@@ -21,7 +21,7 @@
 #ifdef TARGET_CLASSIC
 #include <Windows.h>
 #else
-#include <Carbon.h>
+#include <Carbon/Carbon.h>
 #endif
 #include <string.h>
 

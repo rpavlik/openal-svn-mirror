@@ -21,7 +21,7 @@
 #ifdef TARGET_CLASSIC
 #include <Sound.h>
 #else
-#include <Carbon.h>
+#include <Carbon/Carbon.h>
 #endif
 
 #include "globaltypes.h"

@@ -18,10 +18,10 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
 
-#if TARGET_CARBON
-#include <Carbon.h>
-#else
+#if TARGET_CLASSIC
 #include <Sound.h>
+#else
+#include <Carbon/Carbon.h>
 #endif
 
 #include "sm.h"
