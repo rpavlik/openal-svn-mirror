@@ -26,6 +26,7 @@
 
 size_t ov_read_func (void *ptr, size_t size, size_t nmemb, void *datasource)
 {
+    QueueEntry *pQE;
     int reqAmt = (int)size*(int)nmemb;
     
     // note -- datasource points to the source which needs the data, which in turn points to the buffer which will supply the data
@@ -33,6 +34,26 @@ size_t ov_read_func (void *ptr, size_t size, size_t nmemb, void *datasource)
     int amt = (((ALsource *)datasource)->readOffset + reqAmt > gBuffer[((ALsource *)datasource)->srcBufferNum].size) ? gBuffer[((ALsource *)datasource)->srcBufferNum].size - ((ALsource *)datasource)->readOffset : reqAmt;
     memcpy(ptr, (void *)gBuffer[((ALsource *)datasource)->srcBufferNum].data + ((ALsource *)datasource)->readOffset, amt);
     ((ALsource *)datasource)->readOffset += amt;
+    
+    if (amt < reqAmt) {  // if not all requested data transferred yet, check for a queue to grab more data from
+        pQE = ((ALsource *)datasource)->ptrQueue;
+        
+        if (pQE != NULL) {
+            while (pQE->processed == AL_TRUE) {
+                pQE = pQE->pNext;
+                if (pQE == NULL) break;
+            }
+        }
+	    
+        if (pQE != NULL) // process next queued buffer
+        {
+            pQE->processed = AL_TRUE;
+            ((ALsource *)datasource)->srcBufferNum = pQE->bufferNum;
+            ((ALsource *)datasource)->readOffset = 0;
+            int supplement = ov_read_func(ptr + amt, 1, reqAmt - amt, datasource);
+            return amt + supplement;
+        }
+    }
             
     return amt;
 }

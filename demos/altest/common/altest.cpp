@@ -4205,21 +4205,24 @@ This test exercises Ogg Vorbis playback functionality.
 ALvoid I_VorbisTest()
 {
       ALint error;
+      ALbyte data[BSIZE];
       ALuint source[3];
-      ALuint Buffer;
-      ALint BuffersInQueue, BuffersProcessed;
+      ALuint tempBuffers[4];
       ALbyte ch;
       ALboolean bLoop = false;
 
       alGetError(); // reset error state
 
       if (alIsExtensionPresent((ALubyte *)"AL_EXT_vorbis") == AL_TRUE) {
-	alGenSources(2,source);
+	alGenSources(3,source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
-		DisplayALError((ALbyte *) "alGenSources 1 : ", error);
+		DisplayALError((ALbyte *) "alGenSources 3 : ", error);
 		return;
 	}
+	 
+	// create buffers for queueing
+	alGenBuffers(4, tempBuffers);
 
 	printf("Vorbis Test\n");
 	printf("Press '1' to play an Ogg Vorbis buffer on source 0\n");
@@ -4304,11 +4307,26 @@ ALvoid I_VorbisTest()
 				alSourceStop(source[2]);
 				if ((error = alGetError()) != AL_NO_ERROR)
 					DisplayALError((ALbyte *) "alSourceStop source 2 : ", error);
-
-				// Attach new buffer
-				alSourcei(source[2],AL_BUFFER, g_Buffers[7]);
-				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError((ALbyte *) "alSourcei 2 AL_BUFFER buffer 7 : \n", error);
+                                alSourcei(source[2], AL_BUFFER, 0);
+		   
+                                // Queue buffers
+				FILE *fp;
+		                fp = fopen("boom.ogg", "rb");
+		                if (fp == NULL) {
+			           printf("Failed to open boom.ogg\n");
+				   break;
+				}
+		   
+		                alGetError(); // clear error state
+		   
+		                int actual;
+		                for (int loop = 0; loop < 4; loop++) {
+			           actual = fread(data, 1, 5000, fp);
+				   alBufferData(tempBuffers[loop], AL_FORMAT_VORBIS_EXT, data, actual, 0);
+		                }
+		                alSourceQueueBuffers(source[2], 4, tempBuffers);
+		   
+		                fclose(fp);
 
 				// Set volume
 				alSourcef(source[2],AL_GAIN,0.5f);
@@ -4328,6 +4346,7 @@ ALvoid I_VorbisTest()
 	alSourceStop(source[0]);
 	alSourceStop(source[1]);
 	alSourceStop(source[3]);
+	alDeleteBuffers(4, tempBuffers);
 	if ((error = alGetError()) != AL_NO_ERROR)
 		DisplayALError((ALbyte *) "alSourceStop : ", error);
 

@@ -190,10 +190,6 @@ pascal void smService (SndChannelPtr chan, SndCommand* acmd)
 	    	pQE->processed = AL_TRUE;
 	    	gSource[source].srcBufferNum = pQE->bufferNum;
 	    	gSource[source].readOffset = 0;
-                if (gSource[source].pCompHdr != NULL) {
-                    DisposePtr(gSource[source].pCompHdr);
-                    gSource[source].pCompHdr = NULL;
-                }
 	    	bNewQE = AL_TRUE;
 	    } else // completed all buffers, so reset buffer processed flags and decrement loop counter
 	    {
