@@ -2981,9 +2981,8 @@ ALboolean _alSourceShouldIncrement(AL_source *src) {
 	AL_sourcestate *srcstate;
 
 	srcstate =_alSourceQueueGetCurrentState(src);
-	assert(srcstate);
 
-	if(src->flags & ALS_NEEDPITCH) {
+	if((srcstate == NULL) || (src->flags & ALS_NEEDPITCH)) {
 		return AL_FALSE;
 	}
 
