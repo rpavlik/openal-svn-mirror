@@ -1,5 +1,11 @@
 2003-11-11  Adam D. Moss  <adam@gimp.org>
 
+	* src/al_debug.c: Fix an implicit declaration: the man
+	page on linux says that vsnprintf() is a GNU extension, so #define
+	_GNU_SOURCE
+
+2003-11-11  Adam D. Moss  <adam@gimp.org>
+
 	* src/arch/sdl/sdl.c: #include <string.h> to avoid implicit
 	declaration of memcpy()/memset()
 
