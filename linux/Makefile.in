@@ -56,6 +56,7 @@ install_minor_libs:
 	$(LN_S) -f $(DESTLIB)/libopenal.$(SO_EXT).$(VERSION) $(DESTLIB)/libopenal.so
 
 install_major_lib_only:
+	$(INSTALL) -d -m 755 $(DESTLIB)
 	$(INSTALL) -m 755 src/libopenal.$(SO_EXT) $(DESTLIB)
 
 install: $(INSTALL_DEPS)
