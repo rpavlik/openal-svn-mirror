@@ -13,9 +13,9 @@
 #
 Name: OpenAL
 Summary: A portable audio API.
-Version: 0.0.6
-Release: CVS311202
-Copyright: GPL
+Version: 0.0.7
+Release: CVS110904
+Copyright: LGPL
 Group: System/Libraries
 Source: openal.tar.gz
 URL: http://openal.org
@@ -27,10 +27,10 @@ Provides: openal
 %description
 OpenAL: A portable audio API.
 
-Please visit http://www.openal.org/snapshots for API documentation.  For questions and comments about the API or any implementation
+Please visit http://www.openal.org/ for API documentation.  For questions and comments about the API or any implementation
 please use the mailing list.
 
-Contact information is available at http://www.openal.org/about/contact.php3
+Contact information is available at http://www.openal.org/lists.html
 
 %prep
 rm -rf $RPM_BUILD_ROOT
@@ -50,9 +50,9 @@ echo "Installing"
 cd linux
 # Installing Library Files
 mkdir -p $RPM_BUILD_ROOT/usr/local/lib/
-cp src/libopenal.so.0.0.6 $RPM_BUILD_ROOT/usr/local/lib/
-ln -s -f /usr/local/lib/libopenal.so.0.0.6 $RPM_BUILD_ROOT/usr/local/lib/libopenal.so.0
-ln -s -f /usr/local/lib/libopenal.so.0.0.6 $RPM_BUILD_ROOT/usr/local/lib/libopenal.so
+cp src/libopenal.so.0.0.7 $RPM_BUILD_ROOT/usr/local/lib/
+ln -s -f /usr/local/lib/libopenal.so.0.0.7 $RPM_BUILD_ROOT/usr/local/lib/libopenal.so.0
+ln -s -f /usr/local/lib/libopenal.so.0.0.7 $RPM_BUILD_ROOT/usr/local/lib/libopenal.so
 cp src/libopenal.a $RPM_BUILD_ROOT/usr/local/lib/
 # Installing Development Files
 mkdir -p $RPM_BUILD_ROOT/usr/local/include/AL
@@ -81,7 +81,7 @@ rm -rf $RPM_BUILD_ROOT
 # Documentation files
 /usr/local/doc/OpenAL/
 # Library files
-/usr/local/lib/libopenal.so.0.0.6
+/usr/local/lib/libopenal.so.0.0.7
 /usr/local/lib/libopenal.so.0
 /usr/local/lib/libopenal.so
 /usr/local/lib/libopenal.a
