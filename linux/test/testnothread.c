@@ -18,7 +18,7 @@ static void init(const char *fname);
 static void cleanup(void);
 
 static ALuint moving_sources[NUMSOURCES] = { 0 };
-static void *context_id;
+static ALCcontext *context_id;
 static void *wave = NULL;
 static time_t start;
 

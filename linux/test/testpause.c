@@ -22,7 +22,7 @@ static ALuint moving_source = 0;
 
 static void *wave = NULL;
 static time_t start;
-static void *context_id = NULL;
+static ALCcontext *context_id = NULL;
 
 static void iterate( void ) {
 	sleep(1);

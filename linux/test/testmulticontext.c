@@ -21,7 +21,7 @@ static void cleanup(void);
 
 static void *data;
 
-static void *context_ids[NUMCONTEXTS];
+static ALCcontext *context_ids[NUMCONTEXTS];
 static ALuint moving_sources[NUMCONTEXTS];
 static ALuint bid;
 

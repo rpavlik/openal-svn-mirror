@@ -25,7 +25,7 @@ static ALuint moving_source[1];
 
 static time_t start;
 
-static void *context_id;
+static ALCcontext *context_id;
 ALuint stereo; /* our buffer */
 
 extern int errno;

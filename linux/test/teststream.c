@@ -23,7 +23,7 @@ static ALuint moving_source = 0;
 
 static void *data = (void *) 0xDEADBEEF;
 
-static void *context_id;
+static ALCcontext *context_id;
 ALuint stereo; /* our buffer */
 static ALshort buf[DATABUFSIZE];
 static FILE *fh;

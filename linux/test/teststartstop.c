@@ -25,7 +25,7 @@ static ALuint moving_source = 0;
 static time_t start;
 static void *data = (void *) 0xDEADBEEF;
 
-static void *context_id;
+static ALCcontext *context_id;
 
 static void iterate( void ) {
 	alSourcePlay( moving_source );

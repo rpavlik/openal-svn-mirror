@@ -24,7 +24,7 @@ int bid_compare(const void *bid1p, const void *bid2p) {
 
 int main(void) {
 	ALCdevice *dev;
-	void *context_id;
+	ALCcontext *context_id;
 	ALuint bids_first[NUMBUFFERS];
 	ALuint bids_second[NUMBUFFERS];
 	ALuint bids_total[2 * NUMBUFFERS];

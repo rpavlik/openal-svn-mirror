@@ -11,7 +11,7 @@ static void cleanup(void);
 
 static ALuint moving_source = 0;
 
-static void *context_id;
+static ALCcontext *context_id;
 
 static void cleanup(void) {
 #ifdef JLIB

@@ -27,7 +27,7 @@ int main(void) {
 	ALuint sids_first[NUMSOURCES];
 	ALuint sids_second[NUMSOURCES];
 	ALuint sids_total[2 * NUMSOURCES];
-	void *context_id;
+	ALCcontext *context_id;
 	int i;
 
 	dev = alcOpenDevice( NULL );

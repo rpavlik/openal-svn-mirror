@@ -10,7 +10,7 @@
 
 int main(void) {
 	ALCdevice *dev;
-	void *context_id;
+	ALCcontext *context_id;
 	ALuint bid;
 	int i;
 

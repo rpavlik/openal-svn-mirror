@@ -11,7 +11,7 @@
 
 int main(void) {
 	ALCdevice *dev;
-	void *context_id = NULL;
+	ALCcontext *context_id = NULL;
 	ALfloat pregain  = FLOAT_VAL;
 	ALfloat postgain = 0.0;
 	ALuint sid;
