@@ -592,24 +592,26 @@ ALboolean set_write_alsa(void *handle,
 
 
 	/* sampling rate */
-	err = psnd_pcm_hw_params_set_rate_near(phandle, setup, &ai->speed, &dir);
+	err = psnd_pcm_hw_params_set_rate_near(phandle, setup, &ai->speed,
+                                               NULL);
 	if(err < 0) {
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
                          "set_write_alsa: could not set speed: %s",
                          psnd_strerror(err));
 		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
-	} else if ((dir != 0) && (err > 0)) {
+	} else if (err > 0) {
                 /* sampling rate is in 'err' */
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-                         "set_write_alsa: alsa speed returned is %u rather than %u (dir %d)\n",
-                         (unsigned int) err, ai->speed, dir);
+                         "set_write_alsa: alsa speed returned is %u rather than %u\n",
+                         (unsigned int) err, ai->speed);
 		ai->speed = (unsigned int) err;
                 if (ai->speed > 200000) {
                         /* This can happen, and is the precursor to other Bad
-                           Things.  It usually means we dlsym()d a crappy interface
-                           version instead of known-good one, and our list of preferential
-                           interfaces may need updating. */
+                           Things.  It usually means we dlsym()d a crappy
+                           interface version instead of known-good one, and
+                           our list of preferential interfaces may need
+                           updating. */
                         _alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
                                  "set_write_alsa: hw speed %u not sane.  failing.", ai->speed);
                         psnd_pcm_hw_params_free(setup);
