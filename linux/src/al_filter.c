@@ -1089,6 +1089,9 @@ void alf_tdoppler( ALuint cid,
 	src->pitch.data = compute_doppler_pitch(lp, lv, sp, sv,
 				doppler_factor, doppler_velocity);
 
+	src->pitch.data = MAX(src->pitch.data, 0.01f);
+	src->pitch.data = MIN(src->pitch.data, 2.0f);
+
 	return;
 }
 
