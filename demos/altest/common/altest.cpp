@@ -44,7 +44,7 @@
 #define INITGUID
 #define OPENAL
 
-#define TEST_VORBIS // enable for ogg vorbis testing
+//#define TEST_VORBIS // enable for ogg vorbis testing
 
 #ifdef _WIN32
 #include <windows.h>	// For timeGetTime()
