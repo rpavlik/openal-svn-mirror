@@ -67,7 +67,9 @@ void smPlaySegment(unsigned int source)
 		// create sound header
                 if (gBuffer[iBufferNum].format == AL_FORMAT_VORBIS_EXT) { // compressed format handling
                     if (gBuffer[iBufferNum].uncompressedData == NULL) {
+#ifdef MAC_OS_X
                         ov_fillBuffer(&gBuffer[iBufferNum]);
+#endif
                     }
                     if (gSource[source].uncompressedReadOffset > gBuffer[iBufferNum].uncompressedSize) { gSource[source].uncompressedReadOffset = 0; }
                     gSource[source].ptrSndHeader->samplePtr = (char *) gBuffer[iBufferNum].uncompressedData + gSource[source].uncompressedReadOffset;
