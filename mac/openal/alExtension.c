@@ -24,8 +24,13 @@
 #include <string.h>
 
 #ifdef VORBIS_EXTENSION
+#ifdef MAC_OS_X
+#include <vorbis/codec.h>
+#include <vorbis/vorbisfile.h>
+#else
 #include "codec.h"
 #include "vorbisfile.h"
+#endif
 #include "vorbisrtn.h"
 #endif
 

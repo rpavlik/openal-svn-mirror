@@ -61,9 +61,8 @@
 		0867D69AFE84028FC02AAC07 = {
 			children = (
 				08FB77AAFE841565C02AAC07,
-				98A893070447C04300A8006E,
-				98A8930A0447C05900A8006E,
-				98A8930D0447C06E00A8006E,
+				98E82AA70471B67B005F25BE,
+				98E82AAA0471B68A005F25BE,
 			);
 			isa = PBXGroup;
 			name = "External Frameworks and Libraries";
@@ -243,7 +242,6 @@
 		08FB77ACFE841707C02AAC07 = {
 			children = (
 				989FD9DE0444FC33005F25BE,
-				989FD9DD0444FBA3005F25BE,
 				989FD9DC0444FB92005F25BE,
 				F558C553036A119601A8006E,
 				F558C552036A119601A8006E,
@@ -368,13 +366,6 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
-		};
-		986F619C04439DCE00A8006E = {
-			fileEncoding = 30;
-			isa = PBXFileReference;
-			name = vorbisfile.h;
-			path = ../al/vorbis/vorbisfile.h;
-			refType = 2;
 		};
 		9894C4180439726000A8006E = {
 			buildPhases = (
@@ -707,18 +698,6 @@
 			name = al_headers;
 			refType = 4;
 		};
-		989FD9DD0444FBA3005F25BE = {
-			children = (
-				98AF1E61043534F4000D2D30,
-				986F619C04439DCE00A8006E,
-				98AF1E62043534F4000D2D30,
-				98AF1E6504353506000D2D30,
-				98AF1E6604353506000D2D30,
-			);
-			isa = PBXGroup;
-			name = vorbis_headers;
-			refType = 4;
-		};
 		989FD9DE0444FC33005F25BE = {
 			children = (
 				98A1D34A043B7D7E005F25BE,
@@ -740,88 +719,6 @@
 			isa = PBXFileReference;
 			name = vorbisrtn.h;
 			path = ../openal/vorbis/vorbisrtn.h;
-			refType = 2;
-		};
-		98A893070447C04300A8006E = {
-			isa = PBXFileReference;
-			name = libvorbis.a;
-			path = /sw/lib/libvorbis.a;
-			refType = 0;
-		};
-		98A893080447C04300A8006E = {
-			fileRef = 98A893070447C04300A8006E;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		98A893090447C04300A8006E = {
-			fileRef = 98A893070447C04300A8006E;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		98A8930A0447C05900A8006E = {
-			isa = PBXFileReference;
-			name = libogg.a;
-			path = /sw/lib/libogg.a;
-			refType = 0;
-		};
-		98A8930B0447C05900A8006E = {
-			fileRef = 98A8930A0447C05900A8006E;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		98A8930C0447C05900A8006E = {
-			fileRef = 98A8930A0447C05900A8006E;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		98A8930D0447C06E00A8006E = {
-			isa = PBXFileReference;
-			name = libvorbisfile.a;
-			path = /sw/lib/libvorbisfile.a;
-			refType = 0;
-		};
-		98A8930E0447C06E00A8006E = {
-			fileRef = 98A8930D0447C06E00A8006E;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		98A8930F0447C06E00A8006E = {
-			fileRef = 98A8930D0447C06E00A8006E;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		98AF1E61043534F4000D2D30 = {
-			fileEncoding = 30;
-			isa = PBXFileReference;
-			name = codec.h;
-			path = ../al/vorbis/codec.h;
-			refType = 2;
-		};
-		98AF1E62043534F4000D2D30 = {
-			fileEncoding = 30;
-			isa = PBXFileReference;
-			name = config_types.h;
-			path = ../al/vorbis/config_types.h;
-			refType = 2;
-		};
-		98AF1E6504353506000D2D30 = {
-			fileEncoding = 30;
-			isa = PBXFileReference;
-			name = ogg.h;
-			path = ../al/vorbis/ogg.h;
-			refType = 2;
-		};
-		98AF1E6604353506000D2D30 = {
-			fileEncoding = 30;
-			isa = PBXFileReference;
-			name = os_types.h;
-			path = ../al/vorbis/os_types.h;
 			refType = 2;
 		};
 		98E387440447B9DC00A8006E = {
@@ -908,12 +805,7 @@
 				98E387540447B9DC00A8006E,
 				98E387550447B9DC00A8006E,
 				98E387560447B9DC00A8006E,
-				98E387570447B9DC00A8006E,
-				98E387580447B9DC00A8006E,
-				98E387590447B9DC00A8006E,
-				98E3875A0447B9DC00A8006E,
 				98E3875B0447B9DC00A8006E,
-				98E3875C0447B9DC00A8006E,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1020,38 +912,8 @@
 			settings = {
 			};
 		};
-		98E387570447B9DC00A8006E = {
-			fileRef = 98AF1E61043534F4000D2D30;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		98E387580447B9DC00A8006E = {
-			fileRef = 98AF1E62043534F4000D2D30;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		98E387590447B9DC00A8006E = {
-			fileRef = 98AF1E6504353506000D2D30;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		98E3875A0447B9DC00A8006E = {
-			fileRef = 98AF1E6604353506000D2D30;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		98E3875B0447B9DC00A8006E = {
 			fileRef = 98A1D34B043B7D7E005F25BE;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		98E3875C0447B9DC00A8006E = {
-			fileRef = 986F619C04439DCE00A8006E;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -1172,9 +1034,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				98E3876E0447B9DC00A8006E,
-				98A893080447C04300A8006E,
-				98A8930B0447C05900A8006E,
-				98A8930E0447C06E00A8006E,
+				98E82AA80471B67B005F25BE,
+				98E82AAB0471B68A005F25BE,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1280,12 +1141,7 @@
 				98E387810447B9FB00A8006E,
 				98E387820447B9FB00A8006E,
 				98E387830447B9FB00A8006E,
-				98E387840447B9FB00A8006E,
-				98E387850447B9FB00A8006E,
-				98E387860447B9FB00A8006E,
-				98E387870447B9FB00A8006E,
 				98E387880447B9FB00A8006E,
-				98E387890447B9FB00A8006E,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1392,38 +1248,8 @@
 			settings = {
 			};
 		};
-		98E387840447B9FB00A8006E = {
-			fileRef = 98AF1E61043534F4000D2D30;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		98E387850447B9FB00A8006E = {
-			fileRef = 98AF1E62043534F4000D2D30;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		98E387860447B9FB00A8006E = {
-			fileRef = 98AF1E6504353506000D2D30;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		98E387870447B9FB00A8006E = {
-			fileRef = 98AF1E6604353506000D2D30;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		98E387880447B9FB00A8006E = {
 			fileRef = 98A1D34B043B7D7E005F25BE;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		98E387890447B9FB00A8006E = {
-			fileRef = 986F619C04439DCE00A8006E;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -1544,9 +1370,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				98E3879B0447B9FB00A8006E,
-				98A893090447C04300A8006E,
-				98A8930C0447C05900A8006E,
-				98A8930F0447C06E00A8006E,
+				98E82AA90471B67B005F25BE,
+				98E82AAC0471B68A005F25BE,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1568,6 +1393,42 @@
 			isa = PBXFrameworkReference;
 			path = OpenAL.framework;
 			refType = 3;
+		};
+		98E82AA70471B67B005F25BE = {
+			isa = PBXFrameworkReference;
+			name = Ogg.framework;
+			path = /System/Library/Frameworks/Ogg.framework;
+			refType = 0;
+		};
+		98E82AA80471B67B005F25BE = {
+			fileRef = 98E82AA70471B67B005F25BE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		98E82AA90471B67B005F25BE = {
+			fileRef = 98E82AA70471B67B005F25BE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		98E82AAA0471B68A005F25BE = {
+			isa = PBXFrameworkReference;
+			name = Vorbis.framework;
+			path = /System/Library/Frameworks/Vorbis.framework;
+			refType = 0;
+		};
+		98E82AAB0471B68A005F25BE = {
+			fileRef = 98E82AAA0471B68A005F25BE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		98E82AAC0471B68A005F25BE = {
+			fileRef = 98E82AAA0471B68A005F25BE;
+			isa = PBXBuildFile;
+			settings = {
+			};
 		};
 //980
 //981

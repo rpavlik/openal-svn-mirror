@@ -19,8 +19,13 @@
  */
 
 #include "globals.h"
+#ifdef MAC_OS_X
+#include <vorbis/codec.h>
+#include <vorbis/vorbisfile.h>
+#else
 #include "codec.h"
 #include "vorbisfile.h"
+#endif
 #include "vorbisrtn.h"
 #include "math.h"
 

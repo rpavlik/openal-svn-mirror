@@ -14,14 +14,272 @@
 			98A893100447C91B00A8006E,
 		);
 		perUserDictionary = {
-			PBXPerProjectTemplateStateSaveDate = 74558820;
+			PBXPerProjectTemplateStateSaveDate = 74561073;
+			"PBXTemplateGeometry-F5314676015831810DCA290F" = {
+				ContentSize = "{1035, 627}";
+				LeftSlideOut = {
+					Collapsed = NO;
+					Frame = "{{0, 23}, {1035, 604}}";
+					Split0 = {
+						ActiveTab = 2;
+						ActiveTabName = PBXBuildResultsModule;
+						Collapsed = NO;
+						Frame = "{{0, 0}, {1035, 604}}";
+						Split0 = {
+							Frame = "{{0, 301}, {1035, 303}}";
+						};
+						SplitCount = 1;
+						Tab0 = {
+							Frame = "{{0, 0}, {952, 321}}";
+						};
+						Tab1 = {
+							Debugger = {
+								Collapsed = NO;
+								Frame = "{{0, 0}, {781, 452}}";
+								Split0 = {
+									Frame = "{{0, 24}, {781, 428}}";
+									Split0 = {
+										Frame = "{{0, 0}, {383, 428}}";
+									};
+									Split1 = {
+										DebugVariablesTableConfiguration = (
+											Name,
+											123,
+											Value,
+											85,
+											Summary,
+											155.123,
+										);
+										Frame = "{{392, 0}, {389, 428}}";
+									};
+									SplitCount = 2;
+								};
+								SplitCount = 1;
+								Tab0 = {
+									Frame = "{{0, 0}, {100, 50}}";
+								};
+								Tab1 = {
+									Frame = "{{0, 0}, {100, 50}}";
+								};
+								TabCount = 2;
+								TabsVisible = YES;
+							};
+							Frame = "{{0, 0}, {781, 452}}";
+							LauncherConfigVersion = 7;
+						};
+						Tab2 = {
+							Frame = "{{0, 0}, {685, 215}}";
+							LauncherConfigVersion = 3;
+							Runner = {
+								Frame = "{{0, 0}, {685, 215}}";
+							};
+						};
+						Tab3 = {
+							BuildMessageFrame = "{{0, 0}, {1037, 262}}";
+							BuildTranscriptFrame = "{{0, 271}, {1037, 2}}";
+							BuildTranscriptFrameExpanded = YES;
+							Frame = "{{0, 0}, {1035, 295}}";
+						};
+						Tab4 = {
+							Frame = "{{0, 0}, {612, 295}}";
+						};
+						TabCount = 5;
+						TabsVisible = NO;
+					};
+					SplitCount = 1;
+					Tab0 = {
+						Frame = "{{0, 0}, {300, 533}}";
+						GroupTreeTableConfiguration = (
+							TargetStatusColumn,
+							18,
+							MainColumn,
+							267,
+						);
+					};
+					Tab1 = {
+						ClassesFrame = "{{0, 0}, {280, 398}}";
+						ClassesTreeTableConfiguration = (
+							PBXBookColumnIdentifier,
+							20,
+							PBXClassColumnIdentifier,
+							237,
+						);
+						Frame = "{{0, 0}, {278, 659}}";
+						MembersFrame = "{{0, 407}, {280, 252}}";
+						MembersTreeTableConfiguration = (
+							PBXBookColumnIdentifier,
+							20,
+							PBXMethodColumnIdentifier,
+							236,
+						);
+					};
+					Tab2 = {
+						Frame = "{{0, 0}, {200, 100}}";
+					};
+					Tab3 = {
+						Frame = "{{0, 0}, {200, 100}}";
+						TargetTableConfiguration = (
+							ActiveObject,
+							16,
+							ObjectNames,
+							202.296,
+						);
+					};
+					Tab4 = {
+						BreakpointsTreeTableConfiguration = (
+							breakpointColumn,
+							197,
+							enabledColumn,
+							31,
+						);
+						Frame = "{{0, 0}, {250, 100}}";
+					};
+					TabCount = 5;
+					TabsVisible = NO;
+				};
+				NavBarShownByDefault = YES;
+				StatusViewVisible = YES;
+				Template = F5314676015831810DCA290F;
+				ToolbarVisible = YES;
+				WindowLocation = "{7, 159}";
+			};
+			"PBXTemplateGeometry-F5CA7ECC015C09990DCA290F" = {
+				ContentSize = "{1111, 772}";
+				LeftSlideOut = {
+					Collapsed = NO;
+					Frame = "{{0, 23}, {1111, 749}}";
+					Split0 = {
+						ActiveTab = 0;
+						ActiveTabName = PBXDebugSessionModule;
+						Collapsed = NO;
+						Frame = "{{24, 0}, {1087, 749}}";
+						Split0 = {
+							Frame = "{{0, 585}, {1087, 164}}";
+						};
+						SplitCount = 1;
+						Tab0 = {
+							Frame = "{{0, 0}, {749, 267}}";
+						};
+						Tab1 = {
+							Debugger = {
+								ActiveTab = 0;
+								ActiveTabName = PBXDebugCLIModule;
+								Collapsed = NO;
+								Frame = "{{0, 0}, {1087, 579}}";
+								Split0 = {
+									Frame = "{{0, 478}, {1087, 101}}";
+									Split0 = {
+										Frame = "{{0, 0}, {529, 101}}";
+									};
+									Split1 = {
+										DebugVariablesTableConfiguration = (
+											Name,
+											123,
+											Value,
+											85,
+											Summary,
+											315.123,
+										);
+										Frame = "{{538, 0}, {549, 101}}";
+									};
+									SplitCount = 2;
+								};
+								SplitCount = 1;
+								Tab0 = {
+									Frame = "{{0, 0}, {1087, 454}}";
+								};
+								Tab1 = {
+									Frame = "{{0, 0}, {100, 50}}";
+								};
+								TabCount = 2;
+								TabsVisible = YES;
+							};
+							Frame = "{{0, 0}, {1087, 579}}";
+							LauncherConfigVersion = 7;
+						};
+						Tab2 = {
+							Frame = "{{0, 0}, {664, 50}}";
+							LauncherConfigVersion = 3;
+							Runner = {
+								Frame = "{{0, 0}, {664, 50}}";
+							};
+						};
+						Tab3 = {
+							BuildMessageFrame = "{{0, 0}, {614, 262}}";
+							BuildTranscriptFrame = "{{0, 271}, {614, 2}}";
+							BuildTranscriptFrameExpanded = YES;
+							Frame = "{{0, 0}, {612, 295}}";
+						};
+						Tab4 = {
+							Frame = "{{0, 0}, {612, 295}}";
+						};
+						TabCount = 5;
+						TabsVisible = NO;
+					};
+					SplitCount = 1;
+					Tab0 = {
+						Frame = "{{0, 0}, {313, 531}}";
+						GroupTreeTableConfiguration = (
+							TargetStatusColumn,
+							18,
+							MainColumn,
+							280,
+						);
+					};
+					Tab1 = {
+						ClassesFrame = "{{0, 0}, {280, 398}}";
+						ClassesTreeTableConfiguration = (
+							PBXBookColumnIdentifier,
+							20,
+							PBXClassColumnIdentifier,
+							237,
+						);
+						Frame = "{{0, 0}, {278, 659}}";
+						MembersFrame = "{{0, 407}, {280, 252}}";
+						MembersTreeTableConfiguration = (
+							PBXBookColumnIdentifier,
+							20,
+							PBXMethodColumnIdentifier,
+							236,
+						);
+					};
+					Tab2 = {
+						Frame = "{{0, 0}, {200, 100}}";
+					};
+					Tab3 = {
+						Frame = "{{0, 0}, {200, 557}}";
+						TargetTableConfiguration = (
+							ActiveObject,
+							16,
+							ObjectNames,
+							202.296,
+						);
+					};
+					Tab4 = {
+						BreakpointsTreeTableConfiguration = (
+							breakpointColumn,
+							197,
+							enabledColumn,
+							31,
+						);
+						Frame = "{{0, 0}, {250, 100}}";
+					};
+					TabCount = 5;
+					TabsVisible = YES;
+				};
+				NavBarShownByDefault = YES;
+				StatusViewVisible = YES;
+				Template = F5CA7ECC015C09990DCA290F;
+				ToolbarVisible = YES;
+				WindowLocation = "{13, 14}";
+			};
 			PBXWorkspaceContents = (
 				{
 					LeftSlideOut = {
 						Split0 = {
 							Split0 = {
 								NavContent0 = {
-									bookmark = 989B39FB0471ADC9005F25BE;
+									bookmark = 98E82AAD0471B80C005F25BE;
 									history = (
 										98A2B970046C81B2005F25BE,
 										989F28B30471ACF2005F25BE,
@@ -65,7 +323,7 @@
 										989B39ED0471ADC9005F25BE,
 										989B39EE0471ADC9005F25BE,
 										989B39EF0471ADC9005F25BE,
-										989F28CF0471ACF2005F25BE,
+										989B39FB0471ADC9005F25BE,
 									);
 									prevStack = (
 										98E3883B0447BFE400A8006E,
@@ -274,42 +532,6 @@
 						TabCount = 5;
 					};
 				},
-				{
-					LeftSlideOut = {
-						Split0 = {
-							Split0 = {
-								NavCount = 1;
-								NavGeometry0 = {
-									Frame = "{{0, 0}, {685, 150}}";
-									NavBarVisible = YES;
-								};
-								NavSplitVertical = NO;
-							};
-							SplitCount = 1;
-							Tab1 = {
-								Debugger = {
-									Split0 = {
-										SplitCount = 2;
-									};
-									SplitCount = 1;
-									TabCount = 2;
-								};
-								LauncherConfigVersion = 7;
-							};
-							Tab2 = {
-								LauncherConfigVersion = 3;
-								Runner = {
-								};
-							};
-							TabCount = 5;
-						};
-						SplitCount = 1;
-						Tab1 = {
-							OptionsSetName = "Hierarchy, all classes";
-						};
-						TabCount = 5;
-					};
-				},
 			);
 			PBXWorkspaceGeometries = (
 				{
@@ -442,136 +664,8 @@
 					ToolbarVisible = YES;
 					WindowLocation = "{0, 4}";
 				},
-				{
-					ContentSize = "{685, 434}";
-					LeftSlideOut = {
-						Collapsed = NO;
-						Frame = "{{0, 23}, {685, 411}}";
-						Split0 = {
-							ActiveTab = 2;
-							ActiveTabName = PBXBuildResultsModule;
-							Collapsed = NO;
-							Frame = "{{0, 0}, {685, 411}}";
-							Split0 = {
-								Frame = "{{0, 301}, {685, 110}}";
-							};
-							SplitCount = 1;
-							Tab0 = {
-								Frame = "{{0, 0}, {952, 321}}";
-							};
-							Tab1 = {
-								Debugger = {
-									Collapsed = NO;
-									Frame = "{{0, 0}, {781, 452}}";
-									Split0 = {
-										Frame = "{{0, 24}, {781, 428}}";
-										Split0 = {
-											Frame = "{{0, 0}, {383, 428}}";
-										};
-										Split1 = {
-											DebugVariablesTableConfiguration = (
-												Name,
-												123,
-												Value,
-												85,
-												Summary,
-												155.123,
-											);
-											Frame = "{{392, 0}, {389, 428}}";
-										};
-										SplitCount = 2;
-									};
-									SplitCount = 1;
-									Tab0 = {
-										Frame = "{{0, 0}, {100, 50}}";
-									};
-									Tab1 = {
-										Frame = "{{0, 0}, {100, 50}}";
-									};
-									TabCount = 2;
-									TabsVisible = YES;
-								};
-								Frame = "{{0, 0}, {781, 452}}";
-								LauncherConfigVersion = 7;
-							};
-							Tab2 = {
-								Frame = "{{0, 0}, {685, 215}}";
-								LauncherConfigVersion = 3;
-								Runner = {
-									Frame = "{{0, 0}, {685, 215}}";
-								};
-							};
-							Tab3 = {
-								BuildMessageFrame = "{{0, 0}, {687, 262}}";
-								BuildTranscriptFrame = "{{0, 271}, {687, 2}}";
-								BuildTranscriptFrameExpanded = YES;
-								Frame = "{{0, 0}, {685, 295}}";
-							};
-							Tab4 = {
-								Frame = "{{0, 0}, {612, 295}}";
-							};
-							TabCount = 5;
-							TabsVisible = NO;
-						};
-						SplitCount = 1;
-						Tab0 = {
-							Frame = "{{0, 0}, {300, 533}}";
-							GroupTreeTableConfiguration = (
-								TargetStatusColumn,
-								18,
-								MainColumn,
-								267,
-							);
-						};
-						Tab1 = {
-							ClassesFrame = "{{0, 0}, {280, 398}}";
-							ClassesTreeTableConfiguration = (
-								PBXBookColumnIdentifier,
-								20,
-								PBXClassColumnIdentifier,
-								237,
-							);
-							Frame = "{{0, 0}, {278, 659}}";
-							MembersFrame = "{{0, 407}, {280, 252}}";
-							MembersTreeTableConfiguration = (
-								PBXBookColumnIdentifier,
-								20,
-								PBXMethodColumnIdentifier,
-								236,
-							);
-						};
-						Tab2 = {
-							Frame = "{{0, 0}, {200, 100}}";
-						};
-						Tab3 = {
-							Frame = "{{0, 0}, {200, 100}}";
-							TargetTableConfiguration = (
-								ActiveObject,
-								16,
-								ObjectNames,
-								202.296,
-							);
-						};
-						Tab4 = {
-							BreakpointsTreeTableConfiguration = (
-								breakpointColumn,
-								197,
-								enabledColumn,
-								31,
-							);
-							Frame = "{{0, 0}, {250, 100}}";
-						};
-						TabCount = 5;
-						TabsVisible = NO;
-					};
-					NavBarShownByDefault = YES;
-					StatusViewVisible = YES;
-					Template = F5314676015831810DCA290F;
-					ToolbarVisible = YES;
-					WindowLocation = "{7, 352}";
-				},
 			);
-			PBXWorkspaceStateSaveDate = 74558820;
+			PBXWorkspaceStateSaveDate = 74561073;
 		};
 		perUserProjectItems = {
 			981473060460BA5E00A8006E = 981473060460BA5E00A8006E;
@@ -645,7 +739,6 @@
 			989F28CB0471ACF2005F25BE = 989F28CB0471ACF2005F25BE;
 			989F28CC0471ACF2005F25BE = 989F28CC0471ACF2005F25BE;
 			989F28CD0471ACF2005F25BE = 989F28CD0471ACF2005F25BE;
-			989F28CF0471ACF2005F25BE = 989F28CF0471ACF2005F25BE;
 			989F28D00471ACF2005F25BE = 989F28D00471ACF2005F25BE;
 			989F28D10471ACF2005F25BE = 989F28D10471ACF2005F25BE;
 			989F28D20471ACF2005F25BE = 989F28D20471ACF2005F25BE;
@@ -790,6 +883,7 @@
 			98E3884E0447BFE400A8006E = 98E3884E0447BFE400A8006E;
 			98E3884F0447BFE400A8006E = 98E3884F0447BFE400A8006E;
 			98E388500447BFE400A8006E = 98E388500447BFE400A8006E;
+			98E82AAD0471B80C005F25BE = 98E82AAD0471B80C005F25BE;
 		};
 		projectwideBuildSettings = {
 		};
@@ -804,7 +898,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.c: ov_read_func";
 		rLen = 0;
-		rLoc = 2413;
+		rLoc = 2499;
 		rType = 0;
 		vrLen = 1140;
 		vrLoc = 1336;
@@ -818,7 +912,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.c: ov_read_func";
 		rLen = 0;
-		rLoc = 1273;
+		rLoc = 1359;
 		rType = 0;
 		vrLen = 1446;
 		vrLoc = 1007;
@@ -828,7 +922,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.h: 28";
 		rLen = 0;
-		rLoc = 1188;
+		rLoc = 1238;
 		rType = 0;
 		vrLen = 1204;
 		vrLoc = 0;
@@ -888,7 +982,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.c: ov_read_func";
 		rLen = 0;
-		rLoc = 1623;
+		rLoc = 1709;
 		rType = 0;
 		vrLen = 892;
 		vrLoc = 2517;
@@ -908,10 +1002,17 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.h: 28";
 		rLen = 0;
-		rLoc = 1201;
+		rLoc = 1251;
 		rType = 0;
 		vrLen = 1204;
 		vrLoc = 0;
+	};
+	986F619C04439DCE00A8006E = {
+		fileEncoding = 30;
+		isa = PBXFileReference;
+		name = vorbisfile.h;
+		path = /Users/garinh/prog/openal/mac/al/vorbis/vorbisfile.h;
+		refType = 0;
 	};
 	987520AF04707A53005F25BE = {
 		fRef = 98A1D34A043B7D7E005F25BE;
@@ -920,7 +1021,7 @@
 		rLen = 0;
 		rLoc = 886;
 		rType = 0;
-		vrLen = 1487;
+		vrLen = 1459;
 		vrLoc = 2663;
 	};
 	987520B004707A53005F25BE = {
@@ -940,7 +1041,7 @@
 		rLen = 0;
 		rLoc = 886;
 		rType = 0;
-		vrLen = 1649;
+		vrLen = 1621;
 		vrLoc = 2501;
 	};
 	9890C7A90468834A00B77F03 = {
@@ -948,7 +1049,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.c: ov_fillBuffer";
 		rLen = 0;
-		rLoc = 4119;
+		rLoc = 4205;
 		rType = 0;
 		vrLen = 1816;
 		vrLoc = 0;
@@ -958,7 +1059,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.h: 28";
 		rLen = 0;
-		rLoc = 1201;
+		rLoc = 1251;
 		rType = 0;
 		vrLen = 1204;
 		vrLoc = 0;
@@ -969,27 +1070,13 @@
 	989B39E50471ADC9005F25BE = {
 		isa = PBXTargetBookmark;
 		trg = 98E387440447B9DC00A8006E;
-		uiCtxt = {
-			TOCViewDetailVisibleRect = "{{0, 0}, {592, 233}}";
-			TOCViewExpandedItems = (
-				"com.apple.target-editor-pane.settings",
-				"com.apple.target-editor-pane.settings.simple",
-				"com.apple.target-editor-pane.info-plist",
-				"com.apple.target-editor-pane.info-plist.simple",
-				"com.apple.target-editor-pane.buildphases",
-			);
-			TOCViewMasterVisibleRect = "{{0, 0}, {234, 701}}";
-			TOCViewSelectedItems = (
-				PBXTargetSummarySettingsModule,
-			);
-		};
 	};
 	989B39E60471ADC9005F25BE = {
 		fRef = 98A1D34A043B7D7E005F25BE;
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.c: 23";
 		rLen = 0;
-		rLoc = 951;
+		rLoc = 1037;
 		rType = 0;
 		vrLen = 2249;
 		vrLoc = 0;
@@ -999,7 +1086,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.h: 21";
 		rLen = 0;
-		rLoc = 912;
+		rLoc = 955;
 		rType = 0;
 		vrLen = 1204;
 		vrLoc = 0;
@@ -1049,7 +1136,7 @@
 		isa = PBXTextBookmark;
 		name = "alExtension.c: 29";
 		rLen = 0;
-		rLoc = 1061;
+		rLoc = 1147;
 		rType = 0;
 		vrLen = 1480;
 		vrLoc = 0;
@@ -1087,27 +1174,13 @@
 	989B39F00471ADC9005F25BE = {
 		isa = PBXTargetBookmark;
 		trg = 98E387440447B9DC00A8006E;
-		uiCtxt = {
-			TOCViewDetailVisibleRect = "{{0, 0}, {592, 233}}";
-			TOCViewExpandedItems = (
-				"com.apple.target-editor-pane.settings",
-				"com.apple.target-editor-pane.settings.simple",
-				"com.apple.target-editor-pane.info-plist",
-				"com.apple.target-editor-pane.info-plist.simple",
-				"com.apple.target-editor-pane.buildphases",
-			);
-			TOCViewMasterVisibleRect = "{{0, 0}, {234, 701}}";
-			TOCViewSelectedItems = (
-				PBXTargetSummarySettingsModule,
-			);
-		};
 	};
 	989B39F10471ADC9005F25BE = {
 		fRef = 98A1D34A043B7D7E005F25BE;
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.c: 23";
 		rLen = 0;
-		rLoc = 951;
+		rLoc = 1037;
 		rType = 0;
 		vrLen = 2249;
 		vrLoc = 0;
@@ -1117,7 +1190,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.h: 21";
 		rLen = 0;
-		rLoc = 912;
+		rLoc = 955;
 		rType = 0;
 		vrLen = 1204;
 		vrLoc = 0;
@@ -1167,7 +1240,7 @@
 		isa = PBXTextBookmark;
 		name = "alExtension.c: 29";
 		rLen = 0;
-		rLoc = 1061;
+		rLoc = 1147;
 		rType = 0;
 		vrLen = 1480;
 		vrLoc = 0;
@@ -1217,7 +1290,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.c: ov_read_func";
 		rLen = 0;
-		rLoc = 1917;
+		rLoc = 2003;
 		rType = 0;
 		vrLen = 1715;
 		vrLoc = 909;
@@ -1237,7 +1310,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.c: ov_read_func";
 		rLen = 0;
-		rLoc = 1917;
+		rLoc = 2003;
 		rType = 0;
 		vrLen = 2085;
 		vrLoc = 415;
@@ -1522,16 +1595,6 @@
 		vrLen = 1260;
 		vrLoc = 0;
 	};
-	989F28CF0471ACF2005F25BE = {
-		fRef = F558C53D036A116501A8006E;
-		isa = PBXTextBookmark;
-		name = "ALut.c: __VERSION__";
-		rLen = 0;
-		rLoc = 0;
-		rType = 0;
-		vrLen = 1670;
-		vrLoc = 0;
-	};
 	989F28D00471ACF2005F25BE = {
 		fRef = 089C1667FE841158C02AAC07;
 		isa = PBXTextBookmark;
@@ -1585,7 +1648,7 @@
 		rLen = 0;
 		rLoc = 886;
 		rType = 0;
-		vrLen = 1651;
+		vrLen = 1623;
 		vrLoc = 2499;
 	};
 	989F28DF0471ACF2005F25BE = {
@@ -1593,7 +1656,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.h: 28";
 		rLen = 0;
-		rLoc = 1201;
+		rLoc = 1251;
 		rType = 0;
 		vrLen = 1204;
 		vrLoc = 0;
@@ -1605,7 +1668,7 @@
 		rLen = 0;
 		rLoc = 886;
 		rType = 0;
-		vrLen = 1651;
+		vrLen = 1623;
 		vrLoc = 2499;
 	};
 	989F28E10471ACF2005F25BE = {
@@ -1613,7 +1676,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.h: 28";
 		rLen = 0;
-		rLoc = 1201;
+		rLoc = 1251;
 		rType = 0;
 		vrLen = 1204;
 		vrLoc = 0;
@@ -1803,7 +1866,7 @@
 		isa = PBXTextBookmark;
 		name = "alExtension.c: extPresent";
 		rLen = 0;
-		rLoc = 1233;
+		rLoc = 1319;
 		rType = 0;
 		vrLen = 1602;
 		vrLoc = 833;
@@ -1975,7 +2038,7 @@
 		rLen = 0;
 		rLoc = 886;
 		rType = 0;
-		vrLen = 1651;
+		vrLen = 1623;
 		vrLoc = 2499;
 	};
 	989F29060471ACF2005F25BE = {
@@ -2043,7 +2106,7 @@
 		isa = PBXTextBookmark;
 		name = "alExtension.c: 30";
 		rLen = 0;
-		rLoc = 1061;
+		rLoc = 1147;
 		rType = 0;
 		vrLen = 1546;
 		vrLoc = 833;
@@ -2053,7 +2116,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.h: 28";
 		rLen = 0;
-		rLoc = 1201;
+		rLoc = 1251;
 		rType = 0;
 		vrLen = 1204;
 		vrLoc = 0;
@@ -2063,7 +2126,7 @@
 		isa = PBXTextBookmark;
 		name = "alExtension.c: 34";
 		rLen = 0;
-		rLoc = 1061;
+		rLoc = 1147;
 		rType = 0;
 		vrLen = 1250;
 		vrLoc = 833;
@@ -2083,7 +2146,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.c: ov_read_func";
 		rLen = 0;
-		rLoc = 951;
+		rLoc = 1037;
 		rType = 0;
 		vrLen = 2108;
 		vrLoc = 0;
@@ -2103,7 +2166,7 @@
 		isa = PBXTextBookmark;
 		name = "alExtension.c: 27";
 		rLen = 0;
-		rLoc = 995;
+		rLoc = 1074;
 		rType = 0;
 		vrLen = 1476;
 		vrLoc = 0;
@@ -2113,9 +2176,9 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.h: 26";
 		rLen = 0;
-		rLoc = 929;
+		rLoc = 979;
 		rType = 0;
-		vrLen = 1250;
+		vrLen = 1204;
 		vrLoc = 0;
 	};
 	989F291D0471ACF2005F25BE = {
@@ -2183,7 +2246,7 @@
 		isa = PBXTextBookmark;
 		name = "alExtension.c: extPresent";
 		rLen = 0;
-		rLoc = 1233;
+		rLoc = 1319;
 		rType = 0;
 		vrLen = 1602;
 		vrLoc = 833;
@@ -2193,7 +2256,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.c: ov_fillBuffer";
 		rLen = 0;
-		rLoc = 2725;
+		rLoc = 2811;
 		rType = 0;
 		vrLen = 1194;
 		vrLoc = 888;
@@ -2207,7 +2270,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.c: ov_fillBuffer";
 		rLen = 0;
-		rLoc = 2725;
+		rLoc = 2811;
 		rType = 0;
 		vrLen = 1195;
 		vrLoc = 887;
@@ -2221,7 +2284,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.c: ov_fillBuffer";
 		rLen = 0;
-		rLoc = 2725;
+		rLoc = 2811;
 		rType = 0;
 		vrLen = 1195;
 		vrLoc = 887;
@@ -2241,7 +2304,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.h: 28";
 		rLen = 0;
-		rLoc = 1188;
+		rLoc = 1238;
 		rType = 0;
 		vrLen = 1204;
 		vrLoc = 0;
@@ -2251,7 +2314,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.c: 75";
 		rLen = 0;
-		rLoc = 4119;
+		rLoc = 4205;
 		rType = 0;
 		vrLen = 1322;
 		vrLoc = 989;
@@ -2271,7 +2334,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.c: ov_fillBuffer";
 		rLen = 0;
-		rLoc = 3177;
+		rLoc = 3263;
 		rType = 0;
 		vrLen = 1238;
 		vrLoc = 989;
@@ -2311,7 +2374,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.c: ov_fillBuffer";
 		rLen = 0;
-		rLoc = 4119;
+		rLoc = 4205;
 		rType = 0;
 		vrLen = 1649;
 		vrLoc = 1760;
@@ -2325,7 +2388,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.c: amt";
 		rLen = 0;
-		rLoc = 1339;
+		rLoc = 1425;
 		rType = 0;
 		vrLen = 1794;
 		vrLoc = 147;
@@ -2345,7 +2408,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.c: ov_read_func";
 		rLen = 0;
-		rLoc = 1824;
+		rLoc = 1910;
 		rType = 0;
 		vrLen = 1752;
 		vrLoc = 833;
@@ -2365,7 +2428,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.c: ov_read_func";
 		rLen = 0;
-		rLoc = 1824;
+		rLoc = 1910;
 		rType = 0;
 		vrLen = 1785;
 		vrLoc = 800;
@@ -2385,7 +2448,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.c: supplement";
 		rLen = 3;
-		rLoc = 2297;
+		rLoc = 2383;
 		rType = 0;
 		vrLen = 2006;
 		vrLoc = 888;
@@ -2480,7 +2543,7 @@
 		isa = PBXTextBookmark;
 		name = "alExtension.c: alIsExtensionPresent";
 		rLen = 0;
-		rLoc = 1355;
+		rLoc = 1441;
 		rType = 0;
 		vrLen = 1134;
 		vrLoc = 415;
@@ -2490,7 +2553,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.c: 47";
 		rLen = 0;
-		rLoc = 2725;
+		rLoc = 2811;
 		rType = 0;
 		vrLen = 1593;
 		vrLoc = 4;
@@ -2500,7 +2563,7 @@
 		isa = PBXTextBookmark;
 		name = "vorbisrtn.h: 22";
 		rLen = 0;
-		rLoc = 929;
+		rLoc = 979;
 		rType = 0;
 		vrLen = 953;
 		vrLoc = 0;
@@ -2574,6 +2637,34 @@
 	98A893310447C98A00A8006E = {
 		exec = 98A893100447C91B00A8006E;
 		isa = PBXExecutableBookmark;
+	};
+	98AF1E61043534F4000D2D30 = {
+		fileEncoding = 30;
+		isa = PBXFileReference;
+		name = codec.h;
+		path = /Users/garinh/prog/openal/mac/al/vorbis/codec.h;
+		refType = 0;
+	};
+	98AF1E62043534F4000D2D30 = {
+		fileEncoding = 30;
+		isa = PBXFileReference;
+		name = config_types.h;
+		path = /Users/garinh/prog/openal/mac/al/vorbis/config_types.h;
+		refType = 0;
+	};
+	98AF1E6504353506000D2D30 = {
+		fileEncoding = 30;
+		isa = PBXFileReference;
+		name = ogg.h;
+		path = /Users/garinh/prog/openal/mac/al/vorbis/ogg.h;
+		refType = 0;
+	};
+	98AF1E6604353506000D2D30 = {
+		fileEncoding = 30;
+		isa = PBXFileReference;
+		name = os_types.h;
+		path = /Users/garinh/prog/openal/mac/al/vorbis/os_types.h;
+		refType = 0;
 	};
 	98E387440447B9DC00A8006E = {
 		activeExec = 0;
@@ -2674,5 +2765,15 @@
 	98E388500447BFE400A8006E = {
 		isa = PBXTargetBookmark;
 		trg = 0867D69CFE84028FC02AAC07;
+	};
+	98E82AAD0471B80C005F25BE = {
+		fRef = F558C53D036A116501A8006E;
+		isa = PBXTextBookmark;
+		name = "ALut.c: 15";
+		rLen = 0;
+		rLoc = 707;
+		rType = 0;
+		vrLen = 1662;
+		vrLoc = 0;
 	};
 }

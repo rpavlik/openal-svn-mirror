@@ -19,7 +19,11 @@
  */
 
 #include "globaltypes.h"
+#ifdef MAC_OS_X
+#include <ogg/ogg.h>
+#else
 #include <ogg.h>
+#endif
 
 size_t ov_read_func (void *ptr, size_t size, size_t nmemb, void *datasource);
 int ov_seek_func (void *datasource, ogg_int64_t offset, int whence);
