@@ -1,8 +1,9 @@
-dnl autoconf file shameless ripped off from mixer-1.0.1
+# Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.13) dnl I'm not sure this works with anything older...
-AC_INIT(doc/openal.texi)
-AC_CONFIG_HEADER(config.h)
+AC_INIT([OpenAL library], [0.0.8], [openal-devel@opensource.creative.com], [openal])
+AC_PREREQ([2.50])
+AC_CONFIG_SRCDIR([doc/openal.texi])
+AC_CONFIG_HEADER([config.h])
 
 # Well, this seems goofy
 chmod 755 config.guess >/dev/null 2>&1

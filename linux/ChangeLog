@@ -1,3 +1,9 @@
+2005-03-20  Sven Panne  <sven.panne@aedion.de>
+
+	* acconfig.h, acinclude.m4 aclocal.m4: Removed.
+
+	* configure.ac: Modernized a tiny bit, requiring autoconf 2.50 now.
+
 2005-03-18  Sven Panne  <sven.panne@aedion.de>
 
 	* linux/audioconvert/ac_misc.c: Removed type punning, newer gcc
