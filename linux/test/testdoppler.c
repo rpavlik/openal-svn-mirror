@@ -27,7 +27,7 @@ static void *cc; /* al context */
 static void iterate( void ) {
 	static ALfloat speed[3] = { 0.0, 0.0, 0.0 };
 
-	speed[0] += .25;
+	speed[2] += .0005;
 
 	alSourcefv( moving_source, AL_VELOCITY, speed );
 	micro_sleep(20000);
