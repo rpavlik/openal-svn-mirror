@@ -1751,9 +1751,11 @@ static void _alSplitSourceQueue( ALuint cid,
 		return;
 	}
 
+#if DEBUG_QUEUE
 	fprintf(stderr, "Splitting from multiple needed %d left %d\n",
 		len,
 		samp->size - src->srcParams.soundpos);
+#endif
 			
 	/*
 	 * We need to get data from more than one buffer
