@@ -1137,13 +1137,13 @@ void alf_minmax( UNUSED(ALuint cid),
 	 * if min or max are set, use them.  Otherwise, keep defaults
 	 */
 	if(aminp != NULL) {
-		attenuation_min = _alDBToLinear(*aminp);
+		attenuation_min = *aminp;
 	} else {
 		_alSourceGetParamDefault( AL_MIN_GAIN, &attenuation_min );
 	}
 
 	if(amaxp != NULL) {
-		attenuation_max = _alDBToLinear(*amaxp);
+		attenuation_max = *amaxp;
 	} else {
 		_alSourceGetParamDefault( AL_MAX_GAIN, &attenuation_max );
 	}

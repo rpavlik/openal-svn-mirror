@@ -39,8 +39,6 @@
 
 #include "audioconvert.h"
 
-#define USE_LOGTAB 1 /* icculus look here JIV FIXME */
-
 /* standard extensions
  *
  * To avoid having these built in (ie, using the plugin arch), don't
@@ -802,113 +800,6 @@ ALboolean _alIsZeroVector(ALfloat *fv)
 	}
 
 	return AL_TRUE;
-}
-
-/*
- * _alLinearToDB( ALfloat linear )
- *
- * Convert a linear gain to a logarithmic one.
- */
-ALfloat _alLinearToDB(ALfloat linear)
-{
-#if USE_LOGTAB
-	static const float logtab[] = {
-		0.00, 0.001, 0.002, 0.003, 0.004, 0.005, 0.01, 0.011,
-		0.012, 0.013, 0.014, 0.015, 0.016, 0.02, 0.021, 0.022,
-		0.023, 0.024, 0.025, 0.03, 0.031, 0.032, 0.033, 0.034,
-		0.04, 0.041, 0.042, 0.043, 0.044, 0.05, 0.051, 0.052,
-		0.053, 0.054, 0.06, 0.061, 0.062, 0.063, 0.064, 0.07,
-		0.071, 0.072, 0.073, 0.08, 0.081, 0.082, 0.083, 0.084,
-		0.09, 0.091, 0.092, 0.093, 0.094, 0.10, 0.101, 0.102,
-		0.103, 0.11, 0.111, 0.112, 0.113, 0.12, 0.121, 0.122,
-		0.123, 0.124, 0.13, 0.131, 0.132, 0.14, 0.141, 0.142,
-		0.143, 0.15, 0.151, 0.152, 0.16, 0.161, 0.162, 0.17,
-		0.171, 0.172, 0.18, 0.181, 0.19, 0.191, 0.192, 0.20,
-		0.201, 0.21, 0.211, 0.22, 0.221, 0.23, 0.231, 0.24, 0.25,
-		0.251, 0.26, 0.27, 0.271, 0.28, 0.29, 0.30, 0.301, 0.31,
-		0.32, 0.33, 0.34, 0.35, 0.36, 0.37, 0.38, 0.39, 0.40,
-		0.41, 0.43, 0.50, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85,
-		0.90, 0.95, 0.97, 0.99 };
-	const int logmax = sizeof logtab / sizeof *logtab;
-
-	if(linear <= 0.0) {
-		return 0.0;
-	}
-
-	if(linear >= 1.0) {
-		return 1.0;
-	}
-
-	return logtab[(int) (logmax * linear)];
-#else
-	/* simple test */
-	return linear * linear;
-#endif
-}
-
-/*
- * _alDBToLinear( ALfloat dBs )
- *
- * Convert a logarithmic gain to a linear one.
- *
- * FIXME: So kludgey.
- */
-ALfloat _alDBToLinear(ALfloat dBs) {
-#if USE_LOGTAB
-	static const float logtab[] = {
-		0.00, 0.001, 0.002, 0.003, 0.004, 0.005, 0.01, 0.011,
-		0.012, 0.013, 0.014, 0.015, 0.016, 0.02, 0.021, 0.022,
-		0.023, 0.024, 0.025, 0.03, 0.031, 0.032, 0.033, 0.034,
-		0.04, 0.041, 0.042, 0.043, 0.044, 0.05, 0.051, 0.052,
-		0.053, 0.054, 0.06, 0.061, 0.062, 0.063, 0.064, 0.07,
-		0.071, 0.072, 0.073, 0.08, 0.081, 0.082, 0.083, 0.084,
-		0.09, 0.091, 0.092, 0.093, 0.094, 0.10, 0.101, 0.102,
-		0.103, 0.11, 0.111, 0.112, 0.113, 0.12, 0.121, 0.122,
-		0.123, 0.124, 0.13, 0.131, 0.132, 0.14, 0.141, 0.142,
-		0.143, 0.15, 0.151, 0.152, 0.16, 0.161, 0.162, 0.17,
-		0.171, 0.172, 0.18, 0.181, 0.19, 0.191, 0.192, 0.20,
-		0.201, 0.21, 0.211, 0.22, 0.221, 0.23, 0.231, 0.24, 0.25,
-		0.251, 0.26, 0.27, 0.271, 0.28, 0.29, 0.30, 0.301, 0.31,
-		0.32, 0.33, 0.34, 0.35, 0.36, 0.37, 0.38, 0.39, 0.40,
-		0.41, 0.43, 0.50, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85,
-		0.90, 0.95, 0.97, 0.99 };
-	const int logmax = sizeof logtab / sizeof *logtab;
-	int max = logmax;
-	int min = 0;
-	int mid;
-	int last = -1;
-
-	if(dBs <= 0.0) {
-		return 0.0;
-	}
-
-	if(dBs >= 1.0) {
-		return 1.0;
-	}
-
-	mid = (max - min) / 2;
-	do {
-		last = mid;
-
-		if(logtab[mid] == dBs) {
-			break;
-		}
-
-		if(logtab[mid] < dBs) {
-			/* too low */
-			min = mid;
-		} else {
-			/* too high */
-			max = mid;
-		}
-
-		mid = min + ((max - min) / 2);
-	} while(last != mid);
-
-	return ((float) mid / logmax);
-#else
-	return sqrt(dBs);
-#endif
 }
 
 /*

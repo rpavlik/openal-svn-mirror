@@ -93,7 +93,7 @@ void alListenerf( ALenum param, ALfloat value ) {
 			dc->listener.Gain = value;
 			break;
 		case AL_GAIN:
-			dc->listener.Gain = _alDBToLinear( value );
+			dc->listener.Gain = value;
 			break;
 		default:
 			_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
@@ -360,7 +360,7 @@ void alGetListenerfv( ALenum param, ALfloat *values ) {
 		/*
 		 * we actually have a value for the param, so
 		 * copy it and return.  Otherwise, set default
-		 * below or do conversion ( for ex GAIN_LINEAR->GAIN).
+		 * below or do conversion.
 		 */
 
 		memcpy( values, fv, sizeof *values * numarguments );
@@ -379,7 +379,7 @@ void alGetListenerfv( ALenum param, ALfloat *values ) {
 			if( fv == NULL ) {
 				values[0] = 1.0f;
 			} else {
-				values[0] = _alLinearToDB( fv[0] );
+				values[0] = fv[0];
 			}
 			break;
 		case AL_POSITION:
@@ -482,6 +482,7 @@ void *_alGetListenerParam( ALuint cid, ALenum param ) {
 	list = &cc->listener;
 
 	switch(param) {
+		case AL_GAIN:
 		case AL_GAIN_LINEAR_LOKI:
 			return &list->Gain;
 			break;
@@ -492,8 +493,6 @@ void *_alGetListenerParam( ALuint cid, ALenum param ) {
 			return &list->Position;
 		case AL_ORIENTATION:
 			return &list->Orientation;
-		case AL_GAIN:
-			return NULL; /* not an error, but the caller has to handle it */
 		default:
 			_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
 				  "_alGetListenerParam(%d, ...) passed bad param 0x%x",

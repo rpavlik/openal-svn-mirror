@@ -743,9 +743,6 @@ void alSourcefv( ALuint sid, ALenum param, ALfloat *fv1 )
 		  }
 		  break;
 		case AL_GAIN:
-		  source->gain.isset = AL_TRUE;
-		  source->gain.data = _alDBToLinear( fv1[0] );
-		  break;
 		case AL_GAIN_LINEAR_LOKI:
 		  source->gain.isset = AL_TRUE;
 		  source->gain.data = fv1[0];
@@ -1203,27 +1200,6 @@ void alGetSourcefv( ALuint sid, ALenum param, ALfloat *values ) {
 	switch( param ) {
 		/* scalars */
 		case AL_GAIN:
-			/*
-			 * AL_GAIN reflects the dB of AL_GAIN_LINEAR_LOKI, so
-			 * we compute this from AL_GAIN_LINEAR_LOKI.
-			 */
-			srcvals = _alGetSourceParam( src, AL_GAIN_LINEAR_LOKI );
-			if( srcvals != NULL) {
-			/*
-			 * If srcval is not NULL, the param in question has
-			 * been explicitly set, which means that we don't
-			 * need to set it to defaults below.
-			 */
-			values[0] = _alLinearToDB( *srcvals );
-
-			SOURCEUNLOCK();
-			return;
-			}
-
-			/* AL_GAIN_LINEAR_LOKI was not set, so we set default */
-			_alSourceGetParamDefault( AL_GAIN_LINEAR_LOKI, values );
-			values[0] = _alLinearToDB( values[0] );
-			break;
 		case AL_MIN_GAIN:
 		case AL_MAX_GAIN:
 		case AL_GAIN_LINEAR_LOKI:
@@ -3226,6 +3202,7 @@ void *_alGetSourceParam(AL_source *source, ALenum param )
 		case AL_DIRECTION:
 			return &source->direction.data;
 			break;
+		case AL_GAIN:
 		case AL_GAIN_LINEAR_LOKI:
 			return &source->gain.data;
 			break;
@@ -3302,6 +3279,7 @@ ALboolean _alSourceIsParamSet( AL_source *source, ALenum param ) {
 		case AL_DIRECTION:
 			return source->direction.isset;
 			break;
+		case AL_GAIN:
 		case AL_GAIN_LINEAR_LOKI:
 			return source->gain.isset;
 			break;
@@ -3373,6 +3351,7 @@ void _alSourceGetParamDefault( ALenum param, ALvoid *retref ) {
 		case AL_CONE_OUTER_GAIN:
 			*fp = 0.0f;
 			break;
+		case AL_GAIN:
 		case AL_GAIN_LINEAR_LOKI:
 		case AL_MAX_GAIN:
 		case AL_PITCH:

@@ -245,20 +245,6 @@ void _alBuffersAppend( void **dsts, void **srcs, int len, int offset, int nc );
 int _alSlurp( const char *fname, void **buffer );
 
 /*
- * _alDBToLinear( ALfloat dBs )
- *
- * Convert a logarithmic gain to a linear one.
- */
-ALfloat _alDBToLinear(ALfloat dBs);
-
-/*
- * _alLinearToDB( ALfloat linear )
- *
- * Convert a linear gain to a logarithmic one.
- */
-ALfloat _alLinearToDB( ALfloat linear );
-
-/*
  * _alMicroSleep( unsigned int n)
  *
  * sleep for n microseconds
