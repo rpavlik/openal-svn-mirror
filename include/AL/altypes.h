@@ -196,6 +196,13 @@ typedef ALdouble ALclampd;
 #define AL_BUFFERS_QUEUED                         0x1015
 #define AL_BUFFERS_PROCESSED                      0x1016
 
+/**
+ * Buffer states
+ */
+#define AL_PENDING                                0x1017
+#define AL_PROCESSED                              0x1018
+
+
 /** Sound samples: format specifier. */
 #define AL_FORMAT_MONO8                           0x1100
 #define AL_FORMAT_MONO16                          0x1101

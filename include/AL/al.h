@@ -38,9 +38,18 @@ extern "C" {
 #endif /* TARGET_OS_MAC */
 #endif /* TARGET_OS_MAC */
 
+#ifndef ALAPI
 #define ALAPI
+#endif
+
+#ifndef ALAPIENTRY
 #define ALAPIENTRY
+#endif
+
+#ifndef CALLBACK
 #define AL_CALLBACK 
+#endif
+
 #endif /* _WIN32 */
 
 #ifndef AL_NO_PROTOTYPES

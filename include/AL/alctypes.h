@@ -59,4 +59,30 @@ typedef int ALCenum;
  */
 #define ALC_INVALID_VALUE                        0x203
 
+/**
+ * Out of memory.
+ */
+#define ALC_OUT_OF_MEMORY                        0x204
+
+
+
+/**
+ * The Specifier string for default device
+ */
+#define ALC_DEFAULT_DEVICE_SPECIFIER             0x300
+#define ALC_DEVICE_SPECIFIER                     0x301
+#define ALC_EXTENSIONS                           0x302
+
+#define ALC_MAJOR_VERSION                        0x303
+#define ALC_MINOR_VERSION                        0x304
+
+#define ALC_ATTRIBUTES_SIZE                      0x305
+#define ALC_ALL_ATTRIBUTES                       0x306
+
+/**
+ * Not sure if the following are conformant
+ */
+#define ALC_FALSE                                0
+#define ALC_TRUE                                 (!(ALC_FALSE))
+
 #endif /* _ALCTYPES_H */

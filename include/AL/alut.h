@@ -1,13 +1,8 @@
 #ifndef _ALUT_H_
 #define _ALUT_H_
 
-#if defined(__MACH__) && defined(__APPLE__)
-#include <OpenAL/altypes.h>
-#include <OpenAL/aluttypes.h>
-#else
-#include <AL/altypes.h>
-#include <AL/aluttypes.h>
-#endif
+#include "altypes.h"
+#include "aluttypes.h"
 
 #ifdef _WIN32
 #define ALAPI         __declspec(dllexport)
@@ -21,9 +16,18 @@
 #endif /* TARGET_OS_MAC */
 #endif /* TARGET_OS_MAC */
 
+#ifndef ALAPI
 #define ALAPI
+#endif
+
+#ifndef ALAPIENTRY
 #define ALAPIENTRY
+#endif
+
+#ifndef AL_CALLBACK
 #define AL_CALLBACK
+#endif 
+
 #endif /* _WIN32 */
 
 #ifdef __cplusplus

@@ -1,13 +1,8 @@
 #ifndef ALC_CONTEXT_H_
 #define ALC_CONTEXT_H_
 
-#if defined(__MACH__) && defined(__APPLE__)
-#include <OpenAL/altypes.h>
-#include <OpenAL/alctypes.h>
-#else
-#include <AL/altypes.h>
-#include <AL/alctypes.h>
-#endif
+#include "altypes.h"
+#include "alctypes.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -76,6 +71,13 @@ ALCAPI ALenum    ALCAPIENTRY alcGetEnumValue(ALCdevice *device, ALubyte *enumNam
 
 ALCAPI ALCdevice* ALCAPIENTRY alcGetContextsDevice(ALCcontext *context);
 
+
+/**
+ * Query functions
+ */
+const ALubyte * alcGetString( ALCdevice *deviceHandle, ALenum token );
+void alcGetIntegerv( ALCdevice *deviceHandle, ALenum  token , ALsizei  size , ALint *dest );
+
 #else
       ALCcontext *   (*alcCreateContext)( ALCdevice *dev, ALint* attrlist );
       ALCenum	     (*alcMakeContextCurrent)( ALCcontext *alcHandle );
@@ -90,6 +92,8 @@ ALCAPI ALCdevice* ALCAPIENTRY alcGetContextsDevice(ALCcontext *context);
       ALvoid  *      (*alcGetProcAddress)(ALCdevice *device, ALubyte *funcName );
       ALenum         (*alcGetEnumValue)(ALCdevice *device, ALubyte *enumName);
       ALCdevice*     (*alcGetContextsDevice)(ALCcontext *context);
+      const ALubyte* (*alcGetString)( ALCdevice *deviceHandle, ALenum token );
+      void           (*alcGetIntegerv*)( ALCdevice *deviceHandle, ALenum  token , ALsizei  size , ALint *dest );
 
 #endif /* AL_NO_PROTOTYPES */
 
