@@ -36,6 +36,15 @@
 #define mlTryLockMutex(m)    Windows_TryLockMutex(m)
 #define mlUnlockMutex(m)     Windows_UnlockMutex(m)
 
+#elif defined USE_MORPHOSMUTEX
+#include "morphosmutex.h"
+
+#define mlCreateMutex()      MorphOS_CreateMutex()
+#define mlDestroyMutex(m)    MorphOS_DestroyMutex(m)
+#define mlLockMutex(m)       MorphOS_LockMutex(m)
+#define mlTryLockMutex(m)    MorphOS_TryLockMutex(m)
+#define mlUnlockMutex(m)     MorphOS_UnlockMutex(m)
+
 #else /* USE_WINDOWSMUTEX */
 
 #error "No mutex package"

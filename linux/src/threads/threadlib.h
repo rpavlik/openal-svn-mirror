@@ -29,6 +29,16 @@
 #define tlExitThread(r)      Windows_ExitThread(r);
 #define tlAtForkThread(p1, p2, c)
 
+#elif defined USE_MORPHOSTHREADS
+#include "morphosthreads.h"
+
+#define tlCreateThread(f, d) MorphOS_CreateThread(f, d)
+#define tlWaitThread(t)      MorphOS_WaitThread(t)
+#define tlKillThread(t)      MorphOS_KillThread(t)
+#define tlSelfThread()       MorphOS_SelfThread()
+#define tlExitThread(r)      MorphOS_ExitThread(r);
+#define tlAtForkThread(p1, p2, c)
+
 #else /* USE_WINDOWSTHREADS */
 
 typedef void *ThreadID;

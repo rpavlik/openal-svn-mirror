@@ -209,6 +209,12 @@ case "$target" in
     SHOULD_ENFORCE_ANSI=no
     SHOULD_USE_WERROR=no
     OS_OBJS="\$(DARWIN_OBJS)" ;;
+	 *morphos*)
+	 AC_DEFINE(MORPHOS_TARGET, 1, [undocumented])
+	 OS_OBJS="\$(MORPHOS_OBJS)"
+    REDUNDANT_DECLS_WARN=no
+	 SHOULD_USE_FPIC=no
+    SHOULD_ENFORCE_ANSI=no ;;
     *)
     OS_OBJS="\$(LIN_OBJS)" ;;
 esac
@@ -439,6 +445,8 @@ dnl do some platform specific threead mojo
 case "$target" in
 	*cygwin*)
 		AC_CHECK_HEADER(windows.h, WINTHREAD_AVAILABLE=yes) ;;
+	*morphos*)
+		AC_CHECK_HEADER(dlfcn.h, MOSTHREAD_AVAILABLE=yes) ;;
 	*) ;;
 esac
 
@@ -469,9 +477,19 @@ else
     		AC_DEFINE(USE_WINDOWSMUTEX, 1, [undocumented])
     		AC_DEFINE(USE_WINDOWSTHREADS, 1, [undocumented])
 	else
+
+		if test x$MOSTHREAD_AVAILABLE = xyes; then
+				SYS_MUTEX_OBJS="mutex/morphosmutex.o"
+				SYS_THREAD_OBJS="threads/morphosthreads.o"
+
+				AC_DEFINE(USE_MORPHOSMUTEX, 1, [undocumented])
+				AC_DEFINE(USE_MORPHOSTHREADS, 1, [undocumented])
+		else
+
     		dnl no thread available
 
     		AC_DEFINE(NO_THREADS, 1, [undocumented])
+		fi
 	fi
 fi
 

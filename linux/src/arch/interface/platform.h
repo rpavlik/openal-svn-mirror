@@ -21,6 +21,8 @@
 #include "arch/irix/iris.h"
 #elif DARWIN_TARGET == 1
 #include "arch/darwin/darwin_native.h"
+#elif MORPHOS_TARGET == 1
+#include "arch/morphos/morphos_native.h"
 #elif WINDOWS_TARGET == 1
 #include "arch/windows/windows_native.h"
 #endif /* LINUX_TARGET == 1 */

@@ -19,6 +19,22 @@ void micro_sleep(unsigned int n) {
 	return;
 }
 
+#elif defined(__MORPHOS__)
+
+#include <clib/amiga_protos.h>
+
+unsigned sleep(unsigned n) {
+	TimeDelay(UNIT_MICROHZ, 0, n*1000);
+
+	return 0;
+}
+
+void micro_sleep(unsigned int n) {
+	TimeDelay(UNIT_MICROHZ, n / 1000000, n % 1000000);
+
+	return;
+}
+
 #else
 
 void micro_sleep(unsigned int n) {
