@@ -165,7 +165,7 @@ ALAPI ALvoid ALAPIENTRY alSourcef (ALuint source, ALenum pname, ALfloat value)
 				gSource[source].maxDistance = value;
 				break;
 			case AL_MIN_GAIN:
-				if ((value > 0.0f) && (value <= 1.0f))
+				if ((value >= 0.0f) && (value <= 1.0f))
 				{
 					gSource[source].minGain = value;
 				} else
