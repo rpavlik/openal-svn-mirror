@@ -101,6 +101,9 @@ typedef struct ALsource_struct
 	ALfloat		BufferDuration;			// Length in seconds of the DS circular buffer
 	ALuint		OldTime;				// Last time Source was serviced by timer
 
+	ALuint		DSFrequency;			// Frequency of DS Buffer
+	ALuint		Silence;				// Bytes of silence added to a Paused or Stopped source
+
 	ALuint		CurrentState;
 	ALboolean	DSBufferPlaying;
 

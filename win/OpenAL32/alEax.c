@@ -54,7 +54,7 @@ ALboolean FloatInRange(float flValue, float flMin, float flMax);
 /*
 	Test for support of appropriate EAX Version
 */
-ALboolean CheckEAXSupport(ALubyte *szEAXName)
+ALboolean CheckEAXSupport(const ALubyte *szEAXName)
 {
 	ALCcontext		*ALContext;
 	ALCdevice		*ALCDevice;

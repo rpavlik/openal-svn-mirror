@@ -45,7 +45,7 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "Comments", "Open Source DS3D Wrapper Implementation\0"
-            VALUE "CompanyName", "Creative Labs\0"
+            VALUE "CompanyName", "Creative Labs, Inc.\0"
             VALUE "FileDescription", "OpenAL32\0"
             VALUE "FileVersion", "Wrapper 0.099\0"
             VALUE "InternalName", "OpenAL32\0"

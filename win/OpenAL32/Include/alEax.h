@@ -10,7 +10,7 @@
 extern "C" {
 #endif
 
-ALboolean		CheckEAXSupport(ALubyte *szEAXName);
+ALboolean		CheckEAXSupport(const ALubyte *szEAXName);
 ALAPI ALenum    ALAPIENTRY EAXGet(const struct _GUID *propertySetID,ALuint property,ALuint source,ALvoid *value,ALuint size);
 ALAPI ALenum    ALAPIENTRY EAXSet(const struct _GUID *propertySetID,ALuint property,ALuint source,ALvoid *value,ALuint size);
 

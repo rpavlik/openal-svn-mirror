@@ -251,7 +251,7 @@ ALAPI ALboolean ALAPIENTRY alIsBuffer(ALuint uiBuffer)
 *
 *	Fill buffer with audio data
 */
-ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,ALvoid *data,ALsizei size,ALsizei freq)
+ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,const ALvoid *data,ALsizei size,ALsizei freq)
 {
 	ALCcontext *Context;
 	ALbuffer *ALBuf;
@@ -263,13 +263,12 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,ALvoid *data,AL
 	if (alIsBuffer(buffer) && (buffer != 0))
 	{
 		ALBuf=((ALbuffer *)buffer);
-//		if ((ALBuf->state==UNUSED)&&(data))
 		if ((ALBuf->refcount==0)&&(data))
 		{
 			switch(format)
 			{
 				case AL_FORMAT_MONO8:
-					ALBuf->data=realloc(ALBuf->data,1+size/sizeof(ALubyte)*sizeof(ALshort));
+					ALBuf->data=realloc(ALBuf->data,2+(size/sizeof(ALubyte))*(1*sizeof(ALshort)));
 					if (ALBuf->data)
 					{
 						ALBuf->format=AL_FORMAT_MONO16;
@@ -283,7 +282,7 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,ALvoid *data,AL
 					break;
 
 				case AL_FORMAT_MONO16:
-					ALBuf->data=realloc(ALBuf->data,2+size/sizeof(ALshort)*sizeof(ALshort));
+					ALBuf->data=realloc(ALBuf->data,2+(size/sizeof(ALshort))*(1*sizeof(ALshort)));
 					if (ALBuf->data)
 					{
 						ALBuf->format=AL_FORMAT_MONO16;
@@ -296,7 +295,7 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,ALvoid *data,AL
 					break;
 
 				case AL_FORMAT_STEREO8:
-					ALBuf->data=realloc(ALBuf->data,2+size/sizeof(ALubyte)*sizeof(ALshort));
+					ALBuf->data=realloc(ALBuf->data,4+(size/sizeof(ALubyte))*(1*sizeof(ALshort)));
 					if (ALBuf->data)
 					{
 						ALBuf->format=AL_FORMAT_STEREO16;
@@ -310,7 +309,7 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,ALvoid *data,AL
 					break;
 
 				case AL_FORMAT_STEREO16:
-					ALBuf->data=realloc(ALBuf->data,4+size/sizeof(ALshort)*sizeof(ALshort));
+					ALBuf->data=realloc(ALBuf->data,4+(size/sizeof(ALshort))*(1*sizeof(ALshort)));
 					if (ALBuf->data)
 					{
 						ALBuf->format=AL_FORMAT_STEREO16;

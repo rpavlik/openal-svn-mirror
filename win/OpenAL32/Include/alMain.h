@@ -22,7 +22,7 @@
 #define NUMWAVEBUFFERS	4
 
 typedef struct ALCdevice_struct 
-  {
+{
  	ALenum		LastError;
  	ALboolean	InUse;
  	ALboolean	Valid;
@@ -51,9 +51,10 @@ typedef struct ALCdevice_struct
 
 	//mmTimer
 	MMRESULT	timer;
-  } ALCdevice;
-  typedef struct ALCcontext_struct 
-  {
+} ALCdevice;
+  
+typedef struct ALCcontext_struct 
+{
 	ALlistener	Listener;
 	
 	ALsource *	Source;
@@ -78,7 +79,7 @@ typedef struct ALCdevice_struct
 
 	struct ALCcontext_struct *previous;
 	struct ALCcontext_struct *next;
-  }  ALCcontext;
+}  ALCcontext;
 
 #endif
 

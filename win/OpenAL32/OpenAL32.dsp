@@ -4,7 +4,7 @@
 
 # TARGTYPE "Win32 (x86) Dynamic-Link Library" 0x0102
 
-CFG="OpenAL32 - Win32 Debug"
+CFG=OpenAL32 - Win32 Release
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
@@ -13,7 +13,7 @@ CFG="OpenAL32 - Win32 Debug"
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "OpenAL32.mak" CFG="OpenAL32 - Win32 Debug"
+!MESSAGE NMAKE /f "OpenAL32.mak" CFG="OpenAL32 - Win32 Release"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
@@ -170,34 +170,6 @@ SOURCE=.\Include\alSource.h
 # Begin Source File
 
 SOURCE=.\Include\alState.h
-# End Source File
-# End Group
-# Begin Group "AL Headers"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\AL\al.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\AL\alc.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\AL\alctypes.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\AL\altypes.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\AL\alu.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\Al\alut.h
 # End Source File
 # End Group
 # End Target
