@@ -475,7 +475,6 @@ ALCcontext *alcCreateContext( struct _AL_device *dev, int *attrlist )
 
 		/* get a context name for the new context */
 		cid = _alcGetNewContextId();
-		_alcSpeakerInit( cid );
 
 		/* misc library initialization */
 		_alInit();
@@ -730,6 +729,8 @@ AL_context *_alcInitContext( ALuint cid ) {
 
 	cc->read_device = NULL;
 	cc->write_device = NULL;
+
+	_alcSpeakerInit( cid );
 
 	/*
 	 * should_sync:
