@@ -8,6 +8,7 @@
 #include "al_siteconfig.h"
 
 #include <AL/al.h>
+#include <AL/alexttypes.h>
 
 #include "al_main.h"
 #include "al_types.h"
@@ -789,6 +790,14 @@ ALenum alGetEnumValue( const ALubyte *ename ) {
 
 	if(ustrcmp("AL_FORMAT_STEREO16", ename) == 0) {
 		return AL_FORMAT_STEREO16;
+	}
+
+	if(ustrcmp("AL_FORMAT_QUAD8_LOKI", ename) == 0) {
+		return AL_FORMAT_QUAD8_LOKI;
+	}
+
+	if(ustrcmp("AL_FORMAT_QUAD16_LOKI", ename) == 0) {
+		return AL_FORMAT_QUAD16_LOKI;
 	}
 
 	if(ustrcmp("AL_FREQUENCY", ename) == 0) {

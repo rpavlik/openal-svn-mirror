@@ -7,6 +7,10 @@
 #define AL_FORMAT_WAVE_EXT                        0x10002
 #define AL_FORMAT_VORBIS_EXT                      0x10003
 
+/* four point formats */
+#define AL_FORMAT_QUAD8_LOKI                      0x10004
+#define AL_FORMAT_QUAD16_LOKI                     0x10005
+
 /**
  * token extensions, base 0x20000
  */

@@ -44,6 +44,10 @@ void acConvertStereo(acAudioCVT *cvt, ALushort format) {
 	}
 
 	cvt->len_cvt *= 2;
+
+	if ( cvt->filters[++cvt->filter_index] ) {
+		cvt->filters[cvt->filter_index](cvt, format);
+	}
 }
 
 /* Effectively mix right and left channels into a single channel */
@@ -190,4 +194,8 @@ void acConvertMono(acAudioCVT *cvt, ALushort format) {
 		break;
 	}
 	cvt->len_cvt /= 2;
+
+	if ( cvt->filters[++cvt->filter_index] ) {
+		cvt->filters[cvt->filter_index](cvt, format);
+	}
 }

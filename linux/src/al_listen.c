@@ -25,6 +25,22 @@
 #include <string.h>
 
 /*
+ * alListeneri( ALenum param, ALint value )
+ *
+ * Sets the listener attribute associated with param to int value.  If param
+ * is not a valid listener attribute, set AL_ILLEGAL_ENUM.  If value is not a
+ * valid value for the attribute, set AL_INVALID_VALUE.
+ */
+void alListeneri( ALenum param, ALint value )
+{
+	ALfloat fv = value;
+
+	alListenerf(param, fv);
+
+	return;
+}
+
+/*
  * alListenerf( ALenum param, ALfloat value )
  *
  * Sets the listener attribute associated with param to float value.  If param
@@ -49,10 +65,10 @@ void alListenerf( ALenum param, ALfloat value ) {
 	/* check range */
 	switch( param ) {
 		case AL_GAIN_LINEAR_LOKI:
-			inrange = _alCheckRangef( value, 0.0f, 1.0f );
+			inrange = _alCheckRangef(value, 0.0f, 1.0f);
 			break;
 		case AL_GAIN:
-			inrange = _alCheckRangef( value, 0.0f, 1.0f );
+			inrange = _alCheckRangef(value, 0.0f, 1.0f);
 			break;
 		default:
 			/*
@@ -63,8 +79,8 @@ void alListenerf( ALenum param, ALfloat value ) {
 
 	if(inrange == AL_FALSE) {
 		_alDebug(ALD_CONTEXT, __FILE__, __LINE__,
-					"alListenerf(0x%x): value %f out of range",
-					param, value);
+			 "alListenerf(0x%x): value %f out of range",
+			 param, value);
 
 		_alDCSetError(AL_INVALID_VALUE);
 		_alcDCUnlockContext();
@@ -361,27 +377,27 @@ void alGetListenerfv( ALenum param, ALfloat *values ) {
 		case AL_GAIN:
 			fv = _alDCGetListenerParam( AL_GAIN_LINEAR_LOKI );
 			if( fv == NULL ) {
-				values[0] = 1.0;
+				values[0] = 1.0f;
 			} else {
 				values[0] = _alLinearToDB( fv[0] );
 			}
 			break;
 		case AL_POSITION:
 		case AL_VELOCITY:
-			values[0] = 0.0;
-			values[1] = 0.0;
-			values[2] = 0.0;
+			values[0] = 0.0f;
+			values[1] = 0.0f;
+			values[2] = 0.0f;
 			break;
 		case AL_ORIENTATION:
 			/* at */
-			values[0] = 0.0;
-			values[1] = 0.0;
-			values[2] = -1.0;
+			values[0] = 0.0f;
+			values[1] = 0.0f;
+			values[2] = -1.0f;
 
 			/* up */
-			values[3] = 0.0;
-			values[4] = 1.0;
-			values[5] = 0.0;
+			values[3] = 0.0f;
+			values[4] = 1.0f;
+			values[5] = 0.0f;
 
 			break;
 		default:
@@ -400,12 +416,34 @@ void alGetListenerfv( ALenum param, ALfloat *values ) {
 }
 
 /*
+ * alGetListener4f( ALenum pname, ALfloat *f1, ALfloat *f2, ALfloat *f3 )
+ *
+ * Populates values with the values of the listener attribute pname.  If pname
+ * is not a valid listener attribute, AL_ILLEGAL_ENUM is set.  If values is
+ * NULL, this is a legal NOP.
+ */
+void alGetListener3f( ALenum param,
+		      ALfloat *f1, ALfloat *f2, ALfloat *f3 )
+{
+	ALfloat safety_first[6];
+
+	alGetListenerfv(param, safety_first);
+
+	*f1 = safety_first[0];
+	*f2 = safety_first[1];
+	*f3 = safety_first[2];
+
+	return;
+}
+
+/*
  * _alDestroyListener(UNUSED(AL_listener *ls))
  *
  * Doesn't do anything.
  *
  */
-void _alDestroyListener(UNUSED(AL_listener *ls)) {
+void _alDestroyListener(UNUSED(AL_listener *ls))
+{
 	/* not needed */
 
 	return;
@@ -483,7 +521,7 @@ void _alInitListener( AL_listener *listener ) {
 	if(err == AL_FALSE) {
 		/* no preset position */
 		for(i = 0; i < 3; i++) {
-			listener->Position[i] = 0.0;
+			listener->Position[i] = 0.0f;
 		}
 	} else {
 		memcpy( listener->Position, tempfv, SIZEOFVECTOR);
@@ -493,7 +531,7 @@ void _alInitListener( AL_listener *listener ) {
 	if(err == AL_FALSE) {
 		/* no preset velocity */
 		for(i = 0; i < 3; i++) {
-			listener->Velocity[i] = 0.0;
+			listener->Velocity[i] = 0.0f;
 		}
 	} else {
 		memcpy( listener->Velocity, tempfv, SIZEOFVECTOR);
@@ -504,19 +542,19 @@ void _alInitListener( AL_listener *listener ) {
 		/* no preset orientation */
 
 		/* at */
-		listener->Orientation[0] = 0.0;
-		listener->Orientation[1] = 0.0;
-		listener->Orientation[2] = -1.0;
+		listener->Orientation[0] = 0.0f;
+		listener->Orientation[1] = 0.0f;
+		listener->Orientation[2] = -1.0f;
 
 		/* up */
-		listener->Orientation[3] = 0.0;
-		listener->Orientation[4] = 1.0;
-		listener->Orientation[5] = 0.0;
+		listener->Orientation[3] = 0.0f;
+		listener->Orientation[4] = 1.0f;
+		listener->Orientation[5] = 0.0f;
 	} else {
 		memcpy( listener->Orientation, tempfv, 2 * SIZEOFVECTOR);
 	}
 
-	listener->Gain = 1.0;
+	listener->Gain = 1.0f;
 
 	return;
 }

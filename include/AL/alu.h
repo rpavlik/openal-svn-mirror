@@ -17,8 +17,13 @@
 #define AL_CALLBACK
 #endif /* _WIN32 */
 
+#if defined(__MACH__) && defined(__APPLE__)
+#include <OpenAL/al.h>
+#include <OpenAL/alutypes.h>
+#else
 #include <AL/al.h>
 #include <AL/alutypes.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {

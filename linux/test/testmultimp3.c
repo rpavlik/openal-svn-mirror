@@ -26,7 +26,7 @@ static ALuint mp3source[MAX_SOURCES];
 
 static time_t start;
 
-static void *context_id;
+static ALCcontext *context_id;
 
 extern int errno;
 

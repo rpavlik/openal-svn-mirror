@@ -438,8 +438,8 @@ void _alSourceUnqueueBuffers(ALuint sid, ALsizei n, ALuint *bids ) {
 	tempqueue = malloc(newsize * sizeof *tempqueue);
 	tempstate = malloc(newsize * sizeof *tempstate);
 
-	ASSERT( tempqueue );
-	ASSERT( tempstate );
+	assert( tempqueue );
+	assert( tempstate );
 			
 	if((tempqueue == NULL) || (tempstate == NULL))
 	{

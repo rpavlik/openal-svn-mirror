@@ -8,7 +8,7 @@
 
 int main( int argc, char* argv[] )
 {
-	void *context_id = NULL;
+	ALCcontext *context_id = NULL;
 	ALCdevice *dev = NULL;
 
 	int attrlist[] = { ALC_FREQUENCY, 44100,

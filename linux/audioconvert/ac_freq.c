@@ -42,6 +42,10 @@ void acFreqMUL2(acAudioCVT *cvt, ALushort format) {
 			break;
 	}
 	cvt->len_cvt *= 2;
+
+	if (cvt->filters[++cvt->filter_index] ) {
+		cvt->filters[cvt->filter_index](cvt, format);
+	}
 }
 
 /* Convert rate down by multiple of 2 */
@@ -70,6 +74,10 @@ void acFreqDIV2(acAudioCVT *cvt, ALushort format) {
 	}
 
 	cvt->len_cvt /= 2;
+
+	if (cvt->filters[++cvt->filter_index] ) {
+		cvt->filters[cvt->filter_index](cvt, format);
+	}
 }
 
 /* Very slow rate conversion routine */
@@ -140,4 +148,8 @@ void acFreqSLOW(acAudioCVT *cvt, ALushort format) {
 		}
 	}
 	cvt->len_cvt = clen;
+
+	if (cvt->filters[++cvt->filter_index] ) {
+		cvt->filters[cvt->filter_index](cvt, format);
+	}
 }

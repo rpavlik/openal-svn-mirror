@@ -20,7 +20,7 @@ static void cleanup(void);
 
 static ALuint caps[NUMCAPTURES] = { 0 };
 
-static void *context_id;
+static ALCcontext *context_id;
 
 void cleanup(void) {
 	alcDestroyContext(context_id);

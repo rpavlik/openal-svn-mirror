@@ -6,3 +6,8 @@ config.log
 config.cache
 config.status
 Makefile
+OpenAL.pbproj
+English.pbproj
+English.lproj
+build
+.DS_Store

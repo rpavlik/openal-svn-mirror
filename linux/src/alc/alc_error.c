@@ -50,7 +50,7 @@ static int ErrorNo2index( ALenum error_number );
  *
  * Returns an alc error from a simple index.
  */
-static int index2ErrorNo( int index );
+static int index2ErrorNo( int ind );
 
 /*
  * ErrorNo2index( ALenum error_number )
@@ -89,8 +89,8 @@ static int ErrorNo2index( ALenum error_number ) {
  *
  * Returns an alc error from a simple index.
  */
-static int index2ErrorNo(int index) {
-	switch(index) {
+static int index2ErrorNo(int ind) {
+	switch(ind) {
  		case 0:
 		  return ALC_NO_ERROR;
 		  break;
@@ -108,7 +108,7 @@ static int index2ErrorNo(int index) {
 		  break;
 		default:
 		  _alDebug(ALD_ERROR, __FILE__, __LINE__,
-		  	"Unknown error index: %d", index);
+		  	"Unknown error index: %d", ind);
 		  break;
 	}
 
@@ -125,7 +125,8 @@ static int index2ErrorNo(int index) {
  * Returns the most recent error generated in the AL state machine,
  * but for alc.
  */
-ALCenum alcGetError( UNUSED(ALCdevice *dev) ) {
+ALCenum alcGetError( UNUSED(ALCdevice *dev) )
+{
 	ALCenum retval;
 	
 	retval = index2ErrorNo( alcErrorIndex );

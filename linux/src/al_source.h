@@ -146,6 +146,23 @@ void _alSourceParamApply( AL_source *src,
 ALint _alSourceGetPendingBids( AL_source *src );
 
 /*
+ * _alSourceGetNextBuffer( AL_source *src )
+ *
+ * Returns the next buffer in a queue, or NULL if no next buffer exists.
+ * Assumes locked source.
+ *
+ */
+AL_buffer *_alSourceGetNextBuffer( AL_source *src );
+
+/*
+ * _alSourceQueuedBuffers( AL_source *src )
+ *
+ * Returns the total number of buffers queued for the source,
+ * without regard to the read or write pointer.
+ */
+ALint _alSourceQueuedBuffers( AL_source *src );
+
+/*
  * _alMonoifyOffset( ALshort **dstref, ALuint offset,
  *                   ALvoid *src, ALuint src_size,
  *                   ALuint dest_channels, ALuint src_channels )

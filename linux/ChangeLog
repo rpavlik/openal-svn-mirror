@@ -1,3 +1,52 @@
+2002-05-06  Joseph I. Valenzuela  <jvalenzu@forbidden.loungenet.org>
+
+	* src/al_siteconfig.h
+	- doh!
+
+2002-05-06  Joseph Valenzuela  <jvalenzu@formosa>
+
+        * openal/linux/CREDITS
+	- vanity change
+	
+	* openal/linux/configure.in
+	- moved dl check out of darwin
+	
+	* openal/linux/audioconvert/ac_format.c
+	- don't remember
+	
+	* openal/linux/src/Makefile.in
+	- changes to aid darwin compilation
+	
+	* openal/linux/src/al_propagation.c
+	- remind me to remove this
+	
+	* openal/linux/src/mutex/mutexlib.h
+	* openal/linux/src/al_ext.c
+	* openal/linux/src/al_main.c
+	* openal/linux/src/al_siteconfig.h
+	
+	* openal/linux/test/Makefile.in
+	- changed tests to use static openal lib
+	
+	* openal/linux/test/testlib.c
+	* openal/linux/test/testlib.h
+	- goofy problem with duplicate symbol declarations,
+	  how did I not catch this before
+
+
+2002-05-03  Joseph Valenzuela  <jvalenzu@formosa>
+
+	* Darwin updates
+
+2002-05-03  Joseph I. Valenzuela  <jvalenzu@forbidden.loungenet.org>
+
+	* /openal/linux/src/arch/alsa/alsa.h
+	* /openal/linux/src/arch/alsa/alsa.c
+	Updated alsa backend to match current trend in apis
+
+	* /openal/linux/src/configure.in
+	Updated alsa test
+
 2001-01-26  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames.com>
 
 	* /openal/linux/audioconvert/ac_helper.c

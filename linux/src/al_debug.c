@@ -27,16 +27,12 @@ static const char *ald2str( aldEnum type );
  * message specified by format, ... ( printf format ).  Otherwise, return.
  *
  */
-int _alDebug( aldEnum level, const char *fn, int ln, const char *format, ... ) {
-	static char formatbuf[2048]; /* FIXME: */
-	char *formatbufptr = formatbuf;
-	va_list ap;
+int _alDebug( aldEnum level, const char *fn, int ln, const char *format, ... )
+{
+	static char formatbuf[1024]; /* JIV FIXME */
 	int count;
-	char *s;
-	void *p;
-	int d;
-	float f;
-	int i = 0;
+
+	va_list ap;
 
 #ifndef NEED_DEBUG
 	return 0;
@@ -96,75 +92,17 @@ int _alDebug( aldEnum level, const char *fn, int ln, const char *format, ... ) {
 #endif /* DEBUG_MAXIMUS */
 
 	count = sprintf(formatbuf, "%s\t[%s:%d] ", ald2str(level), fn, ln);
-	if(count < 0) {
+	if(count < 0)
+	{
 		return count;
 	}
 
-	formatbufptr += count;
-
 	va_start(ap, format);
-	while(format[i]) {
-		switch(format[i]) {
-			case '%':
-				i++;
-				switch(format[i]) {
-					case '%':
-						*formatbufptr++ = '%';
-						break;
-					case 'd':
-						d = va_arg(ap, int);
-						formatbufptr +=
-							sprintf(formatbufptr,
-								"%d", d);
-						break;
-					case 'f':
-						f = (float) va_arg(ap, double);
-						formatbufptr +=
-							sprintf(formatbufptr,
-								"%.2f", f);
-						break;
-					case 'p':
-						p = va_arg(ap, void *);
-						formatbufptr +=
-							sprintf(formatbufptr,
-								"%p", p);
-						break;
-					case 'x':
-						d = va_arg(ap, int);
-						formatbufptr +=
-							sprintf(formatbufptr,
-								"%x", d);
-						break;
-					case 's':
-						s = va_arg(ap, char *);
-						while((*formatbufptr++ = *s++)){
-							continue;
-						}
-						formatbufptr--;
-						break;
-					case 'c':
-						*formatbufptr++ =
-							(char) va_arg(ap, int);
-						break;
-					default:
-						fprintf(stderr,
-					"unknown conversion code %c\n",
-					format[i]);
-						break;
-				}
-				break;
-			default:
-				*formatbufptr++ = format[i];
-				break;
-		}
-		i++;
-	}
-	*formatbufptr = '\0';
-						
+	vsprintf(formatbuf, format, ap);
 	va_end(ap);
 
-
-	return fprintf(stderr, "%s\n", formatbuf);
+	return fprintf(stderr, "%s\t[%s:%d] %s\n",
+		       ald2str(level), fn, ln, formatbuf );
 }
 
 /*

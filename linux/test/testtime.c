@@ -20,7 +20,7 @@ static void cleanup(void);
 static ALuint multis;
 
 static ALCdevice *dev = NULL;
-static void *context_id;
+static ALCcontext *context_id;
 static void *wave = NULL;
 
 static void iterate( void ) {

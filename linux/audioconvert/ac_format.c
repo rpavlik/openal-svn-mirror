@@ -15,6 +15,6 @@ void *acFormatConvert(void *buf, int len, int ffmt, int tfmt) {
 	if(ffmt == tfmt)
 		return buf;
 
-
+	return 0;
 }
 

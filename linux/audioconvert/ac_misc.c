@@ -266,7 +266,7 @@ void *ac_wave_to_pcm(void *data, ALuint *size,
 		  }
 
 		  /* FIXME: Need to convert to native format? */
-#ifdef WORDS_BIGENDIAN
+#if defined(WORDS_BIGENDIAN) && DEBUG_CONVERT
 		  fprintf(stderr,
 		  	"[%s:%d] do we need to convert to host native format here?\n",
 			__FILE__, __LINE__);

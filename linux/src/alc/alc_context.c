@@ -158,13 +158,14 @@ unsigned int jlib_debug = 0;
 #endif
 
 /*
- * alcMakeContextCurrent( ALvoid *handle )
+ * alcMakeContextCurrent( ALCcontext *handle )
  *
  * Makes the context refered to by handle the current context.  If handle does
  * not refer to a context, ALC_INVALID_CONTEXT is set and returned.
  * Otherwise, the operation sucedes and ALC_NO_ERROR is returned.
  */
-ALCenum alcMakeContextCurrent( ALvoid *handle ) {
+ALCenum alcMakeContextCurrent( ALCcontext *handle )
+{
 	AL_context *cc;
 	int cid;
 	static ALboolean ispaused = AL_FALSE;
@@ -267,7 +268,8 @@ ALCenum alcMakeContextCurrent( ALvoid *handle ) {
  *
  * Destroys the context referred to by handle.
  */
-ALCenum alcDestroyContext( ALvoid *handle ) {
+ALCenum alcDestroyContext( ALCcontext *handle )
+{
 	AL_context *cc;
 	ALCenum retval = ALC_NO_ERROR;
 	int cid;
@@ -331,7 +333,8 @@ ALCenum alcDestroyContext( ALvoid *handle ) {
  *
  * If alcHandle is not valid, ALC_INVALID_CONTEXT is returned.
  */
-void *alcProcessContext( ALvoid *alcHandle ) {
+ALCcontext *alcProcessContext( ALCcontext *alcHandle )
+{
 	AL_context *cc;
 	ALboolean should_sync;
 	int cid;
@@ -380,14 +383,15 @@ void *alcProcessContext( ALvoid *alcHandle ) {
 
 /**
  *
- * alcSuspendContext( ALvoid *alcHandle )
+ * alcSuspendContext( ALCcontext *alcHandle )
  *
  * Suspends processing on an asynchronous context.  This is a legal nop on a
  * synced context.
  *
  * If alcHandle is not valid, ALC_INVALID_CONTEXT is returned.
  */
-void alcSuspendContext( ALvoid *alcHandle ) {
+void alcSuspendContext( ALCcontext *alcHandle )
+{
 	AL_context *cc;
 	ALuint cid;
 
@@ -448,7 +452,8 @@ void alcSuspendContext( ALvoid *alcHandle ) {
  *
  * FIXME: not as well tested as I'd like.
  */
-void *alcCreateContext( struct _AL_device *dev, int *attrlist ) {
+ALCcontext *alcCreateContext( struct _AL_device *dev, int *attrlist )
+{
 	ALint cid;
 
 	if( dev == NULL ) {
@@ -915,13 +920,13 @@ ALint _alcGetNewContextId(void) {
 	cindex = al_contexts.size - 1;
 	cid = _alcGenerateNewCid();
 
-	ASSERT(al_contexts.inuse[cindex] == AL_FALSE);
+	assert(al_contexts.inuse[cindex] == AL_FALSE);
 
 	al_contexts.inuse[cindex] = AL_TRUE;
 	al_contexts.map[cindex]   = cid;
 
 	if(_alcInitContext(cid) == NULL) {
-		ASSERT(0);
+		assert(0);
 		return -1;
 	}
 
@@ -1048,10 +1053,12 @@ static ALuint _alcCidToIndex( ALuint cid ) {
  *
  * Converts index to a cid, returning that.
  */
-static ALuint _alcIndexToCid(int index) {
-	ASSERT(index < (int) al_contexts.size);
+static ALuint _alcIndexToCid(int ind)
+{
+	assert(ind >= 0);
+	assert(ind < (int) al_contexts.size);
 
-	return al_contexts.map[index];
+	return al_contexts.map[ind];
 }
 
 /*
@@ -1072,12 +1079,15 @@ static ALuint _alcGenerateNewCid(void) {
  * suitable for use with every function that takes a context handle,
  * or NULL if there is no current context.
  */
-void *alcGetCurrentContext( void ) {
-	if(al_contexts.items == 0) {
+ALCcontext *alcGetCurrentContext( void )
+{
+	if(al_contexts.items == 0)
+	{
 		return NULL;
 	}
 
-	if( _alcCCId == (ALuint) -1 ) {
+	if( _alcCCId == (ALuint) -1 )
+	{
 		/* We are paused */
 		return NULL;
 	}
@@ -1289,7 +1299,8 @@ ALuint _alcGetWriteSpeed( ALuint cid ) {
  *
  * assumes locked context
  */
-ALsizei _alcDeviceRead( ALuint cid, ALvoid *dataptr, ALuint bytes_to_read ) {
+ALsizei _alcDeviceRead( ALuint cid, ALvoid *dataptr, ALuint bytes_to_read )
+{
 	AL_context *cc;
 
 	cc = _alcGetContext( cid );
@@ -1382,7 +1393,8 @@ ALboolean alcIsExtensionPresent( UNUSED(ALCdevice *device), ALubyte *extName ) {
  * Returns the alc extension function named funcName, or NULL if it doesn't
  * exist.
  */
-ALvoid *alcGetProcAddress( UNUSED(ALCdevice *device), ALubyte *funcName ) {
+ALvoid *alcGetProcAddress( UNUSED(ALCdevice *device), ALubyte *funcName )
+{
 	return alGetProcAddress( funcName );
 }
 
@@ -1393,4 +1405,29 @@ ALvoid *alcGetProcAddress( UNUSED(ALCdevice *device), ALubyte *funcName ) {
  */
 ALenum alcGetEnumValue( UNUSED(ALCdevice *device), ALubyte *enumName ) {
 	return alGetEnumValue( enumName );
+}
+
+ALCdevice *alcGetContextsDevice(ALCcontext *handle)
+{
+	AL_device *dc;
+	AL_context *cc;
+	ALuint cid = VOIDP_TO_ALUINT( handle );
+
+	_alcLockAllContexts();
+
+	cc = _alcGetContext( cid );
+	if( cc == NULL )
+	{
+		_alcSetError( ALC_INVALID_CONTEXT );
+		_alcUnlockAllContexts( );
+					
+		return NULL;
+	}
+
+	dc = cc->write_device;
+	
+	/* just unlock contexts */
+	_alcUnlockAllContexts();
+
+	return dc;
 }

@@ -191,7 +191,7 @@ ALfloat _alVectorAngleBeween( ALfloat *origin, ALfloat *v1, ALfloat *v2 ) {
 		mag);
 #endif /* DEBUG_MATH */
 
-	ASSERT(_alIsFinite(mag));
+	assert(_alIsFinite(mag));
 
 	/* okay, we have the magnitude of the angle but not the sign.
 	 * To know this, we will need to know that quadrant the v1 and

@@ -10,10 +10,10 @@
 #include "al_siteconfig.h"
 
 #include <AL/altypes.h>
-#include <AL/alkludge.h>
 
 #include "al_siteconfig.h"
 
+#include <assert.h>
 #include <fcntl.h>
 #include <machine/soundcard.h>
 #include <stdio.h>
@@ -33,6 +33,12 @@
 #include "al_debug.h"
 #include "alc/alc_context.h"
 
+#ifdef WORDS_BIGENDIAN
+#define AFMT_S16 AFMT_S16_BE
+#else
+#define AFMT_S16 AFMT_S16_LE
+#endif /* WORDS_BIGENDIAN */
+
 static int alcChannel_to_dsp_channel(ALuint alcc);
 
 /* /dev/dsp variables */
@@ -44,14 +50,16 @@ static int mixer_fd    = -1; /* /dev/mixer file descriptor */
 static int BSD2ALFMT(int fmt, int channels) {
 	switch(fmt) {
 		case AFMT_U8:
-			switch(channels) {
+			switch(channels)
+			{
 				case 1: return AL_FORMAT_MONO8;
 				case 2: return AL_FORMAT_STEREO8;
 				default: return -1;
 			}
 			break;
-		case AFMT_S16_LE:
-			switch(channels) {
+		case AFMT_S16:
+			switch(channels)
+			{
 				case 1: return AL_FORMAT_MONO16;
 				case 2: return AL_FORMAT_STEREO16;
 				default: return -1;
@@ -69,16 +77,18 @@ static int BSD2ALFMT(int fmt, int channels) {
 }
 
 /* convert the format channel from openal to /dev/dsp format */
-static int AL2BSDFMT(int fmt) {
-	switch(fmt) {
+static int AL2BSDFMT(int fmt)
+{
+	switch(fmt)
+	{
 		case AL_FORMAT_MONO16:
 		case AL_FORMAT_STEREO16:
-		  return AFMT_S16_LE;
-		  break;
+			return AFMT_S16;
+			break;
 		case AL_FORMAT_MONO8:
 		case AL_FORMAT_STEREO8:
-		  return AFMT_U8;
-		  break;
+			return AFMT_U8;
+			break;
 		default:
 #ifdef DEBUG_MAXIMUS
 		  fprintf(stderr, "unknown format 0x%x\n", fmt);
@@ -174,8 +184,8 @@ void native_blitbuffer(void *handle, void *dataptr, int bytes_to_write) {
 		FD_ZERO(&dsp_fd_set);
 		FD_SET(fd, &dsp_fd_set);
 
-		ASSERT(iterator > 0);
-		ASSERT(iterator <= bytes_to_write);
+		assert(iterator > 0);
+		assert(iterator <= bytes_to_write);
 
 		err = write(fd,
 			    (char *) dataptr + bytes_to_write - iterator,

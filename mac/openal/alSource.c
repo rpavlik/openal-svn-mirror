@@ -151,7 +151,7 @@ ALAPI ALvoid ALAPIENTRY alSourcef (ALuint source, ALenum pname, ALfloat value)
 		switch(pname) 
 		{
 			case AL_PITCH:
-				if ((value>=0.5f)&&(value<=2.0f))
+				if (value>=0.0f)
 				{	
 					gSource[source].pitch = value;
 				}
@@ -174,7 +174,7 @@ ALAPI ALvoid ALAPIENTRY alSourcef (ALuint source, ALenum pname, ALfloat value)
 				}
 				break;
 			case AL_MAX_GAIN:
-				if ((value > 0.0f) && (value <= 1.0f))
+				if ((value >= 0.0f) && (value <= 1.0f))
 				{
 					gSource[source].maxGain = value;
 				} else

@@ -329,8 +329,8 @@ static void convert_to_little_endian( ALuint bps, void *data, int nbytes )
 	ALshort *outp = data;
 	ALuint i;
 
-	ASSERT( data );
-	ASSERT( nbytes > 0 );
+	assert( data );
+	assert( nbytes > 0 );
 
 	if( bps == 8 ) {
 		/* 8-bit samples don't need to be converted */
@@ -345,7 +345,7 @@ static void convert_to_little_endian( ALuint bps, void *data, int nbytes )
 	return;
 #endif /* WORDS_BIG_ENDIAN */
 
-	ASSERT( bps == 16 );
+	assert( bps == 16 );
 
 	/* do the conversion */
 	for( i = 0; i < nbytes/sizeof(ALshort); i++ ) {

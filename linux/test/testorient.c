@@ -18,7 +18,7 @@
 #define M_PI	(2 * M_PI_2)
 #endif
 
-static void *context_id = NULL; /* our context */
+static ALCcontext *context_id = NULL; /* our context */
 static void setposition(ALfloat x, ALfloat y, ALfloat z);
 static void setorientation(ALfloat ax, ALfloat ay, ALfloat az,
 			   ALfloat ux, ALfloat uy, ALfloat uz);

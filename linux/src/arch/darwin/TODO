@@ -1,6 +1,5 @@
 Implements what's not !
-Test sound conversion code.
+Add a preference file to determine which is the default Audio Controller (by now, it is the first found).
+Optimize for Altivec.
 Clean up everything.
-Make better autoconf & automake files.
-Decide how to implement dynamic library loading (dlfnc.h or dylid?...)
 Try to make all test programs work.

@@ -22,6 +22,39 @@
 #include "alc/alc_error.h"
 
 /** State retrieval. */
+ALboolean alGetBoolean( ALenum param )
+{
+	ALboolean retval = AL_FALSE;
+
+	alGetBooleanv(param, &retval);
+
+	return retval;
+}
+	
+ALint alGetInteger( ALenum param )
+{
+	ALint retval = -1;
+
+	alGetIntegerv(param, &retval);
+	return retval;
+}
+
+ALfloat alGetFloat( ALenum param )
+{
+	ALfloat retval = 0.0f;
+
+	alGetFloatv(param, &retval);
+
+	return retval;
+}
+
+ALdouble alGetDouble( ALenum param )
+{
+	ALdouble retval = 0.0;
+
+	alGetDoublev(param, &retval);
+	return retval;
+}
 
 /*
  * alGetFloatv( ALenum param, ALfloat *fv )
@@ -217,7 +250,7 @@ const ALubyte *alGetString( ALenum param ) {
 
 	switch(param) {
 		case AL_VENDOR:
-			return (const ALubyte *) "Loki(R) Software";
+			return (const ALubyte *) "J. Valenzuela";
 			break;
 		case AL_VERSION:
 			return (const ALubyte *) LAL_VERSION;

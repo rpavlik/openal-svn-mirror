@@ -11,6 +11,7 @@
 
 #include <AL/al.h>
 #include <AL/alc.h>
+#include <AL/alexttypes.h>
 
 #include "al_debug.h"
 #include "al_types.h"
@@ -122,7 +123,9 @@ ALboolean _alInit( void ) {
 	_alRegisterExtensionGroup( (const ALubyte*) "ALC_LOKI_audio_channel" );
 	_alRegisterExtensionGroup( (const ALubyte*) "AL_LOKI_buffer_data_callback" );
 	_alRegisterExtensionGroup( (const ALubyte*) "AL_LOKI_IMA_ADPCM_format" );
+	_alRegisterExtensionGroup( (const ALubyte*) "AL_LOKI_WAVE_format" );
 	_alRegisterExtensionGroup( (const ALubyte*) "AL_LOKI_play_position" );
+	_alRegisterExtensionGroup( (const ALubyte*) "AL_LOKI_quadriphonic" );
 
 #ifdef VORBIS_SUPPORT
 	_alRegisterExtensionGroup( (const ALubyte*) "AL_EXT_vorbis" );
@@ -245,6 +248,9 @@ int _alLockPrintf( const char *msg, const char *fn, int ln ) {
 ALenum _al_AC2ALFMT( ALuint acformat, ALuint channels ) {
 	switch( acformat ) {
 		case AUDIO_U8:
+			if(channels == 4) {
+				return AL_FORMAT_QUAD8_LOKI;
+			}
 			if(channels == 2) {
 				return AL_FORMAT_STEREO8;
 			}
@@ -254,11 +260,15 @@ ALenum _al_AC2ALFMT( ALuint acformat, ALuint channels ) {
 			break;
 		case AUDIO_S16LSB:
 		case AUDIO_S16MSB:
+			if(channels == 4) {
+				return AL_FORMAT_QUAD16_LOKI;
+			}
 			if(channels == 2) {
 				return AL_FORMAT_STEREO16;
 			}
-			if(channels == 1)
+			if(channels == 1) {
 				return AL_FORMAT_MONO16;
+			}
 			break;
 	}
 
@@ -278,9 +288,11 @@ ALenum _al_AC2ALFMT( ALuint acformat, ALuint channels ) {
  */
 ALushort _al_AL2ACFMT( ALenum alformat ) {
 	switch( alformat ) {
+		case AL_FORMAT_QUAD8_LOKI:
 		case AL_FORMAT_STEREO8:
 		case AL_FORMAT_MONO8:
 			return AUDIO_U8;
+		case AL_FORMAT_QUAD16_LOKI:
 		case AL_FORMAT_STEREO16:
 		case AL_FORMAT_MONO16:
 			return AUDIO_S16;
@@ -293,6 +305,33 @@ ALushort _al_AL2ACFMT( ALenum alformat ) {
 #endif
 
 	return -1;
+}
+
+/*
+ * _al_ALCHANNELS(fmt)
+ *
+ * evaluates to the number of channels in an openal format.
+ */
+ALubyte _al_ALCHANNELS(ALenum alformat)
+{
+	switch( alformat ) {
+		case AL_FORMAT_MONO8:
+		case AL_FORMAT_MONO16:
+			return 1;
+		case AL_FORMAT_STEREO8:
+		case AL_FORMAT_STEREO16:
+			return 2;
+		case AL_FORMAT_QUAD8_LOKI:
+		case AL_FORMAT_QUAD16_LOKI:
+			return 4;
+		default:
+			break;
+	}
+
+#ifdef DEBUG_CONVERT
+	fprintf(stderr, "ALCHANNELS: wtf? format = 0x%x\n", alformat);
+#endif
+	return 0;
 }
 
 /*
@@ -316,6 +355,13 @@ ALenum _al_formatscale(ALenum format, ALuint new_channel_num) {
 		  switch(fmt_bits) {
 			  case 8: return AL_FORMAT_STEREO8; break;
 			  case 16: return AL_FORMAT_STEREO16; break;
+			  default: return -1;
+		  }
+		  break;
+		case 4:
+		  switch(fmt_bits) {
+			  case 8: return AL_FORMAT_QUAD8_LOKI; break;
+			  case 16: return AL_FORMAT_QUAD16_LOKI; break;
 			  default: return -1;
 		  }
 		  break;
@@ -608,12 +654,14 @@ int _alSlurp(const char *fname, void **buffer) {
 ALuint _al_PCMRatioify( ALuint ffreq, ALuint tfreq,
 			ALenum ffmt, ALenum tfmt,
 			ALuint samples ) {
-	samples *= ((float) tfreq / ffreq );
+	ALuint ret = samples;
 
-	samples *= (_al_formatbits( ffmt ) / 8 );
-	samples /= (_al_formatbits( tfmt ) / 8 );
+	ret *= ((float) tfreq / (float) ffreq);
 
-	return samples;
+	ret *= (_al_formatbits( ffmt ) / 8 );
+	ret /= (_al_formatbits( tfmt ) / 8 );
+
+	return ret;
 }
 
 /*
@@ -631,6 +679,10 @@ ALenum _al_AL2FMT(ALuint channels, ALuint bits) {
 		case 2:
 			if(bits == 16) return AL_FORMAT_STEREO8;
 			if(bits == 16) return AL_FORMAT_STEREO16;
+			break;
+		case 4:
+			if(bits == 16) return AL_FORMAT_QUAD8_LOKI;
+			if(bits == 16) return AL_FORMAT_QUAD16_LOKI;
 			break;
 	}
 
@@ -721,7 +773,8 @@ ALboolean _alCheckRangeb(ALboolean b) {
  *
  * Returns true if fv1 == { 0.0f, 0.0f, 0.0f }
  */
-ALboolean _alIsZeroVector(ALfloat *fv) {
+ALboolean _alIsZeroVector(ALfloat *fv)
+{
 	if(fv[0] != 0.0f) {
 		return AL_FALSE;
 	}
@@ -742,7 +795,8 @@ ALboolean _alIsZeroVector(ALfloat *fv) {
  *
  * Convert a linear gain to a logarithmic one.
  */
-ALfloat _alLinearToDB(ALfloat linear) {
+ALfloat _alLinearToDB(ALfloat linear)
+{
 	static const float logtab[] = {
 		0.00, 0.001, 0.002, 0.003, 0.004, 0.005, 0.01, 0.011,
 		0.012, 0.013, 0.014, 0.015, 0.016, 0.02, 0.021, 0.022,
@@ -840,12 +894,15 @@ ALfloat _alDBToLinear(ALfloat dBs) {
  *  Returns AL_TRUE if format is an openal format specifying raw pcm data,
  *  AL_FALSE otherwise.
  */
-ALboolean _al_RAWFORMAT(ALenum format) {
+ALboolean _al_RAWFORMAT(ALenum format)
+{
 	switch(format) {
 		case AL_FORMAT_MONO16:
 		case AL_FORMAT_MONO8:
 		case AL_FORMAT_STEREO16:
 		case AL_FORMAT_STEREO8:
+		case AL_FORMAT_QUAD16_LOKI:
+		case AL_FORMAT_QUAD8_LOKI:
 			return AL_TRUE;
 		default:
 			break;
@@ -859,21 +916,24 @@ ALboolean _al_RAWFORMAT(ALenum format) {
  *
  * Returns bit depth of format.
  */
-ALbyte _al_formatbits(ALenum format) {
+ALbyte _al_formatbits(ALenum format)
+{
 	switch(format) {
 		case AL_FORMAT_MONO16:
 		case AL_FORMAT_STEREO16:
+		case AL_FORMAT_QUAD16_LOKI:
 		case AL_FORMAT_IMA_ADPCM_MONO16_EXT:
 		case AL_FORMAT_IMA_ADPCM_STEREO16_EXT:
 			return 16;
 			break;
 		case AL_FORMAT_MONO8:
 		case AL_FORMAT_STEREO8:
+		case AL_FORMAT_QUAD8_LOKI:
 			return 8;
 			break;
 	}
 
-	ASSERT(0);
+	assert(0);
 
 	return -1;
 }
@@ -883,7 +943,8 @@ ALbyte _al_formatbits(ALenum format) {
  *
  * Returns smallest power of two large that meets or exceeds num.
  */
-ALuint _alSmallestPowerOfTwo( ALuint num ) {
+ALuint _alSmallestPowerOfTwo( ALuint num )
+{
 	ALuint retval = 1;
 
 	while( retval < num ) {
@@ -898,7 +959,8 @@ ALuint _alSmallestPowerOfTwo( ALuint num ) {
  *
  * Returns AL_TRUE if v is a finite, non NaN value, AL_FALSE otherwise.
  */
-ALboolean _alIsFinite( ALfloat v ) {
+ALboolean _alIsFinite( ALfloat v )
+{
 	/* skip infinite test for now */
 	if(v == v) {
 		return AL_TRUE;

@@ -17,7 +17,7 @@ static void cleanup(void);
 
 static ALuint reverb_sid = 0;
 
-static void *context_id;
+static ALCcontext *context_id;
 static void *wave = NULL;
 
 static void init( const char *fname ) {

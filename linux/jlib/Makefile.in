@@ -5,13 +5,17 @@ INC       = -I.
 SLIB      = libjlib.a
 OBJS      = globals.o  hash.o
 MAKE      = @MAKE@
+RANLIB    = @RANLIB@
 
 .SUFFIXES: .c
 .c.o:
 	$(CC) $(CCFLAGS) $(DEFINES) $(INC) -g -c -o $@ $<
 
-all: $(OBJS)
+all: $(SLIB)
+
+$(SLIB): $(OBJS)
 	ar cru $(SLIB) $(OBJS)
+	$(RANLIB) $(SLIB)
 
 install: all
 

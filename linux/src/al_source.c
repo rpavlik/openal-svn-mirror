@@ -55,6 +55,9 @@ static void _alSource2D( AL_source *src );
  */
 static void _alMonoifyOffset1to2(ALshort **dstref, ALuint offset, ALvoid *src, ALuint ssize);
 static void _alMonoifyOffset2to2(ALshort **dstref, ALuint offset, ALvoid *src, ALuint ssize);
+static void _alMonoifyOffset1to4(ALshort **dstref, ALuint offset, ALvoid *src, ALuint ssize);
+static void _alMonoifyOffset2to4(ALshort **dstref, ALuint offset, ALvoid *src, ALuint ssize);
+static void _alMonoifyOffset4to4(ALshort **dstref, ALuint offset, ALvoid *src, ALuint ssize);
 
 /*
  * Channelify functions copy the PCM data from srcs[0..nc-1] into an
@@ -63,6 +66,7 @@ static void _alMonoifyOffset2to2(ALshort **dstref, ALuint offset, ALvoid *src, A
  * left and right channel data, respectively.
  */
 static void _alChannelify2Offset(ALshort *dst, ALuint offset, ALshort **srcs, ALuint size);
+static void _alChannelify4Offset(ALshort *dst, ALuint offset, ALshort **srcs, ALuint size);
 
 /* static data */
 static ALshort *stereoptr = NULL; /*
@@ -101,7 +105,7 @@ static void _alSplitSourceQueue(ALuint cid,
  * get a channel pointer into the buffer's data, scaled by the source's
  * position into the PCM data.
  */
-void *_alSourceGetBufptr(AL_source *src, AL_buffer *buf, ALuint index);
+void *_alSourceGetBufptr(AL_source *src, AL_buffer *buf, ALuint ind);
 
 /*
  * alIsSource( ALuint sid )
@@ -109,7 +113,8 @@ void *_alSourceGetBufptr(AL_source *src, AL_buffer *buf, ALuint index);
  * Returns AL_TRUE if sid is a currently valid source id, 
  * AL_FALSE otherwise.
  */
-ALboolean alIsSource( ALuint sid ) {
+ALboolean alIsSource( ALuint sid )
+{
 	ALboolean retval = AL_FALSE;
 
 	_alDCLockSource( sid );
@@ -129,7 +134,8 @@ ALboolean alIsSource( ALuint sid ) {
  *
  * Assumes locked source
  */
-ALboolean _alIsSource( ALuint sid ) {
+ALboolean _alIsSource( ALuint sid )
+{
 	AL_source *src;
 	ALboolean retval = AL_TRUE;
 
@@ -283,9 +289,9 @@ void _alSource2D( AL_source *src ) {
  * AL_INITIAL or AL_STOPPED, AL_ILLEGAL_COMMAND.
  *
  */
-void alSourcei( ALuint sid, ALenum param, ALint i1 ) {
+void alSourcei( ALuint sid, ALenum param, ALint i1 )
+{
 	AL_source *src;
-	AL_sourcestate *srcstate;
 	ALboolean inrange = AL_TRUE;
 	ALfloat temp;
 
@@ -390,10 +396,8 @@ void alSourcei( ALuint sid, ALenum param, ALint i1 ) {
 		return;
 	}
 
-	srcstate = _alSourceQueueGetCurrentState(src);
-	ASSERT( srcstate );
-
-	switch(param) {
+	switch(param)
+	{
 		case AL_BUFFER:
 			switch( src->state )
 			{
@@ -541,9 +545,9 @@ void alSource3f( ALuint sid, ALenum param,
  * If any member of fv is out of range for the attribute, AL_INVALID_VALUE.
  *
  */
-void alSourcefv( ALuint sid, ALenum param, ALfloat *fv1 ) {
+void alSourcefv( ALuint sid, ALenum param, ALfloat *fv1 )
+{
 	AL_source *source;
-	AL_sourcestate *srcstate;
 	ALboolean inrange = AL_TRUE;
 
 	/*
@@ -636,7 +640,7 @@ void alSourcefv( ALuint sid, ALenum param, ALfloat *fv1 ) {
 		  inrange = inrange && ( _alIsFinite( fv1[1] ) == AL_TRUE );
 		  inrange = inrange && ( _alIsFinite( fv1[2] ) == AL_TRUE );
 
-		  ASSERT( inrange );
+		  assert( inrange );
 		  break;
 		default:
 		  /* invalid param. error below */
@@ -658,9 +662,6 @@ void alSourcefv( ALuint sid, ALenum param, ALfloat *fv1 ) {
 		return;
 	}
 
-	srcstate = _alSourceQueueGetCurrentState( source );
-	ASSERT( srcstate );
-	
 	switch( param ) {
 		case AL_POSITION:
 		  source->position.isset = AL_TRUE;
@@ -798,9 +799,9 @@ void alGetSourcei( ALuint sid, ALenum param, ALint *retref )
  * If param does not specify a source attribute, AL_ILLEGAL_ENUM.
  *
  */
-void alGetSourceiv( ALuint sid, ALenum param, ALint *retref ) {
+void alGetSourceiv( ALuint sid, ALenum param, ALint *retref )
+{
 	AL_source *src;
-	AL_sourcestate *srcstate;
 	ALint *temp;
 
 	/*
@@ -908,9 +909,6 @@ void alGetSourceiv( ALuint sid, ALenum param, ALint *retref ) {
 
 		return;
 	}
-
-	srcstate = _alSourceQueueGetCurrentState(src);
-	ASSERT(srcstate);
 
 	switch(param) {
 		case AL_BUFFERS_QUEUED:
@@ -1249,7 +1247,8 @@ void _alSplitSources( ALuint cid,
 	static ALuint buflen = 0;
 
 	src = _alGetSource( cid, sourceid );
-	if(src == NULL) {
+	if(src == NULL)
+	{
 		/* bad mojo */
 		return;
 	}
@@ -1263,7 +1262,8 @@ void _alSplitSources( ALuint cid,
 	 * or buflen is equal to len and stereoptr is null because
 	 * the device was destroyed and then restarted.
 	 */
-	if(buflen < len || stereoptr == NULL) {
+	if(buflen < len || stereoptr == NULL)
+	{
 		buflen = len;
 
 		stereoptr = realloc(stereoptr, buflen * 2);
@@ -1271,7 +1271,8 @@ void _alSplitSources( ALuint cid,
 		memset( stereoptr, 0, buflen * 2 );
 	}
 
-	if(stereoptr == NULL) {
+	if(stereoptr == NULL)
+	{
 		/* at this point, we're dead and don't know it. */
 		return;
 	}
@@ -1293,7 +1294,8 @@ void _alSplitSources( ALuint cid,
 	/*
 	 *  If we have a callback function, read from it.
 	 */
-	if(samp->flags & ALB_CALLBACK) {
+	if(samp->flags & ALB_CALLBACK)
+	{
 		srcstate->flags |= ALQ_CALLBACKBUFFER;
 
 		_alSplitSourceCallback(cid, sourceid, nc, len, samp, buffers);
@@ -1303,8 +1305,10 @@ void _alSplitSources( ALuint cid,
 		srcstate->flags &= ~ALQ_CALLBACKBUFFER;
 	}
 
-	if(_alSourceBytesLeftByChannel(src, samp) < (ALint) len) {
-		if(_alSourceIsLooping(src) == AL_TRUE ) {
+	if(_alSourceBytesLeftByChannel(src, samp) < (ALint) len)
+	{
+		if(_alSourceIsLooping(src) == AL_TRUE )
+		{
 			/*
 			 * looping sources, when they need to wrap,
 			 * are handled via SplitSourceLooping.
@@ -1317,19 +1321,22 @@ void _alSplitSources( ALuint cid,
 			return;
 		}
 
-		if(_alSourceGetPendingBids(src) > 0) {
+		if(_alSourceGetPendingBids(src) > 0)
+		{
 			/*
 			 * There are more buffers in the queue, so
 			 * do the wrapping.
 			 */
-			_alSplitSourceQueue(cid, sourceid, nc, len, samp, buffers);
+			_alSplitSourceQueue(cid, sourceid,
+					    nc, len, samp, buffers);
 
 			return;
 		}
 
 		len = _alSourceBytesLeftByChannel(src, samp);
 
-		if((len <= 0) || (len > samp->size)) {
+		if((len <= 0) || (len > samp->size))
+		{
 			/* really short sound */
 			len = samp->size;
 
@@ -1337,7 +1344,11 @@ void _alSplitSources( ALuint cid,
 		}
 	}
 	
-	for(i = 0; i < _alcGetNumSpeakers(cid); i++) {
+	if(_alSourceGetPendingBids(src) > 0)
+		assert(src->bid_queue.read_index < src->bid_queue.size );
+
+	for(i = 0; i < _alcGetNumSpeakers(cid); i++)
+	{
 		bufptr = _alSourceGetBufptr(src, samp, i);
 
 		memcpy(buffers[i], bufptr, len);
@@ -1490,7 +1501,7 @@ static void _alSplitSourceLooping( ALuint cid,
 	mixable    = _alSourceBytesLeftByChannel(src, samp);
 	remaining  = 0;
 
-	ASSERT(mixable >= 0);
+	assert(mixable >= 0);
 
 	/* in case samp->size < len, we don't want
 	 * to overwrite with the memcpy
@@ -1582,21 +1593,25 @@ static void _alSplitSourceQueue( ALuint cid,
 				 ALuint sourceid,
 				 ALint nc, ALuint len,
 				 AL_buffer *samp,
-				 ALshort **buffers ) {
+				 ALshort **buffers )
+{
+	int bufchannels = _al_ALCHANNELS(samp->format);
 	AL_source *src;
+	AL_buffer *nextsamp;
 	long mixable;
 	long remaining;
 	char *bufptr;
-	int i;
-	int bufchannels = _al_ALCHANNELS(samp->format);
 	ALuint nextbid;
-	AL_buffer *nextsamp;
 	void *nextpcm;
+	int new_soundpos = -1;
+	int old_soundpos;
+	int old_readindex;
+	ALuint collected_bytes = 0;
+	int i;
 
-	_alDebug(ALD_QUEUE, __FILE__, __LINE__, "_alSplitSourceQueue: foo");
-		     
 	src = _alGetSource(cid, sourceid);
-	if(src == NULL) {
+	if(src == NULL)
+	{
 		/*
 		 * Should we really be setting the error here?
 		 */
@@ -1608,10 +1623,14 @@ static void _alSplitSourceQueue( ALuint cid,
 		return;
 	}
 
+	old_soundpos = src->srcParams.soundpos;
+	old_readindex = src->bid_queue.read_index;
+
 	nextbid = src->bid_queue.queue[src->bid_queue.read_index + 1];
 
 	nextsamp = _alGetBuffer(nextbid);
-	if(nextsamp == NULL) {
+	if(nextsamp == NULL)
+	{
 		/*
 		 * Should we really be setting the error here?
 		 */
@@ -1620,14 +1639,26 @@ static void _alSplitSourceQueue( ALuint cid,
 		return;
 	}
 
-	mixable    = _alSourceBytesLeftByChannel(src, samp);
-	remaining  = 0;
-
-	/* in case samp->size < len, we don't want
-	 * to overwrite with the memcpy
+	/*
+	 *
+	 * First, test whether we can get enough data to fill the
+	 * request with the current buffer's data ( minus current sound
+	 * pos ) plus the next buffer's data.
 	 */
-	if(len * bufchannels <= samp->size) {
-		/* normal case */
+	if( samp->size - src->srcParams.soundpos + nextsamp->size >= len )
+	{
+		/* printf( "filling from one buffer\n" ); */
+		/* we can fill the request */
+
+		mixable = _alSourceBytesLeftByChannel(src, samp);
+		remaining = 0;
+
+		assert( mixable >= 0 );
+
+		/*
+		 * in case samp->size < len, we don't want
+		 * to overwrite with the memcpy
+		 */
 		remaining = (len * bufchannels) - mixable;
 
 		for(i = 0; i < nc; i++) {
@@ -1638,14 +1669,82 @@ static void _alSplitSourceQueue( ALuint cid,
 			memcpy(buffers[i] + mixable/2, nextpcm, remaining);
 		}
 
+		src->srcParams.new_readindex = src->bid_queue.read_index + 1;
+		src->srcParams.new_soundpos = remaining;
+
 		return;
 	}
 
-	for(i = 0; i < nc; i++) {
-		bufptr = _alSourceGetBufptr(src, samp, i);
+	/*
+	 * We need to get data from more than one buffer
+	 */
+	while( collected_bytes < len )
+	{
+		int bid;
 
-		memcpy(buffers[i], bufptr, len);
+		if( src->bid_queue.read_index >= src->bid_queue.size )
+		{
+			/* printf( "end of buffer queue\n" ); */
+
+			/*
+			 * Read past the last buffer and we still
+			 * have to write out.  Pad the rest with silence,
+			 * I guess.  Do we support looping queued buffers?
+			 */
+			for(i = 0; i < nc; i++)
+			{
+				memset(buffers[i] + collected_bytes/2,
+				       0, len - collected_bytes);
+			}
+
+			src->srcParams.new_readindex=src->bid_queue.read_index;
+			src->srcParams.new_soundpos = 0;
+
+			src->bid_queue.read_index = old_readindex;
+			src->srcParams.soundpos   = old_soundpos;
+
+			return;
+		}
+
+		/*
+		printf( "spanning two buffers\n" );
+		*/
+
+		assert(src->bid_queue.read_index < src->bid_queue.size );
+
+		bid = src->bid_queue.queue[src->bid_queue.read_index];
+		samp = _alGetBuffer(bid);
+
+		mixable = samp->size - src->srcParams.soundpos;
+
+		if(mixable > (int) len)
+		{
+			mixable = len;
+			new_soundpos = mixable;
+		}
+		else
+		{
+			src->bid_queue.read_index++;
+		}
+
+		/* copy from current buffer */
+		for(i = 0; i < nc; i++)
+		{
+			bufptr = _alSourceGetBufptr(src, samp, i);
+
+			memcpy(buffers[i] + collected_bytes/2, bufptr, mixable);
+		}
+
+		collected_bytes += mixable;
+
+		src->srcParams.soundpos = 0;
 	}
+
+	src->srcParams.new_readindex = src->bid_queue.read_index;
+	src->srcParams.new_soundpos = new_soundpos;
+
+	src->bid_queue.read_index = old_readindex;
+	src->srcParams.soundpos   = old_soundpos;
 
 	return;
 }
@@ -1667,6 +1766,23 @@ static void _alSplitSourceQueue( ALuint cid,
 void _alMonoifyOffset(ALshort **dstref, ALuint offset,
 		      ALvoid *srcp, ALuint size, ALuint dc, ALuint sc) {
 	switch( dc ) {
+	        case 4:
+                  switch(sc) {
+                          case 1:
+                                _alMonoifyOffset1to4(dstref, offset, srcp, size);
+                                break;
+                          case 2:
+                                _alMonoifyOffset2to4(dstref, offset, srcp, size);
+				break;
+                          case 4:
+                                _alMonoifyOffset4to4(dstref, offset, srcp, size);
+				break;
+                          default:
+			  	fprintf(stderr, "unhandled Monoify (dc %d sc %d)\n",
+					dc, sc);
+				break;
+		  }
+		  break;
 		case 2:
 		  switch(sc) {
 			  case 1:
@@ -1700,6 +1816,98 @@ void _alMonoifyOffset(ALshort **dstref, ALuint offset,
 
 	return;
 }
+
+static void _alMonoifyOffset1to4( ALshort **dsts, ALuint offset,
+				  ALvoid *srcp, ALuint size) {
+	ALshort *src = (ALshort *) srcp;
+	ALshort *dst0 = dsts[0];
+	ALshort *dst1 = dsts[1];
+	ALshort *dst2 = dsts[2];
+	ALshort *dst3 = dsts[3];
+	
+	int len      = size / sizeof *src;
+        int i;
+
+	offset /= sizeof **dsts;
+	dst0 += offset;
+	dst1 += offset;
+	dst2 += offset;
+	dst3 += offset;
+
+	for(i = 0; i < len; i++) {
+		dst0[i] = src[0];
+		dst1[i] = src[0];
+		dst2[i] = src[0];
+		dst3[i] = src[0];
+
+		src++;
+	}
+
+        return;
+}
+
+
+
+static void _alMonoifyOffset2to4( ALshort **dsts, ALuint offset,
+				  ALvoid *srcp, ALuint size) {
+	ALshort *src = (ALshort *) srcp;
+	ALshort *dst0 = dsts[0];
+	ALshort *dst1 = dsts[1];
+	ALshort *dst2 = dsts[2];
+	ALshort *dst3 = dsts[3];
+	
+	int len      = size / sizeof *src;
+        int i;
+
+	offset /= sizeof **dsts;
+	dst0 += offset;
+	dst1 += offset;
+	dst2 += offset;
+	dst3 += offset;
+
+	for(i = 0; i < len; i++) {
+		dst0[i] = src[0];
+		dst1[i] = src[1];
+		dst2[i] = src[0];
+		dst3[i] = src[1];
+
+		src += 2;
+	}
+
+        return;
+}
+
+
+
+static void _alMonoifyOffset4to4( ALshort **dsts, ALuint offset,
+				  ALvoid *srcp, ALuint size) {
+	ALshort *src = (ALshort *) srcp;
+	ALshort *dst0 = dsts[0];
+	ALshort *dst1 = dsts[1];
+	ALshort *dst2 = dsts[2];
+	ALshort *dst3 = dsts[3];
+	
+	int len      = size / sizeof *src;
+        int i;
+
+	offset /= sizeof **dsts;
+	dst0 += offset;
+	dst1 += offset;
+	dst2 += offset;
+	dst3 += offset;
+
+	for(i = 0; i < len; i++) {
+		dst0[i] = src[0];
+		dst1[i] = src[1];
+		dst2[i] = src[2];
+		dst3[i] = src[3];
+
+		src += 4;
+	}
+
+        return;
+}
+
 
 /*
  * _alMonoifyOffset1to2( ALshort **dsts, ALuint offset,
@@ -1773,8 +1981,13 @@ static void _alMonoifyOffset2to2( ALshort **dsts, ALuint offset,
  *  FIXME: handle cases with > 2 channels
  */
 void _alChannelifyOffset( ALshort *dst, ALuint offset,
-			  ALshort **srcs, ALuint size, ALuint nc ) {
-	switch( nc ) {
+			  ALshort **srcs, ALuint size, ALuint nc )
+{
+	switch( nc )
+	{
+		case 4:
+			_alChannelify4Offset(dst, offset, srcs, size);
+			break;
 		case 2:
 			_alChannelify2Offset(dst, offset, srcs, size);
 			break;
@@ -1814,6 +2027,39 @@ void _alChannelify2Offset( ALshort *dst, ALuint offset,
 
 	return;
 }
+
+/*
+ *  _alChannelify4Offset( ALshort *dst, ALuint offset,  
+ *                        ALshort **srcs, ALuint size ) 
+ *
+ * This function is like ChannelifyOffset, but specificly for those cases
+ * where the number of channels in srcs is 4.
+ *              
+ * assumes locked context
+ */
+void _alChannelify4Offset( ALshort *dst, ALuint offset,
+                           ALshort **srcs, ALuint size ) {
+        ALshort *src0 = &srcs[0][offset / sizeof *srcs];
+        ALshort *src1 = &srcs[1][offset / sizeof *srcs];
+	ALshort *src2 = &srcs[2][offset / sizeof *srcs];
+	ALshort *src3 = &srcs[3][offset / sizeof *srcs];
+        ALuint k;
+        
+        size /= sizeof *dst; /* we need sample offsets */
+
+        for( k = 0; k < size; k++ ) {
+                dst[0] = src0[k];
+                dst[1] = src1[k];
+		dst[2] = src2[k];
+		dst[3] = src3[k];
+  
+                dst += 4;
+        }
+  
+        return;
+}  
+
+
 
 /*
  * alDeleteSources( ALsizei n, ALuint *sources )
@@ -2326,12 +2572,13 @@ void alSourcePausev( ALsizei ns, ALuint *sids ) {
 void _alCollapseSource( ALuint cid, ALuint sid,
 			ALuint nc, ALuint mixbuflen,
 			ALshort **buffers ) {
+	ALboolean islooping;
+	ALboolean isqueued;
 	AL_source *src;
 	AL_buffer *smp;
 	ALuint len;
-	ALuint bufchannels;
 
-	len = mixbuflen / sizeof **buffers;
+	len = mixbuflen / nc;
 
 	src = _alGetSource( cid, sid );
 	if(src == NULL) {
@@ -2345,7 +2592,8 @@ void _alCollapseSource( ALuint cid, ALuint sid,
 		return;
 	}
 
-	bufchannels = _al_ALCHANNELS( smp->format );
+	islooping = _alSourceIsLooping(src);
+	isqueued  = _alSourceGetPendingBids(src) > 0;
 
 	if(src->srcParams.outbuf == NULL) {
 		src->srcParams.outbuf = malloc( mixbuflen );
@@ -2356,18 +2604,17 @@ void _alCollapseSource( ALuint cid, ALuint sid,
 		}
 	}
 
-	memset(src->srcParams.outbuf, 0, mixbuflen);
+	if(len > (smp->size - src->srcParams.soundpos)) {
+		if( !isqueued  && !islooping )
+		{
+			/* kludge.  dc->silence? */
+			memset(src->srcParams.outbuf, 0, mixbuflen);
 
-	if(len > bufchannels * (smp->size - src->srcParams.soundpos)) {
-		/* kludge.  dc->silence? */
-		memset(src->srcParams.outbuf, 0, mixbuflen);
-
-		if( _alSourceIsLooping(src) == AL_FALSE ) {
 			/*
 			 * Non looping source get f_buffer truncated because
 			 * they don't (potentially) posses enough data.
 			 */
-			len = bufchannels * (smp->size - src->srcParams.soundpos);
+			len = (smp->size - src->srcParams.soundpos);
 		}
 	}
 
@@ -2401,6 +2648,8 @@ static void _alInitSource( ALuint sid ) {
 	/* set data values */
 	src->srcParams.outbuf   = NULL;
 	src->srcParams.soundpos = 0;
+	src->srcParams.new_soundpos = -1;
+	src->srcParams.new_readindex = -1;
 	src->flags              = ALS_NONE;
 	src->reverbpos          = 0;
 
@@ -2412,7 +2661,7 @@ static void _alInitSource( ALuint sid ) {
 	_alSourceQueueInit( src );
 
 	srcstate = _alSourceQueueGetCurrentState( src );
-	ASSERT( srcstate );
+	assert( srcstate );
 
 	_alSourceStateInit( srcstate );
 
@@ -2619,7 +2868,7 @@ ALboolean _alSourceShouldIncrement(AL_source *src) {
 	AL_sourcestate *srcstate;
 
 	srcstate =_alSourceQueueGetCurrentState(src);
-	ASSERT(srcstate);
+	assert(srcstate);
 
 	if(src->flags & ALS_NEEDPITCH) {
 		return AL_FALSE;
@@ -2783,23 +3032,38 @@ ALboolean FL_alUnlockSource( UNUSED(const char *fn),
  *  best to have a set of default variables here and return their
  *  value when need be?
  */
-void *_alGetSourceParam(AL_source *source, ALenum param ) {
-	AL_sourcestate *srcstate;
+void *_alGetSourceParam(AL_source *source, ALenum param )
+{
+	if( _alSourceIsParamSet( source, param ) == AL_FALSE )
+	{
+		if(param == AL_BUFFER)
+			assert(0);
 
-	if( _alSourceIsParamSet( source, param ) == AL_FALSE ) {
 		return NULL;
 	}
 
-	srcstate = _alSourceQueueGetCurrentState( source );
-	ASSERT(srcstate);
-
-	switch( param ) {
+	switch( param )
+	{
 		case AL_BUFFER:
-			if( source->bid_queue.size > 0 ) {
-				int index = source->bid_queue.read_index;
+			if( source->bid_queue.read_index >=
+			    source->bid_queue.size )
+			{
+				int size = source->bid_queue.size;
 
-				return &source->bid_queue.queue[index];
-			} else {
+				/* often the case for size one queues */
+				return &source->bid_queue.queue[size - 1];
+			}
+			else
+			if( source->bid_queue.size > 0 )
+			{
+				int rindex = source->bid_queue.read_index;
+				int size = source->bid_queue.size;
+
+				assert(rindex < size);
+				return &source->bid_queue.queue[rindex];
+			}
+			else
+			{
 				_alDebug(ALD_SOURCE, __FILE__, __LINE__,
 					"_alGetSourceState: bid_queue.size == %d",
 				source->bid_queue.size);
@@ -2860,11 +3124,13 @@ void *_alGetSourceParam(AL_source *source, ALenum param ) {
 			_alDebug(ALD_SOURCE, __FILE__, __LINE__,
 				"unknown source param 0x%x", param);
 
-			ASSERT( 0 );
+			assert( 0 );
 
 			break;
 	}
 
+		if(param == AL_BUFFER)
+			assert(0);
 	return NULL;
 }
 
@@ -2874,11 +3140,6 @@ void *_alGetSourceParam(AL_source *source, ALenum param ) {
  * Returns AL_TRUE if param is set for source, AL_FALSE otherwise.
  */
 ALboolean _alSourceIsParamSet( AL_source *source, ALenum param ) {
-	AL_sourcestate *srcstate;
-
-	srcstate = _alSourceQueueGetCurrentState( source );
-	ASSERT(srcstate);
-
 	switch( param ) {
 		case AL_BUFFER:
 		case AL_SOURCE_STATE:
@@ -2933,10 +3194,11 @@ ALboolean _alSourceIsParamSet( AL_source *source, ALenum param ) {
 			return source->rolloff_factor.isset;
 			break;
 		default:
+			break;
 			_alDebug(ALD_SOURCE, __FILE__, __LINE__,
 				"unknown source param 0x%x", param);
 
-			ASSERT( 0 );
+			/* assert( 0 ); */
 			break;
 	}
 
@@ -3001,9 +3263,44 @@ void _alSourceGetParamDefault( ALenum param, ALvoid *retref ) {
 			break;
 		case AL_SOURCE_STATE:
 		default:
-			ASSERT( 0 );
+			assert( 0 );
 			break;
 	}
 
 	return;
+}
+
+/*
+ * _alSourceGetNextBuffer( AL_source *src )
+ *
+ * Returns the next buffer in a queue, or NULL if no next buffer exists.
+ * Assumes locked source.
+ *
+ */
+AL_buffer *_alSourceGetNextBuffer( AL_source *src )
+{
+	assert( src );
+
+	if(src->bid_queue.read_index < src->bid_queue.size - 1)
+	{
+		ALuint rindex = src->bid_queue.read_index;
+		ALuint bid = src->bid_queue.queue[rindex];
+
+		return _alGetBuffer(bid);
+	}
+
+	return NULL;
+}
+
+/*
+ * _alSourceQueuedBuffers( AL_source *src )
+ *
+ * Returns the total number of buffers queued for the source,
+ * without regard to the read or write pointer.
+ */
+ALint _alSourceQueuedBuffers( AL_source *src )
+{
+	assert( src );
+
+	return src->bid_queue.size;
 }

@@ -9,6 +9,7 @@ LIBS=-L. @LIBS@
 MAKE=@MAKE@
 SO_EXT=@SHARED_LIBRARY_EXT@
 NASM=@NASM@
+RANLIB=@RANLIB@
 
 AL_OBJS=al_buffer.o al_listen.o al_ext.o \
 	al_source.o 			 \
@@ -88,17 +89,17 @@ VERSION=$(MAJOR_VERSION).$(MINOR_VERSION).$(MICRO_VERSION)
 all: libopenal.a libopenal.$(SO_EXT) extensions $(TEST_PROGS)
 
 clean:
-	rm -f $(AL_OBJS)
-	rm -f $(ALC_OBJS)
-	rm -f $(ALUT_OBJS)
-	rm -f $(EXT_OBJS)
-	rm -f $(EXT_DLL_OBJS)
-	rm -f libopenal.a
-	rm -f libopenal.$(SO_EXT).$(VERSION)
-	rm -f libopenal.$(SO_EXT).$(MAJOR_VERSION)
-	rm -f libopenal.$(SO_EXT)
-	rm -f core
-	rm -f gmon.out
+	-rm -f $(AL_OBJS)
+	-rm -f $(ALC_OBJS)
+	-rm -f $(ALUT_OBJS)
+	-rm -f $(EXT_OBJS)
+	-rm -f $(EXT_DLL_OBJS)
+	-rm -f libopenal.a
+	-rm -f libopenal.$(SO_EXT).$(VERSION)
+	-rm -f libopenal.$(SO_EXT).$(MAJOR_VERSION)
+	-rm -f libopenal.$(SO_EXT)
+	-rm -f core
+	-rm -f gmon.out
 
 distclean: clean
 	rm -Rf Makefile
@@ -112,6 +113,7 @@ libopenal.a: $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(ALUT_OBJS) extensions
 		$(AC_OBJS)   \
 		$(ALUT_OBJS) \
 		$(EXT_OBJS)
+	$(RANLIB) libopenal.a
 
 
 libopenal.so: $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(ALUT_OBJS) extensions
@@ -129,6 +131,19 @@ libopenal.so: $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(ALUT_OBJS) extensions
 libopenal.dll:  $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(ALUT_OBJS) libopenal.def \
 	extensions
 	dlltool -k --dllname libopenal.dll --output-lib $@ --def libopenal.def
+
+# after ensuring some compatibilty issues, bump major up and
+# add copmatbility flag
+#-compatibility_version $(MAJOR_VERSION).$(MINOR_VERSION) 
+libopenal.dylib: $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(ALUT_OBJS) extensions
+	$(CC) -dynamiclib -prebind -undefined suppress -flat_namespace -o libopenal.dylib -install_name libopenal.dylib -current_version $(MAJOR_VERSION).$(MINOR_VERSION).$(MICRO_VERSION) \
+		$(LDFLAGS)     \
+		$(AL_OBJS)     \
+		$(ALC_OBJS)    \
+		$(AC_OBJS)     \
+		$(ALUT_OBJS)   \
+		$(EXT_OBJS)    \
+		$(LIBS)
 
 # extension mojo
 extensions: $(EXT_OBJS) $(EXT_DLL_OBJS)

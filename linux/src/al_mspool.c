@@ -12,6 +12,9 @@
 
 #include <stdlib.h>
 
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+
 /*
  * _alMixPoolResize( _alMixPool *mspool, size_t newsize )
  *
@@ -22,30 +25,35 @@
  * After a successful initialization, mspool will have the capacity for at
  * least newsize _alMixPoolNodes.
  */
-ALboolean _alMixPoolResize(_alMixPool *spool, size_t newsize) {
+ALboolean _alMixPoolResize(_alMixPool *spool, size_t newsize)
+{
 	_alMixPoolNode *temp;
 	unsigned int i;
 
-	if(newsize < 1) {
-		newsize = 1;
-	}
+	newsize = MAX( newsize, 1 );
 
-	if(spool->size >= newsize) {
+	if(spool->size >= newsize)
+	{
 		return AL_TRUE; /* no resize needed */
 	}
 
-	if(spool->pool == NULL) {
+	if(spool->pool == NULL)
+	{
 		spool->pool = malloc(newsize * sizeof *spool->pool);
-	} else  {
+	}
+	else 
+	{
 		temp = realloc(spool->pool, newsize * sizeof(_alMixPoolNode));
-		if(temp == NULL) {
+		if(temp == NULL)
+		{
 			return AL_FALSE; /* could not realloc */
 		}
 
 		spool->pool = temp;
 	}
 
-	for(i = spool->size; i < newsize; i++) {
+	for(i = spool->size; i < newsize; i++)
+	{
 		spool->pool[i].inuse = AL_FALSE;
 	}
 
@@ -60,12 +68,15 @@ ALboolean _alMixPoolResize(_alMixPool *spool, size_t newsize) {
  * Initializes an already allocated _alMixPool object.  Returns index suitable
  * for calls which expect an index, or -1 on error.
  */
-int _alMixPoolAlloc( _alMixPool *spool ) {
+int _alMixPoolAlloc( _alMixPool *spool )
+{
 	int msindex;
 
 	msindex = _alMixPoolFirstFreeIndex(spool);
-	if(msindex == -1) {
-		if(_alMixPoolResize(spool, spool->size * 2) == AL_FALSE) {
+	if(msindex == -1)
+	{
+		if(_alMixPoolResize(spool, spool->size * 2) == AL_FALSE)
+		{
 			return -1;
 		}
 		
@@ -83,8 +94,15 @@ int _alMixPoolAlloc( _alMixPool *spool ) {
  * Return _alMixSource from mspool using simple index, or NULL if msindex is
  * not a valid index or has not been flagged for use.
  */
-_alMixSource *_alMixPoolIndex(_alMixPool *spool, int msindex) {
-	if(spool->pool[msindex].inuse == AL_FALSE) {
+_alMixSource *_alMixPoolIndex(_alMixPool *spool, int msindex)
+{
+	if( msindex > (int) spool->size )
+	{
+		return NULL;
+	}
+
+	if(spool->pool[msindex].inuse == AL_FALSE)
+	{
 		return NULL;
 	}
 
@@ -96,11 +114,14 @@ _alMixSource *_alMixPoolIndex(_alMixPool *spool, int msindex) {
  *
  * Returns first available index in mspool, or -1 if nothing is available.
  */
-int _alMixPoolFirstFreeIndex(_alMixPool *spool) {
+int _alMixPoolFirstFreeIndex(_alMixPool *spool)
+{
 	ALuint i;
 
-	for(i = 0; i < spool->size; i++) {
-		if(spool->pool[i].inuse == AL_FALSE) {
+	for(i = 0; i < spool->size; i++)
+	{
+		if(spool->pool[i].inuse == AL_FALSE)
+		{
 			return i;
 		}
 	}
@@ -151,11 +172,14 @@ ALboolean _alMixPoolDealloc( _alMixPool *spool, int msindex,
  *
  * Finalizes each _alMixSource in the _alMixPool object, using freer_func.
  */
-void _alMixPoolFree(_alMixPool *spool, void (*freer_func)(void *)) {
+void _alMixPoolFree(_alMixPool *spool, void (*freer_func)(void *))
+{
 	unsigned int i;
 
-	for(i = 0; i < spool->size; i++) {
-		if(spool->pool[i].inuse == AL_TRUE) {
+	for(i = 0; i < spool->size; i++)
+	{
+		if(spool->pool[i].inuse == AL_TRUE)
+		{
 			_alMixPoolDealloc( spool, i, freer_func );
 		}
 	}

@@ -79,6 +79,12 @@ ALAPI void ALAPIENTRY alGetDoublev( ALenum param, ALdouble* data );
 ALAPI const ALubyte* ALAPIENTRY alGetString( ALenum param );
 
 
+/** State retrieval.through return value ( for compatibility ) */
+ALAPI ALboolean ALAPIENTRY alGetBoolean( ALenum param );
+ALAPI ALint ALAPIENTRY alGetInteger( ALenum param );
+ALAPI ALfloat ALAPIENTRY alGetFloat( ALenum param );
+ALAPI ALdouble ALAPIENTRY alGetDouble( ALenum param );
+
 /**
  * Error support.
  * Obtain the most recent error generated in the AL state machine.
@@ -129,6 +135,8 @@ ALAPI ALenum ALAPIENTRY alGetEnumValue( const ALubyte* ename );
  */
 ALAPI void ALAPIENTRY alListenerf( ALenum pname, ALfloat param );
 
+ALAPI void ALAPIENTRY alListeneri( ALenum pname, ALint param );
+
 /**
  *
  * Listener Position:        ALfloat[3]
@@ -153,6 +161,9 @@ ALAPI void ALAPIENTRY alGetListenerf( ALenum pname, ALfloat* value );
 
 ALAPI void ALAPIENTRY alGetListeneriv( ALenum pname, ALint* value );
 ALAPI void ALAPIENTRY alGetListenerfv( ALenum pname, ALfloat* values );
+
+ALAPI void ALAPIENTRY alGetListener3f( ALenum pname,
+				       ALfloat *f1, ALfloat *f2, ALfloat *f3 ); 
 
 /**
  * SOURCE

@@ -1,3 +1,12 @@
+Q : How can I choose the sound card I want for rendering?
+A : You can't. The first found is the first used.
+
+Q : MP3 support doesn't work.
+A : To enable MP3 exentensions, SDL must be installed. Maybe it works, maybe not. I don't have nor time neither SDL to test.
+
+Q : The compiler complains about lack of libdl.
+A : libdl.dylib is required. You must install it before compiling.
+
 Q : Moving windows or using a big amount of CPU power makes result sound choppy.
 A : Increase the number of buffers in "darwin_native.c" and recompile.
 
@@ -6,3 +15,6 @@ A : Decrease the number of buffers in "darwin_native.c" and recompile.
 
 Q : There's really too much latency and result sound choppy.
 A : Change your CPU or write a better MOSX implementation than mine !
+
+Q : Why my question is not listed here?
+A : Because I can't guess ALL questions ! Ask me directly : gborios@free.fr

@@ -1,2 +1,3 @@
 Makefile
 libopenal.so.*
+libopenal.dylib*

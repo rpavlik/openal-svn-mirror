@@ -1004,7 +1004,7 @@ static ALboolean selfEvaluating( AL_rctree *head ) {
 AL_rctree *alrc_cons( AL_rctree *ls1, AL_rctree *ls2 ) {
 	AL_rctree *newc;
 
-	ASSERT( ls1->type == ALRC_CONSCELL );
+	assert( ls1->type == ALRC_CONSCELL );
 
 	if( ls1->data.ccell.cdr == NULL ) {
 		newc = ls1->data.ccell.cdr = _alRcTreeAlloc();
@@ -1027,7 +1027,7 @@ AL_rctree *alrc_cons( AL_rctree *ls1, AL_rctree *ls2 ) {
  * cons cell.
  */
 AL_rctree *alrc_car( AL_rctree *ls ) {
-	ASSERT( ls->type == ALRC_CONSCELL );
+	assert( ls->type == ALRC_CONSCELL );
 
 	return ls->data.ccell.car;
 }
@@ -1039,7 +1039,7 @@ AL_rctree *alrc_car( AL_rctree *ls ) {
  * cons cell.
  */
 AL_rctree *alrc_cdr( AL_rctree *ls ) {
-	ASSERT( ls->type == ALRC_CONSCELL );
+	assert( ls->type == ALRC_CONSCELL );
 
 	return ls->data.ccell.cdr;
 }
@@ -1063,7 +1063,7 @@ AL_rctree *apply( AL_rctree *procobj, AL_rctree *args ) {
 	}
 
 	if( procobj->type != ALRC_CONSCELL) {
-		ASSERT(0);
+		assert(0);
 		
 		return NULL;
 	}
@@ -1074,7 +1074,7 @@ AL_rctree *apply( AL_rctree *procobj, AL_rctree *args ) {
 	body      = alrc_cadr( lobj );
 
 	/* lambda expression */
-	ASSERT(length(prototype) == length(args));
+	assert(length(prototype) == length(args));
 
 	/* build bindings */
 	i = length( prototype );
@@ -1109,7 +1109,7 @@ AL_rctree *apply( AL_rctree *procobj, AL_rctree *args ) {
  * Returns length of list ls, or 0 if ls is not a cons cell.
  */
 static ALuint length( AL_rctree *ls ) {
-	ASSERT( ls->type != ALRC_CONSCELL );
+	assert( ls->type != ALRC_CONSCELL );
 
 	if( ls->type != ALRC_CONSCELL ) {
 		return 0;
@@ -1291,9 +1291,9 @@ static AL_rctree *buildExp( const char *tokenstr, unsigned int *offset ) {
 static AL_rctree *literalExp( const char *foo ) {
 	AL_rctree *retval = _alRcTreeAlloc();
 
-	ASSERT(foo[0] != '(');
-	ASSERT(foo[0] != '\'');
-	ASSERT(foo[0] != '(');
+	assert(foo[0] != '(');
+	assert(foo[0] != '\'');
+	assert(foo[0] != '(');
 
 	if ((foo[0] == '#') && (foo[1] == 'p'))
         {
@@ -1312,7 +1312,7 @@ static AL_rctree *literalExp( const char *foo ) {
 				retval->data.b = AL_TRUE;
 				break;
 			default:
-				ASSERT( 0 );
+				assert( 0 );
 				_alRcTreeFree( retval );
 
 				return NULL;

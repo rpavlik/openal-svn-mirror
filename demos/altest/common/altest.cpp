@@ -80,6 +80,7 @@
 #include <alut.h>
 #include <eax.h>
 #include <Timer.h>
+#define SWAPBYTES
 #endif
 
 #ifdef MAC_OS_X
@@ -92,7 +93,9 @@
 #include <al.h>
 #include <alc.h>
 #include <alut.h>
+#include <unistd.h>
 #define NO_EAX
+#define SWAPBYTES
 #endif
 
 #define NUM_BUFFERS 7	// Number of buffers to be Generated
@@ -257,6 +260,10 @@ ALvoid SemiAutoTests(ALvoid);
 void SwapWords(unsigned int *puint);
 void SwapBytes(unsigned short *pshort);
 #endif
+#ifdef MAC_OS_X
+void SwapWords(unsigned int *puint);
+void SwapBytes(unsigned short *pshort);
+#endif
 
 // Test Function prototypes
 ALvoid I_PositionTest(ALvoid);
@@ -310,6 +317,9 @@ void delay_ms(unsigned int ms)
 	{
 		Microseconds(&currentTime);
 	}
+#endif
+#ifdef MAC_OS_X
+	usleep(ms * 1000);
 #endif
 #ifdef _WIN32
 	int startTime;
@@ -1392,6 +1402,12 @@ ALvoid SA_StringQueries(ALvoid)
 		unsigned char *tempString;
 #endif /* __linux */
 
+		ALCcontext* pContext;
+		ALCdevice* pDevice;
+		pContext = alcGetCurrentContext();
+		pDevice = alcGetContextsDevice(pContext);
+		tempString = alcGetString(pDevice, ALC_DEVICE_SPECIFIER);
+		printf("OpenAL Context Device Specifier is '%s'\n", tempString);
 		tempString = alGetString(AL_RENDERER);
 		printf("OpenAL Renderer is '%s'\n", tempString);
 		tempString = alGetString(AL_VERSION);
@@ -3688,6 +3704,35 @@ void SwapBytes(unsigned short *pshort)
     pChar1[1]=pChar2[0];
 }
 #endif
+#ifdef MAC_OS_X
+void SwapWords(unsigned int *puint)
+{
+    unsigned int tempint;
+	char *pChar1, *pChar2;
+	
+	tempint = *puint;
+	pChar2 = (char *)&tempint;
+	pChar1 = (char *)puint;
+	
+	pChar1[0]=pChar2[3];
+	pChar1[1]=pChar2[2];
+	pChar1[2]=pChar2[1];
+	pChar1[3]=pChar2[0];
+}
+
+void SwapBytes(unsigned short *pshort)
+{
+    unsigned short tempshort;
+    char *pChar1, *pChar2;
+    
+    tempshort = *pshort;
+    pChar2 = (char *)&tempshort;
+    pChar1 = (char *)pshort;
+    
+    pChar1[0]=pChar2[1];
+    pChar1[1]=pChar2[0];
+}
+#endif
 
 #define BSIZE 20000
 #define NUMBUFFERS	4
@@ -3752,6 +3797,11 @@ ALvoid I_StreamingTest(ALvoid)
     SwapBytes(&wave.Channels);
     SwapWords(&wave.SamplesPerSec);
 #endif
+#ifdef MAC_OS_X
+    SwapWords(&wave.dataSize);
+    SwapBytes(&wave.Channels);
+    SwapWords(&wave.SamplesPerSec);
+#endif
 
 	DataSize = wave.dataSize;
 
@@ -3774,7 +3824,7 @@ ALvoid I_StreamingTest(ALvoid)
 	{
 		fread(data, 1, BSIZE, fp);
 		DataSize -= BSIZE;
-#ifndef __MACOS__
+#ifndef SWAPBYTES
 		alBufferData(Buffers[loop], Format, data, BSIZE, wave.SamplesPerSec);
 #else
 		for (int i = 0; i < BSIZE; i=i+2)
@@ -3875,7 +3925,7 @@ ALvoid I_StreamingTest(ALvoid)
 						memset(data + DataToRead, 0, BSIZE - DataToRead);
 					}
 
-#ifndef __MACOS__				
+#ifndef SWAPBYTES
 					alBufferData(BufferID, Format, data, DataToRead, wave.SamplesPerSec);
 #else
 					for (int i = 0; i < DataToRead; i = i+2)
@@ -3915,8 +3965,11 @@ ALvoid I_StreamingTest(ALvoid)
 #ifndef __MACOS__ // don't use SIOUX routines during streaming on MacOS -- messes with interrupts
 				printf("Queuing underrun detected.\n");
 #endif
+#ifndef LINUX
 				alGetSourcei(Sources[0], AL_BUFFERS_PROCESSED, &processed);
-				alSourceUnqueueBuffers(Sources[0], processed, &UnqueueID[0]);
+#else
+				alGetSourceiv(Sources[0], AL_BUFFERS_PROCESSED, &processed);
+#endif
 				alSourcePlay(Sources[0]);
 			}
 		}
