@@ -455,36 +455,40 @@ int main(int argc, char* argv[])
 	strcpy(deviceName, "");
 	if (alcIsExtensionPresent(NULL, (ALubyte*)"ALC_ENUMERATION_EXT") == AL_TRUE) { // try out enumeration extension
 		defaultDevice = (char *)alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
-		deviceList = (char *)alcGetString(NULL, ALC_DEVICE_SPECIFIER);
-		for (numDevices = 0; numDevices < 12; numDevices++) {devices[numDevices] = NULL;}
-		for (numDevices = 0; numDevices < 12; numDevices++) {
-			devices[numDevices] = deviceList;
-			if (strcmp(devices[numDevices], defaultDevice) == 0) {
-				numDefaultDevice = numDevices;
-			}
-			deviceList += strlen(deviceList);
-			if (deviceList[0] == 0) {
-				if (deviceList[1] == 0) {
-					break;
-				} else {
-					deviceList += 1;
+		if (defaultDevice != NULL) {
+			deviceList = (char *)alcGetString(NULL, ALC_DEVICE_SPECIFIER);
+			if (deviceList != NULL) {
+				for (numDevices = 0; numDevices < 12; numDevices++) {devices[numDevices] = NULL;}
+				for (numDevices = 0; numDevices < 12; numDevices++) {
+					devices[numDevices] = deviceList;
+					if (strcmp(devices[numDevices], defaultDevice) == 0) {
+						numDefaultDevice = numDevices;
+					}
+					deviceList += strlen(deviceList);
+					if (deviceList[0] == 0) {
+						if (deviceList[1] == 0) {
+							break;
+						} else {
+							deviceList += 1;
+						}
+					}
 				}
-			}
-		}
-		if (devices[numDevices] != NULL) {
-			numDevices++;
-			printf("\nEnumeration extension found -- select an output device:\n");
-			printf("0. NULL Device (Default)\n");
-			for (i = 0; i < numDevices; i++) {
-				printf("%d. %s\n", i + 1, devices[i]);
-			}
-			printf("\n\n");
-			do {
-				ch = getUpperCh();
-				i = atoi((char *)&ch);
-			} while ((i < 0) || (i > numDevices));
-			if ((i != 0) && (strlen(devices[i-1]) < 256)) {
-				strcpy(deviceName, devices[i-1]);
+				if (devices[numDevices] != NULL) {
+					numDevices++;
+					printf("\nEnumeration extension found -- select an output device:\n");
+					printf("0. NULL Device (Default)\n");
+					for (i = 0; i < numDevices; i++) {
+						printf("%d. %s\n", i + 1, devices[i]);
+					}
+					printf("\n\n");
+					do {
+						ch = getUpperCh();
+						i = atoi((char *)&ch);
+					} while ((i < 0) || (i > numDevices));
+					if ((i != 0) && (strlen(devices[i-1]) < 256)) {
+						strcpy(deviceName, devices[i-1]);
+					}
+				}
 			}
 		}
 	}
