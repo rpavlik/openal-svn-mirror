@@ -51,7 +51,7 @@ static int (*psnd_pcm_close)(snd_pcm_t *pcm) = NULL;
 static int (*psnd_pcm_hw_params)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params) = NULL;
 static int (*psnd_pcm_hw_params_any)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params) = NULL;
 static int (*psnd_pcm_hw_params_set_access)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_access_t access) = NULL;
-static int (*psnd_pcm_hw_params_set_buffer_size)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_uframes_t val) = NULL;
+static int (*psnd_pcm_hw_params_set_buffer_size_near)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val) = NULL;
 static int (*psnd_pcm_hw_params_set_channels)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val) = NULL;
 static int (*psnd_pcm_hw_params_set_format)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_format_t val) = NULL;
 static int (*psnd_pcm_hw_params_set_periods)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val, int dir) = NULL;
@@ -133,7 +133,7 @@ static int openal_load_alsa_library(void)
 	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_get_channels);
 	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_get_period_size);
 	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_set_access);
-	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_set_buffer_size);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_set_buffer_size_near);
 	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_set_channels);
 	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_set_format);
 	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_set_period_size);
@@ -457,7 +457,7 @@ ALboolean set_read_alsa( void *handle,
 		return AL_FALSE;
 	}
 
-	err = psnd_pcm_hw_params_set_buffer_size(phandle, setup, ai->bufframesize);
+	err = psnd_pcm_hw_params_set_buffer_size_near(phandle, setup, &ai->bufframesize);
 	if (err < 0) {
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
 				"set_read_alsa: %s, size: %d, speed: %d\n",
@@ -629,7 +629,7 @@ ALboolean set_write_alsa(void *handle,
 		return AL_FALSE;
 	}
 
-	err = psnd_pcm_hw_params_set_buffer_size(phandle, setup, ai->bufframesize);
+	err = psnd_pcm_hw_params_set_buffer_size_near(phandle, setup, &ai->bufframesize);
 	if (err < 0) {
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
 				"set_write_alsa: %s, size: %d, speed: %d\n",
