@@ -237,7 +237,7 @@ int _alLockPrintf( const char *msg, const char *fn, int ln ) {
 
 	blanks[maxlen] = '\0';
 
-	sprintf(threadstr, "%s[%u]", blanks, tlSelfThread());
+	snprintf(threadstr, sizeof(threadstr), "%s[%u]", blanks, tlSelfThread());
 
 	return _alDebug(ALD_LOCK, fn, ln, "%s %s", threadstr, msg);
 }

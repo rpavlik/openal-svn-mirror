@@ -355,9 +355,9 @@ static char *_alOpenRcFile( void ) {
 	/*
 	 * try home dir
 	 */
-	sprintf(pathname, "%s/.%s", getenv("HOME"), _AL_FNAME);
+	snprintf(pathname, sizeof(pathname), "%s/.%s", getenv("HOME"), _AL_FNAME);
 #else
-	sprintf(pathname, "ENV:%s", _AL_FNAME);
+	snprintf(pathname, sizeof(pathname), "ENV:%s", _AL_FNAME);
 #endif
 	if(stat(pathname, &buf) != -1) {
 		fh = fopen(pathname, "rb");
@@ -366,7 +366,7 @@ static char *_alOpenRcFile( void ) {
 		filelen = buf.st_size;
 	} else {
 		/* try system wide OpenAL config file */
-		sprintf(pathname, "/etc/%s", _AL_FNAME);
+		snprintf(pathname, sizeof(pathname), "/etc/%s", _AL_FNAME);
 		if(stat(pathname, &buf) != -1) {
 			fh = fopen(pathname, "rb");
 
@@ -1241,7 +1241,7 @@ static AL_rctree *buildExp( const char *tokenstr, unsigned int *offset ) {
 
 		retval->data.ccell.car = _alRcTreeAlloc();
 		retval->data.ccell.car->type = ALRC_SYMBOL;
-		sprintf(retval->data.ccell.car->data.str.c_str,
+		snprintf(retval->data.ccell.car->data.str.c_str, ALRC_MAXSTRLEN,
 			"quote");
 		retval->data.ccell.car->data.str.len = 5;
 
@@ -1350,14 +1350,14 @@ static AL_rctree *literalExp( const char *foo ) {
         else if (is_string(foo))
         {
 		retval->type = ALRC_STRING;
-		sprintf( retval->data.str.c_str, &foo[1] );
+		snprintf( retval->data.str.c_str, ALRC_MAXSTRLEN, &foo[1] );
 
 		retval->data.str.len = strlen( foo ) - 2;
 	}
         else
         {
 		retval->type = ALRC_SYMBOL;
-		sprintf( retval->data.str.c_str, foo );
+		snprintf( retval->data.str.c_str, ALRC_MAXSTRLEN, foo );
 
 		retval->data.str.len = strlen( foo );
 	}

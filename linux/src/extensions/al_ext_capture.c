@@ -91,7 +91,7 @@ ALboolean alCaptureInit_EXT( UNUSED(ALenum format),
 			char spec[1024];
 			char *fmt="'( (direction \"read\") (sampling-rate %d))";
 
-			sprintf(spec, fmt, rate);
+			snprintf(spec, sizeof(spec), fmt, rate);
 			capture_device = alcOpenDevice((ALubyte *)spec);
 			if ( capture_device ) {
 				_alcSetContext(NULL, cid, capture_device);

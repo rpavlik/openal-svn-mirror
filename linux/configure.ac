@@ -7,6 +7,10 @@ AC_CONFIG_HEADER([config.h])
 AC_SUBST([PACKAGE_VERSION_MAJOR], [`echo $PACKAGE_VERSION | sed 's/^\(@<:@^.@:>@*\)\(\.\{0,1\}\(.*\)\)$/\1'/`])
 
 # Checks for programs.
+
+# We need ISO C99 features for e.g. snprintf.
+CFLAGS="-D_ISOC99_SOURCE $CFLAGS"
+
 AC_PROG_CC
 AC_C_CONST
 AC_PROG_CXX

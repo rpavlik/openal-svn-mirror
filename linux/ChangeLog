@@ -1,5 +1,13 @@
 2005-03-25  Sven Panne  <sven.panne@aedion.de>
 
+	* configure.ac, src/al_config.c, src/al_debug.c, src/al_ext.c,
+	src/al_main.c, src/al_rcvar.c, src/arch/alsa/alsa.c,
+	src/arch/arts/arts.c, src/arch/esd/esd.c,
+	src/arch/linux/lin_dsp.c, src/arch/solaris/solaris_native.c,
+	src/arch/waveout/waveout.c, src/arch/windows/windows_native.c,
+	src/extensions/al_ext_capture.c: Never use strcpy/strcyt/sprintf,
+	use their safe relatives strncpy/strncat/snprintf instead.
+
 	* linux/src/configure.ac: <alsa/asoundlib.h> needs <time.h> when
 	ISO C99 is enabled.
 

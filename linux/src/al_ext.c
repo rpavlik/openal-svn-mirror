@@ -201,8 +201,8 @@ ALboolean _alGetExtensionStrings( ALubyte* buffer, int size ) {
 		int length = strlen( (char *) group->name ) + 1;
 
 		if( length < size ) {
-			strcat( (char *) buffer, (char *) group->name );
-			strcat( (char *) buffer, " " );
+			strncat( (char *) buffer, (char *) group->name, size );
+			strncat( (char *) buffer, " ", size - length + 1 );
 		} else {
 			break;
 		}

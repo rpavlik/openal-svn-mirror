@@ -190,7 +190,7 @@ void release_arts(void *handle) {
 static const char *genartskey(void) {
 	static char retval[1024];
 
-	sprintf(retval, "openal%d", getpid());
+	snprintf(retval, sizeof(retval), "openal%d", getpid());
 
 	return retval;
 }

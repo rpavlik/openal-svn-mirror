@@ -510,7 +510,7 @@ Rcvar alrc_quote( Rcvar val) {
 
 	retval->data.ccell.car = _alRcTreeAlloc();
 	retval->data.ccell.car->type = ALRC_SYMBOL;
-	sprintf( retval->data.ccell.car->data.str.c_str,
+	snprintf( retval->data.ccell.car->data.str.c_str, ALRC_MAXSTRLEN,
 		 "quote" );
 	retval->data.ccell.car->data.str.len = 5;
 

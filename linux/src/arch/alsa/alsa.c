@@ -256,10 +256,8 @@ static void get_out_device_name(char *retref, int retsize)
 		}
 	}
 
-	assert((int) strlen(DEFAULT_DEVICE) < retsize);
-	strcpy(retref, DEFAULT_DEVICE);
-
-	return;
+	strncpy(retref, DEFAULT_DEVICE, retsize);
+	retref[retsize - 1] = '\0';
 }
 
 static void get_in_device_name(char *retref, int retsize)
@@ -270,7 +268,7 @@ static void get_in_device_name(char *retref, int retsize)
 
 	if (!(rcv = rc_lookup("alsa-in-device")))
 		rcv = rc_lookup("alsa-device");
-	if(rcv != NULL)
+	if (rcv != NULL)
 	{
 		if(rc_type(rcv) == ALRC_STRING)
 		{
@@ -280,10 +278,8 @@ static void get_in_device_name(char *retref, int retsize)
 		}
 	}
 
-	assert((int) strlen(DEFAULT_DEVICE) < retsize);
-	strcpy(retref, DEFAULT_DEVICE);
-
-	return;
+	strncpy(retref, DEFAULT_DEVICE, retsize);
+	retref[retsize - 1] = '\0';
 }
 
 void *grab_write_alsa( void )

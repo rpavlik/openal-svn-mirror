@@ -248,7 +248,7 @@ void release_esd(void *handle) {
 static const char *genesdkey(void) {
 	static char retval[ESD_NAMELEN];
 
-	sprintf(retval, "openal-%d\n", (int) getpid());
+	snprintf(retval, sizeof(retval), "openal-%d\n", (int) getpid());
 
 	return retval;
 }

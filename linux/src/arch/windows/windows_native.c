@@ -68,7 +68,7 @@ static void CALLBACK WinFillAudio(UNUSED(HWAVEOUT hwo),
 static const char *implement_me(const char *fn) {
 	static char retval[2048];
 
-	sprintf(retval,
+	snprintf(retval, sizeof(retval),
 	"%s is not implemented under Windows.  Please contact %s for\n"
 	"information on how you can help get %s implemented on Windows.\n",
 	fn, EMAIL_ADDRESS, fn);

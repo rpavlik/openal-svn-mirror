@@ -96,7 +96,7 @@ int _alDebug( aldEnum level, const char *fn, int ln, const char *format, ... )
 
 #endif /* DEBUG_MAXIMUS */
 
-	count = sprintf(formatbuf, "%s\t[%s:%d] ", ald2str(level), fn, ln);
+	count = snprintf(formatbuf, sizeof(formatbuf), "%s\t[%s:%d] ", ald2str(level), fn, ln);
 	if(count < 0)
 	{
 		return count;

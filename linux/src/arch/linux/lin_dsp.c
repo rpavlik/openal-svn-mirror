@@ -641,7 +641,7 @@ static int set_fd(int dsp_fd, ALboolean readable,
 #ifdef DEBUG
 			char errbuf[256];
 
-			sprintf(errbuf, "(fd %d speed %d)", dsp_fd, *speed);
+			snprintf(errbuf, sizeof(errbuf), "(fd %d speed %d)", dsp_fd, *speed);
 
 			perror(errbuf);
 			return AL_FALSE;
@@ -655,7 +655,7 @@ static int set_fd(int dsp_fd, ALboolean readable,
 #ifdef DEBUG
 			char errbuf[256];
 
-			sprintf(errbuf, "(fd %d speed %d)", dsp_fd, *speed);
+			snprintf(errbuf, sizeof(errbuf), "(fd %d speed %d)", dsp_fd, *speed);
 
 			perror(errbuf);
 			return AL_FALSE;

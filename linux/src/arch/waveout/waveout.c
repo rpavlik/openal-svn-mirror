@@ -278,7 +278,7 @@ static const char *waveout_unique_name(char *template) {
 
 	do {
 		/* repeat until we have a unique name */
-		sprintf(&retval[template_offset], "%d.wav", sequence++);
+		snprintf(&retval[template_offset], sizeof(retval) - template_offset, "%d.wav", sequence++);
 		strncpy(template, retval, MAXNAMELEN);
 	} while(stat(retval, &buf) == 0);
 
