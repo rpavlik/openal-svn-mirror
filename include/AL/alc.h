@@ -11,16 +11,14 @@ extern "C" {
 #define ALC_VERSION_0_1         1
 
 #ifdef _WIN32
+ typedef struct ALCdevice_struct ALCdevice;
+ typedef struct ALCcontext_struct ALCcontext;
  #ifndef _XBOX
   #ifdef _OPENAL32LIB
    #define ALCAPI __declspec(dllexport)
   #else
    #define ALCAPI __declspec(dllimport)
   #endif
-
-  typedef struct ALCdevice_struct ALCdevice;
-  typedef struct ALCcontext_struct ALCcontext;
-
   #define ALCAPIENTRY __cdecl
  #endif
 #endif
