@@ -1,9 +1,10 @@
 2002-09-07  Joseph Valenzuela  <jvalenzu@formosa>
 
-	* al_filter.c
+	* src/al_filter.c:
 	Messed with pitch again.  Both removed and reintroduced lookup
-	table, but I think the result is more sound now.  Going to clean
-	it up a little more later.
+	table, but I think the result is more sound now.  Got a chance to
+	clean it up, may revisit soon to reduce memory fragmentation in
+	the tpitch lookup table.
 
 2002-09-05  Joseph Valenzuela  <jvalenzu@formosa>
 

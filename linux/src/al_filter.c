@@ -1326,6 +1326,7 @@ void alf_tpitch( UNUSED(ALuint cid),
 	 * Iterate over each buffers[0..nc-1]
 	 */
 	for(i = 0; i < nc; i++) {
+		ALuint clen = len;
 		int j;
 
 		/*
@@ -1371,10 +1372,15 @@ void alf_tpitch( UNUSED(ALuint cid),
 		offsets = tpitch_lookup.offsets[ l_index ];
 		fractionals = tpitch_lookup.fractionals[ l_index ];
 
-#if DEBUG_MEM
-		assert(offsets);
-		assert(fractionals);
-#endif
+		/* don't run past end */
+		if(((clen + 1) * pitch * sizeof(ALshort)) >=
+		   (samp->size - src->srcParams.soundpos))
+		{
+			clen = samp->size - src->srcParams.soundpos;
+			clen /= pitch;
+			clen /= sizeof(ALshort);
+			clen -= 1;
+		}
 
 		/*
 		 * this is where the "resampling" takes place.  We do a
@@ -1382,7 +1388,7 @@ void alf_tpitch( UNUSED(ALuint cid),
 		 * be necessary, but seems to improve performance quite
 		 * a bit.
 		 */
-		for(j = 0; j < (ALuint) len; j++)
+		for(j = 0; j < clen; j++)
 		{
 			{
 				int offset = offsets[j];
@@ -1399,6 +1405,12 @@ void alf_tpitch( UNUSED(ALuint cid),
 				finalsample = MIN(finalsample, canon_max);
 				bufptr[j] =   MAX(finalsample, canon_min);
 			}
+		}
+
+		/* JIV FIXME: use memset */
+		for( ; j < len; j++)
+		{
+			bufptr[j] = 0;
 		}
 	}
 
