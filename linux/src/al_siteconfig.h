@@ -12,7 +12,7 @@
 #endif /* DARWIN_PBBUILDER */
 
 
-#define USE_LRINT 1 /* icculus look here JIV FIXME */
+#define USE_LRINT 0 /* icculus look here JIV FIXME */
 
 #if USE_LRINT
 
