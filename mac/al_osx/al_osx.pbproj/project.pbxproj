@@ -89,7 +89,7 @@
 				INSTALL_PATH = "@executable_path/../Frameworks";
 				LIBRARY_SEARCH_PATHS = "";
 				OPTIMIZATION_CFLAGS = "-O3";
-				OTHER_LDFLAGS = "";
+				OTHER_LDFLAGS = "-seg1addr 0x10000000";
 				PRODUCT_NAME = OpenAL;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
@@ -584,7 +584,7 @@
 				INSTALL_PATH = "@executable_path/../Frameworks";
 				LIBRARY_SEARCH_PATHS = "";
 				OPTIMIZATION_CFLAGS = "-O0";
-				OTHER_LDFLAGS = "";
+				OTHER_LDFLAGS = "-seg1addr 0x10000000";
 				PRODUCT_NAME = OpenAL;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
@@ -940,7 +940,7 @@
 				LIBRARY_SEARCH_PATHS = "";
 				OPTIMIZATION_CFLAGS = "-O3";
 				OTHER_CFLAGS = "-DVORBIS_EXTENSION";
-				OTHER_LDFLAGS = "";
+				OTHER_LDFLAGS = "-seg1addr 0x10000000";
 				PRODUCT_NAME = OpenAL;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
@@ -1276,7 +1276,7 @@
 				LIBRARY_SEARCH_PATHS = /sw/lib;
 				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "-DVORBIS_EXTENSION";
-				OTHER_LDFLAGS = "";
+				OTHER_LDFLAGS = "-seg1addr 0x10000000";
 				PRODUCT_NAME = OpenAL;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
