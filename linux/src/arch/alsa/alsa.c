@@ -13,157 +13,300 @@
 #include "arch/interface/interface_sound.h"
 #include "arch/alsa/alsa.h"
 
-#include <sys/asoundlib.h>
-
-#ifdef UNUSED
-#undef UNUSED
-#endif /* UNUSED */
+#include <alsa/asoundlib.h>
 
 #include "al_config.h"
+#include "al_debug.h"
 #include "al_main.h"
 #include "al_siteconfig.h"
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 /* alsa stuff */
+#define DEFAULT_DEVICE "plughw:0,0"
 
 /* convert from AL to ALSA format */
 static int AL2ALSAFMT(ALenum format);
 static ALenum ALSA2ALFMT(int fmt, int chans);
 
-static struct {
+/*
+ * get either the default device name or something the
+ * user specified
+ */
+void get_device_name(char *retref, int retsize);
+
+struct alsa_info
+{
 	snd_pcm_t *handle;
+	int format;
 	fd_set fd_set;
-} alsa_info;
+};
 
-void *release_alsa(void *handle) {
-	snd_pcm_t *phandle;
+void *release_alsa(void *handle)
+{
+	struct alsa_info *ai = handle;
 
-	if(handle == NULL) {
+	if(handle == NULL)
+	{
 		return NULL;
 	}
 
-	phandle = handle;
+	snd_pcm_close(ai->handle);
 
-	snd_pcm_close(phandle);
+	free(ai);
 
 	return NULL;
 }
 
-void *grab_read_alsa( void ) {
+void *grab_read_alsa( void )
+{
 	/* no capture support */
 	return NULL;
 }
 
-void *grab_write_alsa( void ) {
-	snd_pcm_t *handle;
-	int err;
+void get_device_name(char *retref, int retsize)
+{
 	Rcvar rcv;
-	int alsa_card = 0;
-	char *name = NULL;
-	char temp[256];
+
+	assert(retref);
 
 	rcv = rc_lookup("alsa-device");
-	if(rcv != NULL) {
-		if(rc_type(rcv) == ALRC_STRING) {
-			rc_tostr0(rcv, temp, 256);
+	if(rcv != NULL)
+	{
+		if(rc_type(rcv) == ALRC_STRING)
+		{
+			int alsa_card = -1;
 
-			alsa_card = snd_card_name(temp);
+			rc_tostr0(rcv, retref, retsize);
 
-			if(alsa_card < 0) {
-				fprintf(stderr,
-					"grab_alsa: invalid card specified %s\n",
-					temp);
-
-				alsa_card = 0;
+			alsa_card = snd_card_get_index(retref);
+			if(alsa_card >= 0)
+			{
+				return;
 			}
 		}
 	}
 
-	err = snd_pcm_open(&handle, alsa_card, 0, SND_PCM_OPEN_PLAYBACK);
-	if(err < 0) {
-		fprintf(stderr, "alsa init failed %s\n", snd_strerror(err));
+	assert((int) strlen(DEFAULT_DEVICE) < retsize);
+	strcpy(retref, DEFAULT_DEVICE);
+
+	return;
+}
+
+void *grab_write_alsa( void )
+{
+	struct alsa_info *retval;
+	snd_pcm_t *handle;
+	char card_name[256];
+	int err;
+
+	get_device_name(card_name, 256);
+
+	err = snd_pcm_open(&handle, card_name, 0, SND_PCM_STREAM_PLAYBACK);
+	if(err < 0)
+	{
+		const char *serr = snd_strerror(err);
+
+		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
+			"grab_alsa: init failed %s\n", serr);
+
 		return NULL;
 	}
 
-	alsa_info.handle = handle;
+	retval = malloc(sizeof *retval);
+	retval->handle = handle;
+	retval->format = 0;
+
 	_alBlitBuffer = alsa_blitbuffer;
 
-	snd_card_get_name(alsa_card, &name);
+	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
+		 "grab_alsa: init ok, using %s\n", card_name);
 
-	fprintf(stderr, "alsa init ok, using %s\n", name);
-
-	free(name);
-
-	return handle;
+	return retval;
 }
 
 ALboolean set_read_alsa( UNUSED(void *handle),
 			 UNUSED(ALuint *bufsiz),
 			 UNUSED(ALenum *fmt),
-			 UNUSED(ALuint *speed))  {
+			 UNUSED(ALuint *speed))
+{
 	/* no capture support */
 	return AL_FALSE;
 }
 
-ALboolean set_write_alsa( void *handle,
-		    ALuint *bufsiz,
-		    ALenum *fmt,
-		    ALuint *speed ) {
-	snd_pcm_format_t *format;
-	snd_pcm_channel_params_t setup;
+ALboolean set_write_alsa(void *handle,
+			 ALuint *bufsiz,
+			 ALenum *fmt,
+			 ALuint *speed)
+{
+	struct alsa_info *ai = handle;
+	snd_pcm_hw_params_t *setup;
+	snd_pcm_t *phandle = 0;
 	int err;
 	ALuint channels = _al_ALCHANNELS(*fmt);
 
-	memset(&setup, 0, sizeof setup);
-
-	format = &setup.format;
-	
-	format->interleave = 1;
-	format->format = AL2ALSAFMT(*fmt);
-	format->voices = channels;
-	format->rate   = *speed;
-
-	setup.channel = SND_PCM_CHANNEL_PLAYBACK;
-	setup.mode    = SND_PCM_MODE_BLOCK;
-
-	setup.buf.block.frag_size = *bufsiz;
-	setup.buf.block.frags_min  = 1;
-	setup.buf.block.frags_max  = 2;
-
-	err = snd_pcm_channel_params(handle, &setup);
-	if(err < 0) {
-		fprintf(stderr, "set_alsa %s\n", snd_strerror(err));
+	if(ai == NULL)
+	{
 		return AL_FALSE;
 	}
 
-	*speed    = format->rate;
-	*bufsiz   = setup.buf.block.frag_size;
-
-	*fmt = ALSA2ALFMT(format->format, format->voices);
-
-	err = snd_pcm_playback_prepare(handle);
-	if(err < 0) {
-		fprintf(stderr, "set_alsa %s\n", snd_strerror(err));
+	if(ai->handle == NULL)
+	{
 		return AL_FALSE;
 	}
+
+	phandle = ai->handle;
+
+	/* did I mention alsa has an ugly api */
+	snd_pcm_hw_params_alloca(&setup);
+	err = snd_pcm_hw_params_any(phandle, setup);
+	if(err < 0)
+	{
+		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
+			 "set_write_alsa: Could not query parameters");
+
+		return AL_FALSE;
+	}
+
+	/* set format */
+	err = snd_pcm_hw_params_set_format(phandle,
+					   setup,
+					   AL2ALSAFMT(*fmt));
+	if(err < 0)
+	{
+		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
+			 "set_write_alsa: could not set format");
+
+		return AL_FALSE;
+	}
+
+	/* channels */
+	err = snd_pcm_hw_params_set_channels(phandle, setup, channels);
+	if(err < 0)
+	{
+		err = snd_pcm_hw_params_get_channels(setup);
+		if((err <= 0) || (err > 4)) {
+			_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
+				 "set_write_alsa: could not set channels");
+
+			return AL_FALSE;
+		}
+
+		channels = err;
+	}
+
+	/* sampling rate */
+	err = snd_pcm_hw_params_set_rate_near(phandle, setup, *speed, NULL);
+	if(err < 0)
+	{
+		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
+			 "set_write_alsa: could not set speed");
+
+		return AL_FALSE;
+	}
+	*speed = err; /* err is sampling rate if >= 0, I guess */
+
+	/*
+	 * bufsiz is in bytes, I assume they want samples
+	 *
+	 * JIV FIXME: obviously I shoudln't be dividing by two,
+	 * we need to get the bit depth of the format.
+	 */
+	*bufsiz = 2 * snd_pcm_hw_params_set_period_size_near(phandle,
+							     setup,
+							     *bufsiz/2,
+							     NULL);
+	snd_pcm_hw_params_set_periods_near(phandle, setup, 2, NULL);
+
+	/* please work ugly api */
+	err = snd_pcm_hw_params(phandle, setup);
+	if(err < 0)
+	{
+		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
+			"set_alsa: %s\n", snd_strerror(err));
+		return AL_FALSE;
+	}
+
+	*fmt = ALSA2ALFMT(*fmt, channels);
+
+	err = snd_pcm_prepare(phandle);
+	if(err < 0)
+	{
+		_alDebug(ALD_MAXIMUS,  __FILE__, __LINE__,
+			"set_alsa %s\n", snd_strerror(err));
+		return AL_FALSE;
+	}
+
+	ai->format = *fmt;
 
 	return AL_TRUE;
 }
 
-void alsa_blitbuffer(void *handle, void *data, int bytes) {
-	snd_pcm_t *phandle = handle;
+void alsa_blitbuffer(void *handle, void *data, int bytes)
+{
+	struct alsa_info *ai = handle;
+	snd_pcm_t *phandle = 0;
+	char *pdata = data;
+	int data_len = bytes;
+	int channels = 0;
 	int err;
 
-	if(handle == NULL) {
+	if(ai == NULL)
+	{
 		return;
 	}
 
-	err = snd_pcm_write(phandle, data, bytes);
-	if(err < 0) {
-		fprintf(stderr,
-		"alsa_blitbuffer %s\n",	snd_strerror(err));
+	if(ai->handle == NULL)
+	{
+		return;
+	}
+
+	phandle = ai->handle;
+
+	channels = _al_ALCHANNELS(ai->format);
+	assert((channels > 1) && (channels <= 4));
+
+	/*
+	 * I'm taking a page from sam's book and not using blocking alsa
+	 * writes anymore.   Which is why this code should look familiar
+	 */
+	while(data_len > 0)
+	{
+		err = snd_pcm_writei(phandle, pdata, bytes);
+		switch(err)
+		{
+			case -EAGAIN:
+				continue;
+				break;
+			case -ESTRPIPE:
+				do
+				{
+					err = snd_pcm_resume(phandle);
+				} while ( err == -EAGAIN );
+				break;
+			default:
+				pdata += err * channels;
+				data_len -= err;
+				break;
+		}
+
+		if(err < 0)
+		{
+			err = snd_pcm_prepare(phandle);
+			if(err < 0)
+			{
+				const char *serr = snd_strerror(err);
+
+				_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
+			 		"alsa_blitbuffer %s\n", serr);
+
+				return;
+			}
+		}
 	}
 
 	return;
@@ -171,10 +314,10 @@ void alsa_blitbuffer(void *handle, void *data, int bytes) {
 	
 static int AL2ALSAFMT(ALenum format) {
 	switch(format) {
-		case AL_FORMAT_STEREO8:  return SND_PCM_SFMT_U8;
-		case AL_FORMAT_MONO8:    return SND_PCM_SFMT_U8;
-		case AL_FORMAT_STEREO16: return SND_PCM_SFMT_S16_LE;
-		case AL_FORMAT_MONO16:   return SND_PCM_SFMT_S16_LE;
+		case AL_FORMAT_STEREO8:  return SND_PCM_FORMAT_U8;
+		case AL_FORMAT_MONO8:    return SND_PCM_FORMAT_U8;
+		case AL_FORMAT_STEREO16: return SND_PCM_FORMAT_S16;
+		case AL_FORMAT_MONO16:   return SND_PCM_FORMAT_S16;
 		default: break;
 	}
 
@@ -183,14 +326,14 @@ static int AL2ALSAFMT(ALenum format) {
 
 static ALenum ALSA2ALFMT(int fmt, int chans) {
 	switch(fmt) {
-		case SND_PCM_SFMT_U8:
+		case SND_PCM_FORMAT_U8:
 			if(chans == 1) {
 				return AL_FORMAT_MONO8;
 			} else if (chans == 2) {
 				return AL_FORMAT_STEREO8;
 			}
 			break;
-		case SND_PCM_SFMT_S16_LE:
+		case SND_PCM_FORMAT_S16:
 			if(chans == 1) {
 				return AL_FORMAT_MONO16;
 			} else if (chans == 2) {
