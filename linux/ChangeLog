@@ -1,3 +1,8 @@
+2004-05-23  Adam D. Moss  <adam@gimp.org>
+
+	* openal/linux/src/arch/arts/arts.c: ARTS fix from
+        Andreas Beckermann <b_mann@gmx.de>
+
 2004-05-21  Adam D. Moss  <adam@gimp.org>
 
 	* openal/linux/src/arch/irix/iris.c: Various IRIX backend

@@ -107,8 +107,8 @@ ALboolean set_write_arts(UNUSED(void *handle),
 
 	/* FIXME: how do we know if this failed? */
 	arts_info.stream = arts_play_stream(*speed,
-					    chans,
 					    _al_formatbits(*fmt),
+					    chans,
 					    genartskey());
 
 	*bufsiz = arts_stream_get(arts_info.stream, ARTS_P_BUFFER_SIZE);
