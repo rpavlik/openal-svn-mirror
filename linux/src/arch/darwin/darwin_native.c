@@ -234,7 +234,10 @@ Crash :
 }
 
 
-ALboolean set_write_native(UNUSED(void *handle), unsigned int *bufsiz, unsigned int *fmt, unsigned int *speed)
+ALboolean set_write_native(UNUSED(void *handle),
+			   unsigned int *bufsiz,
+			   unsigned int *fmt,
+			   unsigned int *speed)
 {
     OSStatus		error = 0;
     unsigned short 	i;
@@ -249,10 +252,20 @@ ALboolean set_write_native(UNUSED(void *handle), unsigned int *bufsiz, unsigned 
     /* Set the buffers states to empty */
     for(i=0; i<maxBuffer; i++)
     {
-	if (libGlobals.buffer[i].startOfDataPtr != NULL) free(libGlobals.buffer[i].startOfDataPtr);
-	if ( (libGlobals.buffer[i].startOfDataPtr = malloc(libGlobals.deviceWBufferSize/2)) == NULL) return AL_FALSE;
+	if (libGlobals.buffer[i].startOfDataPtr != NULL)
+	{
+		free(libGlobals.buffer[i].startOfDataPtr);
+	}
+
+	libGlobals.buffer[i].startOfDataPtr = malloc(libGlobals.deviceWBufferSize/2);
+	if(libGlobals.buffer[i].startOfDataPtr == NULL)
+	{
+		/* JIV FIXME: release other allocations before returning */
+		return AL_FALSE;
+	}
 	libGlobals.buffer[i].bufferIsEmpty = AL_TRUE;
     }
+
     libGlobals.bufferToFill = 0;
     libGlobals.bufferToRead = 0;
     
@@ -313,10 +326,24 @@ void  native_blitbuffer(void *handle, void *data, int bytes)
 	case AL_FORMAT_STEREO16:
 	    for (i = 0; i<bytes/nativePreferedBuffSize;i++)
 	    {
-                memcpy(libGlobals.buffer[libGlobals.bufferToFill].startOfDataPtr+i*nativePreferedBuffSize, data, nativePreferedBuffSize);
-                libGlobals.buffer[libGlobals.bufferToFill].bufferIsEmpty = AL_FALSE;
-                libGlobals.bufferToFill = ++libGlobals.bufferToFill % maxBuffer;
-                while (libGlobals.buffer[libGlobals.bufferToFill].bufferIsEmpty != AL_TRUE) sleep(0.02);
+		    assert(nativePreferedBuffSize <= bytes);
+		    assert(nativePreferedBuffSize <= libGlobals.deviceWBufferSize/2);
+
+		    /* JIV FIXME
+
+                      seems incorrect
+
+		    assert(nativePreferedBuffSize <= libGlobals.deviceWBufferSize/2 - i * nativePreferedBuffSize);
+		      memcpy(libGlobals.buffer[libGlobals.bufferToFill].startOfDataPtr + i * nativePreferedBuffSize, data, nativePreferedBuffSize);
+                     */
+
+		    memcpy(libGlobals.buffer[libGlobals.bufferToFill].startOfDataPtr, data, nativePreferedBuffSize);
+
+		
+		    libGlobals.buffer[libGlobals.bufferToFill].bufferIsEmpty = AL_FALSE;
+		    libGlobals.bufferToFill = ++libGlobals.bufferToFill % maxBuffer;
+		    while (libGlobals.buffer[libGlobals.bufferToFill].bufferIsEmpty != AL_TRUE)
+			    sleep(0.02);
 	    }
             return;
 
