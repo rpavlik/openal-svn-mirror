@@ -476,7 +476,7 @@ int main(int argc, char* argv[])
 			printf("\n\n");
 			do {
 				ch = getUpperCh();
-				i = atoi(&ch);
+				i = atoi((char *)&ch);
 			} while ((i < 0) || (i > numDevices));
 			if ((i != 0) && (strlen(devices[i-1]) < 256)) {
 				strcpy(deviceName, devices[i-1]);
