@@ -33,7 +33,6 @@
 #include <windows.h>
 #include <crtdbg.h>
 #include <objbase.h>
-#include <atlconv.h>
 #include <mmsystem.h>
 
 #include "OpenAL32.h"
@@ -1694,7 +1693,7 @@ ALCAPI const ALubyte* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
                 #if !defined(_WIN64)
                 __asm popa;
                 #endif // !defined(_WIN64)
-				strcpy(mixerDevice, T2A(info.szPname));
+				strcpy(mixerDevice, info.szPname);
 				if (strstr(mixerDevice, "Audigy") != NULL) {
 					acceptPartial = true;
 					strcpy(mixerDevice, "Audigy");
