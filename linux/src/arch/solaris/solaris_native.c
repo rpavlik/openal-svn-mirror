@@ -65,7 +65,7 @@ void *grab_read_native(void) {
   return NULL ;
 }
 
-//void *grab_native(void) {
+/*void *grab_native(void) {*/
 void *grab_write_native(void) {
   int fd ;
   solaris_audio* saudio ;
@@ -102,14 +102,14 @@ void native_blitbuffer(void *handle,
 		       int bytes_to_write) {
 	solaris_audio* sa ;
 
-	// arch/bsd graft
+	/* arch/bsd graft */
 	struct timeval tv = { 1, 0 }; /* wait 1 sec max */
 	int iterator = 0;
 	int err;
 	fd_set sa_fd_set ;
 
 
-	//fprintf(stderr, "Writing to audio device bytes_to_write{ %d }...\n", bytes_to_write );
+	/*fprintf(stderr, "Writing to audio device bytes_to_write{ %d }...\n", bytes_to_write );*/
 
 	if( handle == NULL )
 		return ;
@@ -117,10 +117,10 @@ void native_blitbuffer(void *handle,
 	if( sa->fd == NULL )
 		return ;
 
-	// This is the original write.
-	//write(sa->fd, (char *) dataptr, bytes_to_write);
+	/* This is the original write. */
+	/* write(sa->fd, (char *) dataptr, bytes_to_write);*/
 
-	// This is the write() adapted from arch/bsd
+	/* This is the write() adapted from arch/bsd */
 
 	FD_SET(sa->fd, &sa_fd_set);
 
@@ -221,30 +221,30 @@ ALboolean set_write_native(void *handle,
 	  return AL_FALSE ;
 
   AUDIO_INITINFO(&(sa->ainfo));
-  //if( ioctl(gaudio.fd, AUDIO_GETINFO, &(gaudio.ainfo)) < 0 )
-  //return AL_FALSE ;
+  /*if( ioctl(gaudio.fd, AUDIO_GETINFO, &(gaudio.ainfo)) < 0 )
+    return AL_FALSE ; */
 
   fprintf(stderr, "Setting audio device...\n");
   sa->ainfo.play.sample_rate = *speed;
   sa->ainfo.play.channels = channels;
-  //fprintf(stderr, "solaris: set_write_native speed{ %d }, channels{ %d }, format{ %d }, buffer_size{ %u } \n", *speed, channels, *fmt, *bufsiz ) ;
+  /*fprintf(stderr, "solaris: set_write_native speed{ %d }, channels{ %d }, format{ %d }, buffer_size{ %u } \n", *speed, channels, *fmt, *bufsiz ) ;*/
   switch (*fmt) {
     case AL_FORMAT_MONO8:
     case AL_FORMAT_STEREO8:
-      //fprintf(stderr, "Setting Mono8/Stereo8... \n");
+            /*fprintf(stderr, "Setting Mono8/Stereo8... \n");*/
       sa->ainfo.play.precision = 8;
       sa->ainfo.play.encoding = AUDIO_ENCODING_LINEAR8;
       break;
     case AL_FORMAT_MONO16:
     case AL_FORMAT_STEREO16:
       sa->ainfo.play.precision = 16;
-      //#ifdef WORDS_BIGENDIAN
-      //fprintf( stderr, "WORDS BIGENDIAN" ) ;
+      /*#ifdef WORDS_BIGENDIAN*/
+      /*fprintf( stderr, "WORDS BIGENDIAN" ) ;*/
       sa->ainfo.play.encoding = AUDIO_ENCODING_LINEAR;
-      //#else
-      //fprintf( stderr, "WORDS LITTLEENDIAN" ) ;
-      //sa->ainfo.play.encoding = AUDIO_ENCODING_LINEAR;
-      //#endif /* WORDS_BIGENDIAN */
+      /*#else
+       fprintf( stderr, "WORDS LITTLEENDIAN" ) ;
+       sa->ainfo.play.encoding = AUDIO_ENCODING_LINEAR;*/
+      /* #endif*/ /* WORDS_BIGENDIAN */
       break;
 
     default:
@@ -254,7 +254,7 @@ ALboolean set_write_native(void *handle,
 
   sa->ainfo.play.buffer_size = *bufsiz;
 
-  //if (ioctl(gaudio.fd, AUDIO_SETINFO, &gaudio.ainfo) < 0)
+  /*if (ioctl(gaudio.fd, AUDIO_SETINFO, &gaudio.ainfo) < 0)*/
   if (ioctl(sa->fd, AUDIO_SETINFO, &(sa->ainfo)) < 0)
     return AL_FALSE;
   else
