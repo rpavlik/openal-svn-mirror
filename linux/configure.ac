@@ -152,7 +152,7 @@ case "$target" in
     SHOULD_USE_RDYNAMIC=no
     REDUNDANT_DECLS_WARN=no
     SHOULD_ENFORCE_ANSI=no ;;
-    *cygwin*)
+    *cygwin*|*mingw*)
     AC_DEFINE(WINDOWS_TARGET, 1, [undocumented])
     OS_OBJS="\$(WINDOWS_OBJS)"
     LIBS="$LIBS -lwinmm"         # need that mm library for waveOutOpen etc
@@ -210,7 +210,7 @@ case "$target" in
     AC_DEFINE(IRIS_SUPPORT, 1, [undocumented])
     LIBS="$LIBS -laudio"
     ;;
-    *cygwin*)
+    *cygwin*|*mingw*)
     # No extra libs needed
     ;;
     *)
@@ -417,7 +417,7 @@ AC_CHECK_HEADER(pthread.h, PTHREAD_AVAILABLE=yes, PTHREAD_AVAILABLE=no)
 
 dnl do some platform specific threead mojo
 case "$target" in
-	*cygwin*)
+	*cygwin*|*mingw*)
 		AC_CHECK_HEADER(windows.h, WINTHREAD_AVAILABLE=yes) ;;
 	*morphos*)
 		AC_CHECK_HEADER(dlfcn.h, MOSTHREAD_AVAILABLE=yes) ;;
@@ -646,7 +646,7 @@ AC_ARG_ENABLE([dsound],
 if test "x$enable_dsound" = xyes; then
   # On cygwin targets, we don't rely on sdl-config.
   case "$target" in
-    *cygwin*)
+    *cygwin*|*mingw*)
       AC_CHECK_HEADER(dsound.h,
         AC_DEFINE(DSOUND_SUPPORT, 1, [undocumented])
         LIBS="$LIBS -ldsound")
