@@ -2,7 +2,10 @@
 
 	* acconfig.h, acinclude.m4 aclocal.m4: Removed.
 
-	* configure.ac: Modernized a tiny bit, requiring autoconf 2.50 now.
+	* configure.ac: Modernized a bit, requiring autoconf 2.58
+	now. Fixed alsa-dlopen, arts-dlopen and esd-dlopen flags. Removed
+	random "spell checking" of arguments. Removed --with-gcc flag,
+	setting CC is the "autoconf way" of doing that.
 
 2005-03-18  Sven Panne  <sven.panne@aedion.de>
 

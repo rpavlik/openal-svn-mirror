@@ -1,13 +1,14 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_INIT([OpenAL library], [0.0.8], [openal-devel@opensource.creative.com], [openal])
-AC_PREREQ([2.50])
+AC_PREREQ([2.58])
 AC_CONFIG_SRCDIR([doc/openal.texi])
 AC_CONFIG_HEADER([config.h])
 
-# Well, this seems goofy
-chmod 755 config.guess >/dev/null 2>&1
-chmod 755 config.sub   >/dev/null 2>&1
+# Checks for programs.
+AC_PROG_CC
+AC_C_CONST
+AC_PROG_CXX
 
 # Making releases:
 #   MICRO_VERSION += 1;
@@ -37,117 +38,89 @@ DO_MINOR_LIBS=yes              # wheether to copy foo.0.0
 # warns
 WFLAGS="-Wall -W -Wbad-function-cast -Wcast-qual -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wimplicit-function-declaration -Waggregate-return -Winline -Wpointer-arith -fno-common"
 
-AC_SUBST(MAJOR_VERSION)
-AC_SUBST(MINOR_VERSION)
-AC_SUBST(MICRO_VERSION)
-AC_SUBST(INTERFACE_AGE)
-AC_SUBST(BINARY_AGE)
-AC_SUBST(VERSION)
+AC_SUBST([MAJOR_VERSION])
+AC_SUBST([MINOR_VERSION])
+AC_SUBST([MICRO_VERSION])
+AC_SUBST([INTERFACE_AGE])
+AC_SUBST([BINARY_AGE])
+AC_SUBST([VERSION])
 
 # We start off with a blank requirement.
 requirements=""
 
-dnl werror stuff
-AC_ARG_ENABLE(werror,
-[  --enable-werror           enable fail on all warnings  [default=no]],
-              , enable_werror=no)
-if test x$enable_werror = xyes; then
-    SHOULD_USE_WERROR=yes
+# werror stuff
+AC_ARG_ENABLE([werror],
+[AS_HELP_STRING([--enable-werror],
+                [enable fail on all warnings @<:@default=no@:>@])])
+
+if test "x$enable_werror" = xyes; then
+  SHOULD_USE_WERROR=yes
 fi
 
-dnl profile stuff
-AC_ARG_ENABLE(profile,
-[  --enable-profile          enable profile               [default=no]],
-              , enable_profile=no)
-if test x$enable_profile = xyes; then
+# profile stuff
+AC_ARG_ENABLE([profile],
+[AS_HELP_STRING([--enable-profile],
+                [enable profile @<:@default=no@:>@])])
 
-dnl prepend to CFLAGS variable
-CFLAGS="-O2 -fexpensive-optimizations -ffast-math -funroll-loops -funroll-all-loops -g -pg $CFLAGS"
-LDFLAGS="-g -pg"
+if test "x$enable_profile" = xyes; then
+  CFLAGS="-O2 -fexpensive-optimizations -ffast-math -funroll-loops -funroll-all-loops -g -pg $CFLAGS"
+  LDFLAGS="-g -pg"
 fi
 
-AC_CANONICAL_SYSTEM
+AC_CANONICAL_TARGET
 
-dnl pity the poor fools with broken headers
-#AC_DEFINE(_NO_STRING_INLINES, 1, [undocumented])
-#AC_DEFINE(__NO_STRING_INLINES, 1, [undocumented])
+# optimization stuff
+AC_ARG_ENABLE([optimization],
+[AS_HELP_STRING([--enable-optimization],
+                [enable optimization @<:@default=no@:>@])])
 
-dnl optimization stuff
+if test "x$enable_optimization" = xyes; then
+  enable_paranoid_locks=no
+  enable_empty_locks=no
+  CFLAGS="-O6 -fexpensive-optimizations -funroll-all-loops -funroll-loops -fomit-frame-pointer -finline-functions -ffast-math $CFLAGS"
 
-dnl check for misspell
-if test x$enable_optimizations = xyes; then
-
-enable_optimization=yes
-
+  # add -march
+  case "$target" in
+    *i386*) CFLAGS="$CFLAGS -march=i386" ;;
+    *i486*) CFLAGS="$CFLAGS -march=i486" ;;
+    *i586*) CFLAGS="$CFLAGS -march=i586" ;;
+    *i686*) CFLAGS="$CFLAGS -march=i686" ;;
+    mips*)  CFLAGS="$CFLAGS -march=mips" ;;
+  esac
 fi
 
-AC_ARG_ENABLE(optimization,
-[  --enable-optimization     enable optimization          [default=no]],
-              , enable_optimization=no)
-if test x$enable_optimization = xyes; then
-
-enable_paranoid_locks=no
-enable_empty_locks=no
-
-CFLAGS="-O6 -fexpensive-optimizations -funroll-all-loops -funroll-loops -fomit-frame-pointer -finline-functions -ffast-math $CFLAGS"
-
-dnl add -march
-case "$target" in
-    *i386*)
-    CFLAGS="$CFLAGS -march=i386" ;;
-    *i486*)
-    CFLAGS="$CFLAGS -march=i486" ;;
-    *i586*)
-    CFLAGS="$CFLAGS -march=i586" ;;
-    *i686*)
-    CFLAGS="$CFLAGS -march=i686" ;;
-    mips*)
-    CFLAGS="$CFLAGS -march=mips" ;;
-    *)
-    echo "Unknown target $target" ;;
-esac
-
-fi
-
-dnl keep CFLAGS variable if set, otherwise set it to just debug
+# keep CFLAGS variable if set, otherwise set it to just debug
 if test "x$CFLAGS" = x; then
-	CFLAGS="-g -O2"
+  CFLAGS="-g -O2"
 fi
 
-dnl optimization stuff
-AC_ARG_ENABLE(paranoid-locks,
-[  --enable-paranoid-locks   enable paranoid locks        [default=no]],
-              , enable_paranoid_locks=no)
-if test x$enable_paranoid_locks = xyes; then
-	AC_DEFINE(PARANOID_LOCKS, 1, [undocumented])
+# optimization stuff
+AC_ARG_ENABLE([paranoid-locks],
+[AS_HELP_STRING([--enable-paranoid-locks],
+                [enable paranoid locks @<:@default=no@:>@])])
+
+if test "x$enable_paranoid_locks" = xyes; then
+  AC_DEFINE(PARANOID_LOCKS, 1, [undocumented])
 fi
 
-dnl no mutex locking for sync. driver
-AC_ARG_ENABLE(empty-locks,
-[  --enable-empty-locks      enable empty locks           [default=no]],
-              , enable_empty_locks=no)
-if test x$enable_empty_locks = xyes; then
-	AC_DEFINE(EMPTY_LOCKS, 1, [undocumented])
+# no mutex locking for sync. driver
+AC_ARG_ENABLE([empty-locks],
+[AS_HELP_STRING([--enable-empty-locks],
+                [enable empty locks @<:@default=no@:>@])])
+
+if test "x$enable_empty_locks" = xyes; then
+  AC_DEFINE(EMPTY_LOCKS, 1, [undocumented])
 fi
 
-dnl debug stuff
-AC_ARG_ENABLE(debug,
-[  --enable-debug            enable debug                 [default=no]],
-              , enable_debug=no)
-if test x$enable_debug = xyes; then
-	AC_DEFINE(DEBUG, 1, [undocumented])
+# debug stuff
+AC_ARG_ENABLE([debug],
+[AS_HELP_STRING([--enable-debug],
+                [enable debug @<:@default=no@:>@])])
+
+if test "x$enable_debug" = xyes; then
+  AC_DEFINE(DEBUG, 1, [undocumented])
 fi
 
-AC_ARG_WITH(gcc,
-[  --with-gcc                with custom gcc              [default=unset]],
-              ,   with_gcc=unset)
-if test x$with_gcc != xunset; then
-	CC=$with_gcc
-fi
-
-AC_PROG_CC
-AC_PROG_CXX
-AC_PROG_CPP
 AC_C_BIGENDIAN
 
 dnl library stuff
@@ -260,20 +233,22 @@ dnl check for sizeof
 AC_CHECK_SIZEOF(void *)
 
 dnl jlib stuff
-AC_ARG_ENABLE(jlib,
-[  --enable-jlib             enable JLIB support          [default=no]],
-              , enable_jlib=no)
-if test x$enable_jlib = xyes; then
-    AC_DEFINE(JLIB, 1, [undocumented])
-   # INCLUDES="$INCLUDES -include \"../include/jlib.h\""
-    LIBS="$LIBS ../jlib/libjlib.a"
+AC_ARG_ENABLE([jlib],
+[AS_HELP_STRING([--enable-jlib],
+                [enable JLIB support @<:@default=no@:>@])])
+
+if test "x$enable_jlib" = xyes; then
+  AC_DEFINE(JLIB, 1, [undocumented])
+  # INCLUDES="$INCLUDES -include \"../include/jlib.h\""
+  LIBS="$LIBS ../jlib/libjlib.a"
 fi
 
-dnl dmalloc stuff
-AC_ARG_ENABLE(dmalloc,
-[  --enable-dmalloc          enable DMALLOC support       [default=no]],
-              , enable_dmalloc=no)
-if test x$enable_dmalloc = xyes; then
+# dmalloc stuff
+AC_ARG_ENABLE([dmalloc],
+[AS_HELP_STRING([--enable-dmalloc],
+                [enable DMALLOC support @<:@default=no@:>@])])
+
+if test "x$enable_dmalloc" = xyes; then
     AC_CHECK_HEADER(dmalloc.h,
     	dnl header found
 	AC_DEFINE(DMALLOC, 1, [undocumented])
@@ -294,155 +269,161 @@ if test x$enable_dmalloc = xyes; then
 		REDUNDANT_DECLS_WARN=no)])
 fi
 
-dnl efence stuff
-AC_ARG_ENABLE(efence,
-[  --enable-efence           enable EFENCE support        [default=no]],
-              , enable_efence=no)
-if test x$enable_efence = xyes; then
-    LIBS="$LIBS -lefence"
+# efence stuff
+AC_ARG_ENABLE([efence],
+[AS_HELP_STRING([--enable-efence],
+                [enable EFENCE support @<:@default=no@:>@])])
+
+if test "x$enable_efence" = xyes; then
+  LIBS="$LIBS -lefence"
 fi
 
-dnl stubifying
-AC_ARG_ENABLE(stub-notify,
-[  --enable-debug-stub       enable stub debugging        [default=no]],
-              , enable_debug_stub=no)
-if test x$enable_debug_stub = xyes; then
-	AC_DEFINE(DEBUG_STUB, 1, [undocumented])
+# stubifying
+AC_ARG_ENABLE([stub-notify],
+[AS_HELP_STRING([--enable-debug-stub],
+                [enable stub debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_stub" = xyes; then
+  AC_DEFINE(DEBUG_STUB, 1, [undocumented])
 fi
 
 dnl looping debug notification
 
-dnl check for misspell
-if test x$enable_debug_looping = xyes; then
-enable_debug_loop=yes
+AC_ARG_ENABLE([debug-loop],
+[AS_HELP_STRING([--enable-debug-loop],
+                [enable looping debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_loop" = xyes; then
+  AC_DEFINE(DEBUG_LOOP, 1, [undocumented])
 fi
 
-AC_ARG_ENABLE(debug-loop,
-[  --enable-debug-loop       enable looping debugging     [default=no]],
-              , enable_debug_loop=no)
-if test x$enable_debug_loop = xyes; then
-	AC_DEFINE(DEBUG_LOOP, 1, [undocumented])
+# conversion debug notification
+AC_ARG_ENABLE([debug-convert],
+[AS_HELP_STRING([--enable-debug-convert],
+                [enable convertion debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_convert" = xyes; then
+  AC_DEFINE(DEBUG_CONVERT, 1, [undocumented])
 fi
 
-dnl conversion debug notification
-AC_ARG_ENABLE(debug-convert,
-[  --enable-debug-convert    enable convertion debugging  [default=no]],
-              , enable_debug_convert=no)
-if test x$enable_debug_convert = xyes; then
-	AC_DEFINE(DEBUG_CONVERT, 1, [undocumented])
+# config file debug notification
+AC_ARG_ENABLE([debug-config],
+[AS_HELP_STRING([--enable-debug-config],
+                [enable config file debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_config" = xyes; then
+  AC_DEFINE(DEBUG_CONFIG, 1, [undocumented])
 fi
 
-dnl config file debug notification
-AC_ARG_ENABLE(debug-config,
-[  --enable-debug-config     enable config file debugging [default=no]],
-              , enable_debug_config=no)
-if test x$enable_debug_config = xyes; then
-	AC_DEFINE(DEBUG_CONFIG, 1, [undocumented])
+# lock debug notification
+AC_ARG_ENABLE([debug-lock],
+[AS_HELP_STRING([--enable-debug-lock],
+                [enable lock debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_lock" = xyes; then
+  AC_DEFINE(DEBUG_LOCK, 1, [undocumented])
 fi
 
-dnl lock debug notification
+# extension debug notification
+AC_ARG_ENABLE([debug-ext],
+[AS_HELP_STRING([--enable-debug-ext],
+                [enable extension debugging @<:@default=no@:>@])])
 
-dnl check for misspell
-if test x$enable_debug_locking = xyes; then
-enable_debug_lock=yes
+if test "x$enable_debug_ext" = xyes; then
+  AC_DEFINE(DEBUG_EXT, 1, [undocumented])
 fi
 
-AC_ARG_ENABLE(debug-lock,
-[  --enable-debug-lock       enable lock debugging        [default=no]],
-              , enable_debug_lock=no)
-if test x$enable_debug_lock = xyes; then
-	AC_DEFINE(DEBUG_LOCK, 1, [undocumented])
+# buffer debug notification
+AC_ARG_ENABLE([debug-buffer],
+[AS_HELP_STRING([--enable-debug-buffer],
+                [enable buffer debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_buffer" = xyes; then
+  AC_DEFINE(DEBUG_BUFFER, 1, [undocumented])
 fi
 
-dnl extension debug notification
-AC_ARG_ENABLE(debug-ext,
-[  --enable-debug-ext        enable extension debugging   [default=no]],
-              , enable_debug_ext=no)
-if test x$enable_debug_ext = xyes; then
-	AC_DEFINE(DEBUG_EXT, 1, [undocumented])
+# source debug notification
+AC_ARG_ENABLE([debug-source],
+[AS_HELP_STRING([--enable-debug-source],
+                [enable source debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_source" = xyes; then
+  AC_DEFINE(DEBUG_SOURCE, 1, [undocumented])
 fi
 
-dnl buffer debug notification
-AC_ARG_ENABLE(debug-buffer,
-[  --enable-debug-buffer     enable buffer debugging      [default=no]],
-              , enable_debug_buffer=no)
-if test x$enable_debug_buffer = xyes; then
-	AC_DEFINE(DEBUG_BUFFER, 1, [undocumented])
+# mixer debug notification
+AC_ARG_ENABLE([debug-mixer],
+[AS_HELP_STRING([--enable-debug-mixer],
+                [enable mixer debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_mixer" = xyes; then
+  AC_DEFINE(DEBUG_MIXER, 1, [undocumented])
 fi
 
-dnl source debug notification
-AC_ARG_ENABLE(debug-source,
-[  --enable-debug-source     enable source debugging      [default=no]],
-              , enable_debug_source=no)
-if test x$enable_debug_source = xyes; then
-	AC_DEFINE(DEBUG_SOURCE, 1, [undocumented])
+# streaming debug notification
+AC_ARG_ENABLE([debug-streaming],
+[AS_HELP_STRING([--enable-debug-streaming],
+                [enable streaming debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_streaming" = xyes; then
+  AC_DEFINE(DEBUG_STREAMING, 1, [undocumented])
 fi
 
-dnl mixer debug notification
-AC_ARG_ENABLE(debug-mixer,
-[  --enable-debug-mixer      enable mixer debugging       [default=no]],
-              , enable_debug_mixer=no)
-if test x$enable_debug_mixer = xyes; then
-	AC_DEFINE(DEBUG_MIXER, 1, [undocumented])
+# math debug notification
+AC_ARG_ENABLE([debug-math],
+[AS_HELP_STRING([--enable-debug-math],
+                [enable math debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_math" = xyes; then
+  AC_DEFINE(DEBUG_MATH, 1, [undocumented])
 fi
 
-dnl streaming debug notification
-AC_ARG_ENABLE(debug-streaming,
-[  --enable-debug-streaming  enable streaming debugging   [default=no]],
-              , enable_debug_streaming=no)
-if test x$enable_debug_streaming = xyes; then
-	AC_DEFINE(DEBUG_STREAMING, 1, [undocumented])
+# mem debug notification
+AC_ARG_ENABLE([debug-mem],
+[AS_HELP_STRING([--enable-debug-mem],
+                [enable mem debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_mem" = xyes; then
+  AC_DEFINE(DEBUG_MEM, 1, [undocumented])
 fi
 
-dnl math debug notification
-AC_ARG_ENABLE(debug-math,
-[  --enable-debug-math       enable math debugging        [default=no]],
-              , enable_debug_math=no)
-if test x$enable_debug_math = xyes; then
-	AC_DEFINE(DEBUG_MATH, 1, [undocumented])
+# context debug notification
+AC_ARG_ENABLE([debug-context],
+[AS_HELP_STRING([--enable-debug-context],
+                [enable context debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_context" = xyes; then
+  AC_DEFINE(DEBUG_CONTEXT, 1, [undocumented])
 fi
 
-dnl mem debug notification
-AC_ARG_ENABLE(debug-mem,
-[  --enable-debug-mem        enable mem debugging         [default=no]],
-              , enable_debug_mem=no)
-if test x$enable_debug_mem = xyes; then
-	AC_DEFINE(DEBUG_MEM, 1, [undocumented])
+# debug queue structures/functions/etc
+AC_ARG_ENABLE([debug-queue],
+[AS_HELP_STRING([--enable-debug-queue],
+                [enable queue debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_queue" = xyes; then
+  AC_DEFINE(DEBUG_QUEUE, 1, [undocumented])
 fi
 
-dnl context debug notification
-AC_ARG_ENABLE(debug-context,
-[  --enable-debug-context    enable context debugging     [default=no]],
-              , enable_debug_context=no)
-if test x$enable_debug_context = xyes; then
-	AC_DEFINE(DEBUG_CONTEXT, 1, [undocumented])
+# debug filter
+AC_ARG_ENABLE([debug-filter],
+[AS_HELP_STRING([--enable-debug-filter],
+                [enable filter debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_filter" = xyes; then
+  AC_DEFINE(DEBUG_FILTER, 1, [undocumented])
 fi
 
-dnl debug queue structures/functions/etc
-AC_ARG_ENABLE(debug-queue,
-[  --enable-debug-queue      enable queue debugging       [default=no]],
-              , enable_debug_queue=no)
-if test x$enable_debug_queue = xyes; then
-	AC_DEFINE(DEBUG_QUEUE, 1, [undocumented])
+# debug maximus
+AC_ARG_ENABLE([debug-maximus],
+[AS_HELP_STRING([--enable-debug-maximus],
+                [enable all debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_maximus" = xyes; then
+  AC_DEFINE(DEBUG_MAXIMUS, 1, [undocumented])
 fi
 
-dnl debug filter
-AC_ARG_ENABLE(debug-filter,
-[  --enable-debug-filter     enable filter debugging      [default=no]],
-              , enable_debug_filter=no)
-if test x$enable_debug_filter = xyes; then
-	AC_DEFINE(DEBUG_FILTER, 1, [undocumented])
-fi
-
-dnl debug maximus
-AC_ARG_ENABLE(debug-maximus,
-[  --enable-debug-maximus    enable all debugging         [default=no]],
-              , enable_debug_maximus=no)
-if test x$enable_debug_maximus = xyes; then
-	AC_DEFINE(DEBUG_MAXIMUS, 1, [undocumented])
-fi
-
-dnl Check available thread packages
+# Check available thread packages
 AC_CHECK_HEADER(pthread.h, PTHREAD_AVAILABLE=yes, PTHREAD_AVAILABLE=no)
 
 dnl do some platform specific threead mojo
@@ -502,10 +483,11 @@ dnl arch specific ASM files
 ARCH_OBJS="\$(PORTABLE_OBJS)"
 
 dnl check for ALSA headers
-AC_ARG_ENABLE(alsa,
-[  --enable-alsa             enable the alsa backend      [default=no]],
-              ,   enable_alsa=no)
-if test x$enable_alsa = xyes; then
+AC_ARG_ENABLE([alsa],
+[AS_HELP_STRING([--enable-alsa],
+                [enable the alsa backend @<:@default=no@:>@])])
+
+if test "x$enable_alsa" = xyes; then
     AC_CHECK_HEADER(alsa/asoundlib.h,
 	SHADOW_WARN=no
 	REDUNDANT_DECLS_WARN=no
@@ -514,371 +496,343 @@ if test x$enable_alsa = xyes; then
     enable_alsa=no)
 fi
 
-dnl
-AC_ARG_ENABLE(alsa,
-[  --enable-alsa-dlopen      dlopen alsa libs at runtime  [default=no]],
-              ,   enable_alsa_dlopen=no)
+AC_ARG_ENABLE([alsa-dlopen],
+[AS_HELP_STRING([--enable-alsa-dlopen],
+                [dlopen alsa libs at runtime @<:@default=no@:>@])])
 
-if test x$enable_alsa = xyes; then
-  if test x$enable_alsa_dlopen = xyes; then
+if test "x$enable_alsa" = xyes; then
+  if test "x$enable_alsa_dlopen" = xyes; then
     AC_DEFINE(OPENAL_DLOPEN_ALSA, 1, [undocumented])
   else
     AC_DEFINE(OPENAL_DLOPEN_ALSA, 0, [undocumented])
-	LIBS="$LIBS -lasound"
+    LIBS="$LIBS -lasound"
   fi
 fi
 
-dnl frequency based functions, should they be included?
-AC_ARG_ENABLE(fft,
-[  --enable-fft              enable fft mojo              [default=no]],
-              ,   enable_fft=no)
-if test x$enable_fft = xyes; then
-	AC_WARN(Regarding the FFT: I hope you know what you're doing)
-        AC_DEFINE(FFT, 1, [undocumented])
+# frequency based functions, should they be included?
+AC_ARG_ENABLE([fft],
+[AS_HELP_STRING([--enable-fft],
+                [enable fft mojo @<:@default=no@:>@])])
+
+if test "x$enable_fft" = xyes; then
+  AC_MSG_WARN([Regarding the FFT: I hope you know what you're doing])
+  AC_DEFINE(FFT, 1, [undocumented])
 fi
 
-dnl   enable arts sound?
-AC_ARG_ENABLE(arts,
-[  --enable-arts             enable aRts backend          [default=no]],
-              ,   enable_arts=no)
-AC_ARG_ENABLE(arts,
-[  --enable-arts-dlopen      dlopen aRts lib at runtime   [default=no]],
-              ,   enable_arts_dlopen=no)
+# enable arts sound?
+AC_ARG_ENABLE([arts],
+[AS_HELP_STRING([--enable-arts],
+                [enable aRts backend @<:@default=no@:>@])])
 
-if test x$enable_arts = xyes; then
-AC_PATH_PROG(HAVEARTS, artsc-config, , $PATH)
-if test ! -z "$HAVEARTS"; then
-	ARTS_CFLAGS=`$HAVEARTS --cflags`
-	ARTS_LIBS=`$HAVEARTS --libs`
+AC_ARG_ENABLE([arts-dlopen],
+[AS_HELP_STRING([--enable-arts-dlopen],
+                [dlopen aRts lib at runtime @<:@default=no@:>@])])
 
-        AC_DEFINE(ARTS_SUPPORT, 1, [undocumented])
-	CFLAGS="$CFLAGS $ARTS_CFLAGS"
-
-    	OS_OBJS="$OS_OBJS \$(ARTS_OBJS)"
-        if test x$enable_arts_dlopen = xyes; then
-            AC_DEFINE(OPENAL_DLOPEN_ARTS, 1, [undocumented])
-        else
-            AC_DEFINE(OPENAL_DLOPEN_ARTS, 0, [undocumented])
-            LIBS="$LIBS $ARTS_LIBS"
-        fi
-else
-	AC_MSG_WARN([*** artsc-config not found.  No support compiled in.])
+if test "x$enable_arts" = xyes; then
+  AC_PATH_PROG(HAVEARTS, artsc-config, , $PATH)
+  if test ! -z "$HAVEARTS"; then
+    ARTS_CFLAGS=`$HAVEARTS --cflags`
+    ARTS_LIBS=`$HAVEARTS --libs`
+    AC_DEFINE(ARTS_SUPPORT, 1, [undocumented])
+    CFLAGS="$CFLAGS $ARTS_CFLAGS"
+    OS_OBJS="$OS_OBJS \$(ARTS_OBJS)"
+    if test x$enable_arts_dlopen = xyes; then
+      AC_DEFINE(OPENAL_DLOPEN_ARTS, 1, [undocumented])
+    else
+      AC_DEFINE(OPENAL_DLOPEN_ARTS, 0, [undocumented])
+      LIBS="$LIBS $ARTS_LIBS"
+    fi
+  else
+    AC_MSG_WARN([artsc-config not found. No aRts support compiled in.])
+  fi
 fi
 
-fi #   enable_arts = yes
+# enable esd sound?
+AC_ARG_ENABLE([esd],
+[AS_HELP_STRING([--enable-esd],
+                [enable esd backend @<:@default=no@:>@])])
 
-dnl   enable esd sound?
-AC_ARG_ENABLE(esd,
-[  --enable-esd              enable esd backend           [default=no]],
-              ,   enable_esd=no)
-AC_ARG_ENABLE(esd,
-[  --enable-esd-dlopen       dlopen esd lib at runtime    [default=no]],
-              ,   enable_esd_dlopen=no)
+AC_ARG_ENABLE([esd-dlopen],
+[AS_HELP_STRING([--enable-esd-dlopen],
+                [dlopen esd lib at runtime @<:@default=no@:>@])])
 
-if test x$enable_esd = xyes; then
-AC_PATH_PROG(HAVEESD, esd-config, , $PATH)
-if test ! -z "$HAVEESD"; then
-	ESD_CFLAGS=`$HAVEESD --cflags`
-	ESD_LIBS=`$HAVEESD --libs`
-
-        AC_DEFINE(ESD_SUPPORT, 1, [undocumented])
-	CFLAGS="$CFLAGS $ESD_CFLAGS"
-
-    	OS_OBJS="$OS_OBJS \$(ESD_OBJS)"
-
-        # bad audiofile.h!  bad!
-	SHADOW_WARN=no
-
-        if test x$enable_esd_dlopen = xyes; then
-            AC_DEFINE(OPENAL_DLOPEN_ESD, 1, [undocumented])
-        else
-            AC_DEFINE(OPENAL_DLOPEN_ESD, 0, [undocumented])
-            LIBS="$LIBS $ESD_LIBS"
-        fi
-else
-	AC_MSG_WARN([*** esd-config not found.  No support compiled in.])
+if test "x$enable_esd" = xyes; then
+  AC_PATH_PROG(HAVEESD, esd-config, , $PATH)
+  if test ! -z "$HAVEESD"; then
+    ESD_CFLAGS=`$HAVEESD --cflags`
+    ESD_LIBS=`$HAVEESD --libs`
+    AC_DEFINE(ESD_SUPPORT, 1, [undocumented])
+    CFLAGS="$CFLAGS $ESD_CFLAGS"
+    OS_OBJS="$OS_OBJS \$(ESD_OBJS)"
+    # bad audiofile.h!  bad!
+    SHADOW_WARN=no
+    if test x$enable_esd_dlopen = xyes; then
+      AC_DEFINE(OPENAL_DLOPEN_ESD, 1, [undocumented])
+    else
+      AC_DEFINE(OPENAL_DLOPEN_ESD, 0, [undocumented])
+      LIBS="$LIBS $ESD_LIBS"
+    fi
+  else
+    AC_MSG_WARN([esd-config not found. No esd support compiled in.])
+  fi
 fi
-
-fi #   enable_esd = yes
 
 dnl check for IRIS headers
-dnl AC_ARG_ENABLE(iris,
-dnl [  --enable-iris             enable the irix backend      [default=no]],
-dnl             ,   enable_iris=no)
-dnl if test x$enable_iris = xyes; then
-dnl	CPPFLAGS=" "
-dnl        OS_OBJS="$OS_OBJS \$(IRIS_OBJS)"
-dnl        DEFINES="$DEFINES -DIRIS_SUPPORT"
-dnl        LIBS="$LIBS -laudio"
-dnl fi #   enable_iris = yes
+dnl AC_ARG_ENABLE([iris],
+dnl [AS_HELP_STRING([--enable-iris],
+dnl                 [enable the irix backend @<:@default=no@:>@])])
+dnl
+dnl if test "x$enable_iris" = xyes; then
+dnl   CPPFLAGS=" "
+dnl   OS_OBJS="$OS_OBJS \$(IRIS_OBJS)"
+dnl   DEFINES="$DEFINES -DIRIS_SUPPORT"
+dnl   LIBS="$LIBS -laudio"
+dnl fi
 
+# enable wave output?
+AC_ARG_ENABLE([waveout],
+[AS_HELP_STRING([--enable-waveout],
+                [enable waveout backend @<:@default=yes@:>@])])
 
-dnl   enable wave output?
-AC_ARG_ENABLE(waveout,
-[  --enable-waveout          enable waveout backend       [default=yes]],
-              ,   enable_waveout=yes)
-if test x$enable_waveout = xyes; then
-        AC_DEFINE(WAVEOUT_SUPPORT, 1, [undocumented])
-	OS_OBJS="$OS_OBJS \$(WAVEOUT_OBJS)"
-fi #   enable_waveout = yes
-
-dnl   enable null output?
-AC_ARG_ENABLE(null,
-[  --enable-null             enable null backend          [default=yes]],
-              ,   enable_null=yes)
-if test x$enable_null = xyes; then
-        AC_DEFINE(NULL_SUPPORT, 1, [undocumented])
-	OS_OBJS="$OS_OBJS \$(NULL_OBJS)"
-fi #   enable_null = yes
-
-dnl   enable SDL sound?
-AC_ARG_ENABLE(sdl,
-[  --enable-sdl              enable sdl backend           [default=no]],
-              ,   enable_sdl=no)
-if test x$enable_sdl = xyes; then
-
-	dnl On cygwin targets, we don't rely on sdl-config.
-	case "$target" in
-		*cygwin*)
-		HAVESDL=1
-
-		SDL_CFLAGS="-I/cygwin/usr/include/SDL"
-		SDL_LIBS=""
-
-		CFLAGS="$CFLAGS $SDL_CFLAGS"
-		LIBS="$LIBS $SDL_LIBS"
-
-		OS_OBJS="$OS_OBJS \$(SDL_OBJS)"
-		AC_DEFINE(SDL_SUPPORT, 1, [undocumented]);;
-		*)
-
-		AC_PATH_PROG(HAVESDL, sdl-config, , $PATH)
-		if test ! -z "$HAVESDL"; then
-			SDL_CFLAGS=`$HAVESDL --cflags`
-			SDL_LIBS=`$HAVESDL --libs`
-
-			AC_DEFINE(SDL_SUPPORT, 1, [undocumented])
-			CFLAGS="$CFLAGS $SDL_CFLAGS"
-			LIBS="$LIBS $SDL_LIBS"
-
-			OLDCPPFLAGS="$CPPFLAGS"
-			CPPFLAGS="-I/usr/local/include/SDL -I/usr/local/include"
-
-			OS_OBJS="$OS_OBJS \$(SDL_OBJS)"
-		else
-			AC_MSG_WARN([*** SDL not found.  No support compiled in.])
-		fi ;;
-	esac
-
-fi #   enable_sdl = yes
-
-dnl   enable directsound backend?
-AC_ARG_ENABLE(dsound,
-[  --enable-dsound           enable directsound backend   [default=no]],
-              ,   enable_dsound=no)
-if test x$enable_dsound = xyes; then
-
-	dnl On cygwin targets, we don't rely on sdl-config.
-	case "$target" in
-		*cygwin*)
-		AC_CHECK_HEADER(dsound.h,
-			AC_DEFINE(DSOUND_SUPPORT, 1, [undocumented])
-			LIBS="$LIBS -ldsound")
-
-		AC_DEFINE(DSOUND_SUPPORT, 1, [undocumented]);;
-		*)
-
-		echo "No dsound on nonwindows"
-		;;
-	esac
-
-fi #   enable_dsound = yes
-
-dnl Enable vorbis support
-AC_ARG_ENABLE(vorbis,
-[  --enable-vorbis           enable vorbis support        [default=no]],
-              ,   enable_vorbis=no)
-if test x$enable_vorbis = xyes; then
-
-	AC_CHECK_LIB(vorbisfile, ov_info,
-		AC_DEFINE( VORBIS_SUPPORT, 1, [undocumented] )
-		LIBS="$LIBS -lvorbis -lvorbisfile",, -lvorbis )
-
-fi #   enable_vorbis = no
-
-dnl Enable SMPEG for mp3 stuff
-AC_ARG_ENABLE(smpeg,
-[  --enable-smpeg            enable smpeg support         [default=no]],
-              ,   enable_smpeg=no)
-if test x$enable_smpeg = xyes; then
-	AC_PATH_PROG(HAVESMPEG, smpeg-config, , $PATH)
-	if test ! -z "$HAVESMPEG"; then
-
-		dnl smpeg requires sdl
-
-		dnl Only test for SDL if we haven't already tested for it
-		if test -z "$HAVESDL"; then
-			AC_PATH_PROG(HAVESDL, sdl-config, , $PATH)
-
-			if test ! -z "$HAVESDL"; then
-				SDL_CFLAGS=`$HAVESDL --cflags`
-				SDL_LIBS=`$HAVESDL --libs`
-
-				AC_DEFINE(SDL_SUPPORT, 1, [undocumented])
-				CFLAGS="$CFLAGS $SDL_CFLAGS"
-				LIBS="$LIBS $SDL_LIBS"
-
-				OLDCPPFLAGS="$CPPFLAGS"
-				CPPFLAGS="-I/usr/local/include/SDL -I/usr/local/include"
-
-				OS_OBJS="$OS_OBJS \$(SDL_OBJS)"
-			fi
-		fi
-
-		if test ! -z "$HAVESDL"; then
-			SMPEG_CFLAGS=`$HAVESMPEG --cflags`
-			SMPEG_LIBS=`$HAVESMPEG --libs`
-
-			AC_DEFINE(SMPEG_SUPPORT, 1, [undocumented])
-			CFLAGS="$CFLAGS $SMPEG_CFLAGS"
-			LIBS="$LIBS $SMPEG_LIBS"
-		else
-			AC_MSG_WARN([*** smpeg requires SDL, and none found.])
-
-		fi
-else
-	AC_MSG_WARN([*** smpeg not found.  No support compiled in.])
+if test "x$enable_waveout" != xno; then
+  AC_DEFINE(WAVEOUT_SUPPORT, 1, [undocumented])
+  OS_OBJS="$OS_OBJS \$(WAVEOUT_OBJS)"
 fi
 
-fi #   enable_smpeg = yes
+# enable null output?
+AC_ARG_ENABLE([null],
+[AS_HELP_STRING([--enable-null],
+                [enable null backend @<:@default=yes@:>@])])
 
-dnl Enable capture support
-AC_ARG_ENABLE(capture,
-[  --enable-capture          enable capture support       [default=no]],
-              ,   enable_capture=no)
-if test x$enable_capture = xyes; then
-	AC_DEFINE(CAPTURE_SUPPORT, 1, [undocumented])
-fi #   enable_capture = no
+if test "x$enable_null" != xno; then
+  AC_DEFINE(NULL_SUPPORT, 1, [undocumented])
+  OS_OBJS="$OS_OBJS \$(NULL_OBJS)"
+fi
 
-dnl makeinfo stuff
+# enable SDL sound?
+AC_ARG_ENABLE([sdl],
+[AS_HELP_STRING([--enable-sdl],
+                [enable SDL backend @<:@default=no@:>@])])
+
+if test "x$enable_sdl" = xyes; then
+  # On cygwin targets, we don't rely on sdl-config.
+  case "$target" in
+    *cygwin*)
+      HAVESDL=1
+      SDL_CFLAGS="-I/cygwin/usr/include/SDL"
+      SDL_LIBS=""
+      CFLAGS="$CFLAGS $SDL_CFLAGS"
+      LIBS="$LIBS $SDL_LIBS"
+      OS_OBJS="$OS_OBJS \$(SDL_OBJS)"
+      AC_DEFINE(SDL_SUPPORT, 1, [undocumented])
+      ;;
+
+    *)
+      AC_PATH_PROG(HAVESDL, sdl-config, , $PATH)
+      if test ! -z "$HAVESDL"; then
+        SDL_CFLAGS=`$HAVESDL --cflags`
+        SDL_LIBS=`$HAVESDL --libs`
+        AC_DEFINE(SDL_SUPPORT, 1, [undocumented])
+        CFLAGS="$CFLAGS $SDL_CFLAGS"
+        LIBS="$LIBS $SDL_LIBS"
+        OLDCPPFLAGS="$CPPFLAGS"
+        CPPFLAGS="-I/usr/local/include/SDL -I/usr/local/include"
+        OS_OBJS="$OS_OBJS \$(SDL_OBJS)"
+      else
+        AC_MSG_WARN([SDL not found. No SDL support compiled in.])
+      fi
+      ;;
+  esac
+fi
+
+# enable directsound backend?
+AC_ARG_ENABLE([dsound],
+[AS_HELP_STRING([--enable-dsound],
+                [enable directsound backend @<:@default=no@:>@])])
+
+if test "x$enable_dsound" = xyes; then
+  # On cygwin targets, we don't rely on sdl-config.
+  case "$target" in
+    *cygwin*)
+      AC_CHECK_HEADER(dsound.h,
+        AC_DEFINE(DSOUND_SUPPORT, 1, [undocumented])
+        LIBS="$LIBS -ldsound")
+      AC_DEFINE(DSOUND_SUPPORT, 1, [undocumented])
+      ;;
+    *)
+      echo "No dsound on nonwindows"
+      ;;
+  esac
+fi
+
+# enable vorbis support?
+AC_ARG_ENABLE([vorbis],
+[AS_HELP_STRING([--enable-vorbis],
+                [enable vorbis support @<:@default=no@:>@])])
+
+if test "x$enable_vorbis" = xyes; then
+    AC_CHECK_LIB(vorbisfile, ov_info,
+      AC_DEFINE( VORBIS_SUPPORT, 1, [undocumented] )
+      LIBS="$LIBS -lvorbis -lvorbisfile",, -lvorbis )
+fi
+
+# enable SMPEG for mp3 stuff?
+AC_ARG_ENABLE([smpeg],
+[AS_HELP_STRING([--enable-smpeg],
+                [enable smpeg support @<:@default=no@:>@])])
+
+if test "x$enable_smpeg" = xyes; then
+  AC_PATH_PROG(HAVESMPEG, smpeg-config, , $PATH)
+  if test ! -z "$HAVESMPEG"; then
+    # smpeg requires sdl
+    # Only test for SDL if we haven't already tested for it
+    if test -z "$HAVESDL"; then
+      AC_PATH_PROG(HAVESDL, sdl-config, , $PATH)
+      if test ! -z "$HAVESDL"; then
+              SDL_CFLAGS=`$HAVESDL --cflags`
+              SDL_LIBS=`$HAVESDL --libs`
+              AC_DEFINE(SDL_SUPPORT, 1, [undocumented])
+              CFLAGS="$CFLAGS $SDL_CFLAGS"
+              LIBS="$LIBS $SDL_LIBS"
+              OLDCPPFLAGS="$CPPFLAGS"
+              CPPFLAGS="-I/usr/local/include/SDL -I/usr/local/include"
+              OS_OBJS="$OS_OBJS \$(SDL_OBJS)"
+      fi
+    fi
+    if test ! -z "$HAVESDL"; then
+      SMPEG_CFLAGS=`$HAVESMPEG --cflags`
+      SMPEG_LIBS=`$HAVESMPEG --libs`
+      AC_DEFINE(SMPEG_SUPPORT, 1, [undocumented])
+      CFLAGS="$CFLAGS $SMPEG_CFLAGS"
+      LIBS="$LIBS $SMPEG_LIBS"
+    else
+      AC_MSG_WARN([smpeg requires SDL, and none found.])
+    fi
+  else
+    AC_MSG_WARN([smpeg not found.  No support compiled in.])
+  fi
+fi
+
+# enable capture support?
+AC_ARG_ENABLE([capture],
+[AS_HELP_STRING([--enable-capture],
+                [enable capture support @<:@default=no@:>@])])
+
+if test "x$enable_capture" = xyes; then
+  AC_DEFINE(CAPTURE_SUPPORT, 1, [undocumented])
+fi
+
+# makeinfo stuff
 AC_CHECK_PROG(MAKEINFO, makeinfo, yes, no)
-if test $MAKEINFO = yes; then
-	MAKEINFO='makeinfo'
+if test "x$MAKEINFO" = xyes; then
+  MAKEINFO='makeinfo'
 else
-	# for silly people without texinfo
-	MAKEINFO='@echo'
+  # for silly people without texinfo
+  MAKEINFO='@echo'
 fi
 
-dnl
-dnl  Warning flags
-dnl      This is where we prune down warnings based on the limitations of
-dnl      the platform or included headers.
-dnl
+# Warning flags
+#   This is where we prune down warnings based on the limitations of
+#   the platform or included headers.
 
-dnl warning pruning based on cpu type
+# warning pruning based on CPU type
 case "$target" in
-    *i386*) ;;
-    *i486*) ;;
-    *i586*) ;;
-    *i686*) ;;
-    *powerpc*);;
-    *alpha*)
+  *alpha*)
     SHOULD_ENFORCE_ANSI=no ;; # f***ed up math headers
-    *) echo "Unknown target $target" ;;
 esac
 
 if test ! -z "$HAVESDL"; then
-	# If we don't have SDL, we can use -ansi for gcc.  If we do, SDL
-	# uses long long which is bad mojo
-	SHOULD_USE_WERROR=no
+  # If we don't have SDL, we can use -ansi for gcc.  If we do, SDL
+  # uses long long which is bad mojo
+  SHOULD_USE_WERROR=no
 fi
 
-dnl Should we use turn warnings into errors?
-if test x$SHOULD_USE_WERROR = xyes; then
-	WFLAGS="$WFLAGS -Werror -pedantic-errors"
+# Should we use turn warnings into errors?
+if test "x$SHOULD_USE_WERROR" = xyes; then
+  WFLAGS="$WFLAGS -Werror -pedantic-errors"
 fi
 
-dnl if we are forced to live with redundant decls, turn off those errors
+# if we are forced to live with redundant decls, turn off those errors
 if test $REDUNDANT_DECLS_WARN = no; then
-WFLAGS="$WFLAGS -Wno-redundant-decls"
+  WFLAGS="$WFLAGS -Wno-redundant-decls"
 else
-WFLAGS="$WFLAGS -Wredundant-decls"
+  WFLAGS="$WFLAGS -Wredundant-decls"
 fi
 
-dnl Typical UNIX doesn't like -ansi
-if test x$SHOULD_ENFORCE_ANSI = xyes; then
-WFLAGS="-ansi $WFLAGS"
+# Typical UNIX doesn't like -ansi
+if test "x$SHOULD_ENFORCE_ANSI" = xyes; then
+  WFLAGS="-ansi $WFLAGS"
 fi
 
-dnl Stupid audiofile headers
-if test x$SHADOW_WARN = xyes; then
-WFLAGS="-Wshadow $WFLAGS"
+# Stupid audiofile headers
+if test "x$SHADOW_WARN" = xyes; then
+  WFLAGS="-Wshadow $WFLAGS"
 fi
 
-dnl Stupid audiofile headers
-if test x$SHOULD_USE_FPIC = xyes; then
-AC_DEFINE(PIC, 1, [undocumented])
-CFLAGS="$CFLAGS -fPIC"
+# Stupid audiofile headers
+if test "x$SHOULD_USE_FPIC" = xyes; then
+  AC_DEFINE(PIC, 1, [undocumented])
+  CFLAGS="$CFLAGS -fPIC"
 fi
 
-dnl add warnings to CFALGS
+# add warnings to CFALGS
 CFLAGS="$CFLAGS $WFLAGS"
 
-dnl okay, rdynamic okay?
-if test x$SHOULD_USE_RDYNAMIC = xyes; then
-AC_DEFINE_UNQUOTED(RDYNAMIC, "-rdynamic", [undocumented])
+# okay, rdynamic okay?
+if test "x$SHOULD_USE_RDYNAMIC" = xyes; then
+  AC_DEFINE_UNQUOTED(RDYNAMIC, "-rdynamic", [undocumented])
 fi
 
-dnl Da domb!
+# Da domb!
 AC_DEFINE(BOMB, 1, [undocumented])
 
-dnl look for install
+# look for install
 AC_PROG_INSTALL
 AC_PROG_LN_S
 
-dnl look for make
+# look for make
 AC_CHECK_PROG(MAKE, gmake, gmake, none)
 if test $MAKE = none; then
-	# no gmake?  Ouch
-	AC_MSG_WARN(Could not find gmake: so setting \$MAKE to make.)
-	MAKE=make
+  # no gmake?  Ouch
+  AC_MSG_WARN([Could not find gmake: so setting \$MAKE to make.])
+  MAKE=make
 fi
 
-dnl define version
+# define version
 AC_DEFINE_UNQUOTED(LAL_VERSION, "$VERSION", [undocumented])
 
-AC_SUBST(DO_MINOR_LIBS)
-AC_SUBST(NASM)
-AC_SUBST(RANLIB)
-AC_SUBST(CC)
-AC_SUBST(CFLAGS)
-AC_SUBST(DEFINES)
-AC_SUBST(LDFLAGS)
-AC_SUBST(LIBS)
-AC_SUBST(INCLUDES)
-AC_SUBST(JLIB)
-AC_SUBST(MAKE)
-AC_SUBST(MAKEINFO)
-AC_SUBST(OS_OBJS)
-AC_SUBST(ARCH_OBJS)
-AC_SUBST(SYS_THREAD_OBJS)
-AC_SUBST(SYS_MUTEX_OBJS)
-AC_SUBST(INSTALL)
-AC_SUBST(LN_S)
-AC_SUBST(SHARED_LIBRARY_EXT)
-AC_SUBST(SIZEOF_VOID_P)
-AC_SUBST(RDYNAMIC)
-AC_SUBST(requirements)
+AC_SUBST([DO_MINOR_LIBS])
+AC_SUBST([NASM])
+AC_SUBST([RANLIB])
+AC_SUBST([CC])
+AC_SUBST([CFLAGS])
+AC_SUBST([DEFINES])
+AC_SUBST([LDFLAGS])
+AC_SUBST([LIBS])
+AC_SUBST([INCLUDES])
+AC_SUBST([JLIB])
+AC_SUBST([MAKE])
+AC_SUBST([MAKEINFO])
+AC_SUBST([OS_OBJS])
+AC_SUBST([ARCH_OBJS])
+AC_SUBST([SYS_THREAD_OBJS])
+AC_SUBST([SYS_MUTEX_OBJS])
+AC_SUBST([INSTALL])
+AC_SUBST([LN_S])
+AC_SUBST([SHARED_LIBRARY_EXT])
+AC_SUBST([SIZEOF_VOID_P])
+AC_SUBST([RDYNAMIC])
+AC_SUBST([requirements])
 
-AC_OUTPUT([
-Makefile
-src/Makefile 
-doc/Makefile 
-jlib/Makefile 
-audioconvert/Makefile 
-test/Makefile
-openal-config
-openal.pc
-],[
-chmod +x openal-config
-])
+# Generate output.
+AC_CONFIG_FILES([Makefile
+                 audioconvert/Makefile 
+                 doc/Makefile
+                 jlib/Makefile
+                 openal-config
+                 openal.pc
+                 src/Makefile
+                 test/Makefile])
+AC_CONFIG_COMMANDS([default], [chmod +x openal-config])
+AC_OUTPUT
+
