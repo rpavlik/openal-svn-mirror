@@ -99,15 +99,36 @@ bool	IsFormatSupported(UInt32	inFormatID)
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// two legacy functions in AL Mac
-// AL_MAIN functions
 ALUTAPI ALvoid ALUTAPIENTRY alutInit(ALint *argc,ALbyte **argv) 
 {
+    ALCcontext *Context;
+    ALCdevice *Device;
+	
+    Device=alcOpenDevice(NULL);  //Open device
+ 	
+    if (Device != NULL) {
+        Context=alcCreateContext(Device,0);  //Create context
+		
+	if (Context != NULL) {
+	    alcMakeContextCurrent(Context);  //Set active context
+	}
+    }
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ALUTAPI ALvoid ALUTAPIENTRY alutExit(ALvoid) 
 {
+    ALCcontext *Context;
+    ALCdevice *Device;
+	
+    //Get active context
+    Context=alcGetCurrentContext();
+    //Get device for active context
+    Device=alcGetContextsDevice(Context);
+    //Release context
+    alcDestroyContext(Context);
+    //Close device
+    alcCloseDevice(Device);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
