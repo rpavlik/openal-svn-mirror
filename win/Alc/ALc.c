@@ -21,19 +21,16 @@
 #pragma comment(lib, "winmm.lib")
 
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
-#include "..\OpenAL32\include\almain.h"
-#include "al\alc.h"
-#include "al\alu.h"
-#include "OpenAL32\include\alBuffer.h"
-
-#ifdef _DEBUG
-#include <stdio.h>
-#endif
+#include "OpenAL32/Include/alMain.h"
+#include "AL/al.h"
+#include "AL/alc.h"
+#include "AL/alu.h"
+#include "OpenAL32/Include/alBuffer.h"
 
 #define SPEEDOFSOUNDMETRESPERSEC	(343.3f)
-
 #define MAX_NUM_SOURCES			64
 
 typedef struct ALCextension_struct
@@ -48,7 +45,6 @@ typedef struct ALCfunction_struct
 	ALvoid		*address;
 } ALCfunction;
 
-
 static ALCextension alcExtensions[] = {	
 	{ NULL,							(ALvoid *) NULL				} };
 
@@ -60,7 +56,7 @@ static ALubyte alcNoError[] = "No Error";
 static ALubyte alcErrInvalidDevice[] = "Invalid Device";
 static ALubyte alcErrInvalidContext[] = "Invalid Context";
 static ALubyte alcErrInvalidEnum[] = "Invalid Enum";
-static ALubyte alcErrInvalidValue[] = "Invalud Value";
+static ALubyte alcErrInvalidValue[] = "Invalid Value";
 
 // Context strings
 static ALubyte alcDefaultDeviceSpecifier[] = "DirectSound3D";
@@ -94,7 +90,7 @@ void UpdateListener(ALCcontext *ALContext);
 ALuint GetMaxNumStereoBuffers(LPDIRECTSOUND lpDS);
 ALuint GetMaxNum3DMonoBuffers(LPDIRECTSOUND lpDS);
 
-#define		TIMERINTERVAL	50	// was 100
+#define		TIMERINTERVAL	50
 	
 ALuint		g_nTimerInterval;
 ALuint		g_nTimerID;
@@ -113,6 +109,20 @@ ALCboolean alcIsContext(ALCcontext *context)
 	}
 
 	return AL_FALSE;
+}
+
+ALCAPI ALCenum ALCAPIENTRY alcGetError(ALCdevice *device)
+{
+	ALCenum errorCode;
+
+	errorCode=LastError;
+	LastError=AL_NO_ERROR;
+	return errorCode;
+}
+
+ALCvoid alcSetError(ALenum errorCode)
+{
+	LastError=errorCode;
 }
 
 // Private, internal functions for Thread-safe behaviour
@@ -137,62 +147,66 @@ ALCAPI ALCvoid ALCAPIENTRY alcProcessContext(ALCcontext *context)
 	// Not a lot happens here !
 }
 
-
-ALCenum alcGetError(ALCdevice *device)
-{
-	ALCenum errorCode;
-
-	errorCode=LastError;
-	LastError=AL_NO_ERROR;
-	return errorCode;
-}
-
-ALCvoid alcSetError(ALenum errorCode)
-{
-	LastError=errorCode;
-}
-
 ALCAPI ALCubyte* ALCAPIENTRY alcGetString(ALCdevice *device,ALCenum param)
 {
 	ALCcontext *Context;
 	ALubyte *value = NULL;
 
 	Context=alcGetCurrentContext();
-	SuspendContext(Context);
-	switch(param)
+	if (Context)
 	{
+		SuspendContext(Context);
+	
+		switch(param)
+		{
 		case ALC_NO_ERROR:
 			value=alcNoError;
 			break;
+
 		case ALC_INVALID_ENUM:
 			value=alcErrInvalidEnum;
 			break;
+
 		case ALC_INVALID_VALUE:
 			value=alcErrInvalidValue;
 			break;
+
 		case ALC_INVALID_DEVICE:
 			value=alcErrInvalidDevice;
 			break;
+
 		case ALC_INVALID_CONTEXT:
 			value=alcErrInvalidContext;
 			break;
+
 		case ALC_DEFAULT_DEVICE_SPECIFIER:
 			value = alcDefaultDeviceSpecifier;
 			break;
+
 		case ALC_DEVICE_SPECIFIER:
 			if (!device)
 				alcSetError(ALC_INVALID_DEVICE);
 			else
 				value = device->szDeviceName;
 			break;
+
 		case ALC_EXTENSIONS:
 			value = alcExtensionList;
 			break;
+
 		default:
 			alcSetError(ALC_INVALID_ENUM);
 			break;
+		}
+	
+		ProcessContext(Context);
 	}
-	ProcessContext(Context);
+	else
+	{
+		// Invalid Context
+		alcSetError(ALC_INVALID_CONTEXT);
+	}
+
 	return value;
 }
 
@@ -201,52 +215,109 @@ ALCAPI ALCvoid ALCAPIENTRY alcGetIntegerv(ALCdevice *device,ALCenum param,ALCsiz
 {
 	ALCcontext *Context;
 
-	if ((size == 0) || (!data))
-		return;
-
 	Context=alcGetCurrentContext();
-	SuspendContext(Context);
-	switch (param)
+	if (Context)
 	{
-		case ALC_MAJOR_VERSION:
-			if (size < sizeof(ALCint))
-				alcSetError(ALC_INVALID_VALUE);
-			else
-				*data = alcMajorVersion;
-			break;
-		case ALC_MINOR_VERSION:
-			if (size < sizeof(ALCint))
-				alcSetError(ALC_INVALID_VALUE);
-			else
-				*data = alcMinorVersion;
-			break;
-		case ALC_ATTRIBUTES_SIZE:
-			if (device)
+		SuspendContext(Context);
+		
+		if (data)
+		{
+			switch (param)
 			{
-				if (size < sizeof(ALCint))
-					alcSetError(ALC_INVALID_VALUE);
+			case ALC_MAJOR_VERSION:
+				if (size >= sizeof(ALCint))
+				{
+					*data = alcMajorVersion;
+				}
 				else
-					*data = strlen(alcExtensionList);
-			}
-			else
-				alcSetError(ALC_INVALID_DEVICE);
-			break;
-		case ALC_ALL_ATTRIBUTES:
-			if (device)
-			{
-				if (size < strlen(alcExtensionList))
+				{
 					alcSetError(ALC_INVALID_VALUE);
+				}
+				break;
+
+			case ALC_MINOR_VERSION:
+				if (size >= sizeof(ALCint))
+				{
+					*data = alcMinorVersion;
+				}
 				else
-					strcpy((char*)data, alcExtensionList);
+				{
+					alcSetError(ALC_INVALID_VALUE);
+				}
+				break;
+
+			case ALC_ATTRIBUTES_SIZE:
+				if (device)
+				{
+					if (size >= sizeof(ALCint))
+					{
+						*data = ( 4 * ( sizeof(ALint) + sizeof(ALenum) ) );
+					}
+					else
+					{
+						alcSetError(ALC_INVALID_VALUE);
+					}		
+				}
+				else
+				{
+					alcSetError(ALC_INVALID_DEVICE);
+				}
+				break;
+
+			case ALC_ALL_ATTRIBUTES:
+				if (device)
+				{
+					if (size >= ( 4 * ( sizeof(ALint) + sizeof(ALenum) ) ))
+					{
+						data[0] = ALC_FREQUENCY;
+						if (device->DS3dlistener)
+							data[1] = 44100;
+						else
+							data[1] = 22050;
+
+						data[2] = ALC_REFRESH;
+						if (device->DS3dlistener)
+							data[3] = 20;
+						else
+							data[3] = 40;
+
+						data[4] = ALC_SYNC;
+						data[5] = AL_FALSE;
+
+						data[6] = 0;
+						data[7] = 0;
+					}
+					else	
+					{
+						alcSetError(ALC_INVALID_VALUE);
+					}
+				}
+				else
+				{
+					alcSetError(ALC_INVALID_DEVICE);
+				}
+				break;
+
+			default:
+				alcSetError(ALC_INVALID_ENUM);
+				break;
 			}
-			else
-				alcSetError(ALC_INVALID_DEVICE);
-			break;
-		default:
-			alcSetError(ALC_INVALID_ENUM);
-			break;
+		}
+		else
+		{
+			// data is a NULL pointer
+			alcSetError(ALC_INVALID_VALUE);
+		}
+
+		ProcessContext(Context);
 	}
-	ProcessContext(Context);
+	else
+	{
+		// Invalid Context
+		alcSetError(ALC_INVALID_CONTEXT);
+	}
+
+	return;
 }
 
 
@@ -454,47 +525,49 @@ ALCvoid alcExitContext(ALCcontext *context)
 
 ALCAPI ALCcontext*ALCAPIENTRY alcCreateContext(ALCdevice *device,ALCint *attrList)
 {
-	ALCcontext *ALContext;
+	ALCcontext *ALContext = NULL;
 
-	if (!device)
+	if (device)
 	{
-		alcSetError(ALC_INVALID_DEVICE);
-		return NULL;
-	}
-
-	if (!Context)
-    {
-		Context=malloc(sizeof(ALCcontext));
-		if (Context)
+		if (!Context)
 		{
-			memset(Context,0,sizeof(ALCcontext));
-			Context->Device=device;
-			Context->Valid=AL_TRUE;
-			alcInitContext(Context);
-			ContextCount++;
+			Context=malloc(sizeof(ALCcontext));
+			if (Context)
+			{
+				memset(Context,0,sizeof(ALCcontext));
+				Context->Device=device;
+				Context->Valid=AL_TRUE;
+				alcInitContext(Context);
+				ContextCount++;
+			}
+			ALContext=Context;
 		}
-		ALContext=Context;
+		else
+		{
+			ALContext=Context;
+			while (ALContext->next)
+				ALContext=ALContext->next;
+			if (ALContext)
+			{
+				ALContext->next=malloc(sizeof(ALCcontext));
+				if (ALContext->next)
+				{
+					memset(ALContext->next,0,sizeof(ALCcontext));
+					ALContext->next->previous=ALContext;
+					ALContext->next->Device=device;
+					ALContext->next->Valid=AL_TRUE;
+					alcInitContext(ALContext);
+					ContextCount++;
+				}
+				ALContext=ALContext->next;
+			}
+		}
 	}
 	else
 	{
-		ALContext=Context;
-		while (ALContext->next)
-			ALContext=ALContext->next;
-		if (ALContext)
-		{
-			ALContext->next=malloc(sizeof(ALCcontext));
-			if (ALContext->next)
-			{
-				memset(ALContext->next,0,sizeof(ALCcontext));
-				ALContext->next->previous=ALContext;
-				ALContext->next->Device=device;
-				ALContext->next->Valid=AL_TRUE;
-				alcInitContext(ALContext);
-				ContextCount++;
-			}
-			ALContext=ALContext->next;
-		}
+		alcSetError(ALC_INVALID_DEVICE);
 	}
+
 	return ALContext;
 }
 
@@ -523,7 +596,9 @@ ALCAPI ALCvoid ALCAPIENTRY alcDestroyContext(ALCcontext *context)
 		free(ALContext);
 	}
 	else
+	{
 		alcSetError(ALC_INVALID_CONTEXT);
+	}
 }
 
 
@@ -550,7 +625,9 @@ ALCAPI ALCdevice* ALCAPIENTRY alcGetContextsDevice(ALCcontext *context)
 		ProcessContext(ALContext);
 	}
 	else
+	{
 		alcSetError(ALC_INVALID_CONTEXT);
+	}
 
 	return ALDevice;
 }
@@ -558,29 +635,32 @@ ALCAPI ALCdevice* ALCAPIENTRY alcGetContextsDevice(ALCcontext *context)
 ALCAPI ALCboolean ALCAPIENTRY alcMakeContextCurrent(ALCcontext *context)
 {
 	ALCcontext *ALContext;
+	ALboolean bReturn = AL_TRUE;
 	
 	// context must be a valid Context or NULL
-	if ((!alcIsContext(context)) && (context != NULL))
+	if ((alcIsContext(context)) || (context == NULL))
+	{
+		if (ALContext=alcGetCurrentContext())
+		{
+			SuspendContext(ALContext);
+			ALContext->InUse=AL_FALSE;
+			ProcessContext(ALContext);
+		}
+
+		if ((ALContext=context) && (ALContext->Device))
+		{
+			SuspendContext(ALContext);
+			ALContext->InUse=AL_TRUE;
+			ProcessContext(ALContext);
+		}
+	}
+	else
 	{
 		alcSetError(ALC_INVALID_CONTEXT);
-		return AL_FALSE;
+		bReturn = AL_FALSE;
 	}
 
-	if (ALContext=alcGetCurrentContext())
-	{
-		SuspendContext(ALContext);
-		ALContext->InUse=AL_FALSE;
-		ProcessContext(ALContext);
-	}
-
-	if ((ALContext=context) && (ALContext->Device))
-	{
-		SuspendContext(ALContext);
-		ALContext->InUse=AL_TRUE;
-		ProcessContext(ALContext);
-	}
-	
-	return AL_TRUE;
+	return bReturn;
 }
 
 
@@ -705,7 +785,7 @@ void CALLBACK TimerCallback(UINT uID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD 
 				else
 					BufferSize = 0;
 				DataSize += BufferSize;
-				if (DataSize >= BytesPlayed)
+				if (DataSize >= BytesPlayed)	// changed from > to >=
 					break;
 				else
 					ALBufferListItem = ALBufferListItem->next;
@@ -1140,7 +1220,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 		OutputType.nSamplesPerSec=44100;
 		OutputType.nAvgBytesPerSec=88200;
 		OutputType.cbSize=0;
-		if (IDirectSound_CreateSoundBuffer(ALContext->Device->DShandle,&DSBDescription,&(LPDIRECTSOUNDBUFFER)ALSource->uservalue1,NULL)==DS_OK)
+		if (IDirectSound_CreateSoundBuffer(ALContext->Device->DShandle,&DSBDescription,(LPDIRECTSOUNDBUFFER *)&ALSource->uservalue1,NULL)==DS_OK)
 		{
 			IDirectSoundBuffer_SetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,0);
 
@@ -1342,6 +1422,8 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 						IDirectSoundBuffer_Release((LPDIRECTSOUNDBUFFER)ALSource->uservalue1);
 						ALSource->uservalue1=NULL;
 
+						ALSource->SourceType = SOURCE2D;
+
 						// Set Caps
 						memset(&DSBDescription,0,sizeof(DSBUFFERDESC));
 						DSBDescription.dwSize=sizeof(DSBUFFERDESC);
@@ -1357,7 +1439,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 						OutputType.nSamplesPerSec=44100;
 						OutputType.nAvgBytesPerSec=176400;
 						OutputType.cbSize=0;
-						if (IDirectSound_CreateSoundBuffer(ALContext->Device->DShandle,&DSBDescription,&(LPDIRECTSOUNDBUFFER)ALSource->uservalue1,NULL)==DS_OK)
+						if (IDirectSound_CreateSoundBuffer(ALContext->Device->DShandle,&DSBDescription,(LPDIRECTSOUNDBUFFER *)&ALSource->uservalue1,NULL)==DS_OK)
 						{
 							IDirectSoundBuffer_SetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,0);
 						}
@@ -1385,8 +1467,6 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 							volume = LinearGainToDB(Gain);
 							IDirectSoundBuffer_SetVolume((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, volume);
 						}
-
-						ALSource->SourceType = SOURCE2D;
 					}
 					else if ((Channels == 1) && (ALSource->SourceType == SOURCE2D))
 					{
@@ -1416,7 +1496,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 						OutputType.nAvgBytesPerSec=88200;
 						OutputType.cbSize=0;
 
-						if (IDirectSound_CreateSoundBuffer(ALContext->Device->DShandle,&DSBDescription,&(LPDIRECTSOUNDBUFFER)ALSource->uservalue1,NULL)==DS_OK)
+						if (IDirectSound_CreateSoundBuffer(ALContext->Device->DShandle,&DSBDescription,(LPDIRECTSOUNDBUFFER *)&ALSource->uservalue1,NULL)==DS_OK)
 						{
 							IDirectSoundBuffer_SetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,0);
 
@@ -1463,9 +1543,9 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 
 					// Record duration of the DS circular buffer
 					if (ALSource->SourceType == SOURCE3D)
-						ALSource->BufferDuration = 44100000.f / (float)Freq;
+						ALSource->BufferDuration = 44100000.f / (float)(Freq*Pitch);
 					else
-						ALSource->BufferDuration = 22050000.f / (float)Freq;
+						ALSource->BufferDuration = 22050000.f / (float)(Freq*Pitch);
 
 
 					if (ALSource->DSBufferPlaying)
@@ -2015,6 +2095,12 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 			
 			IDirectSoundBuffer_SetFrequency((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,(long)(Freq*Pitch));
 			
+			// Update duration of the DS circular buffer
+			if (ALSource->SourceType == SOURCE3D)
+				ALSource->BufferDuration = 44100000.f / (float)(Freq*Pitch);
+			else
+				ALSource->BufferDuration = 22050000.f / (float)(Freq*Pitch);
+
 			ALSource->update1 &= ~FREQUENCY;
 			if (ALSource->update1 == 0)
 				return;
@@ -2042,7 +2128,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 		if (ALSource->uservalue2)
 		{
 			maxDist = ALSource->param[AL_MAX_DISTANCE-AL_CONE_INNER_ANGLE].data.f;
-			IDirectSound3DBuffer_SetMaxDistance((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,maxDist,DS3D_IMMEDIATE);			
+			IDirectSound3DBuffer_SetMaxDistance((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,maxDist,DS3D_IMMEDIATE);
 			ALSource->update1 &= ~MAXDIST;
 			if (ALSource->update1 == 0)
 				return;
@@ -2354,7 +2440,8 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(ALCubyte *deviceName)
 	ALuint dwSize1, dwSize2;
 	ALboolean bUseDS;
 	ALboolean bUseDS3D;
-	ALuint numStereo, numMono, numSources;
+	ALboolean bDeviceFound = AL_FALSE;
+	ALuint numSources;
 
 	bUseDS = AL_FALSE;
 	bUseDS3D = AL_FALSE;
@@ -2424,39 +2511,51 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(ALCubyte *deviceName)
 										// Check that is an accelerated DS device
 										if (!(dsCaps.dwFlags & DSCAPS_EMULDRIVER))
 										{
-											numStereo = GetMaxNumStereoBuffers(device->DShandle);
-											numMono = GetMaxNum3DMonoBuffers(device->DShandle);
-											numSources = min(numStereo, numMono);
+											numSources = (GetMaxNum3DMonoBuffers(device->DShandle) - 1);
 
 											// To enable the 'DirectSound3D' device, the audio card MUST support
 											// at least 16 voices.  (If not, then the device selection drops through
-											// to the 'DirectSound'.
+											// to the 'DirectSound' device).
 											if (numSources >= 16)
 											{
 												device->CreationFlag = DSBCAPS_LOCHARDWARE;
 												device->MaxNoOfSources = numSources;
 
 												strcpy(device->szDeviceName, "DirectSound3D");
-												return device;
+												bDeviceFound = AL_TRUE;
 											}
-
 										}
 									}
-
-									IDirectSound3DListener_Release(device->DS3dlistener);
-									device->DS3dlistener=NULL;
 								}
 							}
-							IDirectSoundBuffer_Release(device->DSpbuffer);
-							device->DSpbuffer=NULL;
 						}
 					}
+				}
+			}
+
+			if (!bDeviceFound)
+			{
+				if (device->DS3dlistener)
+				{
+					IDirectSound3DListener_Release(device->DS3dlistener);
+					device->DS3dlistener=NULL;
+				}
+
+				if (device->DSpbuffer)
+				{
+					IDirectSoundBuffer_Release(device->DSpbuffer);
+					device->DSpbuffer=NULL;
+				}
+
+				if (device->DShandle)
+				{
 					IDirectSound_Release(device->DShandle);
 					device->DShandle=NULL;
 				}
+
+				// Failed to initialize DirectSound3D device - so fall back to DirectSound device
+				bUseDS = AL_TRUE;
 			}
-			// Failed to initialize DirectSound3D device - so fall back to DirectSound device
-			bUseDS = AL_TRUE;
 		}
 
 		if (bUseDS)
@@ -2503,73 +2602,109 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(ALCubyte *deviceName)
 												device->MaxNoOfSources = 32;
 
 												strcpy(device->szDeviceName, "DirectSound");
-												return device;
+												bDeviceFound = AL_TRUE;
 											}
 										}
 									}
-									IDirectSoundBuffer_Release(device->DSsbuffer);
-									device->DSsbuffer=NULL;
 								}
 							}
-							IDirectSoundBuffer_Release(device->DSpbuffer);
-							device->DSpbuffer=NULL;
 						}
 					}
+				}
+			}
+
+			if (!bDeviceFound)
+			{
+				if (device->DSsbuffer)
+				{
+					IDirectSoundBuffer_Release(device->DSsbuffer);
+					device->DSsbuffer=NULL;
+				}
+
+				if (device->DSpbuffer)
+				{
+					IDirectSoundBuffer_Release(device->DSpbuffer);
+					device->DSpbuffer=NULL;
+				}
+				
+				if (device->DShandle)
+				{
 					IDirectSound_Release(device->DShandle);
 					device->DShandle=NULL;
 				}
 			}
 		}
 		
-		// Fallback to WaveOut code
-		if (waveOutOpen(&device->handle,WAVE_MAPPER,&OutputType,0,0,WAVE_FORMAT_DIRECT_QUERY)==MMSYSERR_NOERROR)
+		if (!bDeviceFound)
 		{
-			if (waveOutOpen(&device->handle,WAVE_MAPPER,&OutputType,(DWORD)&alcWaveOutProc,(DWORD)0,CALLBACK_FUNCTION)==MMSYSERR_NOERROR)
+			// Fallback to WaveOut code
+			if (waveOutOpen(&device->handle,WAVE_MAPPER,&OutputType,0,0,WAVE_FORMAT_DIRECT_QUERY)==MMSYSERR_NOERROR)
 			{
-				g_hWaveHdrEvent = CreateEvent(NULL, AL_TRUE, AL_FALSE, "WaveOutAllHeadersReturned");
-				if (g_hWaveHdrEvent != NULL)
+				if (waveOutOpen(&device->handle,WAVE_MAPPER,&OutputType,(DWORD)&alcWaveOutProc,(DWORD)0,CALLBACK_FUNCTION)==MMSYSERR_NOERROR)
 				{
-					g_hWaveThreadEvent = CreateEvent(NULL, AL_TRUE, AL_FALSE, "WaveOutThreadDestroyed");
-					if (g_hWaveThreadEvent != NULL)
+					g_hWaveHdrEvent = CreateEvent(NULL, AL_TRUE, AL_FALSE, "WaveOutAllHeadersReturned");
+					if (g_hWaveHdrEvent != NULL)
 					{
-						g_hThread=CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)ThreadProc,NULL,0,&g_ThreadID);
-						if (g_hThread != NULL)
+						g_hWaveThreadEvent = CreateEvent(NULL, AL_TRUE, AL_FALSE, "WaveOutThreadDestroyed");
+						if (g_hWaveThreadEvent != NULL)
 						{
-							device->MaxNoOfSources = 32;
-							// Setup Windows Multimedia driver buffers and start playing
-							for (i=0;i<NUMWAVEBUFFERS;i++)
+							g_hThread=CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)ThreadProc,NULL,0,&g_ThreadID);
+							if (g_hThread != NULL)
 							{
-								memset(&device->buffer[i],0,sizeof(WAVEHDR));
-								device->buffer[i].lpData=malloc(((OutputType.nAvgBytesPerSec/16)&0xfffffff0));
-								device->buffer[i].dwBufferLength=((OutputType.nAvgBytesPerSec/16)&0xfffffff0);
-								device->buffer[i].dwFlags=0;
-								device->buffer[i].dwLoops=0;
-								waveOutPrepareHeader(device->handle,&device->buffer[i],sizeof(WAVEHDR));
-								if (waveOutWrite(device->handle,&device->buffer[i],sizeof(WAVEHDR))!=MMSYSERR_NOERROR)
+								device->MaxNoOfSources = 32;
+								// Setup Windows Multimedia driver buffers and start playing
+								for (i=0;i<NUMWAVEBUFFERS;i++)
 								{
-									waveOutUnprepareHeader(device->handle,&device->buffer[i],sizeof(WAVEHDR));
-									free(device->buffer[i].lpData);
+									memset(&device->buffer[i],0,sizeof(WAVEHDR));
+									device->buffer[i].lpData=malloc(((OutputType.nAvgBytesPerSec/16)&0xfffffff0));
+									device->buffer[i].dwBufferLength=((OutputType.nAvgBytesPerSec/16)&0xfffffff0);
+									device->buffer[i].dwFlags=0;
+									device->buffer[i].dwLoops=0;
+									waveOutPrepareHeader(device->handle,&device->buffer[i],sizeof(WAVEHDR));
+									if (waveOutWrite(device->handle,&device->buffer[i],sizeof(WAVEHDR))!=MMSYSERR_NOERROR)
+									{
+										waveOutUnprepareHeader(device->handle,&device->buffer[i],sizeof(WAVEHDR));
+										free(device->buffer[i].lpData);
+									}
+									else
+										g_BuffersCommitted++;
 								}
-								else
-									g_BuffersCommitted++;
+								strcpy(device->szDeviceName, "MMSYSTEM");
+								bDeviceFound = AL_TRUE;
 							}
-							strcpy(device->szDeviceName, "MMSYSTEM");
-							return device;
 						}
-						CloseHandle(g_hWaveThreadEvent);
-						g_hWaveThreadEvent = NULL;
 					}
+				}
+			}
+
+			if (!bDeviceFound)
+			{
+				if (g_hWaveThreadEvent)
+				{
+					CloseHandle(g_hWaveThreadEvent);
+					g_hWaveThreadEvent = NULL;
+				}
+
+				if (g_hWaveHdrEvent)
+				{
 					CloseHandle(g_hWaveHdrEvent);
 					g_hWaveHdrEvent = NULL;
 				}
-				waveOutClose(device->handle);
-				device->handle = NULL;
+
+				if (device->handle)
+				{
+					waveOutClose(device->handle);
+					device->handle = NULL;
+				}
 			}
 		}
 
-		// No suitable output device found
-		free(device);
-		device = NULL;
+		if (!bDeviceFound)
+		{
+			// No suitable output device found
+			free(device);
+			device = NULL;
+		}
 	}
 
 	return device;
@@ -2650,7 +2785,10 @@ ALCAPI ALCvoid ALCAPIENTRY alcCloseDevice(ALCdevice *device)
 		memset(device,0,sizeof(ALCdevice));
 		free(device);
 	}
-	else alcSetError(ALC_INVALID_DEVICE);
+	else
+	{
+		alcSetError(ALC_INVALID_DEVICE);
+	}
 }
 
 DWORD WINAPI ThreadProc(LPVOID lpParameter)
@@ -2756,15 +2894,22 @@ void SetGlobalRolloffFactor()
 
 	if (ALContext->DistanceModel != AL_NONE)
 	{
-		// Calculate average per-Source roll-off factor
-		ALSource = ALContext->Source;
-		for (i = 0; i < ALContext->SourceCount; i++)
+		if (ALContext->SourceCount == 0)
 		{
-			flRollOffFactor += ALSource->param[AL_ROLLOFF_FACTOR-AL_CONE_INNER_ANGLE].data.f;
-			ALSource = ALSource->next;
+			flRollOffFactor = 1.0f;
 		}
+		else
+		{
+			// Calculate average per-Source roll-off factor
+			ALSource = ALContext->Source;
+			for (i = 0; i < ALContext->SourceCount; i++)
+			{
+				flRollOffFactor += ALSource->param[AL_ROLLOFF_FACTOR-AL_CONE_INNER_ANGLE].data.f;
+				ALSource = ALSource->next;
+			}
 
-		flRollOffFactor = flRollOffFactor / ALContext->SourceCount;
+			flRollOffFactor = flRollOffFactor / ALContext->SourceCount;
+		}
 	}
 
 	IDirectSound3DListener_SetRolloffFactor (ALContext->Device->DS3dlistener, flRollOffFactor, DS3D_IMMEDIATE);

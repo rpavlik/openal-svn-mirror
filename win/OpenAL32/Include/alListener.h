@@ -4,7 +4,7 @@
 #define ALAPI __declspec(dllexport)
 #define ALAPIENTRY __cdecl
 
-#include "al\altypes.h"
+#include "AL/altypes.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,8 +19,6 @@ extern "C" {
 #define LDOPPLERVELOCITY	32
 #define LDISTANCEMODEL		64
 
-#pragma pack(push, 4)
-
 typedef struct ALlistener_struct
 {
 	ALfloat		Position[3];
@@ -30,8 +28,6 @@ typedef struct ALlistener_struct
 	ALfloat		Gain;
 	ALuint		update1;			// Store changes that need to be made in UpdateContext
 } ALlistener;
-
-#pragma pack (pop)
 
 #ifdef __cplusplus
 }

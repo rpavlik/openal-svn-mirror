@@ -116,7 +116,6 @@ int main(int argc, char* argv[])
 
 	//Create context(s)
 	Context=alcCreateContext(Device,NULL);
-
 	if (Context == NULL)
 	{
 		printf("Failed to initialize Open AL\n");
@@ -124,11 +123,11 @@ int main(int argc, char* argv[])
 	}
 
 	//Set active context
+	alcGetError(Device);
 	alcMakeContextCurrent(Context);
-
 	if (alcGetError(Device) != ALC_NO_ERROR)
 	{
-		printf("Failed to initialize Open AL\n");
+		printf("Failed to Make Context Current\n");
 		exit(-1);
 	}
 
@@ -612,6 +611,9 @@ ALvoid PositionTest(ALvoid)
 
 	ALfloat source1Pos[]={ 2.0, 0.0, -2.0};	// Front and to the right of the listener
 	ALfloat source1Vel[]={ 0.0, 0.0, 0.0};
+
+	// temp set distance model
+	alDistanceModel(AL_INVERSE_DISTANCE);
 
 	alGenSources(2,source);
 	if ((error = alGetError()) != AL_NO_ERROR)

@@ -19,10 +19,10 @@
  */
 
 #include <stdlib.h>
-#include "include\alMain.h"
-#include "al\alc.h"
-#include "include\alError.h"
-#include "include\alState.h"
+#include "Include/alMain.h"
+#include "AL/alc.h"
+#include "Include/alError.h"
+#include "Include/alState.h"
 
 static ALubyte alVendor[] = "Creative Labs Inc.";
 static ALubyte alVersion[] = "OpenAL 1.0";
@@ -42,14 +42,24 @@ ALAPI ALvoid ALAPIENTRY alEnable(ALenum capability)
 	ALCcontext *Context;
 
 	Context=alcGetCurrentContext();
-	SuspendContext(Context);
-	switch (capability)
+	if (Context)
 	{
-		default:
-			alSetError(AL_INVALID_ENUM);
-			break;
+		SuspendContext(Context);
+	
+		switch (capability)
+		{
+			default:
+				alSetError(AL_INVALID_ENUM);
+				break;
+		}
+	
+		ProcessContext(Context);
 	}
-	ProcessContext(Context);
+	else
+	{
+		// Invalid Context
+		alSetError(AL_INVALID_OPERATION);
+	}
 }
 
 ALAPI ALvoid ALAPIENTRY alDisable(ALenum capability)
@@ -57,14 +67,24 @@ ALAPI ALvoid ALAPIENTRY alDisable(ALenum capability)
 	ALCcontext *Context;
 
 	Context=alcGetCurrentContext();
-	SuspendContext(Context);
-	switch (capability)
+	if (Context)
 	{
-		default:
-			alSetError(AL_INVALID_ENUM);
-			break;
+		SuspendContext(Context);
+	
+		switch (capability)
+		{
+			default:
+				alSetError(AL_INVALID_ENUM);
+				break;
+		}
+
+		ProcessContext(Context);
 	}
-	ProcessContext(Context);
+	else
+	{
+		// Invalid Context
+		alSetError(AL_INVALID_OPERATION);
+	}
 }
 
 ALAPI ALboolean ALAPIENTRY alIsEnabled(ALenum capability)
@@ -73,14 +93,25 @@ ALAPI ALboolean ALAPIENTRY alIsEnabled(ALenum capability)
 	ALboolean value=AL_FALSE;
 
 	Context=alcGetCurrentContext();
-	SuspendContext(Context);
-	switch (capability)
+	if (Context)
 	{
-		default:
-			alSetError(AL_INVALID_ENUM);
-			break;
+		SuspendContext(Context);
+	
+		switch (capability)
+		{
+			default:
+				alSetError(AL_INVALID_ENUM);
+				break;
+		}
+	
+		ProcessContext(Context);
 	}
-	ProcessContext(Context);
+	else
+	{
+		// Invalid Context
+		alSetError(AL_INVALID_OPERATION);
+	}
+
 	return value;
 }
 
@@ -90,26 +121,40 @@ ALAPI ALboolean ALAPIENTRY alGetBoolean(ALenum pname)
 	ALboolean value=AL_FALSE;
 
 	Context=alcGetCurrentContext();
-	SuspendContext(Context);
-	switch (pname)
+	if (Context)
 	{
-		case AL_DOPPLER_FACTOR:
-			if (Context->DopplerFactor != 0.0f)
-				value = AL_TRUE;
-			break;
-		case AL_DOPPLER_VELOCITY:
-			if (Context->DopplerVelocity != 0.0f)
-				value = AL_TRUE;
-			break;
-		case AL_DISTANCE_MODEL:
-			if (Context->DistanceModel == AL_INVERSE_DISTANCE_CLAMPED)
-				value = AL_TRUE;
-			break;
-		default:
-			alSetError(AL_INVALID_ENUM);
-			break;
+		SuspendContext(Context);
+	
+		switch (pname)
+		{
+			case AL_DOPPLER_FACTOR:
+				if (Context->DopplerFactor != 0.0f)
+					value = AL_TRUE;
+				break;
+
+			case AL_DOPPLER_VELOCITY:
+				if (Context->DopplerVelocity != 0.0f)
+					value = AL_TRUE;
+				break;
+
+			case AL_DISTANCE_MODEL:
+				if (Context->DistanceModel == AL_INVERSE_DISTANCE_CLAMPED)
+					value = AL_TRUE;
+				break;
+
+			default:
+				alSetError(AL_INVALID_ENUM);
+				break;
+		}
+
+		ProcessContext(Context);
 	}
-	ProcessContext(Context);
+	else
+	{
+		// Invalid Context
+		alSetError(AL_INVALID_OPERATION);
+	}
+
 	return value;
 }
 
@@ -119,24 +164,37 @@ ALAPI ALdouble ALAPIENTRY alGetDouble(ALenum pname)
 	ALdouble value = 0.0;
 
 	Context=alcGetCurrentContext();
-	SuspendContext(Context);
-
-	switch (pname)
+	if (Context)
 	{
-		case AL_DOPPLER_FACTOR:
-			value = (double)Context->DopplerFactor;
-			break;
-		case AL_DOPPLER_VELOCITY:
-			value = (double)Context->DopplerVelocity;
-			break;
-		case AL_DISTANCE_MODEL:
-			value = (double)Context->DistanceModel;
-			break;
-		default:
-			alSetError(AL_INVALID_ENUM);
-			break;
+		SuspendContext(Context);
+
+		switch (pname)
+		{
+			case AL_DOPPLER_FACTOR:
+				value = (double)Context->DopplerFactor;
+				break;
+
+			case AL_DOPPLER_VELOCITY:
+				value = (double)Context->DopplerVelocity;
+				break;
+
+			case AL_DISTANCE_MODEL:
+				value = (double)Context->DistanceModel;
+				break;
+
+			default:
+				alSetError(AL_INVALID_ENUM);
+				break;
+		}
+
+		ProcessContext(Context);
 	}
-	ProcessContext(Context);
+	else
+	{
+		// Invalid Context
+		alSetError(AL_INVALID_OPERATION);
+	}
+
 	return value;
 }
 
@@ -146,23 +204,37 @@ ALAPI ALfloat ALAPIENTRY alGetFloat(ALenum pname)
 	ALfloat value = 0.0f;
 
 	Context=alcGetCurrentContext();
-	SuspendContext(Context);
-	switch (pname)
+	if (Context)
 	{
-		case AL_DOPPLER_FACTOR:
-			value = Context->DopplerFactor;
-			break;
-		case AL_DOPPLER_VELOCITY:
-			value = Context->DopplerVelocity;
-			break;
-		case AL_DISTANCE_MODEL:
-			value = (float)Context->DistanceModel;
-			break;
-		default:
-			alSetError(AL_INVALID_ENUM);
-			break;
+		SuspendContext(Context);
+	
+		switch (pname)
+		{
+			case AL_DOPPLER_FACTOR:
+				value = Context->DopplerFactor;
+				break;
+
+			case AL_DOPPLER_VELOCITY:
+				value = Context->DopplerVelocity;
+				break;
+
+			case AL_DISTANCE_MODEL:
+				value = (float)Context->DistanceModel;
+				break;
+
+			default:
+				alSetError(AL_INVALID_ENUM);
+				break;
+		}
+
+		ProcessContext(Context);
 	}
-	ProcessContext(Context);
+	else
+	{
+		// Invalid Context
+		alSetError(AL_INVALID_OPERATION);
+	}
+
 	return value;
 }
 
@@ -172,23 +244,37 @@ ALAPI ALint ALAPIENTRY alGetInteger(ALenum pname)
 	ALint value = 0;
 
 	Context=alcGetCurrentContext();
-	SuspendContext(Context);
-	switch (pname)
+	if (Context)
 	{
-		case AL_DOPPLER_FACTOR:
-			value = (ALint)Context->DopplerFactor;
-			break;
-		case AL_DOPPLER_VELOCITY:
-			value = (ALint)Context->DopplerVelocity;
-			break;
-		case AL_DISTANCE_MODEL:
-			value= (ALint)Context->DistanceModel;
-			break;
-		default:
-			alSetError(AL_INVALID_ENUM);
-			break;
+		SuspendContext(Context);
+	
+		switch (pname)
+		{
+			case AL_DOPPLER_FACTOR:
+				value = (ALint)Context->DopplerFactor;
+				break;
+
+			case AL_DOPPLER_VELOCITY:
+				value = (ALint)Context->DopplerVelocity;
+				break;
+
+			case AL_DISTANCE_MODEL:
+				value= (ALint)Context->DistanceModel;
+				break;
+
+			default:
+				alSetError(AL_INVALID_ENUM);
+				break;
+		}
+
+		ProcessContext(Context);
 	}
-	ProcessContext(Context);
+	else
+	{
+		// Invalid Context
+		alSetError(AL_INVALID_OPERATION);
+	}
+
 	return value;
 }
 
@@ -197,34 +283,49 @@ ALAPI ALvoid ALAPIENTRY alGetBooleanv(ALenum pname,ALboolean *data)
 	ALCcontext *Context;
 	
 	Context=alcGetCurrentContext();
-	SuspendContext(Context);
-	
-	if (!data)
+	if (Context)
 	{
-		alSetError(AL_INVALID_VALUE);
+		SuspendContext(Context);
+	
+		if (data)
+		{
+			switch (pname)
+			{
+				case AL_DOPPLER_FACTOR:
+					if (Context->DopplerFactor != 0.0f)
+						*data = AL_TRUE;
+					break;
+
+				case AL_DOPPLER_VELOCITY:
+					if (Context->DopplerVelocity != 0.0f)
+						*data = AL_TRUE;
+					break;
+
+				case AL_DISTANCE_MODEL:
+					if (Context->DistanceModel == AL_INVERSE_DISTANCE_CLAMPED)
+						*data = AL_TRUE;
+					break;
+
+				default:
+					alSetError(AL_INVALID_ENUM);
+					break;
+			}
+		}
+		else
+		{
+			// data is a NULL pointer
+			alSetError(AL_INVALID_VALUE);
+		}
+
 		ProcessContext(Context);
-		return;
+	}
+	else
+	{
+		// Invalid Context
+		alSetError(AL_INVALID_OPERATION);
 	}
 
-	switch (pname)
-	{
-		case AL_DOPPLER_FACTOR:
-			if (Context->DopplerFactor != 0.0f)
-				*data = AL_TRUE;
-			break;
-		case AL_DOPPLER_VELOCITY:
-			if (Context->DopplerVelocity != 0.0f)
-				*data = AL_TRUE;
-			break;
-		case AL_DISTANCE_MODEL:
-			if (Context->DistanceModel == AL_INVERSE_DISTANCE_CLAMPED)
-				*data = AL_TRUE;
-			break;
-		default:
-			alSetError(AL_INVALID_ENUM);
-			break;
-	}
-	ProcessContext(Context);
+	return;
 }
 
 ALAPI ALvoid ALAPIENTRY alGetDoublev(ALenum pname,ALdouble *data)
@@ -232,31 +333,46 @@ ALAPI ALvoid ALAPIENTRY alGetDoublev(ALenum pname,ALdouble *data)
 	ALCcontext *Context;
 
 	Context=alcGetCurrentContext();
-	SuspendContext(Context);
-
-	if (!data)
+	if (Context)
 	{
-		alSetError(AL_INVALID_VALUE);
+		SuspendContext(Context);
+
+		if (data)
+		{
+			switch (pname)
+			{
+				case AL_DOPPLER_FACTOR:
+					*data = (double)Context->DopplerFactor;
+					break;
+
+				case AL_DOPPLER_VELOCITY:
+					*data = (double)Context->DopplerVelocity;
+					break;
+
+				case AL_DISTANCE_MODEL:
+					*data = (double)Context->DistanceModel;
+					break;
+
+				default:
+					alSetError(AL_INVALID_ENUM);
+					break;
+			}
+		}
+		else
+		{
+			// data is a NULL pointer
+			alSetError(AL_INVALID_VALUE);
+		}
+
 		ProcessContext(Context);
-		return;
+	}
+	else
+	{
+		// Invalid Context
+		alSetError(AL_INVALID_OPERATION);
 	}
 
-	switch (pname)
-	{
-		case AL_DOPPLER_FACTOR:
-			*data = (double)Context->DopplerFactor;
-			break;
-		case AL_DOPPLER_VELOCITY:
-			*data = (double)Context->DopplerVelocity;
-			break;
-		case AL_DISTANCE_MODEL:
-			*data = (double)Context->DistanceModel;
-			break;
-		default:
-			alSetError(AL_INVALID_ENUM);
-			break;
-	}
-	ProcessContext(Context);
+	return;
 }
 
 ALAPI ALvoid ALAPIENTRY alGetFloatv(ALenum pname,ALfloat *data)
@@ -264,31 +380,46 @@ ALAPI ALvoid ALAPIENTRY alGetFloatv(ALenum pname,ALfloat *data)
 	ALCcontext *Context;
 
 	Context=alcGetCurrentContext();
-	SuspendContext(Context);
-
-	if (!data)
+	if (Context)
 	{
-		alSetError(AL_INVALID_VALUE);
+		SuspendContext(Context);
+
+		if (data)
+		{
+			switch (pname)
+			{
+				case AL_DOPPLER_FACTOR:
+					*data = Context->DopplerFactor;
+					break;
+
+				case AL_DOPPLER_VELOCITY:
+					*data = Context->DopplerVelocity;
+					break;
+
+				case AL_DISTANCE_MODEL:
+					*data = (float)Context->DistanceModel;
+					break;
+
+				default:
+					alSetError(AL_INVALID_ENUM);
+					break;
+			}
+		}
+		else
+		{
+			// data is a NULL pointer
+			alSetError(AL_INVALID_VALUE);
+		}
+		
 		ProcessContext(Context);
-		return;
+	}
+	else
+	{
+		// Invalid Context
+		alSetError(AL_INVALID_OPERATION);
 	}
 
-	switch (pname)
-	{
-		case AL_DOPPLER_FACTOR:
-			*data = Context->DopplerFactor;
-			break;
-		case AL_DOPPLER_VELOCITY:
-			*data = Context->DopplerVelocity;
-			break;
-		case AL_DISTANCE_MODEL:
-			*data = (float)Context->DistanceModel;
-			break;
-		default:
-			alSetError(AL_INVALID_ENUM);
-			break;
-	}
-	ProcessContext(Context);
+	return;
 }
 
 ALAPI ALvoid ALAPIENTRY alGetIntegerv(ALenum pname,ALint *data)
@@ -296,77 +427,99 @@ ALAPI ALvoid ALAPIENTRY alGetIntegerv(ALenum pname,ALint *data)
 	ALCcontext *Context;
 
 	Context=alcGetCurrentContext();
-	SuspendContext(Context);
-
-	if (!data)
+	if (Context)
 	{
-		alSetError(AL_INVALID_VALUE);
+		SuspendContext(Context);
+
+		if (data)
+		{
+			switch (pname)
+			{
+				case AL_DOPPLER_FACTOR:
+					*data = (ALint)Context->DopplerFactor;
+					break;
+
+				case AL_DOPPLER_VELOCITY:
+					*data = (ALint)Context->DopplerVelocity;
+					break;
+
+				case AL_DISTANCE_MODEL:
+					*data = (ALint)Context->DistanceModel;
+					break;
+
+				default:
+					alSetError(AL_INVALID_ENUM);
+					break;
+			}
+		}
+		else
+		{
+			// data is a NULL pointer
+			alSetError(AL_INVALID_VALUE);
+		}
+
 		ProcessContext(Context);
-		return;
+	}
+	else
+	{
+		// Invalid Context
+		alSetError(AL_INVALID_OPERATION);
 	}
 
-	switch (pname)
-	{
-		case AL_DOPPLER_FACTOR:
-			*data = (ALint)Context->DopplerFactor;
-			break;
-		case AL_DOPPLER_VELOCITY:
-			*data = (ALint)Context->DopplerVelocity;
-			break;
-		case AL_DISTANCE_MODEL:
-			*data = (ALint)Context->DistanceModel;
-			break;
-		default:
-			alSetError(AL_INVALID_ENUM);
-			break;
-	}
-	ProcessContext(Context);
+	return;
 }
 
 ALAPI ALubyte * ALAPIENTRY alGetString(ALenum pname)
 {
-	ALCcontext *Context;
 	ALubyte *value;
 
-	Context=alcGetCurrentContext();
-	SuspendContext(Context);
 	switch(pname)
 	{
 		case AL_VENDOR:
 			value=alVendor;
 			break;
+
 		case AL_VERSION:
 			value=alVersion;
 			break;
+
 		case AL_RENDERER:
 			value=alRenderer;
 			break;
+
 		case AL_EXTENSIONS:
 			value=alExtensions;
 			break;
+
 		case AL_NO_ERROR:
 			value=alNoError;
 			break;
+
 		case AL_INVALID_NAME:
 			value=alErrInvalidName;
 			break;
+
 		case AL_INVALID_ENUM:
 			value=alErrInvalidEnum;
 			break;
+
 		case AL_INVALID_VALUE:
 			value=alErrInvalidValue;
 			break;
+
 		case AL_INVALID_OPERATION:
 			value=alErrInvalidOp;
 			break;
+
 		case AL_OUT_OF_MEMORY:
 			value=alErrOutOfMemory;
 			break;
+
 		default:
 			alSetError(AL_INVALID_ENUM);
 			break;
 	}
-	ProcessContext(Context);
+
 	return value;
 }
 
@@ -375,16 +528,30 @@ ALAPI ALvoid ALAPIENTRY alDopplerFactor(ALfloat value)
 	ALCcontext *Context;
 
 	Context=alcGetCurrentContext();
-	SuspendContext(Context);
-	if (value>=0.0f)
+	if (Context)
 	{
-		Context->DopplerFactor=value;
-		Context->Listener.update1 = LDOPPLERFACTOR;
-		alcUpdateContext(Context, ALLISTENER, 0);
+		SuspendContext(Context);
+	
+		if (value>=0.0f)
+		{
+			Context->DopplerFactor=value;
+			Context->Listener.update1 = LDOPPLERFACTOR;
+			alcUpdateContext(Context, ALLISTENER, 0);
+		}
+		else
+		{
+			alSetError(AL_INVALID_VALUE);
+		}
+
+		ProcessContext(Context);
 	}
 	else
-		alSetError(AL_INVALID_VALUE);
-	ProcessContext(Context);
+	{
+		// Invalid Context
+		alSetError(AL_INVALID_OPERATION);
+	}
+
+	return;
 }
 
 ALAPI ALvoid ALAPIENTRY alDopplerVelocity(ALfloat value)
@@ -392,16 +559,30 @@ ALAPI ALvoid ALAPIENTRY alDopplerVelocity(ALfloat value)
 	ALCcontext *Context;
 
 	Context=alcGetCurrentContext();
-	SuspendContext(Context);
-	if (value>0.0f)
+	if (Context)
 	{
-		Context->DopplerVelocity=value;
-		Context->Listener.update1 = LDOPPLERVELOCITY;
-		alcUpdateContext(Context, 0, 0);
+		SuspendContext(Context);
+	
+		if (value>0.0f)
+		{
+			Context->DopplerVelocity=value;
+			Context->Listener.update1 = LDOPPLERVELOCITY;
+			alcUpdateContext(Context, 0, 0);
+		}
+		else
+		{
+			alSetError(AL_INVALID_VALUE);
+		}
+
+		ProcessContext(Context);
 	}
 	else
-		alSetError(AL_INVALID_VALUE);
-	ProcessContext(Context);
+	{
+		// Invalid Context
+		alSetError(AL_INVALID_OPERATION);
+	}
+
+	return;
 }
 
 ALAPI ALvoid ALAPIENTRY alDistanceModel(ALenum value)
@@ -409,19 +590,32 @@ ALAPI ALvoid ALAPIENTRY alDistanceModel(ALenum value)
 	ALCcontext *Context;
 
 	Context=alcGetCurrentContext();
-	SuspendContext(Context);
-	switch (value)
+	if (Context)
 	{
-		case AL_NONE:
-		case AL_INVERSE_DISTANCE:
-		case AL_INVERSE_DISTANCE_CLAMPED:
-			Context->DistanceModel=value;
-			Context->Listener.update1 = LDISTANCEMODEL;
-			alcUpdateContext(Context, ALLISTENER, 0);
-			break;
-		default:
-			alSetError(AL_INVALID_VALUE);
-			break;
+		SuspendContext(Context);
+	
+		switch (value)
+		{
+			case AL_NONE:
+			case AL_INVERSE_DISTANCE:
+			case AL_INVERSE_DISTANCE_CLAMPED:
+				Context->DistanceModel=value;
+				Context->Listener.update1 = LDISTANCEMODEL;
+				alcUpdateContext(Context, ALLISTENER, 0);
+				break;
+
+			default:
+				alSetError(AL_INVALID_VALUE);
+				break;
+		}
+
+		ProcessContext(Context);
 	}
-	ProcessContext(Context);
+	else
+	{
+		// Invalid Context
+		alSetError(AL_INVALID_OPERATION);
+	}
+
+	return;
 }

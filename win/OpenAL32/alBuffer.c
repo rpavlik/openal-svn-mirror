@@ -20,155 +20,201 @@
 
 #include <stdlib.h> 
 #include <stdio.h>
-#include "include\alMain.h"
-#include "al\alc.h"
-#include "include\alError.h"
-#include "include\alBuffer.h"
+#include "Include/alMain.h"
+#include "AL/al.h"
+#include "AL/alc.h"
+#include "Include/alError.h"
+#include "Include/alBuffer.h"
 
-static ALbuffer *Buffer=NULL;
-static ALuint BufferCount=0;
+/*
+*	AL Buffer Functions
+*
+*	AL Buffers are shared amoung Contexts, so we store the list of generated Buffers
+*	as a global variable in this module.   (A valid context is not required to make
+*	AL Buffer function calls
+*
+*/
 
-ALAPI ALvoid ALAPIENTRY alGenBuffers(ALsizei n,ALuint *buffers)
+/*
+* Global Variables
+*/
+
+static ALbuffer *	g_pBuffers = NULL;			// Linked List of Buffers
+static ALuint		g_uiBufferCount = 0;		// Buffer Count
+
+/*
+*	alGenBuffers(ALsizei n, ALuint *puiBuffers)
+*
+*	Generates n AL Buffers, and stores the Buffers Names in the array pointed to by puiBuffers
+*/
+ALAPI ALvoid ALAPIENTRY alGenBuffers(ALsizei n,ALuint *puiBuffers)
 {
 	ALCcontext *Context;
 	ALbuffer *ALBuf;
 	ALsizei i=0;
-	
-	// Request to generate 0 Buffers is a valid NOP
-	if (n == 0)
-		return;
 
 	Context = alcGetCurrentContext();
 	SuspendContext(Context);
 
-	// Check that enough memory has been allocted in the 'buffers' array for n buffers
-	if (IsBadWritePtr((void*)buffers, n * sizeof(ALuint)))
+	// Check that we are actually generation some Buffers
+	if (n > 0)
 	{
-		alSetError(AL_INVALID_VALUE);
-		ProcessContext(Context);
-		return;
-	}
+		// Check the pointer is valid (and points to enough memory to store Buffer Names)
+		if (!IsBadWritePtr((void*)puiBuffers, n * sizeof(ALuint)))
+		{
+			// Is this the first Buffer created
+			if (!g_pBuffers)
+			{
+				g_pBuffers = malloc(sizeof(ALbuffer));
+				if (g_pBuffers)
+				{
+					memset(g_pBuffers, 0, sizeof(ALbuffer));
+					puiBuffers[i]=(ALuint)g_pBuffers;
+					g_pBuffers->state=UNUSED;
+					g_uiBufferCount++;
+					i++;
+				}
+				ALBuf = g_pBuffers;
+			}
+			else
+			{
+				// Find last Buffer in list
+				ALBuf = g_pBuffers;
+				while (ALBuf->next)
+					ALBuf=ALBuf->next;
+			}
+			
+			// Create all the new Buffers
+			while ((ALBuf)&&(i<n))
+			{
+				ALBuf->next = malloc(sizeof(ALbuffer));
+				if (ALBuf->next)
+				{
+					memset(ALBuf->next, 0, sizeof(ALbuffer));
+					puiBuffers[i] = (ALuint)ALBuf->next;
+					ALBuf->next->previous = ALBuf;
+					ALBuf->next->state = UNUSED;
+					g_uiBufferCount++;
+					i++;
+					ALBuf = ALBuf->next;
+				}
+				else
+				{
+					// Out of memory
+					break;
+				}
+			}
 
-	if (!Buffer)
-	{
-		Buffer=malloc(sizeof(ALbuffer));
-		if (Buffer)
-		{
-			memset(Buffer,0,sizeof(ALbuffer));
-			buffers[i]=(ALuint)Buffer;
-			Buffer->state=UNUSED;
-			BufferCount++;
-			i++;
-		}
-		ALBuf=Buffer;
-	}
-	else
-	{
-		ALBuf=Buffer;
-		while (ALBuf->next)
-			ALBuf=ALBuf->next;
-	}
-	
-	while ((ALBuf)&&(i<n))
-	{
-		ALBuf->next=malloc(sizeof(ALbuffer));
-		if (ALBuf->next)
-		{
-			memset(ALBuf->next,0,sizeof(ALbuffer));
-			buffers[i]=(ALuint)ALBuf->next;
-			ALBuf->next->previous=ALBuf;
-			ALBuf->next->state=UNUSED;
-			BufferCount++;
-			i++;
-			ALBuf=ALBuf->next;
+			// If we didn't create all the Buffers, we must have run out of memory
+			if (i != n)
+			{
+				alSetError(AL_OUT_OF_MEMORY);
+			}
 		}
 		else
 		{
-			// Out of memory
-			break;
+			// Pointer does not point to enough memory to write Buffer names
+			alSetError(AL_INVALID_VALUE);
 		}
 	}
 
-	if (i!=n)
-		alSetError(AL_OUT_OF_MEMORY);
-
 	ProcessContext(Context);
+
+	return;
 }
 
-ALAPI ALvoid ALAPIENTRY alDeleteBuffers(ALsizei n,ALuint *buffers)
+/*
+*	alDeleteBuffers(ALsizei n, ALuint *puiBuffers)
+*
+*	Deletes the n AL Buffers pointed to by puiBuffers
+*/
+ALAPI ALvoid ALAPIENTRY alDeleteBuffers(ALsizei n,ALuint *puiBuffers)
 {
 	ALCcontext *Context;
 	ALbuffer *ALBuf;
 	ALsizei i;
-
-	// NOP
-	if (n == 0)
-		return;
+	ALboolean bFailed = AL_FALSE;
 
 	Context = alcGetCurrentContext();
 	SuspendContext(Context);
 
-	if (n > BufferCount)
+	// Check we are actually Deleting some Buffers
+	if (n > 0)
 	{
-		alSetError(AL_INVALID_NAME);
-		ProcessContext(Context);
-		return;
-	}
-
-	// Check that all the buffers are valid and can actually be deleted
-	for (i=0;i<n;i++)
-	{
-		// Check for valid Buffer ID or NULL buffer
-		if ((!alIsBuffer(buffers[i]))&&(buffers[i]!=0))
+		if (n <= g_uiBufferCount)
 		{
-			alSetError(AL_INVALID_NAME);
-			ProcessContext(Context);
-			return;
-		}
-		else
-		{
-			// If not the NULL buffer, check that the reference count is 0
-			ALBuf=((ALbuffer *)buffers[i]);
-			if (ALBuf)
+			// Check that all the buffers are valid and can actually be deleted
+			for (i = 0; i < n; i++)
 			{
-				if (ALBuf->refcount != 0)
+				// Check for valid Buffer ID or NULL buffer
+				if ((alIsBuffer(puiBuffers[i])) || (puiBuffers[i] == 0))
 				{
-					// Buffer still in use, cannot be deleted
-					alSetError(AL_INVALID_OPERATION);
-					ProcessContext(Context);
-					return;
+					// If not the NULL buffer, check that the reference count is 0
+					ALBuf = ((ALbuffer *)puiBuffers[i]);
+					if (ALBuf)
+					{
+						if (ALBuf->refcount != 0)
+						{
+							// Buffer still in use, cannot be deleted
+							alSetError(AL_INVALID_OPERATION);
+							bFailed = AL_TRUE;
+						}
+					}
+				}
+				else
+				{
+					// Invalid Buffer
+					alSetError(AL_INVALID_NAME);
+					bFailed = AL_TRUE;
+				}
+			}
+
+			// If all the Buffers were valid (and have Reference Counts of 0), then we can delete them
+			if (!bFailed)
+			{
+				for (i = 0; i < n; i++)
+				{
+					ALBuf=((ALbuffer *)puiBuffers[i]);
+					if (ALBuf)
+					{
+						if (ALBuf->previous)
+							ALBuf->previous->next=ALBuf->next;
+						else
+							g_pBuffers = ALBuf->next;
+
+						if (ALBuf->next)
+							ALBuf->next->previous = ALBuf->previous;
+
+						// Release the memory used to store audio data
+						if (ALBuf->data)
+							free(ALBuf->data);
+
+						// Release buffer structure
+						memset(ALBuf, 0, sizeof(ALbuffer));
+						g_uiBufferCount--;
+						free(ALBuf);
+					}
 				}
 			}
 		}
-	}
-
-	for (i=0;i<n;i++)
-	{
-		ALBuf=((ALbuffer *)buffers[i]);
-		if (ALBuf)
+		else
 		{
-			if (ALBuf->previous)
-				ALBuf->previous->next=ALBuf->next;
-			else
-				Buffer=ALBuf->next;
-			if (ALBuf->next)
-				ALBuf->next->previous=ALBuf->previous;
-
-			// Release the memory used to store audio data
-			if (ALBuf->data)
-				free(ALBuf->data);
-
-			// Release buffer structure
-			memset(ALBuf,0,sizeof(ALbuffer));
-			BufferCount--;
-			free(ALBuf);
+			alSetError(AL_INVALID_NAME);
 		}
 	}
 
 	ProcessContext(Context);
+
+	return;
+
 }
 
-ALAPI ALboolean ALAPIENTRY alIsBuffer(ALuint buffer)
+/*
+*	alIsBuffer(ALuint uiBuffer)
+*
+*	Checks if ulBuffer is a valid Buffer Name
+*/
+ALAPI ALboolean ALAPIENTRY alIsBuffer(ALuint uiBuffer)
 {
 	ALCcontext *Context;
 	ALboolean result=AL_FALSE;
@@ -178,10 +224,11 @@ ALAPI ALboolean ALAPIENTRY alIsBuffer(ALuint buffer)
 	Context = alcGetCurrentContext();
 	SuspendContext(Context);
 
-	ALBuf = Buffer;
-	for (i = 0; i < BufferCount; i++)
+	// Check through list of generated buffers for uiBuffer
+	ALBuf = g_pBuffers;
+	for (i = 0; i < g_uiBufferCount; i++)
 	{
-		if ((ALuint)ALBuf == buffer)
+		if ((ALuint)ALBuf == uiBuffer)
 		{
 			result = AL_TRUE;
 			break;
@@ -191,10 +238,15 @@ ALAPI ALboolean ALAPIENTRY alIsBuffer(ALuint buffer)
 	}
 
 	ProcessContext(Context);
+
 	return result;
 }
 
-
+/*
+*	alBufferData(ALuint buffer,ALenum format,ALvoid *data,ALsizei size,ALsizei freq)
+*
+*	Fill buffer with audio data
+*/
 ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,ALvoid *data,ALsizei size,ALsizei freq)
 {
 	ALCcontext *Context;
@@ -207,7 +259,7 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,ALvoid *data,AL
 	if (alIsBuffer(buffer))
 	{
 		ALBuf=((ALbuffer *)buffer);
-		if ((ALBuf->state==UNUSED)&&(data))
+		if ((ALBuf->refcount==0)&&(data))
 		{
 			switch(format)
 			{
@@ -224,6 +276,7 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,ALvoid *data,AL
 					else
 						alSetError(AL_OUT_OF_MEMORY);
 					break;
+
 				case AL_FORMAT_MONO16:
 					ALBuf->data=realloc(ALBuf->data,2+size/sizeof(ALshort)*sizeof(ALshort));
 					if (ALBuf->data)
@@ -236,6 +289,7 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,ALvoid *data,AL
 					else
 						alSetError(AL_OUT_OF_MEMORY);
 					break;
+
 				case AL_FORMAT_STEREO8:
 					ALBuf->data=realloc(ALBuf->data,2+size/sizeof(ALubyte)*sizeof(ALshort));
 					if (ALBuf->data)
@@ -249,6 +303,7 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,ALvoid *data,AL
 					else
 						alSetError(AL_OUT_OF_MEMORY);
 					break;
+
 				case AL_FORMAT_STEREO16:
 					ALBuf->data=realloc(ALBuf->data,4+size/sizeof(ALshort)*sizeof(ALshort));
 					if (ALBuf->data)
@@ -261,19 +316,32 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,ALvoid *data,AL
 					else
 						alSetError(AL_OUT_OF_MEMORY);
 					break;
+
 				default:
 					alSetError(AL_INVALID_VALUE);
 					break;
 			}
 		}
-		else alSetError(AL_INVALID_VALUE);
+		else
+		{
+			// Buffer is in use, or data is a NULL pointer
+			alSetError(AL_INVALID_VALUE);
+		}
 	} 
-	else alSetError(AL_INVALID_OPERATION);
+	else
+	{
+		// Invalid Buffer Name
+		alSetError(AL_INVALID_NAME);
+	}
 
 	ProcessContext(Context);
 }
 
-
+/*
+*	alGetBufferf(ALuint buffer,ALenum pname,ALfloat *value)
+*
+*	Query buffer for floating point attributes (current none defined)
+*/
 ALAPI ALvoid ALAPIENTRY alGetBufferf(ALuint buffer,ALenum pname,ALfloat *value)
 {
 	ALCcontext *Context;
@@ -282,30 +350,38 @@ ALAPI ALvoid ALAPIENTRY alGetBufferf(ALuint buffer,ALenum pname,ALfloat *value)
 	Context = alcGetCurrentContext();
 	SuspendContext(Context);
 
-	if (!value)
+	if (value)
 	{
-		alSetError(AL_INVALID_VALUE);
-		ProcessContext(Context);
-		return;
-	}
-
-	if (alIsBuffer(buffer))
-	{
-		ALBuf=((ALbuffer *)buffer);
-		switch(pname)
+		if (alIsBuffer(buffer))
 		{
-			default:
-				alSetError(AL_INVALID_ENUM);
-				break;
+			ALBuf=((ALbuffer *)buffer);
+			switch(pname)
+			{
+				default:
+					alSetError(AL_INVALID_ENUM);
+					break;
+			}
+		}
+		else
+		{
+			// Invalid Buffer Name
+			alSetError(AL_INVALID_NAME);
 		}
 	}
 	else
-		alSetError(AL_INVALID_NAME);
+	{
+		// value is a NULL pointer
+		alSetError(AL_INVALID_VALUE);
+	}
 
 	ProcessContext(Context);
 }
 
-
+/*
+*	alGetBufferi(ALuint buffer,ALenum pname,ALint *value)
+*
+*	Query buffer for integer attributes
+*/
 ALAPI ALvoid ALAPIENTRY alGetBufferi(ALuint buffer,ALenum pname,ALint *value)
 {
 	ALCcontext *Context;
@@ -314,46 +390,54 @@ ALAPI ALvoid ALAPIENTRY alGetBufferi(ALuint buffer,ALenum pname,ALint *value)
 	Context = alcGetCurrentContext();
 	SuspendContext(Context);
 
-	if (!value)
+	if (value)
 	{
-		alSetError(AL_INVALID_VALUE);
-		ProcessContext(Context);
-		return;
-	}
-		
-	if (alIsBuffer(buffer))
-	{
-		ALBuf=((ALbuffer *)buffer);
-		switch(pname)
+		if (alIsBuffer(buffer))
 		{
-			case AL_FREQUENCY:
-				*value=ALBuf->frequency;
-				break;
-			case AL_BITS:
-				*value=(((ALBuf->format==AL_FORMAT_MONO8)||(ALBuf->format==AL_FORMAT_STEREO8))?8:16);
-				break;
-			case AL_CHANNELS:
-				*value=(((ALBuf->format==AL_FORMAT_MONO8)||(ALBuf->format==AL_FORMAT_MONO16))?1:2);
-				break;
-			case AL_SIZE:
-				*value=ALBuf->size;
-				break;
-			default:
-				alSetError(AL_INVALID_ENUM);
-				break;
+			ALBuf=((ALbuffer *)buffer);
+			switch(pname)
+			{
+				case AL_FREQUENCY:
+					*value=ALBuf->frequency;
+					break;
+
+				case AL_BITS:
+					*value=(((ALBuf->format==AL_FORMAT_MONO8)||(ALBuf->format==AL_FORMAT_STEREO8))?8:16);
+					break;
+
+				case AL_CHANNELS:
+					*value=(((ALBuf->format==AL_FORMAT_MONO8)||(ALBuf->format==AL_FORMAT_MONO16))?1:2);
+					break;
+
+				case AL_SIZE:
+					*value=ALBuf->size;
+					break;
+
+				default:
+					alSetError(AL_INVALID_ENUM);
+					break;
+			}
+		} 
+		else
+		{
+			// Invalid Buffer Name
+			alSetError(AL_INVALID_NAME);
 		}
-	} 
+	}
 	else
-		alSetError(AL_INVALID_NAME);
+	{
+		// value is a NULL pointer
+		alSetError(AL_INVALID_VALUE);
+	}
 
 	ProcessContext(Context);
 }
 
 
 /*
-	ReleaseALBuffers()
-
-	Called by DLLMain on exit to destroy any buffers that still exist
+*	ReleaseALBuffers()
+*
+*	INTERNAL FN : Called by DLLMain on exit to destroy any buffers that still exist
 */
 ALvoid ReleaseALBuffers(ALvoid)
 {
@@ -365,15 +449,16 @@ ALvoid ReleaseALBuffers(ALvoid)
 #endif
 
 #ifdef _DEBUG
-	if (BufferCount > 0)
+	if (g_uiBufferCount > 0)
 	{
-		sprintf(szString, "OpenAL32 : DllMain() %d Buffer(s) NOT deleted\n", BufferCount);
+		// In Debug Mode only - write out number of AL Buffers not destroyed
+		sprintf(szString, "OpenAL32 : DllMain() %d Buffer(s) NOT deleted\n", g_uiBufferCount);
 		OutputDebugString(szString);
 	}
 #endif
 
-	ALBuffer = Buffer;
-	for (i = 0; i < BufferCount; i++)
+	ALBuffer = g_pBuffers;
+	for (i = 0; i < g_uiBufferCount; i++)
 	{
 		// Release sample data
 		if (ALBuffer->data)

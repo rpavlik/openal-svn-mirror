@@ -7,9 +7,9 @@
 #define ALAPI __declspec(dllexport)
 #define ALAPIENTRY __cdecl
 
-#include "al\altypes.h"
-#include "al\alctypes.h"
-#include "al\alu.h"
+#include "AL/altypes.h"
+#include "AL/alctypes.h"
+#include "AL/alu.h"
 #include "alBuffer.h"
 #include "alError.h"
 #include "alExtension.h"
@@ -62,7 +62,7 @@ typedef struct ALCdevice_struct
 	
 	ALsource *	Source;
 	ALuint		SourceCount;
-	
+
 	ALenum		LastError;
 	ALboolean	InUse;
 	ALboolean	Valid;

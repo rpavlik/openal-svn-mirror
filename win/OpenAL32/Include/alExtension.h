@@ -4,8 +4,8 @@
 #define ALAPI __declspec(dllexport)
 #define ALAPIENTRY __cdecl
 
-#include "al\altypes.h"
-#include "al\alctypes.h"
+#include "AL/altypes.h"
+#include "AL/alctypes.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,10 +28,6 @@ typedef struct ALenum_struct
 	ALubyte		*enumName;
 	ALenum		value;
 } ALenums;
-
-ALAPI ALboolean ALAPIENTRY alIsExtensionPresent(ALubyte *extName);
-ALAPI ALvoid *	ALAPIENTRY alGetProcAddress(ALubyte *funcName);
-ALAPI ALenum	ALAPIENTRY alGetEnumValue(ALubyte *enumName);
 
 #ifdef __cplusplus
 }

@@ -6,7 +6,7 @@
 #define ALAPI __declspec(dllexport)
 #define ALAPIENTRY __cdecl
 
-#include "al\altypes.h"
+#include "AL/altypes.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -106,27 +106,6 @@ typedef struct ALsource_struct
 	struct ALsource_struct *previous;
 	struct ALsource_struct *next;
 } ALsource;
-
-ALAPI ALvoid	ALAPIENTRY alGenSources(ALsizei n,ALuint *sources);
-ALAPI ALvoid	ALAPIENTRY alDeleteSources(ALsizei n,ALuint *sources);
-ALAPI ALboolean	ALAPIENTRY alIsSource(ALuint source);
-ALAPI ALvoid	ALAPIENTRY alSourcef(ALuint source,ALenum pname,ALfloat value);
-ALAPI ALvoid	ALAPIENTRY alSourcefv(ALuint source,ALenum pname,ALfloat *values);
-ALAPI ALvoid	ALAPIENTRY alSource3f(ALuint source,ALenum pname,ALfloat v1,ALfloat v2,ALfloat v3);
-ALAPI ALvoid	ALAPIENTRY alSourcei(ALuint source,ALenum pname,ALint value);
-ALAPI ALvoid	ALAPIENTRY alGetSourcef(ALuint source,ALenum pname,ALfloat *value);
-ALAPI ALvoid	ALAPIENTRY alGetSourcefv(ALuint source,ALenum pname,ALfloat *values);
-ALAPI ALvoid	ALAPIENTRY alGetSourcei(ALuint source,ALenum pname,ALint *value);
-ALAPI ALvoid	ALAPIENTRY alSourcePlay(ALuint source);
-ALAPI ALvoid	ALAPIENTRY alSourcePlayv(ALsizei n,ALuint *sources); 
-ALAPI ALvoid	ALAPIENTRY alSourcePause(ALuint source);
-ALAPI ALvoid	ALAPIENTRY alSourcePausev(ALsizei n,ALuint *sources);
-ALAPI ALvoid	ALAPIENTRY alSourceStop(ALuint source);
-ALAPI ALvoid	ALAPIENTRY alSourceStopv(ALsizei n,ALuint *sources);
-ALAPI ALvoid	ALAPIENTRY alSourceRewind(ALuint source);
-ALAPI ALvoid	ALAPIENTRY alSourceRewindv(ALsizei n,ALuint *sources);
-ALAPI ALvoid	ALAPIENTRY alSourceQueueBuffers( ALuint source, ALsizei n, ALuint* buffers );
-ALAPI ALvoid	ALAPIENTRY alSourceUnqueueBuffers( ALuint source, ALsizei n, ALuint* buffers );
 
 #ifdef __cplusplus
 }

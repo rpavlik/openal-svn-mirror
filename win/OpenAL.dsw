@@ -3,7 +3,7 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
-Project: "ALc"=.\ALc\ALc.dsp - Package Owner=<4>
+Project: "ALc"=".\ALc\ALc.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -15,7 +15,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "ALu"=.\ALu\ALu.dsp - Package Owner=<4>
+Project: "ALu"=".\ALu\ALu.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -27,7 +27,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "ALut"=.\ALut\ALut.dsp - Package Owner=<4>
+Project: "ALut"=".\ALut\ALut.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -39,7 +39,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "OpenAL32"=.\OpenAL32\OpenAL32.dsp - Package Owner=<4>
+Project: "OpenAL32"=".\OpenAL32\OpenAL32.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -60,7 +60,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "OpenALDemo"=.\OpenALDemo\OpenALDemo.dsp - Package Owner=<4>
+Project: "OpenALDemo"=".\OpenALDemo\OpenALDemo.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{

@@ -18,22 +18,30 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
 
-#include "include\alMain.h"
-#include "al\alc.h"
-#include "include\alError.h"
+#include "Include/alMain.h"
+#include "AL/alc.h"
+#include "Include/alError.h"
 
 ALAPI ALenum ALAPIENTRY alGetError(ALvoid)
 {
 	ALCcontext *Context;
 	ALenum errorCode;
 
-	Context=alcGetCurrentContext();
-	if (!Context)
-		return AL_INVALID_OPERATION;
+	Context = alcGetCurrentContext();
 	SuspendContext(Context);
-	errorCode=Context->LastError;
-	Context->LastError=AL_NO_ERROR;
+
+	if (Context)
+	{
+		errorCode = Context->LastError;
+		Context->LastError = AL_NO_ERROR;
+	}
+	else
+	{
+		errorCode = AL_INVALID_OPERATION;
+	}
+
 	ProcessContext(Context);
+
 	return errorCode;
 }
 
@@ -42,9 +50,12 @@ ALvoid alSetError(ALenum errorCode)
 	ALCcontext *Context;
 
 	Context=alcGetCurrentContext();
-	if (!Context)
-		return;
 	SuspendContext(Context);
-	Context->LastError=errorCode;
+
+	if (Context)
+	{
+		Context->LastError=errorCode;
+	}
+	
 	ProcessContext(Context);
 }

@@ -4,13 +4,12 @@
 #define ALAPI __declspec(dllexport)
 #define ALAPIENTRY __cdecl
 
-#include "al\altypes.h"
+#include "AL/altypes.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-ALAPI ALenum	ALAPIENTRY alGetError(ALvoid);
 ALvoid alSetError(ALenum errorCode);
 
 #ifdef __cplusplus

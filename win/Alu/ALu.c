@@ -19,9 +19,9 @@
  */
 
 #include <math.h>
-#include "al\al.h"
-#include "..\OpenAL32\include\almain.h"
-#include "al\alc.h"
+#include "AL/al.h"
+#include "OpenAL32/Include/alMain.h"
+#include "AL/alc.h"
 
 ALUAPI ALint ALUAPIENTRY aluF2L(ALfloat Value)
 {

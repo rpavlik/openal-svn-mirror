@@ -21,64 +21,79 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
-#include "..\OpenAL32\include\almain.h"
-#include "al\alc.h"
-#include "al\alut.h"
+#include "OpenAL32/Include/alMain.h"
+#include "AL/alc.h"
+#include "AL/alut.h"
 
-#pragma pack (push,1) 							/* Turn off alignment */
+#if defined _MSC_VER
+	#pragma pack (push,1) 							/* Turn off alignment */
+#elif defined __GNUC__
+	#define PADOFF_VAR __attribute__((packed))
+#endif
+
+#ifndef PADOFF_VAR
+	#define PADOFF_VAR
+#endif
 
 typedef struct                                  /* WAV File-header */
 {
-  ALubyte  Id[4];
-  ALsizei  Size;
-  ALubyte  Type[4];
+  ALubyte  Id[4]			PADOFF_VAR;
+  ALsizei  Size				PADOFF_VAR;
+  ALubyte  Type[4]			PADOFF_VAR;
 } WAVFileHdr_Struct;
 
 typedef struct                                  /* WAV Fmt-header */
 {
-  ALushort Format;                              
-  ALushort Channels;
-  ALuint   SamplesPerSec;
-  ALuint   BytesPerSec;
-  ALushort BlockAlign;
-  ALushort BitsPerSample;
+  ALushort Format			PADOFF_VAR;
+  ALushort Channels			PADOFF_VAR;
+  ALuint   SamplesPerSec	PADOFF_VAR;
+  ALuint   BytesPerSec		PADOFF_VAR;
+  ALushort BlockAlign		PADOFF_VAR;
+  ALushort BitsPerSample	PADOFF_VAR;
 } WAVFmtHdr_Struct;
 
 typedef struct									/* WAV FmtEx-header */
 {
-  ALushort Size;
-  ALushort SamplesPerBlock;
+  ALushort Size				PADOFF_VAR;
+  ALushort SamplesPerBlock	PADOFF_VAR;
 } WAVFmtExHdr_Struct;
 
 typedef struct                                  /* WAV Smpl-header */
 {
-  ALuint   Manufacturer;
-  ALuint   Product;
-  ALuint   SamplePeriod;                          
-  ALuint   Note;                                  
-  ALuint   FineTune;                              
-  ALuint   SMPTEFormat;
-  ALuint   SMPTEOffest;
-  ALuint   Loops;
-  ALuint   SamplerData;
+  ALuint   Manufacturer		PADOFF_VAR;
+  ALuint   Product			PADOFF_VAR;
+  ALuint   SamplePeriod		PADOFF_VAR;
+  ALuint   Note				PADOFF_VAR;
+  ALuint   FineTune			PADOFF_VAR;
+  ALuint   SMPTEFormat		PADOFF_VAR;
+  ALuint   SMPTEOffest		PADOFF_VAR;
+  ALuint   Loops			PADOFF_VAR;
+  ALuint   SamplerData		PADOFF_VAR;
   struct
   {
-    ALuint Identifier;
-    ALuint Type;
-    ALuint Start;
-    ALuint End;
-    ALuint Fraction;
-    ALuint Count;
-  }      Loop[1];
+    ALuint Identifier		PADOFF_VAR;
+    ALuint Type				PADOFF_VAR;
+    ALuint Start			PADOFF_VAR;
+    ALuint End				PADOFF_VAR;
+    ALuint Fraction			PADOFF_VAR;
+    ALuint Count			PADOFF_VAR;
+  }      Loop[1]			PADOFF_VAR;
 } WAVSmplHdr_Struct;
 
 typedef struct                                  /* WAV Chunk-header */
 {
-  ALubyte  Id[4];
-  ALuint   Size;
+  ALubyte  Id[4]			PADOFF_VAR;
+  ALuint   Size				PADOFF_VAR;
 } WAVChunkHdr_Struct;
 
-#pragma pack (pop)								/* Default alignment */
+
+#ifdef PADOFF_VAR			    				/* Default alignment */
+	#undef PADOFF_VAR
+#endif
+
+#if defined _MSC_VER
+	#pragma pack (pop)
+#endif
 
 ALUTAPI ALvoid ALUTAPIENTRY alutInit(ALint *argc,ALbyte **argv) 
 {

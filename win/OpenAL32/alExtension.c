@@ -20,8 +20,8 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "include\alExtension.h"
-#include "include\alEax.h"
+#include "Include/alExtension.h"
+#include "Include/alEax.h"
 
 static ALextension extension[]=  {	
 	{ "EAX",					  (ALvoid *) NULL				},
@@ -140,38 +140,40 @@ static ALenums	   enumeration[]={
 
 ALAPI ALboolean ALAPIENTRY alIsExtensionPresent(ALubyte *extName)
 {
+	ALboolean bSupported = AL_FALSE;
 	ALsizei i=0;
 
 	// Check for EAX Support
 	if (!strcmp(extName, "EAX") || !strcmp(extName, "EAX2.0"))
 	{
-		if (CheckEAXSupport(extName))
-			return AL_TRUE;
-		else
-			return AL_FALSE;
+		bSupported = CheckEAXSupport(extName);
 	}
 
-	while ((extension[i].extName)&&(strcmp((char *)extension[i].extName,(char *)extName)))
-		i++;
-	return (extension[i].extName!=NULL?AL_TRUE:AL_FALSE);
+	return bSupported;
 }
 
 
 ALAPI ALvoid * ALAPIENTRY alGetProcAddress(ALubyte *funcName)
 {
 	ALsizei i=0;
+	ALvoid *pAddress;
 
 	while ((function[i].funcName)&&(strcmp((char *)function[i].funcName,(char *)funcName)))
 		i++;
-	return function[i].address;
+	pAddress = function[i].address;
+
+	return pAddress;
 }
 
 
 ALAPI ALenum ALAPIENTRY alGetEnumValue(ALubyte *enumName)
 {
 	ALsizei i=0;
+	ALenum	val;
 
 	while ((enumeration[i].enumName)&&(strcmp((char *)enumeration[i].enumName,(char *)enumName)))
 		i++;
-	return enumeration[i].value;
+	val = enumeration[i].value;
+
+	return val;
 }

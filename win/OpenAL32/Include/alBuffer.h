@@ -4,7 +4,7 @@
 #define ALAPI __declspec(dllexport)
 #define ALAPIENTRY __cdecl
 
-#include "al\altypes.h"
+#include "AL/altypes.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,14 +27,6 @@ typedef struct ALbuffer_struct
 	struct ALbuffer_struct *previous;
 	struct ALbuffer_struct *next;
 } ALbuffer;
-
-ALAPI ALvoid	ALAPIENTRY alGenBuffers(ALsizei n,ALuint *buffers);
-ALAPI ALvoid	ALAPIENTRY alGenStreamingBuffers(ALsizei n,ALuint *buffers);
-ALAPI ALvoid	ALAPIENTRY alDeleteBuffers(ALsizei n,ALuint *buffers);
-ALAPI ALboolean	ALAPIENTRY alIsBuffer(ALuint buffer);
-ALAPI ALvoid	ALAPIENTRY alBufferData(ALuint buffer,ALenum format,ALvoid *data,ALsizei size,ALsizei freq);
-ALAPI ALvoid	ALAPIENTRY alGetBufferf(ALuint buffer,ALenum pname,ALfloat *value);
-ALAPI ALvoid	ALAPIENTRY alGetBufferi(ALuint buffer,ALenum pname,ALint *value);
 
 ALvoid ReleaseALBuffers(ALvoid);
 

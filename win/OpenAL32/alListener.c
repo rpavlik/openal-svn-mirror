@@ -18,19 +18,22 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
 
-#include "include\alMain.h"
-#include "al\alc.h"
-#include "include\alError.h"
-#include "include\alListener.h"
+#include "Include/alMain.h"
+#include "AL/alc.h"
+#include "Include/alError.h"
+#include "Include/alListener.h"
 
 ALAPI ALvoid ALAPIENTRY alListenerf(ALenum pname,ALfloat value)
 {
 	ALCcontext *Context;
 
 	Context=alcGetCurrentContext();
-	SuspendContext(Context);
-	switch(pname) 
+	if (Context)
 	{
+		SuspendContext(Context);
+		
+		switch(pname) 
+		{
 		case AL_GAIN:
 			if (value>=0.0f)
 			{
@@ -39,13 +42,25 @@ ALAPI ALvoid ALAPIENTRY alListenerf(ALenum pname,ALfloat value)
 				alcUpdateContext(Context, ALLISTENER, 0);
 			}
 			else
+			{
 				alSetError(AL_INVALID_VALUE);
+			}
 			break;
+
 		default:
 			alSetError(AL_INVALID_ENUM);
 			break;
+		}
+
+		ProcessContext(Context);
 	}
-	ProcessContext(Context);
+	else
+	{
+		// No Context
+		alSetError(AL_INVALID_OPERATION);
+	}
+
+	return;
 }
 
 
@@ -54,9 +69,11 @@ ALAPI ALvoid ALAPIENTRY alListener3f(ALenum pname,ALfloat v1,ALfloat v2,ALfloat 
 	ALCcontext *Context;
 	
 	Context=alcGetCurrentContext();
-	SuspendContext(Context);
-	switch(pname) 
+	if (Context)
 	{
+		SuspendContext(Context);
+		switch(pname) 
+		{
 		case AL_POSITION:
 			Context->Listener.Position[0] = v1;
 			Context->Listener.Position[1] = v2;
@@ -64,6 +81,7 @@ ALAPI ALvoid ALAPIENTRY alListener3f(ALenum pname,ALfloat v1,ALfloat v2,ALfloat 
 			Context->Listener.update1 |= LPOSITION;
 			alcUpdateContext(Context, ALLISTENER, 0);
 			break;
+
 		case AL_VELOCITY:
 			Context->Listener.Velocity[0] = v1;
 			Context->Listener.Velocity[1] = v2;
@@ -71,11 +89,21 @@ ALAPI ALvoid ALAPIENTRY alListener3f(ALenum pname,ALfloat v1,ALfloat v2,ALfloat 
 			Context->Listener.update1 |= LVELOCITY;
 			alcUpdateContext(Context, ALLISTENER, 0);
 			break;
+
 		default:
 			alSetError(AL_INVALID_ENUM);
 			break;
+		}
+	
+		ProcessContext(Context);
 	}
-	ProcessContext(Context);
+	else
+	{
+		// No Context
+		alSetError(AL_INVALID_OPERATION);
+	}
+
+	return;
 }
 
 
@@ -83,49 +111,64 @@ ALAPI ALvoid ALAPIENTRY alListenerfv(ALenum pname,ALfloat *values)
 {
 	ALCcontext *Context;
 	
-	if (!values)
-	{
-		alSetError(AL_INVALID_VALUE);
-		return;
-	}
-
 	Context=alcGetCurrentContext();
-	SuspendContext(Context);
-	switch(pname) 
+	if (Context)
 	{
-		case AL_POSITION:
-			Context->Listener.Position[0] = values[0];
-			Context->Listener.Position[1] = values[1];
-			Context->Listener.Position[2] = values[2];
-			Context->Listener.update1 |= LPOSITION;
-			alcUpdateContext(Context, ALLISTENER, 0);
-			break;
+		SuspendContext(Context);
 
-		case AL_VELOCITY:
-			Context->Listener.Velocity[0] = values[0];
-			Context->Listener.Velocity[1] = values[1];
-			Context->Listener.Velocity[2] = values[2];
-			Context->Listener.update1 |= LVELOCITY;
-			alcUpdateContext(Context, ALLISTENER, 0);
-			break;
+		if (values)
+		{
+			switch(pname) 
+			{
+			case AL_POSITION:
+				Context->Listener.Position[0] = values[0];
+				Context->Listener.Position[1] = values[1];
+				Context->Listener.Position[2] = values[2];
+				Context->Listener.update1 |= LPOSITION;
+				alcUpdateContext(Context, ALLISTENER, 0);
+				break;
 
-		case AL_ORIENTATION:
-			// AT then UP
-			Context->Listener.Forward[0] = values[0];
-			Context->Listener.Forward[1] = values[1];
-			Context->Listener.Forward[2] = values[2];
-			Context->Listener.Up[0] = values[3]; 
-			Context->Listener.Up[1] = values[4];
-			Context->Listener.Up[2] = values[5];
-			Context->Listener.update1 |= LORIENTATION;
-			alcUpdateContext(Context, ALLISTENER, 0);
-			break;
+			case AL_VELOCITY:
+				Context->Listener.Velocity[0] = values[0];
+				Context->Listener.Velocity[1] = values[1];
+				Context->Listener.Velocity[2] = values[2];
+				Context->Listener.update1 |= LVELOCITY;
+				alcUpdateContext(Context, ALLISTENER, 0);
+				break;
 
-		default:
-			alSetError(AL_INVALID_ENUM);
-			break;
+			case AL_ORIENTATION:
+				// AT then UP
+				Context->Listener.Forward[0] = values[0];
+				Context->Listener.Forward[1] = values[1];
+				Context->Listener.Forward[2] = values[2];
+				Context->Listener.Up[0] = values[3]; 
+				Context->Listener.Up[1] = values[4];
+				Context->Listener.Up[2] = values[5];
+				Context->Listener.update1 |= LORIENTATION;
+				alcUpdateContext(Context, ALLISTENER, 0);
+				break;
+
+			default:
+				alSetError(AL_INVALID_ENUM);
+				break;
+			}
+		}
+		else
+		{
+			// values is a NULL pointer
+			alSetError(AL_INVALID_VALUE);
+		}
+
+	    ProcessContext(Context);
 	}
-    ProcessContext(Context);
+	else
+	{
+		// Invalid Context
+		alSetError(AL_INVALID_OPERATION);
+	}
+
+	return;
+
 }
 
 
@@ -134,14 +177,26 @@ ALAPI ALvoid ALAPIENTRY alListeneri(ALenum pname,ALint value)
 	ALCcontext *Context;
 
 	Context=alcGetCurrentContext();
-	SuspendContext(Context);
-	switch(pname) 
+	if (Context)
 	{
+		SuspendContext(Context);
+		
+		switch(pname) 
+		{
 		default:
 			alSetError(AL_INVALID_ENUM);
 			break;
+		}
+
+		ProcessContext(Context);
 	}
-	ProcessContext(Context);
+	else
+	{
+		// Invalid context
+		alSetError(AL_INVALID_OPERATION);
+	}
+
+	return;
 }
 
 
@@ -149,56 +204,85 @@ ALAPI ALvoid ALAPIENTRY alGetListenerf(ALenum pname,ALfloat *value)
 {
 	ALCcontext *Context;
 
-	if (!value)
+	Context=alcGetCurrentContext();
+	if (Context)
 	{
-		alSetError(AL_INVALID_VALUE);
-		return;
+		SuspendContext(Context);
+	
+		if (value)
+		{
+			switch(pname)
+			{
+				case AL_GAIN:
+					*value = Context->Listener.Gain;
+					break;
+				default:
+					alSetError(AL_INVALID_ENUM);
+					break;
+			}
+		}
+		else
+		{
+			// value is a NULL pointer
+			alSetError(AL_INVALID_VALUE);
+		}
+
+		ProcessContext(Context);
+	}
+	else
+	{ 
+		// Invalid Context
+		alSetError(AL_INVALID_OPERATION);
 	}
 
-	Context=alcGetCurrentContext();
-	SuspendContext(Context);
-	switch(pname)
-	{
-		case AL_GAIN:
-			*value = Context->Listener.Gain;
-			break;
-		default:
-			alSetError(AL_INVALID_ENUM);
-			break;
-	}
-	ProcessContext(Context);
+	return;
 }
 
 
 ALAPI ALvoid ALAPIENTRY alGetListener3f(ALenum pname,ALfloat *v1,ALfloat *v2,ALfloat *v3)
 {
 	ALCcontext *Context;
-	
-	if ((!v1) || (!v2) || (!v3))
-	{
-		alSetError(AL_INVALID_VALUE);
-		return;
-	}
 
 	Context = alcGetCurrentContext();
-	SuspendContext(Context);
-	switch(pname) 
+	if (Context)
 	{
-		case AL_POSITION:
-			*v1=Context->Listener.Position[0];
-			*v2=Context->Listener.Position[1];
-			*v3=Context->Listener.Position[2];
-			break;
-		case AL_VELOCITY:
-			*v1=Context->Listener.Velocity[0];
-			*v2=Context->Listener.Velocity[1];
-			*v3=Context->Listener.Velocity[2];
-			break;
-		default:
-			alSetError(AL_INVALID_ENUM);
-			break;
+		SuspendContext(Context);
+	
+		if ((v1) && (v2) && (v3))
+		{
+			switch(pname) 
+			{
+			case AL_POSITION:
+				*v1=Context->Listener.Position[0];
+				*v2=Context->Listener.Position[1];
+				*v3=Context->Listener.Position[2];
+				break;
+
+			case AL_VELOCITY:
+				*v1=Context->Listener.Velocity[0];
+				*v2=Context->Listener.Velocity[1];
+				*v3=Context->Listener.Velocity[2];
+				break;
+
+			default:
+				alSetError(AL_INVALID_ENUM);
+				break;
+			}
+		}
+		else
+		{
+			alSetError(AL_INVALID_VALUE);
+		}
+
+		ProcessContext(Context);
 	}
-	ProcessContext(Context);
+	else
+	{
+		// Invalid context
+		alSetError(AL_INVALID_OPERATION);
+	}
+	
+	return;
 }
 
 
@@ -206,40 +290,54 @@ ALAPI ALvoid ALAPIENTRY alGetListenerfv(ALenum pname,ALfloat *values)
 {
 	ALCcontext *Context;
 	
-	if (!values)
+	Context = alcGetCurrentContext();
+	if (Context)
 	{
-		alSetError(AL_INVALID_VALUE);
-		return;
+		SuspendContext(Context);
+
+		if (values)
+		{
+			switch(pname) 
+			{
+			case AL_POSITION:
+				values[0] = Context->Listener.Position[0];
+				values[1] = Context->Listener.Position[1];
+				values[2] = Context->Listener.Position[2];
+				break;
+			case AL_VELOCITY:
+				values[0] = Context->Listener.Velocity[0];
+				values[1] = Context->Listener.Velocity[1];
+				values[2] = Context->Listener.Velocity[2];
+				break;
+			case AL_ORIENTATION:
+				// AT then UP
+				values[3] = Context->Listener.Up[0]; 
+				values[4] = Context->Listener.Up[1];
+				values[5] = Context->Listener.Up[2];
+				values[0] = Context->Listener.Forward[0];
+				values[1] = Context->Listener.Forward[1];
+				values[2] = Context->Listener.Forward[2];
+				break;
+			default:
+				alSetError(AL_INVALID_ENUM);
+				break;
+			}
+		}
+		else
+		{
+			// values is a NULL pointer
+			alSetError(AL_INVALID_VALUE);
+		}
+
+		ProcessContext(Context);
+	}
+	else
+	{
+		// Invalid context
+		alSetError(AL_INVALID_OPERATION);
 	}
 
-	Context = alcGetCurrentContext();
-	SuspendContext(Context);
-	switch(pname) 
-	{
-		case AL_POSITION:
-			values[0] = Context->Listener.Position[0];
-			values[1] = Context->Listener.Position[1];
-			values[2] = Context->Listener.Position[2];
-			break;
-		case AL_VELOCITY:
-			values[0] = Context->Listener.Velocity[0];
-			values[1] = Context->Listener.Velocity[1];
-			values[2] = Context->Listener.Velocity[2];
-			break;
-		case AL_ORIENTATION:
-			// AT then UP
-			values[3] = Context->Listener.Up[0]; 
-			values[4] = Context->Listener.Up[1];
-			values[5] = Context->Listener.Up[2];
-			values[0] = Context->Listener.Forward[0];
-			values[1] = Context->Listener.Forward[1];
-			values[2] = Context->Listener.Forward[2];
-			break;
-		default:
-			alSetError(AL_INVALID_ENUM);
-			break;
-	}
-	ProcessContext(Context);
+	return;
 }
 
 
@@ -247,19 +345,34 @@ ALAPI ALvoid ALAPIENTRY alGetListeneri(ALenum pname,ALint *value)
 {
 	ALCcontext *Context;
 
-	if (!value)
+	Context=alcGetCurrentContext();
+	if (Context)
 	{
-		alSetError(AL_INVALID_VALUE);
-		return;
+		SuspendContext(Context);
+
+		if (value)
+		{
+			switch(pname) 
+			{
+			default:
+				alSetError(AL_INVALID_ENUM);
+				break;
+			}
+		}
+		else
+		{
+			// value is a NULL pointer
+			alSetError(AL_INVALID_VALUE);
+		}
+
+		ProcessContext(Context);
+	}
+	else
+	{
+		// Invalid Context
+		alSetError(AL_INVALID_OPERATION);
+
 	}
 
-	Context=alcGetCurrentContext();
-	SuspendContext(Context);
-	switch(pname) 
-	{
-		default:
-			alSetError(AL_INVALID_ENUM);
-			break;
-	}
-	ProcessContext(Context);
+	return;
 }
