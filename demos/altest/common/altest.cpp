@@ -1552,11 +1552,7 @@ ALvoid SA_StringQueries(ALvoid)
 	{
 		printf("Check that the following values are reasonable:\n");
 
-#ifdef LINUX
 		const ALubyte *tempString;
-#else
-		unsigned char *tempString;
-#endif
 
 		ALCcontext* pContext;
 		ALCdevice* pDevice;

@@ -128,7 +128,7 @@ ALAPI ALvoid ALAPIENTRY alGenBuffers(ALsizei n,ALuint *puiBuffers)
 *
 *	Deletes the n AL Buffers pointed to by puiBuffers
 */
-ALAPI ALvoid ALAPIENTRY alDeleteBuffers(ALsizei n,ALuint *puiBuffers)
+ALAPI ALvoid ALAPIENTRY alDeleteBuffers(ALsizei n, const ALuint *puiBuffers)
 {
 	ALCcontext *Context;
 	ALbuffer *ALBuf;

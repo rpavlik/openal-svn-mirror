@@ -395,17 +395,17 @@ ALUAPI ALvoid ALUAPIENTRY aluMixData(ALvoid *context,ALvoid *buffer,ALsizei size
 							switch (Channels)
 							{
 								case 0x01:
-									value=((Data[k]*((1L<<FRACTIONBITS)-fraction))+(Data[k+1]*(fraction)))>>FRACTIONBITS;
+									value=(ALshort) (((Data[k]*((1L<<FRACTIONBITS)-fraction))+(Data[k+1]*(fraction)))>>FRACTIONBITS);
 									DryBuffer[j][0]+=((ALfloat)value)*DrySend[0];
 									DryBuffer[j][1]+=((ALfloat)value)*DrySend[1];
 									WetBuffer[j][0]+=((ALfloat)value)*WetSend[0];
 									WetBuffer[j][1]+=((ALfloat)value)*WetSend[1];
 									break;
 								case 0x02:
-									value=((Data[k*2  ]*((1L<<FRACTIONBITS)-fraction))+(Data[k*2+2]*(fraction)))>>FRACTIONBITS;
+									value=(ALshort) (((Data[k*2  ]*((1L<<FRACTIONBITS)-fraction))+(Data[k*2+2]*(fraction)))>>FRACTIONBITS);
 									DryBuffer[j][0]+=((ALfloat)value)*DrySend[0];
 									WetBuffer[j][0]+=((ALfloat)value)*WetSend[0];
-									value=((Data[k*2+1]*((1L<<FRACTIONBITS)-fraction))+(Data[k*2+3]*(fraction)))>>FRACTIONBITS;
+									value=(ALshort) (((Data[k*2+1]*((1L<<FRACTIONBITS)-fraction))+(Data[k*2+3]*(fraction)))>>FRACTIONBITS);
 									DryBuffer[j][1]+=((ALfloat)value)*DrySend[1];
 									WetBuffer[j][1]+=((ALfloat)value)*WetSend[1];
 									break;

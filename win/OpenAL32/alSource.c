@@ -256,7 +256,7 @@ ALAPI ALvoid ALAPIENTRY alGenSources(ALsizei n,ALuint *sources)
 
 
 
-ALAPI ALvoid ALAPIENTRY alDeleteSources(ALsizei n,ALuint *sources)
+ALAPI ALvoid ALAPIENTRY alDeleteSources(ALsizei n, const ALuint *sources)
 {
 	ALCcontext *Context;
 	ALCdevice  *Device;
@@ -520,7 +520,7 @@ ALAPI ALvoid ALAPIENTRY alSourcef(ALuint source,ALenum pname,ALfloat value)
 }
 
 
-ALAPI ALvoid ALAPIENTRY alSourcefv(ALuint source,ALenum pname,ALfloat *values)
+ALAPI ALvoid ALAPIENTRY alSourcefv(ALuint source,ALenum pname, const ALfloat *values)
 {
 	ALCcontext *Context;
 	ALsource *Source;
@@ -1115,7 +1115,7 @@ ALAPI ALvoid ALAPIENTRY alSourcePlay(ALuint source)
 	return;
 }
 
-ALAPI ALvoid ALAPIENTRY alSourcePlayv(ALsizei n,ALuint *sources)
+ALAPI ALvoid ALAPIENTRY alSourcePlayv(ALsizei n, const ALuint *sources)
 {
 	ALCcontext *Context;
 	ALsource *Source;
@@ -1233,7 +1233,7 @@ ALAPI ALvoid ALAPIENTRY alSourcePause(ALuint source)
 	return;
 }
 
-ALAPI ALvoid ALAPIENTRY alSourcePausev(ALsizei n,ALuint *sources)
+ALAPI ALvoid ALAPIENTRY alSourcePausev(ALsizei n, const ALuint *sources)
 {
 	ALCcontext *Context;
 	ALsource *Source;
@@ -1336,7 +1336,7 @@ ALAPI ALvoid ALAPIENTRY alSourceStop(ALuint source)
 	return;
 }
 
-ALAPI ALvoid ALAPIENTRY alSourceStopv(ALsizei n,ALuint *sources)
+ALAPI ALvoid ALAPIENTRY alSourceStopv(ALsizei n, const ALuint *sources)
 {
 	ALCcontext *Context;
 	ALsource *Source;
@@ -1451,7 +1451,7 @@ ALAPI ALvoid ALAPIENTRY alSourceRewind(ALuint source)
 	return;
 }
 
-ALAPI ALvoid ALAPIENTRY alSourceRewindv(ALsizei n,ALuint *sources)
+ALAPI ALvoid ALAPIENTRY alSourceRewindv(ALsizei n, const ALuint *sources)
 {
 	ALCcontext *Context;
 	ALsource *Source;
@@ -1521,7 +1521,7 @@ ALAPI ALvoid ALAPIENTRY alSourceRewindv(ALsizei n,ALuint *sources)
 }
 
 
-ALAPI ALvoid ALAPIENTRY alSourceQueueBuffers( ALuint source, ALsizei n, ALuint* buffers )
+ALAPI ALvoid ALAPIENTRY alSourceQueueBuffers( ALuint source, ALsizei n, const ALuint* buffers )
 {
 	ALCcontext *Context;
 	ALsource *ALSource;

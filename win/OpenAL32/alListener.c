@@ -120,7 +120,7 @@ ALAPI ALvoid ALAPIENTRY alListener3f(ALenum pname,ALfloat v1,ALfloat v2,ALfloat 
 }
 
 
-ALAPI ALvoid ALAPIENTRY alListenerfv(ALenum pname,ALfloat *values)
+ALAPI ALvoid ALAPIENTRY alListenerfv(ALenum pname, const ALfloat *values)
 {
 	ALCcontext *Context;
 	

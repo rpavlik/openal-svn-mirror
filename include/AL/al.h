@@ -91,11 +91,7 @@ ALAPI void ALAPIENTRY alGetFloatv( ALenum param, ALfloat* data );
 ALAPI void ALAPIENTRY alGetDoublev( ALenum param, ALdouble* data );
 
 /** State retrieval. */
-#ifdef LINUX_AL
 ALAPI const ALubyte* ALAPIENTRY alGetString( ALenum param );
-#else
-ALAPI ALubyte* ALAPIENTRY alGetString( ALenum param );
-#endif
 
 
 /** State retrieval.through return value ( for compatibility ) */
@@ -115,11 +111,7 @@ ALAPI ALenum ALAPIENTRY alGetError( ALvoid );
  * Obtain the address of a function (usually an extension)
  *  with the name fname. All addresses are context-independent. 
  */
-#ifdef LINUX_AL
 ALAPI ALboolean ALAPIENTRY alIsExtensionPresent( const ALubyte* fname );
-#else
-ALAPI ALboolean ALAPIENTRY alIsExtensionPresent( ALubyte* fname );
-#endif
 
 
 /** 
@@ -127,22 +119,14 @@ ALAPI ALboolean ALAPIENTRY alIsExtensionPresent( ALubyte* fname );
  * Obtain the address of a function (usually an extension)
  *  with the name fname. All addresses are context-independent. 
  */
-#ifdef LINUX_AL
 ALAPI void* ALAPIENTRY alGetProcAddress( const ALubyte* fname );
-#else
-ALAPI void* ALAPIENTRY alGetProcAddress( ALubyte* fname );
-#endif
 
 
 /**
  * Extension support.
  * Obtain the integer value of an enumeration (usually an extension) with the name ename. 
  */
-#ifdef LINUX_AL
 ALAPI ALenum ALAPIENTRY alGetEnumValue( const ALubyte* ename );
-#else
-ALAPI ALenum ALAPIENTRY alGetEnumValue( ALubyte* ename );
-#endif
 
 
 
@@ -181,7 +165,7 @@ ALAPI void ALAPIENTRY alListener3f( ALenum pname,
  * Listener Velocity:        ALfloat[3]
  * Listener Orientation:     ALfloat[6]  (forward and up vector).
  */
-ALAPI void ALAPIENTRY alListenerfv( ALenum pname, ALfloat* param ); 
+ALAPI void ALAPIENTRY alListenerfv( ALenum pname, const ALfloat* param ); 
 
 /*
  * Retrieve listener information.
@@ -212,7 +196,7 @@ ALAPI void ALAPIENTRY alGetListener3f( ALenum pname,
 ALAPI void ALAPIENTRY alGenSources( ALsizei n, ALuint* sources ); 
 
 /** Delete Source objects. */
-ALAPI void ALAPIENTRY alDeleteSources( ALsizei n, ALuint* sources );
+ALAPI void ALAPIENTRY alDeleteSources( ALsizei n, const ALuint* sources );
 
 /** Verify a handle is a valid Source. */ 
 ALAPI ALboolean ALAPIENTRY alIsSource( ALuint sid ); 
@@ -223,7 +207,7 @@ ALAPI void ALAPIENTRY alSourcei( ALuint sid, ALenum param, ALint value );
 ALAPI void ALAPIENTRY alSourcef( ALuint sid, ALenum param, ALfloat value ); 
 ALAPI void ALAPIENTRY alSource3f( ALuint sid, ALenum param,
                                   ALfloat f1, ALfloat f2, ALfloat f3 );
-ALAPI void ALAPIENTRY alSourcefv( ALuint sid, ALenum param, ALfloat* values ); 
+ALAPI void ALAPIENTRY alSourcefv( ALuint sid, ALenum param, const ALfloat* values ); 
 
 /** Get an integer parameter for a Source object. */
 ALAPI void ALAPIENTRY alGetSourcei( ALuint sid,  ALenum pname, ALint* value );
@@ -238,10 +222,10 @@ ALAPI void ALAPIENTRY alGetSourcefv( ALuint sid, ALenum pname, ALfloat* values )
 ALAPI void ALAPIENTRY alGetSource3f( ALuint sid, ALenum pname, ALfloat* value1,
                                      ALfloat* value2, ALfloat* value3);
 
-ALAPI void ALAPIENTRY alSourcePlayv( ALsizei ns, ALuint *ids );
-ALAPI void ALAPIENTRY alSourceStopv( ALsizei ns, ALuint *ids );
-ALAPI void ALAPIENTRY alSourceRewindv( ALsizei ns, ALuint *ids );
-ALAPI void ALAPIENTRY alSourcePausev( ALsizei ns, ALuint *ids );
+ALAPI void ALAPIENTRY alSourcePlayv( ALsizei ns, const ALuint *ids );
+ALAPI void ALAPIENTRY alSourceStopv( ALsizei ns, const ALuint *ids );
+ALAPI void ALAPIENTRY alSourceRewindv( ALsizei ns, const ALuint *ids );
+ALAPI void ALAPIENTRY alSourcePausev( ALsizei ns, const ALuint *ids );
 
 /** Activate a source, start replay. */
 ALAPI void ALAPIENTRY alSourcePlay( ALuint sid );
@@ -283,7 +267,7 @@ ALAPI void ALAPIENTRY alSourceStop( ALuint sid );
 /** Buffer object generation. */
 ALAPI void ALAPIENTRY alGenBuffers( ALsizei n, ALuint* buffers );
 
-ALAPI void ALAPIENTRY alDeleteBuffers( ALsizei n, ALuint* buffers );
+ALAPI void ALAPIENTRY alDeleteBuffers( ALsizei n, const ALuint* buffers );
 
 
 ALAPI ALboolean ALAPIENTRY alIsBuffer( ALuint buffer );
@@ -293,7 +277,7 @@ ALAPI ALboolean ALAPIENTRY alIsBuffer( ALuint buffer );
  */
 ALAPI void ALAPIENTRY alBufferData( ALuint   buffer,
                    ALenum   format,
-                   ALvoid*    data,
+                   const ALvoid*    data,
                    ALsizei  size,
                    ALsizei  freq );
 
@@ -348,7 +332,7 @@ ALAPI void ALAPIENTRY alEnvironmentfIASIG( ALuint eid, ALenum param, ALuint valu
 /**
  * Queue stuff
  */
-ALAPI void ALAPIENTRY alSourceQueueBuffers( ALuint sid, ALsizei numEntries, ALuint *bids );
+ALAPI void ALAPIENTRY alSourceQueueBuffers( ALuint sid, ALsizei numEntries, const ALuint *bids );
 ALAPI void ALAPIENTRY alSourceUnqueueBuffers( ALuint sid, ALsizei numEntries, ALuint *bids );
 
 #ifdef LINUX_AL
@@ -384,43 +368,27 @@ ALAPI void ALAPIENTRY alDistanceModel( ALenum distanceModel );
                                                       ALfloat* data );
       void                         (*alGetDoublev)( ALenum param,
                                                       ALdouble* data );
-#ifdef LINUX_AL
       const ALubyte*               (*alGetString)( ALenum param );
-#else
-      ALubyte*                     (*alGetString)( ALenum param );
-#endif
       ALenum                       (*alGetError)( ALvoid );
 
       /** 
        * Extension support.
        * Query existance of extension
        */
-#ifdef LINUX_AL
       ALboolean                (*alIsExtensionPresent)(const ALubyte* fname );
-#else
-      ALboolean                (*alIsExtensionPresent)(ALubyte* fname );
-#endif
 
       /** 
        * Extension support.
        * Obtain the address of a function (usually an extension)
        *  with the name fname. All addresses are context-independent. 
        */
-#ifdef LINUX_AL
       void*                (*alGetProcAddress)( const ALubyte* fname );
-#else
-      void*                (*alGetProcAddress)( ALubyte* fname );
-#endif      
 
       /**
        * Extension support.
        * Obtain the integer value of an enumeration (usually an extension) with the name ename. 
        */
-#ifdef LINUX_AL
       ALenum                (*alGetEnumValue)( const ALubyte* ename );
-#else
-	  ALenum                (*alGetEnumValue)( ALubyte* ename);
-#endif
 
 /**
  * LISTENER
@@ -442,7 +410,7 @@ ALAPI void ALAPIENTRY alDistanceModel( ALenum distanceModel );
        * Listener Velocity:        ALfloat[3]
        * Listener Orientation:     ALfloat[6]  (forward and up vector).
        */
-      void                (*alListenerfv)( ALenum pname, ALfloat* param ); 
+      void                (*alListenerfv)( ALenum pname, const ALfloat* param ); 
 
       /*
        * Retrieve listener information.
@@ -468,7 +436,7 @@ ALAPI void ALAPIENTRY alDistanceModel( ALenum distanceModel );
       void                (*alGenSources)( ALsizei n, ALuint* sources ); 
 
       /** Delete Source objects. */
-      void                (*alDeleteSources)( ALsizei n, ALuint* sources );
+      void                (*alDeleteSources)( ALsizei n, const ALuint* sources );
 
       /** Verify a handle is a valid Source. */ 
       ALboolean        (*alIsSource)( ALuint sid ); 
@@ -485,7 +453,7 @@ ALAPI void ALAPIENTRY alDistanceModel( ALenum distanceModel );
 
       /** Set a float vector parameter for a Source object. */
       void                (*alSourcefv)( ALuint sid, ALenum param,
-                              ALfloat* values ); 
+                              const ALfloat* values ); 
 
       /** Get an integer scalar parameter for a Source object. */
       void                (*alGetSourcei)( ALuint sid,
@@ -539,10 +507,10 @@ ALAPI void ALAPIENTRY alDistanceModel( ALenum distanceModel );
       /**
        * vector forms of those functions we all love
        */
-      void                (*alSourcePlayv)( ALsizei ns, ALuint *ids );
-      void                (*alSourceStopv)( ALsizei ns, ALuint *ids );
-      void                (*alSourceRewindv)( ALsizei ns, ALuint *ids );
-      void                (*alSourcePausev)( ALsizei ns, ALuint *ids );
+      void                (*alSourcePlayv)( ALsizei ns, const ALuint *ids );
+      void                (*alSourceStopv)( ALsizei ns, const ALuint *ids );
+      void                (*alSourceRewindv)( ALsizei ns, const ALuint *ids );
+      void                (*alSourcePausev)( ALsizei ns, const ALuint *ids );
 
 /**
  * BUFFER
@@ -556,7 +524,7 @@ ALAPI void ALAPIENTRY alDistanceModel( ALenum distanceModel );
 
       /** Buffer object generation. */
       void                (*alGenBuffers)( ALsizei n, ALuint* buffers );
-      void                (*alDeleteBuffers)( ALsizei n, ALuint* buffers );
+      void                (*alDeleteBuffers)( ALsizei n, const ALuint* buffers );
       ALboolean           (*alIsBuffer)( ALuint buffer );
 
       /**
@@ -564,7 +532,7 @@ ALAPI void ALAPIENTRY alDistanceModel( ALenum distanceModel );
        */
       void                (*alBufferData)( ALuint   buffer,
                                         ALenum   format,
-                                        ALvoid*    data,
+                                        const ALvoid*    data,
                                         ALsizei  size,
                                         ALsizei  freq );
 
@@ -608,7 +576,7 @@ ALAPI void ALAPIENTRY alDistanceModel( ALenum distanceModel );
       void              (*alQueuei)(ALuint sid, ALenum param, ALint value );
 #endif
       void              (*alSourceUnqueueBuffers)(ALuint sid, ALsizei numEntries, ALuint *bids );
-      void              (*alSourceQueueBuffers)(ALuint sid, ALsizei numEntries, ALuint *bids );
+      void              (*alSourceQueueBuffers)(ALuint sid, ALsizei numEntries, const ALuint *bids );
 
       void              (*alDopplerFactor)( ALfloat value );
       void              (*alDopplerVelocity)( ALfloat value );

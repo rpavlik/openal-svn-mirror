@@ -48,22 +48,22 @@
 typedef struct ALCextension_struct
 {
 
-    char* ename;
+    const char*		ename;
 
 } ALCextension;
 
 typedef struct
 {
-    char*    ename;
-    ALenum   value;
+    const char*		ename;
+    ALenum			value;
 
 } ALCRouterEnum;
 
 typedef struct ALCfunction_struct
 {
 
-    char* fname;
-    ALvoid*  address;
+    const char*		fname;
+    ALvoid*			address;
 
 } ALCfunction;
 
@@ -158,11 +158,11 @@ static ALCextension alcExtensions[] =
 
 // Error strings
 static ALenum  LastError = AL_NO_ERROR;
-static ALubyte alcNoError[] = "No Error";
-static ALubyte alcErrInvalidDevice[] = "Invalid Device";
-static ALubyte alcErrInvalidContext[] = "Invalid Context";
-static ALubyte alcErrInvalidEnum[] = "Invalid Enum";
-static ALubyte alcErrInvalidValue[] = "Invalid Value";
+static const ALubyte alcNoError[] = "No Error";
+static const ALubyte alcErrInvalidDevice[] = "Invalid Device";
+static const ALubyte alcErrInvalidContext[] = "Invalid Context";
+static const ALubyte alcErrInvalidEnum[] = "Invalid Enum";
+static const ALubyte alcErrInvalidValue[] = "Invalid Value";
 
 // Context strings
 static ALubyte alcDefaultDeviceSpecifier[MAX_PATH] = "\0";
@@ -186,9 +186,9 @@ static ALint alcMinorVersion = 0;
 // NewSpecifierCheck
 //*****************************************************************************
 //
-ALboolean NewSpecifierCheck(ALubyte* specifier)
+ALboolean NewSpecifierCheck(const ALubyte* specifier)
 {
-	ALubyte* list = alcDeviceSpecifierList;
+	const ALubyte* list = alcDeviceSpecifierList;
 
 	while (*list != 0) {
 		if (strcmp((char *)list, (char *)specifier) == 0) {
@@ -216,9 +216,9 @@ ALvoid BuildDeviceSpecifierList()
     TCHAR fileExt[MAX_PATH + 1];
 	TCHAR systemAL[MAX_PATH + 1];
     BOOL found = FALSE;
-    ALubyte* specifier = 0;
+    const ALubyte* specifier = 0;
     ALuint specifierSize = 0;
-    ALubyte* list = alcDeviceSpecifierList;
+    const ALubyte* list = alcDeviceSpecifierList;
     ALuint listSize = 0;
 	ALCdevice *device;
 	void *context;
@@ -306,7 +306,7 @@ ALvoid BuildDeviceSpecifierList()
 								(alcCloseDeviceFxn != 0) &&
 								(alcIsExtensionPresentFxn != 0)) {
 
-								if (alcIsExtensionPresentFxn(NULL, (ALubyte *)"ALC_ENUMERATION_EXT")) {
+								if (alcIsExtensionPresentFxn(NULL, (const ALubyte *)"ALC_ENUMERATION_EXT")) {
 									// this DLL can enumerate devices -- so add complete list of devices
 									specifier = alcGetStringFxn(0, ALC_DEVICE_SPECIFIER);
 									do {
@@ -769,7 +769,7 @@ HINSTANCE FindDllWithMatchingSpecifier(TCHAR* dllSearchPattern, char* specifier,
     TCHAR fileExt[MAX_PATH + 1];
 	TCHAR systemAL[MAX_PATH + 1];
     BOOL found = FALSE;
-    ALubyte* deviceSpecifier = 0;
+    const ALubyte* deviceSpecifier = 0;
 	ALCdevice *device;
 	void *context;
 
@@ -1031,7 +1031,7 @@ ALCAPI ALvoid ALCAPIENTRY alcCloseDevice(ALCdevice* device)
 // alcCreateContext
 //*****************************************************************************
 //
-ALCAPI ALCcontext* ALCAPIENTRY alcCreateContext(ALCdevice* device, ALint* attrList)
+ALCAPI ALCcontext* ALCAPIENTRY alcCreateContext(ALCdevice* device, const ALint* attrList)
 {
     ALCcontext* context = 0;
 
@@ -1175,7 +1175,7 @@ ALCAPI ALCcontext* ALCAPIENTRY alcGetCurrentContext(ALvoid)
 // alcGetEnumValue
 //*****************************************************************************
 //
-ALCAPI ALenum ALCAPIENTRY alcGetEnumValue(ALCdevice* device, ALubyte* ename)
+ALCAPI ALenum ALCAPIENTRY alcGetEnumValue(ALCdevice* device, const ALubyte* ename)
 {
     //
     // Always return the router version of the ALC enum if it exists.
@@ -1294,7 +1294,7 @@ ALCAPI ALvoid ALCAPIENTRY alcGetIntegerv(ALCdevice* device, ALenum param, ALsize
 // alcGetProcAddress
 //*****************************************************************************
 //
-ALCAPI ALvoid* ALCAPIENTRY alcGetProcAddress(ALCdevice* device, ALubyte* fname)
+ALCAPI ALvoid* ALCAPIENTRY alcGetProcAddress(ALCdevice* device, const ALubyte* fname)
 {
     //
     // Always return the router version of the ALC function if it exists.
@@ -1330,7 +1330,7 @@ ALCAPI ALvoid* ALCAPIENTRY alcGetProcAddress(ALCdevice* device, ALubyte* fname)
 // alcIsExtensionPresent
 //*****************************************************************************
 //
-ALCAPI ALboolean ALCAPIENTRY alcIsExtensionPresent(ALCdevice* device, ALubyte* ename)
+ALCAPI ALboolean ALCAPIENTRY alcIsExtensionPresent(ALCdevice* device, const ALubyte* ename)
 {
     //
     // Check if its a router supported extension first as its a good idea to have
@@ -1454,7 +1454,7 @@ ALCAPI ALboolean ALCAPIENTRY alcMakeContextCurrent(ALCcontext* context)
 // alcOpenDevice
 //*****************************************************************************
 //
-ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(ALubyte* deviceName)
+ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(const ALubyte* deviceName)
 {
     HINSTANCE dll = 0;
     ALCdevice* device = 0;
@@ -1623,9 +1623,9 @@ ALCAPI ALCvoid ALCAPIENTRY alcSuspendContext(ALCcontext* context)
 // alcGetString
 //*****************************************************************************
 //
-ALCAPI ALubyte* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
+ALCAPI const ALubyte* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
 {
-    ALubyte* value = 0;
+    const ALubyte* value = 0;
 
     if(device)
     {
@@ -1671,7 +1671,7 @@ ALCAPI ALubyte* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
                 //
                 // See if we can find a native implementation for the user's current device.
                 //
-                char* specifier = 0;
+                const char* specifier = 0;
                 HINSTANCE dll = 0;
 				char mixerDevice[32];
 				bool acceptPartial = false;

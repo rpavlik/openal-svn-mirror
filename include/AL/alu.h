@@ -37,8 +37,8 @@ extern "C" {
 #ifdef _WIN32
 ALUAPI ALint	ALUAPIENTRY aluF2L(ALfloat value);
 ALUAPI ALshort	ALUAPIENTRY aluF2S(ALfloat value);
-ALUAPI ALvoid	ALUAPIENTRY aluCrossproduct(ALfloat *inVector1,ALfloat *inVector2,ALfloat *outVector);
-ALUAPI ALfloat	ALUAPIENTRY aluDotproduct(ALfloat *inVector1,ALfloat *inVector2);
+ALUAPI ALvoid	ALUAPIENTRY aluCrossproduct(ALfloat *inVector1, ALfloat *inVector2,ALfloat *outVector);
+ALUAPI ALfloat	ALUAPIENTRY aluDotproduct(ALfloat *inVector1, ALfloat *inVector2);
 ALUAPI ALvoid	ALUAPIENTRY aluNormalize(ALfloat *inVector);
 ALUAPI ALvoid	ALUAPIENTRY aluMatrixVector(ALfloat *vector,ALfloat matrix[3][3]);
 ALUAPI ALvoid	ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint channels,ALfloat *drysend,ALfloat *wetsend,ALfloat *pitch);

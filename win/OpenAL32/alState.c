@@ -24,18 +24,18 @@
 #include "Include/alError.h"
 #include "Include/alState.h"
 
-static ALubyte alVendor[] = "Creative Labs Inc.";
-static ALubyte alVersion[] = "OpenAL 1.0";
-static ALubyte alRenderer[] = "Software";
-static ALubyte alExtensions[] = "EAX 2.0";
+static const ALubyte alVendor[] = "Creative Labs Inc.";
+static const ALubyte alVersion[] = "OpenAL 1.0";
+static const ALubyte alRenderer[] = "Software";
+static const ALubyte alExtensions[] = "EAX 2.0";
 
 // Error Messages
-static ALubyte alNoError[] = "No Error";
-static ALubyte alErrInvalidName[] = "Invalid Name";
-static ALubyte alErrInvalidEnum[] = "Invalid Enum";
-static ALubyte alErrInvalidValue[] = "Invalid Value";
-static ALubyte alErrInvalidOp[] = "Invalid Operation";
-static ALubyte alErrOutOfMemory[] = "Out of Memory";
+static const ALubyte alNoError[] = "No Error";
+static const ALubyte alErrInvalidName[] = "Invalid Name";
+static const ALubyte alErrInvalidEnum[] = "Invalid Enum";
+static const ALubyte alErrInvalidValue[] = "Invalid Value";
+static const ALubyte alErrInvalidOp[] = "Invalid Operation";
+static const ALubyte alErrOutOfMemory[] = "Out of Memory";
 
 ALAPI ALvoid ALAPIENTRY alEnable(ALenum capability)
 {
@@ -469,9 +469,9 @@ ALAPI ALvoid ALAPIENTRY alGetIntegerv(ALenum pname,ALint *data)
 	return;
 }
 
-ALAPI ALubyte * ALAPIENTRY alGetString(ALenum pname)
+ALAPI const ALubyte * ALAPIENTRY alGetString(ALenum pname)
 {
-	ALubyte *value;
+	const ALubyte *value;
 
 	switch(pname)
 	{

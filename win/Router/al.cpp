@@ -96,7 +96,7 @@ ALAPI ALvoid ALAPIENTRY alGenBuffers(ALsizei n, ALuint* bufferNames)
 // alDeleteBuffers
 //*****************************************************************************
 //
-ALAPI ALvoid ALAPIENTRY alDeleteBuffers(ALsizei n, ALuint* bufferNames)
+ALAPI ALvoid ALAPIENTRY alDeleteBuffers(ALsizei n, const ALuint* bufferNames)
 {
     AL_VOID_FXN(alDeleteBuffers(n, bufferNames));
 }
@@ -116,7 +116,7 @@ ALAPI ALboolean ALAPIENTRY alIsBuffer(ALuint bufferName)
 // alBufferData
 //*****************************************************************************
 //
-ALAPI ALvoid ALAPIENTRY alBufferData(ALuint bufferName, ALenum format, ALvoid* data, ALsizei size, ALsizei freq)
+ALAPI ALvoid ALAPIENTRY alBufferData(ALuint bufferName, ALenum format, const ALvoid* data, ALsizei size, ALsizei freq)
 {
     AL_VOID_FXN(alBufferData(bufferName, format, data, size, freq));
 }
@@ -283,7 +283,7 @@ ALAPI ALvoid ALAPIENTRY alGetIntegerv(ALenum param, ALint* data)
 // alGetEnumValue
 //*****************************************************************************
 //
-ALAPI ALenum ALAPIENTRY alGetEnumValue(ALubyte* ename)
+ALAPI ALenum ALAPIENTRY alGetEnumValue(const ALubyte* ename)
 {
     AL_RESULT_FXN(alGetEnumValue(ename), ALenum, AL_INVALID_ENUM);
 }
@@ -303,7 +303,7 @@ ALAPI ALenum ALAPIENTRY alGetError(ALvoid)
 // alGetProcAddress
 //*****************************************************************************
 //
-ALAPI ALvoid* ALAPIENTRY alGetProcAddress(ALubyte* fname)
+ALAPI ALvoid* ALAPIENTRY alGetProcAddress(const ALubyte* fname)
 {
     AL_RESULT_FXN(alGetProcAddress(fname), ALvoid*, 0);
 }
@@ -313,9 +313,9 @@ ALAPI ALvoid* ALAPIENTRY alGetProcAddress(ALubyte* fname)
 // alGetString
 //*****************************************************************************
 //
-ALAPI ALubyte* ALAPIENTRY alGetString(ALenum param)
+ALAPI const ALubyte* ALAPIENTRY alGetString(ALenum param)
 {
-    AL_RESULT_FXN(alGetString(param), ALubyte*, 0);
+    AL_RESULT_FXN(alGetString(param), const ALubyte*, 0);
 }
 
 
@@ -323,7 +323,7 @@ ALAPI ALubyte* ALAPIENTRY alGetString(ALenum param)
 // alIsExtensionPresent
 //*****************************************************************************
 //
-ALAPI ALboolean ALAPIENTRY alIsExtensionPresent(ALubyte* ename)
+ALAPI ALboolean ALAPIENTRY alIsExtensionPresent(const ALubyte* ename)
 {
     AL_RESULT_FXN(alIsExtensionPresent(ename), ALboolean, AL_FALSE);
 }
@@ -372,7 +372,7 @@ ALAPI ALvoid ALAPIENTRY alListener3f(ALenum param, ALfloat v1, ALfloat v2, ALflo
 // alListenerfv
 //*****************************************************************************
 //
-ALAPI ALvoid ALAPIENTRY alListenerfv(ALenum param, ALfloat* values)
+ALAPI ALvoid ALAPIENTRY alListenerfv(ALenum param, const ALfloat* values)
 {
     AL_VOID_FXN(alListenerfv(param, values));
 }
@@ -452,7 +452,7 @@ ALAPI ALvoid ALAPIENTRY alGenSources(ALsizei n, ALuint* sourceNames)
 // alDeleteSources
 //*****************************************************************************
 //
-ALAPI ALvoid ALAPIENTRY alDeleteSources(ALsizei n, ALuint* sourceNames)
+ALAPI ALvoid ALAPIENTRY alDeleteSources(ALsizei n, const ALuint* sourceNames)
 {
     AL_VOID_FXN(alDeleteSources(n, sourceNames));
 }
@@ -482,7 +482,7 @@ ALAPI ALvoid ALAPIENTRY alSourcef(ALuint sourceName, ALenum param, ALfloat value
 // alSourcefv
 //*****************************************************************************
 //
-ALAPI ALvoid ALAPIENTRY alSourcefv(ALuint sourceName, ALenum param, ALfloat* values)
+ALAPI ALvoid ALAPIENTRY alSourcefv(ALuint sourceName, ALenum param, const ALfloat* values)
 {
     AL_VOID_FXN(alSourcefv(sourceName, param, values));
 }
@@ -561,7 +561,7 @@ ALAPI ALvoid ALAPIENTRY alSourcePlay(ALuint sourceName)
 // alSourcePlayv
 //*****************************************************************************
 //
-ALAPI ALvoid ALAPIENTRY alSourcePlayv(ALsizei n, ALuint* sourceNames)
+ALAPI ALvoid ALAPIENTRY alSourcePlayv(ALsizei n, const ALuint* sourceNames)
 {
     AL_VOID_FXN(alSourcePlayv(n, sourceNames));
 }
@@ -581,7 +581,7 @@ ALAPI ALvoid ALAPIENTRY alSourcePause(ALuint sourceName)
 // alSourcePausev
 //*****************************************************************************
 //
-ALAPI ALvoid ALAPIENTRY alSourcePausev(ALsizei n, ALuint* sourceNames)
+ALAPI ALvoid ALAPIENTRY alSourcePausev(ALsizei n, const ALuint* sourceNames)
 {
     AL_VOID_FXN(alSourcePausev(n, sourceNames));
 }
@@ -601,7 +601,7 @@ ALAPI ALvoid ALAPIENTRY alSourceStop(ALuint sourceName)
 // alSourceStopv
 //*****************************************************************************
 //
-ALAPI ALvoid ALAPIENTRY alSourceStopv(ALsizei n, ALuint* sourceNames)
+ALAPI ALvoid ALAPIENTRY alSourceStopv(ALsizei n, const ALuint* sourceNames)
 {
     AL_VOID_FXN(alSourceStopv(n, sourceNames));
 }
@@ -621,7 +621,7 @@ ALAPI ALvoid ALAPIENTRY alSourceRewind(ALuint sourceName)
 // alSourceRewindv
 //*****************************************************************************
 //
-ALAPI ALvoid ALAPIENTRY alSourceRewindv(ALsizei n, ALuint* sourceNames)
+ALAPI ALvoid ALAPIENTRY alSourceRewindv(ALsizei n, const ALuint* sourceNames)
 {
     AL_VOID_FXN(alSourceRewindv(n, sourceNames));
 }
@@ -631,7 +631,7 @@ ALAPI ALvoid ALAPIENTRY alSourceRewindv(ALsizei n, ALuint* sourceNames)
 // alSourceQueueBuffers
 //*****************************************************************************
 //
-ALAPI ALvoid ALAPIENTRY alSourceQueueBuffers(ALuint sourceName, ALsizei n, ALuint* buffers)
+ALAPI ALvoid ALAPIENTRY alSourceQueueBuffers(ALuint sourceName, ALsizei n, const ALuint* buffers)
 {
     AL_VOID_FXN(alSourceQueueBuffers(sourceName, n, buffers));
 }

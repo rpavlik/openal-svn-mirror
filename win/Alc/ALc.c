@@ -153,9 +153,9 @@ ALCAPI ALCvoid ALCAPIENTRY alcProcessContext(ALCcontext *context)
 	// Not a lot happens here !
 }
 
-ALCAPI ALCubyte* ALCAPIENTRY alcGetString(ALCdevice *device,ALCenum param)
+ALCAPI const ALCubyte* ALCAPIENTRY alcGetString(ALCdevice *device,ALCenum param)
 {
-	ALubyte *value = NULL;
+	const ALubyte *value = NULL;
 
 	switch(param)
 	{
@@ -573,7 +573,7 @@ ALCvoid alcExitContext(ALCcontext *context)
 }
 
 
-ALCAPI ALCcontext*ALCAPIENTRY alcCreateContext(ALCdevice *device,ALCint *attrList)
+ALCAPI ALCcontext*ALCAPIENTRY alcCreateContext(ALCdevice *device, const ALCint *attrList)
 {
 	ALCcontext *ALContext = NULL;
 
@@ -2505,7 +2505,7 @@ void UpdateListener(ALCcontext *ALContext)
 }
 
 
-ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(ALCubyte *deviceName)
+ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(const ALCubyte *deviceName)
 {
 	DSBUFFERDESC DSBDescription;
 	WAVEFORMATEX OutputType;
@@ -2910,7 +2910,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParameter)
 
 	Determine if there is an extension called extName available
 */
-ALCAPI ALCboolean ALCAPIENTRY alcIsExtensionPresent(ALCdevice *device,ALCubyte *extName)
+ALCAPI ALCboolean ALCAPIENTRY alcIsExtensionPresent(ALCdevice *device, const ALCubyte *extName)
 {
 	ALsizei i=0;
 
@@ -2925,7 +2925,7 @@ ALCAPI ALCboolean ALCAPIENTRY alcIsExtensionPresent(ALCdevice *device,ALCubyte *
 
 	Get the function address for given function extension
 */
-ALCAPI ALCvoid *  ALCAPIENTRY alcGetProcAddress(ALCdevice *device,ALCubyte *funcName)
+ALCAPI ALCvoid *  ALCAPIENTRY alcGetProcAddress(ALCdevice *device, const ALCubyte *funcName)
 {
 	ALsizei i=0;
 
@@ -2941,7 +2941,7 @@ ALCAPI ALCvoid *  ALCAPIENTRY alcGetProcAddress(ALCdevice *device,ALCubyte *func
 	Get the value for a particular ALC Enumerated Value
 	Calls alGetEnumValue in alExtension.c to process request
 */
-ALCAPI ALCenum ALCAPIENTRY alcGetEnumValue(ALCdevice *device,ALCubyte *enumName)
+ALCAPI ALCenum ALCAPIENTRY alcGetEnumValue(ALCdevice *device, const ALCubyte *enumName)
 {
 	return alGetEnumValue(enumName);
 }
