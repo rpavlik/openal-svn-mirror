@@ -447,7 +447,7 @@ int main(int argc, char* argv[])
 	char *devices[12];
 	int numDevices, numDefaultDevice, i;
 
-	sprintf(deviceName, "");
+	strcpy(deviceName, "");
 	if (alcIsExtensionPresent(NULL, (ALubyte*)"ALC_ENUMERATION_EXT") == AL_TRUE) { // try out enumeration extension
 		defaultDevice = (char *)alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
 		deviceList = (char *)alcGetString(NULL, ALC_DEVICE_SPECIFIER);
@@ -474,7 +474,7 @@ int main(int argc, char* argv[])
 			}
 			printf("\n\n");
 			do {
-				ch = _getch();
+				ch = getUpperCh();
 				i = atoi(&ch);
 			} while ((i < 1) || (i > numDevices));
 			if (strlen(devices[i-1]) < 256) {
