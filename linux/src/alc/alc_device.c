@@ -88,6 +88,8 @@ ALCdevice *alcOpenDevice( const ALubyte *deviceSpecifier ) {
 	freq_sym  = rc_lookup( "sampling-rate" );
 	speakers  = rc_lookup( "speaker-num" );
 
+	memset( dirstr, 0, sizeof(dirstr) );
+	
 	if( direction != NULL ) {
 		switch( rc_type( direction ) ) {
 			case ALRC_STRING:
@@ -97,7 +99,6 @@ ALCdevice *alcOpenDevice( const ALubyte *deviceSpecifier ) {
 				rc_symtostr0(direction, dirstr, 64);
 				break;
 			default:
-				memset( dirstr, 0, 64 );
 				break;
 		}
 	}
