@@ -26,7 +26,7 @@ ALfloat _alVectorMagnitudeAtZero( const ALfloat *v2 ) {
 		       v2[1] * v2[1] +
 		       v2[2] * v2[2] );
 
-	retval = abs( retval );
+	retval = fabs( retval );
 
 	return retval;
 
