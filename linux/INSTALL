@@ -7,7 +7,7 @@ and you should be okay.
 
 Compilation / installation goes something like this:
 
-	./configure --enable-prefix=/usr/local
+	./configure --prefix=/usr/local
 	make
 	cd test
 	[run tests]
