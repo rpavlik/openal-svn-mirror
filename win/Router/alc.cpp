@@ -265,7 +265,7 @@ ALvoid BuildDeviceSpecifierList()
     for(i = _tcsicmp(dir[0], dir[1]) != 0 ? 0 : 1; i < 3; i++)
     {
         _tcscpy(searchName, dir[i]);
-        _tcscat(searchName, _T("*OpenAL*.dll"));
+        _tcscat(searchName, _T("nvopenal.dll"));
         searchHandle = FindFirstFile(searchName, &findData);
         if(searchHandle != INVALID_HANDLE_VALUE)
         {
@@ -1479,7 +1479,7 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(ALubyte* deviceName)
 	//
     // Find the device to open.
     //
-    dll = FindDllWithMatchingSpecifier(_T("*OpenAL*.dll"), (char*)deviceName);
+    dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), (char*)deviceName);
     if(!dll)
     {
         dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), (char*)deviceName);
@@ -1494,7 +1494,7 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(ALubyte* deviceName)
                 strcmp((char*)deviceName, "MMSYSTEM")      == 0))
             {
                 deviceName = alcGetString(0, ALC_DEFAULT_DEVICE_SPECIFIER);
-                dll = FindDllWithMatchingSpecifier(_T("*OpenAL*.dll"), (char*)deviceName);
+                dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), (char*)deviceName);
                 if(!dll)
                 {
                     dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), (char*)deviceName);
@@ -1688,7 +1688,7 @@ ALCAPI ALubyte* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
 					acceptPartial = true;
 					strcpy(mixerDevice, "Audigy");
 				}
-                dll = FindDllWithMatchingSpecifier(_T("*OpenAL*.dll"), mixerDevice, acceptPartial, actualName);
+                dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), mixerDevice, acceptPartial, actualName);
                 if(!dll)
                 {
                     dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), mixerDevice, acceptPartial, actualName);
@@ -1707,7 +1707,7 @@ ALCAPI ALubyte* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
                 //
                 // Try to find a default version.
                 //
-                dll = FindDllWithMatchingSpecifier(_T("*OpenAL*.dll"), "DirectSound3D");
+                dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), "DirectSound3D");
                 if(!dll)
                 {
                     dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), "DirectSound3D");
@@ -1720,7 +1720,7 @@ ALCAPI ALubyte* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
                     break;
                 }
 
-                dll = FindDllWithMatchingSpecifier(_T("*OpenAL*.dll"), "DirectSound");
+                dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), "DirectSound");
                 if(!dll)
                 {
                     dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), "DirectSound");
@@ -1733,7 +1733,7 @@ ALCAPI ALubyte* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
                     break;
                 }
 
-                dll = FindDllWithMatchingSpecifier(_T("*OpenAL*.dll"), "MMSYSTEM");
+                dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), "MMSYSTEM");
                 if(!dll)
                 {
                     dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), "MMSYSTEM");
