@@ -31,9 +31,7 @@
 #include "sm.h"
 
 #ifdef MAC_OS_X
-#define EXTERN extern
-#include <mach-o/dyld.h>
-#include "vorbis/codec.h"
+#include "vorbisrtn.h"
 #endif
  
  // Sound Manager functions
@@ -67,36 +65,52 @@ void smPlaySegment(unsigned int source)
 			smSetSourceVolume(source, (kFullVolume * Volume), (kFullVolume * Volume));
 		}
 		// create sound header
-		if (gSource[source].readOffset > gBuffer[iBufferNum].size) { gSource[source].readOffset = 0; }
-		gSource[source].ptrSndHeader->samplePtr = (char *) gBuffer[iBufferNum].data + gSource[source].readOffset;
-		if ((gSource[source].readOffset + gBufferSize) <= gBuffer[iBufferNum].size)
-		{
-			gSource[source].ptrSndHeader->numFrames = gBufferSize;
-		} else
-		{
-			gSource[source].ptrSndHeader->numFrames = (gBuffer[iBufferNum].size - gSource[source].readOffset);
-		}
-		if (gBuffer[iBufferNum].bits == 16) { gSource[source].ptrSndHeader->numFrames = gSource[source].ptrSndHeader->numFrames / 2; }
-		gSource[source].ptrSndHeader->numFrames =gSource[source].ptrSndHeader->numFrames / gBuffer[iBufferNum].channels;
-		gSource[source].ptrSndHeader->sampleSize = gBuffer[iBufferNum].bits;
-		gSource[source].ptrSndHeader->numChannels = gBuffer[iBufferNum].channels;
-		switch (gBuffer[iBufferNum].frequency)
-		{
-			case 11025:	gSource[source].ptrSndHeader->sampleRate = rate11khz;
-					break;
-			case 22050: gSource[source].ptrSndHeader->sampleRate = rate22khz;
-					break;
-			case 44100: gSource[source].ptrSndHeader->sampleRate = rate44khz;
-				    break;
-			default: gSource[source].ptrSndHeader->sampleRate = rate44khz;
-		}
-		gSource[source].ptrSndHeader->loopStart = 0;
-		gSource[source].ptrSndHeader->loopEnd = 0;
-		gSource[source].ptrSndHeader->encode = extSH;
-		gSource[source].ptrSndHeader->baseFrequency = 60;
-		gSource[source].ptrSndHeader->markerChunk = NULL;
-		gSource[source].ptrSndHeader->instrumentChunks = NULL;
-		gSource[source].ptrSndHeader->AESRecording = NULL;
+                if (gBuffer[iBufferNum].format == AL_FORMAT_VORBIS_EXT) { // compressed format handling
+                    if (gBuffer[iBufferNum].uncompressedData == NULL) {
+                        ov_fillBuffer(&gBuffer[iBufferNum]);
+                    }
+                    if (gSource[source].uncompressedReadOffset > gBuffer[iBufferNum].uncompressedSize) { gSource[source].uncompressedReadOffset = 0; }
+                    gSource[source].ptrSndHeader->samplePtr = (char *) gBuffer[iBufferNum].uncompressedData + gSource[source].uncompressedReadOffset;
+                    if ((gSource[source].uncompressedReadOffset + gBufferSize) <= gBuffer[iBufferNum].uncompressedSize)
+                    {
+                            gSource[source].ptrSndHeader->numFrames = gBufferSize;
+                    } else
+                    {
+                            gSource[source].ptrSndHeader->numFrames = (gBuffer[iBufferNum].uncompressedSize - gSource[source].uncompressedReadOffset);
+                    }
+                } else // uncompressed buffer format
+                {
+                    if (gSource[source].readOffset > gBuffer[iBufferNum].size) { gSource[source].readOffset = 0; }
+                    gSource[source].ptrSndHeader->samplePtr = (char *) gBuffer[iBufferNum].data + gSource[source].readOffset;
+                    if ((gSource[source].readOffset + gBufferSize) <= gBuffer[iBufferNum].size)
+                    {
+                            gSource[source].ptrSndHeader->numFrames = gBufferSize;
+                    } else
+                    {
+                            gSource[source].ptrSndHeader->numFrames = (gBuffer[iBufferNum].size - gSource[source].readOffset);
+                    }
+                }
+                if (gBuffer[iBufferNum].bits == 16) { gSource[source].ptrSndHeader->numFrames = gSource[source].ptrSndHeader->numFrames / 2; }
+                gSource[source].ptrSndHeader->numFrames =gSource[source].ptrSndHeader->numFrames / gBuffer[iBufferNum].channels;
+                gSource[source].ptrSndHeader->sampleSize = gBuffer[iBufferNum].bits;
+                gSource[source].ptrSndHeader->numChannels = gBuffer[iBufferNum].channels;
+                switch (gBuffer[iBufferNum].frequency)
+                {
+                        case 11025:	gSource[source].ptrSndHeader->sampleRate = rate11khz;
+                                        break;
+                        case 22050: gSource[source].ptrSndHeader->sampleRate = rate22khz;
+                                        break;
+                        case 44100: gSource[source].ptrSndHeader->sampleRate = rate44khz;
+                                    break;
+                        default: gSource[source].ptrSndHeader->sampleRate = rate44khz;
+                }
+                gSource[source].ptrSndHeader->loopStart = 0;
+                gSource[source].ptrSndHeader->loopEnd = 0;
+                gSource[source].ptrSndHeader->encode = extSH;
+                gSource[source].ptrSndHeader->baseFrequency = 60;
+                gSource[source].ptrSndHeader->markerChunk = NULL;
+                gSource[source].ptrSndHeader->instrumentChunks = NULL;
+                gSource[source].ptrSndHeader->AESRecording = NULL;
 				
 		// create buffer command
 		SCommand.cmd = bufferCmd;

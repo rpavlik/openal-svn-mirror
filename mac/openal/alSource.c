@@ -98,6 +98,7 @@ ALAPI ALvoid ALAPIENTRY alDeleteSources (ALsizei n, ALuint *sources)
 				gSource[sources[i]].srcBufferNum = AL_MAXBUFFERS + 1; // value > AL_MAXBUFFERS used as signal source is not being used
 				gSource[sources[i]].readOffset = 0;
 				gSource[sources[i]].writeOffset = 0;
+                                gSource[sources[i]].uncompressedReadOffset = 0;
 				gSource[sources[i]].state = AL_INITIAL;
 				gSource[sources[i]].srcRelative = AL_FALSE;
 				gSource[sources[i]].looping = AL_FALSE;
@@ -480,6 +481,7 @@ ALAPI ALvoid ALAPIENTRY alSourceStop (ALuint source)
 	
 	gSource[source].state = AL_STOPPED;
 	gSource[source].readOffset = 0;
+        gSource[source].uncompressedReadOffset = 0;
 	
 	pQE = gSource[source].ptrQueue; // reset all processed flags
 	while (pQE != NULL)
@@ -494,7 +496,8 @@ ALAPI ALvoid ALAPIENTRY alSourceRewind (ALuint source)
 {
     alSourceStop(source);
     gSource[source].state = AL_INITIAL;
-    gSource[source].readOffset = 0; 
+    gSource[source].readOffset = 0;
+    gSource[source].uncompressedReadOffset = 0;
 }
 
 ALAPI ALvoid ALAPIENTRY alSourcePlayv(ALsizei n, ALuint *ID)

@@ -18,13 +18,18 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
  
+#ifndef GLOBALTYPES_H
+#define GLOBALTYPES_H
+
 #include "altypes.h"
  
 typedef struct ALbuffer_struct 
 {
 	ALenum		format;
 	ALshort *	data;
+        ALshort *       uncompressedData;
 	ALsizei		size;
+        ALsizei		uncompressedSize;
 	ALsizei		frequency;
 	ALsizei     bits;
 	ALsizei     channels;
@@ -46,6 +51,7 @@ typedef struct ALsource_struct
     ALint         	srcBufferNum;
     ALuint 		  	readOffset; // playback position (read position)
     ALuint        	writeOffset; // write position
+    ALuint		uncompressedReadOffset;
     ALuint        	state;
     ALboolean 		srcRelative;
     ALuint        	looping;
@@ -78,3 +84,5 @@ typedef struct ALlistener_struct
 
 #define ALAPI
 #define ALAPIENTRY
+
+#endif // #ifndef GLOBALTYPES_H

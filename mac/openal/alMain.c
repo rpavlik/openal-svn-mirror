@@ -76,7 +76,9 @@ ALAPI ALvoid ALAPIENTRY alInit(ALint *argc, ALubyte **argv)
 	for (i = 0; i < AL_MAXBUFFERS; i++)
 	{
 		gBuffer[i].data = NULL;
+                gBuffer[i].uncompressedData = NULL;
 		gBuffer[i].size = 0;
+                gBuffer[i].uncompressedSize = 0;
 		gBuffer[i].frequency = 44100;
 	}
 	
@@ -86,6 +88,7 @@ ALAPI ALvoid ALAPIENTRY alInit(ALint *argc, ALubyte **argv)
 		gSource[i].channelPtr = NULL;
 		gSource[i].srcBufferNum = AL_MAXBUFFERS + 1; // value > AL_MAXBUFFERS used as signal that no buffer is attached to this source
 		gSource[i].readOffset = 0;
+                gSource[i].uncompressedReadOffset = 0;
 		gSource[i].writeOffset = 0;
 		gSource[i].state = AL_INITIAL;
 		gSource[i].srcRelative = AL_FALSE;
@@ -140,8 +143,10 @@ ALAPI ALvoid ALAPIENTRY alExit(ALvoid)
 		if (gBuffer[i].data != NULL)
 		{
 			DisposePtr((char *) gBuffer[i].data);
+                        DisposePtr((char *) gBuffer[i].uncompressedData);
 			gBuffer[i].data = NULL;
 			gBuffer[i].size = 0;
+                        gBuffer[i].uncompressedSize = 0;
 		}
 	}
 	

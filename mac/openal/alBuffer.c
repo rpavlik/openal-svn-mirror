@@ -48,6 +48,7 @@ ALAPI ALvoid ALAPIENTRY alGenBuffers(ALsizei n, ALuint *buffers)
 			{
 				gBuffer[i].data = (void *) NewPtrClear(1024);  // allocate the buffer
 				gBuffer[i].size = 1024;
+                                gBuffer[i].uncompressedSize = 0;
 				gBuffer[i].bits = 8;
 				gBuffer[i].channels = 1;
 				buffers[iCount] = i;
@@ -103,8 +104,10 @@ ALAPI ALvoid ALAPIENTRY alDeleteBuffers(ALsizei n, ALuint *buffers)
 				if ((alIsBuffer(buffers[i]) == true) && (buffers[i] != 0))
 				{
 					DisposePtr((char *)gBuffer[buffers[i]].data); // get rid of memory used by buffer
+                                        DisposePtr((char *)gBuffer[buffers[i]].uncompressedData);
 	 				gBuffer[buffers[i]].data = NULL;
 	 				gBuffer[buffers[i]].size = 0;
+                                        gBuffer[buffers[i]].uncompressedSize = 0;
 	 				gBuffer[buffers[i]].bits = 8;
 	 				gBuffer[buffers[i]].channels = 1;
 	 				buffers[i] = 0;
@@ -132,6 +135,7 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,ALvoid *data,AL
 {
 	if (alIsBuffer(buffer) == true)
 	{
+                DisposePtr((char *) gBuffer[buffer].uncompressedData);
 		DisposePtr((char *) gBuffer[buffer].data);
 	
 		gBuffer[buffer].data = (void *) NewPtrClear(size); // size is bytes for this example
@@ -140,6 +144,7 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,ALvoid *data,AL
 			BlockMove((char *) data, gBuffer[buffer].data, size);
 			gBuffer[buffer].size = size;
 			gBuffer[buffer].frequency = freq;
+                        gBuffer[buffer].format = format;
 			switch (format)
 			{
 		    	case AL_FORMAT_STEREO8:
@@ -154,7 +159,7 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,ALvoid *data,AL
 		    		gBuffer[buffer].channels = 2;
 		    		gBuffer[buffer].bits = 16;
 		    		break;
-		   	 	case AL_FORMAT_MONO16: 
+                        case AL_FORMAT_MONO16: 
 		    		gBuffer[buffer].channels = 1;
 		    		gBuffer[buffer].bits = 16;
 		    		break;

@@ -150,6 +150,7 @@
 				98AF1E64043534F4000D2D30,
 				98AF1E6704353506000D2D30,
 				98AF1E6804353506000D2D30,
+				98A1D34F043B7D7E005F25BE,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -177,6 +178,7 @@
 				F558C54F036A116501A8006E,
 				F558C551036A116501A8006E,
 				F558C558036A119601A8006E,
+				98A1D34E043B7D7E005F25BE,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -252,6 +254,8 @@
 				F558C52F036A116501A8006E,
 				F558C530036A116501A8006E,
 				F558C531036A116501A8006E,
+				98A1D34A043B7D7E005F25BE,
+				98A1D34B043B7D7E005F25BE,
 				98AF1E61043534F4000D2D30,
 				98AF1E62043534F4000D2D30,
 				98AF1E6504353506000D2D30,
@@ -458,6 +462,7 @@
 				9894C42C0439726000A8006E,
 				9894C42D0439726000A8006E,
 				9894C42E0439726000A8006E,
+				98A1D34D043B7D7E005F25BE,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -617,6 +622,7 @@
 				9894C43B0439726000A8006E,
 				9894C43C0439726000A8006E,
 				9894C43D0439726000A8006E,
+				98A1D34C043B7D7E005F25BE,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -718,6 +724,44 @@
 			isa = PBXFrameworkReference;
 			path = OpenAL.framework;
 			refType = 3;
+		};
+		98A1D34A043B7D7E005F25BE = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = vorbisrtn.c;
+			path = /Users/garinh/prog/openal/mac/openal/vorbis/vorbisrtn.c;
+			refType = 0;
+		};
+		98A1D34B043B7D7E005F25BE = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = vorbisrtn.h;
+			path = /Users/garinh/prog/openal/mac/openal/vorbis/vorbisrtn.h;
+			refType = 0;
+		};
+		98A1D34C043B7D7E005F25BE = {
+			fileRef = 98A1D34A043B7D7E005F25BE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		98A1D34D043B7D7E005F25BE = {
+			fileRef = 98A1D34B043B7D7E005F25BE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		98A1D34E043B7D7E005F25BE = {
+			fileRef = 98A1D34A043B7D7E005F25BE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		98A1D34F043B7D7E005F25BE = {
+			fileRef = 98A1D34B043B7D7E005F25BE;
+			isa = PBXBuildFile;
+			settings = {
+			};
 		};
 		98AF1E61043534F4000D2D30 = {
 			fileEncoding = 30;
