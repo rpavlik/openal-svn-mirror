@@ -89,8 +89,13 @@
 #include <AL/alut.h>
 #endif
 
+#ifndef AL_INVALID_ENUM
 #define AL_INVALID_ENUM AL_ILLEGAL_ENUM
+#endif
+
+#ifndef AL_INVALID_OPERATION
 #define AL_INVALID_OPERATION AL_ILLEGAL_COMMAND
+#endif
 
 void alGetSource3f(ALint sid, ALenum param,
 		   ALfloat *f1, ALfloat *f2, ALfloat *f3)
