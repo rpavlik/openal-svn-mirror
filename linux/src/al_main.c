@@ -127,6 +127,10 @@ ALboolean _alInit( void ) {
 	_alRegisterExtensionGroup( (const ALubyte*) "AL_LOKI_play_position" );
 	_alRegisterExtensionGroup( (const ALubyte*) "AL_LOKI_quadriphonic" );
 
+#ifdef SMPEG_SUPPORT
+	 _alRegisterExtensionGroup( (const ALubyte*) "AL_EXT_MP3" );
+#endif /* SMPEG_SUPPORT */
+
 #ifdef VORBIS_SUPPORT
 	_alRegisterExtensionGroup( (const ALubyte*) "AL_EXT_vorbis" );
 #endif /* CAPTURE_SUPPORT */
