@@ -175,8 +175,6 @@ static void _alMixSources( void )
 	AL_buffer *samp;
 	AL_source *src;
 	int *sampid;
-	int written;
-	ALuint bytes_to_write;
 	_alMixSource *itr = NULL;
 	ALboolean islooping   = AL_FALSE;
 	ALboolean isstreaming = AL_FALSE;
@@ -274,49 +272,9 @@ static void _alMixSources( void )
 		iscallback  = _alBidIsCallback( *sampid );
 
 		/* apply each filter to sourceid sid */
-		_alApplyFilters( itr->context_id, itr->sid );
+		_alApplyFilters(itr->context_id, itr->sid);
 
-		/*
-		 * calculate how many bytes left.  For looping sounds,
-		 * we can ignore qualifications of samp->size because
-		 * we loop (ie, have infinite length).
-		 */
-		if( islooping == AL_TRUE )
-		{
-			/* looping sounds always have enough data */
-			bytes_to_write = bufsiz;
-		}
-		else if( isinqueue == AL_TRUE )
-		{
-			/*
-			 * queueing sounds are like looping sounds in that
-			 * we calculate the number of bytes to write not
-			 * just from the number of bytes left in this buffer.
-			 *
-			 * Well, because it is difficult to predict how 
-			 * much data we actually have available, just request
-			 * bufsiz and have SplitSourceQueue pad it out
-			 * with 0s.  This precludes looping queued buffers
-			 * at the moment.
-			 */
-			bytes_to_write = bufsiz;
-		}
-		else
-		{
-			/* completely normal sound */
-			bytes_to_write = _alSourceBytesLeft(src, samp);
-		}
-
-		/*
-		 * set written to either bufsiz or the number of bytes
-		 * left in the source.
-		 */
-		written = MIN(bytes_to_write, bufsiz);
-
-		if(written)
-		{
-			_alAddDataToMixer( src->srcParams.outbuf, written );
-		}
+		_alAddDataToMixer(src->srcParams.outbuf, bufsiz);
 
 		if(_alSourceShouldIncrement(src) == AL_TRUE)
 		{
@@ -324,9 +282,15 @@ static void _alMixSources( void )
 			 * soundpos is an offset into the original buffer
 			 * data, which is most likely mono.  We use nc (the
 			 * number of channels in mixer's format) to scale
-			 * soundpos
+			 * soundpos.
+			 *
+			 * John Quigley noticed a bug resulting from the
+			 * mix manager getting unequal amounts of data.
+			 * so we always add the same amount of data to
+			 * the mixer, because we should be memsetting it
+			 * to 0 when we're applying the filters.
 			 */
-			_alSourceIncrement(src, written / nc);
+			_alSourceIncrement(src, bufsiz / nc);
 		}
 
 		if((isinqueue == AL_TRUE) &&
@@ -415,7 +379,7 @@ static void _alMixSources( void )
  */
 static ALuint _alAddDataToMixer( void *dataptr, ALuint bytes_to_write )
 {
-	if(dataptr == NULL)
+	if((dataptr == NULL) || (bytes_to_write == 0))
 	{
 		/* Most likely, thread is waiting to die */
 		return 0;
@@ -527,14 +491,14 @@ static void _alDestroyMixSource( void *ms )
 
 	if(_alSourceQueuedBuffers(src) > 1)
 	{
-		int rindex = src->bid_queue.read_index;
+		int ri;
 
-		rindex = MIN(rindex, src->bid_queue.size - 1);
+		ri = MIN(src->bid_queue.read_index, src->bid_queue.size - 1);
 
-		assert( rindex >= 0 );
-		assert( rindex < src->bid_queue.size );
+		assert( ri >= 0 );
+		assert( ri < src->bid_queue.size );
 
-		bid = &src->bid_queue.queue[rindex];
+		bid = &src->bid_queue.queue[ri];
 	}
 	else if(bid == NULL)
 	{
