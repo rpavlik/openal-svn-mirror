@@ -21,8 +21,6 @@
 #include "arch/interface/interface_sound.h"
 #include "arch/alsa/alsa.h"
 
-#include <alsa/asoundlib.h>
-
 #include "al_config.h"
 #include "al_debug.h"
 #include "al_main.h"
@@ -33,6 +31,8 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include <alsa/asoundlib.h>
 
 /* alsa stuff */
 #define DEFAULT_DEVICE "plughw:0,0"

@@ -1,3 +1,8 @@
+2003-05-15  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
+
+	* src/arch/alsa/alsa.c:
+	Moves alsa/asoundlib.h inclusion below sys/time.h
+
 2003-05-07  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
 
 	* src/al_filter.c:
