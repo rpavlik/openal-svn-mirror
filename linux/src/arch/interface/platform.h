@@ -48,6 +48,7 @@
 #define set_read_alsa(h,b,f,s)        AL_FALSE
 #define release_alsa(h)
 #define alsa_blitbuffer(h,d,b)
+#define capture_alsa(h,d,b)           0
 #endif /* ALSA_SUPPORT */
 
 #ifdef ARTS_SUPPORT
