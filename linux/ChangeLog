@@ -1,9 +1,14 @@
-2003-01-13  Joseph Valenzuela  <jvalenzu@formosa.infinite-monkeys.org>
+2003-01-13  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
 
 	* al/aluttypes.h
 	* linux/include/al/alexttypes.h
 	Added AL_PROVIDES_ALUT and LAL_OPENAL defines.
-	
+
+	* openal.spec
+	added file
+
+	* Changelog
+	Removed "formosa." from my email
 
 2003-01-06  Erik Greenwald <erik@smluc.org> <erik@math.smsu.edu>
 
@@ -11,7 +16,7 @@
 	* src/arch/bsd/bsd_dsp.h
 	Fixes for FreeBSD 4.7 (-stable)
 
-2003-01-02  Joseph Valenzuela  <jvalenzu@formosa.infinite-monkeys.org>
+2003-01-02  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
 
 	* src/arch/linux/lin_dsp.c
 	Fix to try /dev/sound/dsp as well as /dev/dsp.  Thanks to
@@ -33,21 +38,21 @@
 	* src/al_source.c
 	Addition queue fixes.
 
-2002-12-30  Joseph Valenzuela  <jvalenzu@formosa.infinite-monkeys.org>
+2002-12-30  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
 
 	* openal/linux/src/al_mixer.c
 	* openal/linux/src/al_source.c
 	Fix assertions for queue mixing, not done yet.
 
 
-2002-12-17  Joseph Valenzuela  <jvalenzu@formosa.infinite-monkeys.org>
+2002-12-17  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
 	* src/al_queue.c
 	* src/al_mixer.c
         * src/al_source.c
         * src/al_source.h
 	Re-added Zoltan Ponekker's patch to fix queue looping.
 	
-2002-12-04  Joseph Valenzuela  <jvalenzu@formosa.infinite-monkeys.org>
+2002-12-04  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
 
 	* src/al_filter.c
 	Added John Quigley's change to queue gain stuff.
