@@ -51,6 +51,7 @@ static const char *lin_getwritepath(void);
 static const char *lin_getreadpath(void);
 static int aquire_read(void);
 static int grab_mixerfd(void);
+static int try_to_open(const char **paths, int n_paths, const char **used_path, int mode);
 
 /* set the params associated with a file descriptor */
 static int set_fd(int dsp_fd, ALboolean readable,
@@ -134,12 +135,17 @@ void *grab_write_native(void)
 {
 	static int write_fd;
 	Rcvar rc_use_select;
-	const char *writepath = lin_getwritepath();
+	const char *writepath = NULL;
 	int divisor = DONTCARE | _alSpot( _ALC_DEF_BUFSIZ );
+	const char *tried_paths[] = {
+		lin_getwritepath(),
+		"/dev/sound/dsp",
+		"/dev/dsp"
+	};
 
-	write_fd = open(writepath, O_WRONLY | O_NONBLOCK);
+	write_fd = try_to_open(tried_paths, 3, &writepath, O_WRONLY | O_NONBLOCK);
 	if(write_fd < 0) {
-		perror("open /dev/dsp");
+		perror("open /dev/[sound/]dsp");
 		return NULL;
 	}
 
@@ -211,16 +217,19 @@ void *grab_read_native(void)
 }
 
 static int grab_mixerfd(void) {
-	mixer_fd = open("/dev/mixer", O_WRONLY | O_NONBLOCK);
+	const char *tried_paths[] = {
+		"/dev/sound/mixer",
+		"/dev/mixer"
+	};
+	mixer_fd = try_to_open(tried_paths, 2, NULL, O_WRONLY | O_NONBLOCK);
 
 	if(mixer_fd > 0) {
 		if(fcntl(mixer_fd, F_SETFL, ~O_NONBLOCK) == -1) {
 			perror("fcntl");
 		}
-
 		return mixer_fd;
 	} else {
-		perror("open /dev/mixer");
+		perror("open /dev/[sound/]mixer");
 	}
 
 	return -1;
@@ -351,7 +360,7 @@ static const char *lin_getwritepath(void) {
 	static char retval[65]; /* FIXME */
 
 	if(devdsp_path == NULL) {
-		return "/dev/dsp";
+		return NULL;
 	}
 
 	switch(rc_type(devdsp_path)) {
@@ -359,7 +368,7 @@ static const char *lin_getwritepath(void) {
 			rc_tostr0(devdsp_path, retval, 64);
 			break;
 		default:
-			return "/dev/dsp";
+			return NULL;
 	}
 
 	return retval;
@@ -378,7 +387,7 @@ static const char *lin_getreadpath(void) {
 	}
 
 	if(devdsp_path == NULL) {
-		return "/dev/dsp";
+		return NULL;
 	}
 
 	switch(rc_type(devdsp_path)) {
@@ -386,7 +395,7 @@ static const char *lin_getreadpath(void) {
 			rc_tostr0(devdsp_path, retval, 64);
 			break;
 		default:
-			return "/dev/dsp";
+			return NULL;
 	}
 
 
@@ -414,10 +423,15 @@ ALsizei capture_nativedevice(UNUSED(void *handle),
 
 static int aquire_read(void) {
 	int read_fd;
-	const char *readpath  = lin_getreadpath();
+	const char *readpath = NULL;
 	int divisor = _alSpot(_ALC_DEF_BUFSIZ) | (1<<16);
+	const char *tried_paths[] = {
+		lin_getreadpath(),
+		"/dev/sound/dsp",
+		"/dev/dsp"
+	};
 
-	read_fd = open( readpath, O_RDONLY | O_NONBLOCK );
+	read_fd = try_to_open(tried_paths, 3, &readpath, O_RDONLY | O_NONBLOCK);
 	if(read_fd >= 0) {
 #if 0 /* Reads should be non-blocking */
 		if(fcntl(read_fd, F_SETFL, ~O_NONBLOCK) == -1) {
@@ -641,3 +655,19 @@ static int set_fd(int dsp_fd, ALboolean readable,
 
 	return 0;
 }
+
+int try_to_open(const char **paths, int n_paths, const char **used_path, int mode)
+{
+	int i, fd = -1;
+	for(i = 0; i != n_paths; ++i)
+	{
+		if(paths[i])
+		{
+			if(used_path) *used_path = paths[i];
+			fd = open(paths[i], mode);
+			if(fd >= 0) return fd;
+		}
+	}
+	return fd;
+}
+

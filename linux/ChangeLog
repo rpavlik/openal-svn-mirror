@@ -1,5 +1,9 @@
 2003-01-02  Joseph Valenzuela  <jvalenzu@formosa.infinite-monkeys.org>
 
+	* src/arch/linux/lin_dsp.c
+	Fix to try /dev/sound/dsp as well as /dev/dsp.  Thanks to
+	Sebastian Kapfer for that.
+
 	* test/.cvsignore
 	* test/testattributes.c
 	* test/Makefile.in
