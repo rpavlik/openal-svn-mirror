@@ -138,8 +138,11 @@ ALAPI void* ALAPIENTRY alGetProcAddress( ALubyte* fname );
  * Extension support.
  * Obtain the integer value of an enumeration (usually an extension) with the name ename. 
  */
+#ifdef LINUX_AL
 ALAPI ALenum ALAPIENTRY alGetEnumValue( const ALubyte* ename );
-
+#else
+ALAPI ALenum ALAPIENTRY alGetEnumValue( ALubyte* ename );
+#endif
 
 
 
@@ -413,7 +416,11 @@ ALAPI void ALAPIENTRY alDistanceModel( ALenum distanceModel );
        * Extension support.
        * Obtain the integer value of an enumeration (usually an extension) with the name ename. 
        */
+#ifdef LINUX_AL
       ALenum                (*alGetEnumValue)( const ALubyte* ename );
+#else
+	  ALenum                (*alGetEnumValue)( ALubyte* ename);
+#endif
 
 /**
  * LISTENER

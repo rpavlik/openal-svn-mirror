@@ -79,9 +79,9 @@ ALCAPI ALCenum ALCAPIENTRY alcGetError( ALCdevice *dev );
 ALCAPI ALCcontext * ALCAPIENTRY alcGetCurrentContext( ALvoid );
 
 #ifdef LINUX_AL
-ALCAPI ALCdevice ALCAPIENTRY *alcOpenDevice( const ALubyte *tokstr );
+ALCAPI ALCdevice * ALCAPIENTRY alcOpenDevice( const ALubyte *tokstr );
 #else
-ALCAPI ALCdevice ALCAPIENTRY *alcOpenDevice( ALubyte *tokstr );
+ALCAPI ALCdevice * ALCAPIENTRY alcOpenDevice( ALubyte *tokstr );
 #endif
 ALCAPI void ALCAPIENTRY alcCloseDevice( ALCdevice *dev );
 
