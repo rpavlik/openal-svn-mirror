@@ -413,6 +413,8 @@ ALsizei capture_audiodevice(void *handle, void *capture_buffer, int bufsiz) {
 		  bytes = capture_emu10k1(handle, capture_buffer, bufsiz);
 		  break;
 		case LA_ALSA:
+		  bytes = capture_alsa(handle, capture_buffer, bufsiz);
+		  break;
 		case LA_SDL:
 		case LA_ARTS:
 		case LA_ESD:

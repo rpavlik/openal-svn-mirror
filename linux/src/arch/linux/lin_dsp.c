@@ -439,9 +439,9 @@ static const char *lin_getreadpath(void) {
 }
 
 /* capture data from the audio device */
-ALsizei capture_nativedevice(UNUSED(void *handle),
-			  UNUSED(void *capture_buffer),
-			  UNUSED(int bufsiz)) {
+ALsizei capture_nativedevice(void *handle,
+			  void *capture_buffer,
+			  int bufsiz) {
 	int read_fd = *(int *)handle;
 	int retval;
 
@@ -633,7 +633,7 @@ static int set_fd(int dsp_fd, ALboolean readable,
 		 * This is for reading.  Don't really use
 		 * the speed argument.
 		 */
-		*speed = 8000;
+		*speed = 16000;
 
 		/* Try to set the speed (ignore value), then read it back */
                 ioctl(dsp_fd, SNDCTL_DSP_SPEED, speed);
