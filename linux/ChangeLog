@@ -1,3 +1,14 @@
+2002-12-04  Joseph Valenzuela  <jvalenzu@formosa.infinite-monkeys.org>
+
+	* src/al_filter.c
+	Added John Quigley's change to queue gain stuff.
+
+	* src/al_queue.c
+	* src/al_mixer.c
+        * src/al_source.c
+        * src/al_source.h
+	Added Zoltan Ponekker's patch to consolidate queue looping.
+
 2002-11-19  Joseph Valenzuela  <jvalenzu@formosa>
 
 	* openal/linux/src/al_source.c
