@@ -113,66 +113,70 @@ typedef struct {
 
 /* Ogg BITSTREAM PRIMITIVES: bitstream ************************/
 
-void  (*oggpack_writeinit) (oggpack_buffer *b);
-void  (*oggpack_writetrunc) (oggpack_buffer *b,long bits);
-void  (*oggpack_writealign) (oggpack_buffer *b);
-void  (*oggpack_writecopy) (oggpack_buffer *b,void *source,long bits);
-void  (*oggpack_reset) (oggpack_buffer *b);
-void  (*oggpack_writeclear) (oggpack_buffer *b);
-void  (*oggpack_readinit) (oggpack_buffer *b,unsigned char *buf,int bytes);
-void  (*oggpack_write) (oggpack_buffer *b,unsigned long value,int bits);
-long  (*oggpack_look) (oggpack_buffer *b,int bits);
-long  (*oggpack_look1) (oggpack_buffer *b);
-void  (*oggpack_adv) (oggpack_buffer *b,int bits);
-void  (*oggpack_adv1) (oggpack_buffer *b);
-long  (*oggpack_read) (oggpack_buffer *b,int bits);
-long  (*oggpack_read1) (oggpack_buffer *b);
-long  (*oggpack_bytes) (oggpack_buffer *b);
-long  (*oggpack_bits) (oggpack_buffer *b);
-unsigned char (*oggpack_get_buffer) (oggpack_buffer *b);
+#ifndef EXTERN
+#define EXTERN
+#endif
+
+EXTERN void  (*oggpack_writeinit) (oggpack_buffer *b);
+EXTERN void  (*oggpack_writetrunc) (oggpack_buffer *b,long bits);
+EXTERN void  (*oggpack_writealign) (oggpack_buffer *b);
+EXTERN void  (*oggpack_writecopy) (oggpack_buffer *b,void *source,long bits);
+EXTERN void  (*oggpack_reset) (oggpack_buffer *b);
+EXTERN void  (*oggpack_writeclear) (oggpack_buffer *b);
+EXTERN void  (*oggpack_readinit) (oggpack_buffer *b,unsigned char *buf,int bytes);
+EXTERN void  (*oggpack_write) (oggpack_buffer *b,unsigned long value,int bits);
+EXTERN long  (*oggpack_look) (oggpack_buffer *b,int bits);
+EXTERN long  (*oggpack_look1) (oggpack_buffer *b);
+EXTERN void  (*oggpack_adv) (oggpack_buffer *b,int bits);
+EXTERN void  (*oggpack_adv1) (oggpack_buffer *b);
+EXTERN long  (*oggpack_read) (oggpack_buffer *b,int bits);
+EXTERN long  (*oggpack_read1) (oggpack_buffer *b);
+EXTERN long  (*oggpack_bytes) (oggpack_buffer *b);
+EXTERN long  (*oggpack_bits) (oggpack_buffer *b);
+EXTERN unsigned char (*oggpack_get_buffer) (oggpack_buffer *b);
 
 /* Ogg BITSTREAM PRIMITIVES: encoding **************************/
 
-int   (*ogg_stream_packetin) (ogg_stream_state *os, ogg_packet *op);
-int   (*ogg_stream_pageout) (ogg_stream_state *os, ogg_page *og);
-int   (*ogg_stream_flush) (ogg_stream_state *os, ogg_page *og);
+EXTERN int   (*ogg_stream_packetin) (ogg_stream_state *os, ogg_packet *op);
+EXTERN int   (*ogg_stream_pageout) (ogg_stream_state *os, ogg_page *og);
+EXTERN int   (*ogg_stream_flush) (ogg_stream_state *os, ogg_page *og);
 
 /* Ogg BITSTREAM PRIMITIVES: decoding **************************/
 
-int    (*ogg_sync_init) (ogg_sync_state *oy);
-int    (*ogg_sync_clear) (ogg_sync_state *oy);
-int    (*ogg_sync_reset) (ogg_sync_state *oy);
-int    (*ogg_sync_destroy) (ogg_sync_state *oy);
+EXTERN int    (*ogg_sync_init) (ogg_sync_state *oy);
+EXTERN int    (*ogg_sync_clear) (ogg_sync_state *oy);
+EXTERN int    (*ogg_sync_reset) (ogg_sync_state *oy);
+EXTERN int    (*ogg_sync_destroy) (ogg_sync_state *oy);
 
-char   (*ogg_sync_buffer) (ogg_sync_state *oy, long size);
-int    (*ogg_sync_wrote) (ogg_sync_state *oy, long bytes);
-long   (*ogg_sync_pageseek) (ogg_sync_state *oy,ogg_page *og);
-int    (*ogg_sync_pageout) (ogg_sync_state *oy, ogg_page *og);
-int    (*ogg_stream_pagein) (ogg_stream_state *os, ogg_page *og);
-int    (*ogg_stream_packetout) (ogg_stream_state *os,ogg_packet *op);
-int    (*ogg_stream_packetpeek) (ogg_stream_state *os,ogg_packet *op);
+EXTERN char   (*ogg_sync_buffer) (ogg_sync_state *oy, long size);
+EXTERN int    (*ogg_sync_wrote) (ogg_sync_state *oy, long bytes);
+EXTERN long   (*ogg_sync_pageseek) (ogg_sync_state *oy,ogg_page *og);
+EXTERN int    (*ogg_sync_pageout) (ogg_sync_state *oy, ogg_page *og);
+EXTERN int    (*ogg_stream_pagein) (ogg_stream_state *os, ogg_page *og);
+EXTERN int    (*ogg_stream_packetout) (ogg_stream_state *os,ogg_packet *op);
+EXTERN int    (*ogg_stream_packetpeek) (ogg_stream_state *os,ogg_packet *op);
 
 /* Ogg BITSTREAM PRIMITIVES: general ***************************/
 
-int    (*ogg_stream_init) (ogg_stream_state *os,int serialno);
-int    (*ogg_stream_clear) (ogg_stream_state *os);
-int    (*ogg_stream_reset) (ogg_stream_state *os);
-int    (*ogg_stream_reset_serialno) (ogg_stream_state *os,int serialno);
-int    (*ogg_stream_destroy) (ogg_stream_state *os);
-int    (*ogg_stream_eos) (ogg_stream_state *os);
+EXTERN int    (*ogg_stream_init) (ogg_stream_state *os,int serialno);
+EXTERN int    (*ogg_stream_clear) (ogg_stream_state *os);
+EXTERN int    (*ogg_stream_reset) (ogg_stream_state *os);
+EXTERN int    (*ogg_stream_reset_serialno) (ogg_stream_state *os,int serialno);
+EXTERN int    (*ogg_stream_destroy) (ogg_stream_state *os);
+EXTERN int    (*ogg_stream_eos) (ogg_stream_state *os);
 
-void   (*ogg_page_checksum_set) (ogg_page *og);
+EXTERN void   (*ogg_page_checksum_set) (ogg_page *og);
 
-int    (*ogg_page_version) (ogg_page *og);
-int    (*ogg_page_continued) (ogg_page *og);
-int    (*ogg_page_bos) (ogg_page *og);
-int    (*ogg_page_eos) (ogg_page *og);
-ogg_int64_t  (*ogg_page_granulepos) (ogg_page *og);
-int    (*ogg_page_serialno) (ogg_page *og);
-long   (*ogg_page_pageno) (ogg_page *og);
-int    (*ogg_page_packets) (ogg_page *og);
+EXTERN int    (*ogg_page_version) (ogg_page *og);
+EXTERN int    (*ogg_page_continued) (ogg_page *og);
+EXTERN int    (*ogg_page_bos) (ogg_page *og);
+EXTERN int    (*ogg_page_eos) (ogg_page *og);
+EXTERN ogg_int64_t  (*ogg_page_granulepos) (ogg_page *og);
+EXTERN int    (*ogg_page_serialno) (ogg_page *og);
+EXTERN long   (*ogg_page_pageno) (ogg_page *og);
+EXTERN int    (*ogg_page_packets) (ogg_page *og);
 
-void   (*ogg_packet_clear) (ogg_packet *op);
+EXTERN void   (*ogg_packet_clear) (ogg_packet *op);
 
 
 #ifdef __cplusplus

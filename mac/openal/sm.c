@@ -29,6 +29,12 @@
 #include "alSource.h"
 #include "alSoftware.h"
 #include "sm.h"
+
+#ifdef MAC_OS_X
+#define EXTERN extern
+#include <mach-o/dyld.h>
+#include "vorbis/codec.h"
+#endif
  
  // Sound Manager functions
 void smPlaySegment(unsigned int source)
