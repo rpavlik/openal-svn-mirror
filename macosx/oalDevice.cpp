@@ -76,6 +76,9 @@ OALDevice::OALDevice (const char* 	 inDeviceName, UInt32   inSelfToken, UInt32  
 	: 	mSelfToken (inSelfToken),
         mHALDevice (0),
         mPreferred3DMixerExists(true),
+        mDistanceScalingRequired(false),
+        mDefaultReferenceDistance(1.0),
+        mDefaultMaxDistance(100000.0),
         mAUGraph(0),
         mBusCount(inBusCount),
 		mOutputNode(0), 
@@ -179,9 +182,11 @@ void OALDevice::InitializeGraph (const char* 		inDeviceName)
     
     if (version < kMinimumMixerVersion)
         throw -1;                           // we do not have a current enough 3DMixer to use, so set an error and throw
-    else if (version < kPreferredMixerVersion)
+    else if (version < 0x20000)
         mPreferred3DMixerExists = false;    // we do not have version 2.0 or greater of the 3DMixer
-
+    else if (version == 0x20000)
+        mDistanceScalingRequired = true;        
+    
     // ~~~~~~~~~~~~~~~~~~~~ CREATE GRAPH
 
 	result = NewAUGraph(&mAUGraph);
@@ -223,6 +228,19 @@ void OALDevice::InitializeGraph (const char* 		inDeviceName)
 		THROW_RESULT
 
 	SetupGraph();
+
+    // store some default distance settings
+    if (mPreferred3DMixerExists)
+    {
+        MixerDistanceParams		distanceParams;
+        UInt32                  outSize;
+        result = AudioUnitGetProperty(GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, 1, &distanceParams, &outSize);
+        if (result == noErr)
+        {
+            mDefaultReferenceDistance = distanceParams.mReferenceDistance;
+            mDefaultMaxDistance = distanceParams.mMaxDistance;
+        }
+    }
 	 	
 	mCanScheduleEvents = true;
 	Print();
@@ -328,8 +346,10 @@ UInt32 OALDevice::GetDesiredRenderChannelCount ()
 					break;
 				case kAudioChannelLayoutTag_AudioUnit_4:
 					returnValue = 4;
+					break;
 				default:
 					returnValue = 2;
+					break;
 			}
 		}
 	

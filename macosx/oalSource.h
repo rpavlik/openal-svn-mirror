@@ -45,7 +45,10 @@ enum {
 };
 
 #define	OALSourceError_CallConverterAgain	'agan'
-#define	kSourceNeedsBus -1
+#define	kSourceNeedsBus                     -1
+
+// do not change kDistanceScalar from 10.0 - it is used to compensate for a reverb related problem in the 3DMixer
+#define kDistanceScalar                     10.0
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Source - Buffer Queue

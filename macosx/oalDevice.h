@@ -55,7 +55,7 @@
 #define kDefaultMaximumDistance     1000000.0
 #define kDefaultRolloff             1.0
 
-#define kPreferredMixerVersion 		0x20000 
+#define kPreferredMixerVersion 		0x21000 
 #define kMinimumMixerVersion 		0x10300
 
 // Default Mixer Output Sample Rate Setting:
@@ -122,7 +122,9 @@ class OALDevice
 	UInt32 			GetReverbSetting() const { return mReverbSetting; }
 	AudioUnit		GetMixerUnit() { return mMixerUnit;}
 	UInt32 			GetDesiredRenderChannelCount ();
-
+	bool            IsDistanceScalingRequired() { return mDistanceScalingRequired;}
+	Float32         GetDefaultReferenceDistance() { return mDefaultReferenceDistance;}
+	Float32         GetDefaultMaxDistance() { return mDefaultMaxDistance;}
 
 	// misc.
     bool            IsPreferredMixerAvailable() { return mPreferred3DMixerExists; }
@@ -157,6 +159,9 @@ class OALDevice
 		UInt32          mSelfToken;
         AudioDeviceID   mHALDevice;                     // the HAL device used to render audio to the user		
         bool            mPreferred3DMixerExists;
+        bool            mDistanceScalingRequired;
+        Float32         mDefaultReferenceDistance;
+        Float32         mDefaultMaxDistance;
         AUGraph 		mAUGraph;
         UInt32          mBusCount;
         BusInfo			*mBusInfo;

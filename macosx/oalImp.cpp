@@ -969,10 +969,13 @@ ALAPI ALvoid ALAPIENTRY alDeleteBuffers(ALsizei n, ALuint *buffers)
                 if (buffers[i] != AL_NONE)
                 {
                     OALBuffer	*buffer = gOALBufferMap->Get((UInt32) buffers[i]);
-                    if (buffer->mData != NULL)
-                        free(buffer->mData);
-                    gOALBufferMap->Remove((UInt32) buffers[i]);
-                }
+                    if (buffer != NULL)
+                    {
+   	                	if (buffer->mData != NULL)
+                        	free(buffer->mData);
+                    }
+	            	gOALBufferMap->Remove((UInt32) buffers[i]);
+	            }
             }
         }
     }
@@ -2088,6 +2091,7 @@ ALAPI ALvoid ALAPIENTRY	alDistanceModel (ALenum value)
 	try {
         switch (value)
         {
+            case AL_NONE:			
             case AL_INVERSE_DISTANCE:
             case AL_INVERSE_DISTANCE_CLAMPED:
             {
@@ -2102,8 +2106,6 @@ ALAPI ALvoid ALAPIENTRY	alDistanceModel (ALenum value)
             } 
             break;
             
-            // warning "***** TO DO: DISTANCE MODEL settings not working yet for NO ATTENUATION - requires some refactoring"
-            case AL_NONE:			
             default:
                 alSetError(AL_INVALID_VALUE);
                 break;
@@ -2128,7 +2130,7 @@ ALAPI ALvoid ALAPIENTRY alDopplerFactor (ALfloat value)
 #endif
 
 	try {
-        if (value >= 0.0f)
+        if (value < 0.0f)
             throw ((OSStatus) AL_INVALID_VALUE);
 
         if (gOALContextMap == NULL)
@@ -2138,8 +2140,6 @@ ALAPI ALvoid ALAPIENTRY alDopplerFactor (ALfloat value)
         if (oalContext == NULL)
             throw ((OSStatus) AL_INVALID_OPERATION);
 
-        // At this time, keep doppler OFF
-        value = 0.0;
         oalContext->SetDopplerFactor(value);
 	}
 	catch (OSStatus		result) {
@@ -2162,7 +2162,7 @@ ALAPI ALvoid ALAPIENTRY alDopplerVelocity (ALfloat value)
 #endif
 
 	try {
-        if (value >= 0.0f)
+        if (value < 0.0f)
             throw ((OSStatus) AL_INVALID_VALUE);
 
         if (gOALContextMap == NULL)

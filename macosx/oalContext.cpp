@@ -137,8 +137,8 @@ void		OALContext::SetDistanceModel(UInt32	inDistanceModel)
 #if LOG_GRAPH_AND_MIXER_CHANGES
 	DebugMessage("OALContext::SetDistanceModel: MarkAllSourcesForRecalculation called\n");
 #endif
-			// change this when code is refactored to allow different distance model settings
-			// mSourceMap->SetDistanceModelForAllSources(mDistanceModel);
+            // the sources may have already been set and now need to be moved back to the reference position
+             mSourceMap->MarkAllSourcesForRecalculation();
 		}
 	}
 }	
@@ -191,7 +191,7 @@ void		OALContext::SetListenerPosition(Float32	posX, Float32	posY, Float32	posZ)
 	if (mSourceMap)
 	{
 #if LOG_GRAPH_AND_MIXER_CHANGES
-	DebugMessage("OALContext::SetListenerPosition: MarkAllSourcesForRecalculation called\n");
+	DebugMessageN4("OALContext::SetListenerPosition called - OALSource = %f:%f:%f/%ld\n", posX, posY, posZ, mSelfToken);
 #endif
 		// moving the listener effects the coordinate translation for ALL the sources
 		mSourceMap->MarkAllSourcesForRecalculation();
