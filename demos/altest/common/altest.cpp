@@ -44,8 +44,8 @@
 #define INITGUID
 #define OPENAL
 
-#define TEST_VORBIS // enable for ogg vorbis testing
-#define TEST_EAX // enable for EAX testing
+#define TEST_VORBIS 0	// enable for ogg vorbis testing
+#define TEST_EAX	0   // enable for EAX testing
 
 #ifdef _WIN32
 #include <windows.h>	// For timeGetTime()
@@ -74,7 +74,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
-#ifdef TEST_VORBIS
+#if TEST_VORBIS
 #include <AL/alext.h>
 #include <AL/alexttypes.h>
 #endif
@@ -181,13 +181,13 @@ typedef struct ALenum_struct
 // Global variables
 ALuint	g_Buffers[NUM_BUFFERS];		// Array of Buffers
 
-#ifdef TEST_EAX
+#if TEST_EAX
 EAXSet	eaxSet;						// EAXSet function, retrieved if EAX Extension is supported
 EAXGet	eaxGet;						// EAXGet function, retrieved if EAX Extension is supported
 ALboolean g_bEAX;					// Boolean variable to indicate presence of EAX Extension 
 #endif
 
-#ifdef TEST_VORBIS
+#if TEST_VORBIS
 #define AL_FORMAT_VORBIS_EXT 0x10003
 unsigned int g_ovSize;
 #endif
@@ -353,11 +353,11 @@ ALvoid SA_Stereo(ALvoid);
 ALvoid SA_Streaming(ALvoid);
 ALvoid SA_QueuingUnderrunPerformance(ALvoid);
 
-#ifdef TEST_VORBIS
+#if TEST_VORBIS
 ALvoid I_VorbisTest(ALvoid);
 #endif
 
-#ifdef TEST_EAX
+#if TEST_EAX
 ALvoid I_EAXTest(ALvoid);
 #endif
 
@@ -436,7 +436,7 @@ int main(int argc, char* argv[])
 	ALfloat listenerVel[]={0.0,0.0,0.0};
 	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};	// Listener facing into the screen
 
-#ifdef TEST_EAX
+#if TEST_EAX
 	ALubyte szFnName[128];
 	ALubyte szEAX[] = "EAX";
 #endif	
@@ -858,7 +858,7 @@ int main(int argc, char* argv[])
 		exit(-1);
 	}
 
-#ifdef TEST_VORBIS
+#if TEST_VORBIS
 	void *ovdata;	
 
 	FILE *fh;
@@ -891,7 +891,7 @@ int main(int argc, char* argv[])
 	}
 #endif
 
-#ifdef TEST_EAX
+#if TEST_EAX
 	// Check for EAX extension
 	g_bEAX = alIsExtensionPresent(szEAX);
 
@@ -929,10 +929,10 @@ int main(int argc, char* argv[])
 		printf("7) Gain Test\n");
 		printf("8) Streaming Test\n");
 		printf("9) Multiple Sources Test\n");
-#ifdef TEST_EAX
+#if TEST_EAX
 		printf("C) EAX Test\n");
 #endif
-#ifdef TEST_VORBIS
+#if TEST_VORBIS
 		printf("D) Ogg Vorbis Test\n");
 #endif
 		printf("\nQ) to quit\n\n\n");
@@ -974,13 +974,13 @@ int main(int argc, char* argv[])
 			case '9':
 				I_MultipleSourcesTest();
 				break;
-#ifdef TEST_EAX
+#if TEST_EAX
 			case 'C':
 				if (g_bEAX)
 					I_EAXTest();
 				break;
 #endif
-#ifdef TEST_VORBIS
+#if TEST_VORBIS
 		        case 'D':
 		                I_VorbisTest();
 		                break;
@@ -2846,7 +2846,7 @@ ALvoid I_LoopingTest(ALvoid)
 	return;
 }
 
-#ifdef TEST_EAX
+#if TEST_EAX
 // EAX Test
 /** used by gendocs.py
 $SECTION Interactive Tests
@@ -4255,7 +4255,7 @@ ALvoid I_MultipleSourcesTest()
 	alDeleteSources(numSources, Sources);
 }
 
-#ifdef TEST_VORBIS
+#if TEST_VORBIS
 // Vorbis Test
 /** used by gendocs.py
 $SECTION Interactive Tests
