@@ -137,7 +137,7 @@ void alListener3f( ALenum pname, ALfloat f1, ALfloat f2, ALfloat f3 ) {
  * param is not a valid listener attribute, set AL_ILLEGAL_ENUM. If any member
  * of pv is not a valid value for the attribute, set AL_INVALID_VALUE.
  */
-void alListenerfv( ALenum pname, ALfloat *pv ) {
+void alListenerfv( ALenum pname, const ALfloat *pv ) {
 	AL_context *dc;
 
 	_alcDCLockContext();

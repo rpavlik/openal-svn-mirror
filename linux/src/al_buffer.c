@@ -244,7 +244,7 @@ void alGenBuffers( ALsizei n, ALuint *buffer ) {
  * associated with sources (especially playing sources!) needs to
  * be specified.  It's not at-the-moment.
  */
-void alDeleteBuffers( ALsizei n, ALuint *buffers ) {
+void alDeleteBuffers( ALsizei n, const ALuint* buffers ) {
 	AL_buffer *buf;
 	ALenum bufstate;
 	int i;
@@ -559,7 +559,7 @@ void alGetBufferf( ALuint buffer, ALenum param, ALfloat *value )
  */
 void alBufferData( ALuint  bid,
 		   ALenum  format,
-                   ALvoid *data,
+                   const ALvoid* data,
 		   ALsizei size,
 		   ALsizei freq ) {
 	AL_buffer *buf;

@@ -31,7 +31,7 @@
  * AL_INVALID_VALUE if numBuffers < 0, or AL_INVALID_NAME if either sid or and
  * bid in bids[0..numBuffers-1] is not a valid buffer.
  */
-void alSourceQueueBuffers( ALuint sid, ALsizei numBuffers, ALuint *bids ) {
+void alSourceQueueBuffers( ALuint sid, ALsizei numBuffers, const ALuint *bids ) {
 	AL_source *src;
 	ALsizei i;
 

@@ -545,7 +545,7 @@ void alSource3f( ALuint sid, ALenum param,
  * If any member of fv is out of range for the attribute, AL_INVALID_VALUE.
  *
  */
-void alSourcefv( ALuint sid, ALenum param, ALfloat *fv1 )
+void alSourcefv( ALuint sid, ALenum param, const ALfloat *fv1 )
 {
 	AL_source *source;
 	ALboolean inrange = AL_TRUE;
@@ -2180,7 +2180,7 @@ void _alChannelify4Offset( ALshort *dst, ALuint offset,
  * If n is 0, this is a legal nop.  If n < 0, INVALID_VALUE is set
  * and this is a nop.
  */
-void alDeleteSources( ALsizei n, ALuint *sources ) {
+void alDeleteSources( ALsizei n, const ALuint *sources ) {
 	AL_source *src;
 	AL_context *cc;
 	int i;
@@ -2423,7 +2423,7 @@ void alSourceRewind( ALuint sid ) {
  * If any member of sids[0..ns-1] is not a valid source name, set
  * AL_INVALID_NAME.
  */
-void alSourceRewindv( ALsizei ns, ALuint *sids ) {
+void alSourceRewindv( ALsizei ns, const ALuint *sids ) {
 	AL_source *src;
 	ALsizei i;
 
@@ -2502,7 +2502,7 @@ void alSourceRewindv( ALsizei ns, ALuint *sids ) {
  * state AL_PLAYING or AL_PAUSED change the state to AL_STOPPED.  Otherwise,
  * set AL_INVALID_NAME.
  */
-void alSourceStopv( ALsizei ns, ALuint *sids ) {
+void alSourceStopv( ALsizei ns, const ALuint *sids ) {
 	ALsizei i;
 
 	if( ns == 0 ) {
@@ -2555,7 +2555,7 @@ void alSourceStopv( ALsizei ns, ALuint *sids ) {
  * state AL_INITIAL, AL_STOPPED or AL_PAUSED, change the state to AL_PLAYING.
  * Otherwise, set AL_INVALID_NAME.
  */
-void alSourcePlayv( ALsizei ns, ALuint *sids ) {
+void alSourcePlayv( ALsizei ns, const ALuint *sids ) {
 	ALsizei i;
 
 	if( ns == 0 ) {
@@ -2609,7 +2609,7 @@ void alSourcePlayv( ALsizei ns, ALuint *sids ) {
  * AL_INVALID_NAME.
  *
  */
-void alSourcePausev( ALsizei ns, ALuint *sids ) {
+void alSourcePausev( ALsizei ns, const ALuint *sids ) {
 	AL_source *src;
 	ALsizei i;
 

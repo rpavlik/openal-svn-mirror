@@ -463,7 +463,7 @@ void alcSuspendContext( ALCcontext *alcHandle )
  *
  * FIXME: not as well tested as I'd like.
  */
-ALCcontext *alcCreateContext( struct _AL_device *dev, ALCint *attrlist )
+ALCcontext *alcCreateContext( struct _AL_device *dev, const ALCint *attrlist )
 {
 	ALint cid;
 
@@ -1422,7 +1422,7 @@ ALboolean _alcIsContextSuspended( ALuint cid ) {
  * Returns AL_TRUE if the alc extension extName is present, AL_FALSE
  * otherwise.
  */
-ALCboolean alcIsExtensionPresent( UNUSED(ALCdevice *device), ALCubyte *extName ) {
+ALCboolean alcIsExtensionPresent( UNUSED(ALCdevice *device), const ALCubyte *extName ) {
 	return alIsExtensionPresent( extName );
 }
 
@@ -1432,7 +1432,7 @@ ALCboolean alcIsExtensionPresent( UNUSED(ALCdevice *device), ALCubyte *extName )
  * Returns the alc extension function named funcName, or NULL if it doesn't
  * exist.
  */
-ALCvoid *alcGetProcAddress( UNUSED(ALCdevice *device), ALCubyte *funcName )
+ALCvoid *alcGetProcAddress( UNUSED(ALCdevice *device), const ALCubyte *funcName )
 {
 	return alGetProcAddress( funcName );
 }
@@ -1442,7 +1442,7 @@ ALCvoid *alcGetProcAddress( UNUSED(ALCdevice *device), ALCubyte *funcName )
  *
  * Returns enum value for enumName.
  */
-ALCenum alcGetEnumValue( UNUSED(ALCdevice *device), ALCubyte *enumName ) {
+ALCenum alcGetEnumValue( UNUSED(ALCdevice *device), const ALCubyte *enumName ) {
 	return alGetEnumValue( enumName );
 }
 
