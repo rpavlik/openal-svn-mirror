@@ -19,8 +19,8 @@
  */
 
 #include "globals.h"
-#include "vorbis/codec.h"
-#include "vorbis/vorbisfile.h"
+#include "codec.h"
+#include "vorbisfile.h"
 #include "vorbisrtn.h"
 #include "math.h"
 
@@ -76,7 +76,6 @@ long ov_tell_func (void *datasource)
 void ov_fillBuffer(ALuint source, ALuint buffer) 
 {
     vorbis_info *vi;
-    FILE *fh;
     
     // decompress the raw Ogg Vorbis data into uncompressedData for source
     //   also fill in uncompressedSize, channels, bits, and frequency fields

@@ -20,8 +20,11 @@
  
 #include "globals.h"
 #include "alError.h"
- 
- #pragma export on 
+
+// AL_ERROR static info
+static		 ALenum		alLastError =AL_NO_ERROR;
+
+#pragma export on 
  
 // AL_ERROR functions
 ALAPI ALenum ALAPIENTRY alGetError (ALvoid)

@@ -24,8 +24,8 @@
 #include <string.h>
 
 #ifdef VORBIS_EXTENSION
-#include "vorbis/codec.h"
-#include "vorbis/vorbisfile.h"
+#include "codec.h"
+#include "vorbisfile.h"
 #include "vorbisrtn.h"
 #endif
 

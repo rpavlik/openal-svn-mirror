@@ -32,14 +32,6 @@
 ALAPI ALvoid ALAPIENTRY alInit(ALint *argc, ALubyte **argv);
 ALAPI ALvoid ALAPIENTRY alExit(ALvoid);
 
-static ALubyte *alcErrorStr[]=
-{
-	(unsigned char *)"There is no accessible sound device/driver/server.",
-	(unsigned char *)"The Device argument does not name a valid device.",
-	(unsigned char *)"The Context argument does not name a valid context.",
-	(unsigned char *)"No error.",
-};
-
 // ALC-global variables
 ALCenum LastError=ALC_NO_ERROR;
 ALCdevice *pOpenDevice = 0;

@@ -17,9 +17,6 @@
  *  Boston, MA  02111-1307, USA.
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
- 
-// AL_ERROR static info
-static		 ALenum		alLastError =AL_NO_ERROR;
 
 #pragma export on
 

@@ -464,16 +464,14 @@ ALAPI ALvoid ALAPIENTRY alGetSourcei (ALuint source, ALenum pname, ALint *value)
 }
 
 ALAPI ALvoid ALAPIENTRY alSourcePlay(ALuint source)
-{
-	QueueEntry *pQE;
-	
+{	
     if (gSource[source].state != AL_PAUSED)
     {
         alSourceStop(source);    
     }	
     
-	gSource[source].state = AL_PLAYING;
-	smPlaySegment(source);
+    gSource[source].state = AL_PLAYING;
+    smPlaySegment(source);
 }
 
 ALAPI ALvoid ALAPIENTRY alSourcePause (ALuint source)

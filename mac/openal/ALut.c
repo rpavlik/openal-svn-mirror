@@ -37,8 +37,6 @@ void convert_c2pstr(char *string);
 void SwapWords(unsigned int *puint);
 void SwapBytes(unsigned short *pshort);
 
-#pragma pack (push,1) 							/* Turn off alignment */
-
 typedef struct                                  /* WAV File-header */
 {
   ALubyte  Id[4];

@@ -72,11 +72,13 @@ void smPlaySegment(unsigned int source)
                         gSource[source].pCompHdr = NULL;
                     } 
                 }
+#ifdef VORBIS_EXTENSION
                 if (gBuffer[iBufferNum].format == AL_FORMAT_VORBIS_EXT) { // compressed format handling
                     ov_fillBuffer(source, iBufferNum);
                     gSource[source].ptrSndHeader->samplePtr = (char *) gSource[source].uncompressedData;
                     gSource[source].ptrSndHeader->numFrames = gSource[source].uncompressedSize;
                 } else // uncompressed buffer format
+#endif
                 {
                     gSource[source].ptrSndHeader->samplePtr = (char *) gBuffer[iBufferNum].data + gSource[source].readOffset;
                     if ((gSource[source].readOffset + gBufferSize) <= gBuffer[iBufferNum].size)
@@ -274,14 +276,12 @@ void smSetSourceVolume (int source, int rVol, int lVol)
 void smSetSourcePitch(int source, float value)
 {
 	SndCommand SoundCommand;
-	OSErr Err;
-	long Rate;
 	
 	SoundCommand.cmd = rateMultiplierCmd;
 	SoundCommand.param1 = NULL;
 	SoundCommand.param2 = 0x00010000 * value;
 				
-	Err = SndDoImmediate (gSource[source].channelPtr, &SoundCommand);	
+	SndDoImmediate (gSource[source].channelPtr, &SoundCommand);	
 }
 
 void smSourceInit(unsigned int source)
@@ -328,8 +328,6 @@ void smSourceFlushAndQuiet(unsigned int source)
 
 void smSourceKill(unsigned int source)
 {
-	OSErr Err;
-	
 	smSourceFlushAndQuiet(source);
 	
 	// kill off source's channel and reset data

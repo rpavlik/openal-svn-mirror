@@ -83,7 +83,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				FRAMEWORK_SEARCH_PATHS = "";
 				FRAMEWORK_VERSION = A;
-				HEADER_SEARCH_PATHS = ../al;
+				HEADER_SEARCH_PATHS = "";
 				INSTALL_PATH = "$(HOME)/Library/Frameworks";
 				LIBRARY_SEARCH_PATHS = "";
 				OPTIMIZATION_CFLAGS = "-O3";
@@ -212,7 +212,8 @@
 			);
 			isa = PBXVariantGroup;
 			name = InfoPlist.strings;
-			refType = 4;
+			path = "";
+			refType = 2;
 		};
 		089C1667FE841158C02AAC07 = {
 			fileEncoding = 10;
@@ -288,6 +289,7 @@
 			);
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
+				OTHER_CFLAGS = "\U0001-D__MACOSX__";
 			};
 			isa = PBXBuildStyle;
 			name = Deployment;
@@ -306,36 +308,36 @@
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = al.h;
-			path = /Users/garinh/prog/openal/mac/al/al.h;
-			refType = 0;
+			path = ../al/al.h;
+			refType = 2;
 		};
 		984FDEC30433F5A20042B474 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alc.h;
-			path = /Users/garinh/prog/openal/mac/al/alc.h;
-			refType = 0;
+			path = ../al/alc.h;
+			refType = 2;
 		};
 		984FDEC40433F5A20042B474 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alctypes.h;
-			path = /Users/garinh/prog/openal/mac/al/alctypes.h;
-			refType = 0;
+			path = ../al/alctypes.h;
+			refType = 2;
 		};
 		984FDEC50433F5A20042B474 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = altypes.h;
-			path = /Users/garinh/prog/openal/mac/al/altypes.h;
-			refType = 0;
+			path = ../al/altypes.h;
+			refType = 2;
 		};
 		984FDEC60433F5A20042B474 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alut.h;
-			path = /Users/garinh/prog/openal/mac/al/alut.h;
-			refType = 0;
+			path = ../al/alut.h;
+			refType = 2;
 		};
 		984FDEC70433F5A20042B474 = {
 			fileRef = 984FDEC20433F5A20042B474;
@@ -371,8 +373,8 @@
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = vorbisfile.h;
-			path = /Users/garinh/prog/openal/mac/al/vorbis/vorbisfile.h;
-			refType = 0;
+			path = ../al/vorbis/vorbisfile.h;
+			refType = 2;
 		};
 		9894C4180439726000A8006E = {
 			buildPhases = (
@@ -387,11 +389,10 @@
 				DYLIB_CURRENT_VERSION = 1;
 				FRAMEWORK_SEARCH_PATHS = "";
 				FRAMEWORK_VERSION = A;
-				HEADER_SEARCH_PATHS = ../al;
+				HEADER_SEARCH_PATHS = "";
 				INSTALL_PATH = "$(HOME)/Library/Frameworks";
 				LIBRARY_SEARCH_PATHS = "";
 				OPTIMIZATION_CFLAGS = "-O0";
-				OTHER_CFLAGS = "-DVORBIS_EXTENSION";
 				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = OpenAL;
 				SECTORDER_FLAGS = "";
@@ -731,15 +732,15 @@
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = vorbisrtn.c;
-			path = /Users/garinh/prog/openal/mac/openal/vorbis/vorbisrtn.c;
-			refType = 0;
+			path = ../openal/vorbis/vorbisrtn.c;
+			refType = 2;
 		};
 		98A1D34B043B7D7E005F25BE = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = vorbisrtn.h;
-			path = /Users/garinh/prog/openal/mac/openal/vorbis/vorbisrtn.h;
-			refType = 0;
+			path = ../openal/vorbis/vorbisrtn.h;
+			refType = 2;
 		};
 		98A893070447C04300A8006E = {
 			isa = PBXFileReference;
@@ -799,29 +800,29 @@
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = codec.h;
-			path = /Users/garinh/prog/openal/mac/al/vorbis/codec.h;
-			refType = 0;
+			path = ../al/vorbis/codec.h;
+			refType = 2;
 		};
 		98AF1E62043534F4000D2D30 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = config_types.h;
-			path = /Users/garinh/prog/openal/mac/al/vorbis/config_types.h;
-			refType = 0;
+			path = ../al/vorbis/config_types.h;
+			refType = 2;
 		};
 		98AF1E6504353506000D2D30 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = ogg.h;
-			path = /Users/garinh/prog/openal/mac/al/vorbis/ogg.h;
-			refType = 0;
+			path = ../al/vorbis/ogg.h;
+			refType = 2;
 		};
 		98AF1E6604353506000D2D30 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = os_types.h;
-			path = /Users/garinh/prog/openal/mac/al/vorbis/os_types.h;
-			refType = 0;
+			path = ../al/vorbis/os_types.h;
+			refType = 2;
 		};
 		98E387440447B9DC00A8006E = {
 			buildPhases = (
@@ -837,7 +838,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				FRAMEWORK_SEARCH_PATHS = "";
 				FRAMEWORK_VERSION = A;
-				HEADER_SEARCH_PATHS = ../al;
+				HEADER_SEARCH_PATHS = "";
 				INSTALL_PATH = "$(HOME)/Library/Frameworks";
 				LIBRARY_SEARCH_PATHS = /sw/lib;
 				OPTIMIZATION_CFLAGS = "-O3";
@@ -1209,7 +1210,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				FRAMEWORK_SEARCH_PATHS = "";
 				FRAMEWORK_VERSION = A;
-				HEADER_SEARCH_PATHS = ../al;
+				HEADER_SEARCH_PATHS = "";
 				INSTALL_PATH = "$(HOME)/Library/Frameworks";
 				LIBRARY_SEARCH_PATHS = /sw/lib;
 				OPTIMIZATION_CFLAGS = "-O0";
@@ -1589,134 +1590,134 @@
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alBuffer.h;
-			path = /Users/garinh/prog/openal/mac/openal/alBuffer.h;
-			refType = 0;
+			path = ../openal/alBuffer.h;
+			refType = 2;
 		};
 		F558C52C036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alc.c;
-			path = /Users/garinh/prog/openal/mac/openal/alc.c;
-			refType = 0;
+			path = ../openal/alc.c;
+			refType = 2;
 		};
 		F558C52D036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alEnvironment.c;
-			path = ../../openal/alEnvironment.c;
-			refType = 3;
+			path = ../openal/alEnvironment.c;
+			refType = 2;
 		};
 		F558C52E036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alEnvironment.h;
-			path = ../../openal/alEnvironment.h;
-			refType = 3;
+			path = ../openal/alEnvironment.h;
+			refType = 2;
 		};
 		F558C52F036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alError.c;
-			path = ../../openal/alError.c;
-			refType = 3;
+			path = ../openal/alError.c;
+			refType = 2;
 		};
 		F558C530036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alError.h;
-			path = ../../openal/alError.h;
-			refType = 3;
+			path = ../openal/alError.h;
+			refType = 2;
 		};
 		F558C531036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alExtension.c;
-			path = ../../openal/alExtension.c;
-			refType = 3;
+			path = ../openal/alExtension.c;
+			refType = 2;
 		};
 		F558C532036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alExtension.h;
-			path = ../../openal/alExtension.h;
-			refType = 3;
+			path = ../openal/alExtension.h;
+			refType = 2;
 		};
 		F558C533036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alListener.c;
-			path = ../../openal/alListener.c;
-			refType = 3;
+			path = ../openal/alListener.c;
+			refType = 2;
 		};
 		F558C534036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alListener.h;
-			path = ../../openal/alListener.h;
-			refType = 3;
+			path = ../openal/alListener.h;
+			refType = 2;
 		};
 		F558C535036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alMain.c;
-			path = ../../openal/alMain.c;
-			refType = 3;
+			path = ../openal/alMain.c;
+			refType = 2;
 		};
 		F558C536036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alMain.h;
-			path = ../../openal/alMain.h;
-			refType = 3;
+			path = ../openal/alMain.h;
+			refType = 2;
 		};
 		F558C537036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alSoftware.c;
-			path = ../../openal/alSoftware.c;
-			refType = 3;
+			path = ../openal/alSoftware.c;
+			refType = 2;
 		};
 		F558C538036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alSoftware.h;
-			path = ../../openal/alSoftware.h;
-			refType = 3;
+			path = ../openal/alSoftware.h;
+			refType = 2;
 		};
 		F558C539036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alSource.c;
-			path = ../../openal/alSource.c;
-			refType = 3;
+			path = ../openal/alSource.c;
+			refType = 2;
 		};
 		F558C53A036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alSource.h;
-			path = ../../openal/alSource.h;
-			refType = 3;
+			path = ../openal/alSource.h;
+			refType = 2;
 		};
 		F558C53B036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alState.c;
-			path = ../../openal/alState.c;
-			refType = 3;
+			path = ../openal/alState.c;
+			refType = 2;
 		};
 		F558C53C036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alState.h;
-			path = ../../openal/alState.h;
-			refType = 3;
+			path = ../openal/alState.h;
+			refType = 2;
 		};
 		F558C53D036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = ALut.c;
-			path = ../../openal/ALut.c;
-			refType = 3;
+			path = ../openal/ALut.c;
+			refType = 2;
 		};
 		F558C53E036A116501A8006E = {
 			fileRef = F558C52A036A116501A8006E;
@@ -1842,29 +1843,29 @@
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = globals.h;
-			path = /Users/garinh/prog/openal/mac/openal/globals.h;
-			refType = 0;
+			path = ../openal/globals.h;
+			refType = 2;
 		};
 		F558C553036A119601A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = globaltypes.h;
-			path = ../../openal/globaltypes.h;
-			refType = 3;
+			path = ../openal/globaltypes.h;
+			refType = 2;
 		};
 		F558C554036A119601A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = sm.c;
-			path = ../../openal/sm.c;
-			refType = 3;
+			path = ../openal/sm.c;
+			refType = 2;
 		};
 		F558C555036A119601A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = sm.h;
-			path = ../../openal/sm.h;
-			refType = 3;
+			path = ../openal/sm.h;
+			refType = 2;
 		};
 		F558C556036A119601A8006E = {
 			fileRef = F558C552036A119601A8006E;

@@ -22,7 +22,7 @@
 #include "alError.h"
 #include "alBuffer.h"
  
- #pragma export on 
+#pragma export on 
  
 // AL_BUFFER functions
 ALAPI ALvoid ALAPIENTRY alGenBuffers(ALsizei n, ALuint *buffers)
