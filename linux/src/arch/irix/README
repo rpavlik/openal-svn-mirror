@@ -1,0 +1,23 @@
+IRIX back-end: Maintainer: Erik Hofman <erik@ehofman.com>
+
+The following configuration options could be specified
+in the ~/.openalrc file:
+
+1. You can now define up to four output channels.
+2. You can specify which output port or interface to use.
+3. For systems that don't support 4 channel audio natively
+   you can specify a second device that is used for the rear
+   channels.
+
+A typical O2 configuration file would look like this:
+
+(define speaker-num 4)
+(define native-out-device "Analog Out")
+(define native-rear-out-device "Analog Out 2")
+
+or alternatively:
+
+(define speaker-num 4)
+(define native-out-device "A3.Speaker")
+(define native-rear-out-device "A3.LineOut2")
+
