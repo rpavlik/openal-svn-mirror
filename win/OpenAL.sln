@@ -1,26 +1,38 @@
-Microsoft Visual Studio Solution File, Format Version 7.00
+Microsoft Visual Studio Solution File, Format Version 8.00
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ALc", "ALc\ALc.vcproj", "{D013ACCB-8A86-4248-B69F-DE2CCC2579A4}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ALu", "ALu\ALu.vcproj", "{A30F9E04-0FBC-42F9-9DB7-30DF7AE0BEAF}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ALut", "ALut\ALut.vcproj", "{81C5086D-D4C4-432E-BF49-A9A501F013D2}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenAL32", "OpenAL32\OpenAL32.vcproj", "{22A85E63-1C04-4493-848D-FBE1531EA79D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A30F9E04-0FBC-42F9-9DB7-30DF7AE0BEAF} = {A30F9E04-0FBC-42F9-9DB7-30DF7AE0BEAF}
+		{81C5086D-D4C4-432E-BF49-A9A501F013D2} = {81C5086D-D4C4-432E-BF49-A9A501F013D2}
+		{D013ACCB-8A86-4248-B69F-DE2CCC2579A4} = {D013ACCB-8A86-4248-B69F-DE2CCC2579A4}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenALDemo", "OpenALDemo\OpenALDemo.vcproj", "{92EBB25A-1087-49B3-9617-B2A26EFF70BE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{22A85E63-1C04-4493-848D-FBE1531EA79D} = {22A85E63-1C04-4493-848D-FBE1531EA79D}
+		{81C5086D-D4C4-432E-BF49-A9A501F013D2} = {81C5086D-D4C4-432E-BF49-A9A501F013D2}
+		{34BD7CDB-1EE5-4A59-967C-79E128AAE4D8} = {34BD7CDB-1EE5-4A59-967C-79E128AAE4D8}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Router", "Router\Router.vcproj", "{34BD7CDB-1EE5-4A59-967C-79E128AAE4D8}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
-		ConfigName.0 = Debug
-		ConfigName.1 = Release
-	EndGlobalSection
-	GlobalSection(ProjectDependencies) = postSolution
-		{22A85E63-1C04-4493-848D-FBE1531EA79D}.0 = {81C5086D-D4C4-432E-BF49-A9A501F013D2}
-		{22A85E63-1C04-4493-848D-FBE1531EA79D}.1 = {A30F9E04-0FBC-42F9-9DB7-30DF7AE0BEAF}
-		{22A85E63-1C04-4493-848D-FBE1531EA79D}.2 = {D013ACCB-8A86-4248-B69F-DE2CCC2579A4}
-		{92EBB25A-1087-49B3-9617-B2A26EFF70BE}.0 = {34BD7CDB-1EE5-4A59-967C-79E128AAE4D8}
+		Debug = Debug
+		Release = Release
 	EndGlobalSection
 	GlobalSection(ProjectConfiguration) = postSolution
 		{D013ACCB-8A86-4248-B69F-DE2CCC2579A4}.Debug.ActiveCfg = Debug|Win32

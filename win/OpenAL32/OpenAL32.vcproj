@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding = "Windows-1252"?>
+<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="7.00"
+	Version="7.10"
 	Name="OpenAL32"
 	SccProjectName=""
 	SccLocalPath="">
@@ -69,7 +69,13 @@
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
 				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
@@ -127,21 +133,29 @@
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
 				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 	</Configurations>
+	<References>
+	</References>
 	<Files>
 		<Filter
 			Name="Source Files"
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat">
 			<File
-				RelativePath=".\OpenAL32.c">
-			</File>
-			<File
 				RelativePath=".\alBuffer.c">
 			</File>
 			<File
 				RelativePath=".\alEax.c">
+			</File>
+			<File
+				RelativePath=".\aleax2.c">
 			</File>
 			<File
 				RelativePath=".\alError.c">
@@ -159,6 +173,9 @@
 				RelativePath=".\alState.c">
 			</File>
 			<File
+				RelativePath=".\OpenAL32.c">
+			</File>
+			<File
 				RelativePath=".\openal32.rc">
 			</File>
 		</Filter>
@@ -170,6 +187,9 @@
 			</File>
 			<File
 				RelativePath=".\Include\alEax.h">
+			</File>
+			<File
+				RelativePath=".\aleax2.h">
 			</File>
 			<File
 				RelativePath=".\Include\alError.h">
