@@ -29,6 +29,7 @@
 #include <string.h>
 
 #include "audioconvert.h"
+#include "threads/threadlib.h"
 #include "mutex/mutexlib.h"
 
 #ifndef elementsof
@@ -44,7 +45,7 @@ static bpool_t buf_pool;
 /*
  * Mutex guarding buf_pool.
  */
-static MutexID buf_mutex = NULL;
+static MutexID buf_mutex;
 
 /*
  * _alDestroyBuffer(void *buf)
@@ -568,6 +569,15 @@ void alBufferData( ALuint  bid,
 	ALenum tformat;
 	ALint tfreq;
 
+	if((data == NULL) || (size == 0))
+	{
+		_alcDCLockContext();
+		_alDCSetError(AL_INVALID_VALUE);
+		_alcDCUnlockContext();
+
+		return;
+	}
+
 	switch(format) {
 #ifdef VORBIS_SUPPORT
 		/*
@@ -583,7 +593,20 @@ void alBufferData( ALuint  bid,
 			return;
 			break;
 #endif /* VORBIS_SUPPORT */
+		case AL_FORMAT_WAVE_EXT:
+		case AL_FORMAT_MONO8:
+		case AL_FORMAT_MONO16:
+		case AL_FORMAT_STEREO8:
+		case AL_FORMAT_STEREO16:
+		case AL_FORMAT_QUAD8_LOKI:
+		case AL_FORMAT_QUAD16_LOKI:
+		case AL_FORMAT_IMA_ADPCM_MONO16_EXT:
+		case AL_FORMAT_IMA_ADPCM_STEREO16_EXT:
+			break;
 		default:
+			_alcDCLockContext();
+			_alDCSetError(AL_INVALID_VALUE);
+			_alcDCUnlockContext();
 			break;
 	}
 
@@ -796,14 +819,9 @@ AL_buffer *_alGetBuffer( ALuint bid ) {
  * Doesn't do much.  No default size, so we just initialize 
  * the mutex.
  */
-ALboolean _alInitBuffers( void ) {
+ALboolean _alInitBuffers( void )
+{
 	buf_mutex = mlCreateMutex();
-	if(buf_mutex == NULL) {
-		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-			"Could not create buffer mutex.");
-
-		return AL_FALSE;
-	}
 
 	return AL_TRUE;
 }
