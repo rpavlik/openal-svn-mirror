@@ -105,7 +105,7 @@ ALCAPI void ALCAPIENTRY alcGetIntegerv(ALCdevice *deviceHandle, ALCenum  token ,
 ALCAPI void ALCAPIENTRY alcGetIntegerv(ALCdevice *device,ALCenum param,ALCsizei size,ALCint *data);
 #endif
 
-#else // AL_NO_PROTOTYPES
+#else /* AL_NO_PROTOTYPES */
       ALCAPI ALCcontext *    ALCAPIENTRY (*alcCreateContext)( ALCdevice *dev, const ALCint* attrlist );
 #ifdef LINUX_AL
       ALCAPI ALCenum	     ALCAPIENTRY (*alcMakeContextCurrent)( ALCcontext *alcHandle );
