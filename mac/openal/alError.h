@@ -18,6 +18,9 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
 
+#ifndef _ERROR_H_
+#define _ERROR_H_
+
 #pragma export on
 
 ALAPI ALenum ALAPIENTRY alGetError (ALvoid);
@@ -25,3 +28,5 @@ ALAPI ALenum ALAPIENTRY alGetError (ALvoid);
 #pragma export off
 
 ALAPI ALvoid ALAPIENTRY alSetError (ALenum errorCode);
+
+#endif

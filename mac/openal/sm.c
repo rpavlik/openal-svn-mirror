@@ -40,8 +40,9 @@ void smPlaySegment(unsigned int source)
 	OSErr Err;
 	SndCommand SCommand;
 	int iBufferNum;
-	ALfloat Pitch, Panning, Volume;
+	ALfloat Pitch;
 	QueueEntry *pQE;
+        ALfloat drysend[2], wetsend[2];
 
 	iBufferNum = gSource[source].srcBufferNum;
 		
@@ -51,19 +52,9 @@ void smPlaySegment(unsigned int source)
 		gSource[source].state = AL_PLAYING;
 		
 		// reset pitch and volume as needed for 3D environment
-		alCalculateSourceParameters(source,&Pitch,&Panning,&Volume);
+		alCalculateSourceParameters(source,2,drysend,wetsend,&Pitch);
 		smSetSourcePitch(source, Pitch);
-		if (gBuffer[iBufferNum].channels == 1) // make sure this is a mono buffer before positioning it
-		{
-			if (Volume > 1.0f) Volume = 1.0f;
-			smSetSourceVolume(source, (kFullVolume * Volume * ((Panning < 0.5) ? (1): (2.0 - Panning * 2.0))), 
-			     (kFullVolume * Volume * ((Panning < 0.5) ? Panning * 2.0 : (1))));
-		} else
-		{
-			Volume = (gSource[source].gain*gListener.Gain);
-			if (Volume > 1.0f) Volume = 1.0f;
-			smSetSourceVolume(source, (kFullVolume * Volume), (kFullVolume * Volume));
-		}
+                smSetSourceVolume(source, (kFullVolume * drysend[1]), (kFullVolume *drysend[0]));
 		// create sound header
                 if (gSource[source].readOffset > gBuffer[iBufferNum].size) { 
                     gSource[source].readOffset = 0;

@@ -18,6 +18,9 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
  
+#ifndef _SM_H_
+#define _SM_H_
+
 // declare Sound Manager routines
 void smPlaySegment(unsigned int source);
 pascal void smService (SndChannelPtr chan, SndCommand* acmd);
@@ -26,3 +29,5 @@ void smSetSourcePitch(int source, float value);
 void smSourceInit(unsigned int source);
 void smSourceFlushAndQuiet(unsigned int source);
 void smSourceKill(unsigned int source);
+
+#endif

@@ -18,23 +18,8 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
  
-// AL_STATE info
-const char *alVendor="Any";
-const char *alVersion="OpenAL 1.0.5";
-const char *alRenderer="Software";
-const char *alExtensions="";
-const char *alNoError="No Error";
-const char *alErrInvalidName="Invalid Name";
-const char *alErrInvalidEnum="Invalid Enum";
-const char *alErrInvalidValue="Invalid Enum Value";
-const char *alErrInvalidOp="Invalid Operation";
-const char *alErrOutOfMemory="Out of Memory";
-
-ALfloat gDopplerFactor;
-ALfloat gDopplerVelocity;
-ALfloat gDistanceScale;
-ALfloat gPropagationSpeed;
-ALenum gDistanceModel;
+#ifndef _STATE_H_
+#define _STATE_H_
 
 #pragma export on
 
@@ -58,3 +43,6 @@ ALAPI ALvoid ALAPIENTRY alPropagationSpeed (ALfloat value);
 ALAPI ALvoid ALAPIENTRY	alDistanceModel (ALenum value);
 
 #pragma export off
+
+#endif
+

@@ -22,6 +22,24 @@
 #include "alError.h"
 #include "alState.h"
 
+// AL_STATE info
+const char *alVendor="Any";
+const char *alVersion="OpenAL 1.0.5";
+const char *alRenderer="Software";
+const char *alExtensions="";
+const char *alNoError="No Error";
+const char *alErrInvalidName="Invalid Name";
+const char *alErrInvalidEnum="Invalid Enum";
+const char *alErrInvalidValue="Invalid Enum Value";
+const char *alErrInvalidOp="Invalid Operation";
+const char *alErrOutOfMemory="Out of Memory";
+
+ALfloat gDopplerFactor;
+ALfloat gDopplerVelocity;
+ALfloat gDistanceScale;
+ALfloat gPropagationSpeed;
+ALenum gDistanceModel;
+
 #pragma export on 
 
 ALAPI ALvoid ALAPIENTRY alEnable (ALenum capability)
@@ -67,10 +85,31 @@ ALAPI ALvoid ALAPIENTRY alGetDoublev (ALenum pname, ALdouble *data)
 
 ALAPI ALvoid ALAPIENTRY alGetFloatv (ALenum pname, ALfloat *data)
 {
+    switch(pname)
+    {
+        case AL_DOPPLER_FACTOR:
+            *data = gDopplerFactor;
+            break;
+    
+        default:
+            alSetError(AL_INVALID_ENUM);
+            break;
+    }
+    return;
 }
 
 ALAPI ALvoid ALAPIENTRY alGetIntegerv (ALenum pname, ALint *data)
 {
+    switch(pname)
+    {
+        case AL_DISTANCE_MODEL:
+            *data = gDistanceModel;
+            break;
+            
+        default:
+            alSetError(AL_INVALID_ENUM);
+            break;
+    }
 }
 
 ALAPI const ALubyte * ALAPIENTRY alGetString (ALenum pname)

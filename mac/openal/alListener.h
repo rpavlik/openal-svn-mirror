@@ -18,6 +18,9 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
  
+#ifndef _LISTENER_H_
+#define _LISTENER_H_
+
 #pragma export on
 
 ALAPI ALvoid ALAPIENTRY alListenerf (ALenum pname, ALfloat value);
@@ -30,3 +33,5 @@ ALAPI ALvoid ALAPIENTRY alGetListener3f( ALenum pname, ALfloat* v1, ALfloat* v2,
 ALAPI ALvoid ALAPIENTRY alGetListenerfv( ALenum pname, ALfloat* values ); 
 
 #pragma export off
+
+#endif

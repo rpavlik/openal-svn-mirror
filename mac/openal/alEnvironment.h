@@ -18,6 +18,9 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
  
+#ifndef _ENVIRONMENT_H_
+#define _ENVIRONMENT_H_
+ 
 #pragma export on
 
 ALAPI ALsizei ALAPIENTRY alGenEnvironmentIASIG (ALsizei n, ALuint *environments);
@@ -27,3 +30,5 @@ ALAPI ALvoid ALAPIENTRY alEnvironmentfIASIG (ALuint environment, ALenum pname, A
 ALAPI ALvoid ALAPIENTRY alEnviromentiIASIG (ALuint environment, ALenum pname, ALint value);
 
 #pragma export off
+
+#endif

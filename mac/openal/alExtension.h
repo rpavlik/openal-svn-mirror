@@ -18,6 +18,9 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
  
+#ifndef _EXTENSION_H_
+#define _EXTENSION_H_
+
 #pragma export on
 
 ALAPI ALboolean ALAPIENTRY alIsExtensionPresent(ALubyte *extName);
@@ -25,3 +28,5 @@ ALAPI ALvoid * ALAPIENTRY alGetProcAddress(ALubyte *fname);
 ALAPI ALenum ALAPIENTRY alGetEnumValue (ALubyte *ename);
 
 #pragma export off
+
+#endif 

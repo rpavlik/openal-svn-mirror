@@ -18,6 +18,9 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
  
+#ifndef _BUFFER_H_
+#define _BUFFER_H_
+ 
 #pragma export on
 
 ALAPI ALvoid ALAPIENTRY alGenBuffers(ALsizei n, ALuint *buffers);
@@ -28,3 +31,5 @@ ALAPI ALvoid ALAPIENTRY alGetBufferf (ALuint buffer, ALenum pname, ALfloat *valu
 ALAPI ALvoid ALAPIENTRY alGetBufferi(ALuint buffer, ALenum pname, ALint *value);
 
 #pragma export off
+
+#endif

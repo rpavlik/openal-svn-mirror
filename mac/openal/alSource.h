@@ -18,6 +18,9 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
  
+#ifndef _SOURCE_H_
+#define _SOURCE_H_
+
 #pragma export on
 
 ALAPI ALvoid ALAPIENTRY alGenSources(ALsizei n, ALuint *sources);
@@ -45,3 +48,5 @@ ALAPI ALvoid ALAPIENTRY alSourceQueueBuffers (ALuint source, ALsizei n, ALuint *
 ALAPI ALvoid ALAPIENTRY alSourceUnqueueBuffers (ALuint source, ALsizei n, ALuint *buffers);
 
 #pragma export off
+
+#endif

@@ -18,9 +18,14 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
  
+#ifndef _MAIN_H_
+#define _MAIN_H_
+
 #pragma export on
 
 ALAPI ALvoid ALAPIENTRY alInit(ALint *argc, ALubyte **argv);
 ALAPI ALvoid ALAPIENTRY alExit(ALvoid);
 
 #pragma export off
+
+#endif

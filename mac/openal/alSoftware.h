@@ -18,8 +18,15 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
 
-ALAPI ALvoid ALAPIENTRY alCrossproduct(ALfloat vector1[3],ALfloat vector2[3],ALfloat vector3[3]);
-ALAPI ALfloat ALAPIENTRY alDotproduct(ALfloat vector1[3],ALfloat vector2[3]);
-ALAPI ALvoid ALAPIENTRY alNormalize(ALfloat vector[3]);
-ALAPI ALvoid ALAPIENTRY alMatrixVector(ALfloat matrix[3][3],ALfloat vector[3]);
-ALAPI ALvoid ALAPIENTRY alCalculateSourceParameters(ALuint source,ALfloat *Pitch,ALfloat *Panning,ALfloat *Volume);
+#ifndef _SW_H_
+#define _SW_H_
+
+ALAPI ALint	ALAPIENTRY alF2L(ALfloat value);
+ALAPI ALshort	ALAPIENTRY alF2S(ALfloat value);
+ALAPI ALvoid	ALAPIENTRY alCrossproduct(ALfloat *inVector1,ALfloat *inVector2,ALfloat *outVector);
+ALAPI ALfloat	ALAPIENTRY alDotproduct(ALfloat *inVector1,ALfloat *inVector2);
+ALAPI ALvoid	ALAPIENTRY alNormalize(ALfloat *inVector);
+ALAPI ALvoid	ALAPIENTRY alMatrixVector(ALfloat *vector,ALfloat matrix[3][3]);
+ALAPI ALvoid	ALAPIENTRY alCalculateSourceParameters(ALuint source,ALuint channels,ALfloat *drysend,ALfloat *wetsend,ALfloat *pitch);
+
+#endif
