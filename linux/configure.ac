@@ -9,6 +9,8 @@ AC_CONFIG_HEADER([config.h])
 AC_PROG_CC
 AC_C_CONST
 AC_PROG_CXX
+AC_PROG_INSTALL
+AC_PROG_LN_S
 
 # Making releases:
 #   MICRO_VERSION += 1;
@@ -786,18 +788,6 @@ fi
 # Da domb!
 AC_DEFINE(BOMB, 1, [undocumented])
 
-# look for install
-AC_PROG_INSTALL
-AC_PROG_LN_S
-
-# look for make
-AC_CHECK_PROG(MAKE, gmake, gmake, none)
-if test $MAKE = none; then
-  # no gmake?  Ouch
-  AC_MSG_WARN([Could not find gmake: so setting \$MAKE to make.])
-  MAKE=make
-fi
-
 # define version
 AC_DEFINE_UNQUOTED(LAL_VERSION, "$VERSION", [undocumented])
 
@@ -811,14 +801,11 @@ AC_SUBST([LDFLAGS])
 AC_SUBST([LIBS])
 AC_SUBST([INCLUDES])
 AC_SUBST([JLIB])
-AC_SUBST([MAKE])
 AC_SUBST([MAKEINFO])
 AC_SUBST([OS_OBJS])
 AC_SUBST([ARCH_OBJS])
 AC_SUBST([SYS_THREAD_OBJS])
 AC_SUBST([SYS_MUTEX_OBJS])
-AC_SUBST([INSTALL])
-AC_SUBST([LN_S])
 AC_SUBST([SHARED_LIBRARY_EXT])
 AC_SUBST([SIZEOF_VOID_P])
 AC_SUBST([RDYNAMIC])
@@ -833,6 +820,7 @@ AC_CONFIG_FILES([Makefile
                  openal.pc
                  src/Makefile
                  test/Makefile])
+
 AC_CONFIG_COMMANDS([default], [chmod +x openal-config])
 AC_OUTPUT
 

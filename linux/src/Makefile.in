@@ -6,7 +6,6 @@ DEFINES=@DEFINES@
 LDFLAGS=@LDFLAGS@
 INC=-I../../include -I../include -I../audioconvert -Iarch -I. @INCLUDES@
 LIBS=-L. @LIBS@
-MAKE=@MAKE@
 SO_EXT=@SHARED_LIBRARY_EXT@
 RANLIB=@RANLIB@
 

@@ -4,7 +4,6 @@ DEFINES   = @DEFINES@
 INC       = -I.
 SLIB      = libjlib.a
 OBJS      = globals.o  hash.o
-MAKE      = @MAKE@
 RANLIB    = @RANLIB@
 
 .SUFFIXES: .c

@@ -23,7 +23,6 @@ TEST_PROGS=testreverb testda testmulti testalut testtime  \
 INC=-I../src -I../include -I../../include -I../audioconvert @INCLUDES@
 LIBOPENAL=../src/libopenal.a
 LIBS=testlib.o -L../src $(LIBOPENAL) @LIBS@
-MAKE=@MAKE@
 
 % : %.c ../config.h testlib.o
 	$(CC) $(INC) $(DEFS) $(CFLAGS) $< -o $@ $(LIBS)
