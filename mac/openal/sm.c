@@ -66,6 +66,9 @@ void smPlaySegment(unsigned int source)
 		}
 		// create sound header
                 if (gBuffer[iBufferNum].format == AL_FORMAT_VORBIS_EXT) { // compressed format handling
+                // ***** changes -- with new "pull" setup, will want to decompress one AL_DEFAULT_INTERNAL_BUFFERS_SIZE amount of OV
+                // data on every pass and put it into the uncompressed data part of the buffer, then tell SM to play it; won't need
+                // pointer to read/write location in uncompressed data or uncompressedSize member of buffer
                     if (gBuffer[iBufferNum].uncompressedData == NULL) {
 #ifdef MAC_OS_X
                         ov_fillBuffer(&gBuffer[iBufferNum]);

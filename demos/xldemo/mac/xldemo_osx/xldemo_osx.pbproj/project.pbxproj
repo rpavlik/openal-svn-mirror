@@ -139,7 +139,6 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "";
 				HEADER_SEARCH_PATHS = "\"$(SYSTEM_LIBRARY_DIR)/Frameworks/GLUT.framework/Versions/A/Headers\" \"$(LOCAL_LIBRARY_DIR)/Frameworks/OpenAL.framework/Versions/A/Headers\" \"$(SYSTEM_LIBRARY_DIR)/Frameworks/OpenGL.framework/Versions/A/Headers\"";
-				OPTIMIZATION_CFLAGS = "";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
