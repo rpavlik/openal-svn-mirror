@@ -1,3 +1,11 @@
+2004-02-02  Ryan C. Gordon  <ryan@epicgames.com>
+
+	* openal/linux/configure.in
+	* openal/linux/src/arch/alsa/alsa.c
+	Optionally use dlopen() on libasound instead of linking directly to it
+	in the ALSA driver. Enable this at configure time with:
+	   ./configure --enable-alsa --enable-alsa-dlopen
+
 2004-01-29  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
 
 	* openal/include/AL/altypes.h
