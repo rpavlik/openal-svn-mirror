@@ -536,9 +536,8 @@ void	OALDevice::SetupGraph()
 			AudioUnitSetProperty (	mMixerUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, i, &format, outSize);
 		}
 
-		// Distance Attenuation: kAudioUnitProperty_3DMixerDistanceAtten: 1.0
-		Float64 	distAttenuation = 1.0;
-		result = AudioUnitSetProperty(mMixerUnit, kAudioUnitProperty_3DMixerDistanceAtten, kAudioUnitScope_Input, i, &distAttenuation, sizeof(distAttenuation));
+		// Distance Attenuation: for pre v2.0 mixer
+        SetDistanceAttenuation (i, kDefaultReferenceDistance, kDefaultMaximumDistance, kDefaultRolloff);			
 
 		mBusInfo[i].mIsAvailable = true;
 		mBusInfo[i].mNumberChannels = 1;
@@ -871,4 +870,28 @@ bool OALDevice::IsValidRenderQuality (UInt32 inRenderQuality)
 	}
 
 	return (false);
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void    OALDevice::SetDistanceAttenuation(UInt32    inBusIndex, Float64 inRefDist, Float64 inMaxDist, Float64 inRolloff)
+{
+    if (IsPreferredMixerAvailable())
+        return;     // unnecessary with v2.0 mixer
+        
+    Float64     maxattenuationDB = 20 * log10(inRefDist / (inRefDist + (inRolloff * (inMaxDist - inRefDist))));
+    Float64     maxattenuation = pow(10, (maxattenuationDB/20));                    
+    Float64     distAttenuation = (log(1/maxattenuation))/(log(inMaxDist)) - 1.0;
+
+#if 0
+    DebugMessageN1("SetDistanceAttenuation:Reference Distance =  %f", inRefDist);
+    DebugMessageN1("SetDistanceAttenuation:Maximum Distance =  %f", inMaxDist);
+    DebugMessageN1("SetDistanceAttenuation:Rolloff =  %f", inRolloff);
+    DebugMessageN1("SetDistanceAttenuation:Max Attenuation DB =  %f", maxattenuationDB);
+    DebugMessageN1("SetDistanceAttenuation:Max Attenuation Scalar =  %f", maxattenuation);
+    DebugMessageN1("SetDistanceAttenuation:distAttenuation =  %f", distAttenuation);
+
+#endif
+    
+    AudioUnitSetProperty(mMixerUnit, kAudioUnitProperty_3DMixerDistanceAtten, kAudioUnitScope_Input, inBusIndex, &distAttenuation, sizeof(distAttenuation));
+    return;
 }

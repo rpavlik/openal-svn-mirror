@@ -115,12 +115,12 @@ OALSource::OALSource (const UInt32 	 	inSelfToken, OALContext	*inOwningContext)
 		mPitch(1.0),                            // this is the user pitch setting changed via the OAL APIs
 		mGain(1.0),
 		mOutputSilence(false),
-		mMaxDistance(1000000.0),                // ***** should be MAX_FLOAT
+		mMaxDistance(kDefaultMaximumDistance),                // ***** should be MAX_FLOAT
 		mMinDistance(1.0),
 		mMinGain(0.0),
 		mMaxGain(1.0),
-		mRollOffFactor(1.0),
-		mReferenceDistance(1.0),
+		mRollOffFactor(kDefaultRolloff),
+		mReferenceDistance(kDefaultReferenceDistance),
 		mLooping(AL_FALSE),
 		mSourceRelative(AL_FALSE),
 		mConeInnerAngle(360.0),
@@ -353,24 +353,29 @@ void	OALSource::SetRollOffFactor (Float32	inRollOffFactor)
 
 	mRollOffFactor = inRollOffFactor;
  	
-    if (!mOwningDevice->IsPreferredMixerAvailable())	// the pre-2.0 3DMixer cannot change kAudioUnitProperty_3DMixerDistanceParams
-		return;
-
-	if (mCurrentPlayBus != kSourceNeedsBus)
-	{	
-		MixerDistanceParams		distanceParams;
-		UInt32					outSize = sizeof(distanceParams);
-		OSStatus	result = AudioUnitGetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, &outSize);
-		if (result == noErr)
-		{
-			distanceParams.mMaxAttenuation = 20 * log10(distanceParams.mReferenceDistance / (distanceParams.mReferenceDistance + (mRollOffFactor * (distanceParams.mMaxDistance -  distanceParams.mReferenceDistance))));
-            if (distanceParams.mMaxAttenuation < 0.0)
-                distanceParams.mMaxAttenuation *= -1.0;
-            else 
-                distanceParams.mMaxAttenuation = 0.0;   // if db result was positive, clamp it to zero
-			AudioUnitSetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, sizeof(distanceParams));
-		}
-	}
+    if (mCurrentPlayBus != kSourceNeedsBus)
+    {
+        if (!mOwningDevice->IsPreferredMixerAvailable())	
+        {
+            // the pre-2.0 3DMixer does not accept kAudioUnitProperty_3DMixerDistanceParams, it has do some extra work and use the DistanceAtten property instead
+            mOwningDevice->SetDistanceAttenuation(mCurrentPlayBus, mReferenceDistance, mMaxDistance, mRollOffFactor);
+        }
+        else
+        {
+			MixerDistanceParams		distanceParams;
+			UInt32					outSize = sizeof(distanceParams);
+			OSStatus	result = AudioUnitGetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, &outSize);
+			if (result == noErr)
+			{
+				distanceParams.mMaxAttenuation = 20 * log10(distanceParams.mReferenceDistance / (distanceParams.mReferenceDistance + (mRollOffFactor * (distanceParams.mMaxDistance -  distanceParams.mReferenceDistance))));
+				if (distanceParams.mMaxAttenuation < 0.0)
+					distanceParams.mMaxAttenuation *= -1.0;
+				else 
+					distanceParams.mMaxAttenuation = 0.0;   // if db result was positive, clamp it to zero
+				AudioUnitSetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, sizeof(distanceParams));
+			}
+        }
+    }
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -385,25 +390,30 @@ void	OALSource::SetMaxDistance (Float32	inMaxDistance)
 
 	mMaxDistance = inMaxDistance;
 
- 	if (!mOwningDevice->IsPreferredMixerAvailable())	// the pre-2.0 3DMixer cannot change kAudioUnitProperty_3DMixerDistanceParams
-		return;
-
-	if (mCurrentPlayBus != kSourceNeedsBus)
-	{	
-		MixerDistanceParams		distanceParams;
-		UInt32					outSize = sizeof(distanceParams);
-		OSStatus	result = AudioUnitGetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, &outSize);
-		if (result == noErr)
-		{
-			distanceParams.mMaxDistance = mMaxDistance;
-			distanceParams.mMaxAttenuation = 20 * log10(distanceParams.mReferenceDistance / (distanceParams.mReferenceDistance + (mRollOffFactor * (distanceParams.mMaxDistance -  distanceParams.mReferenceDistance))));
-            if (distanceParams.mMaxAttenuation < 0.0)
-                distanceParams.mMaxAttenuation *= -1.0;
-            else 
-                distanceParams.mMaxAttenuation = 0.0;   // if db result was positive, clamp it to zero
-			AudioUnitSetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, sizeof(distanceParams));
-		}
-	}
+    if (mCurrentPlayBus != kSourceNeedsBus)
+    {
+        if (!mOwningDevice->IsPreferredMixerAvailable())	
+        {
+            // the pre-2.0 3DMixer does not accept kAudioUnitProperty_3DMixerDistanceParams, it has do some extra work and use the DistanceAtten property instead
+            mOwningDevice->SetDistanceAttenuation(mCurrentPlayBus, mReferenceDistance, mMaxDistance, mRollOffFactor);
+        }
+        else
+        {
+            MixerDistanceParams		distanceParams;
+            UInt32					outSize = sizeof(distanceParams);
+            OSStatus	result = AudioUnitGetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, &outSize);
+            if (result == noErr)
+            {
+                distanceParams.mMaxDistance = mMaxDistance;
+                distanceParams.mMaxAttenuation = 20 * log10(distanceParams.mReferenceDistance / (distanceParams.mReferenceDistance + (mRollOffFactor * (distanceParams.mMaxDistance -  distanceParams.mReferenceDistance))));
+                if (distanceParams.mMaxAttenuation < 0.0)
+                    distanceParams.mMaxAttenuation *= -1.0;
+                else 
+                    distanceParams.mMaxAttenuation = 0.0;   // if db result was positive, clamp it to zero
+                AudioUnitSetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, sizeof(distanceParams));
+            }
+        }
+    }
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -418,25 +428,30 @@ void	OALSource::SetReferenceDistance (Float32	inReferenceDistance)
 
 	mReferenceDistance = inReferenceDistance;
  	
-    if (!mOwningDevice->IsPreferredMixerAvailable())	// the pre-2.0 3DMixer cannot change kAudioUnitProperty_3DMixerDistanceParams
-		return;
-
-	if (mCurrentPlayBus != kSourceNeedsBus)
-	{	
-		MixerDistanceParams		distanceParams;
-		UInt32					outSize = sizeof(distanceParams);
-		OSStatus	result = AudioUnitGetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, &outSize);
-		if (result == noErr)
-		{
-			distanceParams.mReferenceDistance = mReferenceDistance;
-			distanceParams.mMaxAttenuation = 20 * log10(distanceParams.mReferenceDistance / (distanceParams.mReferenceDistance + (mRollOffFactor * (distanceParams.mMaxDistance -  distanceParams.mReferenceDistance))));
-            if (distanceParams.mMaxAttenuation < 0.0)
-                distanceParams.mMaxAttenuation *= -1.0;
-            else 
-                distanceParams.mMaxAttenuation = 0.0;   // if db result was positive, clamp it to zero
-			
-			AudioUnitSetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, sizeof(distanceParams));
-		}
+    if (mCurrentPlayBus != kSourceNeedsBus)
+    {
+        if (!mOwningDevice->IsPreferredMixerAvailable())	
+        {
+            // the pre-2.0 3DMixer does not accept kAudioUnitProperty_3DMixerDistanceParams, it has do some extra work and use the DistanceAtten property instead
+            mOwningDevice->SetDistanceAttenuation(mCurrentPlayBus, mReferenceDistance, mMaxDistance, mRollOffFactor);
+        }
+        else
+        {
+            MixerDistanceParams		distanceParams;
+            UInt32					outSize = sizeof(distanceParams);
+            OSStatus	result = AudioUnitGetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, &outSize);
+            if (result == noErr)
+            {
+                distanceParams.mReferenceDistance = mReferenceDistance;
+                distanceParams.mMaxAttenuation = 20 * log10(distanceParams.mReferenceDistance / (distanceParams.mReferenceDistance + (mRollOffFactor * (distanceParams.mMaxDistance -  distanceParams.mReferenceDistance))));
+                if (distanceParams.mMaxAttenuation < 0.0)
+                    distanceParams.mMaxAttenuation *= -1.0;
+                else 
+                    distanceParams.mMaxAttenuation = 0.0;   // if db result was positive, clamp it to zero
+                
+                AudioUnitSetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, sizeof(distanceParams));
+            }
+        }
 	}
 }
 
@@ -823,6 +838,11 @@ void	OALSource::Play()
 					AudioUnitSetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, sizeof(distanceParams));
 				}
 			}
+            else
+            {
+                // the pre-2.0 3DMixer does not accept kAudioUnitProperty_3DMixerDistanceParams, it has do some extra work and use the DistanceAtten property instead
+                mOwningDevice->SetDistanceAttenuation(mCurrentPlayBus, mReferenceDistance, mMaxDistance, mRollOffFactor);
+            }
 		}	
 
         // get the sample rate of the bus
@@ -1462,7 +1482,9 @@ void OALSource::CalculateDistanceAndAzimuth(Float32 *outDistance, Float32 *outAz
         
     if (!mOwningDevice->IsPreferredMixerAvailable() && (mReferenceDistance > 1.0))
     {
-        // the pre 2.0 mixer does not have the DistanceParam property so everything needs to be scaled to the reference distance
+        // the pre 2.0 mixer does not have the DistanceParam property so to compensate,
+        // set the DistanceAtten property correctly for refDist, maxDist, and rolloff,
+        // and then scale our calculated distance to a reference distance of 1.0 before passing to the mixer
         Distance = Distance/mReferenceDistance;
         if (Distance > mMaxDistance/mReferenceDistance) 
             Distance = mMaxDistance/mReferenceDistance; // clamp the distance to the max distance

@@ -51,6 +51,10 @@
 // Device Constants
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+#define kDefaultReferenceDistance   1.0
+#define kDefaultMaximumDistance     1000000.0
+#define kDefaultRolloff             1.0
+
 #define kPreferredMixerVersion 		0x20000 
 #define kMinimumMixerVersion 		0x10300
 
@@ -108,6 +112,7 @@ class OALDevice
 	void 			SetRenderQuality (UInt32 inRenderQuality);
 	void 			SetRenderChannelCount (UInt32 inRenderChannelCount);
     void            SetReverb(UInt32  inReverbSetting);
+    void            SetDistanceAttenuation(UInt32    inBusIndex, Float64 inRefDist, Float64 inMaxDist, Float64 inRolloff);
 
 	// get info
 	UInt32          GetDeviceToken () const { return mSelfToken; }
