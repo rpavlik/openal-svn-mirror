@@ -105,7 +105,7 @@ static void _alSplitSourceQueue(ALuint cid,
  * get a channel pointer into the buffer's data, scaled by the source's
  * position into the PCM data.
  */
-void *_alSourceGetBufptr(AL_source *src, AL_buffer *buf, ALuint index);
+void *_alSourceGetBufptr(AL_source *src, AL_buffer *buf, ALuint ind);
 
 /*
  * alIsSource( ALuint sid )

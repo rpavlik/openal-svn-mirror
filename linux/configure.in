@@ -132,6 +132,7 @@ if test x$with_gcc != xunset; then
 fi
 
 AC_PROG_CC
+AC_PROG_CXX
 AC_PROG_CPP
 AC_C_BIGENDIAN
 
