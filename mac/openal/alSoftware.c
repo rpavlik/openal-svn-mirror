@@ -19,6 +19,7 @@
  */
 
 #include <math.h>
+#include <string.h>
 #include "globals.h" 
 #include "alSource.h"
 #include "alSoftware.h"
@@ -27,10 +28,7 @@
 #include "alBuffer.h"
 #include "alError.h"
 
-#ifdef MAC_OS_X
-#include <string.h>
 #define FLT_MIN 0.00001
-#endif
 
 extern ALenum gDistanceModel;
 
@@ -121,7 +119,7 @@ ALAPI ALvoid ALAPIENTRY alCalculateSourceParameters(ALuint source,ALuint numOutp
 	{
 		//Get global properties
 		alGetFloatv(AL_DOPPLER_FACTOR,&DopplerFactor);
-		alGetIntegerv(AL_DISTANCE_MODEL,&DistanceModel);
+		alGetIntegerv(AL_DISTANCE_MODEL,(int *)&DistanceModel);
 		
 		//Get listener properties
 		alGetListenerf(AL_GAIN,&ListenerGain);
@@ -132,7 +130,7 @@ ALAPI ALvoid ALAPIENTRY alCalculateSourceParameters(ALuint source,ALuint numOutp
 		//Get source properties
 		alGetSourcef(source,AL_PITCH,&Pitch);
 		alGetSourcef(source,AL_GAIN,&Volume);
-		alGetSourcei(source,AL_BUFFER,&Buffer);
+		alGetSourcei(source,AL_BUFFER,(int *)&Buffer);
 		alGetSourcefv(source,AL_POSITION,Position);
 		alGetSourcefv(source,AL_VELOCITY,Velocity);
 		alGetSourcefv(source,AL_DIRECTION,Direction);
@@ -152,7 +150,7 @@ ALAPI ALvoid ALAPIENTRY alCalculateSourceParameters(ALuint source,ALuint numOutp
 		RoomRolloff=(ALfloat)(0.0f);
 		
 		//Get buffer properties
-		alGetBufferi(Buffer,AL_CHANNELS,&NumBufferChannels);
+		alGetBufferi(Buffer,AL_CHANNELS,(int *)&NumBufferChannels);
 		//Only apply 3D calculations for mono buffers
 		if (NumBufferChannels==1)
 		{

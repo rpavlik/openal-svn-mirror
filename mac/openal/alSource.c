@@ -532,7 +532,9 @@ ALAPI ALvoid ALAPIENTRY alSourceStop (ALuint source)
             gSource[source].pCompHdr = NULL;
         }
         gSource[source].uncompressedReadOffset = 0;
+#ifdef MAC_OS_X
         gSource[source].uncompressedBufferOffset = 0;
+#endif
 	
 	pQE = gSource[source].ptrQueue; // reset all processed flags
 	while (pQE != NULL)
@@ -557,7 +559,9 @@ ALAPI ALvoid ALAPIENTRY alSourceRewind (ALuint source)
         gSource[source].pCompHdr = NULL;
     }
     gSource[source].uncompressedReadOffset = 0;
+#ifdef MAC_OS_X
     gSource[source].uncompressedBufferOffset = 0;
+#endif
 }
 
 ALAPI ALvoid ALAPIENTRY alSourcePlayv(ALsizei n, ALuint *ID)
