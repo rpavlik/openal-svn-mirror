@@ -62,10 +62,38 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <memory.h>
+#include <math.h>
+
+#ifdef OSX_FRAMEWORK
+#include <OpenAL/al.h>
+#include <OpenAL/alc.h>
+#include <OpenAL/alut.h>
+#else
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alut.h>
+#endif
+
+#define AL_INVALID_ENUM AL_ILLEGAL_ENUM
+#define AL_INVALID_OPERATION AL_ILLEGAL_COMMAND
 #define NO_EAX
+
+void alGetSource3f(ALint sid, ALenum param,
+		   ALfloat *f1, ALfloat *f2, ALfloat *f3)
+{
+	ALfloat safety_first[6];
+
+	if(!f1 || !f2 || !f3)
+	{
+		return;
+	}
+
+	alGetSourcefv(sid, param, safety_first);
+
+	*f1 = safety_first[0];
+	*f2 = safety_first[1];
+	*f3 = safety_first[3];
+}
 #endif
 
 #ifdef __MACOS__
@@ -187,7 +215,7 @@ static ALenums enumeration[]={
 	// Buffer attributes
 	{ (ALubyte *)"AL_FREQUENCY",					AL_FREQUENCY						},
 	{ (ALubyte *)"AL_SIZE",							AL_SIZE								},
-	
+
 	// Buffer States (not supported yet)
 	{ (ALubyte *)"AL_UNUSED",						AL_UNUSED							},
 	{ (ALubyte *)"AL_PENDING",						AL_PENDING							},
@@ -244,10 +272,9 @@ static ALenums enumeration[]={
 void delay_ms(unsigned int ms);
 ALvoid DisplayALError(ALbyte *szText, ALint errorcode);
 
-#ifdef __linux
-// guess what, char is signed on some platforms
+#ifdef LINUX
 ALvoid DisplayALError(const char *text, ALint errorcode);
-#endif /* __linux */
+#endif
 
 char getUpperCh(void);
 int CRToContinue(void);
@@ -337,14 +364,14 @@ ALvoid DisplayALError(ALbyte *szText, ALint errorcode)
 	return;
 }
 
-#ifdef __linux
+#ifdef LINUX
 ALvoid DisplayALError( const char *text, ALint errorcode)
 {
 	printf("%s%s\n", text, alGetString(errorcode));
 
 	return;
 }
-#endif /* __linux */
+#endif
 
 
 /*
@@ -1396,11 +1423,11 @@ ALvoid SA_StringQueries(ALvoid)
 	{
 		printf("Check that the following values are reasonable:\n");
 
-#ifdef __linux
+#ifdef LINUX
 		const ALubyte *tempString;
 #else
 		unsigned char *tempString;
-#endif /* __linux */
+#endif
 
 		ALCcontext* pContext;
 		ALCdevice* pDevice;
@@ -1419,20 +1446,20 @@ ALvoid SA_StringQueries(ALvoid)
 		printf("\nError Codes are :-\n");
 		printf("AL_NO_ERROR : '%s'\n", tempString = alGetString(AL_NO_ERROR));
 
-#ifdef __linux
+#ifdef LINUX
 		printf("AL_ILLEGAL_ENUM : '%s'\n", tempString = alGetString(AL_ILLEGAL_ENUM));
 #else
 // ***** FIXME ***** warning: Check the spec: pretty sure INVALID_ENUM changed to ILLEGAL_ENUM
 		printf("AL_INVALID_ENUM : '%s'\n", tempString = alGetString(AL_INVALID_ENUM));
-#endif /* __linux */
+#endif
 		printf("AL_INVALID_VALUE : '%s'\n", tempString = alGetString(AL_INVALID_VALUE));
 
-#ifdef __linux
+#ifdef LINUX
 		printf("AL_ILLEGAL_COMMAND: '%s'\n", tempString = alGetString(AL_ILLEGAL_COMMAND));
 #else
 // ***** FIXME ***** warning Check the spec: pretty sure INVALID_OPERATION changed to ILLEGAL_COMMAND
 		printf("AL_INVALID_OPERATION : '%s'\n", tempString = alGetString(AL_INVALID_OPERATION));
-#endif /* __linux */
+#endif
 		printf("AL_OUT_OF_MEMORY : '%s'\n", tempString = alGetString(AL_OUT_OF_MEMORY));
 		CRForNextTest();
 	}
