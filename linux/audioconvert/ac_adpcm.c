@@ -97,7 +97,7 @@ ac_adpcm_coder(short indata[], char outdata[], int len,adpcm_state_t *state) {
     int step;			/* Stepsize */
     int valpred;		/* Predicted output value */
     int vpdiff;			/* Current change to valpred */
-    int index;			/* Current step change index */
+    int ind;			/* Current step change index */
     int outputbuffer = 0;	/* place to keep previous 4-bit value */
     int bufferstep;		/* toggle between outputbuffer/output */
 
@@ -105,8 +105,8 @@ ac_adpcm_coder(short indata[], char outdata[], int len,adpcm_state_t *state) {
     inp = indata;
 
     valpred = state->valprev;
-    index = state->index;
-    step = stepsizeTable[index];
+    ind = state->index;
+    step = stepsizeTable[ind];
 
     bufferstep = 1;
 
@@ -162,10 +162,10 @@ ac_adpcm_coder(short indata[], char outdata[], int len,adpcm_state_t *state) {
 	/* Step 5 - Assemble value, update index and step values */
 	delta |= sign;
 	
-	index += indexTable[delta];
-	if ( index < 0 ) index = 0;
-	if ( index > 88 ) index = 88;
-	step = stepsizeTable[index];
+	ind += indexTable[delta];
+	if ( ind < 0 ) ind = 0;
+	if ( ind > 88 ) ind = 88;
+	step = stepsizeTable[ind];
 
 	/* Step 6 - Output value */
 	if ( bufferstep ) {
@@ -181,7 +181,7 @@ ac_adpcm_coder(short indata[], char outdata[], int len,adpcm_state_t *state) {
       *outp++ = outputbuffer;
     
     state->valprev = valpred;
-    state->index = index;
+    state->index = ind;
 }
 
 void
@@ -195,7 +195,7 @@ int position)
     int step;			/* Stepsize */
     int valpred;		/* Predicted value */
     int vpdiff;			/* Current change to valpred */
-    int index;			/* Current step change index */
+    int ind;			/* Current step change index */
     int inputbuffer = 0;	/* place to keep next 4-bit value */
     int bufferstep;		/* toggle between inputbuffer/input */
 
@@ -203,8 +203,8 @@ int position)
     inp = (signed char *)indata;
 
     valpred = state->valprev;
-    index = state->index;
-    step = stepsizeTable[index];
+    ind = state->index;
+    step = stepsizeTable[ind];
 
     inp += position>>1;
     bufferstep = position&1;
@@ -224,9 +224,9 @@ int position)
 	bufferstep = !bufferstep;
 
 	/* Step 2 - Find new index value (for later) */
-	index += indexTable[delta];
-	if ( index < 0 ) index = 0;
-	if ( index > 88 ) index = 88;
+	ind += indexTable[delta];
+	if ( ind < 0 ) ind = 0;
+	if ( ind > 88 ) ind = 88;
 
 	/* Step 3 - Separate sign and magnitude */
 	sign = delta & 8;
@@ -254,14 +254,14 @@ int position)
 	  valpred = -32768;
 
 	/* Step 6 - Update step value */
-	step = stepsizeTable[index];
+	step = stepsizeTable[ind];
 
 	/* Step 7 - Output value */
 	*outp++ = valpred;
     }
 
     state->valprev = valpred;
-    state->index = index;
+    state->index = ind;
 }
 
 int msadpcm_decode(ALubyte *encoded, ALubyte *decoded, ALuint audio_len,

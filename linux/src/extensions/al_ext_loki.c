@@ -30,6 +30,10 @@
 
 #include "arch/interface/interface_sound.h"
 
+#ifndef elementsof
+#define elementsof(a) ((sizeof(a)) / (sizeof *(a)))
+#endif
+
 static ALfloat _alcGetAudioChannel_LOKI(ALuint channel);
 static void _alcSetAudioChannel_LOKI(ALuint channel, ALfloat volume);
 
@@ -337,7 +341,19 @@ void alFiniLoki(void) {
 }
 
 /**
- * Like buffer data but supports format hint
+ *
+ * alBufferWriteData_LOKI( ALuint  bid,
+ *               ALenum  format,
+ *               ALvoid  *data,
+ *               ALsizei size,
+ *               ALsizei freq
+ *               ALenum  internalFormat )
+ *
+ * associates data with bid, with format hint
+ *
+ * If format is invalid, set AL_INVALID_ENUM.  If bid is not a valid buffer
+ * name, set AL_INVALID_NAME.  If not enough memory is available to make a
+ * copy of this data, set AL_OUT_OF_MEMORY.
  */
 void alBufferWriteData_LOKI( ALuint  bid,
 		   ALenum  format,
@@ -348,6 +364,7 @@ void alBufferWriteData_LOKI( ALuint  bid,
 	AL_buffer *buf;
 	unsigned int retsize;
 	void *cdata;
+	ALuint i;
 
 	_alLockBuffer();
 
@@ -389,6 +406,88 @@ void alBufferWriteData_LOKI( ALuint  bid,
 		return;
 	}
 
+	buf->format = internalFormat;
+
+	if(buf->size < retsize)
+	{
+		void *temp_copies[_ALC_MAX_CHANNELS] = { NULL };
+		ALboolean success = AL_TRUE;
+
+		/* don't use realloc */
+		_alBufferFreeOrigBuffers(buf);
+
+		for(i = 0; i < _al_ALCHANNELS(buf->format); i++)
+		{
+			temp_copies[i] = malloc(retsize);
+			success = (temp_copies[i] != NULL) ? AL_TRUE : AL_FALSE;
+		}
+
+		if(!success)
+		{
+			free(cdata);
+
+			for(i = 0; i < _al_ALCHANNELS(buf->format); i++)
+			{
+				free(temp_copies[i]);
+			}
+
+			/* JIV FIXME: lock context */
+			_alcDCLockContext();
+			_alDCSetError(AL_OUT_OF_MEMORY);
+			_alcDCUnlockContext();
+				  
+			_alUnlockBuffer();
+
+			return;
+		}
+
+		switch(_al_ALCHANNELS(buf->format))
+		{
+			case 1:
+			  for(i = 0; i < elementsof(buf->orig_buffers); i++)
+			  {
+				  buf->orig_buffers[i] = temp_copies[0];
+			  }
+			  
+			  break;
+			case 2:
+			  for(i = 0; i < elementsof(buf->orig_buffers); i += 2)
+			  {
+				  buf->orig_buffers[i]   = temp_copies[0];
+				  buf->orig_buffers[i+1] = temp_copies[1];				  
+			  }
+			  
+			  break;
+			case 4:
+			  assert(elementsof(buf->orig_buffers) >= 4);
+			  for(i = 0; i < elementsof(buf->orig_buffers); i += 4)
+			  {
+				  buf->orig_buffers[i]   = temp_copies[0];
+				  buf->orig_buffers[i+1] = temp_copies[1];				  
+				  buf->orig_buffers[i+2] = temp_copies[2];
+				  buf->orig_buffers[i+3] = temp_copies[3];				  
+			  }
+			case 6:
+			  assert(elementsof(buf->orig_buffers) >= 6);			  
+			  for(i = 0; i < elementsof(buf->orig_buffers); i += 6)
+			  {
+				  buf->orig_buffers[i]   = temp_copies[0];
+				  buf->orig_buffers[i+1] = temp_copies[1];
+				  buf->orig_buffers[i+2] = temp_copies[2];
+				  buf->orig_buffers[i+3] = temp_copies[3];
+				  buf->orig_buffers[i+4] = temp_copies[4];
+				  buf->orig_buffers[i+5] = temp_copies[5];				  
+			  }
+			  
+			  break;
+			default:
+			  /* well this is weird */
+			  assert(0);
+			  break;
+		}
+	}
+
+
 	_alMonoify((ALshort **) buf->orig_buffers,
 		   cdata,
 		   retsize / _al_ALCHANNELS(buf->format),
@@ -396,7 +495,7 @@ void alBufferWriteData_LOKI( ALuint  bid,
 
 	free(cdata);
 
-	buf->size          = retsize;
+	buf->size = retsize;
 
 	_alUnlockBuffer();
 

@@ -95,4 +95,65 @@ typedef struct IMA_ADPCM_decoder {
 #define	ALC_CHAN_PCM_LOKI                        0x300001
 #define	ALC_CHAN_CD_LOKI                         0x300002
 
+
+typedef void (*PFNALCSETAUDIOCHANNELPROC)(ALuint channel, ALfloat volume);
+typedef ALfloat (*PFNALCGETAUDIOCHANNELPROC)(ALuint channel);
+typedef void (*PFNALBOMBONERRORPROC)(void);
+
+typedef void (*PFNALBUFFERIPROC)(ALuint bid, ALenum param, ALint value);
+
+typedef void (*PFNALBUFFERDATAWITHCALLBACKPROC)(ALuint bid,
+		int (*Callback)(ALuint, ALuint, ALshort *, ALenum, ALint, ALint));
+
+typedef void (*PFNALBUFFERWRITEDATAPROC)( ALuint   buffer,
+                   ALenum   format,
+                   ALvoid*  data,
+                   ALsizei  size,
+                   ALsizei  freq,
+                   ALenum   internalFormat );
+
+typedef void (*PFNALGENSTREAMINGBUFFERSPROC)( ALsizei n, ALuint *samples );
+
+typedef ALsizei (*PFNALBUFFERAPPENDDATAPROC)( ALuint   buffer,
+                            ALenum   format,
+                            ALvoid*    data,
+                            ALsizei  size,
+                            ALsizei  freq );
+
+typedef ALsizei (*PFNALBUFFERAPPENDWRITEDATAPROC)( ALuint   buffer,
+                            ALenum   format,
+                            ALvoid*  data,
+                            ALsizei  size,
+                            ALsizei  freq,
+			    ALenum internalFormat );
+
+/* captures */
+
+typedef ALboolean (*PFNALCAPTUREINITPROC)( ALenum format, ALuint rate, ALsizei bufferSize );
+
+typedef ALboolean (*PFNALCAPTUREDESTROYPROC)( ALvoid );
+
+typedef ALboolean (*PFNALCAPTURESTARTPROC)( ALvoid );
+
+typedef ALboolean (*PFNALCAPTURESTOPPROC)( ALvoid );
+
+/* Non-blocking device read */
+typedef ALsizei (*PFNALCAPTUREGETDATAPROC)( ALvoid* data, ALsizei n, ALenum format, ALuint rate );
+
+/* vorbis */
+typedef  ALboolean (*PFNALUTLOADVORBISPROC)(ALuint bid, ALvoid *data, ALint size);
+
+/* custom loaders */
+typedef ALboolean (*PFNALUTLOADRAW_ADPCMDATAPROC)( ALuint bid,
+				ALvoid *data, ALuint size, ALuint freq,
+				ALenum format);
+
+typedef ALboolean (*ALUTLOADIMA_ADPCMDATAPROC)(ALuint bid,
+				ALvoid *data, ALuint size,
+				alIMAADPCM_state_LOKI *ias);
+
+typedef ALboolean (*ALUTLOADMS_ADPCMDATAPROC)(ALuint bid,
+				void *data, int size,
+				alMSADPCM_state_LOKI *mss);
+
 #endif /* _LAL_EXTTYPES_H_ */

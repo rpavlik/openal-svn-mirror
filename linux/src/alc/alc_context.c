@@ -1431,3 +1431,80 @@ ALCdevice *alcGetContextsDevice(ALCcontext *handle)
 
 	return dc;
 }
+
+
+
+
+
+const ALubyte *alcGetString( ALCdevice *dev, ALenum token )
+{
+	switch(token)
+	{
+		case ALC_DEFAULT_DEVICE_SPECIFIER:
+		  return (const ALubyte *) "'((sampling-rate 44100) (device '(native))";
+		  break;
+		case ALC_DEVICE_SPECIFIER:
+		  if(!dev)
+		  {
+			  _alcSetError(ALC_INVALID_DEVICE);
+			  return "";
+		  }
+
+		  return dev->specifier;
+		  break;
+		case ALC_EXTENSIONS:
+		  return (const ALubyte *) "";
+		  break;
+		case ALC_NO_ERROR:
+		  return (const ALubyte *) "ALC_NO_ERROR";
+		  break;
+		case ALC_INVALID_DEVICE:
+		  return (const ALubyte *) "ALC_INVALID_DEVICE";
+		  break;
+		case ALC_INVALID_CONTEXT:
+		  return (const ALubyte *) "ALC_INVALID_CONTEXT";
+		  break;
+		case ALC_INVALID_ENUM:
+		  return (const ALubyte *) "ALC_INVALID_ENUM";
+		  break;
+		case ALC_INVALID_VALUE:
+		  return (const ALubyte *) "ALC_INVALID_VALUE";
+		  break;
+		default:
+		  _alcSetError(ALC_INVALID_ENUM);
+		  break;
+	}
+
+	return (const ALubyte *) "";
+}
+
+void alcGetIntegerv( UNUSED(ALCdevice *deviceHandle), ALenum  token,
+		     ALsizei  size , ALint *dest )
+{
+	UNUSED(AL_context *cc);
+
+	if((dest == NULL) || (size == 0))
+	{
+		return;
+	}
+		
+	switch(token)
+	{
+		  /* JIV FIXME: move major/minor to header
+		     and copy attributes at context creation
+		     time
+		   */
+		case ALC_MAJOR_VERSION:
+		  *dest = 1;
+		case ALC_MINOR_VERSION:
+		  *dest = 0;
+		case ALC_ATTRIBUTES_SIZE:
+		  *dest = 1;
+		case ALC_ALL_ATTRIBUTES:
+		  *dest = 0;
+		  break;
+		default:
+		  _alcSetError(ALC_INVALID_ENUM);
+		  break;
+	}
+}

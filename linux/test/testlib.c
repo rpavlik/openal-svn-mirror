@@ -42,6 +42,7 @@ void	(*talReverbScale)(ALuint sid, ALfloat param);
 void	(*talReverbDelay)(ALuint sid, ALfloat param);
 void	(*talBombOnError)(void);
 void	(*talBufferi)(ALuint bid, ALenum param, ALint value);
+void	(*talBufferWriteData)(ALuint bid, ALenum format, ALvoid *data, ALint size, ALint freq, ALenum iFormat);
 ALuint  (*talBufferAppendData)(ALuint bid, ALenum format, ALvoid *data, ALint freq, ALint samples);
 ALuint  (*talBufferAppendWriteData)(ALuint bid, ALenum format, ALvoid *data, ALint freq, ALint samples, ALenum internalFormat);
 ALboolean (*alCaptureInit) ( ALenum format, ALuint rate, ALsizei bufferSize );
@@ -97,6 +98,14 @@ void fixup_function_pointers(void) {
 	alCaptureStart   = (ALboolean (*)( ALvoid )) GP("alCaptureStart_EXT");
 	alCaptureStop    = (ALboolean (*)( ALvoid )) GP("alCaptureStop_EXT");
 	alCaptureGetData = (ALsizei (*)( ALvoid*, ALsizei, ALenum, ALuint )) GP("alCaptureGetData_EXT");
+
+
+	talBufferWriteData = (PFNALBUFFERWRITEDATAPROC) GP("alBufferWriteData_LOKI");
+	if(talBufferWriteData == NULL)
+	{
+		fprintf( stderr, "Could not GP alBufferWriteData_LOKI\n" );
+		exit(1);
+	}
 
 	talBufferAppendData = (ALuint (*)(ALuint, ALenum, ALvoid *, ALint, ALint)) GP("alBufferAppendData_LOKI");
 	talBufferAppendWriteData = (ALuint (*)(ALuint, ALenum, ALvoid *, ALint, ALint, ALenum)) GP("alBufferAppendWriteData_LOKI");

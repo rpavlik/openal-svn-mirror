@@ -258,13 +258,3 @@ ALsizei _alcDeviceRead( ALuint cid, void *data, ALuint bytes_to_read );
 #define _alcLockAllContexts()   FL_alcLockAllContexts(__FILE__, __LINE__)
 
 #endif /* _ALC_CONTEXT_H_ */
-
-#if 0
-/*
- * _alcGetContextByIndex( ALuint cindex )
- *
- * Returns a pointer to the AL_context with index cindex, or NULL if cindex is
- * >= the number of available contexts.
- */
-AL_context *_alcGetContextByIndex( ALuint cindex );
-#endif

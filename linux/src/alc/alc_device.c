@@ -42,6 +42,7 @@ ALCdevice *alcOpenDevice( const ALubyte *deviceSpecifier ) {
 	Rcvar freq_sym = NULL;
 	Rcvar speakers = NULL;
 	UNUSED(Rcvar devices) = NULL;
+	int i;
 
 	if( num_devices == 0 ) {
 		/* first initialization */
@@ -106,6 +107,27 @@ ALCdevice *alcOpenDevice( const ALubyte *deviceSpecifier ) {
 		/* FIXME: set AL_OUT_OF_MEMORY here? */
 
 		return NULL;
+	}
+
+	/* copy specifier */
+	if(deviceSpecifier)
+	{
+		i = strlen(deviceSpecifier);
+		retval->specifier = malloc(i+1);
+		if(retval->specifier == NULL)
+		{
+			free(retval);
+			return NULL;
+		}
+
+		memcpy(retval->specifier, deviceSpecifier, i);
+		retval->specifier[i] = '\0';
+	}
+	else
+	{
+		/* JIV FIXME: maybe set to default string? */
+		retval->specifier = malloc(1);
+		retval->specifier[0] = '\0';
 	}
 
 	/* defaults */
@@ -181,6 +203,7 @@ ALCdevice *alcOpenDevice( const ALubyte *deviceSpecifier ) {
 void alcCloseDevice( ALCdevice *dev ) {
 	release_audiodevice( dev->handle );
 
+	free( dev->specifier );
 	free( dev );
 
 	num_devices--;

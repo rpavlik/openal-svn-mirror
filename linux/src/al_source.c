@@ -2895,11 +2895,11 @@ void _alSourceIncrement(AL_source *src, ALuint bytes) {
  *
  * assumes locked context
  */
-void *_alSourceGetBufptr( AL_source *src, AL_buffer *buf, ALuint index ) {
+void *_alSourceGetBufptr( AL_source *src, AL_buffer *buf, ALuint ind ) {
 	ALbyte *retval;
 	ALuint pos = src->srcParams.soundpos;
 
-	retval = buf->orig_buffers[index];
+	retval = buf->orig_buffers[ind];
 
 	return retval + pos;
 }
@@ -3056,11 +3056,11 @@ void *_alGetSourceParam(AL_source *source, ALenum param )
 			else
 			if( source->bid_queue.size > 0 )
 			{
-				int rindex = source->bid_queue.read_index;
+				int rind = source->bid_queue.read_index;
 				int size = source->bid_queue.size;
 
-				assert(rindex < size);
-				return &source->bid_queue.queue[rindex];
+				assert(rind < size);
+				return &source->bid_queue.queue[rind];
 			}
 			else
 			{

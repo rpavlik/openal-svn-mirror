@@ -60,11 +60,11 @@ static void init( const char *fname ) {
 	      break;
 	    default:
 	 	fprintf(stderr, "Using MULTICHANNEL\n");
-	      	talBufferi(boom, AL_CHANNELS, 2);
+	      	/* talBufferi(boom, AL_CHANNELS, 2); */
 	      break;
 	}
 	
-	alBufferData( boom, format, wave, size, freq );
+	talBufferWriteData( boom, format, wave, size, freq, format );
 	free(wave); /* openal makes a local copy of wave data */
 
 	alGenSources( 1, &moving_source);
@@ -84,7 +84,7 @@ static void init( const char *fname ) {
 int main( int argc, char* argv[] ) {
 	ALCdevice *dev;
 	void *ci;
-	int attrlist[] = { ALC_FREQUENCY, 22050, 0 };
+	int attrlist[] = { ALC_FREQUENCY, 44100, 0 };
 
 	dev = alcOpenDevice( NULL );
 	if( dev == NULL ) {

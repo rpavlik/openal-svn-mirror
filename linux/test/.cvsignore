@@ -1,4 +1,5 @@
 Makefile
+.gdb_history
 test
 testtypes
 testreverb

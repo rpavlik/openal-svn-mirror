@@ -270,6 +270,7 @@ typedef struct _AL_device {
 	ALuint bufsiz;
 
 	DeviceEnum flags;
+	ALubyte *specifier;
 } AL_device;
 
 typedef struct _AL_context {

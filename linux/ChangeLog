@@ -1,3 +1,62 @@
+2002-07-12  Joseph Valenzuela  <jvalenzu@formosa>
+
+	* /usr/local/cvs-repository/openal/linux/Makefile.in
+	* /usr/local/cvs-repository/openal/linux/aclocal.m4
+        * /usr/local/cvs-repository/openal/linux/autogen.sh
+	* /usr/local/cvs-repository/openal/linux/configure.in
+
+	Joseph Carter's patches to enable compilation with recent
+	versions of autoconf
+
+	* /usr/local/cvs-repository/openal/linux/audioconvert/ac_adpcm.c
+
+	Change variable names from index
+
+	* /usr/local/cvs-repository/openal/linux/include/AL/alext.h
+	* /usr/local/cvs-repository/openal/linux/include/AL/alexttypes.h
+
+	move typedefs to alexttypes.h
+
+	* /usr/local/cvs-repository/openal/linux/src/al_types.h
+	Added device specifier to device
+
+	* /usr/local/cvs-repository/openal/linux/src/al_buffer.c
+	* /usr/local/cvs-repository/openal/linux/src/al_buffer.h
+	* /usr/local/cvs-repository/openal/linux/src/extensions/al_ext_loki.c
+
+	change style of orig_buffer allocation to reduce memory.  Now
+	channels in buf->orig_buffer may be duplicated, so freeing
+	requires uniq'ing orig_buffer[0..._ALC_MAX_CHANNELS].
+	
+	* /usr/local/cvs-repository/openal/linux/src/al_main.h
+
+	H to the Izzo
+	
+	* /usr/local/cvs-repository/openal/linux/src/al_source.c
+
+	Change variable name from rindex
+
+	* /usr/local/cvs-repository/openal/linux/src/mixaudio16.c
+	Add a little sanity to MixAudio16_n
+	
+	* /usr/local/cvs-repository/openal/linux/src/alc/alc_context.c
+	* /usr/local/cvs-repository/openal/linux/src/alc/alc_context.h
+	* /usr/local/cvs-repository/openal/linux/src/alc/alc_device.c
+	Added device specifier and attribute stubs
+
+	* /usr/local/cvs-repository/openal/linux/test/.cvsignore
+
+	V to the Izza
+
+	* /usr/local/cvs-repository/openal/linux/test/testlib.c
+	* /usr/local/cvs-repository/openal/linux/test/testlib.h
+
+	Added function pointer for alBufferWriteData_LOKI
+	
+	* /usr/local/cvs-repository/openal/linux/test/testmultichannel.c
+
+	Changed testmultichannel to use alBufferWriteData_LOKI
+
 2002-05-06  Joseph I. Valenzuela  <jvalenzu@forbidden.loungenet.org>
 
 	* src/al_siteconfig.h

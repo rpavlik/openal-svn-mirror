@@ -31,6 +31,10 @@
 #include "audioconvert.h"
 #include "mutex/mutexlib.h"
 
+#ifndef elementsof
+#define elementsof(a) ((sizeof(a)) / (sizeof *(a)))
+#endif
+
 /*
  * buf_pool is a the bpool_t structure which we use to slab allocate
  * AL_buffers.
@@ -641,16 +645,82 @@ void alBufferData( ALuint  bid,
 	 */
 	_alLockBuffer();
 
-	if(buf->size < retsize) {
-		void *temp;
+	if(buf->size < retsize)
+	{
+		void *temp_copies[_ALC_MAX_CHANNELS] = { NULL };
+		ALboolean success = AL_TRUE;
 
-		for(i = 0; i < buf->num_buffers; i++) {
-			temp = realloc(buf->orig_buffers[i], retsize);
-			if(temp == NULL) {
-				/* FIXME: do something */
+		/* don't use realloc */
+		_alBufferFreeOrigBuffers(buf);
+
+		for(i = 0; i < _al_ALCHANNELS(buf->format); i++)
+		{
+			temp_copies[i] = malloc(retsize);
+			success = (temp_copies[i] != NULL) ? AL_TRUE : AL_FALSE;
+		}
+
+		if(!success)
+		{
+			free(cdata);
+
+			for(i = 0; i < _al_ALCHANNELS(buf->format); i++)
+			{
+				free(temp_copies[i]);
 			}
 
-			buf->orig_buffers[i] = temp;
+			/* JIV FIXME: lock context */
+			_alcDCLockContext();
+			_alDCSetError(AL_OUT_OF_MEMORY);
+			_alcDCUnlockContext();
+				  
+			_alUnlockBuffer();
+
+			return;
+		}
+
+		switch(_al_ALCHANNELS(buf->format))
+		{
+			case 1:
+			  for(i = 0; i < elementsof(buf->orig_buffers); i++)
+			  {
+				  buf->orig_buffers[i] = temp_copies[0];
+			  }
+			  
+			  break;
+			case 2:
+			  for(i = 0; i < elementsof(buf->orig_buffers); i += 2)
+			  {
+				  buf->orig_buffers[i]   = temp_copies[0];
+				  buf->orig_buffers[i+1] = temp_copies[1];				  
+			  }
+			  
+			  break;
+			case 4:
+			  assert(elementsof(buf->orig_buffers) >= 4);
+			  for(i = 0; i < elementsof(buf->orig_buffers); i += 4)
+			  {
+				  buf->orig_buffers[i]   = temp_copies[0];
+				  buf->orig_buffers[i+1] = temp_copies[1];				  
+				  buf->orig_buffers[i+2] = temp_copies[2];
+				  buf->orig_buffers[i+3] = temp_copies[3];				  
+			  }
+			case 6:
+			  assert(elementsof(buf->orig_buffers) >= 6);			  
+			  for(i = 0; i < elementsof(buf->orig_buffers); i += 6)
+			  {
+				  buf->orig_buffers[i]   = temp_copies[0];
+				  buf->orig_buffers[i+1] = temp_copies[1];
+				  buf->orig_buffers[i+2] = temp_copies[2];
+				  buf->orig_buffers[i+3] = temp_copies[3];
+				  buf->orig_buffers[i+4] = temp_copies[4];
+				  buf->orig_buffers[i+5] = temp_copies[5];				  
+			  }
+			  
+			  break;
+			default:
+			  /* well this is weird */
+			  assert(0);
+			  break;
 		}
 	}
 
@@ -659,7 +729,7 @@ void alBufferData( ALuint  bid,
 		   retsize / _al_ALCHANNELS(tformat),
 		   buf->num_buffers, _al_ALCHANNELS(tformat));
 
-	buf->size          = retsize / _al_ALCHANNELS(tformat);
+	buf->size = retsize / _al_ALCHANNELS(tformat);
 
 	_alUnlockBuffer();
 
@@ -811,7 +881,6 @@ void *_alBufferCanonizeData( ALenum format,
  */
 static void _alDestroyBuffer( void *bufp ) {
 	AL_buffer *buf = (AL_buffer *) bufp;
-	ALuint i;
 
 	if(_alBufferIsCallback( buf ) == AL_TRUE) {
 		/*
@@ -822,10 +891,7 @@ static void _alDestroyBuffer( void *bufp ) {
 		buf->destroy_buffer_callback = NULL;
 	}
 
-	for(i = 0; i < buf->num_buffers; i++) {
-		free( buf->orig_buffers[i] );
-		buf->orig_buffers[i] = NULL;
-	}
+	_alBufferFreeOrigBuffers(buf);
 
 	free( buf->queue_list.sids );
 	free( buf->current_list.sids );
@@ -999,7 +1065,6 @@ void _alBufferDataWithCallback_LOKI( ALuint bid,
 				     DestroyCallback_LOKI d_sid,
 				     DestroyCallback_LOKI d_bid ) {
 	AL_buffer *buf;
-	ALuint i;
 
 	_alLockBuffer();
 	buf = _alGetBuffer( bid );
@@ -1018,10 +1083,8 @@ void _alBufferDataWithCallback_LOKI( ALuint bid,
 		return;
 	}
 
-	for(i = 0; i < buf->num_buffers; i++) {
-		free( buf->orig_buffers[i] );
-		buf->orig_buffers[i] = NULL;
-	}
+	_alBufferFreeOrigBuffers(buf);
+
 
 	buf->size     = 0;
 	buf->callback = callback;
@@ -1557,6 +1620,44 @@ ALenum _alGetBufferState( AL_buffer *buffer ) {
 	}
 
 	return AL_UNUSED;
+}
+
+
+void _alBufferFreeOrigBuffers(AL_buffer *buf)
+{
+	ALuint i, j;
+	ALvoid *temp;
+
+	/* sort */
+	for(i = 0; i < elementsof(buf->orig_buffers); i++)
+	{
+		for(j = i+1; j < elementsof(buf->orig_buffers); j++)
+		{
+			if(buf->orig_buffers[i] > buf->orig_buffers[j])
+			{
+				temp = buf->orig_buffers[i];
+				buf->orig_buffers[i] = buf->orig_buffers[j];
+				buf->orig_buffers[j] = temp;
+			}
+		}
+	}
+
+	/* uniq */
+	for(i = 0; i < elementsof(buf->orig_buffers) - 1; i++)
+	{
+		if(buf->orig_buffers[i] == buf->orig_buffers[i+1])
+		{
+			buf->orig_buffers[i] = NULL;
+		}
+	}
+
+
+	/* free */
+	for(i = 0; i < elementsof(buf->orig_buffers); i++)
+	{
+		free(buf->orig_buffers[i]);
+		buf->orig_buffers[i] = NULL;
+	}
 }
 
 /* binary compatibility functions */

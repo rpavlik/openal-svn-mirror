@@ -144,6 +144,16 @@ ALboolean _alBidIsCallback( ALuint bid );
  */
 ALboolean _alBufferIsCallback( AL_buffer *buffer );
 
+
+/*
+ * _alBufferFreeOrigBuffers(AL_buffer *buf)
+ *
+ *
+ * Free the orig_buffers of buf.  Don't just use free(buf->orig_buffer[n]
+ * because there are duplicates in there.
+ */
+void _alBufferFreeOrigBuffers(AL_buffer *buf);
+
 /*
  * _alNumBufferHint( ALuint num_buffers )
  *

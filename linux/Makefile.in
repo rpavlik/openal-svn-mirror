@@ -9,7 +9,7 @@ MINOR_VERSION=@MINOR_VERSION@
 MICRO_VERSION=@MICRO_VERSION@
 VERSION=$(MAJOR_VERSION).$(MINOR_VERSION).$(MICRO_VERSION)
 
-all: configure config.h.in
+all: configure
 	cd jlib && $(MAKE) all
 	cd src  && $(MAKE) all
 	cd doc  && $(MAKE) all
@@ -61,6 +61,3 @@ configure: configure.in
 	autoconf
 	@exit 1
 
-config.h.in: acconfig.h
-	@echo "acconfig.h newer than config.h.in...Please run autogen.sh and reconfigure."
-	@exit 1

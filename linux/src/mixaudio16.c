@@ -14,6 +14,11 @@
 #include "mixaudio16.h"
 
 #include <AL/altypes.h>
+#include <string.h>
+
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+
 
 #ifdef MMX_SUPPORT
 extern void mix16_1( ALshort *dst, ALshort *src,  int len );
@@ -72,23 +77,47 @@ void MixAudio16_n( ALshort *dst, alMixEntry *entries, ALuint numents ) {
 	ALuint i;
 	int si; /* source iterator */
 	int len;
+	int maxbytes = -1;
+
+	if(numents == 0)
+	{
+		return;
+	}
 
 	len = entries[0].bytes; /* sure hope all the same */
 	len /= sizeof(ALshort);     /* len is in bytes */
+
+	for(i = 0; i < numents; i++)
+	{
+		maxbytes = MAX(entries[i].bytes, maxbytes);
+	}
+
+	memset(dst, 0, maxbytes);
 
 	si = 0;
 	while(len--) {
 		sample = *dst;
 
-		for(i = 0; i < numents; i++) {
-			sample += ((ALshort *) entries[i].data)[si];
+		for(i = 0; i < numents; i++)
+		{
+			assert(entries[i].bytes == maxbytes);
+
+			if(entries[i].bytes >= si * 2)
+			{
+				sample += ((ALshort *) entries[i].data)[si];
+			}
 		}
 
-		if(sample > max_audioval ) {
+		if(sample > max_audioval )
+		{
 			*dst = max_audioval;
-		} else if(sample < min_audioval ) {
+		}
+		else if(sample < min_audioval )
+		{
 			*dst = min_audioval;
-		} else {
+		}
+		else
+		{
 			*dst = sample;
 		}
 

@@ -7,6 +7,7 @@ extern "C" {
 
 #include "../src/al_siteconfig.h"
 #include "AL/altypes.h"
+#include "AL/alexttypes.h"
 #include "../config.h"
 
 /*
@@ -23,6 +24,9 @@ extern void	(*talReverbDelay)(ALuint sid, ALfloat param);
 extern void	(*talBombOnError)(void);
 
 extern void	(*talBufferi)(ALuint bid, ALenum param, ALint value);
+
+
+extern void	(*talBufferWriteData)(ALuint bid, ALenum format, ALvoid *data, ALint size, ALint freq, ALenum iFormat);
 
 extern ALuint  (*talBufferAppendData)(ALuint bid, ALenum format, ALvoid *data, ALint freq, ALint samples);
 extern ALuint  (*talBufferAppendWriteData)(ALuint bid, ALenum format, ALvoid *data, ALint freq, ALint samples, ALenum internalFormat);
