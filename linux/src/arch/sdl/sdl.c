@@ -117,7 +117,7 @@ void sdl_blitbuffer(UNUSED(void *handle), void *data, int bytes)  {
 	SDL_LockAudio();
 	while(writeOffset >= ringbuffersize) {
 		SDL_UnlockAudio();
-		SDL_Delay(0);
+		SDL_Delay(1);
 		SDL_LockAudio();
 	}
 
