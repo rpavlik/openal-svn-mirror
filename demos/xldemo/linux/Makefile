@@ -4,7 +4,7 @@ CXX = g++
 INCLUDE = -I/usr/local/include -I/usr/X11R6/include 
 LIBDIR  = -L/usr/local/lib -L/usr/X11R6/lib -L. 
 
-WARNFLAGS=-Wall -Werror -ansi -pedantic -pedantic-errors -Wno-unused -Wno-long-long -Wno-deprecated
+WARNFLAGS=-Wall -ansi -Wno-unused -Wno-long-long -Wno-deprecated
 COMPILERFLAGS = $(WARNFLAGS) -fPIC -DPIC -g -O2 -DLINUX
 
 CFLAGS = $(COMPILERFLAGS) $(INCLUDE)
