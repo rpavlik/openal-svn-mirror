@@ -169,31 +169,6 @@ void convert_c2pstr(char *string)
 	}
 	string[0] = length;
 }
-
-/* *****
-OSStatus FSPathMakeFSSpec(const UInt8 *path, FSSpec *spec, Boolean *isDirectory)
-{
-	OSStatus	result;
-	FSRef		ref;
-	
-	// check parameters 
-	require_action(NULL != spec, BadParameter, result = paramErr);
-	
-	// convert the POSIX path to an FSRef 
-	result = FSPathMakeRef(path, &ref, isDirectory);
-	require_noerr(result, FSPathMakeRef);
-	
-	// and then convert the FSRef to an FSSpec 
-	result = FSGetCatalogInfo(&ref, kFSCatInfoNone, NULL, NULL, spec, NULL);
-	require_noerr(result, FSGetCatalogInfo);
-	
-FSGetCatalogInfo:
-FSPathMakeRef:
-BadParameter:
-
-	return ( result );
-}
-*/
  
 ALUTAPI ALvoid ALUTAPIENTRY alutLoadWAVFile(ALbyte *file,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq)
 {
@@ -208,17 +183,32 @@ ALUTAPI ALvoid ALUTAPIENTRY alutLoadWAVFile(ALbyte *file,ALenum *format,ALvoid *
 	long numBytes;
 	int i;
 	
+#ifdef TARGET_CLASSIC
+	char filename[255];
+#endif
+	
 	*format=AL_FORMAT_MONO16;
 	*data=NULL;
 	*size=0;
 	*freq=22050;
 	
+#ifdef TARGET_CLASSIC
+	strcpy(filename, file);
+	convert_c2pstr(filename);
+
+	if (filename)
+	{		
+		if (FSMakeFSSpec(0,0,(const unsigned char *)filename,&sfFile) == 0)
+		{
+		    {
+#else
 	if (file)
 	{
-            if (FSPathMakeRef(file, &ref, NULL) == 0)
-            {
-                if (FSGetCatalogInfo(&ref, kFSCatInfoNone, NULL, NULL, &sfFile, NULL) == 0)
-		{
+        if (FSPathMakeRef(file, &ref, NULL) == 0) // under Carbon, doing this so that POSIX paths will be accepted
+        {
+            if (FSGetCatalogInfo(&ref, kFSCatInfoNone, NULL, NULL, &sfFile, NULL) == 0)
+		    {
+#endif
 		    FSpOpenDF(&sfFile, fsRdPerm, &fRefNum);
 		    
 		    numBytes = sizeof(WAVFileHdr_Struct);
@@ -297,10 +287,10 @@ ALUTAPI ALvoid ALUTAPIENTRY alutLoadWAVFile(ALbyte *file,ALenum *format,ALvoid *
 				}
 				SetFPos(fRefNum, fsFromMark, ChunkHdr.Size&1);
 				FileHdr.Size-=(((ChunkHdr.Size+1)&~1)+8);
-			}
+			    }
 			FSClose(fRefNum);
-		}
-            }
+		    }
+        }
 	}
 }
 
