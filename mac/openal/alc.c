@@ -126,7 +126,7 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(ALCubyte *deviceName)
 	// allow opening of one device
 	if (pOpenDevice == 0)
 	{
-		pOpenDevice = (ALCdevice *) 1;
+		pOpenDevice = &pOpenDevice; // put in a valid memory address
 		return pOpenDevice;
 	} else
 	{
