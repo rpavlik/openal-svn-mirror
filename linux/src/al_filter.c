@@ -86,6 +86,8 @@
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
 #define MAX(a,b) (((a) < (b)) ? (b) : (a))
 
+#define MIN_PITCH 0.25f
+
 #define USE_TPITCH_LOOKUP 1 /* icculus change here JIV FIXME */
 
 /* 
@@ -1085,7 +1087,16 @@ void alf_tdoppler( ALuint cid,
 	src->pitch.data = compute_doppler_pitch(lp, lv, sp, sv,
 				doppler_factor, doppler_velocity);
 
-	src->pitch.data = MAX(src->pitch.data, 0.01f);
+#ifdef DEBUG
+	if(src->pitch.data < MIN_PITCH)
+	{
+		_alDebug(ALD_FILTER, __FILE__, __LINE__,
+			 "Clamping src->pitch.data %f\n",
+			 src->pitch.data);
+	}
+#endif
+
+	src->pitch.data = MAX(src->pitch.data, MIN_PITCH);
 	src->pitch.data = MIN(src->pitch.data, 2.0f);
 
 	return;
@@ -1220,7 +1231,7 @@ static ALfloat compute_doppler_pitch( ALfloat *object1, ALfloat *o1_vel,
          */
         obj1V = speed + obj1V;
         obj2V = speed - obj2V;
-        ratio = obj1V/obj2V;
+        ratio = obj1V / obj2V;
 
         /* Finally, scale by the doppler factor */
 	retval = factor * ratio;
@@ -1534,7 +1545,7 @@ void alf_tpitch( UNUSED(ALuint cid),
 	 * if pitch is out of range, clamp.
 	 */
 	pitch = MIN(pitch, 2.0f);
-	pitch = MAX(pitch, 0.01);	
+	pitch = MAX(pitch, MIN_PITCH);	
 	
 	/*
 	 *  We need len in samples, not bytes.
