@@ -108,7 +108,7 @@ ALUTAPI ALvoid ALUTAPIENTRY alutInit(ALint *argc,ALbyte **argv)
 	ALCdevice *Device;
 	
 	//Open device
- 	Device=alcOpenDevice("DirectSound3D");
+ 	Device=alcOpenDevice(NULL);
 	//Create context(s)
 	Context=alcCreateContext(Device,NULL);
 	//Set active context
