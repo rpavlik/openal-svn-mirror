@@ -17,7 +17,7 @@
  *  Boston, MA  02111-1307, USA.
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
- 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>

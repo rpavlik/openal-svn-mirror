@@ -39,13 +39,13 @@ ALAPI ALvoid ALAPIENTRY alGenBuffers(ALsizei n,ALuint *buffers)
 		return;
 
 	Context = alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 
 	// Check that enough memory has been allocted in the 'buffers' array for n buffers
 	if (IsBadWritePtr((void*)buffers, n * sizeof(ALuint)))
 	{
 		alSetError(AL_INVALID_VALUE);
-		alcProcessContext(Context);
+		ProcessContext(Context);
 		return;
 	}
 
@@ -92,7 +92,7 @@ ALAPI ALvoid ALAPIENTRY alGenBuffers(ALsizei n,ALuint *buffers)
 	if (i!=n)
 		alSetError(AL_OUT_OF_MEMORY);
 
-	alcProcessContext(Context);
+	ProcessContext(Context);
 }
 
 ALAPI ALvoid ALAPIENTRY alDeleteBuffers(ALsizei n,ALuint *buffers)
@@ -106,50 +106,66 @@ ALAPI ALvoid ALAPIENTRY alDeleteBuffers(ALsizei n,ALuint *buffers)
 		return;
 
 	Context = alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 
 	if (n > BufferCount)
 	{
-		alSetError(AL_INVALID_VALUE);
-		alcProcessContext(Context);
+		alSetError(AL_INVALID_NAME);
+		ProcessContext(Context);
 		return;
+	}
+
+	// Check that all the buffers are valid and can actually be deleted
+	for (i=0;i<n;i++)
+	{
+		// Check for valid Buffer ID or NULL buffer
+		if ((!alIsBuffer(buffers[i]))&&(buffers[i]!=0))
+		{
+			alSetError(AL_INVALID_NAME);
+			ProcessContext(Context);
+			return;
+		}
+		else
+		{
+			// If not the NULL buffer, check that the reference count is 0
+			ALBuf=((ALbuffer *)buffers[i]);
+			if (ALBuf)
+			{
+				if (ALBuf->refcount != 0)
+				{
+					// Buffer still in use, cannot be deleted
+					alSetError(AL_INVALID_OPERATION);
+					ProcessContext(Context);
+					return;
+				}
+			}
+		}
 	}
 
 	for (i=0;i<n;i++)
 	{
-		if (alIsBuffer(buffers[i]))
+		ALBuf=((ALbuffer *)buffers[i]);
+		if (ALBuf)
 		{
-			ALBuf=((ALbuffer *)buffers[i]);
+			if (ALBuf->previous)
+				ALBuf->previous->next=ALBuf->next;
+			else
+				Buffer=ALBuf->next;
+			if (ALBuf->next)
+				ALBuf->next->previous=ALBuf->previous;
 
-			// Check the reference counter for the buffer 
-			if (ALBuf->refcount == 0)
-			{
-				if (ALBuf->previous)
-					ALBuf->previous->next=ALBuf->next;
-				else
-					Buffer=ALBuf->next;
-				if (ALBuf->next)
-					ALBuf->next->previous=ALBuf->previous;
+			// Release the memory used to store audio data
+			if (ALBuf->data)
+				free(ALBuf->data);
 
-				// Release the memory used to store audio data
-				if (ALBuf->data)
-					free(ALBuf->data);
-
-				// Release buffer structure
-				memset(ALBuf,0,sizeof(ALbuffer));
-				BufferCount--;
-				free(ALBuf);
-			}
-			else alSetError(AL_INVALID_OPERATION);
-		} 
-		else
-		{
-			if (buffers[i] != 0)
-				alSetError(AL_INVALID_NAME);
+			// Release buffer structure
+			memset(ALBuf,0,sizeof(ALbuffer));
+			BufferCount--;
+			free(ALBuf);
 		}
 	}
 
-	alcProcessContext(Context);
+	ProcessContext(Context);
 }
 
 ALAPI ALboolean ALAPIENTRY alIsBuffer(ALuint buffer)
@@ -160,7 +176,7 @@ ALAPI ALboolean ALAPIENTRY alIsBuffer(ALuint buffer)
 	unsigned int i;
 	
 	Context = alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 
 	ALBuf = Buffer;
 	for (i = 0; i < BufferCount; i++)
@@ -174,7 +190,7 @@ ALAPI ALboolean ALAPIENTRY alIsBuffer(ALuint buffer)
 		ALBuf = ALBuf->next;
 	}
 
-	alcProcessContext(Context);
+	ProcessContext(Context);
 	return result;
 }
 
@@ -186,7 +202,7 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,ALvoid *data,AL
 	ALsizei i;
 	
 	Context = alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 
 	if (alIsBuffer(buffer))
 	{
@@ -196,7 +212,7 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,ALvoid *data,AL
 			switch(format)
 			{
 				case AL_FORMAT_MONO8:
-					ALBuf->data=realloc(ALBuf->data,size/sizeof(ALubyte)*sizeof(ALshort));
+					ALBuf->data=realloc(ALBuf->data,1+size/sizeof(ALubyte)*sizeof(ALshort));
 					if (ALBuf->data)
 					{
 						ALBuf->format=AL_FORMAT_MONO16;
@@ -209,7 +225,7 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,ALvoid *data,AL
 						alSetError(AL_OUT_OF_MEMORY);
 					break;
 				case AL_FORMAT_MONO16:
-					ALBuf->data=realloc(ALBuf->data,size/sizeof(ALshort)*sizeof(ALshort));
+					ALBuf->data=realloc(ALBuf->data,2+size/sizeof(ALshort)*sizeof(ALshort));
 					if (ALBuf->data)
 					{
 						ALBuf->format=AL_FORMAT_MONO16;
@@ -221,7 +237,7 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,ALvoid *data,AL
 						alSetError(AL_OUT_OF_MEMORY);
 					break;
 				case AL_FORMAT_STEREO8:
-					ALBuf->data=realloc(ALBuf->data,size/sizeof(ALubyte)*sizeof(ALshort));
+					ALBuf->data=realloc(ALBuf->data,2+size/sizeof(ALubyte)*sizeof(ALshort));
 					if (ALBuf->data)
 					{
 						ALBuf->format=AL_FORMAT_STEREO16;
@@ -234,7 +250,7 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,ALvoid *data,AL
 						alSetError(AL_OUT_OF_MEMORY);
 					break;
 				case AL_FORMAT_STEREO16:
-					ALBuf->data=realloc(ALBuf->data,size/sizeof(ALshort)*sizeof(ALshort));
+					ALBuf->data=realloc(ALBuf->data,4+size/sizeof(ALshort)*sizeof(ALshort));
 					if (ALBuf->data)
 					{
 						ALBuf->format=AL_FORMAT_STEREO16;
@@ -254,7 +270,7 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,ALvoid *data,AL
 	} 
 	else alSetError(AL_INVALID_OPERATION);
 
-	alcProcessContext(Context);
+	ProcessContext(Context);
 }
 
 
@@ -264,7 +280,14 @@ ALAPI ALvoid ALAPIENTRY alGetBufferf(ALuint buffer,ALenum pname,ALfloat *value)
 	ALbuffer *ALBuf;
 
 	Context = alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
+
+	if (!value)
+	{
+		alSetError(AL_INVALID_VALUE);
+		ProcessContext(Context);
+		return;
+	}
 
 	if (alIsBuffer(buffer))
 	{
@@ -272,13 +295,14 @@ ALAPI ALvoid ALAPIENTRY alGetBufferf(ALuint buffer,ALenum pname,ALfloat *value)
 		switch(pname)
 		{
 			default:
-				alSetError(AL_INVALID_OPERATION);
+				alSetError(AL_INVALID_ENUM);
 				break;
 		}
-	} 
-	else alSetError(AL_INVALID_OPERATION);
+	}
+	else
+		alSetError(AL_INVALID_NAME);
 
-	alcProcessContext(Context);
+	ProcessContext(Context);
 }
 
 
@@ -288,11 +312,16 @@ ALAPI ALvoid ALAPIENTRY alGetBufferi(ALuint buffer,ALenum pname,ALint *value)
 	ALbuffer *ALBuf;
 
 	Context = alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 
-	if (buffer == 0)
-		*value = 0;
-	else if (alIsBuffer(buffer))
+	if (!value)
+	{
+		alSetError(AL_INVALID_VALUE);
+		ProcessContext(Context);
+		return;
+	}
+		
+	if (alIsBuffer(buffer))
 	{
 		ALBuf=((ALbuffer *)buffer);
 		switch(pname)
@@ -310,13 +339,14 @@ ALAPI ALvoid ALAPIENTRY alGetBufferi(ALuint buffer,ALenum pname,ALint *value)
 				*value=ALBuf->size;
 				break;
 			default:
-				alSetError(AL_INVALID_OPERATION);
+				alSetError(AL_INVALID_ENUM);
 				break;
 		}
 	} 
-	else alSetError(AL_INVALID_OPERATION);
+	else
+		alSetError(AL_INVALID_NAME);
 
-	alcProcessContext(Context);
+	ProcessContext(Context);
 }
 
 

@@ -86,3 +86,16 @@ typedef struct ALCdevice_struct
 
 ALCvoid alcUpdateContext(ALCcontext *context,ALuint type,ALuint name);
 ALint LinearGainToDB(float flGain);
+ALvoid SetGlobalRolloffFactor();
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+ALCvoid SuspendContext(ALCcontext *context);
+ALCvoid ProcessContext(ALCcontext *context);
+
+#ifdef __cplusplus
+}
+#endif

@@ -28,7 +28,7 @@ ALAPI ALvoid ALAPIENTRY alListenerf(ALenum pname,ALfloat value)
 	ALCcontext *Context;
 
 	Context=alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 	switch(pname) 
 	{
 		case AL_GAIN:
@@ -42,10 +42,10 @@ ALAPI ALvoid ALAPIENTRY alListenerf(ALenum pname,ALfloat value)
 				alSetError(AL_INVALID_VALUE);
 			break;
 		default:
-			alSetError(AL_INVALID_OPERATION);
+			alSetError(AL_INVALID_ENUM);
 			break;
 	}
-	alcProcessContext(Context);
+	ProcessContext(Context);
 }
 
 
@@ -54,7 +54,7 @@ ALAPI ALvoid ALAPIENTRY alListener3f(ALenum pname,ALfloat v1,ALfloat v2,ALfloat 
 	ALCcontext *Context;
 	
 	Context=alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 	switch(pname) 
 	{
 		case AL_POSITION:
@@ -72,10 +72,10 @@ ALAPI ALvoid ALAPIENTRY alListener3f(ALenum pname,ALfloat v1,ALfloat v2,ALfloat 
 			alcUpdateContext(Context, ALLISTENER, 0);
 			break;
 		default:
-			alSetError(AL_INVALID_OPERATION);
+			alSetError(AL_INVALID_ENUM);
 			break;
 	}
-	alcProcessContext(Context);
+	ProcessContext(Context);
 }
 
 
@@ -90,7 +90,7 @@ ALAPI ALvoid ALAPIENTRY alListenerfv(ALenum pname,ALfloat *values)
 	}
 
 	Context=alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 	switch(pname) 
 	{
 		case AL_POSITION:
@@ -122,10 +122,10 @@ ALAPI ALvoid ALAPIENTRY alListenerfv(ALenum pname,ALfloat *values)
 			break;
 
 		default:
-			alSetError(AL_INVALID_OPERATION);
+			alSetError(AL_INVALID_ENUM);
 			break;
 	}
-    alcProcessContext(Context);
+    ProcessContext(Context);
 }
 
 
@@ -134,14 +134,14 @@ ALAPI ALvoid ALAPIENTRY alListeneri(ALenum pname,ALint value)
 	ALCcontext *Context;
 
 	Context=alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 	switch(pname) 
 	{
 		default:
-			alSetError(AL_INVALID_OPERATION);
+			alSetError(AL_INVALID_ENUM);
 			break;
 	}
-	alcProcessContext(Context);
+	ProcessContext(Context);
 }
 
 
@@ -156,17 +156,17 @@ ALAPI ALvoid ALAPIENTRY alGetListenerf(ALenum pname,ALfloat *value)
 	}
 
 	Context=alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 	switch(pname)
 	{
 		case AL_GAIN:
 			*value = Context->Listener.Gain;
 			break;
 		default:
-			alSetError(AL_INVALID_OPERATION);
+			alSetError(AL_INVALID_ENUM);
 			break;
 	}
-	alcProcessContext(Context);
+	ProcessContext(Context);
 }
 
 
@@ -181,7 +181,7 @@ ALAPI ALvoid ALAPIENTRY alGetListener3f(ALenum pname,ALfloat *v1,ALfloat *v2,ALf
 	}
 
 	Context = alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 	switch(pname) 
 	{
 		case AL_POSITION:
@@ -195,10 +195,10 @@ ALAPI ALvoid ALAPIENTRY alGetListener3f(ALenum pname,ALfloat *v1,ALfloat *v2,ALf
 			*v3=Context->Listener.Velocity[2];
 			break;
 		default:
-			alSetError(AL_INVALID_OPERATION);
+			alSetError(AL_INVALID_ENUM);
 			break;
 	}
-	alcProcessContext(Context);
+	ProcessContext(Context);
 }
 
 
@@ -213,7 +213,7 @@ ALAPI ALvoid ALAPIENTRY alGetListenerfv(ALenum pname,ALfloat *values)
 	}
 
 	Context = alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 	switch(pname) 
 	{
 		case AL_POSITION:
@@ -236,10 +236,10 @@ ALAPI ALvoid ALAPIENTRY alGetListenerfv(ALenum pname,ALfloat *values)
 			values[2] = Context->Listener.Forward[2];
 			break;
 		default:
-			alSetError(AL_INVALID_OPERATION);
+			alSetError(AL_INVALID_ENUM);
 			break;
 	}
-	alcProcessContext(Context);
+	ProcessContext(Context);
 }
 
 
@@ -247,13 +247,19 @@ ALAPI ALvoid ALAPIENTRY alGetListeneri(ALenum pname,ALint *value)
 {
 	ALCcontext *Context;
 
+	if (!value)
+	{
+		alSetError(AL_INVALID_VALUE);
+		return;
+	}
+
 	Context=alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 	switch(pname) 
 	{
 		default:
-			alSetError(AL_INVALID_OPERATION);
+			alSetError(AL_INVALID_ENUM);
 			break;
 	}
-	alcProcessContext(Context);
+	ProcessContext(Context);
 }

@@ -67,6 +67,7 @@ ALvoid StreamingTest(ALvoid);
 ALvoid RelativeTest(ALvoid);
 ALvoid CreationDeletionTest(ALvoid);
 ALvoid MultipleSourcesTest(ALvoid);
+ALvoid SourceRollOffTest(ALvoid);
 
 /*
 	Display AL Error message
@@ -115,11 +116,25 @@ int main(int argc, char* argv[])
 
 	//Create context(s)
 	Context=alcCreateContext(Device,NULL);
+
+	if (Context == NULL)
+	{
+		printf("Failed to initialize Open AL\n");
+		exit(-1);
+	}
+
 	//Set active context
 	alcMakeContextCurrent(Context);
 
-	// Clear Error Code
+	if (alcGetError(Device) != ALC_NO_ERROR)
+	{
+		printf("Failed to initialize Open AL\n");
+		exit(-1);
+	}
+
+	// Clear Error Codes
 	alGetError();
+	alcGetError(Device);
 
 	// Set Listener attributes
 
@@ -402,6 +417,7 @@ int main(int argc, char* argv[])
 		printf("A Source Relative Test\n");
 		printf("B Generate / Delete Sources Test\n");
 		printf("C Multiple Sources Test\n");
+		printf("D Source Roll-off Test\n");
 		printf("Q to quit\n\n\n");
 
 		ch = _getch();
@@ -447,6 +463,9 @@ int main(int argc, char* argv[])
 				break;
 			case 'C':
 				MultipleSourcesTest();
+				break;
+			case 'D':
+				SourceRollOffTest();
 				break;
 			default:
 				break;
@@ -645,7 +664,7 @@ ALvoid PositionTest(ALvoid)
 	if ((error = alGetError()) != AL_NO_ERROR)
 		DisplayALError("alSourcei 1 AL_BUFFER buffer 1 : \n", error);
 
-	alSourcei(source[1],AL_LOOPING,AL_TRUE);
+	alSourcei(source[1],AL_LOOPING,AL_FALSE);
 	if ((error = alGetError()) != AL_NO_ERROR)
 		DisplayALError("alSourcei 1 AL_LOOPING false: \n", error);
 
@@ -1814,7 +1833,7 @@ ALvoid GainTest(ALvoid)
 	return;
 }
 
-#define BSIZE 20000
+#define BSIZE		(4608*2)
 #define NUMBUFFERS	4
 
 /*
@@ -1838,6 +1857,7 @@ ALvoid StreamingTest(ALvoid)
 	ALboolean		bFinished = AL_FALSE;
 	ALuint			Format;
 	ALuint			loop;
+	ALint			i, state;
 
 	printf("Streaming Test\n");
 
@@ -1934,11 +1954,7 @@ ALvoid StreamingTest(ALvoid)
 			
 			curtime = timeGetTime() - starttime;
 			printf("Time is %d ... Buffers Completed is %d   \n", curtime, buffersreturned);
-			if ((curtime < 2700) && (buffersreturned == 12))
-			{
-				exit(-1);
-			}
-
+	
 			// Pseudo code for Streaming with Open AL
 			// while (processed)
 			//		Unqueue a buffer
@@ -1997,6 +2013,63 @@ ALvoid StreamingTest(ALvoid)
 					}
 				}
 			}
+		}
+
+		// Get state
+		alGetSourcei(Sources[0], AL_SOURCE_STATE, &state);
+		if (state != AL_PLAYING)
+		{
+			printf("Buffer stopped .. need to restart it\n\n\n");
+
+			// Unqueue all buffers
+			alGetSourcei(Sources[0], AL_BUFFERS_PROCESSED, &processed);
+
+			printf("Source stopped, unqueuing %d buffers\n", processed);
+
+			for (i = 0; i < processed; i++)
+			{
+				alSourceUnqueueBuffers(Sources[0], 1, &BufferID);
+
+				if (!bFinished)
+				{
+					DataToRead = (DataSize > BSIZE) ? BSIZE : DataSize;
+
+					if (DataToRead == DataSize)
+						bFinished = AL_TRUE;
+					
+					fread(data, 1, DataToRead, fp);
+					DataSize -= DataToRead;
+					
+					if (bFinished == AL_TRUE)
+					{
+						memset(data + DataToRead, 0, BSIZE - DataToRead);
+					}
+
+					alBufferData(BufferID, Format, data, BSIZE, wave.SamplesPerSec);
+					if ((error = alGetError()) != AL_NO_ERROR)
+						DisplayALError("alBufferData : ", error);
+
+					// Queue buffer
+					alSourceQueueBuffers(Sources[0], 1, &BufferID);
+					if ((error = alGetError()) != AL_NO_ERROR)
+						DisplayALError("alSourceQueueBuffers 1 : ", error);
+
+					processed--;
+				}
+				else
+				{
+					buffersinqueue--;
+					processed--;
+
+					if (buffersinqueue == 0)
+					{
+						bFinishedPlaying = true;
+						break;
+					}
+				}
+			}
+			// Restart playback
+			alSourcePlay(Sources[0]);
 		}
 	}
 
@@ -2128,7 +2201,7 @@ ALvoid RelativeTest(ALvoid)
 }
 
 /*
-	Test that Source can be Generated and Deleted willy-nilly !
+	Test that Source can be Generated and Deleted
 */
 ALvoid CreationDeletionTest(ALvoid)
 {
@@ -2202,6 +2275,7 @@ ALvoid MultipleSourcesTest()
 {
 	ALuint	numSources = 0;
 	ALuint	Sources[64] = { 0 };
+	ALuint	SourceStopped[64] = { 0 };
 	ALint	error;
 	ALuint	i;
 	char	ch;
@@ -2274,4 +2348,130 @@ ALvoid MultipleSourcesTest()
 
 	// Delete the Sources
 	alDeleteSources(numSources, Sources);
+}
+
+ALvoid SourceRollOffTest()
+{
+	ALint	error;
+	
+	ALuint	source[2];
+	ALbyte	ch;
+
+	ALfloat source0Pos[]={ -10.0, 0.0, 10.0};	// Behind and to the left of the listener
+	ALfloat source1Pos[]={ 10.0, 0.0, -10.0};	// Front and to the right of the listener
+
+	alGenSources(2,source);
+	if ((error = alGetError()) != AL_NO_ERROR)
+	{
+		DisplayALError("alGenSources 2 : ", error);
+		return;
+	}
+
+	alSourcefv(source[0],AL_POSITION,source0Pos);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alSourcefv 0 AL_POSITION : \n", error);
+	
+	alSourcei(source[0],AL_BUFFER, g_Buffers[1]);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alSourcei 0 AL_BUFFER buffer 0 : \n", error);
+
+	alSourcei(source[0],AL_LOOPING,AL_TRUE);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alSourcei 0 AL_LOOPING true: \n", error);
+
+	alSourcefv(source[1],AL_POSITION,source1Pos);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alSourcefv 1 AL_POSITION : \n", error);
+
+	alSourcei(source[1],AL_BUFFER, g_Buffers[1]);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alSourcei 1 AL_BUFFER buffer 1 : \n", error);
+
+	alSourcei(source[1],AL_LOOPING,AL_TRUE);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alSourcei 1 AL_LOOPING false: \n", error);
+
+	printf("Source Roll-off Test\n");
+	printf("Press '1' to play source 0 rear left of listener\n");
+	printf("Press '2' to stop source 0\n");
+	printf("Press '3' to play source 1 front right of listener\n");
+	printf("Press '4' to stop source 1\n");
+	printf("Press '5' to set Source 0 Roff-off Factor to 0.5\n");
+	printf("Press '6' to set Source 0 Roll-off Factor to 1.0\n");
+	printf("Press '7' to set Source 0 Roll-off Factor to 2.0\n");
+	printf("Press '8' to set Source 1 Roff-off Factor to 0.5\n");
+	printf("Press '9' to set Source 1 Roll-off Factor to 1.0\n");
+	printf("Press 'A' to set Source 1 Roll-off Factor to 2.0\n");
+
+	printf("Press 'q' to quit\n");
+
+	do
+	{
+		ch = _getch();
+		ch = toupper( ch );
+		switch (ch)
+		{
+			case '1':
+				alSourcePlay(source[0]);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError("alSourcePlay source 0 : ", error);
+				break;
+			case '2':
+				alSourceStop(source[0]);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError("alSourceStop source 0 : ", error);
+				break;
+			case '3':
+				alSourcePlay(source[1]);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError("alSourcePlay source 1 : ", error);
+				break;
+			case '4':
+				alSourceStop(source[1]);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError("alSourceStop source 1 : ", error);
+				break;
+			case '5':
+				alSourcef(source[0], AL_ROLLOFF_FACTOR, 0.5f);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError("alSourcef ROLLOFF_FACTOR 0.5 : ", error);
+				break;
+			case '6':
+				alSourcef(source[0], AL_ROLLOFF_FACTOR, 1.0f);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError("alSourcef ROLLOFF_FACTOR 1.0 : ", error);
+				break;
+			case '7':
+				alSourcef(source[0], AL_ROLLOFF_FACTOR, 2.0f);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError("alSourcef ROLLOFF_FACTOR 2.0 : ", error);
+				break;
+			case '8':
+				alSourcef(source[1], AL_ROLLOFF_FACTOR, 0.5f);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError("alSourcef ROLLOFF_FACTOR 0.5 : ", error);
+				break;
+			case '9':
+				alSourcef(source[1], AL_ROLLOFF_FACTOR, 1.0f);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError("alSourcef ROLLOFF_FACTOR 1.0 : ", error);
+				break;
+			case 'A':
+				alSourcef(source[1], AL_ROLLOFF_FACTOR, 2.0f);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError("alSourcef ROLLOFF_FACTOR 2.0 : ", error);
+				break;
+		}
+	} while (ch != 'Q');
+
+	// Release resources
+	alSourceStopv(2, source);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alSourceStopv 2 : ", error);
+
+	alDeleteSources(2, source);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alDeleteSources 2 : ", error);
+
+	return;
 }

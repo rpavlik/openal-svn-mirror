@@ -26,7 +26,6 @@ typedef struct ALbuffer_struct
 	ALuint		refcount;		// Number of sources using this buffer (deletion can only occur when this is 0)
 	struct ALbuffer_struct *previous;
 	struct ALbuffer_struct *next;
-	//Add mutex per buffer !!
 } ALbuffer;
 
 ALAPI ALvoid	ALAPIENTRY alGenBuffers(ALsizei n,ALuint *buffers);

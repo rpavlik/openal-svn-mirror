@@ -42,14 +42,14 @@ ALAPI ALvoid ALAPIENTRY alEnable(ALenum capability)
 	ALCcontext *Context;
 
 	Context=alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 	switch (capability)
 	{
 		default:
 			alSetError(AL_INVALID_ENUM);
 			break;
 	}
-	alcProcessContext(Context);
+	ProcessContext(Context);
 }
 
 ALAPI ALvoid ALAPIENTRY alDisable(ALenum capability)
@@ -57,14 +57,14 @@ ALAPI ALvoid ALAPIENTRY alDisable(ALenum capability)
 	ALCcontext *Context;
 
 	Context=alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 	switch (capability)
 	{
 		default:
 			alSetError(AL_INVALID_ENUM);
 			break;
 	}
-	alcProcessContext(Context);
+	ProcessContext(Context);
 }
 
 ALAPI ALboolean ALAPIENTRY alIsEnabled(ALenum capability)
@@ -73,14 +73,14 @@ ALAPI ALboolean ALAPIENTRY alIsEnabled(ALenum capability)
 	ALboolean value=AL_FALSE;
 
 	Context=alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 	switch (capability)
 	{
 		default:
 			alSetError(AL_INVALID_ENUM);
 			break;
 	}
-	alcProcessContext(Context);
+	ProcessContext(Context);
 	return value;
 }
 
@@ -90,7 +90,7 @@ ALAPI ALboolean ALAPIENTRY alGetBoolean(ALenum pname)
 	ALboolean value=AL_FALSE;
 
 	Context=alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 	switch (pname)
 	{
 		case AL_DOPPLER_FACTOR:
@@ -109,7 +109,7 @@ ALAPI ALboolean ALAPIENTRY alGetBoolean(ALenum pname)
 			alSetError(AL_INVALID_ENUM);
 			break;
 	}
-	alcProcessContext(Context);
+	ProcessContext(Context);
 	return value;
 }
 
@@ -119,7 +119,7 @@ ALAPI ALdouble ALAPIENTRY alGetDouble(ALenum pname)
 	ALdouble value = 0.0;
 
 	Context=alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 
 	switch (pname)
 	{
@@ -136,7 +136,7 @@ ALAPI ALdouble ALAPIENTRY alGetDouble(ALenum pname)
 			alSetError(AL_INVALID_ENUM);
 			break;
 	}
-	alcProcessContext(Context);
+	ProcessContext(Context);
 	return value;
 }
 
@@ -146,7 +146,7 @@ ALAPI ALfloat ALAPIENTRY alGetFloat(ALenum pname)
 	ALfloat value = 0.0f;
 
 	Context=alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 	switch (pname)
 	{
 		case AL_DOPPLER_FACTOR:
@@ -162,7 +162,7 @@ ALAPI ALfloat ALAPIENTRY alGetFloat(ALenum pname)
 			alSetError(AL_INVALID_ENUM);
 			break;
 	}
-	alcProcessContext(Context);
+	ProcessContext(Context);
 	return value;
 }
 
@@ -172,7 +172,7 @@ ALAPI ALint ALAPIENTRY alGetInteger(ALenum pname)
 	ALint value = 0;
 
 	Context=alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 	switch (pname)
 	{
 		case AL_DOPPLER_FACTOR:
@@ -188,7 +188,7 @@ ALAPI ALint ALAPIENTRY alGetInteger(ALenum pname)
 			alSetError(AL_INVALID_ENUM);
 			break;
 	}
-	alcProcessContext(Context);
+	ProcessContext(Context);
 	return value;
 }
 
@@ -197,16 +197,15 @@ ALAPI ALvoid ALAPIENTRY alGetBooleanv(ALenum pname,ALboolean *data)
 	ALCcontext *Context;
 	
 	Context=alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 	
 	if (!data)
 	{
 		alSetError(AL_INVALID_VALUE);
-		alcProcessContext(Context);
+		ProcessContext(Context);
 		return;
 	}
 
-	*data = AL_FALSE;
 	switch (pname)
 	{
 		case AL_DOPPLER_FACTOR:
@@ -225,7 +224,7 @@ ALAPI ALvoid ALAPIENTRY alGetBooleanv(ALenum pname,ALboolean *data)
 			alSetError(AL_INVALID_ENUM);
 			break;
 	}
-	alcProcessContext(Context);
+	ProcessContext(Context);
 }
 
 ALAPI ALvoid ALAPIENTRY alGetDoublev(ALenum pname,ALdouble *data)
@@ -233,16 +232,15 @@ ALAPI ALvoid ALAPIENTRY alGetDoublev(ALenum pname,ALdouble *data)
 	ALCcontext *Context;
 
 	Context=alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 
 	if (!data)
 	{
 		alSetError(AL_INVALID_VALUE);
-		alcProcessContext(Context);
+		ProcessContext(Context);
 		return;
 	}
 
-	*data = 0.0;
 	switch (pname)
 	{
 		case AL_DOPPLER_FACTOR:
@@ -258,7 +256,7 @@ ALAPI ALvoid ALAPIENTRY alGetDoublev(ALenum pname,ALdouble *data)
 			alSetError(AL_INVALID_ENUM);
 			break;
 	}
-	alcProcessContext(Context);
+	ProcessContext(Context);
 }
 
 ALAPI ALvoid ALAPIENTRY alGetFloatv(ALenum pname,ALfloat *data)
@@ -266,16 +264,15 @@ ALAPI ALvoid ALAPIENTRY alGetFloatv(ALenum pname,ALfloat *data)
 	ALCcontext *Context;
 
 	Context=alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 
 	if (!data)
 	{
 		alSetError(AL_INVALID_VALUE);
-		alcProcessContext(Context);
+		ProcessContext(Context);
 		return;
 	}
 
-	*data = 0.0f;
 	switch (pname)
 	{
 		case AL_DOPPLER_FACTOR:
@@ -291,7 +288,7 @@ ALAPI ALvoid ALAPIENTRY alGetFloatv(ALenum pname,ALfloat *data)
 			alSetError(AL_INVALID_ENUM);
 			break;
 	}
-	alcProcessContext(Context);
+	ProcessContext(Context);
 }
 
 ALAPI ALvoid ALAPIENTRY alGetIntegerv(ALenum pname,ALint *data)
@@ -299,16 +296,15 @@ ALAPI ALvoid ALAPIENTRY alGetIntegerv(ALenum pname,ALint *data)
 	ALCcontext *Context;
 
 	Context=alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 
 	if (!data)
 	{
 		alSetError(AL_INVALID_VALUE);
-		alcProcessContext(Context);
+		ProcessContext(Context);
 		return;
 	}
 
-	*data = 0;
 	switch (pname)
 	{
 		case AL_DOPPLER_FACTOR:
@@ -324,7 +320,7 @@ ALAPI ALvoid ALAPIENTRY alGetIntegerv(ALenum pname,ALint *data)
 			alSetError(AL_INVALID_ENUM);
 			break;
 	}
-	alcProcessContext(Context);
+	ProcessContext(Context);
 }
 
 ALAPI ALubyte * ALAPIENTRY alGetString(ALenum pname)
@@ -333,7 +329,7 @@ ALAPI ALubyte * ALAPIENTRY alGetString(ALenum pname)
 	ALubyte *value;
 
 	Context=alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 	switch(pname)
 	{
 		case AL_VENDOR:
@@ -370,7 +366,7 @@ ALAPI ALubyte * ALAPIENTRY alGetString(ALenum pname)
 			alSetError(AL_INVALID_ENUM);
 			break;
 	}
-	alcProcessContext(Context);
+	ProcessContext(Context);
 	return value;
 }
 
@@ -379,7 +375,7 @@ ALAPI ALvoid ALAPIENTRY alDopplerFactor(ALfloat value)
 	ALCcontext *Context;
 
 	Context=alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 	if (value>=0.0f)
 	{
 		Context->DopplerFactor=value;
@@ -388,7 +384,7 @@ ALAPI ALvoid ALAPIENTRY alDopplerFactor(ALfloat value)
 	}
 	else
 		alSetError(AL_INVALID_VALUE);
-	alcProcessContext(Context);
+	ProcessContext(Context);
 }
 
 ALAPI ALvoid ALAPIENTRY alDopplerVelocity(ALfloat value)
@@ -396,7 +392,7 @@ ALAPI ALvoid ALAPIENTRY alDopplerVelocity(ALfloat value)
 	ALCcontext *Context;
 
 	Context=alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 	if (value>0.0f)
 	{
 		Context->DopplerVelocity=value;
@@ -405,7 +401,7 @@ ALAPI ALvoid ALAPIENTRY alDopplerVelocity(ALfloat value)
 	}
 	else
 		alSetError(AL_INVALID_VALUE);
-	alcProcessContext(Context);
+	ProcessContext(Context);
 }
 
 ALAPI ALvoid ALAPIENTRY alDistanceModel(ALenum value)
@@ -413,7 +409,7 @@ ALAPI ALvoid ALAPIENTRY alDistanceModel(ALenum value)
 	ALCcontext *Context;
 
 	Context=alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 	switch (value)
 	{
 		case AL_NONE:
@@ -427,5 +423,5 @@ ALAPI ALvoid ALAPIENTRY alDistanceModel(ALenum value)
 			alSetError(AL_INVALID_VALUE);
 			break;
 	}
-	alcProcessContext(Context);
+	ProcessContext(Context);
 }

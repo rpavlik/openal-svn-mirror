@@ -87,7 +87,7 @@ LINK32=link.exe
 # SUBTRACT LINK32 /pdb:none
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
-PostBuild_Cmds=copy  debug\openal32.dll  ..\openALDemo\debug
+PostBuild_Cmds=copy  debug\openal32.dll  ..\openALDemo\debug	copy debug\openal32.dll e:\sdk\eax30extensions\exe
 # End Special Build Tool
 
 !ENDIF 

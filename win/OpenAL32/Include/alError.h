@@ -11,7 +11,7 @@ extern "C" {
 #endif
 
 ALAPI ALenum	ALAPIENTRY alGetError(ALvoid);
-ALAPI ALvoid	ALAPIENTRY alSetError(ALenum errorCode);
+ALvoid alSetError(ALenum errorCode);
 
 #ifdef __cplusplus
 }

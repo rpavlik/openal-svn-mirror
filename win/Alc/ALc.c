@@ -28,10 +28,13 @@
 #include "al\alu.h"
 #include "OpenAL32\include\alBuffer.h"
 
+#ifdef _DEBUG
 #include <stdio.h>
-#include <assert.h>
+#endif
 
 #define SPEEDOFSOUNDMETRESPERSEC	(343.3f)
+
+#define MAX_NUM_SOURCES			64
 
 typedef struct ALCextension_struct
 {
@@ -87,12 +90,14 @@ DWORD WINAPI ThreadProc(LPVOID lpParameter);
 void UpdateSource(ALCcontext *ALContext, ALsource *ALSource);
 void UpdateListener(ALCcontext *ALContext);
 
-// Call to update a particular Source
-void ProcessSource(ALCcontext *ALContext, ALsource *ALSource);
+// Local function definitions
+ALuint GetMaxNumStereoBuffers(LPDIRECTSOUND lpDS);
+ALuint GetMaxNum3DMonoBuffers(LPDIRECTSOUND lpDS);
 
+#define		TIMERINTERVAL	50	// was 100
+	
 ALuint		g_nTimerInterval;
 ALuint		g_nTimerID;
-
 
 ALCboolean alcIsContext(ALCcontext *context)
 {
@@ -110,17 +115,30 @@ ALCboolean alcIsContext(ALCcontext *context)
 	return AL_FALSE;
 }
 
-ALCAPI ALCvoid ALCAPIENTRY alcSuspendContext(ALCcontext *context)
+// Private, internal functions for Thread-safe behaviour
+ALCvoid SuspendContext(ALCcontext *context)
 {
 	EnterCriticalSection(&g_mutex);
 }
 
-ALCAPI ALCvoid ALCAPIENTRY alcProcessContext(ALCcontext *context)
+ALCvoid ProcessContext(ALCcontext *context)
 {
 	LeaveCriticalSection(&g_mutex);
 }
 
-ALCAPI ALCenum ALCAPIENTRY alcGetError(ALCdevice *device)
+
+ALCAPI ALCvoid ALCAPIENTRY alcSuspendContext(ALCcontext *context)
+{
+	// Not a lot happens here !
+}
+
+ALCAPI ALCvoid ALCAPIENTRY alcProcessContext(ALCcontext *context)
+{
+	// Not a lot happens here !
+}
+
+
+ALCenum alcGetError(ALCdevice *device)
 {
 	ALCenum errorCode;
 
@@ -129,7 +147,7 @@ ALCAPI ALCenum ALCAPIENTRY alcGetError(ALCdevice *device)
 	return errorCode;
 }
 
-ALCAPI ALCvoid ALCAPIENTRY alcSetError(ALenum errorCode)
+ALCvoid alcSetError(ALenum errorCode)
 {
 	LastError=errorCode;
 }
@@ -140,7 +158,7 @@ ALCAPI ALCubyte* ALCAPIENTRY alcGetString(ALCdevice *device,ALCenum param)
 	ALubyte *value = NULL;
 
 	Context=alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 	switch(param)
 	{
 		case ALC_NO_ERROR:
@@ -160,24 +178,25 @@ ALCAPI ALCubyte* ALCAPIENTRY alcGetString(ALCdevice *device,ALCenum param)
 			break;
 		case ALC_DEFAULT_DEVICE_SPECIFIER:
 			value = alcDefaultDeviceSpecifier;
+			break;
 		case ALC_DEVICE_SPECIFIER:
 			if (!device)
 				alcSetError(ALC_INVALID_DEVICE);
 			else
 				value = device->szDeviceName;
+			break;
 		case ALC_EXTENSIONS:
 			value = alcExtensionList;
+			break;
 		default:
 			alcSetError(ALC_INVALID_ENUM);
 			break;
 	}
-	alcProcessContext(Context);
+	ProcessContext(Context);
 	return value;
 }
 
 
-/*
-*/
 ALCAPI ALCvoid ALCAPIENTRY alcGetIntegerv(ALCdevice *device,ALCenum param,ALCsizei size,ALCint *data)
 {
 	ALCcontext *Context;
@@ -186,7 +205,7 @@ ALCAPI ALCvoid ALCAPIENTRY alcGetIntegerv(ALCdevice *device,ALCenum param,ALCsiz
 		return;
 
 	Context=alcGetCurrentContext();
-	alcSuspendContext(Context);
+	SuspendContext(Context);
 	switch (param)
 	{
 		case ALC_MAJOR_VERSION:
@@ -227,7 +246,7 @@ ALCAPI ALCvoid ALCAPIENTRY alcGetIntegerv(ALCdevice *device,ALCenum param,ALCsiz
 			alcSetError(ALC_INVALID_ENUM);
 			break;
 	}
-	alcProcessContext(Context);
+	ProcessContext(Context);
 }
 
 
@@ -269,6 +288,9 @@ static void CALLBACK alcDirectSoundProc(UINT uID,UINT uReserved,DWORD dwUser,DWO
 	DWORD BytesPlayed;
 	HRESULT DSRes;
 
+	ALContext=alcGetCurrentContext();
+	SuspendContext(ALContext);
+
 	ALDevice=(ALCdevice *)dwUser;
 	IDirectSoundBuffer_GetCurrentPosition(ALDevice->DSsbuffer,&PlayCursor,&WriteCursor);
 	if (!OldWriteCursor) OldWriteCursor=WriteCursor-PlayCursor;
@@ -282,15 +304,12 @@ static void CALLBACK alcDirectSoundProc(UINT uID,UINT uReserved,DWORD dwUser,DWO
 	}
 	if (DSRes==DS_OK)
 	{
-		ALContext=alcGetCurrentContext();
 		if (ALContext)
 		{
-			alcSuspendContext(ALContext);
 			if (WritePtr1)
 				aluMixData(ALContext,WritePtr1,WriteCnt1,ALContext->Format);
 			if (WritePtr2)
 				aluMixData(ALContext,WritePtr2,WriteCnt2,ALContext->Format);
-			alcProcessContext(ALContext);
 		}
 		else 
 		{
@@ -302,16 +321,18 @@ static void CALLBACK alcDirectSoundProc(UINT uID,UINT uReserved,DWORD dwUser,DWO
 		IDirectSoundBuffer_Unlock(ALDevice->DSsbuffer,WritePtr1,WriteCnt1,WritePtr2,WriteCnt2);
 	}
 	OldWriteCursor=WriteCursor;
+
+	ProcessContext(ALContext);
 }
 
-ALCAPI ALvoid ALCAPIENTRY alcInitContext(ALCcontext *context)
+ALvoid alcInitContext(ALCcontext *context)
 {
 	TIMECAPS timeCaps;
 
 	if (context)
 	{
 		//Lock context
-		alcSuspendContext(context);
+		SuspendContext(context);
 		//Initialise listener
 		context->Listener.Gain=1.0f;
 		context->Listener.Position[0]=0.0f;
@@ -344,13 +365,13 @@ ALCAPI ALvoid ALCAPIENTRY alcInitContext(ALCcontext *context)
 		context->Listener.update1 = LPOSITION | LVELOCITY | LORIENTATION | LDOPPLERFACTOR | LDOPPLERVELOCITY | LDISTANCEMODEL;
 		alcUpdateContext(context, ALLISTENER, 0);
 
-		g_nTimerInterval = 100;
+		g_nTimerInterval = TIMERINTERVAL;
 		g_nTimerID = 0;
 
 		// Get the Timer Capabilities of the system
 		timeGetDevCaps(&timeCaps, sizeof(TIMECAPS));
 
-		// We want 100ms accuracy, if this is not possible, then just go with the best that we have
+		// If desired accuracy is not available, then just go with the best that we have
 		if (timeCaps.wPeriodMin > g_nTimerInterval)
 			g_nTimerInterval = timeCaps.wPeriodMin;
 
@@ -358,11 +379,11 @@ ALCAPI ALvoid ALCAPIENTRY alcInitContext(ALCcontext *context)
 		timeBeginPeriod(g_nTimerInterval);
 			
 		//Unlock context
-		alcProcessContext(context);
+		ProcessContext(context);
 	}
 }
 
-ALCAPI ALCvoid ALCAPIENTRY alcExitContext(ALCcontext *context)
+ALCvoid alcExitContext(ALCcontext *context)
 {
 	unsigned int i;
 	ALsource *ALSource;
@@ -374,7 +395,7 @@ ALCAPI ALCvoid ALCAPIENTRY alcExitContext(ALCcontext *context)
 	if (alcIsContext(context))
 	{
 		//Lock context
-		alcSuspendContext(context);
+		SuspendContext(context);
 
 		// Stop the multimedia timer
 		if (g_nTimerID != 0)
@@ -424,7 +445,7 @@ ALCAPI ALCvoid ALCAPIENTRY alcExitContext(ALCcontext *context)
 		context->Valid=AL_TRUE;
 
 		//Unlock context
-		alcProcessContext(context);
+		ProcessContext(context);
 	}
 	else
 		alcSetError(ALC_INVALID_CONTEXT);
@@ -485,7 +506,7 @@ ALCAPI ALCvoid ALCAPIENTRY alcDestroyContext(ALCcontext *context)
 	if (alcIsContext(context))
 	{
 		// Lock context
-		alcSuspendContext(context);
+		SuspendContext(context);
 		ALContext=((ALCcontext *)context);
 		alcExitContext(ALContext);
 		if (ALContext->previous)
@@ -497,7 +518,7 @@ ALCAPI ALCvoid ALCAPIENTRY alcDestroyContext(ALCcontext *context)
 		memset(ALContext,0,sizeof(ALCcontext));
 		ContextCount--;
 		// Unlock context
-		alcProcessContext(context);
+		ProcessContext(context);
 		// Free memory (MUST do this after ProcessContext)
 		free(ALContext);
 	}
@@ -524,9 +545,9 @@ ALCAPI ALCdevice* ALCAPIENTRY alcGetContextsDevice(ALCcontext *context)
 	ALContext=context;
 	if (alcIsContext(ALContext))
 	{
-		alcSuspendContext(ALContext);
+		SuspendContext(ALContext);
 		ALDevice=ALContext->Device;
-		alcProcessContext(ALContext);
+		ProcessContext(ALContext);
 	}
 	else
 		alcSetError(ALC_INVALID_CONTEXT);
@@ -547,16 +568,16 @@ ALCAPI ALCboolean ALCAPIENTRY alcMakeContextCurrent(ALCcontext *context)
 
 	if (ALContext=alcGetCurrentContext())
 	{
-		alcSuspendContext(ALContext);
+		SuspendContext(ALContext);
 		ALContext->InUse=AL_FALSE;
-		alcProcessContext(ALContext);
+		ProcessContext(ALContext);
 	}
 
 	if ((ALContext=context) && (ALContext->Device))
 	{
-		alcSuspendContext(ALContext);
+		SuspendContext(ALContext);
 		ALContext->InUse=AL_TRUE;
-		alcProcessContext(ALContext);
+		ProcessContext(ALContext);
 	}
 	
 	return AL_TRUE;
@@ -572,6 +593,8 @@ void CALLBACK TimerCallback(UINT uID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD 
 	ALuint Data, BytesWritten, DataLeft;
 	ALuint DataPlayed, DataCount;
 	ALuint BytesPlayed, BufferSize;
+	ALuint NewTime;
+	ALint  BytesPlayedSinceLastTimer;
 	ALvoid *lpPart1, *lpPart2;
 	ALsource *ALSource;
 	ALuint BuffersToSkip;
@@ -580,41 +603,97 @@ void CALLBACK TimerCallback(UINT uID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD 
 
 	ALContext = (ALCcontext*)dwUser;
 
-	alcSuspendContext(ALContext);
-	
+	SuspendContext(ALContext);
+
 	ALSource = ALContext->Source;
 
 	// Process each playing source
 	for (loop=0;loop < ALContext->SourceCount;loop++)
 	{
-		if (alIsSource((ALuint)ALSource) && (ALSource->state == AL_PLAYING))
+		if (ALSource->DSBufferPlaying)
 		{
-			// Valid playing source
-
 			// Get position in DS Buffer
 			IDirectSoundBuffer_GetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, &PlayCursor, &WriteCursor);
+
+			// Get current time
+			// if time elapsed > duration of circular buffer
+			//	 bytesplayed += 88200
+			//   oldwritecursor = writecursor
+			// oldtime = current time
+
+			NewTime = timeGetTime();
+
+			if ((NewTime - ALSource->OldTime) > ALSource->BufferDuration)
+			{
+				// Buffer has wrapped around due to lack of Time Callbacks !
+				BytesPlayedSinceLastTimer = 88200;
+				ALSource->OldWriteCursor = WriteCursor;
+			}
+			else
+			{
+				// Calculate amount of data played since last Timer event
+				if (ALSource->OldPlayCursor > PlayCursor)
+					BytesPlayedSinceLastTimer = ((88200 - ALSource->OldPlayCursor) + PlayCursor);
+				else
+					BytesPlayedSinceLastTimer = (PlayCursor - ALSource->OldPlayCursor);
+			}
+
+			ALSource->BytesPlayed += BytesPlayedSinceLastTimer;
+			ALSource->OldTime = NewTime;
 
 			// Lock buffer from Old Write cursor to current Play cursor
 			if (ALSource->OldWriteCursor > PlayCursor)
 				DataToLock = (88200 - ALSource->OldWriteCursor) + PlayCursor;
 			else
 				DataToLock = PlayCursor - ALSource->OldWriteCursor;
-			
-			// Calculate amount of data played since last Timer event
-			if (ALSource->OldPlayCursor > PlayCursor)
-				ALSource->BytesPlayed += ((88200 - ALSource->OldPlayCursor) + PlayCursor);
-			else
-				ALSource->BytesPlayed += (PlayCursor - ALSource->OldPlayCursor);
+
+			// If Source is PAUSED or STOPPED, copy silence into DS Buffer
+			if ((ALSource->CurrentState == AL_PAUSED) || (ALSource->CurrentState == AL_STOPPED))
+			{
+				IDirectSoundBuffer_Lock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, ALSource->OldWriteCursor, DataToLock, &lpPart1, &Part1Size, &lpPart2, &Part2Size, 0);
+
+				if (lpPart1)
+				{
+					memset(lpPart1, 0, Part1Size);
+					ALSource->OldWriteCursor += Part1Size;
+					if (ALSource->OldWriteCursor >= 88200)
+						ALSource->OldWriteCursor -= 88200;
+				}
+
+				if (lpPart2)
+				{
+					memset(lpPart2, 0, Part2Size);
+					ALSource->OldWriteCursor += Part2Size;
+					if (ALSource->OldWriteCursor >= 88200)
+						ALSource->OldWriteCursor -= 88200;
+				}
+
+				IDirectSoundBuffer_Unlock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, lpPart1, Part1Size, lpPart2, Part2Size);
+
+				// Update Old Play Cursor
+				ALSource->OldPlayCursor = PlayCursor;
+
+				// Move on to next Source
+				ALSource = ALSource->next;
+				continue;
+			}
 
 			// Update current buffer variable
 
 			// Find position in queue
 			BytesPlayed = ALSource->BytesPlayed;
+
 			if (BytesPlayed >= ALSource->TotalBufferDataSize)
 			{
-				if (ALSource->TotalBufferDataSize == 0)
-					assert(ALSource->TotalBufferDataSize != 0);
-				BytesPlayed = (BytesPlayed % ALSource->TotalBufferDataSize);
+				if (ALSource->param[AL_LOOPING-AL_CONE_INNER_ANGLE].data.i == AL_TRUE)
+				{
+					BytesPlayed = (BytesPlayed % ALSource->TotalBufferDataSize);
+				}
+				else
+				{
+					// Not looping ... must have played too much data !
+					BytesPlayed = ALSource->TotalBufferDataSize;
+				}
 			}
 
 			ALBufferListItem = ALSource->queue;
@@ -626,7 +705,7 @@ void CALLBACK TimerCallback(UINT uID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD 
 				else
 					BufferSize = 0;
 				DataSize += BufferSize;
-				if (DataSize > BytesPlayed)
+				if (DataSize >= BytesPlayed)
 					break;
 				else
 					ALBufferListItem = ALBufferListItem->next;
@@ -640,10 +719,7 @@ void CALLBACK TimerCallback(UINT uID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD 
 			// Also check if the Source has now finished playing
 			if (ALSource->param[AL_LOOPING-AL_CONE_INNER_ANGLE].data.i == AL_FALSE)
 			{
-				if (PlayCursor >= ALSource->OldPlayCursor)
-					ALSource->DataStillToPlay -= (PlayCursor - ALSource->OldPlayCursor);
-				else
-					ALSource->DataStillToPlay -= ((88200 - ALSource->OldPlayCursor) + PlayCursor);
+				ALSource->DataStillToPlay -= BytesPlayedSinceLastTimer;
 
 				if (ALSource->DataStillToPlay < 0)
 					ALSource->DataStillToPlay = 0;
@@ -675,28 +751,22 @@ void CALLBACK TimerCallback(UINT uID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD 
 						ALBufferListItem = NULL;
 				}
 
-
-
 				// Check if finished - if so stop source !
 				if (ALSource->DataStillToPlay == 0)
 				{
-					IDirectSoundBuffer_Stop((LPDIRECTSOUNDBUFFER)ALSource->uservalue1);
-					IDirectSoundBuffer_SetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, 0);
 					ALSource->state = AL_STOPPED;
+					ALSource->CurrentState = AL_STOPPED;
 
 					// Reset variables
 					ALSource->BufferPosition = 0;
 					ALSource->BytesPlayed = 0;
 					ALSource->FinishedQueue = AL_FALSE;
-					ALSource->OldPlayCursor = 0;
-					ALSource->OldWriteCursor = 0;
 					ALSource->SilenceAdded = 0;
 
 					// Move on to next source
+					ALSource = ALSource->next;
 					continue;
 				}
-
-
 			}
 			
 
@@ -704,6 +774,7 @@ void CALLBACK TimerCallback(UINT uID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD 
 			{
 				// Finished copying audio data into source, but data hasn't finished playing yet
 				// Therefore copy silence into DS Buffer
+
 				IDirectSoundBuffer_Lock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, ALSource->OldWriteCursor, DataToLock, &lpPart1, &Part1Size, &lpPart2, &Part2Size, 0);
 
 				if (lpPart1)
@@ -725,7 +796,7 @@ void CALLBACK TimerCallback(UINT uID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD 
 				}
 
 				IDirectSoundBuffer_Unlock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, lpPart1, Part1Size, lpPart2, Part2Size);
-				
+
 				// Update Old Play Cursor
 				ALSource->OldPlayCursor = PlayCursor;
 			}
@@ -737,6 +808,7 @@ void CALLBACK TimerCallback(UINT uID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD 
 				{
 					// Find position in buffer queue
 					BuffersToSkip = ALSource->BuffersAddedToDSBuffer;
+
 					if (BuffersToSkip >= ALSource->BuffersInQueue)
 						BuffersToSkip = BuffersToSkip % ALSource->BuffersInQueue;
 
@@ -833,11 +905,17 @@ void CALLBACK TimerCallback(UINT uID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD 
 					{
 						// Fill Part 2 with silence
 						memset(lpPart2, 0, Part2Size);
+
+						ALSource->SilenceAdded += Part2Size;
+						ALSource->OldWriteCursor += Part2Size;
+						if (ALSource->OldWriteCursor >= 88200)
+							ALSource->OldWriteCursor -= 88200;
 					}
 					else
 					{
 						// Find position in buffer queue
 						BuffersToSkip = ALSource->BuffersAddedToDSBuffer;
+
 						if (BuffersToSkip >= ALSource->BuffersInQueue)
 							BuffersToSkip = BuffersToSkip % ALSource->BuffersInQueue;
 
@@ -889,7 +967,6 @@ void CALLBACK TimerCallback(UINT uID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD 
 								BytesWritten += DataLeft;
 
 								ALSource->BuffersAddedToDSBuffer++;
-
 								ALSource->BufferPosition = 0;
 
 								// Get next valid buffer ID
@@ -930,7 +1007,7 @@ void CALLBACK TimerCallback(UINT uID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD 
 
 				ALSource->OldPlayCursor = PlayCursor;
 
-				IDirectSoundBuffer_Unlock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, lpPart1, Part1Size, lpPart2, Part2Size);
+				IDirectSoundBuffer_Unlock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, lpPart1, Part1Size, lpPart2, Part2Size);				
 			} // end else
 
 			// If we are still playing (we may have reached the end) then update current buffer
@@ -941,7 +1018,7 @@ void CALLBACK TimerCallback(UINT uID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD 
 		ALSource = ALSource->next;
 	}
 
-	alcProcessContext(ALContext);
+	ProcessContext(ALContext);
 
 	return;
 }
@@ -955,7 +1032,7 @@ ALCvoid alcUpdateContext(ALCcontext *context, ALuint type, ALuint name)
 	ALContext = context;
 	ALSource = (ALsource*)name;
 
-	alcSuspendContext(ALContext);
+	SuspendContext(ALContext);
 
 	//Platform specific context updating
 	if ((ALContext->Device->DShandle)&&(ALContext->Device->DS3dlistener))
@@ -973,8 +1050,10 @@ ALCvoid alcUpdateContext(ALCcontext *context, ALuint type, ALuint name)
 				if (ALSource->uservalue1)
 				{
 					// Start playing the DS Streaming buffer (always looping)
+					ALSource->OldTime = timeGetTime();
 					IDirectSoundBuffer_Play((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,0,0,DSBPLAY_LOOPING);
 					ALSource->play=AL_FALSE;
+					ALSource->DSBufferPlaying = AL_TRUE;
 				}
 			}
 		}
@@ -989,147 +1068,7 @@ ALCvoid alcUpdateContext(ALCcontext *context, ALuint type, ALuint name)
 
 	}
 
-	alcProcessContext(ALContext);
-}
-
-
-/*
-	ProcessSource(ALCcontext, ALsource)
-
-	Obtain up-to-date status information for the given Source - e.g. Number of Buffers Processed,
-	Current Buffer, and the current State.  If this function detects that the Source has finished playing
-	it will stop the DS Buffer, and reset all the control variables.
-
-	Note : This function must not update any of the global control variables of the Source (except when
-	stopping the Source), otherwise the Timer callback function will perform incorrectly.
-
-	Note 2 : Some problems seem to occur on some soundcard drivers if this function is called too
-	often ( > 100 times a second).
-*/
-void ProcessSource(ALCcontext *ALContext, ALsource *ALSource)
-{
-	ALuint PlayCursor, WriteCursor;
-	ALuint BufferID, DataSize;
-	ALuint DataPlayed, DataCount;
-	ALuint BytesPlayed, BufferSize;
-	ALint  DataStillToPlay;
-	ALbufferlistitem *ALBufferListItem;
-	ALuint	curTime;
-	static ALuint lastTime = 0;
-
-	// Only update the state of the Source at the most 100 times a second !
-	curTime = GetTickCount();
-	if (curTime < (lastTime + 10))
-		return;
-	else
-		lastTime = curTime;
-
-	if (ALSource->state == AL_PLAYING)
-	{
-		// Get position in DS Buffer
-
-		PlayCursor = ALSource->OldPlayCursor;
-		if (IDirectSoundBuffer_GetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, &PlayCursor, &WriteCursor) != DS_OK)
-			return;
-		
-		// Calculate amount of data played since last update
-		BytesPlayed = ALSource->BytesPlayed;
-
-		if (ALSource->OldPlayCursor > PlayCursor)
-			BytesPlayed += ((88200 - ALSource->OldPlayCursor) + PlayCursor);
-		else
-			BytesPlayed += (PlayCursor - ALSource->OldPlayCursor);
-
-		// Check for wrap-around (for looping Sources)
-		if (BytesPlayed >= ALSource->TotalBufferDataSize)
-		{
-			if (ALSource->TotalBufferDataSize == 0)
-				assert(ALSource->TotalBufferDataSize != 0);
-			BytesPlayed = (BytesPlayed % ALSource->TotalBufferDataSize);
-		}
-
-		// Determine current Buffer
-		DataSize = 0;
-		ALBufferListItem = ALSource->queue;		
-		while (ALBufferListItem != NULL)
-		{
-			if (ALBufferListItem->buffer)
-				BufferSize = ((ALbuffer*)(ALBufferListItem->buffer))->size;
-			else
-				BufferSize = 0;
-			DataSize += BufferSize;
-			if (DataSize > BytesPlayed)
-				break;
-			else
-				ALBufferListItem = ALBufferListItem->next;
-		}
-
-		// Record current BufferID
-		BufferID = ALBufferListItem->buffer;
-
-		// If we are not looping, decrement DataStillToPlay by the amount played since the last
-		// Timer event, and check if any buffers in the queue have finished playing
-		DataStillToPlay = ALSource->DataStillToPlay;
-		if (ALSource->param[AL_LOOPING-AL_CONE_INNER_ANGLE].data.i == AL_FALSE)
-		{
-			if (PlayCursor >= ALSource->OldPlayCursor)
-				DataStillToPlay -= (PlayCursor - ALSource->OldPlayCursor);
-			else
-				DataStillToPlay -= ((88200 - ALSource->OldPlayCursor) + PlayCursor);
-
-			if (DataStillToPlay < 0)
-				DataStillToPlay = 0;
-
-			// Check if any buffers in the queue have finished playing - if they have adjust
-			// their state to PROCESSED
-
-			DataPlayed = ALSource->TotalBufferDataSize - DataStillToPlay;
-
-			DataCount = 0;
-			ALSource->BuffersProcessed = 0;
-			ALBufferListItem = ALSource->queue;
-			while (ALBufferListItem != NULL)
-			{
-				if (ALBufferListItem->buffer)
-					DataSize = ((ALbuffer*)ALBufferListItem->buffer)->size;
-				else
-					DataSize = 0;
-				DataCount += DataSize;
-				if (DataCount <= DataPlayed)
-				{
-					// Buffer has been played
-					ALBufferListItem->bufferstate = PROCESSED;
-					ALSource->BuffersProcessed++;
-					ALBufferListItem = ALBufferListItem->next;
-				}
-				else
-					ALBufferListItem = NULL;
-			}
-
-			// Check if finished - if so stop source !
-			if (DataStillToPlay <= 0)
-			{
-				IDirectSoundBuffer_Stop((LPDIRECTSOUNDBUFFER)ALSource->uservalue1);
-				IDirectSoundBuffer_SetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, 0);
-				ALSource->state = AL_STOPPED;
-
-				// Reset variables
-				ALSource->BufferPosition = 0;
-				ALSource->BytesPlayed = 0;
-				ALSource->DataStillToPlay = 0;
-				ALSource->FinishedQueue = AL_FALSE;
-				ALSource->OldPlayCursor = 0;
-				ALSource->OldWriteCursor = 0;
-				ALSource->SilenceAdded = 0;
-			}
-		}
-
-		// If we are still playing (we may have reached the end) then update current buffer
-		if (ALSource->state == AL_PLAYING)
-			ALSource->param[AL_BUFFER-AL_CONE_INNER_ANGLE].data.i = BufferID;
-	}
-
-	return;
+	ProcessContext(ALContext);
 }
 
 
@@ -1146,25 +1085,14 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 	ALint	Relative;
 	ALuint	Data, Freq, State, Channels, outerAngle, innerAngle;
 	ALfloat Pitch, outerGain, maxDist, minDist, Gain;
-	ALvoid *lpPart1;
-	ALuint	Part1Size, DataSize;
-	ALuint PlayCursor, WriteCursor;
-	ALuint BufferID, status, Loop, i;
+	ALvoid *lpPart1, *lpPart2;
+	ALuint	Part1Size, Part2Size, DataSize;
+	ALuint DataToCopy, PlayCursor, WriteCursor;
+	ALuint BufferID, Loop, i;
 	ALbufferlistitem *ALBufferListItem;
 	ALbufferlistitem *ALBufferListTemp;
 	ALint	volume;
 
-	if (ALSource->update1 & SUPDATEBUFFERS)
-	{
-		// Force an update to recalculate the number of buffers processed, and the current buffer
-		// (and the state of the Source)
-		ProcessSource(ALContext, ALSource);
-
-		ALSource->update1 &= ~SUPDATEBUFFERS;
-		if (ALSource->update1 == 0)
-				return;
-	}
-	
 	// Check if the Source is being Destroyed
 	if (ALSource->update1 == SDELETE)
 	{				
@@ -1184,6 +1112,9 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 			}
 			IDirectSoundBuffer_Release((LPDIRECTSOUNDBUFFER)ALSource->uservalue1);
 			ALSource->uservalue1=NULL;
+
+			// Update Global Roll-off factor
+			SetGlobalRolloffFactor();
 
 			ALSource->update1 &= ~SDELETE;
 			if (ALSource->update1 == 0)
@@ -1225,6 +1156,12 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 				// Get Property Set Interface
 				IDirectSound3DBuffer_QueryInterface((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,&IID_IKsPropertySet,(LPUNKNOWN *)&ALSource->uservalue3);
 			}
+			else
+			{
+				// Failed creation of 3D interface, so release the buffer
+				IDirectSoundBuffer_Release((LPDIRECTSOUNDBUFFER)ALSource->uservalue1);
+				ALSource->uservalue1 = NULL;
+			}
 		}
 
 		ALSource->update1 &= ~SGENERATESOURCE;
@@ -1240,22 +1177,21 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 		switch (State)
 		{
 			case AL_INITIAL:
-				if (ALSource->uservalue1)
-					IDirectSoundBuffer_SetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,0);
 				break;
+
 			case AL_PLAYING:
+				if (ALSource->uservalue1 == NULL)
+				{
+					ALSource->play = AL_FALSE;
+					ALSource->state = AL_STOPPED;
+					break;
+				}
+
 				if (ALSource->play)
-				{							
-					// Check if this Source is already playing
-					IDirectSoundBuffer_GetStatus((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,&status);
-					
-					// If already playing, stop source, set position to zero, mark all items in 
-					// queue as PENDING ready to start playback
-					if (status & DSBSTATUS_PLAYING)
-					{
-						IDirectSoundBuffer_Stop((LPDIRECTSOUNDBUFFER)ALSource->uservalue1);
-						IDirectSoundBuffer_SetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,0);
-						
+				{	
+					// If Source is already playing, we need to restart it from the beginning
+					if (ALSource->CurrentState == AL_PLAYING)
+					{	
 						// Mark all buffers in the queue as PENDING
 						ALBufferListItem = ALSource->queue;
 						while (ALBufferListItem != NULL)
@@ -1270,28 +1206,23 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 						ALSource->BytesPlayed = 0;
 						ALSource->DataStillToPlay = 0;
 						ALSource->FinishedQueue = AL_FALSE;
-						ALSource->OldPlayCursor = 0;
-						ALSource->OldWriteCursor = 0;
 					}
 
-					// Check that we have some data to play
+					// If the queue is empty, set Source State to STOPPED
 					if (ALSource->BuffersInQueue == 0)
 					{
 						ALSource->play = AL_FALSE;
-
-						// temp
 						ALSource->state = AL_STOPPED;
-
+						ALSource->CurrentState = AL_STOPPED;
 						break;
 					}
 
+					// If the total size of all the buffers in the queue is 0, mark them all as processed
+					// and set the Source State to STOPPED
 					if (ALSource->TotalBufferDataSize == 0)
 					{
-						// Nothing to play (the buffers must be of length 0) - mark them as processed
-				
-						// Mark all buffers in queue as PROCESSED
 						ALSource->BuffersProcessed = ALSource->BuffersInQueue;
-
+						
 						ALBufferListItem= ALSource->queue;
 						while (ALBufferListItem != NULL)
 						{
@@ -1299,12 +1230,9 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 							ALBufferListItem = ALBufferListItem->next;
 						}
 
-						// No need to start playing !
 						ALSource->play = AL_FALSE;
-
-						// temp
 						ALSource->state = AL_STOPPED;
-
+						ALSource->CurrentState = AL_STOPPED;
 						break;
 					}
 
@@ -1324,6 +1252,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 
 					// Find position in buffer queue
 					BuffersToSkip = ALSource->BuffersAddedToDSBuffer;
+
 					if (BuffersToSkip > ALSource->BuffersInQueue)
 					{
 						BuffersToSkip = BuffersToSkip % ALSource->BuffersInQueue;
@@ -1361,12 +1290,9 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 					// Check if we still have something to play !
 					if (ALBufferListItem == NULL)
 					{
-						// No buffers to play - remove play flag
 						ALSource->play = AL_FALSE;
-
-						// temp
 						ALSource->state = AL_STOPPED;
-
+						ALSource->CurrentState = AL_STOPPED;
 						break;
 					}
 
@@ -1377,11 +1303,6 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 					// Update current buffer variable
 					BufferID = ALBufferListItem->buffer;
 					ALSource->param[AL_BUFFER-AL_CONE_INNER_ANGLE].data.i = BufferID;
-
-					// Update variables
-					ALSource->BytesPlayed = 0;
-					ALSource->OldWriteCursor = 0;
-					ALSource->OldPlayCursor = 0;
 
 					// Calculate how much data still to play
 					DataSize = ((ALbuffer*)BufferID)->size;
@@ -1417,6 +1338,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 							IDirectSound3DBuffer_Release((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2);
 							ALSource->uservalue2 = NULL;
 						}
+						IDirectSoundBuffer_Stop((LPDIRECTSOUNDBUFFER)ALSource->uservalue1);
 						IDirectSoundBuffer_Release((LPDIRECTSOUNDBUFFER)ALSource->uservalue1);
 						ALSource->uservalue1=NULL;
 
@@ -1440,6 +1362,21 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 							IDirectSoundBuffer_SetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,0);
 						}
 
+						// Check the buffer was created successfully
+						if (ALSource->uservalue1 == NULL)
+						{
+							ALSource->play = AL_FALSE;
+							ALSource->state = AL_STOPPED;
+							ALSource->CurrentState = AL_STOPPED;
+							break;
+						}
+
+						// Update variables
+						ALSource->DSBufferPlaying = AL_FALSE;
+
+						ALSource->OldPlayCursor = 0;
+						ALSource->OldWriteCursor = 0;
+
 						// Set correct volume for new DS Buffer
 						if (ALSource->uservalue1)
 						{
@@ -1458,6 +1395,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 						// Need to destroy the stereo streaming buffer and create a 3D mono one instead
 						if (ALSource->uservalue1)
 						{
+							IDirectSoundBuffer_Stop((LPDIRECTSOUNDBUFFER)ALSource->uservalue1);
 							IDirectSoundBuffer_Release((LPDIRECTSOUNDBUFFER)ALSource->uservalue1);
 							ALSource->uservalue1=NULL;
 						}
@@ -1490,6 +1428,20 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 							}
 						}
 
+						// Check the buffer was created successfully
+						if (ALSource->uservalue1 == NULL)
+						{
+							ALSource->play = AL_FALSE;
+							ALSource->state = AL_STOPPED;
+							ALSource->CurrentState = AL_STOPPED;
+							break;
+						}
+
+						// Update variables
+						ALSource->DSBufferPlaying = AL_FALSE;
+
+						ALSource->OldPlayCursor = 0;
+						ALSource->OldWriteCursor = 0;
 
 						// Set correct volume for new DS Buffer
 						if (ALSource->uservalue1)
@@ -1509,110 +1461,395 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 
 					IDirectSoundBuffer_SetFrequency((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, (long)(Freq*Pitch));
 
-					// Lock the whole DS buffer
-					IDirectSoundBuffer_Lock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,0,0,&lpPart1,&Part1Size,NULL,NULL,DSBLOCK_ENTIREBUFFER);
-						
-					BytesWritten = 0;
+					// Record duration of the DS circular buffer
+					if (ALSource->SourceType == SOURCE3D)
+						ALSource->BufferDuration = 44100000.f / (float)Freq;
+					else
+						ALSource->BufferDuration = 22050000.f / (float)Freq;
 
-					while (AL_TRUE)
+
+					if (ALSource->DSBufferPlaying)
 					{
-						// Copy audio data from Open AL Buffer into DS buffer
-							
-						// Find out how much data is left in current Open AL Buffer
-						Data = (ALint)(((ALbuffer*)BufferID)->data);
-						DataSize = ((ALbuffer*)BufferID)->size;
-							
-						if (DataSize == 0)
-							DataLeft = 0;
+						// Lock as much of the Buffer as possible (from write cursor to play cursor)
+						IDirectSoundBuffer_GetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, &PlayCursor, &WriteCursor);
+						
+						if (PlayCursor > WriteCursor)
+							DataToCopy = PlayCursor - WriteCursor;
 						else
-							DataLeft = DataSize - ALSource->BufferPosition;
+							DataToCopy = ((88200 - WriteCursor) + PlayCursor);
 
-						if (DataLeft > (88200 - BytesWritten))
+						IDirectSoundBuffer_Lock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,WriteCursor,DataToCopy,&lpPart1,&Part1Size,&lpPart2,&Part2Size,0);
+						
+						if (lpPart1 != NULL)
 						{
-							// Copy (88200 - BytesWritten) bytes to Direct Sound buffer
-							memcpy((ALubyte*)lpPart1 + BytesWritten, (ALubyte*)Data + ALSource->BufferPosition, 88200 - BytesWritten);
-							ALSource->FinishedQueue = AL_FALSE;	// More data to follow ...
-							ALSource->BufferPosition += (88200 - BytesWritten);		// Record position in buffer data
-							BytesWritten += (88200 - BytesWritten);
-							break;
-						}
-						else
-						{
-							// Not enough data in buffer to fill DS buffer so just copy as much data as possible
-							memcpy((ALubyte*)lpPart1 + BytesWritten, (ALubyte*)Data + ALSource->BufferPosition, DataLeft);
+							// Find position in buffer queue
+							BuffersToSkip = ALSource->BuffersAddedToDSBuffer;
 
-							BytesWritten += DataLeft;
+							if (BuffersToSkip >= ALSource->BuffersInQueue)
+								BuffersToSkip = BuffersToSkip % ALSource->BuffersInQueue;
 
-							ALSource->BuffersAddedToDSBuffer++;
-
-							ALSource->BufferPosition = 0;
-
-							// Get next valid buffer ID
-							ALBufferListItem = ALBufferListItem->next;
-								
-							if (ALBufferListItem == NULL)
+							ALBufferListItem = ALSource->queue;
+							for (i = 0; i < BuffersToSkip; i++)
 							{
-								// No more buffers - check for looping flag
-								if (ALSource->param[AL_LOOPING-AL_CONE_INNER_ANGLE].data.i == AL_TRUE)
+								ALBufferListItem = ALBufferListItem->next;
+							}
+
+							BytesWritten = 0;
+							BufferID = ALBufferListItem->buffer;
+
+							while (AL_TRUE)
+							{
+								// Copy audio data from Open AL Buffer(s) into DS buffer
+											
+								// Find out how much data is left in current Open AL Buffer
+								if (BufferID)
 								{
-									// Looping
-									ALBufferListItem = ALSource->queue;
+									Data = (ALint)(((ALbuffer*)BufferID)->data);
+									DataSize = ((ALbuffer*)BufferID)->size;
 								}
 								else
 								{
-									// Not looping and no more buffers
+									Data = 0;
+									DataSize = 0;
+								}
+
+								if (DataSize == 0)
+									DataLeft = 0;
+								else
+									DataLeft = DataSize - ALSource->BufferPosition;
+
+								if (DataLeft > (Part1Size - BytesWritten))
+								{
+									// Copy (Part1Size - BytesWritten) bytes to Direct Sound buffer
+									memcpy((ALubyte*)lpPart1 + BytesWritten, (ALubyte*)Data + ALSource->BufferPosition, Part1Size - BytesWritten);
+									ALSource->FinishedQueue = AL_FALSE;	// More data to follow ...
+									ALSource->BufferPosition += (Part1Size - BytesWritten);		// Record position in buffer data
+									BytesWritten += (Part1Size - BytesWritten);
 									break;
+								}
+								else
+								{
+									// Not enough data in buffer to fill DS buffer so just copy as much data as possible
+									if ((Data) && (DataLeft > 0))
+										memcpy((ALubyte*)lpPart1 + BytesWritten, (ALubyte*)Data + ALSource->BufferPosition, DataLeft);
+
+									BytesWritten += DataLeft;
+
+									ALSource->BuffersAddedToDSBuffer++;
+
+									ALSource->BufferPosition = 0;
+
+									// Get next valid buffer ID
+									ALBufferListItem = ALBufferListItem->next;
+											
+									if (ALBufferListItem == NULL)
+									{
+										// No more buffers - check for looping flag
+										if (ALSource->param[AL_LOOPING-AL_CONE_INNER_ANGLE].data.i == AL_TRUE)
+										{
+											// Looping
+											ALBufferListItem = ALSource->queue;
+										}
+										else
+										{
+											// Not looping and no more buffers
+											ALSource->FinishedQueue = AL_TRUE;
+											break;
+										}
+									}
+
+									BufferID = ALBufferListItem->buffer;
 								}
 							}
 
-							BufferID = ALBufferListItem->buffer;
+							if (BytesWritten < Part1Size)
+							{
+								// Fill the rest of the buffer with silence
+								memset((ALubyte*)lpPart1 + BytesWritten, 0, Part1Size - BytesWritten);
+								ALSource->SilenceAdded += (Part1Size - BytesWritten);
+							}
+
+							ALSource->OldWriteCursor += Part1Size;
+							if (ALSource->OldWriteCursor >= 88200)
+								ALSource->OldWriteCursor -= 88200;
 						}
-					}
 
-					if (BytesWritten < 88200)
+
+						if (lpPart2 != NULL)
+						{
+							if (ALSource->FinishedQueue)
+							{
+								// Fill Part 2 with silence
+								memset(lpPart2, 0, Part2Size);
+							}
+							else
+							{
+								// Find position in buffer queue
+								BuffersToSkip = ALSource->BuffersAddedToDSBuffer;
+
+								if (BuffersToSkip >= ALSource->BuffersInQueue)
+									BuffersToSkip = BuffersToSkip % ALSource->BuffersInQueue;
+
+								ALBufferListItem = ALSource->queue;
+								for (i = 0; i < BuffersToSkip; i++)
+								{
+									ALBufferListItem = ALBufferListItem->next;
+								}
+
+								BytesWritten = 0;
+								BufferID = ALBufferListItem->buffer;
+
+								while (AL_TRUE)
+								{
+									// Copy audio data from Open AL Buffer(s) into DS buffer
+											
+									// Find out how much data is left in current Open AL Buffer
+									if (BufferID)
+									{
+										Data = (ALint)((ALbuffer*)BufferID)->data;
+										DataSize = ((ALbuffer*)BufferID)->size;
+									}
+									else
+									{
+										Data = 0;
+										DataSize = 0;
+									}
+
+									if (DataSize == 0)
+										DataLeft = 0;
+									else
+										DataLeft = DataSize - ALSource->BufferPosition;
+				
+									if (DataLeft > (Part2Size - BytesWritten))
+									{
+										// Copy (Part1Size - BytesWritten) bytes to Direct Sound buffer
+										memcpy((ALubyte*)lpPart2 + BytesWritten, (ALubyte*)Data + ALSource->BufferPosition, Part2Size - BytesWritten);
+										ALSource->FinishedQueue = AL_FALSE;	// More data to follow ...
+										ALSource->BufferPosition += (Part2Size - BytesWritten);		// Record position in buffer data
+										BytesWritten += (Part2Size - BytesWritten);
+										break;
+									}
+									else
+									{
+										// Not enough data in buffer to fill DS buffer so just copy as much data as possible
+										if ((Data) && (DataLeft > 0))
+											memcpy((ALubyte*)lpPart2 + BytesWritten, (ALubyte*)Data + ALSource->BufferPosition, DataLeft);
+
+										BytesWritten += DataLeft;
+
+										ALSource->BuffersAddedToDSBuffer++;
+										ALSource->BufferPosition = 0;
+
+										// Get next valid buffer ID
+										ALBufferListItem = ALBufferListItem->next;
+											
+										if (ALBufferListItem == NULL)
+										{
+											// No more buffers - check for looping flag
+											if (ALSource->param[AL_LOOPING-AL_CONE_INNER_ANGLE].data.i == AL_TRUE)
+											{
+												// Looping
+												ALBufferListItem = ALSource->queue;
+											}
+											else
+											{
+												// Not looping and no more buffers
+												ALSource->FinishedQueue = AL_TRUE;
+												break;
+											}
+										}
+
+										BufferID = ALBufferListItem->buffer;
+									}
+								}
+
+								if (BytesWritten < Part2Size)
+								{
+									// Fill the rest of the buffer with silence
+									memset((ALubyte*)lpPart2 + BytesWritten, 0, Part2Size - BytesWritten);
+									ALSource->SilenceAdded += (Part2Size - BytesWritten);
+								}
+
+								ALSource->OldWriteCursor += Part2Size;
+								if (ALSource->OldWriteCursor >= 88200)
+									ALSource->OldWriteCursor -= 88200;
+							}
+						}
+
+						ALSource->OldPlayCursor = PlayCursor;
+
+						IDirectSoundBuffer_Unlock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, lpPart1, Part1Size, lpPart2, Part2Size);
+
+					}
+					else
 					{
-						// Fill the rest of the buffer with silence
-						memset((ALubyte*)lpPart1 + BytesWritten, 0, 88200 - BytesWritten);
-						ALSource->SilenceAdded = 88200 - BytesWritten;
-						ALSource->FinishedQueue = AL_TRUE;		// Set this to true to indicate no more data needs to be copied into buffer
-					}
+						IDirectSoundBuffer_Lock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,0,0,&lpPart1,&Part1Size,0,0,DSBLOCK_ENTIREBUFFER);
+											
+						BytesWritten = 0;
 
-					IDirectSoundBuffer_Unlock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,lpPart1,Part1Size,NULL,0);						
+						while (AL_TRUE)
+						{
+							// Copy audio data from Open AL Buffer into DS buffer
+									
+							// Find out how much data is left in current Open AL Buffer
+							Data = (ALint)(((ALbuffer*)BufferID)->data);
+							DataSize = ((ALbuffer*)BufferID)->size;
+									
+							if (DataSize == 0)
+								DataLeft = 0;
+							else
+								DataLeft = DataSize - ALSource->BufferPosition;
+
+							if (DataLeft > (88200 - BytesWritten))
+							{
+								// Copy (88200 - BytesWritten) bytes to Direct Sound buffer
+								memcpy((ALubyte*)lpPart1 + BytesWritten, (ALubyte*)Data + ALSource->BufferPosition, 88200 - BytesWritten);
+								ALSource->FinishedQueue = AL_FALSE;	// More data to follow ...
+								ALSource->BufferPosition += (88200 - BytesWritten);		// Record position in buffer data
+								BytesWritten += (88200 - BytesWritten);
+								break;
+							}
+							else
+							{
+								// Not enough data in buffer to fill DS buffer so just copy as much data as possible
+								memcpy((ALubyte*)lpPart1 + BytesWritten, (ALubyte*)Data + ALSource->BufferPosition, DataLeft);
+								BytesWritten += DataLeft;
+
+								ALSource->BuffersAddedToDSBuffer++;
+								ALSource->BufferPosition = 0;
+
+								// Get next valid buffer ID
+								ALBufferListItem = ALBufferListItem->next;
+									
+								if (ALBufferListItem == NULL)
+								{
+									// No more buffers - check for looping flag
+									if (ALSource->param[AL_LOOPING-AL_CONE_INNER_ANGLE].data.i == AL_TRUE)
+									{
+										// Looping
+										ALBufferListItem = ALSource->queue;
+									}
+									else
+									{
+										// Not looping and no more buffers
+										break;
+									}
+								}
+
+								BufferID = ALBufferListItem->buffer;
+							}
+						}
+
+						if (BytesWritten < 88200)
+						{
+							// Fill the rest of the buffer with silence
+							memset((ALubyte*)lpPart1 + BytesWritten, 0, 88200 - BytesWritten);
+							ALSource->SilenceAdded = 88200 - BytesWritten;
+							ALSource->FinishedQueue = AL_TRUE;		// Set this to true to indicate no more data needs to be copied into buffer
+						}
+
+						IDirectSoundBuffer_Unlock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,lpPart1,Part1Size,0,0);
+					}
 				}
+
+				ALSource->CurrentState = AL_PLAYING;
+
 				break;
 
 			case AL_PAUSED:
 				if (ALSource->uservalue1)
 				{
-					IDirectSoundBuffer_Stop((LPDIRECTSOUNDBUFFER)ALSource->uservalue1);
-					ALSource->paused = AL_TRUE;
+					if (ALSource->CurrentState != AL_PAUSED)
+					{
+						ALSource->CurrentState = AL_PAUSED;
+
+						// Lock as much of buffer as possible, and fill with silence
+						IDirectSoundBuffer_GetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, &PlayCursor, &WriteCursor);
+						
+						if (PlayCursor > WriteCursor)
+							DataToCopy = PlayCursor - WriteCursor;
+						else
+							DataToCopy = ((88200 - WriteCursor) + PlayCursor);
+
+						IDirectSoundBuffer_Lock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,WriteCursor,DataToCopy,&lpPart1,&Part1Size,&lpPart2,&Part2Size,0);
+						
+						if (lpPart1 != NULL)
+						{
+							memset(lpPart1, 0, Part1Size);
+							ALSource->OldWriteCursor += Part1Size;
+							if (ALSource->OldWriteCursor >= 88200)
+								ALSource->OldWriteCursor -= 88200;
+						}
+						
+						if (lpPart2 != NULL)
+						{
+							memset(lpPart2, 0, Part2Size);
+							ALSource->OldWriteCursor += Part2Size;
+							if (ALSource->OldWriteCursor >= 88200)
+								ALSource->OldWriteCursor -= 88200;	
+						}
+
+						ALSource->OldPlayCursor = PlayCursor;
+
+						IDirectSoundBuffer_Unlock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, lpPart1, Part1Size, lpPart2, Part2Size);
+					}
 				}
 				break;
+
 			case AL_STOPPED:
 				if (ALSource->uservalue1)
 				{
-					IDirectSoundBuffer_Stop((LPDIRECTSOUNDBUFFER)ALSource->uservalue1);
-					IDirectSoundBuffer_SetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,0);
-					// Re-set variables
-					ALSource->BufferPosition = 0;
-					ALSource->BytesPlayed = 0;
-					ALSource->DataStillToPlay = 0;
-					ALSource->FinishedQueue = AL_FALSE;
-					ALSource->OldPlayCursor = 0;
-					ALSource->OldWriteCursor = 0;
-					ALSource->SilenceAdded = 0;
+					if (ALSource->CurrentState != AL_STOPPED)
+					{
+						// Re-set variables
+						ALSource->BufferPosition = 0;
+						ALSource->DataStillToPlay = 0;
+						ALSource->FinishedQueue = AL_FALSE;
+						ALSource->SilenceAdded = 0;
+
+						ALSource->CurrentState = AL_STOPPED;
+
+						// Lock as much of buffer as possible, and fill with silence
+						IDirectSoundBuffer_GetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, &PlayCursor, &WriteCursor);
+						
+						if (PlayCursor > WriteCursor)
+							DataToCopy = PlayCursor - WriteCursor;
+						else
+							DataToCopy = ((88200 - WriteCursor) + PlayCursor);
+
+						IDirectSoundBuffer_Lock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,WriteCursor,DataToCopy,&lpPart1,&Part1Size,&lpPart2,&Part2Size,0);
+						
+						if (lpPart1 != NULL)
+						{
+							memset(lpPart1, 0, Part1Size);
+							ALSource->OldWriteCursor += Part1Size;
+							if (ALSource->OldWriteCursor >= 88200)
+								ALSource->OldWriteCursor -= 88200;
+						}
+						
+						if (lpPart2 != NULL)
+						{
+							memset(lpPart2, 0, Part2Size);
+							ALSource->OldWriteCursor += Part2Size;
+							if (ALSource->OldWriteCursor >= 88200)
+								ALSource->OldWriteCursor -= 88200;	
+						}
+
+						ALSource->OldPlayCursor = PlayCursor;
+
+						IDirectSoundBuffer_Unlock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, lpPart1, Part1Size, lpPart2, Part2Size);
+
+						// Mark all buffers in queue as PROCESSED
+						ALSource->BuffersProcessed = ALSource->BuffersInQueue;
+
+						ALBufferListItem= ALSource->queue;
+						while (ALBufferListItem != NULL)
+						{
+							ALBufferListItem->bufferstate = PROCESSED;
+							ALBufferListItem = ALBufferListItem->next;
+						}
+					}
 				}
-
-				// Mark all buffers in queue as PROCESSED
-				ALSource->BuffersProcessed = ALSource->BuffersInQueue;
-
-				ALBufferListItem= ALSource->queue;
-				while (ALBufferListItem != NULL)
-				{
-					ALBufferListItem->bufferstate = PROCESSED;
-					ALBufferListItem = ALBufferListItem->next;
-				}
-
 				break;
 		}
 
@@ -1675,7 +1912,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 	if (ALSource->update1 & SQUEUE)
 	{
 		if ((ALSource->uservalue1) && (ALSource->state == AL_PLAYING))
-		{
+		{			
 			// Some buffer(s) have been added to the queue
 
 			// If silence has been added, then we need to overwrite the silence with new audio
@@ -1775,7 +2012,9 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 				Freq = ((ALbuffer*)BufferID)->frequency;
 
 			Pitch = ALSource->param[AL_PITCH-AL_CONE_INNER_ANGLE].data.f;
+			
 			IDirectSoundBuffer_SetFrequency((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,(long)(Freq*Pitch));
+			
 			ALSource->update1 &= ~FREQUENCY;
 			if (ALSource->update1 == 0)
 				return;
@@ -1803,7 +2042,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 		if (ALSource->uservalue2)
 		{
 			maxDist = ALSource->param[AL_MAX_DISTANCE-AL_CONE_INNER_ANGLE].data.f;
-			IDirectSound3DBuffer_SetMaxDistance((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,maxDist,DS3D_IMMEDIATE);	
+			IDirectSound3DBuffer_SetMaxDistance((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,maxDist,DS3D_IMMEDIATE);			
 			ALSource->update1 &= ~MAXDIST;
 			if (ALSource->update1 == 0)
 				return;
@@ -1820,13 +2059,24 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 			volume = LinearGainToDB(outerGain);
 
 			IDirectSound3DBuffer_SetConeOutsideVolume((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2, volume,DS3D_IMMEDIATE);
-
 			ALSource->update1 &= ~CONEOUTSIDEVOLUME;
 			if (ALSource->update1 == 0)
 				return;
 		}
 	}
 
+
+	// Check if we need to update the Roll-Off Factor of the Source
+	if (ALSource->update1 & ROLLOFFFACTOR)
+	{
+		// Temporary solution - emulate per-Source roll-off by setting the DS3D Global Roll-off factor
+		// to the average of all the per-Source roll-off factors
+		SetGlobalRolloffFactor();
+
+		ALSource->update1 &= ~ROLLOFFFACTOR;
+		if (ALSource->update1 == 0)
+			return;
+	}
 	
 	// Check if we need to update the 3D Processing Mode (Head Relative)
 	if (ALSource->update1 & MODE)
@@ -1992,7 +2242,6 @@ void UpdateListener(ALCcontext *ALContext)
 {
 	ALfloat		Pos[3],Vel[3], Ori[6];
 	ALfloat		flDistanceFactor;
-	ALfloat		flRollOffFactor;
 	ALsource	*ALSource;
 	ALfloat		Gain;
 	ALuint		i;
@@ -2083,12 +2332,7 @@ void UpdateListener(ALCcontext *ALContext)
 
 	if (ALContext->Listener.update1 & LDISTANCEMODEL)
 	{
-		if (ALContext->DistanceModel == AL_NONE)
-			flRollOffFactor = 0.0f;
-		else
-			flRollOffFactor = 1.0f;
-
-		IDirectSound3DListener_SetRolloffFactor (ALContext->Device->DS3dlistener, flRollOffFactor, DS3D_IMMEDIATE);
+		SetGlobalRolloffFactor();
 		ALContext->Listener.update1 &= ~LDISTANCEMODEL;
 		if (ALContext->Listener.update1 == 0)
 			return;
@@ -2110,6 +2354,7 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(ALCubyte *deviceName)
 	ALuint dwSize1, dwSize2;
 	ALboolean bUseDS;
 	ALboolean bUseDS3D;
+	ALuint numStereo, numMono, numSources;
 
 	bUseDS = AL_FALSE;
 	bUseDS3D = AL_FALSE;
@@ -2179,26 +2424,22 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(ALCubyte *deviceName)
 										// Check that is an accelerated DS device
 										if (!(dsCaps.dwFlags & DSCAPS_EMULDRIVER))
 										{
-											// Check how many Hardware 3D Streaming buffers can be created
-											device->MaxNoOfSources = dsCaps.dwFreeHw3DStreamingBuffers;
-											// Some soundcards incorrectly report the number of voices so we are going to
-											// clamp the number of Sources to an upper limit of 31
-											if (device->MaxNoOfSources > 31)
-											{
-												device->MaxNoOfSources = 31;
-											}
+											numStereo = GetMaxNumStereoBuffers(device->DShandle);
+											numMono = GetMaxNum3DMonoBuffers(device->DShandle);
+											numSources = min(numStereo, numMono);
 
-											if (device->MaxNoOfSources > 15)
+											// To enable the 'DirectSound3D' device, the audio card MUST support
+											// at least 16 voices.  (If not, then the device selection drops through
+											// to the 'DirectSound'.
+											if (numSources >= 16)
 											{
 												device->CreationFlag = DSBCAPS_LOCHARDWARE;
+												device->MaxNoOfSources = numSources;
+
+												strcpy(device->szDeviceName, "DirectSound3D");
+												return device;
 											}
-											else
-											{
-												device->MaxNoOfSources = 16;
-												device->CreationFlag = DSBCAPS_LOCSOFTWARE;
-											}
-											strcpy(device->szDeviceName, "DirectSound3D");
-											return device;
+
 										}
 									}
 
@@ -2341,10 +2582,15 @@ ALCAPI ALCvoid ALCAPIENTRY alcCloseDevice(ALCdevice *device)
 
 	if (device)
 	{
-		EnterCriticalSection(&g_mutex);
 		//Release timer
 		if (device->timer)
 			timeKillEvent(device->timer);
+
+		// Wait ... just in case any timer events happen
+		Sleep(100);
+
+		EnterCriticalSection(&g_mutex);
+
 		//Platform specific exit
 		if (device->DShandle)
 		{
@@ -2424,9 +2670,9 @@ DWORD WINAPI ThreadProc(LPVOID lpParameter)
 				ALDevice=alcGetContextsDevice(ALContext);
 				if (ALContext)
 				{
-					alcSuspendContext(ALContext);
+					SuspendContext(ALContext);
 					aluMixData(ALContext,WaveHdr->lpData,WaveHdr->dwBufferLength,ALContext->Format);
-					alcProcessContext(ALContext);
+					ProcessContext(ALContext);
 				}
 				else memset(WaveHdr->lpData,0,WaveHdr->dwBufferLength);
 				waveOutWrite(ALDevice->handle,WaveHdr,sizeof(WAVEHDR));
@@ -2485,6 +2731,46 @@ ALCAPI ALCenum ALCAPIENTRY alcGetEnumValue(ALCdevice *device,ALCubyte *enumName)
 	return alGetEnumValue(enumName);
 }
 
+/*
+	SetGlobalRolloffFactor
+
+	Temporary solution to providing support for per-Source roll-off factor (the DS3D Global roll-off factor
+	will be set to the average of all the Source's roll-off factors) *unless* the AL Distance Model is set
+	to AL_NONE (in which case the global roll-off factor is set to 0).
+*/
+void SetGlobalRolloffFactor()
+{
+	ALuint		i;
+	ALfloat		flRollOffFactor;
+	ALsource	*ALSource;
+	ALCcontext	*ALContext;
+
+	ALContext=alcGetCurrentContext();
+
+	if (!ALContext)
+		return;
+
+	SuspendContext(ALContext);
+
+	flRollOffFactor = 0.0f;
+
+	if (ALContext->DistanceModel != AL_NONE)
+	{
+		// Calculate average per-Source roll-off factor
+		ALSource = ALContext->Source;
+		for (i = 0; i < ALContext->SourceCount; i++)
+		{
+			flRollOffFactor += ALSource->param[AL_ROLLOFF_FACTOR-AL_CONE_INNER_ANGLE].data.f;
+			ALSource = ALSource->next;
+		}
+
+		flRollOffFactor = flRollOffFactor / ALContext->SourceCount;
+	}
+
+	IDirectSound3DListener_SetRolloffFactor (ALContext->Device->DS3dlistener, flRollOffFactor, DS3D_IMMEDIATE);
+
+	ProcessContext(ALContext);
+}
 
 /*
 	LinearGainToDB
@@ -2497,4 +2783,119 @@ ALint LinearGainToDB(float flGain)
 		return (long)(2000.0*log10(flGain));
 	else
 		return -10000;
+}
+
+/*
+	Determine how many Stereo buffers can be successfully created
+*/
+ALuint GetMaxNumStereoBuffers(LPDIRECTSOUND lpDS)
+{
+	LPDIRECTSOUNDBUFFER lpDSB[MAX_NUM_SOURCES];
+	DSBUFFERDESC DSBDescription;
+	WAVEFORMATEX	OutputType;
+	ALuint loop;
+	ALuint numBuffers = 0;
+
+	// Set Caps
+	memset(&DSBDescription,0,sizeof(DSBUFFERDESC));
+	DSBDescription.dwSize=sizeof(DSBUFFERDESC);
+	DSBDescription.dwFlags=DSBCAPS_CTRLVOLUME|DSBCAPS_CTRLFREQUENCY|DSBCAPS_GLOBALFOCUS|
+		DSBCAPS_GETCURRENTPOSITION2|DSBCAPS_LOCHARDWARE;
+	DSBDescription.dwBufferBytes=88200;
+	DSBDescription.lpwfxFormat=&OutputType;
+	memset(&OutputType,0,sizeof(WAVEFORMATEX));
+	OutputType.wFormatTag=WAVE_FORMAT_PCM;
+	OutputType.nChannels=2;
+	OutputType.wBitsPerSample=16;
+	OutputType.nBlockAlign=4;
+	OutputType.nSamplesPerSec=44100;
+	OutputType.nAvgBytesPerSec=176400;
+	OutputType.cbSize=0;
+
+	for (loop = 0; loop < MAX_NUM_SOURCES; loop++)
+	{
+		if (IDirectSound_CreateSoundBuffer(lpDS,&DSBDescription,&lpDSB[loop],NULL)==DS_OK)
+			numBuffers++;
+		else
+			break;
+	}
+
+	// Release all the buffers
+	for (loop = 0; loop < numBuffers; loop++)
+	{
+		if (lpDSB[loop])
+		{
+			IDirectSoundBuffer_Release(lpDSB[loop]);
+			lpDSB[loop] = NULL;
+		}
+	}
+
+	return numBuffers;
+}
+
+
+/*
+	Determine how many mono 3D buffers can be successfully created
+*/
+ALuint GetMaxNum3DMonoBuffers(LPDIRECTSOUND lpDS)
+{
+	LPDIRECTSOUNDBUFFER lpDSB[MAX_NUM_SOURCES] = { NULL };
+	LPDIRECTSOUND3DBUFFER lpDS3DB[MAX_NUM_SOURCES] = { NULL };
+	DSBUFFERDESC DSBDescription;
+	WAVEFORMATEX	OutputType;
+	ALuint loop;
+	ALuint numBuffers = 0;
+
+	// Set Caps
+	memset(&DSBDescription,0,sizeof(DSBUFFERDESC));
+	DSBDescription.dwSize=sizeof(DSBUFFERDESC);
+	DSBDescription.dwFlags=DSBCAPS_CTRL3D|DSBCAPS_CTRLVOLUME|DSBCAPS_CTRLFREQUENCY|DSBCAPS_GLOBALFOCUS|
+		DSBCAPS_GETCURRENTPOSITION2|DSBCAPS_LOCHARDWARE;
+	DSBDescription.dwBufferBytes=88200;
+	DSBDescription.lpwfxFormat=&OutputType;
+	memset(&OutputType,0,sizeof(WAVEFORMATEX));
+	OutputType.wFormatTag=WAVE_FORMAT_PCM;
+	OutputType.nChannels=1;
+	OutputType.wBitsPerSample=16;
+	OutputType.nBlockAlign=2;
+	OutputType.nSamplesPerSec=44100;
+	OutputType.nAvgBytesPerSec=88200;
+	OutputType.cbSize=0;
+	
+	for (loop = 0; loop < MAX_NUM_SOURCES; loop++)
+	{
+		if (IDirectSound_CreateSoundBuffer(lpDS,&DSBDescription,&lpDSB[loop],NULL)==DS_OK)
+		{
+			if (IDirectSoundBuffer_QueryInterface(lpDSB[loop], &IID_IDirectSound3DBuffer, &lpDS3DB[loop])==DS_OK)
+			{
+				numBuffers++;
+			}
+			else
+			{
+				break;
+			}
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	// Release all the buffers
+	for (loop = 0; loop < numBuffers; loop++)
+	{
+		if (lpDS3DB[loop])
+		{
+			IDirectSound3DBuffer_Release(lpDS3DB[loop]);
+			lpDS3DB[loop] = NULL;
+		}
+
+		if (lpDSB[loop])
+		{
+			IDirectSoundBuffer_Release(lpDSB[loop]);
+			lpDSB[loop] = NULL;
+		}
+	}
+
+	return numBuffers;
 }

@@ -24,8 +24,7 @@
 #include "include\alEax.h"
 #include "include\alListener.h"
 #include <objbase.h>
-
-
+ 
 // EAX 2.0 GUIDs
 const GUID DSPROPSETID_EAX20_ListenerProperties
 				= { 0x306a6a8, 0xb224, 0x11d2, { 0x99, 0xe5, 0x0, 0x0, 0xe8, 0xd8, 0xc7, 0x22 } };
@@ -53,7 +52,7 @@ ALboolean CheckEAXSupport(ALubyte *szEAXName)
 	
 	ALContext = alcGetCurrentContext();
 	ALCDevice = alcGetContextsDevice(ALContext);
-	alcSuspendContext(ALContext);
+	SuspendContext(ALContext);
 
 	// To test for EAX support we will need a valid Source
 
@@ -95,7 +94,7 @@ ALboolean CheckEAXSupport(ALubyte *szEAXName)
 		if (bSourceGenerated)
 			alDeleteSources(1, &(ALuint)ALSource);
 
-		alcProcessContext(ALContext);
+		ProcessContext(ALContext);
 		return AL_FALSE;
 	}
 
@@ -115,7 +114,7 @@ ALboolean CheckEAXSupport(ALubyte *szEAXName)
 		if (bSourceGenerated)
 			alDeleteSources(1, &((ALuint)ALSource));
 
-		alcProcessContext(ALContext);
+		ProcessContext(ALContext);
 		return AL_FALSE;
 	}
 
@@ -143,7 +142,7 @@ ALboolean CheckEAXSupport(ALubyte *szEAXName)
 	if (bSourceGenerated)
 		alDeleteSources(1, &((ALuint)ALSource));
 
-	alcProcessContext(ALContext);
+	ProcessContext(ALContext);
 	return bEAXSupported;
 }
 
@@ -169,11 +168,10 @@ ALAPI ALenum ALAPIENTRY EAXGet(const GUID *propertySetID,ALuint property,ALuint 
 	ALuint		ulBytes;
 	ALenum		ALErrorCode = AL_NO_ERROR;
 	ALboolean	bGenSource = AL_FALSE;
-	ALboolean	bEAX2B = AL_FALSE;
-	ALboolean	bEAX2L = AL_FALSE;
+	ALboolean	bEAX2B = AL_FALSE, bEAX2L = AL_FALSE;
 
 	ALContext = alcGetCurrentContext();
-	alcSuspendContext(ALContext);
+	SuspendContext(ALContext);
 
 	// Determine which EAX Property is being used
 	if ( IsEqualGUID(propertySetID, &DSPROPSETID_EAX20_BufferProperties) )
@@ -190,8 +188,8 @@ ALAPI ALenum ALAPIENTRY EAXGet(const GUID *propertySetID,ALuint property,ALuint 
 			ALSource = (ALsource*)source;
 			if (ALSource->uservalue3)
 			{
-				IKsPropertySet_Get((LPKSPROPERTYSET)ALSource->uservalue3, propertySetID, property, NULL, 0,
-					value, size, &ulBytes);
+				if (FAILED(IKsPropertySet_Get((LPKSPROPERTYSET)ALSource->uservalue3, propertySetID, property, NULL, 0, value, size, &ulBytes)))
+						ALErrorCode = AL_INVALID_OPERATION;
 			}
 			else
 				ALErrorCode = AL_INVALID_OPERATION;
@@ -229,8 +227,8 @@ ALAPI ALenum ALAPIENTRY EAXGet(const GUID *propertySetID,ALuint property,ALuint 
 
 		if (alIsSource((ALuint)ALSource) && ALSource->uservalue3)
 		{
-			IKsPropertySet_Get((LPKSPROPERTYSET)ALSource->uservalue3, propertySetID, property, NULL, 0,
-				value, size, &ulBytes);
+			if (FAILED(IKsPropertySet_Get((LPKSPROPERTYSET)ALSource->uservalue3, propertySetID, property, NULL, 0, value, size, &ulBytes)))
+				ALErrorCode = AL_INVALID_OPERATION;
 		}
 		else
 			ALErrorCode = AL_INVALID_OPERATION;
@@ -240,7 +238,7 @@ ALAPI ALenum ALAPIENTRY EAXGet(const GUID *propertySetID,ALuint property,ALuint 
 			alDeleteSources(1, &(ALuint)ALSource);
 	}
 
-	alcProcessContext(ALContext);
+	ProcessContext(ALContext);
 	return ALErrorCode;
 }
 
@@ -255,7 +253,7 @@ ALAPI ALenum ALAPIENTRY EAXGet(const GUID *propertySetID,ALuint property,ALuint 
 	size		  : Size of data pointed to by value
 
 	Returns AL_INVALID_NAME if a valid Source name was required but not given
-	Returns AL_INVALID_OPERATION if the Source is 2D
+	Returns AL_INVALID_OPERATION if the Source is 2D or the EAX call fails
 	Returns AL_INVALID_VALUE if the GUID is not recognized
 */
 ALAPI ALenum ALAPIENTRY EAXSet(const GUID *propertySetID,ALuint property,ALuint source,ALvoid *value,ALuint size)
@@ -265,11 +263,10 @@ ALAPI ALenum ALAPIENTRY EAXSet(const GUID *propertySetID,ALuint property,ALuint 
 	ALuint		i;
 	ALenum		ALErrorCode = AL_NO_ERROR;
 	ALboolean	bGenSource = AL_FALSE;
-	ALboolean	bEAX2B = AL_FALSE;
-	ALboolean	bEAX2L = AL_FALSE;	
+	ALboolean	bEAX2B = AL_FALSE, bEAX2L = AL_FALSE;	
 
 	ALCContext=alcGetCurrentContext();
-	alcSuspendContext(ALCContext);
+	SuspendContext(ALCContext);
 
 	// Determine which EAX Property is being set
 	if ( IsEqualGUID(propertySetID, &DSPROPSETID_EAX20_BufferProperties) )
@@ -287,7 +284,8 @@ ALAPI ALenum ALAPIENTRY EAXSet(const GUID *propertySetID,ALuint property,ALuint 
 			ALSource = (ALsource*)source;
 			if (ALSource->uservalue3)
 			{
-				IKsPropertySet_Set((LPKSPROPERTYSET)ALSource->uservalue3, propertySetID, property, NULL, 0, value, size);
+				if (FAILED(IKsPropertySet_Set((LPKSPROPERTYSET)ALSource->uservalue3, propertySetID, property, NULL, 0, value, size)))
+					ALErrorCode = AL_INVALID_OPERATION;
 			}
 			else
 				ALErrorCode = AL_INVALID_OPERATION;
@@ -329,7 +327,8 @@ ALAPI ALenum ALAPIENTRY EAXSet(const GUID *propertySetID,ALuint property,ALuint 
 		// If we found a valid Source, then apply EAX affect using EAXUnified if necessary
 		if (alIsSource((ALuint)ALSource) && ALSource->uservalue3)
 		{
-			IKsPropertySet_Set((LPKSPROPERTYSET)ALSource->uservalue3, propertySetID, property, NULL, 0, value, size);
+			if (FAILED(IKsPropertySet_Set((LPKSPROPERTYSET)ALSource->uservalue3, propertySetID, property, NULL, 0, value, size)))
+				ALErrorCode = AL_INVALID_OPERATION;
 		}
 		else
 			ALErrorCode = AL_INVALID_OPERATION;
@@ -339,6 +338,6 @@ ALAPI ALenum ALAPIENTRY EAXSet(const GUID *propertySetID,ALuint property,ALuint 
 	if (bGenSource)
 		alDeleteSources(1, &(ALuint)ALSource);
 	
-	alcProcessContext(ALCContext);
+	ProcessContext(ALCContext);
 	return ALErrorCode;
 }

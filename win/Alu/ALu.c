@@ -95,6 +95,9 @@ ALUAPI ALvoid ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint chan
 	ALint HeadRelative;
 	ALenum Error;
 	ALsource *ALSource;
+	ALbuffer *ALBuffer;
+	ALuint Buffer;
+	ALuint NumBufferChannels = 1;
 
 	if (alIsSource(source))
 	{
@@ -134,6 +137,56 @@ ALUAPI ALvoid ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint chan
 		alGetListenerfv(AL_POSITION,ListenerPosition);
 		alGetListenerfv(AL_VELOCITY,ListenerVelocity);
 		alGetListenerfv(AL_ORIENTATION,ListenerOrientation);
+
+		//Get buffer info
+		Buffer = ALSource->param[AL_BUFFER-AL_CONE_INNER_ANGLE].data.i;
+		if (Buffer)
+		{
+			ALBuffer = (ALbuffer*)Buffer;
+			NumBufferChannels = (((ALBuffer->format==AL_FORMAT_MONO8)||(ALBuffer->format==AL_FORMAT_MONO16))?1:2);
+		}
+
+		// If this is a Stereo Source - just apply the correct volume levels + pitch (1.0f)
+		if (NumBufferChannels == 2)
+		{
+			switch (channels)
+			{
+				case 1:
+					drysend[0]=(Volume*1.0f*ListenerGain);
+					wetsend[0]=(Volume*0.0f*ListenerGain);
+					break;
+				case 2:
+				default:
+					drysend[0]=(Volume*1.0f*ListenerGain);
+					drysend[1]=(Volume*1.0f*ListenerGain);
+					wetsend[0]=(Volume*0.0f*ListenerGain);
+					wetsend[1]=(Volume*0.0f*ListenerGain);
+			 		break;
+				case 3:
+					drysend[0]=(Volume*1.0f*ListenerGain);
+					drysend[1]=(Volume*1.0f*ListenerGain);
+					drysend[2]=(Volume*1.0f*ListenerGain);
+					wetsend[0]=(Volume*0.0f*ListenerGain);
+					wetsend[1]=(Volume*0.0f*ListenerGain);
+					wetsend[2]=(Volume*0.0f*ListenerGain);
+					break;
+				case 4:
+					drysend[0]=(Volume*1.0f*ListenerGain);
+					drysend[1]=(Volume*1.0f*ListenerGain);
+					drysend[2]=(Volume*1.0f*ListenerGain);
+					drysend[3]=(Volume*1.0f*ListenerGain);
+					wetsend[0]=(Volume*0.0f*ListenerGain);
+					wetsend[1]=(Volume*0.0f*ListenerGain);
+					wetsend[2]=(Volume*0.0f*ListenerGain);
+					wetsend[3]=(Volume*0.0f*ListenerGain);
+					break;
+			}
+
+			pitch[0] = 1.0f;
+
+			return;
+		}
+
 		//1. Translate Listener to origin (convert to head relative)
 		if (HeadRelative==AL_FALSE)
 		{
@@ -265,7 +318,7 @@ ALUAPI ALvoid ALUAPIENTRY aluMixData(ALvoid *context,ALvoid *buffer,ALsizei size
 	if (context)
 	{
 		ALContext=((ALCcontext *)context);
-		alcSuspendContext(ALContext);
+		SuspendContext(ALContext);
 		if ((buffer)&&(size))
 		{
 			//Figure output format variables
@@ -437,7 +490,7 @@ ALUAPI ALvoid ALUAPIENTRY aluMixData(ALvoid *context,ALvoid *buffer,ALsizei size
 			}
 		}
 		Error=alGetError();
-		alcProcessContext(ALContext);
+		ProcessContext(ALContext);
 	}
 }
 

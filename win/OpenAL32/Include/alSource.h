@@ -25,11 +25,11 @@ extern "C" {
 #define CONEOUTSIDEVOLUME		512
 #define LOOPED					1024
 #define STATE					2048
-#define SDELETE					4096
-#define SGENERATESOURCE			8192
-#define SQUEUE					16384
-#define SUNQUEUE				32768
-#define SUPDATEBUFFERS			65536
+#define ROLLOFFFACTOR			4096
+#define SDELETE					8192
+#define SGENERATESOURCE			16384
+#define SQUEUE					32768
+#define SUNQUEUE				65536
 
 #define ALSOURCE		1
 #define ALLISTENER		2
@@ -67,7 +67,6 @@ typedef struct ALsource_struct
 	ALboolean	valid;
 	ALboolean	play;
 	ALboolean	relative;
-	ALboolean	paused;
 	ALenum		state;
 	ALuint		position;
 	ALuint		position_fraction;
@@ -98,10 +97,15 @@ typedef struct ALsource_struct
 	ALuint		OldPlayCursor;			// Previous position of Play Cursor
 	ALuint		OldWriteCursor;			// Previous position of the Write Cursor
 	ALuint		SilenceAdded;			// Number of bytes of silence added to buffer
+	ALfloat		BufferDuration;			// Length in seconds of the DS circular buffer
+	ALuint		OldTime;				// Last time Source was serviced by timer
+
+	ALuint		CurrentState;
+	ALboolean	DSBufferPlaying;
+
 	struct ALsource_struct *previous;
 	struct ALsource_struct *next;
 } ALsource;
-
 
 ALAPI ALvoid	ALAPIENTRY alGenSources(ALsizei n,ALuint *sources);
 ALAPI ALvoid	ALAPIENTRY alDeleteSources(ALsizei n,ALuint *sources);

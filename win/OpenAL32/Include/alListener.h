@@ -32,16 +32,7 @@ typedef struct ALlistener_struct
 } ALlistener;
 
 #pragma pack (pop)
-/*
-ALAPI ALvoid	ALAPIENTRY alListenerf(ALenum pname,ALfloat value);
-ALAPI ALvoid	ALAPIENTRY alListener3f(ALenum pname,ALfloat v1,ALfloat v2,ALfloat v3); 
-ALAPI ALvoid	ALAPIENTRY alListenerfv(ALenum pname,ALfloat *values); 
-ALAPI ALvoid	ALAPIENTRY alListeneri(ALenum pname,ALint value);
-ALAPI ALvoid	ALAPIENTRY alGetListenerf(ALenum pname,ALfloat *value);
-ALAPI ALvoid	ALAPIENTRY alGetListener3f(ALenum pname,ALfloat *v1,ALfloat *v2,ALfloat *v3); 
-ALAPI ALvoid	ALAPIENTRY alGetListenerfv(ALenum pname,ALfloat *values); 
-ALAPI ALvoid	ALAPIENTRY alGetListeneri(ALenum pname,ALint *value);
-*/
+
 #ifdef __cplusplus
 }
 #endif
