@@ -233,6 +233,9 @@ typedef int ALenum;
 #define AL_FORMAT_STEREO8                        0x1102
 #define AL_FORMAT_STEREO16                       0x1103
 
+/** Ogg Vorbis format specifier. */
+#define AL_FORMAT_VORBIS_EXT                     0x1110
+
 /** 
  * Sound buffers: frequency, in units of Hertz [Hz].
  * This is the number of samples per second. Half of the

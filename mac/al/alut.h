@@ -29,8 +29,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#pragma export on
+   
+#ifdef TARGET_OS_MAC
+   #if TARGET_OS_MAC
+       #pragma export on
+   #endif
+#endif
 
 ALUTAPI ALvoid	ALUTAPIENTRY alutInit(ALint *argc,ALbyte **argv);
 ALUTAPI ALvoid	ALUTAPIENTRY alutExit(ALvoid);
@@ -38,7 +42,11 @@ ALUTAPI ALvoid	ALUTAPIENTRY alutLoadWAVFile(ALbyte *file,ALenum *format,ALvoid *
 ALUTAPI ALvoid  ALUTAPIENTRY alutLoadWAVMemory(ALbyte *memory,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq);
 ALUTAPI ALvoid  ALUTAPIENTRY alutUnloadWAV(ALenum format,ALvoid *data,ALsizei size,ALsizei freq);
 
-#pragma export off
+#ifdef TARGET_OS_MAC
+   #if TARGET_OS_MAC
+      #pragma export off
+   #endif
+#endif
 
 #ifdef __cplusplus
 }

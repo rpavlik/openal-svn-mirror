@@ -124,6 +124,8 @@ void alGetSource3f(ALint sid, ALenum param,
 #endif
 
 #ifdef MAC_OS_X
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -1088,13 +1090,13 @@ ALvoid FA_RequestObjectNames(ALvoid)
 	{
 		localResultOK = false;
 	}
-	alGenBuffers(-1, testBuffers); // invalid -- make sure error code comes back
+	alGenBuffers((ALuint)-1, testBuffers); // invalid -- make sure error code comes back
 	error = alGetError();
 	if (error == AL_NO_ERROR)
 	{
 		localResultOK = false;
 	}
-	alGenSources(-1, testSources); // invalid -- make sure error code comes back
+	alGenSources((ALuint)-1, testSources); // invalid -- make sure error code comes back
 	error = alGetError();
 	if (error == AL_NO_ERROR)
 	{
@@ -1125,13 +1127,13 @@ ALvoid FA_ReleaseObjectNames (ALvoid)
 	printf("\nReleasing Object Names Test. ");
 	alGetError();
 	localResultOK = true;
-	alDeleteBuffers(-1, testBuffers); // invalid -- make sure error code comes back
+	alDeleteBuffers((ALuint)-1, testBuffers); // invalid -- make sure error code comes back
 	error = alGetError();
 	if (error == AL_NO_ERROR)
 	{
 		localResultOK = false;
 	}
-	alDeleteSources(-1, testSources); // invalid -- make sure error code comes back
+	alDeleteSources((ALuint)-1, testSources); // invalid -- make sure error code comes back
 	error = alGetError();
 	if (error == AL_NO_ERROR)
 	{
@@ -4013,7 +4015,7 @@ ALvoid I_StreamingTest(ALvoid)
 #ifndef SWAPBYTES
 					alBufferData(BufferID, Format, data, DataToRead, wave.SamplesPerSec);
 #else
-					for (int i = 0; i < DataToRead; i = i+2)
+					for (unsigned int i = 0; i < DataToRead; i = i+2)
 					{
 						SwapBytes((unsigned short *)(data+i));
 					}
@@ -4176,16 +4178,17 @@ This test exercises Ogg Vorbis playback functionality.
 */
 ALvoid I_VorbisTest()
 {
-	ALint	error;
-	ALuint	source[1];
-	ALuint  buffers[2];
-	ALuint	Buffer;
-	ALint	BuffersInQueue, BuffersProcessed;
-	ALbyte	ch;
-	ALboolean bLoop = false;
-	ALfloat source0Pos[]={ 2.0, 0.0,-2.0};	// Front and right of the listener
-	ALfloat source0Vel[]={ 0.0, 0.0, 0.0};
+      ALint error;
+      ALuint source[1];
+      ALuint buffers[2];
+      ALuint Buffer;
+      ALint BuffersInQueue, BuffersProcessed;
+      ALbyte ch;
+      ALboolean bLoop = false;
+      ALfloat source0Pos[]={ 2.0, 0.0,-2.0};	// Front and right of the listener
+      ALfloat source0Vel[]={ 0.0, 0.0, 0.0};
 
+      if (alIsExtensionPresent((ALubyte *)"AL_EXT_vorbis") == AL_TRUE) {
 	alGenSources(1,source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
@@ -4233,14 +4236,7 @@ ALvoid I_VorbisTest()
 				alSourcePlay(source[0]);
 				if ((error = alGetError()) != AL_NO_ERROR)
 					DisplayALError((ALbyte *) "alSourcePlay source 0 : ", error);
-		   
-		                // delay until done playing
-/*				ALint state;
-				alGetSourceiv(source[0], AL_SOURCE_STATE, &state);
-		                while (state == AL_PLAYING) {
-			          sleep(1);
-		                } */
-				
+		   				
 				break;
 			case '2':
 				if (bLoop)
@@ -4268,8 +4264,11 @@ ALvoid I_VorbisTest()
 
 	alDeleteSources(1, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError((ALbyte *) "alDeleteSources 2 : ", error);
+  	  DisplayALError((ALbyte *) "alDeleteSources 2 : ", error);    
+      } else { // Ogg Vorbis extension not present
+	printf("\nOgg Vorbis extension not available.\n");
+      }
 	
-	return;
+      return;
 }
 #endif

@@ -140,6 +140,11 @@
 				F558C556036A119601A8006E,
 				F558C557036A119601A8006E,
 				F558C559036A119601A8006E,
+				984FDEC70433F5A20042B474,
+				984FDEC80433F5A20042B474,
+				984FDEC90433F5A20042B474,
+				984FDECA0433F5A20042B474,
+				984FDECB0433F5A20042B474,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -230,6 +235,11 @@
 		08FB77ACFE841707C02AAC07 = {
 			children = (
 				F558C52A036A116501A8006E,
+				984FDEC20433F5A20042B474,
+				984FDEC30433F5A20042B474,
+				984FDEC40433F5A20042B474,
+				984FDEC50433F5A20042B474,
+				984FDEC60433F5A20042B474,
 				F558C52B036A116501A8006E,
 				F558C52C036A116501A8006E,
 				F558C52D036A116501A8006E,
@@ -292,6 +302,81 @@
 //4F2
 //4F3
 //4F4
+//980
+//981
+//982
+//983
+//984
+		984FDEC20433F5A20042B474 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = al.h;
+			path = /Users/garinh/prog/openal/mac/al/al.h;
+			refType = 0;
+		};
+		984FDEC30433F5A20042B474 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = alc.h;
+			path = /Users/garinh/prog/openal/mac/al/alc.h;
+			refType = 0;
+		};
+		984FDEC40433F5A20042B474 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = alctypes.h;
+			path = /Users/garinh/prog/openal/mac/al/alctypes.h;
+			refType = 0;
+		};
+		984FDEC50433F5A20042B474 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = altypes.h;
+			path = /Users/garinh/prog/openal/mac/al/altypes.h;
+			refType = 0;
+		};
+		984FDEC60433F5A20042B474 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = alut.h;
+			path = /Users/garinh/prog/openal/mac/al/alut.h;
+			refType = 0;
+		};
+		984FDEC70433F5A20042B474 = {
+			fileRef = 984FDEC20433F5A20042B474;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		984FDEC80433F5A20042B474 = {
+			fileRef = 984FDEC30433F5A20042B474;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		984FDEC90433F5A20042B474 = {
+			fileRef = 984FDEC40433F5A20042B474;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		984FDECA0433F5A20042B474 = {
+			fileRef = 984FDEC50433F5A20042B474;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		984FDECB0433F5A20042B474 = {
+			fileRef = 984FDEC60433F5A20042B474;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+//980
+//981
+//982
+//983
+//984
 //F50
 //F51
 //F52

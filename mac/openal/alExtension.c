@@ -23,18 +23,38 @@
 #include "alc.h"
 #include <string.h>
 
+#ifdef MAC_OS_X
+#include <mach-o/dyld.h>
+#endif
+
 #pragma export on 
+
+#ifdef MAC_OS_X
+void *pVorbisLib = NULL;
+#endif
 
 ALAPI ALboolean ALAPIENTRY alIsExtensionPresent(ALubyte *extName)
 {
     ALboolean extPresent;
     
     extPresent = AL_FALSE;
-    
+
+#ifdef MAC_OS_X
     if (!strcmp(extName, "AL_EXT_vorbis")) {
         // check for required libraries
-            // set function pointers
+        pVorbisLib = (void *) NSAddImage("libvorbis.dylib", NSADDIMAGE_OPTION_RETURN_ON_ERROR);
+        if (pVorbisLib == NULL) {
+          // try Fink loc if first try fails
+          pVorbisLib = (void *) NSAddImage("/sw/lib/libvorbis.dylib", NSADDIMAGE_OPTION_RETURN_ON_ERROR);
+        }
+        
+        // set function pointers
+            
+        if (pVorbisLib != NULL) {
+          extPresent = AL_TRUE;
+        }
     }
+#endif
     
     return extPresent;
 }

@@ -24,10 +24,14 @@
 #include <Carbon/Carbon.h>
 #endif
 
+#if defined(__APPLE__) & defined(__MACH__) // check for OS X
+#define MAC_OS_X
+#endif
+
 #include "globaltypes.h"
 
-extern ALbuffer gBuffer[AL_MAXBUFFERS];
-extern ALsource gSource[AL_MAXSOURCES];
+extern ALbuffer gBuffer[AL_MAXBUFFERS]; // holds data on each buffer
+extern ALsource gSource[AL_MAXSOURCES]; // holds data on each source
 extern ALfloat gDopplerFactor;
 extern ALfloat gDopplerVelocity;
 extern ALfloat gDistanceScale;
@@ -35,3 +39,7 @@ extern ALfloat gPropagationSpeed;
 extern ALlistener gListener;
 extern SndCallBackUPP gpSMRtn;
 extern ALuint gBufferSize;
+
+#ifdef MAC_OS_X
+extern void *pVorbisLib;
+#endif
