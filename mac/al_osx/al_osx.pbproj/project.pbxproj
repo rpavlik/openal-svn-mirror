@@ -1,0 +1,590 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 38;
+	objects = {
+		034768DDFF38A45A11DB9C8B = {
+			children = (
+				034768DEFF38A45A11DB9C8B,
+			);
+			isa = PBXGroup;
+			name = Products;
+			refType = 4;
+		};
+		034768DEFF38A45A11DB9C8B = {
+			isa = PBXFrameworkReference;
+			path = openal.framework;
+			refType = 3;
+		};
+//030
+//031
+//032
+//033
+//034
+//080
+//081
+//082
+//083
+//084
+		0867D690FE84028FC02AAC07 = {
+			buildStyles = (
+				4F0BB7EC011F40E904CA0E50,
+				4F0BB7ED011F40E904CA0E50,
+			);
+			isa = PBXProject;
+			mainGroup = 0867D691FE84028FC02AAC07;
+			productRefGroup = 034768DDFF38A45A11DB9C8B;
+			projectDirPath = "";
+			targets = (
+				0867D69CFE84028FC02AAC07,
+			);
+		};
+		0867D691FE84028FC02AAC07 = {
+			children = (
+				08FB77ACFE841707C02AAC07,
+				089C1665FE841158C02AAC07,
+				0867D69AFE84028FC02AAC07,
+				034768DDFF38A45A11DB9C8B,
+			);
+			isa = PBXGroup;
+			name = al_osx;
+			refType = 4;
+		};
+		0867D69AFE84028FC02AAC07 = {
+			children = (
+				08FB77AAFE841565C02AAC07,
+			);
+			isa = PBXGroup;
+			name = "External Frameworks and Libraries";
+			refType = 4;
+		};
+		0867D69CFE84028FC02AAC07 = {
+			buildPhases = (
+				0867D69DFE84028FC02AAC07,
+				0867D69EFE84028FC02AAC07,
+				0867D69FFE84028FC02AAC07,
+				0867D6A0FE84028FC02AAC07,
+				0867D6A2FE84028FC02AAC07,
+			);
+			buildSettings = {
+				DEBUGGING_SYMBOLS = NO;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = "";
+				FRAMEWORK_VERSION = A;
+				HEADER_SEARCH_PATHS = ../al;
+				INSTALL_PATH = "$(HOME)/Library/Frameworks";
+				LIBRARY_SEARCH_PATHS = "";
+				OPTIMIZATION_CFLAGS = "-O2";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = openal;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
+				WRAPPER_EXTENSION = framework;
+			};
+			dependencies = (
+			);
+			isa = PBXFrameworkTarget;
+			name = al_osx;
+			productInstallPath = "$(HOME)/Library/Frameworks";
+			productName = al_osx;
+			productReference = 034768DEFF38A45A11DB9C8B;
+			productSettingsXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>openal</string>
+	<key>CFBundleGetInfoString</key>
+	<string>OpenAL</string>
+	<key>CFBundleIconFile</key>
+	<string></string>
+	<key>CFBundleIdentifier</key>
+	<string></string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>OpenAL</string>
+	<key>CFBundlePackageType</key>
+	<string>FMWK</string>
+	<key>CFBundleShortVersionString</key>
+	<string>OpenAL</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>1.0.1d1</string>
+	<key>CSResourcesFileMapped</key>
+	<true/>
+</dict>
+</plist>
+";
+			shouldUseHeadermap = 1;
+		};
+		0867D69DFE84028FC02AAC07 = {
+			buildActionMask = 2147483647;
+			files = (
+				F558C53F036A116501A8006E,
+				F558C542036A116501A8006E,
+				F558C544036A116501A8006E,
+				F558C546036A116501A8006E,
+				F558C548036A116501A8006E,
+				F558C54A036A116501A8006E,
+				F558C54C036A116501A8006E,
+				F558C54E036A116501A8006E,
+				F558C550036A116501A8006E,
+				F558C556036A119601A8006E,
+				F558C557036A119601A8006E,
+				F558C559036A119601A8006E,
+			);
+			isa = PBXHeadersBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0867D69EFE84028FC02AAC07 = {
+			buildActionMask = 2147483647;
+			files = (
+				089C1668FE841158C02AAC07,
+			);
+			isa = PBXResourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0867D69FFE84028FC02AAC07 = {
+			buildActionMask = 2147483647;
+			files = (
+				F558C53E036A116501A8006E,
+				F558C540036A116501A8006E,
+				F558C541036A116501A8006E,
+				F558C543036A116501A8006E,
+				F558C545036A116501A8006E,
+				F558C547036A116501A8006E,
+				F558C549036A116501A8006E,
+				F558C54B036A116501A8006E,
+				F558C54D036A116501A8006E,
+				F558C54F036A116501A8006E,
+				F558C551036A116501A8006E,
+				F558C558036A119601A8006E,
+			);
+			isa = PBXSourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0867D6A0FE84028FC02AAC07 = {
+			buildActionMask = 2147483647;
+			files = (
+				08FB77ABFE841565C02AAC07,
+			);
+			isa = PBXFrameworksBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0867D6A2FE84028FC02AAC07 = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			isa = PBXRezBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		089C1665FE841158C02AAC07 = {
+			children = (
+				089C1666FE841158C02AAC07,
+			);
+			isa = PBXGroup;
+			name = Resources;
+			refType = 4;
+		};
+		089C1666FE841158C02AAC07 = {
+			children = (
+				089C1667FE841158C02AAC07,
+			);
+			isa = PBXVariantGroup;
+			name = InfoPlist.strings;
+			refType = 4;
+		};
+		089C1667FE841158C02AAC07 = {
+			fileEncoding = 10;
+			isa = PBXFileReference;
+			name = English;
+			path = English.lproj/InfoPlist.strings;
+			refType = 4;
+		};
+		089C1668FE841158C02AAC07 = {
+			fileRef = 089C1666FE841158C02AAC07;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		08FB77AAFE841565C02AAC07 = {
+			isa = PBXFrameworkReference;
+			name = Carbon.framework;
+			path = /System/Library/Frameworks/Carbon.framework;
+			refType = 0;
+		};
+		08FB77ABFE841565C02AAC07 = {
+			fileRef = 08FB77AAFE841565C02AAC07;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		08FB77ACFE841707C02AAC07 = {
+			children = (
+				F558C52A036A116501A8006E,
+				F558C52B036A116501A8006E,
+				F558C52C036A116501A8006E,
+				F558C52D036A116501A8006E,
+				F558C52E036A116501A8006E,
+				F558C52F036A116501A8006E,
+				F558C530036A116501A8006E,
+				F558C531036A116501A8006E,
+				F558C532036A116501A8006E,
+				F558C533036A116501A8006E,
+				F558C534036A116501A8006E,
+				F558C535036A116501A8006E,
+				F558C536036A116501A8006E,
+				F558C537036A116501A8006E,
+				F558C538036A116501A8006E,
+				F558C539036A116501A8006E,
+				F558C53A036A116501A8006E,
+				F558C53B036A116501A8006E,
+				F558C53C036A116501A8006E,
+				F558C53D036A116501A8006E,
+				F558C552036A119601A8006E,
+				F558C553036A119601A8006E,
+				F558C554036A119601A8006E,
+				F558C555036A119601A8006E,
+			);
+			isa = PBXGroup;
+			name = Source;
+			refType = 4;
+		};
+//080
+//081
+//082
+//083
+//084
+//4F0
+//4F1
+//4F2
+//4F3
+//4F4
+		4F0BB7EC011F40E904CA0E50 = {
+			buildRules = (
+			);
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				OPTIMIZATION_CFLAGS = "-O0";
+			};
+			isa = PBXBuildStyle;
+			name = Development;
+		};
+		4F0BB7ED011F40E904CA0E50 = {
+			buildRules = (
+			);
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+			};
+			isa = PBXBuildStyle;
+			name = Deployment;
+		};
+//4F0
+//4F1
+//4F2
+//4F3
+//4F4
+//F50
+//F51
+//F52
+//F53
+//F54
+		F558C52A036A116501A8006E = {
+			isa = PBXFileReference;
+			name = alBuffer.c;
+			path = /Users/garinh/prog/openal/mac/openal/alBuffer.c;
+			refType = 0;
+		};
+		F558C52B036A116501A8006E = {
+			isa = PBXFileReference;
+			name = alBuffer.h;
+			path = /Users/garinh/prog/openal/mac/openal/alBuffer.h;
+			refType = 0;
+		};
+		F558C52C036A116501A8006E = {
+			isa = PBXFileReference;
+			name = alc.c;
+			path = /Users/garinh/prog/openal/mac/openal/alc.c;
+			refType = 0;
+		};
+		F558C52D036A116501A8006E = {
+			isa = PBXFileReference;
+			name = alEnvironment.c;
+			path = /Users/garinh/prog/openal/mac/openal/alEnvironment.c;
+			refType = 0;
+		};
+		F558C52E036A116501A8006E = {
+			isa = PBXFileReference;
+			name = alEnvironment.h;
+			path = /Users/garinh/prog/openal/mac/openal/alEnvironment.h;
+			refType = 0;
+		};
+		F558C52F036A116501A8006E = {
+			isa = PBXFileReference;
+			name = alError.c;
+			path = /Users/garinh/prog/openal/mac/openal/alError.c;
+			refType = 0;
+		};
+		F558C530036A116501A8006E = {
+			isa = PBXFileReference;
+			name = alError.h;
+			path = /Users/garinh/prog/openal/mac/openal/alError.h;
+			refType = 0;
+		};
+		F558C531036A116501A8006E = {
+			isa = PBXFileReference;
+			name = alExtension.c;
+			path = /Users/garinh/prog/openal/mac/openal/alExtension.c;
+			refType = 0;
+		};
+		F558C532036A116501A8006E = {
+			isa = PBXFileReference;
+			name = alExtension.h;
+			path = /Users/garinh/prog/openal/mac/openal/alExtension.h;
+			refType = 0;
+		};
+		F558C533036A116501A8006E = {
+			isa = PBXFileReference;
+			name = alListener.c;
+			path = /Users/garinh/prog/openal/mac/openal/alListener.c;
+			refType = 0;
+		};
+		F558C534036A116501A8006E = {
+			isa = PBXFileReference;
+			name = alListener.h;
+			path = /Users/garinh/prog/openal/mac/openal/alListener.h;
+			refType = 0;
+		};
+		F558C535036A116501A8006E = {
+			isa = PBXFileReference;
+			name = alMain.c;
+			path = /Users/garinh/prog/openal/mac/openal/alMain.c;
+			refType = 0;
+		};
+		F558C536036A116501A8006E = {
+			isa = PBXFileReference;
+			name = alMain.h;
+			path = /Users/garinh/prog/openal/mac/openal/alMain.h;
+			refType = 0;
+		};
+		F558C537036A116501A8006E = {
+			isa = PBXFileReference;
+			name = alSoftware.c;
+			path = /Users/garinh/prog/openal/mac/openal/alSoftware.c;
+			refType = 0;
+		};
+		F558C538036A116501A8006E = {
+			isa = PBXFileReference;
+			name = alSoftware.h;
+			path = /Users/garinh/prog/openal/mac/openal/alSoftware.h;
+			refType = 0;
+		};
+		F558C539036A116501A8006E = {
+			isa = PBXFileReference;
+			name = alSource.c;
+			path = /Users/garinh/prog/openal/mac/openal/alSource.c;
+			refType = 0;
+		};
+		F558C53A036A116501A8006E = {
+			isa = PBXFileReference;
+			name = alSource.h;
+			path = /Users/garinh/prog/openal/mac/openal/alSource.h;
+			refType = 0;
+		};
+		F558C53B036A116501A8006E = {
+			isa = PBXFileReference;
+			name = alState.c;
+			path = /Users/garinh/prog/openal/mac/openal/alState.c;
+			refType = 0;
+		};
+		F558C53C036A116501A8006E = {
+			isa = PBXFileReference;
+			name = alState.h;
+			path = /Users/garinh/prog/openal/mac/openal/alState.h;
+			refType = 0;
+		};
+		F558C53D036A116501A8006E = {
+			isa = PBXFileReference;
+			name = ALut.c;
+			path = /Users/garinh/prog/openal/mac/openal/ALut.c;
+			refType = 0;
+		};
+		F558C53E036A116501A8006E = {
+			fileRef = F558C52A036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F558C53F036A116501A8006E = {
+			fileRef = F558C52B036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F558C540036A116501A8006E = {
+			fileRef = F558C52C036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F558C541036A116501A8006E = {
+			fileRef = F558C52D036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F558C542036A116501A8006E = {
+			fileRef = F558C52E036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F558C543036A116501A8006E = {
+			fileRef = F558C52F036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F558C544036A116501A8006E = {
+			fileRef = F558C530036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F558C545036A116501A8006E = {
+			fileRef = F558C531036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F558C546036A116501A8006E = {
+			fileRef = F558C532036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F558C547036A116501A8006E = {
+			fileRef = F558C533036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F558C548036A116501A8006E = {
+			fileRef = F558C534036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F558C549036A116501A8006E = {
+			fileRef = F558C535036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F558C54A036A116501A8006E = {
+			fileRef = F558C536036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F558C54B036A116501A8006E = {
+			fileRef = F558C537036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F558C54C036A116501A8006E = {
+			fileRef = F558C538036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F558C54D036A116501A8006E = {
+			fileRef = F558C539036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F558C54E036A116501A8006E = {
+			fileRef = F558C53A036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F558C54F036A116501A8006E = {
+			fileRef = F558C53B036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F558C550036A116501A8006E = {
+			fileRef = F558C53C036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F558C551036A116501A8006E = {
+			fileRef = F558C53D036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F558C552036A119601A8006E = {
+			isa = PBXFileReference;
+			name = globals.h;
+			path = /Users/garinh/prog/openal/mac/openal/globals.h;
+			refType = 0;
+		};
+		F558C553036A119601A8006E = {
+			isa = PBXFileReference;
+			name = globaltypes.h;
+			path = /Users/garinh/prog/openal/mac/openal/globaltypes.h;
+			refType = 0;
+		};
+		F558C554036A119601A8006E = {
+			isa = PBXFileReference;
+			name = sm.c;
+			path = /Users/garinh/prog/openal/mac/openal/sm.c;
+			refType = 0;
+		};
+		F558C555036A119601A8006E = {
+			isa = PBXFileReference;
+			name = sm.h;
+			path = /Users/garinh/prog/openal/mac/openal/sm.h;
+			refType = 0;
+		};
+		F558C556036A119601A8006E = {
+			fileRef = F558C552036A119601A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F558C557036A119601A8006E = {
+			fileRef = F558C553036A119601A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F558C558036A119601A8006E = {
+			fileRef = F558C554036A119601A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F558C559036A119601A8006E = {
+			fileRef = F558C555036A119601A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+	};
+	rootObject = 0867D690FE84028FC02AAC07;
+}
