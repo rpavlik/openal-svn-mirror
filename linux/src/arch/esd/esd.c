@@ -27,6 +27,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#if OPENAL_DLOPEN_ESD
+#include <dlfcn.h>
+#endif
+
 #include <esd.h>
 
 #define DEF_SPEED	_ALC_CANON_SPEED
@@ -39,6 +43,58 @@
 #define ESD_NAMELEN    1024
 
 static const char *genesdkey(void);
+static int openal_load_esd_library(void);
+
+
+/*
+ * ESD library functions.
+ */
+static int (*pesd_open_sound)( const char *host );
+static int (*pesd_play_stream)( esd_format_t format, int rate, 
+		     const char *host, const char *name );
+static int (*pesd_standby)( int esd );
+static int (*pesd_resume)( int esd );
+static int (*pesd_close)( int esd );
+
+/*
+ * ESD library handle.
+ */
+static void * esd_lib_handle = NULL;
+
+static int openal_load_esd_library(void)
+{
+        char * error = NULL;
+    
+	if (esd_lib_handle != NULL)
+		return 1;  /* already loaded. */
+
+	#if OPENAL_DLOPEN_ESD
+		#define OPENAL_LOAD_ESD_SYMBOL(x) p##x = dlsym(esd_lib_handle, #x); \
+                                                   error = dlerror(); \
+                                                   if (p##x == NULL) { \
+                                                           fprintf(stderr,"Could not resolve ESoundD symbol %s: %s\n", #x, ((error!=NULL)?(error):("(null)"))); \
+                                                           dlclose(esd_lib_handle); esd_lib_handle = NULL; \
+                                                           return 0; }
+                dlerror(); /* clear error state */
+		esd_lib_handle = dlopen("libesd.so", RTLD_LAZY | RTLD_GLOBAL);
+                error = dlerror();
+		if (esd_lib_handle == NULL) {
+                        fprintf(stderr,"Could not open ESoundD library: %s\n",((error!=NULL)?(error):("(null)")));
+			return 0;
+                }
+        #else
+		#define OPENAL_LOAD_ESD_SYMBOL(x) p##x = x;
+		esd_lib_handle = (void *) 0xF00DF00D;
+	#endif
+
+        OPENAL_LOAD_ESD_SYMBOL(esd_open_sound);
+        OPENAL_LOAD_ESD_SYMBOL(esd_standby);
+        OPENAL_LOAD_ESD_SYMBOL(esd_resume);
+        OPENAL_LOAD_ESD_SYMBOL(esd_play_stream);
+        OPENAL_LOAD_ESD_SYMBOL(esd_close);
+                
+	return 1;
+}
 
 static fd_set esd_fd_set;
 
@@ -62,7 +118,11 @@ void *grab_write_esd(void) {
 	const char *espeaker = getenv("ESPEAKER");
 	int esd;
 
-	esd = esd_open_sound(espeaker);
+        if (!openal_load_esd_library()) {
+                return NULL;
+        }
+    
+	esd = pesd_open_sound(espeaker);
 	if(esd < 0) {
 		fprintf(stderr, "esd open sound failed.\n");
 		return NULL;
@@ -82,7 +142,7 @@ void *grab_write_esd(void) {
 		default: break;
 	}
 
-	socket = esd_play_stream(fmt, DEF_SPEED, espeaker, esdkey);
+	socket = pesd_play_stream(fmt, DEF_SPEED, espeaker, esdkey);
 
 	if(socket < 0) {
 		fprintf(stderr, "esd play stream failed.\n");
@@ -178,7 +238,7 @@ void release_esd(void *handle) {
 
 	eh = (esd_openal_info_t *) handle;
 
-	esd_close(eh->esdhandle);
+	pesd_close(eh->esdhandle);
 
 	return;
 }
@@ -201,7 +261,7 @@ void pause_esd(void *handle) {
 	eh = (esd_openal_info_t *) handle;
 
 	eh->paused = AL_TRUE;
-	esd_standby(eh->esdhandle);
+	pesd_standby(eh->esdhandle);
 
 	return;
 }
@@ -216,7 +276,7 @@ void resume_esd(void *handle) {
 	eh = (esd_openal_info_t *) handle;
 
 	eh->paused = AL_FALSE;
-	esd_resume(eh->esdhandle);
+	pesd_resume(eh->esdhandle);
 
 	return;
 }
@@ -253,7 +313,7 @@ ALboolean set_write_esd(UNUSED(void *handle),
 
 	eh->speed = *speed;
 
-	socket = esd_play_stream(eh->fmt,
+	socket = pesd_play_stream(eh->fmt,
 				 eh->speed,
 				 eh->espeaker,
 				 eh->name);

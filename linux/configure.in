@@ -547,8 +547,12 @@ fi
 
 dnl   enable arts sound?
 AC_ARG_ENABLE(arts,
-[  --enable-arts             enable arts backend          [default=no]],
+[  --enable-arts             enable aRts backend          [default=no]],
               ,   enable_arts=no)
+AC_ARG_ENABLE(arts,
+[  --enable-arts-dlopen      dlopen aRts lib at runtime   [default=no]],
+              ,   enable_arts_dlopen=no)
+
 if test x$enable_arts = xyes; then
 AC_PATH_PROG(HAVEARTS, artsc-config, , $PATH)
 if test ! -z "$HAVEARTS"; then
@@ -557,9 +561,14 @@ if test ! -z "$HAVEARTS"; then
 
         AC_DEFINE(ARTS_SUPPORT, 1, [undocumented])
 	CFLAGS="$CFLAGS $ARTS_CFLAGS"
-	LIBS="$LIBS $ARTS_LIBS"
 
     	OS_OBJS="$OS_OBJS \$(ARTS_OBJS)"
+        if test x$enable_arts_dlopen = xyes; then
+            AC_DEFINE(OPENAL_DLOPEN_ARTS, 1, [undocumented])
+        else
+            AC_DEFINE(OPENAL_DLOPEN_ARTS, 0, [undocumented])
+            LIBS="$LIBS $ARTS_LIBS"
+        fi
 else
 	AC_MSG_WARN([*** artsc-config not found.  No support compiled in.])
 fi
@@ -570,6 +579,10 @@ dnl   enable esd sound?
 AC_ARG_ENABLE(esd,
 [  --enable-esd              enable esd backend           [default=no]],
               ,   enable_esd=no)
+AC_ARG_ENABLE(esd,
+[  --enable-esd-dlopen       dlopen esd lib at runtime    [default=no]],
+              ,   enable_esd_dlopen=no)
+
 if test x$enable_esd = xyes; then
 AC_PATH_PROG(HAVEESD, esd-config, , $PATH)
 if test ! -z "$HAVEESD"; then
@@ -578,12 +591,18 @@ if test ! -z "$HAVEESD"; then
 
         AC_DEFINE(ESD_SUPPORT, 1, [undocumented])
 	CFLAGS="$CFLAGS $ESD_CFLAGS"
-	LIBS="$LIBS $ESD_LIBS"
 
     	OS_OBJS="$OS_OBJS \$(ESD_OBJS)"
 
         # bad audiofile.h!  bad!
 	SHADOW_WARN=no
+
+        if test x$enable_esd_dlopen = xyes; then
+            AC_DEFINE(OPENAL_DLOPEN_ESD, 1, [undocumented])
+        else
+            AC_DEFINE(OPENAL_DLOPEN_ESD, 0, [undocumented])
+            LIBS="$LIBS $ESD_LIBS"
+        fi
 else
 	AC_MSG_WARN([*** esd-config not found.  No support compiled in.])
 fi
