@@ -1020,6 +1020,7 @@ void alf_tdoppler( ALuint cid,
 	AL_sourcestate *srcstate;
 	ALfloat doppler_factor;
 	ALfloat doppler_velocity;
+	ALfloat doppler_pitch;
 
 	/* lock context, get context specific stuff */
 	_alcLockContext( cid );
@@ -1075,7 +1076,6 @@ void alf_tdoppler( ALuint cid,
 		 *
 		 * FIXME: use epsilon
 		 */
-		src->pitch.data = 1.0;
 		
 		return;
 	}
@@ -1086,8 +1086,17 @@ void alf_tdoppler( ALuint cid,
 		fprintf(stderr, "weird\n");
 	}
 
-	src->pitch.data = compute_doppler_pitch(lp, lv, sp, sv,
-				doppler_factor, doppler_velocity);
+	doppler_pitch = compute_doppler_pitch(lp, lv, sp, sv,
+					doppler_factor, doppler_velocity);
+
+	if(src->pitch.isset == AL_TRUE)
+	{
+		src->pitch.data *= doppler_pitch;
+	}
+	else
+	{
+		src->pitch.data = doppler_pitch;
+	}
 
 #ifdef DEBUG
 	if(src->pitch.data < MIN_PITCH)

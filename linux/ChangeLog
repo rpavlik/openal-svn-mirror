@@ -1,3 +1,8 @@
+2003-05-07  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
+
+	* src/al_filter.c:
+	CHanged doppler to multiply existing pitch, if present.
+
 2003-04-01  J. Valenzuela  <jvalenzu@infinite-monkeys.org>
 
 	* misc
