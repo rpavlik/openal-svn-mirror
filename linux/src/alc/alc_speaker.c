@@ -27,6 +27,10 @@
 
 #include <stdio.h>
 
+#ifndef M_SQRT1_2
+# define M_SQRT1_2      0.70710678118654752440  /* 1/sqrt(2) */
+#endif
+
 /*
  * _alcSpeakerMove( ALuint cid )
  *
@@ -42,16 +46,14 @@
  */
 void _alcSpeakerMove( ALuint cid ) {
 	AL_context *cc;
-	ALfloat zeros[] = { 0.0, 0.0,  0.0 };
-	ALfloat oldat[] = { 0.0, 0.0, -1.0 };
-	ALfloat oldup[] = { 0.0, 1.0, 0.0 };
-	ALfloat newat[3];
-	ALfloat newup[3];
-	ALfloat angle;   /* angle to rotate at vector by */
-	ALfloat upangle; /* angle to rotate up vector by */
+	ALfloat vec[3];
 	ALfloat *pos;    /* listener position */
+	ALfloat *ori;    /* listener orientation */
 	ALfloat ipos[3]; /* inverse listener position */
 	ALuint i;
+	ALmatrix *m;
+	ALmatrix *pm;
+	ALmatrix *rm;
 
 	cc = _alcGetContext( cid );
 	if(cc == NULL) {
@@ -64,20 +66,19 @@ void _alcSpeakerMove( ALuint cid ) {
 	}
 
 	pos = cc->listener.Position;
+	ori = cc->listener.Orientation;
 
-	_alVectorNormalize(newat, cc->listener.Orientation );
-	_alVectorNormalize(newup, &cc->listener.Orientation[3] );
+	m  = _alMatrixAlloc(3, 3);
+	pm = _alMatrixAlloc(1, 3);
+	rm = _alMatrixAlloc(1, 3);
 
-	angle   = _alVectorAngleBeween( zeros, newat, oldat );
-	upangle = _alVectorAngleBeween( zeros, newup, oldup );
+	_alVectorCrossProduct(vec, ori + 0, ori + 3);
+	_alVectorNormalize(m->data[0], vec);
 
-	_alDebug(ALD_MATH, __FILE__, __LINE__, "( oldat %f %f %f) ( newat %f %f %f )",
-		oldat[0], oldat[1], oldat[2], newat[0], newat[1], newat[2] );
-	_alDebug(ALD_MATH, __FILE__, __LINE__, "( oldup %f %f %f) ( newup %f %f %f )",
-		oldup[0], oldup[1], oldup[2], newup[0], newup[1], newup[2] );
+	_alVectorCrossProduct(vec, m->data[0], ori + 0);
+	_alVectorNormalize(m->data[1], vec);
 
-	_alDebug(ALD_MATH, __FILE__, __LINE__, "( angle %f )", angle );
-	_alDebug(ALD_MATH, __FILE__, __LINE__, "( upangle %f) ", upangle );
+	_alVectorNormalize(m->data[2], ori + 0);
 
 	/* reset speaker position */
 	_alcSpeakerInit(cid);
@@ -85,15 +86,14 @@ void _alcSpeakerMove( ALuint cid ) {
 	_alVectorInverse( ipos, cc->listener.Position );
 
 	/* rotate about at and up vectors */
-	for(i = 0; i < _alcDCGetNumSpeakers(); i++) {
-		_alVectorTranslate(cc->_speaker_pos[i].pos,
-				 cc->_speaker_pos[i].pos, ipos);
+	for(i = 0; i < _alcGetNumSpeakers(cid); i++) {
+		_alVectorTranslate(pm->data[0],
+				   cc->_speaker_pos[i].pos, ipos);
 
-		_alRotatePointAboutAxis( angle, cc->_speaker_pos[i].pos, oldup );
-		_alRotatePointAboutAxis( upangle, cc->_speaker_pos[i].pos, oldat );
+		_alMatrixMul(rm, pm, m);
 
 		_alVectorTranslate(cc->_speaker_pos[i].pos,
-				 cc->_speaker_pos[i].pos, pos);
+				   rm->data[0], pos);
 	}
 
 	_alDebug(ALD_MATH, __FILE__, __LINE__,
@@ -105,6 +105,10 @@ void _alcSpeakerMove( ALuint cid ) {
 		cc->_speaker_pos[1].pos[0],
 		cc->_speaker_pos[1].pos[1],
 		cc->_speaker_pos[1].pos[2]);
+	
+	_alMatrixFree(m);
+	_alMatrixFree(pm);
+	_alMatrixFree(rm);
 
 	return;
 }
@@ -121,6 +125,8 @@ void _alcSpeakerInit( ALuint cid ) {
 	AL_listener *lis;
 	ALfloat *lpos;
 	ALfloat sdis; /* scaled distance */
+	ALuint i;
+	ALuint num;
 
 	cc  = _alcGetContext( cid );
 	lis = _alcGetListener( cid );
@@ -151,26 +157,38 @@ void _alcSpeakerInit( ALuint cid ) {
 	_alDebug(ALD_CONTEXT, __FILE__, __LINE__,
 		"_alcSpeakerInit: ( sdis %f )", sdis );
 
-	/* left */
-	cc->_speaker_pos[ALS_LEFT].pos[0]   = lpos[0] - sdis;
-	cc->_speaker_pos[ALS_LEFT].pos[1]   = lpos[1];
-	cc->_speaker_pos[ALS_LEFT].pos[2]   = lpos[2];
+	for (i = 0; i < _ALC_MAX_CHANNELS; i++)
+	{
+		cc->_speaker_pos[i].pos[0]   = lpos[0];
+		cc->_speaker_pos[i].pos[1]   = lpos[1];
+		cc->_speaker_pos[i].pos[2]   = lpos[2];
+	}
 
-	/* right */
-	cc->_speaker_pos[ALS_RIGHT].pos[0]  =  lpos[0] + sdis;
-	cc->_speaker_pos[ALS_RIGHT].pos[1]  =  lpos[1];
-	cc->_speaker_pos[ALS_RIGHT].pos[2]  =  lpos[2];
+	num = _alcGetNumSpeakers(cid);
 
-	/* left rear */
-	cc->_speaker_pos[ALS_LEFTS].pos[0]  =  lpos[0] - sdis;
-	cc->_speaker_pos[ALS_LEFTS].pos[1]  =  lpos[1] + sdis;
-	cc->_speaker_pos[ALS_LEFTS].pos[2]  =  lpos[2] - sdis;
+	/* fourpoint */
 
-	/* right rear */
-	cc->_speaker_pos[ALS_RIGHTS].pos[0] =  lpos[0] + sdis;
-	cc->_speaker_pos[ALS_RIGHTS].pos[1] =  lpos[1] + sdis;
-	cc->_speaker_pos[ALS_RIGHTS].pos[2] =  lpos[2] + sdis;
+	if (num >= 4)
+	{
+		sdis *= M_SQRT1_2;
 
+		cc->_speaker_pos[ALS_LEFT].pos[2] += sdis;
+		cc->_speaker_pos[ALS_RIGHT].pos[2] += sdis;
+
+		cc->_speaker_pos[ALS_LEFTS].pos[0] -= sdis;
+		cc->_speaker_pos[ALS_LEFTS].pos[2] -= sdis;
+
+		cc->_speaker_pos[ALS_RIGHTS].pos[0] += sdis;
+		cc->_speaker_pos[ALS_RIGHTS].pos[2] -= sdis;
+	}
+
+	/* stereo */
+
+	if (num >= 2)
+	{
+		cc->_speaker_pos[ALS_LEFT].pos[0] -= sdis;
+		cc->_speaker_pos[ALS_RIGHT].pos[0] += sdis;
+	}
 	return;
 }
 
