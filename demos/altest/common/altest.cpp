@@ -54,9 +54,11 @@
 #include <stdlib.h>
 #include <memory.h>
 #include <math.h>
-#include <al.h>
-#include <alc.h>
-#include <alut.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <al/al.h>
+#include <al/alc.h>
+#include <al/alut.h>
 #include <eax.h>
 #endif
 
@@ -408,7 +410,6 @@ ALvoid DisplayALError( const char *text, ALint errorcode)
 */
 int main(int argc, char* argv[])
 {
-	ALubyte szFnName[128];
 	ALbyte	ch;
 	ALint	error;
 	ALsizei size,freq;
@@ -426,6 +427,7 @@ int main(int argc, char* argv[])
 	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};	// Listener facing into the screen
 
 #ifdef TEST_EAX
+	ALubyte szFnName[128];
 	ALubyte szEAX[] = "EAX";
 #endif	
 
@@ -796,40 +798,37 @@ int main(int argc, char* argv[])
 	}
 
 #ifdef TEST_VORBIS
-     // Load boom.ogg
-     struct stat sbuf;
-     if (stat("boom.ogg", &sbuf) != -1) 
-     {
-        int size;
-	int freq;
-	size = sbuf.st_size;
-	void *data;
-	data = malloc(size);
+	void *ovdata;
+	ovdata = malloc(size);
 	
-	if (data != NULL) 
-	  {
-	     FILE *fh;
-	     fh = fopen("boom.ogg", "rb");
-	     if (fh != NULL) 
-	       {
-		  fread(data, size, 1, fh);
-		  // Copy boom.ogg data into AL Buffer 7
-		  alGetError();
-		  alBufferData(g_Buffers[7], AL_FORMAT_VORBIS_EXT, data, size, freq);
-		  error = alGetError();
-		  if (error != AL_NO_ERROR) {
-		    DisplayALError((ALbyte *) "alBufferData buffer 7 : ", error);
-		    // Delete buffers
-		    alDeleteBuffers(NUM_BUFFERS, g_Buffers);
-		    exit(-1);
-		  }
-	       }
-	     
-	     // Unload boom.ogg
-	     free(data);
-	     fclose(fh);
-	  }
-     }
+	if (ovdata != NULL) {
+		 FILE *fh;
+		 fh = fopen("boom.ogg", "rb");
+		 if (fh != NULL) {
+#ifndef _WIN32
+			struct stat sbuf;
+			if (stat("boom.ogg", &sbuf) != -1) {
+#else
+			struct _stat sbuf;
+			if (_fstat(fh->_file, &sbuf) != -1) {
+#endif
+				int size = sbuf.st_size;
+				fread(ovdata, size, 1, fh);
+				  
+				// Copy boom.ogg data into AL Buffer 7
+				alGetError();
+				alBufferData(g_Buffers[7], AL_FORMAT_VORBIS_EXT, ovdata, size, freq);
+				error = alGetError();
+				if (error != AL_NO_ERROR) {
+					DisplayALError((ALbyte *) "alBufferData buffer 7 : ", error);
+				}
+			}
+				 
+			// Unload boom.ogg
+			free(ovdata);
+			fclose(fh);
+		}
+	}
 #endif
 
 #ifdef TEST_EAX
@@ -3864,7 +3863,6 @@ ALvoid I_StreamingTest(ALvoid)
 
 	ALbyte			data[BSIZE];
 	ALuint			Buffers[NUMBUFFERS];
-	ALuint   		UnqueueID[NUMBUFFERS];
 	ALuint			BufferID;
 	ALuint			Sources[1];
 	ALint			error;
