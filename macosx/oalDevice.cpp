@@ -579,7 +579,8 @@ UInt32		OALDevice::GetAvailableMonoBus ()
 			mBusInfo[i].mIsAvailable = false;
 #if LOG_BUS_CONNECTIONS
 			mMonoSourcesConnected++;
-			DebugMessageN2("GetAvailableMonoBus1: Sources Connected, Mono =  %ld, Stereo = %ld\n", MonoSourcesConnected(), StereoSourcesConnected());
+			DebugMessageN2("GetAvailableMonoBus1: Sources Connected, Mono =  %ld, Stereo = %ld\n", mMonoSourcesConnected, mStereoSourcesConnected);
+			DebugMessageN1("GetAvailableMonoBus1: BUS_NUMBER = %ld\n", i);
 #endif
 			return (i);
 		}
@@ -592,7 +593,7 @@ UInt32		OALDevice::GetAvailableMonoBus ()
 		{
 #if LOG_BUS_CONNECTIONS
 			mMonoSourcesConnected++;
-			DebugMessageN2("GetAvailableMonoBus2: Sources Connected, Mono =  %ld, Stereo = %ld\n", MonoSourcesConnected(), StereoSourcesConnected());
+			DebugMessageN2("GetAvailableMonoBus2: Sources Connected, Mono =  %ld, Stereo = %ld\n", mMonoSourcesConnected, mStereoSourcesConnected);
 #endif
 			CAStreamBasicDescription 	theOutFormat;
 			theOutFormat.mChannelsPerFrame = 1;
@@ -638,7 +639,7 @@ UInt32		OALDevice::GetAvailableStereoBus ()
 			mBusInfo[i].mIsAvailable = false;
 #if LOG_BUS_CONNECTIONS
 			mStereoSourcesConnected++;
-			DebugMessageN2("GetAvailableStereoBus1: Sources Connected, Mono =  %ld, Stereo = %ld\n", MonoSourcesConnected(), StereoSourcesConnected());
+			DebugMessageN2("GetAvailableStereoBus1: Sources Connected, Mono =  %ld, Stereo = %ld\n", mMonoSourcesConnected, mStereoSourcesConnected);
 			DebugMessageN1("GetAvailableStereoBus1: BUS_NUMBER = %ld\n", i);
 #endif
 			return (i);
@@ -653,7 +654,7 @@ UInt32		OALDevice::GetAvailableStereoBus ()
 
 #if LOG_BUS_CONNECTIONS
 			mStereoSourcesConnected++;
-			DebugMessageN2("GetAvailableStereoBus2: Sources Connected, Mono =  %ld, Stereo = %ld\n", MonoSourcesConnected(), StereoSourcesConnected());
+			DebugMessageN2("GetAvailableStereoBus2: Sources Connected, Mono =  %ld, Stereo = %ld\n", mMonoSourcesConnected, mStereoSourcesConnected);
 			DebugMessageN1("GetAvailableStereoBus2: BUS_NUMBER = %ld\n", i);
 #endif
 			CAStreamBasicDescription 	theOutFormat;
@@ -695,7 +696,7 @@ void	OALDevice::SetBusAsAvailable (UInt32 inBusIndex) const
 	else
 		mStereoSourcesConnected--;
 
-		DebugMessageN2("SetBusAsAvailable: Sources Connected, Mono =  %ld, Stereo = %ld\n", MonoSourcesConnected(), StereoSourcesConnected());
+		DebugMessageN2("SetBusAsAvailable: Sources Connected, Mono =  %ld, Stereo = %ld\n", mMonoSourcesConnected, mStereoSourcesConnected);
 #endif
 }
 

@@ -32,6 +32,8 @@
 #include <map>
 #include  "CAStreamBasicDescription.h"
 
+#define LOG_BUS_CONNECTIONS  	0
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Some build flags for gathering performance and data flow information
 

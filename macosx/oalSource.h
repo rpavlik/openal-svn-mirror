@@ -35,6 +35,7 @@
 #include <list>
 #include "CAStreamBasicDescription.h"
 #include "CAGuard.h"
+#include "CAMutex.h"
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // buffer info state constants
@@ -239,90 +240,31 @@ typedef	ACMap ACMap;
 // OALSources
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#define kBufferQueueMutex   "BUFFER_Q"
+#define kStateMutex         "SOURCE_STATE"
+
 #pragma mark _____OALSource_____
 class OALSource
 {
-	public:
-	OALSource(const UInt32 	 	inSelfToken, OALContext	*inOwningContext);
-	~OALSource();
-
-	// buffer queue
-	UInt32	BuffersProcessed();
-	void	SetBuffer (UInt32	inBuffer, OALBuffer	*inBuffer);
-	UInt32	GetBuffer ();
-	void	AppendBufferToQueue(UInt32	inBufferToken, OALBuffer	*inBuffer);
-	void	RemoveBuffersFromQueue(UInt32	inCount, UInt32	*outBufferTokens);
-	UInt32	GetQLength();
-
-	// get info methods
-	UInt32	GetToken() { return mSelfToken; }
-	UInt32	GetState() { return mState; }
-	Float32	GetPitch () { return mPitch; }
-	Float32	GetGain () { return mGain; }
-	Float32	GetMaxDistance () { return mMaxDistance; }
-	Float32	GetReferenceDistance () { return mReferenceDistance; }
-	Float32	GetRollOffFactor () { return mRollOffFactor; }
-	Float32	GetMinGain () { return mMinGain; }
-	Float32	GetMaxGain () { return mMaxGain; }
-	UInt32	GetLooping () { return mLooping; }
-	UInt32	GetSourceRelative () { return mSourceRelative; }
-	void	GetPosition (Float32 &inX, Float32 &inY, Float32 &inZ);
-	void	GetVelocity (Float32 &inX, Float32 &inY, Float32 &inZ);
-	void	GetDirection (Float32 &inX, Float32 &inY, Float32 &inZ);
-	Float32	GetConeInnerAngle () {return mConeInnerAngle;}
-	Float32	GetConeOuterAngle () {return mConeOuterAngle;}
-	Float32	GetConeOuterGain () {return mConeOuterGain;}
-	
-	// set info methods
-	void	ChangeChannelSettings();
-	void	SetPitch (Float32	inPitch);
-	void	ResetDoppler() {mResetDoppler = true;}
-	void	SetDoppler ();
-	void	SetBusGain ();
-	void	SetBusFormat ();
-	void	SetGain (Float32	inGain);
-	void	SetMaxDistance (Float32	inMaxDistance);
-	void	SetMinGain (Float32	inMinGain);
-	void	SetMaxGain (Float32	inMaxGain);
-	void	SetRollOffFactor (Float32	inRollOffFactor);
-	void	SetReferenceDistance (Float32	inReferenceDistance);
-	void	SetPosition (Float32 inX, Float32 inY, Float32 inZ);
-	void	SetVelocity (Float32 inX, Float32 inY, Float32 inZ);
-	void	SetDirection (Float32 inX, Float32 inY, Float32 inZ);
-	void	SetLooping (UInt32	inLooping) {mLooping = inLooping;}
-	void	SetSourceRelative (UInt32	inSourceRelative);
-	void	SetChannelParameters () { mCalculateDistance = true; }	
-
-	void	SetConeInnerAngle (Float32	inConeInnerAngle) {mConeInnerAngle = inConeInnerAngle;}
-	void	SetConeOuterAngle (Float32	inConeOuterAngle) {mConeOuterAngle = inConeOuterAngle;}
-	void	SetConeOuterGain (Float32	inConeOuterGain) {mConeOuterGain = inConeOuterGain;}
-	
-	// playback methods
-	void	Reset();
-	void	Play();
-	void	Pause();
-	void	Resume();
-	void	Stop();
-	void	PlayFinished();
-	void	RewindToStart();
-	
+#pragma mark __________ PRIVATE __________
 	private:
 
 		UInt32						mSelfToken;					// the token returned to the caller upon alGenSources()
 		OALContext                  *mOwningContext;
         OALDevice					*mOwningDevice;             // the OALDevice object for the owning OpenAL device
+        CAMutex                     mStateMutex;                // used for non render thread locks
 		
 		bool						mCalculateDistance;		
 		bool						mResetBusFormat;
 		bool						mResetPitch;
-		bool						mResetDoppler;
 
-		BufferQueue					*mBufferQueue;				// map of buffers for queueing
+		BufferQueue					*mBufferQueueActive;        // map of buffers for queueing
+		BufferQueue					*mBufferQueueInactive;      // map of buffers already queued
+        CAMutex                     mBufferQueueMutex;
 		UInt32						mCurrentBufferIndex;		// token for curent buffer being played
 		bool						mQueueIsProcessed;			// state of the entire buffer queue
 		
-		UInt32						mState;						// playback state: Playing, Stopped, Paused, Initial
-
 		int							mRenderThreadID;
 		CAGuard						mPlayGuard;
 		AURenderCallbackStruct 		mPlayCallback;
@@ -331,15 +273,7 @@ class OALSource
 		
 		ACMap						*mACMap;
 
-        Float32						mPitch;
-		float						mGain;
 		bool						mOutputSilence;
-		Float32						mMaxDistance;
-		Float32						mMinDistance;
-		Float32						mMinGain;
-		Float32						mMaxGain;
-		Float32						mRollOffFactor;
-		Float32						mReferenceDistance;
 		Float32						mPosition[3];
 		Float32						mVelocity[3];
 		Float32						mDirection[3];
@@ -357,17 +291,34 @@ class OALSource
         float                       mCachedInputR2;                
         UInt32                      mTempSourceStorageBufferSize;   
         AudioBufferList             *mTempSourceStorage;
-		
+
+		UInt32						mState;						// playback state: Playing, Stopped, Paused, Initial
+		float						mGain;
+        Float32						mPitch;
+        Float32						mDopplerScaler;
+        Float32						mRollOffFactor;
+		Float32						mReferenceDistance;
+		Float32						mMaxDistance;
+		Float32						mMinDistance;
+		Float32						mMinGain;
+		Float32						mMaxGain;
+        		
+	void        JoinBufferLists();
+	void        LoopToBeginning();
+	void        ChangeChannelSettings(bool isRenderThread);
 	void		InitSource();
 	void		SetState(UInt32		inState);
 	OSStatus 	DoPreRender ();
 	OSStatus 	DoRender (AudioBufferList 	*ioData);
 	OSStatus 	DoSRCRender (AudioBufferList 	*ioData);           // support for pre 2.0 3DMixer
 	OSStatus 	DoPostRender ();
-	void 		CalculateDistanceAndAzimuth(Float32 *outDistance, Float32 *outAzimuth);
+	void 		CalculateDistanceAndAzimuth(Float32 *outDistance, Float32 *outAzimuth, Float32	*outDopplerShift, bool isRenderThread);
 	bool        CallingInRenderThread () const { return (int(pthread_self()) == mRenderThreadID); }
+	void        UpdateBusGain (bool isRenderThread);
+	void        UpdateBusFormat (bool isRenderThread);
+	void        Reset();
+	void        PlayFinished();
 
-#pragma mark __________ Private_Class_Members
 	OSStatus	MuteCurrentPlayBus () const
 	{
 		return AudioUnitSetParameter (	mOwningDevice->GetMixerUnit(), k3DMixerParam_Gain, kAudioUnitScope_Input,
@@ -394,6 +345,63 @@ class OALSource
                                                     AudioBufferList					*ioData,
                                                     AudioStreamPacketDescription	**outDataPacketDescription,
                                                     void*							inUserData);
+
+#pragma mark __________ PUBLIC __________
+	public:
+	OALSource(const UInt32 	 	inSelfToken, OALContext	*inOwningContext);
+	~OALSource();
+	
+	// set info methods - these may be called from either the render thread or the API caller
+	void	SetPitch (Float32	inPitch, bool isRenderThread);
+	void	SetGain (Float32	inGain, bool isRenderThread);
+	void	SetMinGain (Float32	inMinGain, bool isRenderThread);
+	void	SetMaxGain (Float32	inMaxGain, bool isRenderThread);
+	void	SetReferenceDistance (Float32	inReferenceDistance, bool isRenderThread);
+	void	SetMaxDistance (Float32	inMaxDistance, bool isRenderThread);
+	void	SetRollOffFactor (Float32	inRollOffFactor, bool isRenderThread);
+	void	SetLooping (UInt32	inLooping, bool isRenderThread);
+	void	SetPosition (Float32 inX, Float32 inY, Float32 inZ, bool isRenderThread);
+	void	SetVelocity (Float32 inX, Float32 inY, Float32 inZ, bool isRenderThread);
+	void	SetDirection (Float32 inX, Float32 inY, Float32 inZ, bool isRenderThread);
+	void	SetSourceRelative (UInt32	inSourceRelative, bool isRenderThread);
+	void	SetChannelParameters (bool isRenderThread);
+	void	SetConeInnerAngle (Float32	inConeInnerAngle, bool isRenderThread);
+	void	SetConeOuterAngle (Float32	inConeOuterAngle, bool isRenderThread);
+	void	SetConeOuterGain (Float32	inConeOuterGain, bool isRenderThread);
+
+	// get info methods
+	Float32	GetPitch ();
+	Float32	GetDopplerScaler ();
+	Float32	GetGain ();
+	Float32	GetMinGain ();
+	Float32	GetMaxGain ();
+	Float32	GetReferenceDistance ();
+	Float32	GetMaxDistance ();
+	Float32	GetRollOffFactor ();
+	UInt32	GetLooping ();
+	void	GetPosition (Float32 &inX, Float32 &inY, Float32 &inZ, bool isRenderThread);
+	void	GetVelocity (Float32 &inX, Float32 &inY, Float32 &inZ, bool isRenderThread);
+	void	GetDirection (Float32 &inX, Float32 &inY, Float32 &inZ, bool isRenderThread);
+	UInt32	GetSourceRelative ();
+	Float32	GetConeInnerAngle ();
+	Float32	GetConeOuterAngle ();
+	Float32	GetConeOuterGain ();
+	UInt32	GetState();
+    UInt32	GetToken();
+
+    // buffer queue
+	UInt32	GetQLength();
+	UInt32	GetBuffersProcessed();
+	void	SetBuffer (UInt32	inBuffer, OALBuffer	*inBuffer);
+	UInt32	GetBuffer ();
+	void	AppendBufferToQueue(UInt32	inBufferToken, OALBuffer	*inBuffer);
+	void	RemoveBuffersFromQueue(UInt32	inCount, UInt32	*outBufferTokens);
+	
+	// playback methods
+	void	Play();
+	void	Pause();
+	void	Resume();
+	void	Stop();
 };	
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -430,27 +438,21 @@ public:
 		return (NULL);
     }
 
-    void MarkAllSourcesForRecalculation() {
+    void MarkAllSourcesForRecalculation(bool    isRenderThread) {
         iterator	it = begin();
         while (it != end())
 		{
-			(*it).second->SetChannelParameters();
+			(*it).second->SetChannelParameters(isRenderThread);
 			it++;
 		}
 		return;
     }
 
-    void SetDopplerForAllSources() {
-        iterator	it = begin();
-        while (it != end())
-		{
-			(*it).second->ResetDoppler();			
-			(*it).second->SetDoppler();
-			it++;
-		}
+    void SetDopplerForAllSources(bool isRenderThread) {
+        MarkAllSourcesForRecalculation(isRenderThread);
 		return;
     }
-
+    
     void StopAllSources() {
         iterator	it = begin();
         while (it != end())

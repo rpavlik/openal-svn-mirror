@@ -77,8 +77,8 @@ class OALContext
 	
 	// set info methods
 	void					SetDistanceModel(UInt32	inDistanceModel);
-	void					SetDopplerFactor(Float32	inDopplerFactor);
-	void					SetDopplerVelocity(Float32	inDopplerVelocity);
+	void					SetDopplerFactor(Float32	inDopplerFactor, bool isRenderThread);
+	void					SetDopplerVelocity(Float32	inDopplerVelocity, bool isRenderThread);
 	void					SetListenerPosition(Float32	posX, Float32	posY, Float32	posZ);
 	void					SetListenerVelocity(Float32	posX, Float32	posY, Float32	posZ);
 	void					SetListenerGain(Float32 inGain);

@@ -36,7 +36,7 @@ OALContext::OALContext (const UInt32	inSelfToken, OALDevice    *inOALDevice)
 		mSourceMap (NULL),
 		mMixerUnit(0),
 		mDistanceModel(AL_INVERSE_DISTANCE_CLAMPED),			
-		mDopplerFactor(0.0),
+		mDopplerFactor(1.0),
 		mDopplerVelocity(1.0),
 		mListenerGain(1.0)
 {
@@ -138,26 +138,31 @@ void		OALContext::SetDistanceModel(UInt32	inDistanceModel)
 	DebugMessage("OALContext::SetDistanceModel: MarkAllSourcesForRecalculation called\n");
 #endif
             // the sources may have already been set and now need to be moved back to the reference position
-             mSourceMap->MarkAllSourcesForRecalculation();
+             mSourceMap->MarkAllSourcesForRecalculation(false);
 		}
 	}
 }	
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void		OALContext::SetDopplerFactor(Float32		inDopplerFactor)
+void		OALContext::SetDopplerFactor(Float32		inDopplerFactor, bool isRenderThread)
 {
 	if (mDopplerFactor != inDopplerFactor)
 	{
 		mDopplerFactor = inDopplerFactor;
 		if (mSourceMap)
-			mSourceMap->SetDopplerForAllSources();
+			mSourceMap->SetDopplerForAllSources(false);
 	}
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void		OALContext::SetDopplerVelocity(Float32	inDopplerVelocity)
+void		OALContext::SetDopplerVelocity(Float32	inDopplerVelocity, bool isRenderThread)
 {
-	mDopplerVelocity = inDopplerVelocity;
+	if (mDopplerVelocity != inDopplerVelocity)
+	{
+		mDopplerVelocity = inDopplerVelocity;
+		if (mSourceMap)
+			mSourceMap->SetDopplerForAllSources(false);
+	}
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -184,6 +189,11 @@ UInt32		OALContext::GetSourceCount()
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void		OALContext::SetListenerPosition(Float32	posX, Float32	posY, Float32	posZ) 
 { 
+	if (	(mListenerPosition[0] == posX) 	&& 
+			(mListenerPosition[1] == posY )	&& 
+			(mListenerPosition[2] == posZ)		)
+		return;
+	
 	mListenerPosition[0] = posX;
 	mListenerPosition[1] = posY;
 	mListenerPosition[2] = posZ;
@@ -194,7 +204,7 @@ void		OALContext::SetListenerPosition(Float32	posX, Float32	posY, Float32	posZ)
 	DebugMessageN4("OALContext::SetListenerPosition called - OALSource = %f:%f:%f/%ld\n", posX, posY, posZ, mSelfToken);
 #endif
 		// moving the listener effects the coordinate translation for ALL the sources
-		mSourceMap->MarkAllSourcesForRecalculation();
+		mSourceMap->MarkAllSourcesForRecalculation(false);
 	}	
 }
 
@@ -211,7 +221,7 @@ void		OALContext::SetListenerVelocity(Float32	posX, Float32	posY, Float32	posZ)
 	DebugMessage("OALContext::SetListenerVelocity: MarkAllSourcesForRecalculation called\n");
 #endif
 		// moving the listener effects the coordinate translation for ALL the sources
-        mSourceMap->MarkAllSourcesForRecalculation();
+        mSourceMap->MarkAllSourcesForRecalculation(false);
 	}
 }
 
@@ -219,6 +229,14 @@ void		OALContext::SetListenerVelocity(Float32	posX, Float32	posY, Float32	posZ)
 void	OALContext::SetListenerOrientation( Float32	forwardX, 	Float32	forwardY,	Float32	forwardZ,
 											Float32	 upX, 		Float32	 upY, 		Float32	 upZ)
 {	
+	if (	(mListenerOrientationForward[0] == forwardX) 	&& 
+			(mListenerOrientationForward[1] == forwardY )	&& 
+			(mListenerOrientationForward[2] == forwardZ) 	&&
+			(mListenerOrientationUp[0] == upX) 				&& 
+			(mListenerOrientationUp[1] == upY ) 			&& 
+			(mListenerOrientationUp[2] == upZ)					)
+		return;
+
 	mListenerOrientationForward[0] = forwardX;
 	mListenerOrientationForward[1] = forwardY;
 	mListenerOrientationForward[2] = forwardZ;
@@ -232,6 +250,6 @@ void	OALContext::SetListenerOrientation( Float32	forwardX, 	Float32	forwardY,	Fl
 	DebugMessage("OALContext::SetListenerOrientation: MarkAllSourcesForRecalculation called\n");
 #endif
 		// moving the listener effects the coordinate translation for ALL the sources
-		mSourceMap->MarkAllSourcesForRecalculation();
+		mSourceMap->MarkAllSourcesForRecalculation(false);
 	}
 }
