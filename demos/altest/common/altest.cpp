@@ -798,36 +798,35 @@ int main(int argc, char* argv[])
 	}
 
 #ifdef TEST_VORBIS
-	void *ovdata;
-	ovdata = malloc(size);
-	
-	if (ovdata != NULL) {
-		 FILE *fh;
-		 fh = fopen("boom.ogg", "rb");
-		 if (fh != NULL) {
+	void *ovdata;	
+
+	FILE *fh;
+	fh = fopen("boom.ogg", "rb");
+	if (fh != NULL) {
 #ifndef _WIN32
-			struct stat sbuf;
-			if (stat("boom.ogg", &sbuf) != -1) {
+		struct stat sbuf;
+		if (stat("boom.ogg", &sbuf) != -1) {
 #else
-			struct _stat sbuf;
-			if (_fstat(fh->_file, &sbuf) != -1) {
+		struct _stat sbuf;
+		if (_fstat(fh->_file, &sbuf) != -1) {
 #endif
-				int size = sbuf.st_size;
-				fread(ovdata, size, 1, fh);
-				  
-				// Copy boom.ogg data into AL Buffer 7
+			int size = sbuf.st_size;
+			ovdata = malloc(size);
+
+		        if (ovdata != NULL) {
+				fread(ovdata, 1, size, fh);
+
+			        // Copy boom.ogg data into AL Buffer 7
 				alGetError();
 				alBufferData(g_Buffers[7], AL_FORMAT_VORBIS_EXT, ovdata, size, freq);
 				error = alGetError();
 				if (error != AL_NO_ERROR) {
 					DisplayALError((ALbyte *) "alBufferData buffer 7 : ", error);
 				}
-			}
-				 
-			// Unload boom.ogg
-			free(ovdata);
+			        free(ovdata);
+			}				 
 			fclose(fh);
-		}
+		}	   
 	}
 #endif
 
