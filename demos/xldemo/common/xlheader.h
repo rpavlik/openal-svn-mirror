@@ -11,7 +11,7 @@
 #include <math.h>
 #include <gl/gl.h>
 #include <gl/glu.h>
-#include <alut.h>
+#include <al/alut.h>
 #include <strstrea.h>
 #endif
 
