@@ -56,6 +56,8 @@ extern "C" {
 
 #endif /* _WIN32 */
 
+#define OPENAL
+
 #ifndef AL_NO_PROTOTYPES
 
 /**

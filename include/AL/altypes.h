@@ -5,7 +5,14 @@
 typedef char ALboolean;
 
 /** OpenAL 8bit signed byte. */
+/* ***** GH
+ * temporary ifdef for Windows
+ */
+#ifdef __GNUC__
 typedef signed char ALbyte;
+#else
+typedef char ALbyte;
+#endif
 
 /** OpenAL 8bit unsigned byte. */
 typedef unsigned char ALubyte;

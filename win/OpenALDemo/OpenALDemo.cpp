@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <conio.h>
 #include <stdlib.h>
+#include "al\al.h"
 #include "al\alc.h"
 #include "al\alut.h"
 #include <memory.h>
