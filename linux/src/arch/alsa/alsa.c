@@ -81,7 +81,7 @@ static int openal_load_alsa_library(void)
 
 	#if OPENAL_DLOPEN_ALSA
 		#define OPENAL_LOAD_ALSA_SYMBOL(x) if ((p##x = dlsym(alsa_lib_handle, #x)) == NULL) { return 0; }
-		alsa_lib_handle = dlopen("libasound.so", RTLD_LAZY | RTLD_GLOBAL);
+		alsa_lib_handle = dlopen("libasound.so.2", RTLD_LAZY | RTLD_GLOBAL);
 		if (alsa_lib_handle == NULL)
 			return 0;
 	#else
