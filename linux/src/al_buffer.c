@@ -1567,10 +1567,10 @@ static void _alBufferAddCurrentRef( AL_buffer *buf, ALuint sid ) {
 static void _alBufferRemoveQueueRef( AL_buffer *buf, ALuint sid ) {
 	ALuint i;
 
-	for(i = 0; i < buf->queue_list.size; i++) {
+	for(i = 0; i < buf->queue_list.items; i++) {
 		if(buf->queue_list.sids[i] == sid) {
-			buf->queue_list.sids[i] = 0;
 			buf->queue_list.items--;
+			buf->queue_list.sids[i] = buf->queue_list.sids[buf->queue_list.items];
 
 			return;
 		}
@@ -1590,10 +1590,10 @@ static void _alBufferRemoveQueueRef( AL_buffer *buf, ALuint sid ) {
 static void _alBufferRemoveCurrentRef( AL_buffer *buf, ALuint sid ) {
 	ALuint i;
 
-	for(i = 0; i < buf->current_list.size; i++) {
+	for(i = 0; i < buf->current_list.items; i++) {
 		if(buf->current_list.sids[i] == sid) {
-			buf->current_list.sids[i] = 0;
 			buf->current_list.items--;
+			buf->current_list.sids[i] = buf->current_list.sids[buf->current_list.items];
 
 			return;
 		}
