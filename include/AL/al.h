@@ -26,7 +26,9 @@
 extern "C" {
 #endif
 
+/* WIN32, not Xbox */
 #ifdef _WIN32
+#ifndef _XBOX
 #ifdef _OPENAL32LIB
 #define ALAPI __declspec(dllexport)
 #else
@@ -34,13 +36,14 @@ extern "C" {
 #endif
 #define ALAPIENTRY __cdecl
 #define AL_CALLBACK 
-#else /* _WIN32 */
+#endif
+#endif
 
 #ifdef TARGET_OS_MAC
 #if TARGET_OS_MAC
 #pragma export on
-#endif /* TARGET_OS_MAC */
-#endif /* TARGET_OS_MAC */
+#endif
+#endif
 
 #ifndef ALAPI
 #define ALAPI
@@ -53,8 +56,6 @@ extern "C" {
 #ifndef CALLBACK
 #define AL_CALLBACK 
 #endif
-
-#endif /* _WIN32 */
 
 #define OPENAL
 
