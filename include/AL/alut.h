@@ -36,8 +36,8 @@ extern "C" {
 
 #ifndef AL_NO_PROTOTYPES
 
-ALUTAPI void ALAPIENTRY alutInit(int *argc, char *argv[]);
-ALUTAPI void ALAPIENTRY alutExit(ALvoid);
+ALUTAPI void ALUTAPIENTRY alutInit(int *argc, char *argv[]);
+ALUTAPI void ALUTAPIENTRY alutExit(ALvoid);
 
   /* ***** GH
 TEMPORARY ifdef -- Linux-implementation-specific function

@@ -203,7 +203,7 @@ ALCAPI ALCubyte* ALCAPIENTRY alcGetString(ALCdevice *device,ALCenum param)
 }
 
 
-ALCAPI ALCvoid ALCAPIENTRY alcGetIntegerv(ALCdevice *device,ALCenum param,ALCsizei size,ALCint *data)
+ALCAPI ALCvoid ALCAPIENTRY alcGetIntegerv(ALCdevice *device,ALCenum param,ALsizei size,ALCint *data)
 {
 	ALCcontext *Context;
 

@@ -36,7 +36,15 @@ typedef float ALfloat;
 typedef double ALdouble;
 
 /** OpenAL 32bit type. */
+/** OpenAL 8bit signed byte. */
+/* ***** GH
+ * temporary ifdef for Windows
+ */
+#ifdef __GNUC__
 typedef signed int ALsizei;
+#else
+typedef unsigned int ALsizei;
+#endif
 
 /** OpenAL void type (for params, not returns). */
 #ifdef __GNUC__

@@ -116,7 +116,7 @@ ALCAPI ALubyte* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param);
 #ifdef __GNUC__
 void alcGetIntegerv( ALCdevice *deviceHandle, ALCenum  token , ALCsizei  size , ALCint *dest );
 #else
-ALCAPI ALvoid ALCAPIENTRY alcGetIntegerv(ALCdevice* device, ALenum param, ALsizei size, ALint* data);
+ALCAPI ALCvoid ALCAPIENTRY alcGetIntegerv(ALCdevice *device,ALCenum param,ALCsizei size,ALCint *data);
 #endif
 
 #else
