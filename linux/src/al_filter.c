@@ -89,7 +89,7 @@
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
 #define MAX(a,b) (((a) < (b)) ? (b) : (a))
 
-#define USE_TPITCH_LOOKUP 0 /* icculus change here JIV FIXME */
+#define USE_TPITCH_LOOKUP 1 /* icculus change here JIV FIXME */
 
 /* 
  * TPITCH_MAX sets the number of discrete values for AL_PITCH we can have.
@@ -177,14 +177,7 @@ static struct {
 	ALuint max;
 	ALuint middle; /* the index which pitch == 1.0 corresponds to */
 	ALuint len; /* length of offsets[0...TPITCH_MAX] in samples */
-
-	int *rawoffsets;	/*
-				 * raw data.  We actually alloc/dealloc this
-				 * chunk and assign ->offsets in order to reduce
-				 * fragmentation.
-				 */
-	float *rawfractionals;
-} tpitch_lookup = { { NULL }, { NULL }, 0, 0, 0, NULL, NULL };
+} tpitch_lookup = { { NULL }, { NULL }, 0, 0, 0 };
 
 /* func associated with our tpitch lookup */
 static void init_tpitch_lookup(ALuint len);
@@ -216,11 +209,12 @@ void _alInitTimeFilters( time_filter_set *tf_ptr_ref ) {
 		tpitch_lookup.max    = TPITCH_MAX;
 		tpitch_lookup.middle = TPITCH_MAX / 2;
 
-		tpitch_lookup.rawoffsets = NULL;
-		tpitch_lookup.rawfractionals = NULL;
-
-		for(i = 0; i < tpitch_lookup.max; i++) {
-			tpitch_lookup.offsets[i] = NULL;
+		for(i = 0; i < tpitch_lookup.max; i++)
+		{
+			free(tpitch_lookup.offsets[i]);
+			free(tpitch_lookup.fractionals[i]);
+			tpitch_lookup.offsets[i] = 0;
+			tpitch_lookup.fractionals[i] = 0;
 		}
 	}
 #endif
@@ -237,14 +231,13 @@ void _alDestroyFilters( void ) {
 #if USE_TPITCH_LOOKUP
 	ALuint i;
 
-	free( tpitch_lookup.rawoffsets );
-	free( tpitch_lookup.rawfractionals );
+	for(i = 0; i < TPITCH_MAX; i++)
+	{
+		free(tpitch_lookup.offsets[i]);
+		free(tpitch_lookup.fractionals[i]);
 
-	tpitch_lookup.rawoffsets = NULL;
-	tpitch_lookup.rawfractionals = NULL;
-
-	for(i = 0; i < TPITCH_MAX; i++) {
-		tpitch_lookup.offsets[i] = NULL;
+		tpitch_lookup.offsets[i] = 0;
+		tpitch_lookup.fractionals[i] = 0;
 	}
 #endif
 
@@ -324,8 +317,9 @@ void _alApplyFilters( ALuint cid, ALuint sid ) {
 	}
 
 #if USE_TPITCH_LOOKUP
-	if(tpitch_lookup.len < len / sizeof (ALshort)) {
-		init_tpitch_lookup(len / sizeof (ALshort));
+	if(tpitch_lookup.len < len)
+	{
+		init_tpitch_lookup(len);
 	}
 #endif
 
@@ -933,11 +927,9 @@ void alf_da( ALuint cid,
  * information on the layout and meaning of tpitch_lookup_init.
  */
 static void init_tpitch_lookup( ALuint len ) {
-	ALfloat step;
 	ALfloat scale;
 	void *temp;
 	ALuint i;
-	ALint j;
 
 	if(tpitch_lookup.len >= len) {
 		/* We only go through the main loop if we
@@ -952,58 +944,36 @@ static void init_tpitch_lookup( ALuint len ) {
 	 * initialize time domain pitch filter lookup table
 	 */
 
-	/* get big chunk of data here, parcel it out in loop.
-	 * resize offsets to fit at least len elements.
-	 *
-	 * len is the number of samples that we process for
-	 * each source in our trip through ApplyFilters.
-	 */
-	temp = realloc(tpitch_lookup.rawoffsets,
-				     len *
-				     tpitch_lookup.max *
-				     sizeof **tpitch_lookup.offsets);
-	if(temp == NULL) {
-		perror("malloc");
-		_alDCSetError(AL_OUT_OF_MEMORY);
-
-		return;
-	}
-
-	tpitch_lookup.rawoffsets = temp;
-
-	/* same for fractional portions */
-	temp = realloc( tpitch_lookup.rawfractionals,
-				len *
-				tpitch_lookup.max *
-				sizeof **tpitch_lookup.fractionals );
-	tpitch_lookup.rawfractionals = temp;
-
 	/*
 	 * For pitch < 1.0, we lower the frequency such that a pitch of
 	 * 0.5 corresponds to 1 octave drop.  Is this just a linear
 	 * application of the step?
 	 */
 	for(i = 0; i < tpitch_lookup.max; i++) {
+		ALfloat pitch;
+		ALuint j;
+
 		/* set offset part */
-		temp = tpitch_lookup.rawoffsets + i * len;
-		tpitch_lookup.offsets[i] = temp;
-
+		free(tpitch_lookup.offsets[i]);
+		tpitch_lookup.offsets[i] = malloc(sizeof *tpitch_lookup.offsets * len);
 		/* set fractional part */
-		temp = tpitch_lookup.rawfractionals + i * len;
-		tpitch_lookup.fractionals[i] = temp;
+		free(tpitch_lookup.fractionals[i]);
+		tpitch_lookup.fractionals[i] = malloc(sizeof *tpitch_lookup.fractionals * len);
 
-		/* set iterate step */
-		step = (2.0 * i) / tpitch_lookup.max;
-		if(step == 0.0) {
-			/* step = TPITCH_MIN_STEP; FIXME */
-		}
+		/* set iterate pitch */
+		pitch = 2.0 * ((float)i / (float)tpitch_lookup.max);
 
 		/* initialize offset table */
 		scale = 0.0f;
 
-		for(j = 0; j < (ALint) len; j++, scale += step) {
-			tpitch_lookup.offsets[i][j]     = scale;
-			tpitch_lookup.fractionals[i][j] = scale - (int) scale;
+		for(j = 0; j < len; j++)
+		{
+			float foffset = j * pitch;
+			ALuint offset = (int) foffset;
+			float frac = foffset - offset;
+
+			tpitch_lookup.offsets[i][j] = offset;
+			tpitch_lookup.fractionals[i][j] = frac;
 		}
 	}
 
@@ -1272,7 +1242,6 @@ void alf_tpitch( UNUSED(ALuint cid),
 	ALshort *bufptr  = NULL;  /* pointer to buffers[0..nc-1] */
 	ALuint l_index;   /* index into lookup table */
 	ALint ipos = 0;   /* used to store offsets temporarily */
-	ALint clen = 0;   /* len, adjusted to avoid overrun due to resampling */
 	ALuint i;
 	int *offsets;        /* pointer to set of offsets in lookup table */
 	float *fractionals;  /* pointer to set of fractionals in lookup table */
@@ -1354,23 +1323,6 @@ void alf_tpitch( UNUSED(ALuint cid),
 #endif
 
 	/*
-	 *  adjust clen until we can safely avoid an overrun.
-	 */
-	/* clen = MIN(TPITCH_MAX, len); */
-	clen = len;
-
-#if DEBUG_MEM
-	assert(clen - 1 < TPITCH_MAX);
-#endif
-	while(offsets[clen - 2] * sizeof(ALshort)
-		+ src->srcParams.soundpos >= samp->size) {
-		/* decrement clen until we won't suffer a buffer
-		 * overrun.
-		 */
-		clen--;
-	}
-
-	/*
 	 * Iterate over each buffers[0..nc-1]
 	 */
 	for(i = 0; i < nc; i++) {
@@ -1430,21 +1382,23 @@ void alf_tpitch( UNUSED(ALuint cid),
 		 * be necessary, but seems to improve performance quite
 		 * a bit.
 		 */
-		for(j = 0; j < clen; j++) {
-			int offset = offsets[j];
-			int nextoffset = offsets[j]+ (j == (int)clen - 1)? 0 : 1;
-			int sample = obufptr[offset];
-			int nextsample = obufptr[nextoffset];
-			float frac = fractionals[j];
+		for(j = 0; j < (ALuint) len; j++)
+		{
+			{
+				int offset = offsets[j];
+				int nextoffset = offsets[j+1];
+				float frac = fractionals[j];
+				int firstsample = obufptr[offset];
+				int nextsample = obufptr[nextoffset];
+				int finalsample;
+				
+				/* do a little interpolation */
+				finalsample = firstsample +
+				            frac * (nextsample - firstsample);
 
-#if DEBUG_MEM || 0
-			assert(j < TPITCH_MAX);
-			assert(offsets[j] < (int) len-1);
-#endif
-
-			
-			/* do a little interpolation */
-			bufptr[j] = sample + frac * (nextsample - sample);
+				finalsample = MIN(finalsample, canon_max);
+				bufptr[j] =   MAX(finalsample, canon_min);
+			}
 		}
 	}
 
@@ -1459,10 +1413,11 @@ void alf_tpitch( UNUSED(ALuint cid),
 	 *  so we must increment it here.  If we detect an overrun, we
 	 *  must reset the src's soundpos to something reasonable.
 	 */
-	ipos = offsets[clen - 1] + offsets[1];
+	ipos = (int) (len * pitch);
 	src->srcParams.soundpos += bufchans * ipos * sizeof(ALshort);
 	
-	if(clen < (ALint) len) {
+	if(src->srcParams.soundpos > samp->size)
+	{
 		/*
 		 * we've reached the end of this sample.
 		 *
@@ -1561,6 +1516,11 @@ void alf_tpitch( UNUSED(ALuint cid),
 	 */
 	for(i = 0; i < nc; i++) {
 		ALuint j;
+
+		if(pitch == 1.0f)
+		{
+			continue;
+		}
 
 		/*
 		 * Kind of breaking convention here and actually using
