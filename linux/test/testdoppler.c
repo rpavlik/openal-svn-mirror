@@ -1,3 +1,6 @@
+/* testdoppler.c - move the source towards, through, and away from
+   the listener, while accelerating constantly. */
+
 #include "testlib.h"
 
 #include <AL/al.h>
