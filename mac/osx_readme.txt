@@ -13,9 +13,7 @@ Compiling using Project Builder:
 
 Compile and link using the Project Builder project in the al_osx directory.  It will create an OpenAL
 framework in the al_osx/build directory which can be placed in /Library/Frameworks for systemwide
-use or in ~/Library/Frameworks for single-user use.  Note -- at the time of this writing, Project
-Builder will not create the Header link or copy the OpenAL headers into Versions/Current/Headers --
-these steps should be done manually before distributing the framework.
+use or in ~/Library/Frameworks for single-user use.
 
 If you want to compile the Ogg Vorbis extension into the framework, you will need to have
 already installed the Ogg and Vorbis frameworks on your system.  At the time
