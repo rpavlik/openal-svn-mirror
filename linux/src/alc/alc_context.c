@@ -162,7 +162,7 @@ unsigned int jlib_debug = 0;
  *
  * Makes the context refered to by handle the current context.  If handle does
  * not refer to a context, ALC_INVALID_CONTEXT is set and returned.
- * Otherwise, the operation sucedes and ALC_NO_ERROR is returned.
+ * Otherwise, the operation suceeds and ALC_NO_ERROR is returned.
  */
 ALCenum alcMakeContextCurrent( ALCcontext *handle )
 {
@@ -1192,6 +1192,7 @@ static void _alcDeviceWriteSet( ALuint cid ) {
 			_alDebug(ALD_CONTEXT, __FILE__, __LINE__, "set_audiodevice failed.");
 
 			_alcSetError( ALC_INVALID_DEVICE );
+                        return;
 		}
 	}
 

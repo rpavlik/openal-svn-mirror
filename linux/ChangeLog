@@ -1,5 +1,13 @@
 2004-06-25  Adam D. Moss  <adam@gimp.org>
 
+        * openal/linux/src/arch/alsa/alsa.c
+        * openal/linux/src/alc/alc_context.c: If _alcDeviceSet() fails then
+        return straight after setting the error code, instead of proceeding
+        to call _alSetMixer().  This stops AL going into a tight loop if
+        a driver's set_write_???() fails.
+
+2004-06-25  Adam D. Moss  <adam@gimp.org>
+
         * openal/linux/src/arch/alsa/alsa.c: Fix from Marco Ziech <mmz@gmx.net>
         for more correct dlsym error handling.
 

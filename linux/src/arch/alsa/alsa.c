@@ -508,12 +508,12 @@ ALboolean set_write_alsa(void *handle,
 	ai->periods     = 2;
 
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-			"alsa info (write):\n"\
-			" channels: %u\n"\
-			" format: %u\n"\
-			" speed: %u\n"\
-			" framesize: %u\n"\
-			" bufframesize: %u\n"\
+			"alsa info (write):"\
+			" channels: %u"\
+			" format: %u"\
+			" speed: %u"\
+			" framesize: %u"\
+			" bufframesize: %u"\
 			" periods: %u",
 			ai->channels, ai->format, ai->speed, ai->framesize, ai->bufframesize, ai->periods);
 
@@ -572,16 +572,29 @@ ALboolean set_write_alsa(void *handle,
 
 
 	/* sampling rate */
-	err = psnd_pcm_hw_params_set_rate_near(phandle, setup, &ai->speed, NULL);
-	if(err < 0)
-	{
+	err = psnd_pcm_hw_params_set_rate_near(phandle, setup, &ai->speed, &dir);
+	if(err < 0) {
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-				"set_write_alsa: could not set speed: %s",psnd_strerror(err));
-
+                         "set_write_alsa: could not set speed: %s",
+                         psnd_strerror(err));
 		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
-	} else if (err > 0) /* err is sampling rate if > 0 */
+	} else if ((dir != 0) && (err > 0)) {
+                /* sampling rate is in 'err' */
+		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
+                         "set_write_alsa: alsa speed returned is %u rather than %u (dir %d)\n",
+                         (unsigned int) err, ai->speed, dir);
 		ai->speed = (unsigned int) err;
+                if (ai->speed > 200000) {
+                        /* This can happen, and is the precursor to other Bad
+                           Things.  I don't know why it happens, but at least
+                           we can detect it and fail gracefully. */
+                        _alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
+                                 "set_write_alsa: hw speed %u not sane.  failing.", ai->speed);
+                        psnd_pcm_hw_params_free(setup);
+                        return AL_FALSE; 
+                }
+        }
 
 
 	/* Set number of periods. Periods used to be called fragments. */
