@@ -1,3 +1,9 @@
+2005-03-18  Sven Panne  <sven.panne@aedion.de>
+
+	* linux/Makefile.in, linux/PLATFORM, linux/configure.ac,
+	linux/configure.in: Renamed configure.in to configure.ac, the
+	former is a misnomer, see the autoconf documentation.
+
 2005-03-15  Sven Panne  <sven.panne@aedion.de>
 
 	* linux/Makefile.in: Make relative versioning links to dynamic
