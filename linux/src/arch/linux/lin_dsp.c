@@ -119,6 +119,35 @@ static int AL2LINFMT(int fmt)
 	return -1;
 }
 
+
+/*
+ * Disable non-blocking on a file descriptor. Returns non-zero on
+ *  success, zero on failure.  --ryan.
+ */
+static int toggle_nonblock(int fd, int state)
+{
+	int retval = 0;
+	int flags = fcntl(fd, F_GETFL);
+	if (flags != -1) {
+		if (state) {
+			flags |= O_NONBLOCK;
+		} else {
+			flags &= ~O_NONBLOCK;
+		}
+
+		if(fcntl(fd, F_SETFL, flags) != -1) {
+			retval = 1;
+		}
+	}
+
+	if (!retval) {
+		perror("fcntl");
+	}
+
+	return(retval);
+}
+
+
 /*
  *
  *  Format of divisor is bit field where:
@@ -153,9 +182,7 @@ void *grab_write_native(void)
 		perror("ioctl SETFRAGMENT grab");
 	}
 
-	if(fcntl(write_fd, F_SETFL, ~O_NONBLOCK) == -1) {
-		perror("fcntl");
-	}
+	toggle_nonblock(write_fd, 0);
 
 	_alBlitBuffer = native_blitbuffer;
 
@@ -224,9 +251,7 @@ static int grab_mixerfd(void) {
 	mixer_fd = try_to_open(tried_paths, 2, NULL, O_WRONLY | O_NONBLOCK);
 
 	if(mixer_fd > 0) {
-		if(fcntl(mixer_fd, F_SETFL, ~O_NONBLOCK) == -1) {
-			perror("fcntl");
-		}
+		toggle_nonblock(mixer_fd, 0);
 		return mixer_fd;
 	} else {
 		perror("open /dev/[sound/]mixer");
@@ -321,9 +346,7 @@ void pause_nativedevice(void *handle) {
 
 	fd = *(int *) handle;
 
-	if(fcntl(fd, F_SETFL, O_NONBLOCK) == -1) {
-		perror("fcntl");
-	}
+	toggle_nonblock(fd, 1);
 
 #if 0
 	if(ioctl(fd, SNDCTL_DSP_POST, 0) == -1) {
@@ -343,9 +366,8 @@ void resume_nativedevice(void *handle) {
 
 	fd = *(int *) handle;
 
-	if(fcntl(fd, F_SETFL, ~O_NONBLOCK) == -1) {
-		perror("fcntl");
-	}
+	toggle_nonblock(fd, 0);
+
 /*
 	if(ioctl(fd, SNDCTL_DSP_SYNC, 0) == -1) {
 		perror("ioctl");
@@ -434,9 +456,7 @@ static int aquire_read(void) {
 	read_fd = try_to_open(tried_paths, 3, &readpath, O_RDONLY | O_NONBLOCK);
 	if(read_fd >= 0) {
 #if 0 /* Reads should be non-blocking */
-		if(fcntl(read_fd, F_SETFL, ~O_NONBLOCK) == -1) {
-			perror("fcntl");
-		}
+		toggle_nonblock(read_fd, 0);
 #endif
 		if(ioctl(read_fd, SNDCTL_DSP_SETFRAGMENT, &divisor) < 0) {
 			perror("ioctl SETFRAGMENT");
