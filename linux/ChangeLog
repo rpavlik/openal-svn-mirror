@@ -1,3 +1,10 @@
+2003-01-13  Joseph Valenzuela  <jvalenzu@formosa.infinite-monkeys.org>
+
+	* al/aluttypes.h
+	* linux/include/al/alexttypes.h
+	Added AL_PROVIDES_ALUT and LAL_OPENAL defines.
+	
+
 2003-01-06  Erik Greenwald <erik@smluc.org> <erik@math.smsu.edu>
 
 	* src/arch/bsd/bsd_dsp.c
