@@ -48,7 +48,6 @@ ALAPI ALvoid ALAPIENTRY alGenBuffers(ALsizei n, ALuint *buffers)
 			{
 				gBuffer[i].data = (void *) NewPtrClear(1024);  // allocate the buffer
 				gBuffer[i].size = 1024;
-                                gBuffer[i].uncompressedSize = 0;
 				gBuffer[i].bits = 8;
 				gBuffer[i].channels = 1;
 				buffers[iCount] = i;
@@ -104,10 +103,8 @@ ALAPI ALvoid ALAPIENTRY alDeleteBuffers(ALsizei n, ALuint *buffers)
 				if ((alIsBuffer(buffers[i]) == true) && (buffers[i] != 0))
 				{
 					DisposePtr((char *)gBuffer[buffers[i]].data); // get rid of memory used by buffer
-                                        DisposePtr((char *)gBuffer[buffers[i]].uncompressedData);
 	 				gBuffer[buffers[i]].data = NULL;
 	 				gBuffer[buffers[i]].size = 0;
-                                        gBuffer[buffers[i]].uncompressedSize = 0;
 	 				gBuffer[buffers[i]].bits = 8;
 	 				gBuffer[buffers[i]].channels = 1;
 	 				buffers[i] = 0;
@@ -135,7 +132,6 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,ALvoid *data,AL
 {
 	if (alIsBuffer(buffer) == true)
 	{
-                DisposePtr((char *) gBuffer[buffer].uncompressedData);
 		DisposePtr((char *) gBuffer[buffer].data);
 	
 		gBuffer[buffer].data = (void *) NewPtrClear(size); // size is bytes for this example

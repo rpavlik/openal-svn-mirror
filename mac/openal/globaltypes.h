@@ -27,9 +27,7 @@ typedef struct ALbuffer_struct
 {
 	ALenum		format;
 	ALshort *	data;
-        ALshort *       uncompressedData;
 	ALsizei		size;
-        ALsizei		uncompressedSize;
 	ALsizei		frequency;
 	ALsizei     bits;
 	ALsizei     channels;
@@ -47,10 +45,12 @@ typedef struct QueueEntry_struct
 
 typedef struct ALsource_struct
 {
-	SndChannelPtr 	channelPtr;
+    SndChannelPtr 	channelPtr;
     ALint         	srcBufferNum;
-    ALuint 		  	readOffset; // playback position (read position)
+    ALuint 		readOffset; // playback position (read position)
     ALuint        	writeOffset; // write position
+    ALshort *           uncompressedData;
+    ALsizei		uncompressedSize;
     ALuint		uncompressedReadOffset;
     ALuint        	state;
     ALboolean 		srcRelative;

@@ -74,8 +74,8 @@ void smPlaySegment(unsigned int source)
                 }
                 if (gBuffer[iBufferNum].format == AL_FORMAT_VORBIS_EXT) { // compressed format handling
                     ov_fillBuffer(source, iBufferNum);
-                    gSource[source].ptrSndHeader->samplePtr = (char *) gBuffer[iBufferNum].uncompressedData;
-                    gSource[source].ptrSndHeader->numFrames = gBuffer[iBufferNum].uncompressedSize;
+                    gSource[source].ptrSndHeader->samplePtr = (char *) gSource[source].uncompressedData;
+                    gSource[source].ptrSndHeader->numFrames = gSource[source].uncompressedSize;
                 } else // uncompressed buffer format
                 {
                     gSource[source].ptrSndHeader->samplePtr = (char *) gBuffer[iBufferNum].data + gSource[source].readOffset;
@@ -217,7 +217,7 @@ pascal void smService (SndChannelPtr chan, SndCommand* acmd)
 	    	}
                 
                 // if looping is on and have uncompressed all compressed data, then reset source but keep it in a playing state
-                if ((gSource[source].looping == AL_TRUE) && (gBuffer[gSource[source].srcBufferNum].uncompressedSize == 0)) {
+                if ((gSource[source].looping == AL_TRUE) && (gSource[source].uncompressedSize == 0)) {
                     gSource[source].readOffset = 0;
                     if (gSource[source].pCompHdr != NULL) {
                         DisposePtr(gSource[source].pCompHdr);
@@ -226,7 +226,7 @@ pascal void smService (SndChannelPtr chan, SndCommand* acmd)
                 }
 	    	
                 // if looping is off and have uncompressed all compressed data, then set the source's state to STOPPED
-                if ((gSource[source].looping != AL_TRUE) && (gBuffer[gSource[source].srcBufferNum].uncompressedSize == 0)) {
+                if ((gSource[source].looping != AL_TRUE) && (gSource[source].uncompressedSize == 0)) {
                     gSource[source].state = AL_STOPPED; 
                 }
             }

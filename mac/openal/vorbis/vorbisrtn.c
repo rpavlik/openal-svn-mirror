@@ -78,13 +78,13 @@ void ov_fillBuffer(ALuint source, ALuint buffer)
     vorbis_info *vi;
     FILE *fh;
     
-    // decompress the raw Ogg Vorbis data into pBuffer->uncompressedData
+    // decompress the raw Ogg Vorbis data into uncompressedData for source
     //   also fill in uncompressedSize, channels, bits, and frequency fields
     
     // create some space for uncompressed data if not already available
-    if (gBuffer[buffer].uncompressedData == NULL) {
-        gBuffer[buffer].uncompressedData = (void *)NewPtrClear(gBufferSize);
-        gBuffer[buffer].uncompressedSize = gBufferSize;
+    if (gSource[source].uncompressedData == NULL) {
+        gSource[source].uncompressedData = (void *)NewPtrClear(gBufferSize);
+        gSource[source].uncompressedSize = gBufferSize;
     }
     
     // create Ogg Vorbis File struct if not already created
@@ -109,5 +109,5 @@ void ov_fillBuffer(ALuint source, ALuint buffer)
     gBuffer[buffer].frequency = vi->rate;
   
     // decompress some data
-    gBuffer[buffer].uncompressedSize=ov_read(gSource[source].pCompHdr,(void *)gBuffer[buffer].uncompressedData,gBufferSize,1,2,1,NULL);
+    gSource[source].uncompressedSize=ov_read(gSource[source].pCompHdr,(void *)gSource[source].uncompressedData,gBufferSize,1,2,1,NULL);
 }

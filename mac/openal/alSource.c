@@ -57,9 +57,14 @@ ALAPI ALvoid ALAPIENTRY alGenSources(ALsizei n, ALuint *sources)
 			{
 				if (gSource[i].srcBufferNum == AL_MAXBUFFERS + 1) // found un-used source
 				{
-		    		smSourceInit(i);
+                                        smSourceInit(i);
 					gSource[i].srcBufferNum = 0;  // allocate the source
 					gSource[i].state = AL_INITIAL;
+                                        if (gSource[i].uncompressedData != NULL) {
+                                            DisposePtr((char *)gSource[i].uncompressedData);
+                                            gSource[i].uncompressedData = NULL;
+                                        }
+                                        gSource[i].uncompressedSize = 0;
 					sources[iCount] = i;
 					iCount++;
 				}
@@ -94,7 +99,10 @@ ALAPI ALvoid ALAPIENTRY alDeleteSources (ALsizei n, ALuint *sources)
 		{
 			if (alIsSource(sources[i]) == true)
 			{
-           	 	smSourceKill(sources[i]);
+                                smSourceKill(sources[i]);
+                                DisposePtr((char *)gSource[sources[i]].uncompressedData);
+                                gSource[sources[i]].uncompressedData = NULL;
+                                gSource[sources[i]].uncompressedSize = 0;
 				gSource[sources[i]].srcBufferNum = AL_MAXBUFFERS + 1; // value > AL_MAXBUFFERS used as signal source is not being used
 				gSource[sources[i]].readOffset = 0;
 				gSource[sources[i]].writeOffset = 0;
@@ -111,11 +119,11 @@ ALAPI ALvoid ALAPIENTRY alDeleteSources (ALsizei n, ALuint *sources)
 				gSource[i].channelPtr = NULL;
 				gSource[i].pitch = 1.0f;
 				gSource[i].gain = 1.0f;
-    			gSource[i].maxDistance = 100000000; // ***** should be MAX_FLOAT
-    			gSource[i].minGain = 0.0f;
-    			gSource[i].maxGain = 1.0f;
-    			gSource[i].rolloffFactor = 1.0f;
-    			gSource[i].referenceDistance = 1.0f;
+                                gSource[i].maxDistance = 100000000; // ***** should be MAX_FLOAT
+                                gSource[i].minGain = 0.0f;
+                                gSource[i].maxGain = 1.0f;
+                                gSource[i].rolloffFactor = 1.0f;
+                                gSource[i].referenceDistance = 1.0f;
 				gSource[i].Position[0] = 0;
 				gSource[i].Position[1] = 0;
 				gSource[i].Position[2] = 0;

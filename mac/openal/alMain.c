@@ -76,9 +76,7 @@ ALAPI ALvoid ALAPIENTRY alInit(ALint *argc, ALubyte **argv)
 	for (i = 0; i < AL_MAXBUFFERS; i++)
 	{
 		gBuffer[i].data = NULL;
-                gBuffer[i].uncompressedData = NULL;
 		gBuffer[i].size = 0;
-                gBuffer[i].uncompressedSize = 0;
 		gBuffer[i].frequency = 44100;
 	}
 	
@@ -108,6 +106,8 @@ ALAPI ALvoid ALAPIENTRY alInit(ALint *argc, ALubyte **argv)
 		gSource[i].Velocity[2] = 0;	
 		gSource[i].ptrQueue = NULL;
 		gSource[i].ptrSndHeader = NULL;
+                gSource[i].uncompressedData = NULL;
+                gSource[i].uncompressedSize = 0;
 	}
 	
 	// clear listener info
@@ -143,16 +143,17 @@ ALAPI ALvoid ALAPIENTRY alExit(ALvoid)
 		if (gBuffer[i].data != NULL)
 		{
 			DisposePtr((char *) gBuffer[i].data);
-                        DisposePtr((char *) gBuffer[i].uncompressedData);
 			gBuffer[i].data = NULL;
 			gBuffer[i].size = 0;
-                        gBuffer[i].uncompressedSize = 0;
 		}
 	}
 	
 	// dispose of source/channel information
 	for (i= 0; i <= AL_MAXSOURCES; i++)
 	{	
+                DisposePtr((char *) gSource[i].uncompressedData);
+                gSource[i].uncompressedData = NULL;
+                gSource[i].uncompressedSize = 0;
 		smSourceKill(i);
 	}
 
