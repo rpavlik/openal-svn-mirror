@@ -89,6 +89,8 @@
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
 #define MAX(a,b) (((a) < (b)) ? (b) : (a))
 
+#define USE_TPITCH_LOOKUP 1 /* icculus change here JIV FIXME */
+
 /* 
  * TPITCH_MAX sets the number of discrete values for AL_PITCH we can have.
  * You can set AL_PITCH to anything, but integer rounding will ensure that
@@ -1232,6 +1234,7 @@ static ALfloat compute_doppler_pitch( ALfloat *object1, ALfloat *o1_vel,
 	return retval;
 }
 
+#if USE_TPITCH_LOOKUP
 /*
  * alf_tpitch
  *
@@ -1255,15 +1258,17 @@ void alf_tpitch( UNUSED(ALuint cid),
 	int *offsets;        /* pointer to set of offsets in lookup table */
 	float *fractionals;  /* pointer to set of fractionals in lookup table */
 	int bufchans;
-	ALfloat *pitch;
+	ALfloat *ppitch, pitch;
 
-	pitch = _alGetSourceParam( src, AL_PITCH );
-	if( pitch == NULL ) {
+	ppitch = _alGetSourceParam( src, AL_PITCH );
+	if(ppitch == NULL) {
 		/*
 		 * if pitch is unset, default or invalid, return.
 		 */
 		return;
 	}
+
+	pitch = *ppitch;
 
 	bufchans = _al_ALCHANNELS(samp->format); /* we need bufchans to
 						      * scale our increment
@@ -1275,17 +1280,17 @@ void alf_tpitch( UNUSED(ALuint cid),
 	/*
 	 * if pitch is out of range, return.
 	 */
-	if(*pitch <= 0.0f)
+	if(pitch <= 0.0f)
 	{
-		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
- 			"pitch out of range: %f, clamping", *pitch);
-		*pitch = 0.05f;
+		_alDebug(ALD_FILTER, __FILE__, __LINE__,
+ 			"pitch out of range: %f, clamping", pitch);
+		pitch = 0.05f;
 	}
-	else if (*pitch > 2.0f)
+	else if (pitch > 2.0f)
 	{
-		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
- 			"pitch out of range: %f, clamping", *pitch);
-		*pitch = 2.0f;
+		_alDebug(ALD_FILTER, __FILE__, __LINE__,
+ 			"pitch out of range: %f, clamping", pitch);
+		pitch = 2.0f;
 	}
 
 	if(_alBufferIsCallback(samp) == AL_TRUE) {
@@ -1304,7 +1309,7 @@ void alf_tpitch( UNUSED(ALuint cid),
 	len /= sizeof(ALshort);
 
 	/* convert pitch into index in our lookup table */
-	l_index = (*pitch / 2.0) * tpitch_lookup.max;
+	l_index = (pitch / 2.0) * tpitch_lookup.max;
 
 	/*
 	 * sanity check.
@@ -1312,6 +1317,9 @@ void alf_tpitch( UNUSED(ALuint cid),
 	if(l_index >= tpitch_lookup.max) {
 		l_index = tpitch_lookup.max - 1;
 	}
+
+	_alDebug(ALD_FILTER, __FILE__, __LINE__,
+	      "pitch %f l_index %d", pitch, l_index);
 
 	/*
 	 * offsets is our set of pitch-scaled offsets, 0...pitch * len.
@@ -1405,7 +1413,7 @@ void alf_tpitch( UNUSED(ALuint cid),
 		 */
 		for(j = 0; j < clen; j++) {
 			int offset = offsets[j];
-			int nextoffset = offsets[j]+ (j == (int)len - 1)? 0 : 1;
+			int nextoffset = offsets[j]+ (j == (int)clen - 1)? 0 : 1;
 			int sample = obufptr[offset];
 			int nextsample = obufptr[nextoffset];
 			float frac = fractionals[j];
@@ -1467,12 +1475,164 @@ void alf_tpitch( UNUSED(ALuint cid),
 			 * let _alMixSources know it's time for this source
 			 * to die.
 			 */
+			_alDebug(ALD_FILTER, __FILE__, __LINE__,
+				 "tpitch: source ending");
 			src->srcParams.soundpos = samp->size;
 		}
 	}
 
 	return;
 }
+#else
+/*
+ * alf_tpitch
+ *
+ * this filter acts out AL_PITCH.
+ *
+ * This filter is implements AL_PITCH, but - oh-ho! - in the 
+ * time domain.  All that good fft mojo going to waste.
+ */
+void alf_tpitch( UNUSED(ALuint cid),
+		 AL_source *src,
+		 AL_buffer *samp,
+		 ALshort **buffers,
+		 ALuint nc,
+		 ALuint len )
+{
+	ALshort *obufptr = NULL; /* pointer to unmolested buffer data */
+	ALshort *bufptr  = NULL;  /* pointer to buffers[0..nc-1] */
+	ALint ipos = 0;   /* used to store offsets temporarily */
+	ALuint i;
+	int bufchans;
+	ALfloat *ppitch, pitch;
+
+	ppitch = _alGetSourceParam( src, AL_PITCH );
+	if(ppitch == NULL) {
+		/*
+		 * if pitch is unset, default or invalid, return.
+		 */
+		return;
+	}
+
+	pitch = *ppitch;
+
+	bufchans = _al_ALCHANNELS(samp->format); /* we need bufchans to
+						      * scale our increment
+						      * of the soundpos,
+						      * because of
+						      * multichannel format
+						      * buffers.
+						      */
+	/*
+	 * if pitch is out of range, clamp.
+	 */
+	pitch = MIN(pitch, 2.0f);
+	pitch = MAX(pitch, 0.01);	
+	
+	/*
+	 *  We need len in samples, not bytes.
+	 */
+	len /= sizeof(ALshort);
+
+	_alDebug(ALD_FILTER, __FILE__, __LINE__, "pitch %f", pitch);
+
+	/*
+	 * Iterate over each buffers[0..nc-1]
+	 */
+	for(i = 0; i < nc; i++) {
+		ALuint j;
+
+		/*
+		 * Kind of breaking convention here and actually using
+		 * the original buffer data instead of just resampling
+		 * inside the passed buffer data.  This is because we
+		 * won't have enough data to resample pitch > 1.0.
+		 *
+		 * We offset our original buffer pointer by the source's
+		 * current position, but in samples, not in bytes
+		 * (which is what src->srcParams.soundpos is in).
+		 */
+		obufptr  = samp->orig_buffers[i];
+		obufptr += src->srcParams.soundpos / sizeof *obufptr;
+
+		/*
+		 * set bufptr to the pcm channel that we
+		 * are about to change in-place.
+		 */
+		bufptr = buffers[i];
+
+		/*
+		 * this is where the "resampling" takes place.  We do a
+		 * very little bit on unrolling here, and it shouldn't
+		 * be necessary, but seems to improve performance quite
+		 * a bit.
+		 */
+		for(j = 0; j < len; j++) {
+			{
+				int sample = obufptr[(int) (j * pitch)];
+				int nextsample = obufptr[(int)((j+1) * pitch)];
+				float frac = 1/pitch;
+				
+				/* do a little interpolation */
+				bufptr[j] = sample +
+				            frac * (nextsample - sample);
+			}
+		}
+	}
+
+	/*
+	 *  AL_PITCH (well, alf_tpitch actually) require that the
+	 *  main mixer func does not increment the source's soundpos,
+	 *  so we must increment it here.  If we detect an overrun, we
+	 *  must reset the src's soundpos to something reasonable.
+	 */
+	ipos = (int) (len * pitch);
+	src->srcParams.soundpos += bufchans * ipos * sizeof(ALshort);
+	
+	if(src->srcParams.soundpos > samp->size)
+	{
+		/*
+		 * we've reached the end of this sample.
+		 *
+		 * Since we're handling the soundpos incrementing for
+		 * this source (usually done in _alMixSources), we have
+		 * to handle all the special cases here instead of 
+		 * delegating them.
+		 *
+		 * These include callback, looping, and streaming 
+		 * sources.  For now, we just handle looping and
+		 * normal sources, as callback sources will probably 
+		 * require added some special case logic to _alSplitSources 
+		 * to give up a little more breathing room.
+		 */
+		if( _alSourceIsLooping( src ) == AL_TRUE ) {
+			/*
+			 * looping source
+			 *
+			 * FIXME:
+			 * 	This isn't right.  soundpos should be set to
+			 * 	something different, and we may need to carry
+			 * 	over info so that the sound loops properly.
+			 */
+
+			/* FIXME: kind of kludgy */
+			src->srcParams.soundpos = 0;
+		} else {
+			/*
+			 * let _alMixSources know it's time for this source
+			 * to die.
+			 */
+			_alDebug(ALD_FILTER, __FILE__, __LINE__,
+				 "tpitch: source ending");
+
+			src->srcParams.soundpos = samp->size;
+		}
+	}
+
+	return;
+}
+#endif
+
 
 /*
  * compute_sa( ALfloat *source_pos, ALfloat source_max,
