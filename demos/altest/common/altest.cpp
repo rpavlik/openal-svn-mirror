@@ -4188,6 +4188,8 @@ ALvoid I_VorbisTest()
       ALfloat source0Pos[]={ 2.0, 0.0,-2.0};	// Front and right of the listener
       ALfloat source0Vel[]={ 0.0, 0.0, 0.0};
 
+      alGetError(); // reset error state
+
       if (alIsExtensionPresent((ALubyte *)"AL_EXT_vorbis") == AL_TRUE) {
 	alGenSources(1,source);
 	if ((error = alGetError()) != AL_NO_ERROR)
