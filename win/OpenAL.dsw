@@ -71,6 +71,12 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name Router
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name ALut
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name OpenAL32
+    End Project Dependency
 }}}
 
 ###############################################################################
