@@ -97,13 +97,6 @@ void _alMixManagerAdd( ALMixManager *mixman, void *dataptr, int bytes_to_write )
 	mixman->pool[mixman->index].data  = dataptr;
 	mixman->pool[mixman->index].bytes = bytes_to_write;
 
-	// JIV REMOVE
-	if(mixman->index)
-	{
-		assert(mixman->pool[mixman->index].bytes ==
-		       mixman->pool[mixman->index-1].bytes);
-	}
-
 	mixman->index++;
 
 	return;
