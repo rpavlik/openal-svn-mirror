@@ -534,9 +534,12 @@ ALAPI ALvoid ALAPIENTRY alDopplerFactor(ALfloat value)
 	
 		if (value>=0.0f)
 		{
-			Context->DopplerFactor=value;
-			Context->Listener.update1 = LDOPPLERFACTOR;
-			alcUpdateContext(Context, ALLISTENER, 0);
+			if (value != Context->DopplerFactor)
+			{
+				Context->DopplerFactor = value;
+				Context->Listener.update1 = LDOPPLERFACTOR;
+				alcUpdateContext(Context, ALLISTENER, 0);
+			}
 		}
 		else
 		{
@@ -565,9 +568,12 @@ ALAPI ALvoid ALAPIENTRY alDopplerVelocity(ALfloat value)
 	
 		if (value>0.0f)
 		{
-			Context->DopplerVelocity=value;
-			Context->Listener.update1 = LDOPPLERVELOCITY;
-			alcUpdateContext(Context, 0, 0);
+			if (value != Context->DopplerVelocity)
+			{
+				Context->DopplerVelocity=value;
+				Context->Listener.update1 = LDOPPLERVELOCITY;
+				alcUpdateContext(Context, ALLISTENER, 0);
+			}
 		}
 		else
 		{
@@ -599,9 +605,12 @@ ALAPI ALvoid ALAPIENTRY alDistanceModel(ALenum value)
 			case AL_NONE:
 			case AL_INVERSE_DISTANCE:
 			case AL_INVERSE_DISTANCE_CLAMPED:
-				Context->DistanceModel=value;
-				Context->Listener.update1 = LDISTANCEMODEL;
-				alcUpdateContext(Context, ALLISTENER, 0);
+				if (value != Context->DistanceModel)
+				{
+					Context->DistanceModel = value;
+					Context->Listener.update1 = LDISTANCEMODEL;
+					alcUpdateContext(Context, ALLISTENER, 0);
+				}
 				break;
 
 			default:

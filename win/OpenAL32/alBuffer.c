@@ -259,6 +259,7 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,ALvoid *data,AL
 	if (alIsBuffer(buffer))
 	{
 		ALBuf=((ALbuffer *)buffer);
+//		if ((ALBuf->state==UNUSED)&&(data))
 		if ((ALBuf->refcount==0)&&(data))
 		{
 			switch(format)

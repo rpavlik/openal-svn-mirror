@@ -19,8 +19,8 @@
  */
 
 #include <math.h>
-#include "AL/al.h"
 #include "OpenAL32/Include/alMain.h"
+#include "AL/al.h"
 #include "AL/alc.h"
 
 ALUAPI ALint ALUAPIENTRY aluF2L(ALfloat Value)
@@ -196,6 +196,8 @@ ALUAPI ALvoid ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint chan
 		}
 		//2. Align coordinate system axes
 		ListenerOrientation[2]=-ListenerOrientation[2]; // convert to right handed
+		ListenerOrientation[5]=-ListenerOrientation[5]; // convert to right handed
+		
 		aluCrossproduct(&ListenerOrientation[3],&ListenerOrientation[0],U);
 		aluNormalize(U);
 		aluCrossproduct(&ListenerOrientation[0],U,V);

@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "OPENAL32_EXPORTS" /Yu"stdafx.h" /FD /c
-# ADD CPP /nologo /W3 /O2 /I "..\\" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "_OPENAL32LIB" /FD /c
+# ADD CPP /nologo /W3 /O2 /I "..\\" /I "..\..\include" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "_OPENAL32LIB" /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -56,7 +56,7 @@ LINK32=link.exe
 # ADD LINK32 dxguid.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
-PostBuild_Cmds=copy  release\openal32.dll  ..\openALDemo\release
+PostBuild_Cmds=copy release\openal32.dll ..\openaldemo
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "OpenAL32 - Win32 Debug"
@@ -73,7 +73,7 @@ PostBuild_Cmds=copy  release\openal32.dll  ..\openALDemo\release
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "OPENAL32_EXPORTS" /Yu"stdafx.h" /FD /GZ /c
-# ADD CPP /nologo /ML /W3 /Gm /ZI /Od /I "..\\" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "_OPENAL32LIB" /FR /FD /GZ /c
+# ADD CPP /nologo /ML /W3 /Gm /ZI /Od /I "..\\" /I "..\..\include" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "_OPENAL32LIB" /FR /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -87,7 +87,7 @@ LINK32=link.exe
 # SUBTRACT LINK32 /pdb:none
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
-PostBuild_Cmds=copy  debug\openal32.dll  ..\openALDemo\debug
+PostBuild_Cmds=copy debug\openal32.dll ..\openaldemo
 # End Special Build Tool
 
 !ENDIF 

@@ -21,7 +21,6 @@
 #pragma comment(lib, "winmm.lib")
 
 #include <math.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
 #include "OpenAL32/Include/alMain.h"
@@ -29,9 +28,13 @@
 #include "AL/alc.h"
 #include "AL/alu.h"
 #include "OpenAL32/Include/alBuffer.h"
+#ifdef _DEBUG
+	#include "stdio.h"
+#endif
 
 #define SPEEDOFSOUNDMETRESPERSEC	(343.3f)
 #define MAX_NUM_SOURCES			64
+#define OUTPUT_BUFFER_SIZE		32768
 
 typedef struct ALCextension_struct
 {
@@ -87,6 +90,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource);
 void UpdateListener(ALCcontext *ALContext);
 
 // Local function definitions
+void EAXFix(ALCcontext *context);
 ALuint GetMaxNumStereoBuffers(LPDIRECTSOUND lpDS);
 ALuint GetMaxNum3DMonoBuffers(LPDIRECTSOUND lpDS);
 
@@ -354,6 +358,7 @@ static void CALLBACK alcDirectSoundProc(UINT uID,UINT uReserved,DWORD dwUser,DWO
 	DWORD PlayCursor,WriteCursor;
 	BYTE *WritePtr1,*WritePtr2;
 	DWORD WriteCnt1,WriteCnt2;
+	WAVEFORMATEX OutputType;
 	ALCcontext *ALContext;
 	ALCdevice *ALDevice;
 	DWORD BytesPlayed;
@@ -363,18 +368,30 @@ static void CALLBACK alcDirectSoundProc(UINT uID,UINT uReserved,DWORD dwUser,DWO
 	SuspendContext(ALContext);
 
 	ALDevice=(ALCdevice *)dwUser;
+
+	// Get current play and write cursors
 	IDirectSoundBuffer_GetCurrentPosition(ALDevice->DSsbuffer,&PlayCursor,&WriteCursor);
 	if (!OldWriteCursor) OldWriteCursor=WriteCursor-PlayCursor;
-	BytesPlayed=((((long)WriteCursor-(long)OldWriteCursor)<0)?((long)32768+(long)WriteCursor-(long)OldWriteCursor):((DWORD)WriteCursor-(DWORD)OldWriteCursor));
-	DSRes=IDirectSoundBuffer_Lock(ALDevice->DSsbuffer,(OldWriteCursor+3528)&32767,BytesPlayed,&WritePtr1,&WriteCnt1,&WritePtr2,&WriteCnt2,0);
+
+	// Get the output format and figure the number of bytes played (block aligned)
+	IDirectSoundBuffer_GetFormat(ALDevice->DSsbuffer,&OutputType,sizeof(WAVEFORMATEX),NULL);
+	BytesPlayed=((((WriteCursor<OldWriteCursor)?(OUTPUT_BUFFER_SIZE+WriteCursor-OldWriteCursor):(WriteCursor-OldWriteCursor))/OutputType.nBlockAlign)*OutputType.nBlockAlign);
+
+	// Lock output buffer started at 40msec in front of the old write cursor (15msec in front of the actual write cursor)
+	DSRes=IDirectSoundBuffer_Lock(ALDevice->DSsbuffer,(OldWriteCursor+(OutputType.nSamplesPerSec/25)*OutputType.nBlockAlign)%OUTPUT_BUFFER_SIZE,BytesPlayed,&WritePtr1,&WriteCnt1,&WritePtr2,&WriteCnt2,0);
+
+	// If the buffer is lost, restore it, play and lock
 	if (DSRes==DSERR_BUFFERLOST)
 	{
 		IDirectSoundBuffer_Restore(ALDevice->DSsbuffer);
 		IDirectSoundBuffer_Play(ALDevice->DSsbuffer,0,0,DSBPLAY_LOOPING);
-		DSRes=IDirectSoundBuffer_Lock(ALDevice->DSsbuffer,(OldWriteCursor+3528)&32767,BytesPlayed,&WritePtr1,&WriteCnt1,&WritePtr2,&WriteCnt2,0);
+		DSRes=IDirectSoundBuffer_Lock(ALDevice->DSsbuffer,(OldWriteCursor+(OutputType.nSamplesPerSec/25)*OutputType.nBlockAlign)%OUTPUT_BUFFER_SIZE,BytesPlayed,&WritePtr1,&WriteCnt1,&WritePtr2,&WriteCnt2,0);
 	}
+
+	// Successfully locked the output buffer
 	if (DSRes==DS_OK)
 	{
+		// If we have a active context, mix data directly into output buffer otherwise fill with silence
 		if (ALContext)
 		{
 			if (WritePtr1)
@@ -389,9 +406,13 @@ static void CALLBACK alcDirectSoundProc(UINT uID,UINT uReserved,DWORD dwUser,DWO
 			if (WritePtr2)
 				memset(WritePtr2,0,WriteCnt2);
 		}
+
+		// Unlock output buffer only when successfully locked
 		IDirectSoundBuffer_Unlock(ALDevice->DSsbuffer,WritePtr1,WriteCnt1,WritePtr2,WriteCnt2);
 	}
-	OldWriteCursor=WriteCursor;
+	
+	// Update old write cursor location
+	OldWriteCursor=((OldWriteCursor+BytesPlayed)%OUTPUT_BUFFER_SIZE);
 
 	ProcessContext(ALContext);
 }
@@ -418,6 +439,21 @@ ALvoid alcInitContext(ALCcontext *context)
 		context->Listener.Up[0]=0.0f; 
 		context->Listener.Up[1]=1.0f;
 		context->Listener.Up[2]=0.0f;
+
+		context->Listener.EAX20LP.dwEnvironment = EAX_ENVIRONMENT_GENERIC;
+		context->Listener.EAX20LP.flEnvironmentSize = EAXLISTENER_DEFAULTENVIRONMENTSIZE;
+		context->Listener.EAX20LP.flEnvironmentDiffusion = EAXLISTENER_DEFAULTENVIRONMENTDIFFUSION;
+		context->Listener.EAX20LP.lRoom = EAXLISTENER_DEFAULTROOM;
+		context->Listener.EAX20LP.lRoomHF = EAXLISTENER_DEFAULTROOMHF;
+		context->Listener.EAX20LP.flDecayTime = EAXLISTENER_DEFAULTDECAYTIME;
+		context->Listener.EAX20LP.flDecayHFRatio = EAXLISTENER_DEFAULTDECAYHFRATIO;
+		context->Listener.EAX20LP.lReflections = EAXLISTENER_DEFAULTREFLECTIONS;
+		context->Listener.EAX20LP.flReflectionsDelay = EAXLISTENER_DEFAULTREFLECTIONSDELAY;
+		context->Listener.EAX20LP.lReverb = EAXLISTENER_DEFAULTREVERB;
+		context->Listener.EAX20LP.flReverbDelay = EAXLISTENER_DEFAULTREVERBDELAY;
+		context->Listener.EAX20LP.flAirAbsorptionHF = EAXLISTENER_DEFAULTAIRABSORPTIONHF;
+		context->Listener.EAX20LP.flRoomRolloffFactor = EAXLISTENER_DEFAULTROOMROLLOFFFACTOR;
+		context->Listener.EAX20LP.dwFlags = EAXLISTENER_DEFAULTFLAGS;
 
 		//Validate context
 		context->LastError=AL_NO_ERROR;
@@ -475,7 +511,7 @@ ALCvoid alcExitContext(ALCcontext *context)
 		// End Timer Period
 		timeEndPeriod(g_nTimerInterval);
 
-#ifdef _DEBUG		
+#ifdef _DEBUG
 		if (context->SourceCount>0)
 		{
 			sprintf(szString,"OpenAL32 : alcDestroyContext() %d Source(s) NOT deleted\n", context->SourceCount);
@@ -508,6 +544,32 @@ ALCvoid alcExitContext(ALCcontext *context)
 			memset(ALSource,0,sizeof(ALsource));
 			free(ALSource);
 			ALSource = ALTempSource;
+		}
+
+		// If we created the Permanent Source ( in EAXFix() ), then manually delete it now
+		if (context->alPrivateSource)
+		{
+			ALSource=((ALsource *)context->alPrivateSource);
+
+			// Delete the Source
+			if (ALSource->uservalue1)
+			{
+				IDirectSoundBuffer_Stop((LPDIRECTSOUNDBUFFER)ALSource->uservalue1);
+				if (ALSource->uservalue3)
+				{
+					IKsPropertySet_Release((LPKSPROPERTYSET)ALSource->uservalue3);
+					ALSource->uservalue3 = NULL;
+				}
+				if (ALSource->uservalue2)
+				{
+					IDirectSound3DBuffer_Release((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2);
+					ALSource->uservalue2 = NULL;
+				}
+				IDirectSoundBuffer_Release((LPDIRECTSOUNDBUFFER)ALSource->uservalue1);
+				ALSource->uservalue1=NULL;
+			}
+			memset(ALSource,0,sizeof(ALsource));
+			free(ALSource);
 		}
 
 		//Invalidate context
@@ -651,6 +713,12 @@ ALCAPI ALCboolean ALCAPIENTRY alcMakeContextCurrent(ALCcontext *context)
 		{
 			SuspendContext(ALContext);
 			ALContext->InUse=AL_TRUE;
+
+			if (ALContext->Device->DS3dlistener)
+			{
+				EAXFix(context);
+			}
+
 			ProcessContext(ALContext);
 		}
 	}
@@ -686,6 +754,7 @@ void CALLBACK TimerCallback(UINT uID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD 
 	SuspendContext(ALContext);
 
 	ALSource = ALContext->Source;
+
 
 	// Process each playing source
 	for (loop=0;loop < ALContext->SourceCount;loop++)
@@ -1172,6 +1241,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 	ALbufferlistitem *ALBufferListItem;
 	ALbufferlistitem *ALBufferListTemp;
 	ALint	volume;
+//	char szString[256];
 
 	// Check if the Source is being Destroyed
 	if (ALSource->update1 == SDELETE)
@@ -1209,7 +1279,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 		memset(&DSBDescription,0,sizeof(DSBUFFERDESC));
 		DSBDescription.dwSize=sizeof(DSBUFFERDESC);
 		DSBDescription.dwFlags=DSBCAPS_CTRLVOLUME|DSBCAPS_CTRLFREQUENCY|DSBCAPS_CTRL3D|DSBCAPS_GLOBALFOCUS|
-			DSBCAPS_GETCURRENTPOSITION2|ALContext->Device->CreationFlag;
+			DSBCAPS_GETCURRENTPOSITION2|DSBCAPS_LOCHARDWARE;
 		DSBDescription.dwBufferBytes=88200;
 		DSBDescription.lpwfxFormat=&OutputType;
 		memset(&OutputType,0,sizeof(WAVEFORMATEX));
@@ -1279,7 +1349,17 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 							ALBufferListItem->bufferstate = PENDING;
 							ALBufferListItem = ALBufferListItem->next;
 						}
+					}
 
+					// Always reset these variables no matter whether Source WAS playing or not
+					ALSource->BuffersProcessed = 0;
+					ALSource->BuffersAddedToDSBuffer = 0;
+					ALSource->BufferPosition = 0;
+					ALSource->BytesPlayed = 0;
+					ALSource->DataStillToPlay = 0;
+					ALSource->FinishedQueue = AL_FALSE;
+
+					/* original ...
 						ALSource->BuffersProcessed = 0;
 						ALSource->BuffersAddedToDSBuffer = 0;
 						ALSource->BufferPosition = 0;
@@ -1287,6 +1367,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 						ALSource->DataStillToPlay = 0;
 						ALSource->FinishedQueue = AL_FALSE;
 					}
+					*/
 
 					// If the queue is empty, set Source State to STOPPED
 					if (ALSource->BuffersInQueue == 0)
@@ -1420,15 +1501,17 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 						}
 						IDirectSoundBuffer_Stop((LPDIRECTSOUNDBUFFER)ALSource->uservalue1);
 						IDirectSoundBuffer_Release((LPDIRECTSOUNDBUFFER)ALSource->uservalue1);
+						
 						ALSource->uservalue1=NULL;
-
+						ALSource->DSBufferPlaying = AL_FALSE;
+						
 						ALSource->SourceType = SOURCE2D;
 
 						// Set Caps
 						memset(&DSBDescription,0,sizeof(DSBUFFERDESC));
 						DSBDescription.dwSize=sizeof(DSBUFFERDESC);
 						DSBDescription.dwFlags=DSBCAPS_CTRLVOLUME|DSBCAPS_CTRLFREQUENCY|DSBCAPS_GLOBALFOCUS|
-							DSBCAPS_GETCURRENTPOSITION2|ALContext->Device->CreationFlag;
+							DSBCAPS_GETCURRENTPOSITION2|DSBCAPS_LOCSOFTWARE;
 						DSBDescription.dwBufferBytes=88200;
 						DSBDescription.lpwfxFormat=&OutputType;
 						memset(&OutputType,0,sizeof(WAVEFORMATEX));
@@ -1454,8 +1537,6 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 						}
 
 						// Update variables
-						ALSource->DSBufferPlaying = AL_FALSE;
-
 						ALSource->OldPlayCursor = 0;
 						ALSource->OldWriteCursor = 0;
 
@@ -1478,13 +1559,16 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 							IDirectSoundBuffer_Stop((LPDIRECTSOUNDBUFFER)ALSource->uservalue1);
 							IDirectSoundBuffer_Release((LPDIRECTSOUNDBUFFER)ALSource->uservalue1);
 							ALSource->uservalue1=NULL;
+							ALSource->DSBufferPlaying = AL_FALSE;
 						}
+
+						ALSource->SourceType = SOURCE3D;
 
 						// Set Caps
 						memset(&DSBDescription,0,sizeof(DSBUFFERDESC));
 						DSBDescription.dwSize=sizeof(DSBUFFERDESC);
 						DSBDescription.dwFlags=DSBCAPS_CTRLVOLUME|DSBCAPS_CTRLFREQUENCY|DSBCAPS_CTRL3D|DSBCAPS_GLOBALFOCUS|
-							DSBCAPS_GETCURRENTPOSITION2|ALContext->Device->CreationFlag;
+							DSBCAPS_GETCURRENTPOSITION2|DSBCAPS_LOCHARDWARE;
 						DSBDescription.dwBufferBytes=88200;
 						DSBDescription.lpwfxFormat=&OutputType;
 						memset(&OutputType,0,sizeof(WAVEFORMATEX));
@@ -1518,8 +1602,6 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 						}
 
 						// Update variables
-						ALSource->DSBufferPlaying = AL_FALSE;
-
 						ALSource->OldPlayCursor = 0;
 						ALSource->OldWriteCursor = 0;
 
@@ -1531,8 +1613,6 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 							volume = LinearGainToDB(Gain);
 							IDirectSoundBuffer_SetVolume((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, volume);
 						}
-
-						ALSource->SourceType = SOURCE3D;
 					}
 
 					// Set Direct Sound buffer to frequency of current Open AL buffer multiplied by desired Pitch
@@ -1559,7 +1639,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 							DataToCopy = ((88200 - WriteCursor) + PlayCursor);
 
 						IDirectSoundBuffer_Lock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,WriteCursor,DataToCopy,&lpPart1,&Part1Size,&lpPart2,&Part2Size,0);
-						
+
 						if (lpPart1 != NULL)
 						{
 							// Find position in buffer queue
@@ -1949,6 +2029,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 			Pos[1] = ALSource->param[AL_POSITION-AL_CONE_INNER_ANGLE].data.fv3[1];
 			Pos[2] = -ALSource->param[AL_POSITION-AL_CONE_INNER_ANGLE].data.fv3[2];
 			IDirectSound3DBuffer_SetPosition((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,Pos[0],Pos[1],Pos[2],DS3D_IMMEDIATE);
+
 			ALSource->update1 &= ~POSITION;
 			if (ALSource->update1 == 0)
 				return;
@@ -1965,6 +2046,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 			Vel[1] = ALSource->param[AL_VELOCITY-AL_CONE_INNER_ANGLE].data.fv3[1];
 			Vel[2] = -ALSource->param[AL_VELOCITY-AL_CONE_INNER_ANGLE].data.fv3[2];
 			IDirectSound3DBuffer_SetVelocity((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,Vel[0],Vel[1],Vel[2],DS3D_IMMEDIATE);
+
 			ALSource->update1 &= ~VELOCITY;
 			if (ALSource->update1 == 0)
 				return;
@@ -1981,6 +2063,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 			Dir[1] = ALSource->param[AL_DIRECTION-AL_CONE_INNER_ANGLE].data.fv3[1];
 			Dir[2] = -ALSource->param[AL_DIRECTION-AL_CONE_INNER_ANGLE].data.fv3[2];
 			IDirectSound3DBuffer_SetConeOrientation((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,Dir[0],Dir[1],Dir[2],DS3D_IMMEDIATE);
+
 			ALSource->update1 &= ~ORIENTATION;
 			if (ALSource->update1 == 0)
 				return;
@@ -2073,6 +2156,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 			Gain = (Gain * ALContext->Listener.Gain);
 			volume = LinearGainToDB(Gain);
 			IDirectSoundBuffer_SetVolume((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, volume);
+			
 			ALSource->update1 &= ~VOLUME;
 			if (ALSource->update1 == 0)
 				return;
@@ -2115,6 +2199,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 		{
 			minDist = ALSource->param[AL_REFERENCE_DISTANCE-AL_CONE_INNER_ANGLE].data.f;
 			IDirectSound3DBuffer_SetMinDistance((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,minDist,DS3D_IMMEDIATE);
+
 			ALSource->update1 &= ~MINDIST;
 			if (ALSource->update1 == 0)
 				return;
@@ -2129,6 +2214,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 		{
 			maxDist = ALSource->param[AL_MAX_DISTANCE-AL_CONE_INNER_ANGLE].data.f;
 			IDirectSound3DBuffer_SetMaxDistance((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,maxDist,DS3D_IMMEDIATE);
+			
 			ALSource->update1 &= ~MAXDIST;
 			if (ALSource->update1 == 0)
 				return;
@@ -2145,6 +2231,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 			volume = LinearGainToDB(outerGain);
 
 			IDirectSound3DBuffer_SetConeOutsideVolume((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2, volume,DS3D_IMMEDIATE);
+
 			ALSource->update1 &= ~CONEOUTSIDEVOLUME;
 			if (ALSource->update1 == 0)
 				return;
@@ -2171,6 +2258,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 		{
 			Relative = ALSource->relative ? DS3DMODE_HEADRELATIVE : DS3DMODE_NORMAL;
 			IDirectSound3DBuffer_SetMode((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,Relative,DS3D_IMMEDIATE);
+
 			ALSource->update1 &= ~MODE;
 			if (ALSource->update1 == 0)
 				return;
@@ -2187,6 +2275,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 			outerAngle = (ALuint)ALSource->param[AL_CONE_OUTER_ANGLE-AL_CONE_INNER_ANGLE].data.f;
 
 			IDirectSound3DBuffer_SetConeAngles((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,innerAngle,outerAngle,DS3D_IMMEDIATE);
+
 			ALSource->update1 &= ~CONEANGLES;
 			if (ALSource->update1 == 0)
 				return;
@@ -2441,6 +2530,7 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(ALCubyte *deviceName)
 	ALboolean bUseDS;
 	ALboolean bUseDS3D;
 	ALboolean bDeviceFound = AL_FALSE;
+//	ALuint numStereo, numMono;
 	ALint numSources;
 
 	bUseDS = AL_FALSE;
@@ -2511,14 +2601,13 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(ALCubyte *deviceName)
 										// Check that is an accelerated DS device
 										if (!(dsCaps.dwFlags & DSCAPS_EMULDRIVER))
 										{
-											numSources = (GetMaxNum3DMonoBuffers(device->DShandle) - 1);
+											numSources = GetMaxNum3DMonoBuffers(device->DShandle);
 
 											// To enable the 'DirectSound3D' device, the audio card MUST support
 											// at least 16 voices.  (If not, then the device selection drops through
 											// to the 'DirectSound' device).
 											if (numSources >= 16)
 											{
-												device->CreationFlag = DSBCAPS_LOCHARDWARE;
 												device->MaxNoOfSources = numSources;
 
 												strcpy(device->szDeviceName, "DirectSound3D");
@@ -2579,7 +2668,7 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(ALCubyte *deviceName)
 								memset(&DSBDescription,0,sizeof(DSBUFFERDESC));
 								DSBDescription.dwSize=sizeof(DSBUFFERDESC);
 								DSBDescription.dwFlags=DSBCAPS_GLOBALFOCUS|DSBCAPS_GETCURRENTPOSITION2;
-								DSBDescription.dwBufferBytes=32768;
+								DSBDescription.dwBufferBytes=OUTPUT_BUFFER_SIZE;
 								DSBDescription.lpwfxFormat=&OutputType;
 								if (IDirectSound_CreateSoundBuffer(device->DShandle,&DSBDescription,&device->DSsbuffer,NULL)==DS_OK)
 								{
@@ -2867,6 +2956,43 @@ ALCAPI ALCvoid *  ALCAPIENTRY alcGetProcAddress(ALCdevice *device,ALCubyte *func
 ALCAPI ALCenum ALCAPIENTRY alcGetEnumValue(ALCdevice *device,ALCubyte *enumName)
 {
 	return alGetEnumValue(enumName);
+}
+
+
+/*
+	To workaround a bug in certain EAX supporting drivers, we need to create a dummy 3D buffer
+	and hold on to it for the life of the application.
+*/
+void EAXFix(ALCcontext *context)
+{
+	ALuint alDummySource;
+	ALboolean	bEAX20 = AL_FALSE;
+
+	if (context->alPrivateSource)
+		return;
+
+	// Generate a dummy Source
+	alGenSources(1, &alDummySource);
+
+	// Query for EAX 2.0 Support (this function will make an EAX 2.0 Set() call if EAX 2.0 is detected)
+	bEAX20 = alIsExtensionPresent((ALubyte*)"EAX2.0");
+
+	if (bEAX20)
+	{
+		// Need to generate Permanent Source
+		alGenSources(1, &(context->alPrivateSource));
+	}
+
+	// Delete dummy Source
+	alDeleteSources(1, &alDummySource);
+
+	// Update Context Source variables
+	if (context->alPrivateSource)
+	{
+		context->Source = NULL;
+		context->SourceCount = 0;
+		context->Device->MaxNoOfSources--;
+	}
 }
 
 /*

@@ -8,6 +8,8 @@
 
 #include "AL/altypes.h"
 
+#include "eax.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -61,7 +63,6 @@ typedef struct ALsource_struct
 			ALint   i;
 			ALfloat f;
 		} data;
-		ALboolean valid;
 	} param[AL_NUM_SOURCE_PARAMS];
 	ALboolean	inuse;
 	ALboolean	valid;
@@ -102,6 +103,8 @@ typedef struct ALsource_struct
 
 	ALuint		CurrentState;
 	ALboolean	DSBufferPlaying;
+
+	EAXBUFFERPROPERTIES EAX20BP;
 
 	struct ALsource_struct *previous;
 	struct ALsource_struct *next;

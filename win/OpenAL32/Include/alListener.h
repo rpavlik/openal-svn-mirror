@@ -5,6 +5,7 @@
 #define ALAPIENTRY __cdecl
 
 #include "AL/altypes.h"
+#include "eax.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,12 +22,13 @@ extern "C" {
 
 typedef struct ALlistener_struct
 {
-	ALfloat		Position[3];
-	ALfloat		Velocity[3];
-	ALfloat		Forward[3];
-	ALfloat		Up[3];
-	ALfloat		Gain;
-	ALuint		update1;			// Store changes that need to be made in UpdateContext
+	ALfloat					Position[3];
+	ALfloat					Velocity[3];
+	ALfloat					Forward[3];
+	ALfloat					Up[3];
+	ALfloat					Gain;
+	ALuint					update1;	// Store changes that need to be made in UpdateContext
+	EAXLISTENERPROPERTIES	EAX20LP;
 } ALlistener;
 
 #ifdef __cplusplus

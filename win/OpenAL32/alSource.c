@@ -65,57 +65,56 @@ ALAPI ALvoid ALAPIENTRY alGenSources(ALsizei n,ALuint *sources)
 								Context->Source->update1 |= SGENERATESOURCE;
 						
 								Context->Source->param[AL_CONE_INNER_ANGLE-AL_CONE_INNER_ANGLE].data.f=360.0;
-								Context->Source->param[AL_CONE_INNER_ANGLE-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Context->Source->param[AL_CONE_OUTER_ANGLE-AL_CONE_INNER_ANGLE].data.f=360.0;
-								Context->Source->param[AL_CONE_OUTER_ANGLE-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Context->Source->param[AL_PITCH-AL_CONE_INNER_ANGLE].data.f= 1.0;
-								Context->Source->param[AL_PITCH-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Context->Source->param[AL_POSITION-AL_CONE_INNER_ANGLE].data.fv3[0]=0.0;
 								Context->Source->param[AL_POSITION-AL_CONE_INNER_ANGLE].data.fv3[1]=0.0;
 								Context->Source->param[AL_POSITION-AL_CONE_INNER_ANGLE].data.fv3[2]=0.0;
-								Context->Source->param[AL_POSITION-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Context->Source->param[AL_DIRECTION-AL_CONE_INNER_ANGLE].data.fv3[0]=1.0;
 								Context->Source->param[AL_DIRECTION-AL_CONE_INNER_ANGLE].data.fv3[1]=0.0;
 								Context->Source->param[AL_DIRECTION-AL_CONE_INNER_ANGLE].data.fv3[2]=0.0;
-								Context->Source->param[AL_DIRECTION-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Context->Source->param[AL_VELOCITY-AL_CONE_INNER_ANGLE].data.fv3[0]=0.0;
 								Context->Source->param[AL_VELOCITY-AL_CONE_INNER_ANGLE].data.fv3[1]=0.0;
 								Context->Source->param[AL_VELOCITY-AL_CONE_INNER_ANGLE].data.fv3[2]=0.0;
-								Context->Source->param[AL_VELOCITY-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Context->Source->param[AL_REFERENCE_DISTANCE-AL_CONE_INNER_ANGLE].data.f= 1.0;
-								Context->Source->param[AL_REFERENCE_DISTANCE-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Context->Source->param[AL_MAX_DISTANCE-AL_CONE_INNER_ANGLE].data.f= 1000000.0;
-								Context->Source->param[AL_MAX_DISTANCE-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 						
 								Context->Source->param[AL_ROLLOFF_FACTOR-AL_CONE_INNER_ANGLE].data.f= 1.0;
-								Context->Source->param[AL_ROLLOFF_FACTOR-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Context->Source->param[AL_LOOPING-AL_CONE_INNER_ANGLE].data.i= AL_FALSE;
-								Context->Source->param[AL_LOOPING-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Context->Source->param[AL_GAIN-AL_CONE_INNER_ANGLE].data.f= 1.0f;
-								Context->Source->param[AL_GAIN-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Context->Source->param[AL_MIN_GAIN-AL_CONE_INNER_ANGLE].data.f= 0.0f;
-								Context->Source->param[AL_MIN_GAIN-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Context->Source->param[AL_MAX_GAIN-AL_CONE_INNER_ANGLE].data.f= 1.0f;
-								Context->Source->param[AL_MAX_GAIN-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Context->Source->param[AL_CONE_OUTER_GAIN-AL_CONE_INNER_ANGLE].data.f= 1.0f;
-								Context->Source->param[AL_CONE_OUTER_GAIN-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Context->Source->state = AL_INITIAL;
 
 								Context->Source->param[AL_BUFFER-AL_CONE_INNER_ANGLE].data.i= 0;
-								Context->Source->param[AL_BUFFER-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
+
+								Context->Source->EAX20BP.lDirect = EAXBUFFER_DEFAULTDIRECT;
+								Context->Source->EAX20BP.lDirectHF = EAXBUFFER_DEFAULTDIRECTHF;
+								Context->Source->EAX20BP.lRoom = EAXBUFFER_DEFAULTROOM;
+								Context->Source->EAX20BP.lRoomHF = EAXBUFFER_DEFAULTROOMHF;
+								Context->Source->EAX20BP.lObstruction = EAXBUFFER_DEFAULTOBSTRUCTION;
+								Context->Source->EAX20BP.flObstructionLFRatio = EAXBUFFER_DEFAULTOBSTRUCTIONLFRATIO;
+								Context->Source->EAX20BP.lOcclusion = EAXBUFFER_DEFAULTOCCLUSION;
+								Context->Source->EAX20BP.flOcclusionLFRatio = EAXBUFFER_DEFAULTOCCLUSIONLFRATIO;
+								Context->Source->EAX20BP.flOcclusionRoomRatio = EAXBUFFER_DEFAULTOCCLUSIONROOMRATIO;
+								Context->Source->EAX20BP.lOutsideVolumeHF = EAXBUFFER_DEFAULTOUTSIDEVOLUMEHF;
+								Context->Source->EAX20BP.flRoomRolloffFactor = EAXBUFFER_DEFAULTROOMROLLOFFFACTOR;
+								Context->Source->EAX20BP.flAirAbsorptionFactor = EAXBUFFER_DEFAULTAIRABSORPTIONFACTOR;
+								Context->Source->EAX20BP.dwFlags = EAXBUFFER_DEFAULTFLAGS;  
 
 								Context->Source->update1 |= CONEANGLES | FREQUENCY | POSITION | VELOCITY | ORIENTATION |
 									MINDIST | MAXDIST | LOOPED | VOLUME | CONEOUTSIDEVOLUME | STATE | ROLLOFFFACTOR;
@@ -151,57 +150,56 @@ ALAPI ALvoid ALAPIENTRY alGenSources(ALsizei n,ALuint *sources)
 								Source->next->update1 |= SGENERATESOURCE;
 
 								Source->next->param[AL_CONE_INNER_ANGLE-AL_CONE_INNER_ANGLE].data.f=360.0;
-								Source->next->param[AL_CONE_INNER_ANGLE-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Source->next->param[AL_CONE_OUTER_ANGLE-AL_CONE_INNER_ANGLE].data.f=360.0;
-								Source->next->param[AL_CONE_OUTER_ANGLE-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Source->next->param[AL_PITCH-AL_CONE_INNER_ANGLE].data.f= 1.0;
-								Source->next->param[AL_PITCH-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Source->next->param[AL_POSITION-AL_CONE_INNER_ANGLE].data.fv3[0]=0.0;
 								Source->next->param[AL_POSITION-AL_CONE_INNER_ANGLE].data.fv3[1]=0.0;
 								Source->next->param[AL_POSITION-AL_CONE_INNER_ANGLE].data.fv3[2]=0.0;
-								Source->next->param[AL_POSITION-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Source->next->param[AL_DIRECTION-AL_CONE_INNER_ANGLE].data.fv3[0]=1.0;
 								Source->next->param[AL_DIRECTION-AL_CONE_INNER_ANGLE].data.fv3[1]=0.0;
 								Source->next->param[AL_DIRECTION-AL_CONE_INNER_ANGLE].data.fv3[2]=0.0;
-								Source->next->param[AL_DIRECTION-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Source->next->param[AL_VELOCITY-AL_CONE_INNER_ANGLE].data.fv3[0]=0.0;
 								Source->next->param[AL_VELOCITY-AL_CONE_INNER_ANGLE].data.fv3[1]=0.0;
 								Source->next->param[AL_VELOCITY-AL_CONE_INNER_ANGLE].data.fv3[2]=0.0;
-								Source->next->param[AL_VELOCITY-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Source->next->param[AL_REFERENCE_DISTANCE-AL_CONE_INNER_ANGLE].data.f= 1.0;
-								Source->next->param[AL_REFERENCE_DISTANCE-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Source->next->param[AL_MAX_DISTANCE-AL_CONE_INNER_ANGLE].data.f= 1000000.0;
-								Source->next->param[AL_MAX_DISTANCE-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Source->next->param[AL_ROLLOFF_FACTOR-AL_CONE_INNER_ANGLE].data.f= 1.0;
-								Source->next->param[AL_ROLLOFF_FACTOR-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Source->next->param[AL_LOOPING-AL_CONE_INNER_ANGLE].data.i= AL_FALSE;
-								Source->next->param[AL_LOOPING-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Source->next->param[AL_GAIN-AL_CONE_INNER_ANGLE].data.f= 1.0f;
-								Source->next->param[AL_GAIN-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Source->next->param[AL_MIN_GAIN-AL_CONE_INNER_ANGLE].data.f= 0.0f;
-								Source->next->param[AL_MIN_GAIN-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Source->next->param[AL_MAX_GAIN-AL_CONE_INNER_ANGLE].data.f= 1.0f;
-								Source->next->param[AL_MAX_GAIN-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Source->next->param[AL_CONE_OUTER_GAIN-AL_CONE_INNER_ANGLE].data.f= 1.0f;
-								Source->next->param[AL_CONE_OUTER_GAIN-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
 
 								Source->next->state = AL_INITIAL;
 
 								Source->next->param[AL_BUFFER-AL_CONE_INNER_ANGLE].data.i= 0;
-								Source->next->param[AL_BUFFER-AL_CONE_INNER_ANGLE].valid = AL_TRUE;
+
+								Source->next->EAX20BP.lDirect = EAXBUFFER_DEFAULTDIRECT;
+								Source->next->EAX20BP.lDirectHF = EAXBUFFER_DEFAULTDIRECTHF;
+								Source->next->EAX20BP.lRoom = EAXBUFFER_DEFAULTROOM;
+								Source->next->EAX20BP.lRoomHF = EAXBUFFER_DEFAULTROOMHF;
+								Source->next->EAX20BP.lObstruction = EAXBUFFER_DEFAULTOBSTRUCTION;
+								Source->next->EAX20BP.flObstructionLFRatio = EAXBUFFER_DEFAULTOBSTRUCTIONLFRATIO;
+								Source->next->EAX20BP.lOcclusion = EAXBUFFER_DEFAULTOCCLUSION;
+								Source->next->EAX20BP.flOcclusionLFRatio = EAXBUFFER_DEFAULTOCCLUSIONLFRATIO;
+								Source->next->EAX20BP.flOcclusionRoomRatio = EAXBUFFER_DEFAULTOCCLUSIONROOMRATIO;
+								Source->next->EAX20BP.lOutsideVolumeHF = EAXBUFFER_DEFAULTOUTSIDEVOLUMEHF;
+								Source->next->EAX20BP.flRoomRolloffFactor = EAXBUFFER_DEFAULTROOMROLLOFFFACTOR;
+								Source->next->EAX20BP.flAirAbsorptionFactor = EAXBUFFER_DEFAULTAIRABSORPTIONFACTOR;
+								Source->next->EAX20BP.dwFlags = EAXBUFFER_DEFAULTFLAGS;
 
 								Source->next->update1 |= CONEANGLES | FREQUENCY | POSITION | VELOCITY | ORIENTATION |
 									MINDIST | MAXDIST | LOOPED | VOLUME | CONEOUTSIDEVOLUME | STATE | ROLLOFFFACTOR;
@@ -416,11 +414,13 @@ ALAPI ALvoid ALAPIENTRY alSourcef(ALuint source,ALenum pname,ALfloat value)
 			{
 				case AL_PITCH:
 					if ((value>=0.0f)&&(value<=2.0f))
-					{	
-						Source->param[pname-AL_CONE_INNER_ANGLE].data.f=value;
-						Source->param[pname-AL_CONE_INNER_ANGLE].valid=AL_TRUE;
-						Source->update1 |= FREQUENCY;	// Property to update
-						alcUpdateContext(Context, ALSOURCE, (ALuint)Source);
+					{
+						if (value != Source->param[pname-AL_CONE_INNER_ANGLE].data.f)
+						{
+							Source->param[pname-AL_CONE_INNER_ANGLE].data.f=value;
+							Source->update1 |= FREQUENCY;
+							alcUpdateContext(Context, ALSOURCE, (ALuint)Source);
+						}
 					}
 					else
 					{
@@ -432,11 +432,12 @@ ALAPI ALvoid ALAPIENTRY alSourcef(ALuint source,ALenum pname,ALfloat value)
 				case AL_CONE_OUTER_ANGLE:
 					if ((value>=0)&&(value<=360))
 					{
-						Source->param[pname-AL_CONE_INNER_ANGLE].data.f=value;
-						Source->param[pname-AL_CONE_INNER_ANGLE].valid=AL_TRUE;
-
-						Source->update1 |= CONEANGLES;
-						alcUpdateContext(Context, ALSOURCE, (ALuint)Source);
+						if (value != Source->param[pname-AL_CONE_INNER_ANGLE].data.f)
+						{
+							Source->param[pname-AL_CONE_INNER_ANGLE].data.f=value;
+							Source->update1 |= CONEANGLES;
+							alcUpdateContext(Context, ALSOURCE, (ALuint)Source);
+						}
 					}
 					else
 					{
@@ -450,19 +451,21 @@ ALAPI ALvoid ALAPIENTRY alSourcef(ALuint source,ALenum pname,ALfloat value)
 				case AL_REFERENCE_DISTANCE:
 					if (value>=0.0f)
 					{
-						Source->param[pname-AL_CONE_INNER_ANGLE].data.f=value;
-						Source->param[pname-AL_CONE_INNER_ANGLE].valid=AL_TRUE;
+						if (value != Source->param[pname-AL_CONE_INNER_ANGLE].data.f)
+						{
+							Source->param[pname-AL_CONE_INNER_ANGLE].data.f = value;
 
-						if (pname == AL_GAIN)
-							Source->update1 |= VOLUME;
-						else if (pname == AL_MAX_DISTANCE)
-							Source->update1 |= MAXDIST;
-						else if (pname == AL_REFERENCE_DISTANCE)
-							Source->update1 |= MINDIST;
-						else if (pname == AL_ROLLOFF_FACTOR)
-							Source->update1 |= ROLLOFFFACTOR;
+							if (pname == AL_GAIN)
+								Source->update1 |= VOLUME;
+							else if (pname == AL_MAX_DISTANCE)
+								Source->update1 |= MAXDIST;
+							else if (pname == AL_REFERENCE_DISTANCE)
+								Source->update1 |= MINDIST;
+							else if (pname == AL_ROLLOFF_FACTOR)
+								Source->update1 |= ROLLOFFFACTOR;
 
-						alcUpdateContext(Context,ALSOURCE, (ALuint)Source);
+							alcUpdateContext(Context, ALSOURCE, (ALuint)Source);
+						}
 					}
 					else
 					{
@@ -475,13 +478,18 @@ ALAPI ALvoid ALAPIENTRY alSourcef(ALuint source,ALenum pname,ALfloat value)
 				case AL_CONE_OUTER_GAIN:
 					if ((value>=0.0f)&&(value<=1.0f))
 					{	
-						Source->param[pname-AL_CONE_INNER_ANGLE].data.f=value;
-						Source->param[pname-AL_CONE_INNER_ANGLE].valid=AL_TRUE;
+						if (value != Source->param[pname-AL_CONE_INNER_ANGLE].data.f)
+						{
+							Source->param[pname-AL_CONE_INNER_ANGLE].data.f=value;
 
-						// MIN_GAIN and MAX_GAIN unsupported at this time
-
-						Source->update1 |= CONEOUTSIDEVOLUME;	// Property to update
-						alcUpdateContext(Context, ALSOURCE, (ALuint)Source);
+							// MIN_GAIN and MAX_GAIN unsupported at this time
+							
+							if (pname == AL_CONE_OUTER_GAIN)
+							{
+								Source->update1 |= CONEOUTSIDEVOLUME;
+								alcUpdateContext(Context, ALSOURCE, (ALuint)Source);
+							}
+						}
 					}
 					else
 					{
@@ -532,19 +540,23 @@ ALAPI ALvoid ALAPIENTRY alSourcefv(ALuint source,ALenum pname,ALfloat *values)
 					case AL_POSITION:
 					case AL_VELOCITY:
 					case AL_DIRECTION:
-						Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[0]=values[0];
-						Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[1]=values[1];
-						Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[2]=values[2];
-						Source->param[pname-AL_CONE_INNER_ANGLE].valid=AL_TRUE;
+						if ((values[0] != Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[0])||
+							(values[1] != Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[1])||
+							(values[2] != Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[2]))
+						{
+							Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[0] = values[0];
+							Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[1] = values[1];
+							Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[2] = values[2];
 
-						if (pname == AL_POSITION)
-							Source->update1 |= POSITION;
-						else if (pname == AL_VELOCITY)
-							Source->update1 |= VELOCITY;
-						else if (pname == AL_DIRECTION)
-							Source->update1 |= ORIENTATION;
+							if (pname == AL_POSITION)
+								Source->update1 |= POSITION;
+							else if (pname == AL_VELOCITY)
+								Source->update1 |= VELOCITY;
+							else if (pname == AL_DIRECTION)
+								Source->update1 |= ORIENTATION;
 
-						alcUpdateContext(Context, ALSOURCE, (ALuint)Source);
+							alcUpdateContext(Context, ALSOURCE, (ALuint)Source);
+						}
 						break;
 
 					default:
@@ -594,19 +606,23 @@ ALAPI ALvoid ALAPIENTRY alSource3f(ALuint source,ALenum pname,ALfloat v1,ALfloat
 				case AL_POSITION:
 				case AL_VELOCITY:
 				case AL_DIRECTION:
-					Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[0]=v1;
-					Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[1]=v2;
-					Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[2]=v3;
-					Source->param[pname-AL_CONE_INNER_ANGLE].valid=AL_TRUE;
+					if ((v1 != Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[0])||
+						(v2 != Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[1])||
+						(v3 != Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[2]))
+					{
+						Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[0] = v1;
+						Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[1] = v2;
+						Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[2] = v3;
 
-					if (pname == AL_POSITION)
-						Source->update1 |= POSITION;
-					else if (pname == AL_VELOCITY)
-						Source->update1 |= VELOCITY;
-					else if (pname == AL_DIRECTION)
-						Source->update1 |= ORIENTATION;
+						if (pname == AL_POSITION)
+							Source->update1 |= POSITION;
+						else if (pname == AL_VELOCITY)
+							Source->update1 |= VELOCITY;
+						else if (pname == AL_DIRECTION)
+							Source->update1 |= ORIENTATION;
 
-					alcUpdateContext(Context, ALSOURCE, (ALuint)Source);
+						alcUpdateContext(Context, ALSOURCE, (ALuint)Source);
+					}
 					break;
 				default:
 					alSetError(AL_INVALID_ENUM);
@@ -653,10 +669,12 @@ ALAPI ALvoid ALAPIENTRY alSourcei(ALuint source,ALenum pname,ALint value)
 				case AL_SOURCE_RELATIVE:
 					if ((value==AL_FALSE)||(value==AL_TRUE))
 					{
-						Source->relative=value;
-						Source->update1 |= MODE;
-						
-						alcUpdateContext(Context, ALSOURCE, (ALuint)Source);
+						if (value != Source->relative)
+						{
+							Source->relative=value;
+							Source->update1 |= MODE;
+							alcUpdateContext(Context, ALSOURCE, (ALuint)Source);
+						}
 					}
 					else
 					{
@@ -668,11 +686,12 @@ ALAPI ALvoid ALAPIENTRY alSourcei(ALuint source,ALenum pname,ALint value)
 				case AL_CONE_OUTER_ANGLE:
 					if ((value>=0)&&(value<=360))
 					{
-						Source->param[pname-AL_CONE_INNER_ANGLE].data.f=(float)value;
-						Source->param[pname-AL_CONE_INNER_ANGLE].valid=AL_TRUE;
-
-						Source->update1 |= CONEANGLES;
-						alcUpdateContext(Context, ALSOURCE, (ALuint)Source);
+						if (((float)value) != Source->param[pname-AL_CONE_INNER_ANGLE].data.f)
+						{
+							Source->param[pname-AL_CONE_INNER_ANGLE].data.f = (float)value;
+							Source->update1 |= CONEANGLES;
+							alcUpdateContext(Context, ALSOURCE, (ALuint)Source);
+						}
 					}
 					else
 					{
@@ -683,10 +702,12 @@ ALAPI ALvoid ALAPIENTRY alSourcei(ALuint source,ALenum pname,ALint value)
 				case AL_LOOPING:
 					if ((value==AL_FALSE)||(value==AL_TRUE))
 					{
-						Source->param[pname-AL_CONE_INNER_ANGLE].data.i=value;
-						Source->param[pname-AL_CONE_INNER_ANGLE].valid=AL_TRUE;
-						Source->update1 |= LOOPED;
-						alcUpdateContext(Context, ALSOURCE, (ALuint)Source);
+						if (value != Source->param[pname-AL_CONE_INNER_ANGLE].data.i)
+						{
+							Source->param[pname-AL_CONE_INNER_ANGLE].data.i = value;
+							Source->update1 |= LOOPED;
+							alcUpdateContext(Context, ALSOURCE, (ALuint)Source);
+						}
 					}
 					else
 					{
@@ -754,7 +775,6 @@ ALAPI ALvoid ALAPIENTRY alSourcei(ALuint source,ALenum pname,ALint value)
 
 							// Update AL_BUFFER parameter
 							Source->param[pname-AL_CONE_INNER_ANGLE].data.i=value;
-							Source->param[pname-AL_CONE_INNER_ANGLE].valid=AL_TRUE;
 						}
 						else
 						{
@@ -822,8 +842,7 @@ ALAPI ALvoid ALAPIENTRY alGetSourcef(ALuint source,ALenum pname,ALfloat *value)
 					case AL_CONE_INNER_ANGLE:
 					case AL_CONE_OUTER_ANGLE:
 					case AL_REFERENCE_DISTANCE:
-						if (Source->param[pname-AL_CONE_INNER_ANGLE].valid)
-							*value=Source->param[pname-AL_CONE_INNER_ANGLE].data.f;
+						*value=Source->param[pname-AL_CONE_INNER_ANGLE].data.f;
 						break;
 					default:
 						alSetError(AL_INVALID_ENUM);
@@ -871,19 +890,17 @@ ALAPI ALvoid ALAPIENTRY alGetSource3f(ALuint source, ALenum pname, ALfloat* v1, 
 				Source=((ALsource *)source);
 				switch(pname) 
 				{
-					case AL_POSITION:
-					case AL_VELOCITY:
-					case AL_DIRECTION:
-						if (Source->param[pname-AL_CONE_INNER_ANGLE].valid)
-						{
-							*v1 = Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[0];
-							*v2 = Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[1];
-							*v3 = Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[2];
-						}
-						break;
-					default:
-						alSetError(AL_INVALID_ENUM);
-						break;
+				case AL_POSITION:
+				case AL_VELOCITY:
+				case AL_DIRECTION:
+					*v1 = Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[0];
+					*v2 = Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[1];
+					*v3 = Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[2];
+					break;
+
+				default:
+					alSetError(AL_INVALID_ENUM);
+					break;
 				}
 			} 
 			else
@@ -927,19 +944,17 @@ ALAPI ALvoid ALAPIENTRY alGetSourcefv(ALuint source,ALenum pname,ALfloat *values
 				Source=((ALsource *)source);
 				switch(pname) 
 				{
-					case AL_POSITION:
-					case AL_VELOCITY:
-					case AL_DIRECTION:
-						if (Source->param[pname-AL_CONE_INNER_ANGLE].valid)
-						{
-							values[0]=Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[0];
-							values[1]=Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[1];
-							values[2]=Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[2];
-						}
-						break;
-					default:
-						alSetError(AL_INVALID_ENUM);
-						break;
+				case AL_POSITION:
+				case AL_VELOCITY:
+				case AL_DIRECTION:
+					values[0] = Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[0];
+					values[1] = Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[1];
+					values[2] = Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[2];
+					break;
+
+				default:
+					alSetError(AL_INVALID_ENUM);
+					break;
 				}
 			} 
 			else
@@ -983,27 +998,20 @@ ALAPI ALvoid ALAPIENTRY alGetSourcei(ALuint source,ALenum pname,ALint *value)
 				switch(pname) 
 				{
 					case AL_SOURCE_RELATIVE:
-						*value=Source->relative;
+						*value = Source->relative;
 						break;
 
 					case AL_CONE_INNER_ANGLE:
 					case AL_CONE_OUTER_ANGLE:
-						if (Source->param[pname-AL_CONE_INNER_ANGLE].valid)
-							*value=(ALint)Source->param[pname-AL_CONE_INNER_ANGLE].data.f;
+						*value = (ALint)Source->param[pname-AL_CONE_INNER_ANGLE].data.f;
 						break;
 
 					case AL_LOOPING:
-						if (Source->param[pname-AL_CONE_INNER_ANGLE].valid)
-							*value = Source->param[pname-AL_CONE_INNER_ANGLE].data.i;
-						else
-							*value = 0;
+						*value = Source->param[pname-AL_CONE_INNER_ANGLE].data.i;
 						break;
 
 					case AL_BUFFER:
-						if (Source->param[pname-AL_CONE_INNER_ANGLE].valid)
-							*value=Source->param[pname-AL_CONE_INNER_ANGLE].data.i;
-						else
-							*value=0;
+						*value = Source->param[pname-AL_CONE_INNER_ANGLE].data.i;
 						break;
 
 					case AL_SOURCE_STATE:

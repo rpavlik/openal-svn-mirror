@@ -39,10 +39,6 @@ typedef struct ALCdevice_struct
 	// Maximum number of sources that can be created
 	ALuint		MaxNoOfSources;
 
-	// Set to DSBCAPS_LOCHARDWARE or DSBCAPS_LOCSOFTWARE based on the number of voices supported
-	// by the hardware (more than 15 required for Hardware support).
-	ALuint		CreationFlag;
-
 	//DirectSound
 	LPDIRECTSOUND DShandle;
 	LPDIRECTSOUNDBUFFER DSpbuffer;
@@ -63,6 +59,8 @@ typedef struct ALCdevice_struct
 	ALsource *	Source;
 	ALuint		SourceCount;
 
+	ALuint		alPrivateSource;	// Guarantees that there is always one Source in existence
+	
 	ALenum		LastError;
 	ALboolean	InUse;
 	ALboolean	Valid;

@@ -51,11 +51,11 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 ..\OpenAL32\Release\OpenAL32.lib ..\Alut\Release\ALut.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib winmm.lib /nologo /subsystem:console /machine:I386
+# ADD LINK32 alut.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib winmm.lib /nologo /subsystem:console /machine:I386 /libpath:"..\openal32\release"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
-PreLink_Desc=Copying OpenAL32.DLL
-PreLink_Cmds=copy ..\OpenAL32\Release\OpenAL32.dll Release
+PreLink_Cmds=copy ..\openal32\release\openal32.dll .
+PostBuild_Cmds=copy release\openaldemo.exe .
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "OpenALDemo - Win32 Debug"
@@ -81,11 +81,11 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 ..\OpenAL32\Debug\OpenAL32.lib ..\alut\Debug\ALut.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib winmm.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 alut.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib winmm.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept /libpath:"..\openal32\debug"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
-PreLink_Desc=Copying OpenAL32.DLL
-PreLink_Cmds=copy ..\OpenAL32\Debug\OpenAL32.dll Debug
+PreLink_Cmds=copy ..\openal32\debug\openal32.dll .
+PostBuild_Cmds=copy debug\openaldemo.exe .
 # End Special Build Tool
 
 !ENDIF 

@@ -1,8 +1,6 @@
 // OpenALDemo.cpp : Defines the entry point for the console application.
 //
 
-
-
 #include <stdio.h>
 #include <conio.h>
 #include <stdlib.h>
@@ -21,8 +19,6 @@ const GUID DSPROPSETID_EAX20_ListenerProperties
 
 const GUID DSPROPSETID_EAX20_BufferProperties
 				= { 0x306a6a7, 0xb224, 0x11d2, {0x99, 0xe5, 0x0, 0x0, 0xe8, 0xd8, 0xc7, 0x22 } };
-
-
 
 #define NUM_BUFFERS 7	// Number of buffers to be Generated
 
@@ -131,7 +127,7 @@ int main(int argc, char* argv[])
 		exit(-1);
 	}
 
-	// Clear Error Codes
+	// Clear Error Code
 	alGetError();
 	alcGetError(Device);
 
@@ -606,14 +602,11 @@ ALvoid PositionTest(ALvoid)
 	ALuint	source[2];
 	ALbyte	ch;
 
-	ALfloat source0Pos[]={ -4.0, 0.0, 4.0};	// Behind and to the left of the listener
+	ALfloat source0Pos[]={ -2.0, 0.0, 2.0};	// Behind and to the left of the listener
 	ALfloat source0Vel[]={ 0.0, 0.0, 0.0};
 
 	ALfloat source1Pos[]={ 2.0, 0.0, -2.0};	// Front and to the right of the listener
 	ALfloat source1Vel[]={ 0.0, 0.0, 0.0};
-
-	// temp set distance model
-	alDistanceModel(AL_INVERSE_DISTANCE);
 
 	alGenSources(2,source);
 	if ((error = alGetError()) != AL_NO_ERROR)

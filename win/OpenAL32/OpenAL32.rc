@@ -28,13 +28,13 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,9,8,8
- PRODUCTVERSION 0,9,8,8
+ FILEVERSION 0,0,9,9
+ PRODUCTVERSION 0,0,9,9
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
- FILEFLAGS 0x1L
+ FILEFLAGS 0x21L
 #else
- FILEFLAGS 0x0L
+ FILEFLAGS 0x20L
 #endif
  FILEOS 0x40004L
  FILETYPE 0x2L
@@ -44,18 +44,18 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "Comments", "Creative DS3D Wrapper Implementation\0"
+            VALUE "Comments", "Open Source DS3D Wrapper Implementation\0"
             VALUE "CompanyName", "Creative Labs\0"
             VALUE "FileDescription", "OpenAL32\0"
-            VALUE "FileVersion", "0.988\0"
+            VALUE "FileVersion", "Wrapper 0.099\0"
             VALUE "InternalName", "OpenAL32\0"
             VALUE "LegalCopyright", "Copyright © 2001\0"
-            VALUE "LegalTrademarks", "Open AL, EAX, EAX Advanced HD, AC3\0"
+            VALUE "LegalTrademarks", "Open AL, EAX\0"
             VALUE "OriginalFilename", "OpenAL32.dll\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "Creative Labs OpenAL32\0"
-            VALUE "ProductVersion", "0.988\0"
-            VALUE "SpecialBuild", "\0"
+            VALUE "ProductVersion", "Wrapper 0.099\0"
+            VALUE "SpecialBuild", "Programmed by Daniel Peacock\0"
         END
     END
     BLOCK "VarFileInfo"
