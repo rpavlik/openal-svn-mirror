@@ -469,16 +469,17 @@ int main(int argc, char* argv[])
 		if (devices[numDevices] != NULL) {
 			numDevices++;
 			printf("\nEnumeration extension found -- select an output device:\n");
-			for (i = 0; i < numDevices; i++) {
-				printf("%d. %s\n", (i + 1), devices[i]);
+			printf("0. NULL Device (Default)\n");
+			for (i = 1; i < numDevices; i++) {
+				printf("%d. %s\n", i, devices[i]);
 			}
 			printf("\n\n");
 			do {
 				ch = getUpperCh();
 				i = atoi(&ch);
-			} while ((i < 1) || (i > numDevices));
-			if (strlen(devices[i-1]) < 256) {
-				strcpy(deviceName, devices[i-1]);
+			} while ((i < 0) || (i > numDevices));
+			if ((i != 0) && (strlen(devices[i]) < 256)) {
+				strcpy(deviceName, devices[i]);
 			}
 		}
 	}
