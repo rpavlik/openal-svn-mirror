@@ -1,3 +1,9 @@
+2002-11-19  Joseph Valenzuela  <jvalenzu@formosa>
+
+	* openal/linux/src/al_source.c
+	* openal/include/AL/al.h
+	Added alGetSource3f for compatibility with win implementation.
+
 2002-09-19  Joseph Valenzuela  <jvalenzu@formosa>
 
 	* src/arch/alsa/alsa.c

@@ -208,6 +208,10 @@ ALAPI void ALAPIENTRY alGetSourceiv( ALuint sid,  ALenum pname, ALint* values );
 ALAPI void ALAPIENTRY alGetSourcef( ALuint sid, ALenum pname, ALfloat* value );
 ALAPI void ALAPIENTRY alGetSourcefv( ALuint sid, ALenum pname, ALfloat* values );
 
+/* deprecated, included for Win compatibility */
+ALAPI void ALAPIENTRY alGetSource3f( ALuint sid, ALenum pname, ALfloat* value1,
+                                     ALfloat* value2, ALfloat* value3);
+
 ALAPI void ALAPIENTRY alSourcePlayv( ALsizei ns, ALuint *ids );
 ALAPI void ALAPIENTRY alSourceStopv( ALsizei ns, ALuint *ids );
 ALAPI void ALAPIENTRY alSourceRewindv( ALsizei ns, ALuint *ids );
@@ -449,10 +453,17 @@ ALAPI void ALAPIENTRY alDistanceModel( ALenum distanceModel );
       void                (*alGetSourcef)( ALuint sid,
                               ALenum pname, ALfloat* value );
 
+      /** Get three float scalar parameter for a Source object. */
+      void                (*alGetSource3f)( ALuint sid, ALenum pname,
+					    ALfloat* value1,
+					    ALfloat* value2,
+					    ALfloat* value3);
+
       /** Get a float vector parameter for a Source object. */
       void                (*alGetSourcefv)( ALuint sid,
                               ALenum pname, ALfloat* values );
 
+  
       /** Activate a source, start replay. */
       void                (*alSourcePlay)( ALuint sid );
 

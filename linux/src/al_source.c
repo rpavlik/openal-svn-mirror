@@ -1015,6 +1015,50 @@ void alGetSourceiv( ALuint sid, ALenum param, ALint *retref )
 	return;
 }
 
+/*
+ * alGetSource3f( ALuint sid, ALenum param,
+ *                ALfloat *value1, ALfloat *value2, ALfloat *value3)
+ *
+ * Retrieve the value of a (potentially) 3-tuple valued source attribute.
+ *
+ * If sid does not name a valid source, AL_INVALID_NAME.
+ * If param does not specify a source attribute, AL_ILLEGAL_ENUM.
+ */
+void alGetSource3f( ALuint sid, ALenum param,
+		    ALfloat *value1, ALfloat *value2, ALfloat *value3)
+{
+	ALfloat safety_first[6];
+
+	if(( value1 == NULL ) &&
+	   ( value2 == NULL ) &&
+	   ( value3 == NULL ))
+	{
+		/* silently ignore */
+		_alDebug( ALD_SOURCE, __FILE__, __LINE__,
+			"alGetSource3f: value passed is NULL" );
+		
+		return;
+	}
+	
+	alGetSourcefv( sid, param, safety_first );
+
+	if(value1)
+	{
+		*value1 = safety_first[0];
+	}
+
+	if(value2)
+	{
+		*value2 = safety_first[1];
+	}
+
+	if(value3)
+	{
+		*value3 = safety_first[2];
+	}
+
+	return;
+}
 
 /*
  * alGetSourcef( ALuint sid, ALenum param, ALfloat *value )
@@ -1027,6 +1071,15 @@ void alGetSourceiv( ALuint sid, ALenum param, ALint *retref )
 void alGetSourcef( ALuint sid, ALenum param, ALfloat *value )
 {
 	ALfloat safety_first[6];
+
+	if( value == NULL )
+	{
+		/* silently ignore */
+		_alDebug( ALD_SOURCE, __FILE__, __LINE__,
+			"alGetSourcef: value passed is NULL" );
+		
+		return;
+	}
 
 	alGetSourcefv( sid, param, safety_first );
 
@@ -3283,8 +3336,8 @@ AL_buffer *_alSourceGetNextBuffer( AL_source *src )
 
 	if(src->bid_queue.read_index < src->bid_queue.size - 1)
 	{
-		ALuint rindex = src->bid_queue.read_index;
-		ALuint bid = src->bid_queue.queue[rindex];
+		ALuint ri  = src->bid_queue.read_index;
+		ALuint bid = src->bid_queue.queue[ri];
 
 		return _alGetBuffer(bid);
 	}
