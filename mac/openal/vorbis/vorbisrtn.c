@@ -49,7 +49,7 @@ size_t ov_read_func (void *ptr, size_t size, size_t nmemb, void *datasource)
         {
             pQE->processed = AL_TRUE;
             ((ALsource *)datasource)->srcBufferNum = pQE->bufferNum;
-            ((ALsource *)datasource)->readOffset = 0;
+            ((ALsource *)datasource)->readOffset = 0; 
             int supplement = ov_read_func(ptr + amt, 1, reqAmt - amt, datasource);
             return amt + supplement;
         }

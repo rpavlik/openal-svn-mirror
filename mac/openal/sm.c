@@ -169,6 +169,11 @@ pascal void smService (SndChannelPtr chan, SndCommand* acmd)
 	source = (ALuint) acmd->param2;
 	
 	bNewQE = AL_FALSE;
+        
+        if ((gBuffer[gSource[source].srcBufferNum].format == AL_FORMAT_VORBIS_EXT) && (gSource[source].uncompressedSize != 0)) {
+            smPlaySegment(source);
+            return;
+        }
 	
 	// evaluate whether or not the buffer has been over-run
         if (gBuffer[gSource[source].srcBufferNum].format != AL_FORMAT_VORBIS_EXT) {
