@@ -76,7 +76,7 @@ static snd_pcm_sframes_t (*psnd_pcm_hw_params_get_period_size)(const snd_pcm_hw_
 static int (*psnd_pcm_hw_params_get_buffer_size)(const snd_pcm_hw_params_t *params,
                                           snd_pcm_uframes_t *val) = NULL;
 static int (*psnd_pcm_hw_params_get_channels)(const snd_pcm_hw_params_t *params, unsigned int *val) = NULL;
-static snd_pcm_sframes_t (*psnd_pcm_hw_params_get_period_size)(const snd_pcm_hw_params_t *params, snd_pcm_uframes_t *frames, int *dir) = NULL;
+static int (*psnd_pcm_hw_params_get_period_size)(const snd_pcm_hw_params_t *params, snd_pcm_uframes_t *frames, int *dir) = NULL;
 #endif
 
 static int openal_load_alsa_library(void)
