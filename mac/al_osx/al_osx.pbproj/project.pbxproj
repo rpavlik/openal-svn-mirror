@@ -300,29 +300,29 @@
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = mutex.c;
-			path = /Users/garinh/prog/openal/mac/openal/mutex.c;
-			refType = 0;
+			path = ../openal/mutex.c;
+			refType = 2;
 		};
 		981B79990523A3AD00940F97 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = mutex.h;
-			path = /Users/garinh/prog/openal/mac/openal/mutex.h;
-			refType = 0;
+			path = ../openal/mutex.h;
+			refType = 2;
 		};
 		981B799A0523A3AD00940F97 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = sm_ca.c;
-			path = /Users/garinh/prog/openal/mac/openal/sm_ca.c;
-			refType = 0;
+			path = ../openal/sm_ca.c;
+			refType = 2;
 		};
 		981B799B0523A3AD00940F97 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = sm_ca.h;
-			path = /Users/garinh/prog/openal/mac/openal/sm_ca.h;
-			refType = 0;
+			path = ../openal/sm_ca.h;
+			refType = 2;
 		};
 		981B799C0523A3AD00940F97 = {
 			fileRef = 981B79980523A3AD00940F97;
