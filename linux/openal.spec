@@ -13,8 +13,8 @@
 #
 Name: OpenAL
 Summary: A portable audio API.
-Version: 0.0.7
-Release: CVS110904
+Version: 0.0.8
+Release: CVS20050128
 Copyright: LGPL
 Group: System/Libraries
 Source: openal.tar.gz
@@ -50,9 +50,9 @@ echo "Installing"
 cd linux
 # Installing Library Files
 mkdir -p $RPM_BUILD_ROOT/usr/local/lib/
-cp src/libopenal.so.0.0.7 $RPM_BUILD_ROOT/usr/local/lib/
-ln -s -f /usr/local/lib/libopenal.so.0.0.7 $RPM_BUILD_ROOT/usr/local/lib/libopenal.so.0
-ln -s -f /usr/local/lib/libopenal.so.0.0.7 $RPM_BUILD_ROOT/usr/local/lib/libopenal.so
+cp src/libopenal.so.0.0.8 $RPM_BUILD_ROOT/usr/local/lib/
+ln -s -f /usr/local/lib/libopenal.so.0.0.8 $RPM_BUILD_ROOT/usr/local/lib/libopenal.so.0
+ln -s -f /usr/local/lib/libopenal.so.0.0.8 $RPM_BUILD_ROOT/usr/local/lib/libopenal.so
 cp src/libopenal.a $RPM_BUILD_ROOT/usr/local/lib/
 # Installing Development Files
 mkdir -p $RPM_BUILD_ROOT/usr/local/include/AL
@@ -81,7 +81,7 @@ rm -rf $RPM_BUILD_ROOT
 # Documentation files
 /usr/local/doc/OpenAL/
 # Library files
-/usr/local/lib/libopenal.so.0.0.7
+/usr/local/lib/libopenal.so.0.0.8
 /usr/local/lib/libopenal.so.0
 /usr/local/lib/libopenal.so
 /usr/local/lib/libopenal.a
