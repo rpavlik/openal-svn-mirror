@@ -27,8 +27,12 @@ extern "C" {
 #endif
 
 #ifdef _WIN32
-#define ALAPI       __declspec(dllexport)
-#define ALAPIENTRY  __cdecl
+#ifdef _OPENAL32LIB
+#define ALAPI __declspec(dllexport)
+#else
+#define ALAPI __declspec(dllimport)
+#endif
+#define ALAPIENTRY __cdecl
 #define AL_CALLBACK 
 #else /* _WIN32 */
 
@@ -85,7 +89,14 @@ ALAPI void ALAPIENTRY alGetFloatv( ALenum param, ALfloat* data );
 ALAPI void ALAPIENTRY alGetDoublev( ALenum param, ALdouble* data );
 
 /** State retrieval. */
+/* ***** GH
+ * temporary fix to benefit Windows compilation -- fix soon
+*/
+#ifdef __GNUC__
 ALAPI const ALubyte* ALAPIENTRY alGetString( ALenum param );
+#else
+ALAPI ALubyte* ALAPIENTRY alGetString( ALenum param );
+#endif
 
 
 /** State retrieval.through return value ( for compatibility ) */
@@ -105,7 +116,14 @@ ALAPI ALenum ALAPIENTRY alGetError( ALvoid );
  * Obtain the address of a function (usually an extension)
  *  with the name fname. All addresses are context-independent. 
  */
+/* ***** GH
+ * temporary fix for Windows
+ */
+#ifdef __GNUC__
 ALAPI ALboolean ALAPIENTRY alIsExtensionPresent( const ALubyte* fname );
+#else
+ALAPI ALboolean ALAPIENTRY alIsExtensionPresent( ALubyte* fname );
+#endif
 
 
 /** 
@@ -113,7 +131,14 @@ ALAPI ALboolean ALAPIENTRY alIsExtensionPresent( const ALubyte* fname );
  * Obtain the address of a function (usually an extension)
  *  with the name fname. All addresses are context-independent. 
  */
+/* ***** GH
+ * temporary fix for Windows compilation
+ */
+#ifdef __GNUC__
 ALAPI void* ALAPIENTRY alGetProcAddress( const ALubyte* fname );
+#else
+ALAPI void* ALAPIENTRY alGetProcAddress( ALubyte* fname );
+#endif
 
 
 /**

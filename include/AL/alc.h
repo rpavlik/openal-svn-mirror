@@ -55,7 +55,15 @@ ALCAPI ALCboolean ALCAPIENTRY alcMakeContextCurrent(ALCcontext *alcHandle);
  * Perform processing on a synced context, non-op on a asynchronous
  * context.
  */
+
+/* ***** GH
+ * temporary fix for Windows compilation
+ */
+#ifdef __GNUC__
 ALCAPI ALCcontext * ALCAPIENTRY alcProcessContext( ALCcontext *alcHandle );
+#else
+ALCAPI ALvoid ALCAPIENTRY alcProcessContext(ALCcontext* context);
+#endif
 
 /**
  * Suspend processing on an asynchronous context, non-op on a
@@ -63,13 +71,27 @@ ALCAPI ALCcontext * ALCAPIENTRY alcProcessContext( ALCcontext *alcHandle );
  */
 ALCAPI void ALCAPIENTRY alcSuspendContext( ALCcontext *alcHandle );
 
+/* ***** GH
+ * temporary fix to benefit Windows compilation
+ */
+#ifdef __GNUC__
 ALCAPI ALCenum ALCAPIENTRY alcDestroyContext( ALCcontext *alcHandle );
+#else
+ALCAPI ALvoid ALCAPIENTRY alcDestroyContext(ALCcontext* context);
+#endif
 
 ALCAPI ALCenum ALCAPIENTRY alcGetError( ALCdevice *dev );
 
 ALCAPI ALCcontext * ALCAPIENTRY alcGetCurrentContext( ALvoid );
 
+/* ***** GH
+ * temporary change for Windows compilation
+ */
+#ifdef __GNUC__
 ALCAPI ALCdevice *alcOpenDevice( const ALubyte *tokstr );
+#else
+ALCAPI ALCdevice *alcOpenDevice( ALubyte *tokstr );
+#endif
 ALCAPI void alcCloseDevice( ALCdevice *dev );
 
 ALCAPI ALCboolean ALCAPIENTRY alcIsExtensionPresent(ALCdevice *device, ALCubyte *extName);
@@ -82,8 +104,20 @@ ALCAPI ALCdevice* ALCAPIENTRY alcGetContextsDevice(ALCcontext *context);
 /**
  * Query functions
  */
+
+/* ***** GH
+ * temporary fix for Windows compilation
+ */
+#ifdef __GNUC__
 const ALCubyte * alcGetString( ALCdevice *deviceHandle, ALCenum token );
+#else
+ALCAPI ALubyte* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param);
+#endif
+#ifdef __GNUC__
 void alcGetIntegerv( ALCdevice *deviceHandle, ALCenum  token , ALCsizei  size , ALCint *dest );
+#else
+ALCAPI ALvoid ALCAPIENTRY alcGetIntegerv(ALCdevice* device, ALenum param, ALsizei size, ALint* data);
+#endif
 
 #else
       ALCAPI ALCcontext *    ALCAPIENTRY (*alcCreateContext)( ALCdevice *dev, ALCint* attrlist );
