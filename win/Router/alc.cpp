@@ -1684,10 +1684,10 @@ ALCAPI const ALubyte* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
 				// 1) whatever device is in the control panel as the preferred device should be accepted
 				// 2) if the preferred device is an Audigy, then the name won't match the hardware DLL, so 
 				//    allow a partial match in this case
-				__asm pusha; // workaround for register destruction caused by these wavOutMessage calls (weird but true)
+				__asm pushad; // workaround for register destruction caused by these wavOutMessage calls (weird but true)
 				waveOutMessage((HWAVEOUT)WAVE_MAPPER,0x2000+0x0015,(LPARAM)&uDeviceID,(WPARAM)&dwFlags);
 				waveOutGetDevCaps(uDeviceID,&info,sizeof(info));
-				__asm popa;
+				__asm popad;
 				strcpy(mixerDevice, T2A(info.szPname));
 				if (strstr(mixerDevice, "Audigy") != NULL) {
 					acceptPartial = true;
