@@ -17,32 +17,101 @@
 void acFreqMUL2(acAudioCVT *cvt, ALushort format) {
 	int i;
 	ALubyte *src, *dst;
-
-	src = (ALubyte *) cvt->buf + cvt->len_cvt;
-	dst = (ALubyte *) cvt->buf + cvt->len_cvt * 2;
-
+	src = (ALbyte *) cvt->buf + cvt->len_cvt;
+	dst = (ALbyte *) cvt->buf + cvt->len_cvt * 2;
+	
 	switch(format & 0xFF) {
-		case 8:
-			for ( i=cvt->len_cvt; i; --i ) {
-				src -= 1;
-				dst -= 2;
-				dst[0] = src[0];
-				dst[1] = src[0];
+	case 8:
+		if (format == AUDIO_U8) {
+			ALubyte *src8 = (ALubyte*) src;
+			ALubyte *dst8 = (ALubyte*) dst;
+			src8 -= 1;
+			dst8 -= 2;
+			if (cvt->len_cvt > 1) {
+				dst8[0] = (src8[0]+src8[-1])/2;
+			} else {
+				dst8[0] = src8[0];
 			}
-			break;
-		case 16:
+			dst8[1] = src8[0];
+			for ( i=cvt->len_cvt-1; i; --i ) {
+				src8 -= 1;
+				dst8 -= 2;
+				dst8[0] = src8[0];
+				dst8[1] = (src8[0]+src8[1])/2;
+			}
+		} else if (format == AUDIO_S8) {
+			ALbyte *src8 = (ALbyte*) src;
+			ALbyte *dst8 = (ALbyte*) dst;
+			src8 -= 1;
+			dst8 -= 2;
+			if (cvt->len_cvt > 1) {
+				dst8[0] = (src8[0]+src8[-1])/2;
+			} else {
+				dst8[0] = src8[0];
+			}
+			dst8[1] = src8[0];
+			for ( i=cvt->len_cvt-1; i; --i ) {
+				src8 -= 1;
+				dst8 -= 2;
+				dst8[0] = src8[0];
+				dst8[1] = (src8[0]+src8[1])/2;
+			}
+		}
+		break;
+	case 16:
+		if (format == AUDIO_S16) {
+			ALshort *src16 = (ALshort*) src;
+			ALshort *dst16 = (ALshort*) dst;
+			src16 -= 1;
+			dst16 -= 2;
+			if (cvt->len_cvt > 1) {
+				dst16[0] = (src16[0]+src16[-1])/2;
+			} else {
+				dst16[0] = src16[0];
+			}
+			dst16[1] = src16[0];
+			for ( i=cvt->len_cvt/2-1; i; --i ) {
+				src16 -= 1;
+				dst16 -= 2;
+				dst16[0] = src16[0];
+				dst16[1] = (src16[0]+src16[1])/2;
+			}
+		} else if (format == AUDIO_U16) {
+			ALushort *src16 = (ALushort*) src;
+			ALushort *dst16 = (ALushort*) dst;
+			src16 -= 1;
+			dst16 -= 2;
+			if (cvt->len_cvt > 1) {
+				dst16[0] = (src16[0]+src16[-1])/2;
+			} else {
+				dst16[0] = src16[0];
+			}
+			dst16[1] = src16[0];
+			for ( i=cvt->len_cvt/2-1; i; --i ) {
+				src16 -= 1;
+				dst16 -= 2;
+				dst16[0] = src16[0];
+				dst16[1] = (src16[0]+src16[1])/2;
+			}
+		} else {
+			/* this is a 16-bit format that doesn't correspond
+			   to a native type, so sample interpolation isn't
+			   completely trivial; we'll just do sample
+			   duplication.  Not too hard to fix though, for
+			   future work. */
+			ALushort *src16 = (ALushort*) src;
+			ALushort *dst16 = (ALushort*) dst;
 			for ( i=cvt->len_cvt/2; i; --i ) {
-				src -= 2;
-				dst -= 4;
-				dst[0] = src[0];
-				dst[1] = src[1];
-				dst[2] = src[0];
-				dst[3] = src[1];
+				src16 -= 1;
+				dst16 -= 2;
+				dst16[0] = src16[0];
+				dst16[1] = src16[0];
 			}
-			break;
+		}
+	break;
 	}
 	cvt->len_cvt *= 2;
-
+	
 	if (cvt->filters[++cvt->filter_index] ) {
 		cvt->filters[cvt->filter_index](cvt, format);
 	}

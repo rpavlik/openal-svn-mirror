@@ -1,3 +1,9 @@
+2003-10-23  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
+
+	* audioconvert/ac_freq.c
+	Added Adam Moss's patch to improve fidelity of low-sampled sounds
+	in higher sampling-rate environments.
+
 2003-06-20  Erik Greenwald <erik@smluc.org>
 
 	* (many)
