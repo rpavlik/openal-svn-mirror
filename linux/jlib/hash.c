@@ -26,7 +26,6 @@
 #define MAX_HFUNCS 1
 
 extern char *internal_strdup(const char *s);
-extern double sqrt( double x ); /* can't include math.h */
 
 /* static function prototypes */
 static h_list *h_list_delete(h_list *keys, jh_entry *he);
