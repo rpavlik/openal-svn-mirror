@@ -1,3 +1,8 @@
+2003-03-21  Joseph Valenzuela  <jvalenzu@formosa.infinite-monkeys.org>
+
+	* src/al_source.c
+	queueing pizzatch
+
 2003-01-13  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
 
 	* al/aluttypes.h

@@ -1773,7 +1773,7 @@ static void _alSplitSourceQueue( ALuint cid,
 		}
 
 		src->srcParams.new_readindex = src->bid_queue.read_index + 1;
-		src->srcParams.new_soundpos = nextsamp->size - remaining;
+		src->srcParams.new_soundpos = remaining;
 
 		if(remaining >= nextsamp->size)
 		{
