@@ -982,6 +982,7 @@ char getUpperCh(void)
 	ch = _getch();
 #else
 	int bs;
+	ch = '\0';
 	bs = getchar();
 	while (bs != 10)
 	{
@@ -1381,7 +1382,7 @@ ALvoid FA_GetBufferProperties(ALvoid)
 	alGetBufferi(g_Buffers[0], AL_CHANNELS, &ch);
 	alGetBufferi(g_Buffers[0], AL_SIZE, &size);
 	
-	passNULL = !(alIsBuffer(NULL));  // the NULL buffer should cause alIsBuffer to be FALSE
+	passNULL = !(alIsBuffer(0));  // the NULL buffer should cause alIsBuffer to be FALSE
 
 	if ((freq == 44100) && (bits == 16) && (ch == 1) && (size == 282626) && (passNULL == true))
 	{
@@ -1580,7 +1581,7 @@ ALvoid SA_SourceGain(ALvoid)
 		alSourcef(testSources[0],AL_GAIN,1.0f); 
 		
 		// dispose of sources
-		alSourcei(testSources[0], AL_BUFFER, NULL);
+		alSourcei(testSources[0], AL_BUFFER, 0);
 		alDeleteSources(1, testSources);
 	}
 }
@@ -1628,7 +1629,7 @@ ALvoid SA_ListenerGain(ALvoid)
 		alSourceStop(testSources[0]);
 		
 		// dispose of sources
-		alSourcei(testSources[0], AL_BUFFER, NULL);
+		alSourcei(testSources[0], AL_BUFFER, 0);
 		alDeleteSources(1, testSources);
 	} 
 }
@@ -1652,6 +1653,7 @@ ALvoid SA_Position(ALvoid)
 		// load up sources
 		alGenSources(1, testSources);
 		alSourcei(testSources[0], AL_BUFFER, g_Buffers[1]);
+		alSource3f(testSources[0], AL_POSITION, 0.0, 0.0, 0.0);
 	
 		printf("Trying Left-to-Right sweep by moving listener(Press Return):\n");
 		CRToContinue();
@@ -2248,6 +2250,9 @@ This test alters the frequency of a playing source.
 ALvoid SA_Frequency(ALvoid)
 {	
 	ALuint testSources[2];
+	float root12 = pow (2, 1/12.0);
+	float increments[15] = { -12, -10, -8, -7, -5, -3, -1, 0,
+				 2, 4, 5, 7, 9, 11, 12 };
 	int i;
 	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
 
@@ -2261,9 +2266,10 @@ ALvoid SA_Frequency(ALvoid)
 		printf("A source will be played eight times -- going from one-half to double it's native frequency (Press Return):\n");
 		CRToContinue();
 		alSourcei(testSources[0], AL_LOOPING, false);
-		for (i = 0; i < 8; i++)
+		for (i = 0; i < 15; i++)
 		{
-			alSourcef(testSources[0], AL_PITCH, (float) (0.5 + (float) i * 0.2));
+			alSourcef(testSources[0], AL_PITCH,
+				  (float) (pow (root12, increments[i])));
 			alSourcePlay(testSources[0]);
 			delay_ms(2000);
 		}
@@ -4320,7 +4326,7 @@ ALvoid I_VorbisTest()
 		        alGetError(); // clear error state
 		   
 		        int actual;
-				data = (char *)malloc(((g_ovSize / 4) + 1));
+				data = (ALbyte *)malloc(((g_ovSize / 4) + 1));
 				if (data != 0) {
 		        for (int loop = 0; loop < 4; loop++) {
 						actual = fread(data, 1, ((g_ovSize / 4) + 1), fp);
