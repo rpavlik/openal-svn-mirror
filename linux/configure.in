@@ -28,7 +28,7 @@ SHADOW_WARN=yes                # warn about shadow variables
 BROKEN_PTHREAD_FLAG=no         # BSD use -pthread, not -lpthread
 NO_PTHREAD_FLAG=no
 SHOULD_USE_FPIC=yes            # use -fPIC to compile position independent objs
-SHOULD_USE_WERROR=yes          # turn warnings into errors
+SHOULD_USE_WERROR=no           # turn warnings into errors
 SHARED_LIBRARY_EXT=so	       # shared library extension
 SHOULD_USE_RDYNAMIC=yes        # doesn't work on irix
 
@@ -41,6 +41,14 @@ AC_SUBST(MICRO_VERSION)
 AC_SUBST(INTERFACE_AGE)
 AC_SUBST(BINARY_AGE)
 AC_SUBST(VERSION)
+
+dnl werror stuff
+AC_ARG_ENABLE(werror,
+[  --enable-werror           enable fail on all warnings  [default=no]],
+              , enable_werror=no)
+if test x$enable_werror = xyes; then
+    SHOULD_USE_WERROR=yes
+fi
 
 dnl profile stuff
 AC_ARG_ENABLE(profile,
