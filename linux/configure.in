@@ -142,7 +142,7 @@ case "$target" in
     RANLIB=ranlib
     AC_CHECK_LIB(m, sin, LIBS="$LIBS -lm", echo "don't need libm...") ;;
     *)
-    RANLIB=echo ranlib
+    RANLIB=echo
     dnl Should be allow dlopen of extensions?
     AC_CHECK_LIB(dl, dlopen, LIBS="$LIBS -ldl", AC_DEFINE(NODLOPEN) echo "Can't dlopen extensions." )
     AC_CHECK_LIB(m, sin, LIBS="$LIBS -lm", echo "I'm afraid you'll need libm."; exit 1) ;;
