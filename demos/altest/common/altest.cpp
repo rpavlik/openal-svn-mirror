@@ -44,7 +44,7 @@
 #define INITGUID
 #define OPENAL
 
-#define TEST_VORBIS // enable for ogg vorbis testing
+//#define TEST_VORBIS // enable for ogg vorbis testing
 //#define TEST_EAX // enable for EAX testing
 
 #ifdef _WIN32
@@ -309,12 +309,12 @@ ALvoid FullAutoTests(ALvoid);
 ALvoid SemiAutoTests(ALvoid);
 
 #ifdef __MACOS__
-void SwapWords(unsigned int *puint);
-void SwapBytes(unsigned short *pshort);
+void ALTestSwapWords(unsigned int *puint);
+void ALTestSwapBytes(unsigned short *pshort);
 #endif
 #ifdef MAC_OS_X
-void SwapWords(unsigned int *puint);
-void SwapBytes(unsigned short *pshort);
+void ALTestSwapWords(unsigned int *puint);
+void ALTestSwapBytes(unsigned short *pshort);
 #endif
 
 // Test Function prototypes
@@ -3849,7 +3849,7 @@ ALvoid I_GainTest(ALvoid)
 }
 
 #ifdef __MACOS__
-void SwapWords(unsigned int *puint)
+void ALTestSwapWords(unsigned int *puint)
 {
     unsigned int tempint;
 	char *pChar1, *pChar2;
@@ -3864,7 +3864,7 @@ void SwapWords(unsigned int *puint)
 	pChar1[3]=pChar2[0];
 }
 
-void SwapBytes(unsigned short *pshort)
+void ALTestSwapBytes(unsigned short *pshort)
 {
     unsigned short tempshort;
     char *pChar1, *pChar2;
@@ -3878,7 +3878,7 @@ void SwapBytes(unsigned short *pshort)
 }
 #endif
 #ifdef MAC_OS_X
-void SwapWords(unsigned int *puint)
+void ALTestSwapWords(unsigned int *puint)
 {
     unsigned int tempint;
 	char *pChar1, *pChar2;
@@ -3893,7 +3893,7 @@ void SwapWords(unsigned int *puint)
 	pChar1[3]=pChar2[0];
 }
 
-void SwapBytes(unsigned short *pshort)
+void ALTestSwapBytes(unsigned short *pshort)
 {
     unsigned short tempshort;
     char *pChar1, *pChar2;
@@ -3965,14 +3965,14 @@ ALvoid I_StreamingTest(ALvoid)
 	}
 	
 #ifdef __MACOS__
-    SwapWords(&wave.dataSize);
-    SwapBytes(&wave.Channels);
-    SwapWords(&wave.SamplesPerSec);
+    ALTestSwapWords(&wave.dataSize);
+    ALTestSwapBytes(&wave.Channels);
+    ALTestSwapWords(&wave.SamplesPerSec);
 #endif
 #ifdef MAC_OS_X
-    SwapWords(&wave.dataSize);
-    SwapBytes(&wave.Channels);
-    SwapWords(&wave.SamplesPerSec);
+    ALTestSwapWords(&wave.dataSize);
+    ALTestSwapBytes(&wave.Channels);
+    ALTestSwapWords(&wave.SamplesPerSec);
 #endif
 
 	DataSize = wave.dataSize;
@@ -4001,7 +4001,7 @@ ALvoid I_StreamingTest(ALvoid)
 #else
 		for (int i = 0; i < BSIZE; i=i+2)
 		{
-			SwapBytes((unsigned short *)(data+i));
+			ALTestSwapBytes((unsigned short *)(data+i));
 		}
 		alBufferData(Buffers[loop], (ALenum) Format, data, BSIZE, wave.SamplesPerSec);
 #endif
@@ -4102,7 +4102,7 @@ ALvoid I_StreamingTest(ALvoid)
 #else
 					for (unsigned int i = 0; i < DataToRead; i = i+2)
 					{
-						SwapBytes((unsigned short *)(data+i));
+						ALTestSwapBytes((unsigned short *)(data+i));
 					}
 					alBufferData(BufferID, (ALenum) Format, (void *) data, DataToRead, wave.SamplesPerSec);
 #endif
