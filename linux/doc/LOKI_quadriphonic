@@ -1,0 +1,52 @@
+
+Name
+
+        LOKI_quadriphonic
+
+Name Strings
+
+        AL_LOKI_quadriphonic
+
+Version
+
+        1.0
+
+Number
+
+        ??
+
+Dependencies
+
+        None
+
+Overview
+        This extension provides support for 4-speaker rendering.
+
+Issues
+
+        None
+
+New Procedures and Functions
+
+        None
+
+New Tokens
+
+        AL_FORMAT_QUAD8_LOKI                      0x10004
+        AL_FORMAT_QUAD16_LOKI                     0x10005
+
+Additions to Specification
+
+        None
+
+Errors
+
+        None
+
+New State
+
+        None
+
+New Implementation State
+
+        None
