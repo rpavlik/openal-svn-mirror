@@ -1,3 +1,11 @@
+2004-06-04  Adam D. Moss  <adam@gimp.org>
+
+        * openal/linux/src/arch/alsa/alsa.c: Fixes from Marco Ziech
+        <mmz@gmx.net>: Fixes for ALSA backend - fix some bugs
+        in alsa_blitbuffer, including handling of EPIPE.  Also init ALSA
+        in non-blocking mode so that ALSA init can potentially properly fail
+        instead of hang if artsd or esd are running.
+
 2004-05-29  Adam D. Moss  <adam@gimp.org>
 
         * openal/linux/src/al_queue.c: Assert fix from

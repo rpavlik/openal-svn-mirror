@@ -61,6 +61,7 @@ static snd_pcm_sframes_t (*psnd_pcm_writei)(snd_pcm_t *pcm, const void *buffer, 
 static int (*psnd_pcm_hw_params_set_period_size)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_uframes_t val, int dir) = NULL;
 static int (*psnd_pcm_open)(snd_pcm_t **pcm, const char *name,
                      snd_pcm_stream_t stream, int mode) = NULL;
+static int (*psnd_pcm_nonblock)(snd_pcm_t * pcm, int nonblock) = NULL;
 
 /* !!! FIXME: hhm...this is a problem. */
 #if (SND_LIB_MAJOR == 0)
@@ -76,14 +77,25 @@ static snd_pcm_sframes_t (*psnd_pcm_hw_params_get_period_size)(const snd_pcm_hw_
 
 static int openal_load_alsa_library(void)
 {
+        char * error = NULL;
+    
 	if (alsa_lib_handle != NULL)
 		return 1;  /* already loaded. */
 
 	#if OPENAL_DLOPEN_ALSA
-		#define OPENAL_LOAD_ALSA_SYMBOL(x) if ((p##x = dlsym(alsa_lib_handle, #x)) == NULL) { return 0; }
+		#define OPENAL_LOAD_ALSA_SYMBOL(x) p##x = dlsym(alsa_lib_handle, #x); \
+                                                   error = dlerror(); \
+                                                   if (p##x == NULL) { \
+                                                           fprintf(stderr,"Could not resolve ALSA symbol %s: %s\n", #x, ((error!=NULL)?(error):("(null)"))); \
+                                                           dlclose(alsa_lib_handle); alsa_lib_handle = NULL; \
+                                                           return 0; }
+                dlerror(); /* clear error state */
 		alsa_lib_handle = dlopen("libasound.so.2", RTLD_LAZY | RTLD_GLOBAL);
-		if (alsa_lib_handle == NULL)
+                error = dlerror();
+		if (alsa_lib_handle == NULL) {
+                        fprintf(stderr,"Could not open ALSA library: %s\n",((error!=NULL)?(error):("(null)")));
 			return 0;
+                }
 	#else
 		#define OPENAL_LOAD_ALSA_SYMBOL(x) p##x = x;
 		alsa_lib_handle = (void *) 0xF00DF00D;
@@ -110,6 +122,7 @@ static int openal_load_alsa_library(void)
 	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_set_rate_near);
 	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_sizeof);
 	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_open);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_nonblock);
 	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_prepare);
 	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_readi);
 	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_resume);
@@ -260,7 +273,10 @@ void *grab_write_alsa( void )
 
 	get_out_device_name(card_name, 256);
 
-	err = psnd_pcm_open(&handle, card_name, SND_PCM_STREAM_PLAYBACK, 0);
+        /* Try to open the device without blocking, so we can 
+         * try other backends even if this would block.
+         */
+	err = psnd_pcm_open(&handle, card_name, SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK);
 	if(err < 0)
 	{
 		const char *serr = psnd_strerror(err);
@@ -271,6 +287,18 @@ void *grab_write_alsa( void )
 		return NULL;
 	}
 
+        /* Now that we have successfully opened the device, 
+         * we can put it into blocking mode.
+         */
+        err = psnd_pcm_nonblock(handle,0);
+	if(err < 0)
+	{
+		const char *serr = psnd_strerror(err);
+
+		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
+			"grab_alsa: could not put device into blocking mode: %s\n", serr);
+	}
+        
 	retval = malloc(sizeof *retval);
 	retval->handle      = handle;
 	retval->format      = 0;
@@ -647,9 +675,17 @@ void alsa_blitbuffer(void *handle, void *data, int bytes)
 					err = psnd_pcm_resume(phandle);
 				} while ( err == -EAGAIN );
 				break;
+                        case -EPIPE:
+                                break;
 			default:
+                                if (err<0) {
+                                        fprintf(stderr,"alsa_blitbuffer: Could not write audio data to sound device: %s\n",
+                                        	psnd_strerror(err));
+                                        break;
+                                }
                                 pdata += err * ai->framesize;
-				data_len -= err* ai->framesize;
+				data_len -= err * ai->framesize;
+                                frames -= err;
 				break;
 		}
 		if(err < 0)
