@@ -1,61 +1,61 @@
-2005-01-28  Adam D. Moss  <adam@gimp.org>
+2005-01-28  Adam D. Moss  <adam@steambird.com>
 
         * linux/configure.in, linux/openal.spec: Bump version to 0.0.8
 
-2005-01-28  Adam D. Moss  <adam@gimp.org>
+2005-01-28  Adam D. Moss  <adam@steambird.com>
 
         * generate/install openal-config and openal.pc(pkgconfig) files
         for OpenAL (Patches by D. Hageman <dhageman@dracken.com>)
 
-2004-11-28  Adam D. Moss  <adam@gimp.org>
+2004-11-28  Adam D. Moss  <adam@steambird.com>
 
         * src/arch/alsa/alsa.c: commit a fixed version of patch by Dino
         Puller <dino@e4a.it> to be more lenient with accepted buffer sizes
         from the hardware.
 
-2004-09-10  Adam D. Moss  <adam@gimp.org>
+2004-09-10  Adam D. Moss  <adam@steambird.com>
 
         * openal/linux/src/mixaudio16.c: Issue an error if we've tried
         to compile with the broken MMX support enabled and we're not
         a genius.
 
-2004-06-30  Adam D. Moss  <adam@gimp.org>
+2004-06-30  Adam D. Moss  <adam@steambird.com>
 
         * openal/linux/src/al_doppler.c: Permit a DOPPLER_FACTOR of 0 as
         per the spec.  Noticed by Jason Daly <jdaly@ist.ucf.edu>
 
-2004-06-30  Adam D. Moss  <adam@gimp.org>
+2004-06-30  Adam D. Moss  <adam@steambird.com>
 
         * openal/linux/src/al_filter.c: Doppler fixes based on a patch
         from Jason Daly <jdaly@ist.ucf.edu> with an additional fix.
 
-2004-06-30  Adam D. Moss  <adam@gimp.org>
+2004-06-30  Adam D. Moss  <adam@steambird.com>
 
         * openal/linux/test/testdoppler.c: A more realistic and helpful
         doppler test -- move the source towards, through, and away from
         the listener, while accelerating constantly.
 
-2004-06-30  Adam D. Moss  <adam@gimp.org>
+2004-06-30  Adam D. Moss  <adam@steambird.com>
 
         * openal/linux/src/arch/alsa/alsa.c: Nonsensical partial revertion to
         work around problem experienced by Prakash K. Cheemplavam.  My
         respect for ALSA has slowly eroded close to the negative by now.
 
-2004-06-25  Adam D. Moss  <adam@gimp.org>
+2004-06-25  Adam D. Moss  <adam@steambird.com>
 
         * openal/linux/src/arch/alsa/alsa.c: Preferentially load symbol
         versions which are known to be good, before falling back to generic
         unversioned symbols.  This avoids picking up random crappy interface
         versions in the dlsym roulette.
 
-2004-06-25  Adam D. Moss  <adam@gimp.org>
+2004-06-25  Adam D. Moss  <adam@steambird.com>
 
         * openal/linux/src/configure.in
         * openal/linux/src/arch/arts/arts.c
         * openal/linux/src/arch/esd/esd.c: From Marco Ziech <mmz@gmx.net>:
         Add option to load arts and esd libraries at run-time.
 
-2004-06-25  Adam D. Moss  <adam@gimp.org>
+2004-06-25  Adam D. Moss  <adam@steambird.com>
 
         * openal/linux/src/arch/alsa/alsa.c
         * openal/linux/src/alc/alc_context.c: If _alcDeviceSet() fails then
@@ -63,12 +63,12 @@
         to call _alSetMixer().  This stops AL going into a tight loop if
         a driver's set_write_???() fails.
 
-2004-06-25  Adam D. Moss  <adam@gimp.org>
+2004-06-25  Adam D. Moss  <adam@steambird.com>
 
         * openal/linux/src/arch/alsa/alsa.c: Fix from Marco Ziech <mmz@gmx.net>
         for more correct dlsym error handling.
 
-2004-06-04  Adam D. Moss  <adam@gimp.org>
+2004-06-04  Adam D. Moss  <adam@steambird.com>
 
         * openal/linux/src/arch/alsa/alsa.c: Fixes from Marco Ziech
         <mmz@gmx.net>: Fixes for ALSA backend - fix some bugs
@@ -76,34 +76,34 @@
         in non-blocking mode so that ALSA init can potentially properly fail
         instead of hang if artsd or esd are running.
 
-2004-05-29  Adam D. Moss  <adam@gimp.org>
+2004-05-29  Adam D. Moss  <adam@steambird.com>
 
         * openal/linux/src/al_queue.c: Assert fix from
         Erik Hofman <erik@ehofman.com>
 
-2004-05-23  Adam D. Moss  <adam@gimp.org>
+2004-05-23  Adam D. Moss  <adam@steambird.com>
 
 	* openal/linux/src/arch/arts/arts.c: ARTS fix from
         Andreas Beckermann <b_mann@gmx.de>
 
-2004-05-21  Adam D. Moss  <adam@gimp.org>
+2004-05-21  Adam D. Moss  <adam@steambird.com>
 
 	* openal/linux/src/arch/irix/iris.c: Various IRIX backend
 	fixes from Erik Hofman.
 
-2004-05-18  Adam D. Moss  <adam@gimp.org>
+2004-05-18  Adam D. Moss  <adam@steambird.com>
 
         * openal/linux/src/arch/irix/iris.c: New IRIX backend from
         Erik Hofman <erik@ehofman.com>, supports 4-channel audio and
         more flexible config.
 
-2004-05-18  Adam D. Moss  <adam@gimp.org>
+2004-05-18  Adam D. Moss  <adam@steambird.com>
 
         * openal/linux/src/al_buffer.c: buf->queue_list.size is not the
         same thing as buf->queue_list.items; don't use one when we mean
         the other, or strangeness may occur.
 
-2004-05-18  Adam D. Moss  <adam@gimp.org>
+2004-05-18  Adam D. Moss  <adam@steambird.com>
 
         * openal/linux/src/al_queue.c: Plug a memory leak... or at least
         work around it.
@@ -126,35 +126,35 @@
 	* openal/linux/src/al_buffer.c
 	AL_CURRENT/AL_QUEUED to AL_PROCESSED/AL_PENDING
 
-2004-01-07  Adam D. Moss  <adam@gimp.org>
+2004-01-07  Adam D. Moss  <adam@steambird.com>
 
 	* audioconvert/ac_freq.c: Fix another potential overenthusiasm
 	when frequency-upscaling a single 16-bit sample.	
 
-2003-12-26  Adam D. Moss  <adam@gimp.org>
+2003-12-26  Adam D. Moss  <adam@steambird.com>
 
 	* src/extensions/al_ext_loki.c: Use the correct sample size
 	in alBufferWriteData_LOKI() after the monoification.  Fixes the
 	problem of the buffer playing for much longer than it should.
 
-2003-12-23  Adam D. Moss  <adam@gimp.org>
+2003-12-23  Adam D. Moss  <adam@steambird.com>
 
 	* audioconvert/ac_freq.c: Fix some minor brainos in the
 	interpolated resample*2, and (more critically) don't do
 	extraneous bad things when cvt->len_cvt==0.
 
-2003-11-11  Adam D. Moss  <adam@gimp.org>
+2003-11-11  Adam D. Moss  <adam@steambird.com>
 
 	* src/al_debug.c: Fix an implicit declaration: the man
 	page on linux says that vsnprintf() is a GNU extension, so #define
 	_GNU_SOURCE
 
-2003-11-11  Adam D. Moss  <adam@gimp.org>
+2003-11-11  Adam D. Moss  <adam@steambird.com>
 
 	* src/arch/sdl/sdl.c: #include <string.h> to avoid implicit
 	declaration of memcpy()/memset()
 
-2003-11-11  Adam D. Moss  <adam@gimp.org>
+2003-11-11  Adam D. Moss  <adam@steambird.com>
 
 	* audioconvert/ac_freq.c
 	For the first sample in a chunk to be resampled*2, use dampened
