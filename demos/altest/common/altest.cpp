@@ -93,6 +93,7 @@
 #include <al.h>
 #include <alc.h>
 #include <alut.h>
+#include <unistd.h>
 #define NO_EAX
 #define SWAPBYTES
 #endif
@@ -316,6 +317,9 @@ void delay_ms(unsigned int ms)
 	{
 		Microseconds(&currentTime);
 	}
+#endif
+#ifdef MAC_OS_X
+	usleep(ms * 1000);
 #endif
 #ifdef _WIN32
 	int startTime;
