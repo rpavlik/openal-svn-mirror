@@ -13,14 +13,6 @@
 #include "ac_endian.h"
 #include "AL/altypes.h"
 
-ALushort swap16(ALushort D) {
-	return (D<<8) | (D>>8);
-}
-
-ALuint swap32(ALuint D) {
-	return (D<<24) | ((D<<8)&0x00FF0000) | ((D>>8)&0x0000FF00) | (D>>24);
-}
-
 ALubyte *cp16le(ALubyte *rawdata, ALushort *reader16) {
 	memcpy(reader16, rawdata, sizeof *reader16);
 	
