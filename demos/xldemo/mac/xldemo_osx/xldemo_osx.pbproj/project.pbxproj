@@ -73,8 +73,8 @@
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = main.cpp;
-			path = /Users/garinh/prog/openal/demos/XLDEMO/Mac/main.cpp;
-			refType = 0;
+			path = ../../../XLDEMO/Mac/main.cpp;
+			refType = 2;
 		};
 		98C0C9C40444FEB3005F25BE = {
 			buildActionMask = 2147483647;
@@ -201,15 +201,15 @@
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = audioenv.cpp;
-			path = /Users/garinh/prog/openal/demos/XLDEMO/COMMON/audioenv.cpp;
-			refType = 0;
+			path = ../../../XLDEMO/COMMON/audioenv.cpp;
+			refType = 2;
 		};
 		98C0C9CE0444FEFF005F25BE = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = audioenv.h;
-			path = /Users/garinh/prog/openal/demos/XLDEMO/COMMON/audioenv.h;
-			refType = 0;
+			path = ../../../XLDEMO/COMMON/audioenv.h;
+			refType = 2;
 		};
 		98C0C9CF0444FEFF005F25BE = {
 			fileRef = 98C0C9CD0444FEFF005F25BE;
@@ -233,15 +233,15 @@
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = common.cpp;
-			path = /Users/garinh/prog/openal/demos/XLDEMO/COMMON/common.cpp;
-			refType = 0;
+			path = ../../../XLDEMO/COMMON/common.cpp;
+			refType = 2;
 		};
 		98C0C9D30444FF13005F25BE = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = common.h;
-			path = /Users/garinh/prog/openal/demos/XLDEMO/COMMON/common.h;
-			refType = 0;
+			path = ../../../XLDEMO/COMMON/common.h;
+			refType = 2;
 		};
 		98C0C9D40444FF13005F25BE = {
 			fileRef = 98C0C9D20444FF13005F25BE;
@@ -259,29 +259,29 @@
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = object.cpp;
-			path = /Users/garinh/prog/openal/demos/XLDEMO/COMMON/object.cpp;
-			refType = 0;
+			path = ../../../XLDEMO/COMMON/object.cpp;
+			refType = 2;
 		};
 		98C0C9D70444FF33005F25BE = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = object.h;
-			path = /Users/garinh/prog/openal/demos/XLDEMO/COMMON/object.h;
-			refType = 0;
+			path = ../../../XLDEMO/COMMON/object.h;
+			refType = 2;
 		};
 		98C0C9D80444FF33005F25BE = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = Obstruct.cpp;
-			path = /Users/garinh/prog/openal/demos/XLDEMO/COMMON/Obstruct.cpp;
-			refType = 0;
+			path = ../../../XLDEMO/COMMON/Obstruct.cpp;
+			refType = 2;
 		};
 		98C0C9D90444FF33005F25BE = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = Obstruct.h;
-			path = /Users/garinh/prog/openal/demos/XLDEMO/COMMON/Obstruct.h;
-			refType = 0;
+			path = ../../../XLDEMO/COMMON/Obstruct.h;
+			refType = 2;
 		};
 		98C0C9DA0444FF33005F25BE = {
 			fileRef = 98C0C9D60444FF33005F25BE;
@@ -311,22 +311,22 @@
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = switches.h;
-			path = /Users/garinh/prog/openal/demos/XLDEMO/COMMON/switches.h;
-			refType = 0;
+			path = ../../../XLDEMO/COMMON/switches.h;
+			refType = 2;
 		};
 		98C0C9DF0444FF47005F25BE = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = textout.cpp;
-			path = /Users/garinh/prog/openal/demos/XLDEMO/COMMON/textout.cpp;
-			refType = 0;
+			path = ../../../XLDEMO/COMMON/textout.cpp;
+			refType = 2;
 		};
 		98C0C9E00444FF47005F25BE = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = textout.h;
-			path = /Users/garinh/prog/openal/demos/XLDEMO/COMMON/textout.h;
-			refType = 0;
+			path = ../../../XLDEMO/COMMON/textout.h;
+			refType = 2;
 		};
 		98C0C9E10444FF47005F25BE = {
 			fileRef = 98C0C9DE0444FF47005F25BE;
@@ -350,8 +350,8 @@
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = xlheader.h;
-			path = /Users/garinh/prog/openal/demos/XLDEMO/COMMON/xlheader.h;
-			refType = 0;
+			path = ../../../XLDEMO/COMMON/xlheader.h;
+			refType = 2;
 		};
 		98C0C9E50444FF59005F25BE = {
 			fileRef = 98C0C9E40444FF59005F25BE;
