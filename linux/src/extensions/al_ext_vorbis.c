@@ -231,6 +231,9 @@ ALint Vorbis_Callback(UNUSED(ALuint sid),
 				      signed_format(format),
 				      &current_section);
 
+			if(ret == OV_HOLE)
+				continue;
+
 			if(ret == 0) {
 				/* eof */
 				fprintf(stderr, "eof\n");
