@@ -7,9 +7,8 @@
  * Guillaume Borios (gborios@free.fr) and Florent Boudet (flobo@ifrance.com)
  * to help the PineApple project (http://ios.free.fr) run on MOSX
  *
- * Version : Alpha 5
+ * Version : Alpha 6
  */
- 
 
 #include <CoreAudio/CoreAudio.h>
 
@@ -26,15 +25,9 @@
 #include "al_rcvar.h"
 #include "alc/alc_context.h"
 
-#define maxBuffer 25 /*number of buffers to use (1 buffer = 11.61 ms with my sound card, this may vary) */
 /* Adding buffers improves response to temporary heavy CPU loads but increases latency... */
 
-#define buildID 10
-
-typedef struct {
-    volatile ALboolean	bufferIsEmpty;
-    void *		startOfDataPtr;
-} archBuffer;
+#define buildID 12
 
 typedef struct {
     AudioDeviceID	deviceW;		/* the device ID */
@@ -42,9 +35,6 @@ typedef struct {
     UInt32		deviceWBufferSize;	/* Buffer size of the audio device */
     AudioBufferList*	deviceWBufferList;
     AudioStreamBasicDescription	deviceFormat;	/* format of the default device */
-    short		bufferToFill;		/* Id of the next buffer to fill */
-    short		bufferToRead;		/* Id of the next buffer to read */
-    archBuffer		buffer[maxBuffer];	/* Buffers array */
 } globalVars, *globalPtr;
 
 /************************************** GLOBALS *********************************/
@@ -54,6 +44,9 @@ static globalVars	libGlobals; /* my globals */
 static unsigned int	alWriteFormat;	/* format of data from AL*/
 static unsigned int	alWriteSpeed;	/* speed of data from AL*/
 static unsigned int	nativePreferedBuffSize;
+static void * coreAudioDestination;
+static int ratio;
+static int stillToPlay = 0;
 
 /************************************* PROTOTYPES *********************************/
 
@@ -61,6 +54,10 @@ static void implement_me(const char *fn);
 OSStatus deviceFillingProc (AudioDeviceID  inDevice, const AudioTimeStamp*  inNow, const AudioBufferList*  inInputData, const AudioTimeStamp*  inInputTime, AudioBufferList* outOutputData, const AudioTimeStamp* inOutputTime, void* inClientData);
 
 OSStatus GetAudioDevices (void **devices /*Dev IDs*/, short	*devicesAvailable /*Dev number*/);
+
+int sync_mixer_iterate( void *dummy );
+
+void playABuffer(void *realdata);
 
 /************************************** UTILITIES *********************************/
 
@@ -81,27 +78,11 @@ static void implement_me(const char *fn)
 
 OSStatus deviceFillingProc (UNUSED(AudioDeviceID  inDevice), UNUSED(const AudioTimeStamp*  inNow), UNUSED(const AudioBufferList*  inInputData), UNUSED(const AudioTimeStamp*  inInputTime), AudioBufferList*  outOutputData, UNUSED(const AudioTimeStamp* inOutputTime), void* inClientData)
 {    
-    register SInt16	*inDataPtr16;
-    register Float32	*outDataPtr;
-    int 		count;
-    globalPtr		theGlobals;
-    
-    theGlobals = inClientData;
-    
-    if (theGlobals->buffer[theGlobals->bufferToRead].bufferIsEmpty == AL_FALSE)
-    {
-        inDataPtr16 = (SInt16*)(libGlobals.buffer[libGlobals.bufferToRead].startOfDataPtr);
-        outDataPtr = (outOutputData->mBuffers[0]).mData;
-        for (count = nativePreferedBuffSize/2; count >0; count--)
-        {
-            *outDataPtr = ((Float32)(*inDataPtr16))/32767.0;
-            outDataPtr++;
-            inDataPtr16++;
-        }
-	theGlobals->buffer[theGlobals->bufferToRead].bufferIsEmpty = AL_TRUE;
-	theGlobals->bufferToRead = ++(theGlobals->bufferToRead) % maxBuffer;
-    }
-    
+    coreAudioDestination = (outOutputData->mBuffers[0]).mData;
+
+    if (stillToPlay) playABuffer(NULL);
+    else sync_mixer_iterate(NULL);
+
     return 0;     
 }
 
@@ -260,35 +241,14 @@ ALboolean set_write_native(UNUSED(void *handle),
 			   unsigned int *speed)
 {
     OSStatus		error = 0;
-    unsigned short 	i;
 
     DebugPrintf("Init Speed : %d\n",*speed);
-    
-    *fmt = AL_FORMAT_STEREO16;
-    *speed = (unsigned int)libGlobals.deviceFormat.mSampleRate;
-    
+
+    //*fmt = AL_FORMAT_STEREO16;
+    //*speed = (unsigned int)libGlobals.deviceFormat.mSampleRate;
+
     alWriteFormat = *fmt;
 
-    /* Set the buffers states to empty */
-    for(i=0; i<maxBuffer; i++)
-    {
-	if (libGlobals.buffer[i].startOfDataPtr != NULL)
-	{
-		free(libGlobals.buffer[i].startOfDataPtr);
-	}
-
-	libGlobals.buffer[i].startOfDataPtr = malloc(libGlobals.deviceWBufferSize/2);
-	if(libGlobals.buffer[i].startOfDataPtr == NULL)
-	{
-		/* JIV FIXME: release other allocations before returning */
-		return AL_FALSE;
-	}
-	libGlobals.buffer[i].bufferIsEmpty = AL_TRUE;
-    }
-
-    libGlobals.bufferToFill = 0;
-    libGlobals.bufferToRead = 0;
-    
     /* defines what the AL buffer size should be */
     switch(alWriteFormat)
     {
@@ -309,8 +269,10 @@ ALboolean set_write_native(UNUSED(void *handle),
 
 	default: break;
     }
-    if ( *speed == 22050) *bufsiz/=2;
+    *bufsiz /= ((unsigned int)libGlobals.deviceFormat.mSampleRate) / *speed;
+
     alWriteSpeed = *speed;
+    ratio = ((unsigned int)libGlobals.deviceFormat.mSampleRate) / *speed;
     nativePreferedBuffSize = *bufsiz;
 
     /* start playing sound through the device */
@@ -337,41 +299,102 @@ int   grab_mixerfd(void)
 
 void  native_blitbuffer(void *handle, void *data, int bytes)
 {
-    unsigned int i;   
-   
+    stillToPlay = bytes / nativePreferedBuffSize;
+
     if (handle == NULL) return;
+
+    if (coreAudioDestination == 0)
+    {
+        fprintf(stderr,"Something wrong happened between CoreAudio and OpenAL.\n");
+        return;
+    }
+    
+    // Gyom FIXME: Is this useful?
+    assert(nativePreferedBuffSize <= bytes);
+
+    playABuffer(data);
+}
+
+void playABuffer(void *realdata)
+{
+    register unsigned int 	count;
+    register Float32	*outDataPtr = coreAudioDestination;
+    register SInt16	*inDataPtr16;
+    register SInt8	*inDataPtr8;
+    static void * data;
+
+    if (realdata!=NULL) data = realdata;
+
+    inDataPtr16 = (SInt16*)(data);
+    inDataPtr8 = (SInt8*)(data);
+
+    stillToPlay--;
 
     switch(alWriteFormat)
     {
-	case AL_FORMAT_STEREO16:
-	    for (i = 0; i < bytes/nativePreferedBuffSize; i++)
-	    {
-		    assert(nativePreferedBuffSize <= bytes);
-		    assert(nativePreferedBuffSize <= libGlobals.deviceWBufferSize/2);
-
-		    /* JIV FIXME
-
-                      seems incorrect
-
-		    assert(nativePreferedBuffSize <= libGlobals.deviceWBufferSize/2 - i * nativePreferedBuffSize);
-		      memcpy(libGlobals.buffer[libGlobals.bufferToFill].startOfDataPtr + i * nativePreferedBuffSize, data, nativePreferedBuffSize);
-                     */
-
-		    memcpy(libGlobals.buffer[libGlobals.bufferToFill].startOfDataPtr, data, nativePreferedBuffSize);
-
-		
-		    libGlobals.buffer[libGlobals.bufferToFill].bufferIsEmpty = AL_FALSE;
-		    libGlobals.bufferToFill = ++libGlobals.bufferToFill % maxBuffer;
-		    while (libGlobals.buffer[libGlobals.bufferToFill].bufferIsEmpty != AL_TRUE)
-			    sleep(0.02);
-	    }
-            return;
-
-	default:
-                DebugPrintf("Format not recognized... Try again ;-)");
+        int i;
+        case AL_FORMAT_STEREO16:
+            assert(nativePreferedBuffSize <= libGlobals.deviceWBufferSize/2);
+            for (count = nativePreferedBuffSize/2; count > 0; count--)
+            {
+                for (i = ratio; i>0; i--)
+                {
+                    *outDataPtr = ((Float32)(*inDataPtr16))/32767.0;
+                    outDataPtr++;
+                }
+                inDataPtr16++;
+            }
+                data = inDataPtr16;
                 break;
+
+        case AL_FORMAT_MONO16:
+            assert(nativePreferedBuffSize <= libGlobals.deviceWBufferSize/2);
+            for (count = nativePreferedBuffSize/2; count >0; count--)
+            {
+                for (i = ratio*2; i>0; i--)
+                {
+                    *outDataPtr = ((Float32)(*inDataPtr16))/32767.0;
+                    outDataPtr++;
+                }
+                inDataPtr16++;
+            }
+                data = inDataPtr16;
+                break;
+
+        case AL_FORMAT_STEREO8:
+            assert(nativePreferedBuffSize <= libGlobals.deviceWBufferSize);
+            for (count = nativePreferedBuffSize; count >0; count--)
+            {
+                for (i = ratio; i>0; i--)
+                {
+                    *outDataPtr = ((Float32)(*inDataPtr8))/32767.0;
+                    outDataPtr++;
+                }
+                inDataPtr8++;
+            }
+                data = inDataPtr8;
+                break;
+
+        case AL_FORMAT_MONO8:
+            assert(nativePreferedBuffSize <= libGlobals.deviceWBufferSize);
+            for (count = nativePreferedBuffSize; count >0; count--)
+            {
+                for (i = ratio*2; i>0; i--)
+                {
+                    *outDataPtr = ((Float32)(*inDataPtr8))/32767.0;
+                    outDataPtr++;
+                }
+                inDataPtr8++;
+            }
+                data = inDataPtr8;
+                break;
+
+        default:
+            DebugPrintf("Format not recognized... Try again ;-)");
+            break;
     }
 }
+
 
 
 void  release_native(void *handle)
