@@ -677,11 +677,11 @@ ALenum _al_AL2FMT(ALuint channels, ALuint bits) {
 			if(bits == 16) return AL_FORMAT_MONO16;
 			break;
 		case 2:
-			if(bits == 16) return AL_FORMAT_STEREO8;
+			if(bits == 8) return AL_FORMAT_STEREO8;
 			if(bits == 16) return AL_FORMAT_STEREO16;
 			break;
 		case 4:
-			if(bits == 16) return AL_FORMAT_QUAD8_LOKI;
+			if(bits == 8) return AL_FORMAT_QUAD8_LOKI;
 			if(bits == 16) return AL_FORMAT_QUAD16_LOKI;
 			break;
 	}
