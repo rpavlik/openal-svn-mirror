@@ -1,16 +1,30 @@
+2005-03-23  Sven Panne  <sven.panne@aedion.de>
+
+	* linux/Makefile.in, linux/audioconvert/Makefile.in,
+	linux/doc/Makefile.in, linux/jlib/Makefile.in
+	linux/src/Makefile.in, linux/test/Makefile.in: Unified *clean
+	targets a bit and added a new target "repo-clean" which brings
+	back everything to the "fresh from repository" state. Alas, there
+	is no standard GNU target for this.
+
+	Note that there is still a lot of cut-n-paste going on here, but
+	this will improve when we switch to automake/libtool (which I
+	intend to do).
+
 2005-03-20  Sven Panne  <sven.panne@aedion.de>
 
-	* Makefile.in, audioconvert/Makefile.in, configure.ac,
-	jlib/Makefile.in, src/Makefile.in, test/Makefile.in: Explicitly
-	handling MAKE is evil because it prevents the correct passing of
-	commandline arguments to sub-makes. Small cleanup.
+	* linux/Makefile.in, linux/audioconvert/Makefile.in,
+	linux/configure.ac, linux/jlib/Makefile.in, linux/src/Makefile.in,
+	linux/test/Makefile.in: Explicitly handling MAKE is evil because
+	it prevents the correct passing of commandline arguments to
+	sub-makes. Small cleanup.
 
-	* configure.ac: Modernized a bit, requiring autoconf 2.58
+	* linux/configure.ac: Modernized a bit, requiring autoconf 2.58
 	now. Fixed alsa-dlopen, arts-dlopen and esd-dlopen flags. Removed
 	random "spell checking" of arguments. Removed --with-gcc flag,
 	setting CC is the "autoconf way" of doing that.
 
-	* acconfig.h, acinclude.m4 aclocal.m4: Removed.
+	* linux/acconfig.h, linux/acinclude.m4, linux/aclocal.m4: Removed.
 
 2005-03-18  Sven Panne  <sven.panne@aedion.de>
 
