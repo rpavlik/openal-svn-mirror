@@ -17,5 +17,8 @@ ALboolean set_write_alsa( void *handle,
 			  ALuint *bufsiz,
 			  ALenum *fmt,
 			  ALuint *speed);
+ALsizei capture_alsa(void *handle,
+		void *capture_buffer,
+		int bufsiz);
 
 #endif /* ALSA_H_ */
