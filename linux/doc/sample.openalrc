@@ -1,12 +1,12 @@
-# Contains user settings for OpenAL
-# Goes in ~/.openalrc
+; Contains user settings for OpenAL
+; Goes in ~/.openalrc
 
-# Which backend?  Tried in order of appearance
+; Which backend?  Tried in order of appearance
 (define devices '(native alsa sdl esd arts null))
 
-# Four speaker surround with ALSA
+; Four speaker surround with ALSA
 (define speaker-num 4)
 (define alsa-out-device "surround40:0,0")
 
-# Some drivers do not support select
-(define native-use-select #t)
+; Some drivers do not support select
+(define native-use-select ;t)
