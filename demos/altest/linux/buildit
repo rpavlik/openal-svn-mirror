@@ -1,8 +1,8 @@
 #!/bin/bash
 
 if test ! "$1" = "osx-framework"; then
-	g++ -pedantic -pedantic-errors -ansi -Wall -Werror -Wno-unused -fPIC -DPIC -g -O2 -DLINUX -I/usr/local/include -I/user/X11R6/include -o altest -L/usr/local/lib -L/usr/X11R6/lib -L. -lopenal -lXmu -lXext -lXi -lX11 -lpthread -ldl ../common/altest.cpp
+	g++ -pedantic -pedantic-errors -ansi -Wall -Wno-unused -fPIC -DPIC -g -O2 -DLINUX -I/usr/local/include -I/user/X11R6/include -o altest -L/usr/local/lib -L/usr/X11R6/lib -L. -lopenal -lXmu -lXext -lXi -lX11 -lpthread -ldl ../common/altest.cpp
 	exit
 fi
 
-	g++ -pedantic -pedantic-errors -ansi -Wall -Werror -Wno-unused -fPIC -DPIC -g -O2 -DLINUX -DOSX_FRAMEWORK -I/usr/local/include -I/user/X11R6/include -o altest -L/usr/local/lib -L/usr/X11R6/lib -L. -lopenal -lXmu -lXext -lXi -lX11 -lpthread -ldl ../common/altest.cpp
+	g++ -pedantic -pedantic-errors -ansi -Wall -Wno-unused -fPIC -DPIC -g -O2 -DLINUX -DOSX_FRAMEWORK -I/usr/local/include -I/user/X11R6/include -o altest -L/usr/local/lib -L/usr/X11R6/lib -L. -lopenal -lXmu -lXext -lXi -lX11 -lpthread -ldl ../common/altest.cpp
