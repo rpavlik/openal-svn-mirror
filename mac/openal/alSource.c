@@ -409,6 +409,9 @@ ALAPI ALvoid ALAPIENTRY alGetSourcei (ALuint source, ALenum pname, ALint *value)
 			case AL_BUFFER:
 				*value=gSource[source].srcBufferNum;
 				break;
+                        case AL_SOURCE_RELATIVE:
+                                *value=gSource[source].srcRelative;
+				break;
 			case AL_SOURCE_STATE:
 			    *value=gSource[source].state;
 			    break;
