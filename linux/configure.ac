@@ -154,6 +154,7 @@ case "$target" in
     SHOULD_ENFORCE_ANSI=no ;;
     *cygwin*|*mingw*)
     AC_DEFINE(WINDOWS_TARGET, 1, [undocumented])
+    CFLAGS="-D_OPENAL32LIB $CFLAGS"
     OS_OBJS="\$(WINDOWS_OBJS)"
     LIBS="$LIBS -lwinmm"         # need that mm library for waveOutOpen etc
     SHARED_LIBRARY_EXT=dll       # shared library extension
