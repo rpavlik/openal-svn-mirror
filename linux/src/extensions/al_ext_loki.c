@@ -496,7 +496,7 @@ void alBufferWriteData_LOKI( ALuint  bid,
 
 	free(cdata);
 
-	buf->size = retsize;
+	buf->size = retsize / _al_ALCHANNELS(buf->format);
 
 	_alUnlockBuffer();
 

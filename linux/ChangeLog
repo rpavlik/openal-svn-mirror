@@ -1,3 +1,9 @@
+2003-12-26  Adam D. Moss  <adam@gimp.org>
+
+	* src/extensions/al_ext_loki.c: Use the correct sample size
+	in alBufferWriteData_LOKI() after the monoification.  Fixes the
+	problem of the buffer playing for much longer than it should.
+
 2003-12-23  Adam D. Moss  <adam@gimp.org>
 
 	* audioconvert/ac_freq.c: Fix some minor brainos in the
