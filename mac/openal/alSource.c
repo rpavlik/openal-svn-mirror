@@ -174,7 +174,7 @@ ALAPI ALvoid ALAPIENTRY alSourcef (ALuint source, ALenum pname, ALfloat value)
 				}
 				break;
 			case AL_MAX_GAIN:
-				if ((value > 0.0f) && (value <= 1.0f))
+				if ((value >= 0.0f) && (value <= 1.0f))
 				{
 					gSource[source].maxGain = value;
 				} else
