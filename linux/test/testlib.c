@@ -35,6 +35,10 @@ void micro_sleep(unsigned int n) {
 	return;
 }
 
+#elif defined(__APPLE__)
+
+void micro_sleep(unsigned int n) { usleep(n); }
+
 #else
 
 void micro_sleep(unsigned int n) {
