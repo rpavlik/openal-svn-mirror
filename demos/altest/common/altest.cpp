@@ -128,7 +128,7 @@ void alGetSource3f(ALint sid, ALenum param,
 #define SWAPBYTES
 #endif
 
-#define NUM_BUFFERS 7	// Number of buffers to be Generated
+#define NUM_BUFFERS 8	// Number of buffers to be Generated
 
 #ifndef LINUX
 #ifndef MAC_OS_X
@@ -329,6 +329,10 @@ ALvoid SA_Frequency(ALvoid);
 ALvoid SA_Stereo(ALvoid);
 ALvoid SA_Streaming(ALvoid);
 ALvoid SA_QueuingUnderrunPerformance(ALvoid);
+
+#ifdef TEST_VORBIS
+ALvoid I_VorbisTest(ALvoid);
+#endif
 
 /*
 	delay_ms -- delay by given number of milliseconds
@@ -773,6 +777,23 @@ int main(int argc, char* argv[])
 		exit(-1);
 	}
 
+#ifdef TEST_VORBIS
+	// Load mono.ogg
+
+	// Copy mono.ogg data into AL Buffer 7
+	alBufferData(g_Buffers[7],format,data,size,freq);
+	if ((error = alGetError()) != AL_NO_ERROR)
+	{
+		DisplayALError((ALbyte *) "alBufferData buffer 7 : ", error);
+		// Delete buffers
+		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
+		exit(-1);
+	}
+
+	// Unload mono.ogg
+        free(data);
+#endif
+
 	// Check for EAX extension
 	g_bEAX = alIsExtensionPresent(szEAX);
 
@@ -802,18 +823,20 @@ int main(int argc, char* argv[])
 		printf("A) Run Fully Automated Tests\n");
 		printf("B) Run Semi-Automated Tests\n");
 		printf("\nInteractive Tests:\n\n");
-		printf("1 Position Test\n");
-		printf("2 Looping Test\n");
-		printf("3 EAX 2.0 Test\n");
-		printf("4 Queue Test\n");
-		printf("5 Buffer Test\n");
-		printf("6 Frequency Test\n");
-		printf("7 Stereo Test\n");
-		printf("8 Gain Test\n");
-		printf("9 Streaming Test\n");
-		printf("0 Multiple Sources Test\n");
-		
-		printf("\nQ to quit\n\n\n");
+		printf("1) Position Test\n");
+		printf("2) Looping Test\n");
+		printf("3) EAX 2.0 Test\n");
+		printf("4) Queue Test\n");
+		printf("5) Buffer Test\n");
+		printf("6) Frequency Test\n");
+		printf("7) Stereo Test\n");
+		printf("8) Gain Test\n");
+		printf("9) Streaming Test\n");
+		printf("0) Multiple Sources Test\n");
+#ifdef TEST_VORBIS
+		printf("C) Ogg Vorbis Test\n");
+#endif
+		printf("\nQ) to quit\n\n\n");
 
 		ch = getUpperCh();
 
@@ -856,6 +879,11 @@ int main(int argc, char* argv[])
 			case '0':
 				I_MultipleSourcesTest();
 				break;
+#ifdef TEST_VORBIS
+		        case 'C':
+		                I_VorbisTest();
+		                break;
+#endif
 			default:
 				break;
 		}
@@ -4100,3 +4128,103 @@ ALvoid I_MultipleSourcesTest()
 	// Delete the Sources
 	alDeleteSources(numSources, Sources);
 }
+
+#ifdef TEST_VORBIS
+// Vorbis Test
+/** used by gendocs.py
+$SECTION Interactive Tests
+$SUBTITLE Vorbis Test
+This test exercises Ogg Vorbis playback functionality.
+*/
+ALvoid I_VorbisTest()
+{
+	ALint	error;
+	ALuint	source[1];
+	ALuint  buffers[2];
+	ALuint	Buffer;
+	ALint	BuffersInQueue, BuffersProcessed;
+	ALbyte	ch;
+	ALboolean bLoop = false;
+	ALfloat source0Pos[]={ 2.0, 0.0,-2.0};	// Front and right of the listener
+	ALfloat source0Vel[]={ 0.0, 0.0, 0.0};
+
+	alGenSources(1,source);
+	if ((error = alGetError()) != AL_NO_ERROR)
+	{
+		DisplayALError((ALbyte *) "alGenSources 1 : ", error);
+		return;
+	}
+
+	buffers[0] = g_Buffers[6];
+	buffers[1] = g_Buffers[6];
+
+	printf("Stereo Test\n");
+	printf("Press '1' to play an Ogg Vorbis buffer on source 0\n");
+	printf("Press '2' to toggle looping on / off\n");
+	printf("Press 'q' to quit\n");
+	printf("Looping is on\n");
+
+	do
+	{
+		ch = getUpperCh();
+ 		
+		switch (ch)
+		{
+			case '1':
+				// Stop source
+				alSourceStop(source[0]);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError((ALbyte *) "alSourceStop source 0 : ", error);
+
+				// Attach new buffer
+				alSourcei(source[0],AL_BUFFER, g_Buffers[6]);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError((ALbyte *) "alSourcei 0 AL_BUFFER buffer 6 (stereo) : \n", error);
+
+				// Set volume
+				alSourcef(source[0],AL_GAIN,0.5f);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError((ALbyte *) "alSourcef 0 AL_GAIN : \n", error);
+
+				// Set looping
+				alSourcei(source[0],AL_LOOPING,bLoop);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING true: \n", error);
+
+				// Play source
+				alSourcePlay(source[0]);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError((ALbyte *) "alSourcePlay source 0 : ", error);
+				
+				break;
+			case '2':
+				if (bLoop)
+				{
+					printf("Looping is off\n");
+					bLoop = AL_FALSE;
+				}
+				else
+				{
+					printf("Looping is on  \n");
+					bLoop = AL_TRUE;
+				}
+				alSourcei(source[0], AL_LOOPING, bLoop);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING : \n", error);
+				break;
+				printf("Current Buffer is %d, %d Buffers in queue, %d Processed\n", Buffer, BuffersInQueue, BuffersProcessed);
+		}
+	} while (ch != 'Q');
+
+	// Release resources
+	alSourceStop(source[0]);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError((ALbyte *) "alSourceStop : ", error);
+
+	alDeleteSources(1, source);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError((ALbyte *) "alDeleteSources 2 : ", error);
+	
+	return;
+}
+#endif
