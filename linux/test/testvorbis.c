@@ -4,6 +4,7 @@
 #include <AL/alc.h>
 #include <AL/alut.h>
 
+#include <errno.h>
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,8 +28,6 @@ static ALuint vorbsource = (ALuint ) -1;
 static time_t start;
 
 static ALCcontext *context_id;
-
-extern int errno;
 
 /* our vorbis extension */
 typedef ALboolean (vorbisLoader)(ALuint, ALvoid *, ALint);

@@ -4,6 +4,7 @@
 #include <AL/alc.h>
 #include <AL/alut.h>
 
+#include <errno.h>
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,8 +30,6 @@ static ALuint mp3source = (ALuint ) -1;
 static time_t start;
 
 static ALCcontext *context_id;
-
-extern int errno;
 
 /* our mp3 extension */
 typedef ALboolean (mp3Loader)(ALuint, ALvoid *, ALint);

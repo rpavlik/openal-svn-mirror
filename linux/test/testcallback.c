@@ -4,6 +4,7 @@
 #include <AL/alc.h>
 #include <AL/alut.h>
 
+#include <errno.h>
 #include <math.h>
 #include <time.h>
 #include <stdio.h>
@@ -27,8 +28,6 @@ static time_t start;
 
 static ALCcontext *context_id;
 ALuint stereo; /* our buffer */
-
-extern int errno;
 
 static void init( void ) {
 	ALfloat zeroes[]   = { 0.0f, 0.0f,  0.0f };
