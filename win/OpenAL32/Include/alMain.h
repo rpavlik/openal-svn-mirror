@@ -9,7 +9,7 @@
 
 #include "AL/altypes.h"
 #include "AL/alctypes.h"
-#include "AL/alu.h"
+#include "alu.h"
 #include "alBuffer.h"
 #include "alError.h"
 #include "alExtension.h"

@@ -26,7 +26,7 @@
 #include "OpenAL32/Include/alMain.h"
 #include "AL/al.h"
 #include "AL/alc.h"
-#include "AL/alu.h"
+#include "OpenAL32/Include/alu.h"
 #include "OpenAL32/Include/alBuffer.h"
 #ifdef _DEBUG
 	#include "stdio.h"

@@ -44,8 +44,8 @@
 #define INITGUID
 #define OPENAL
 
-//#define TEST_VORBIS // enable for ogg vorbis testing
-//#define TEST_EAX // enable for EAX testing
+#define TEST_VORBIS // enable for ogg vorbis testing
+#define TEST_EAX // enable for EAX testing
 
 #ifdef _WIN32
 #include <windows.h>	// For timeGetTime()
@@ -188,6 +188,7 @@ ALboolean g_bEAX;					// Boolean variable to indicate presence of EAX Extension
 #endif
 
 #ifdef TEST_VORBIS
+#define AL_FORMAT_VORBIS_EXT 0x10003
 unsigned int g_ovSize;
 #endif
 
