@@ -24,6 +24,7 @@
 #include "alList.h"
 #include <windows.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 
 //****************************************************************************

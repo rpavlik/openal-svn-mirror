@@ -32,7 +32,9 @@
 #include <stddef.h>
 #include <windows.h>
 #include <crtdbg.h>
+#include <objbase.h>
 #include <atlconv.h>
+#include <mmsystem.h>
 
 #include "OpenAL32.h"
 
@@ -196,7 +198,7 @@ ALboolean NewSpecifierCheck(const ALubyte* specifier)
 		}
 		list += strlen((char *)list) + 1;
 	}
-	
+
 	return AL_TRUE;
 }
 
@@ -289,7 +291,7 @@ ALvoid BuildDeviceSpecifierList()
 						//
 						dll = LoadLibrary(searchName);
 						if(dll)
-						{	
+						{
 							alcOpenDeviceFxn = (ALCAPI_OPEN_DEVICE)GetProcAddress(dll, "alcOpenDevice");
 							alcCreateContextFxn = (ALCAPI_CREATE_CONTEXT)GetProcAddress(dll, "alcCreateContext");
 							alcMakeContextCurrentFxn = (ALCAPI_MAKE_CONTEXT_CURRENT)GetProcAddress(dll, "alcMakeContextCurrent");
@@ -298,7 +300,7 @@ ALvoid BuildDeviceSpecifierList()
 							alcCloseDeviceFxn = (ALCAPI_CLOSE_DEVICE)GetProcAddress(dll, "alcCloseDevice");
 							alcIsExtensionPresentFxn = (ALCAPI_IS_EXTENSION_PRESENT)GetProcAddress(dll, "alcIsExtensionPresent");
 
-							if ((alcOpenDeviceFxn != 0) && 
+							if ((alcOpenDeviceFxn != 0) &&
 								(alcCreateContextFxn != 0) &&
 								(alcMakeContextCurrentFxn != 0) &&
 								(alcGetStringFxn != 0) &&
@@ -322,7 +324,7 @@ ALvoid BuildDeviceSpecifierList()
 										specifier += strlen((char *)specifier) + 1;
 									} while (strlen((char *)specifier) > 0);
 								} else {
-									// no enumeration ability, -- so just add default device to the list								
+									// no enumeration ability, -- so just add default device to the list
 									device = alcOpenDeviceFxn(NULL);
 									if (device != NULL) {
 										context = alcCreateContextFxn(device, NULL);
@@ -346,7 +348,7 @@ ALvoid BuildDeviceSpecifierList()
 								}
 							} else {
 								// handle legacy Creative DLLs which don't have alcIsExtensionPresentFxn exported (original Audigy, Live)
-								if ((alcOpenDeviceFxn != 0) && 
+								if ((alcOpenDeviceFxn != 0) &&
 									(alcCreateContextFxn != 0) &&
 									(alcMakeContextCurrentFxn != 0) &&
 									(alcGetStringFxn != 0) &&
@@ -432,7 +434,7 @@ ALvoid BuildDeviceSpecifierList()
 							alcCloseDeviceFxn = (ALCAPI_CLOSE_DEVICE)GetProcAddress(dll, "alcCloseDevice");
 							alcIsExtensionPresentFxn = (ALCAPI_IS_EXTENSION_PRESENT)GetProcAddress(dll, "alcIsExtensionPresent");
 
-							if ((alcOpenDeviceFxn != 0) && 
+							if ((alcOpenDeviceFxn != 0) &&
 								(alcCreateContextFxn != 0) &&
 								(alcMakeContextCurrentFxn != 0) &&
 								(alcGetStringFxn != 0) &&
@@ -456,7 +458,7 @@ ALvoid BuildDeviceSpecifierList()
 										specifier += strlen((char *)specifier) + 1;
 									} while (strlen((char *)specifier) > 0);
 								} else {
-									// no enumeration ability, -- so just add default device to the list								
+									// no enumeration ability, -- so just add default device to the list
 									device = alcOpenDeviceFxn(NULL);
 									if (device != NULL) {
 										context = alcCreateContextFxn(device, NULL);
@@ -480,7 +482,7 @@ ALvoid BuildDeviceSpecifierList()
 								}
 							} else {
 								// handle legacy Creative DLLs which don't have alcIsExtensionPresentFxn exported (original Audigy, Live)
-								if ((alcOpenDeviceFxn != 0) && 
+								if ((alcOpenDeviceFxn != 0) &&
 									(alcCreateContextFxn != 0) &&
 									(alcMakeContextCurrentFxn != 0) &&
 									(alcGetStringFxn != 0) &&
@@ -845,7 +847,7 @@ HINSTANCE FindDllWithMatchingSpecifier(TCHAR* dllSearchPattern, char* specifier,
 						alcCloseDeviceFxn = (ALCAPI_CLOSE_DEVICE)GetProcAddress(dll, "alcCloseDevice");
 						alcIsExtensionPresentFxn = (ALCAPI_IS_EXTENSION_PRESENT)GetProcAddress(dll, "alcIsExtensionPresent");
 
-						if ((alcOpenDeviceFxn != 0) && 
+						if ((alcOpenDeviceFxn != 0) &&
 							(alcCreateContextFxn != 0) &&
 							(alcMakeContextCurrentFxn != 0) &&
 							(alcGetStringFxn != 0) &&
@@ -855,7 +857,7 @@ HINSTANCE FindDllWithMatchingSpecifier(TCHAR* dllSearchPattern, char* specifier,
 
 							alcGetStringFxn = (ALCAPI_GET_STRING)GetProcAddress(dll, "alcGetString");
 							if(alcGetStringFxn)
-							{			
+							{
 								if (alcIsExtensionPresentFxn(0, (ALubyte *)"ALC_ENUMERATION_EXT")) {
 									// have an enumeratable DLL here, so check all available devices
 									deviceSpecifier = alcGetStringFxn(0, ALC_DEVICE_SPECIFIER);
@@ -1682,12 +1684,16 @@ ALCAPI const ALubyte* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
 
 				// two issues here --
 				// 1) whatever device is in the control panel as the preferred device should be accepted
-				// 2) if the preferred device is an Audigy, then the name won't match the hardware DLL, so 
+				// 2) if the preferred device is an Audigy, then the name won't match the hardware DLL, so
 				//    allow a partial match in this case
-				__asm pushad; // workaround for register destruction caused by these wavOutMessage calls (weird but true)
-				waveOutMessage((HWAVEOUT)WAVE_MAPPER,0x2000+0x0015,(LPARAM)&uDeviceID,(WPARAM)&dwFlags);
+                #if !defined(_WIN64)
+                __asm pusha; // workaround for register destruction caused by these wavOutMessage calls (weird but true)
+                #endif // !defined(_WIN64)
+                waveOutMessage((HWAVEOUT)(UINT_PTR)WAVE_MAPPER,0x2000+0x0015,(LPARAM)&uDeviceID,(WPARAM)&dwFlags);
 				waveOutGetDevCaps(uDeviceID,&info,sizeof(info));
-				__asm popad;
+                #if !defined(_WIN64)
+                __asm popa;
+                #endif // !defined(_WIN64)
 				strcpy(mixerDevice, T2A(info.szPname));
 				if (strstr(mixerDevice, "Audigy") != NULL) {
 					acceptPartial = true;
