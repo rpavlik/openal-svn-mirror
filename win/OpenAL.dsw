@@ -69,8 +69,20 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name OpenAL32
+    Project_Dep_Name Router
     End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "Router"=".\Router\Router.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
 }}}
 
 ###############################################################################

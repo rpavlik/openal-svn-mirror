@@ -49,6 +49,7 @@ typedef struct ALCfunction_struct
 } ALCfunction;
 
 static ALCextension alcExtensions[] = {	
+	{ "ALC_ENUMERATION_EXT",		(ALvoid *) NULL				},
 	{ NULL,							(ALvoid *) NULL				} };
 
 static ALCfunction  alcFunctions[] = {	
@@ -63,7 +64,8 @@ static ALubyte alcErrInvalidValue[] = "Invalid Value";
 
 // Context strings
 static ALubyte alcDefaultDeviceSpecifier[] = "DirectSound3D";
-static ALubyte alcExtensionList[] = "";
+static ALubyte alcDeviceList[] = "DirectSound3D\0DirectSound\0MMSYSTEM\0\0";
+static ALubyte alcExtensionList[] = "Enumeration\0\0";
 
 static ALCint alcMajorVersion = 1;
 static ALCint alcMinorVersion = 0;
@@ -153,62 +155,48 @@ ALCAPI ALCvoid ALCAPIENTRY alcProcessContext(ALCcontext *context)
 
 ALCAPI ALCubyte* ALCAPIENTRY alcGetString(ALCdevice *device,ALCenum param)
 {
-	ALCcontext *Context;
 	ALubyte *value = NULL;
 
-	Context=alcGetCurrentContext();
-	if (Context)
+	switch(param)
 	{
-		SuspendContext(Context);
-	
-		switch(param)
-		{
-		case ALC_NO_ERROR:
-			value=alcNoError;
-			break;
+	case ALC_NO_ERROR:
+		value=alcNoError;
+		break;
 
-		case ALC_INVALID_ENUM:
-			value=alcErrInvalidEnum;
-			break;
+	case ALC_INVALID_ENUM:
+		value=alcErrInvalidEnum;
+		break;
 
-		case ALC_INVALID_VALUE:
-			value=alcErrInvalidValue;
-			break;
+	case ALC_INVALID_VALUE:
+		value=alcErrInvalidValue;
+		break;
 
-		case ALC_INVALID_DEVICE:
-			value=alcErrInvalidDevice;
-			break;
+	case ALC_INVALID_DEVICE:
+		value=alcErrInvalidDevice;
+		break;
 
-		case ALC_INVALID_CONTEXT:
-			value=alcErrInvalidContext;
-			break;
+	case ALC_INVALID_CONTEXT:
+		value=alcErrInvalidContext;
+		break;
 
-		case ALC_DEFAULT_DEVICE_SPECIFIER:
-			value = alcDefaultDeviceSpecifier;
-			break;
+	case ALC_DEFAULT_DEVICE_SPECIFIER:
+		value = alcDefaultDeviceSpecifier;
+		break;
 
-		case ALC_DEVICE_SPECIFIER:
-			if (!device)
-				alcSetError(ALC_INVALID_DEVICE);
-			else
-				value = device->szDeviceName;
-			break;
+	case ALC_DEVICE_SPECIFIER:
+		if (device)
+			value = device->szDeviceName;
+		else
+			value = alcDeviceList;
+		break;
 
-		case ALC_EXTENSIONS:
-			value = alcExtensionList;
-			break;
+	case ALC_EXTENSIONS:
+		value = alcExtensionList;
+		break;
 
-		default:
-			alcSetError(ALC_INVALID_ENUM);
-			break;
-		}
-	
-		ProcessContext(Context);
-	}
-	else
-	{
-		// Invalid Context
-		alcSetError(ALC_INVALID_CONTEXT);
+	default:
+		alcSetError(ALC_INVALID_ENUM);
+		break;
 	}
 
 	return value;

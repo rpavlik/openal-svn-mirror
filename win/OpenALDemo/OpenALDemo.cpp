@@ -92,6 +92,11 @@ int main(int argc, char* argv[])
 	ALboolean loop;
 	ALCcontext *Context;
 	ALCdevice *Device;
+	char deviceName[256];
+	char *defaultDevice;
+	char *deviceList;
+	char *devices[12];
+	int numDevices, numDefaultDevice, i;
 
 	ALfloat listenerPos[]={0.0,0.0,0.0};
 	ALfloat listenerVel[]={0.0,0.0,0.0};
@@ -102,7 +107,48 @@ int main(int argc, char* argv[])
 	// Initialize Open AL manually
 
 	//Open device
-	Device = alcOpenDevice((ALubyte*)"DirectSound3D");
+	strcpy(deviceName, "");
+	if (alcIsExtensionPresent(NULL, (ALubyte*)"ALC_ENUMERATION_EXT") == AL_TRUE) { // try out enumeration extension
+		defaultDevice = (char *)alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
+		deviceList = (char *)alcGetString(NULL, ALC_DEVICE_SPECIFIER);
+		for (numDevices = 0; numDevices < 12; numDevices++) {devices[numDevices] = NULL;}
+		for (numDevices = 0; numDevices < 12; numDevices++) {
+			devices[numDevices] = deviceList;
+			if (strcmp(devices[numDevices], defaultDevice) == 0) {
+				numDefaultDevice = numDevices;
+			}
+			deviceList += strlen(deviceList);
+			if (deviceList[0] == 0) {
+				if (deviceList[1] == 0) {
+					break;
+				} else {
+					deviceList += 1;
+				}
+			}
+		}
+		if (devices[numDevices] != NULL) {
+			numDevices++;
+			printf("\nEnumeration extension found -- select an output device:\n");
+			printf("0. NULL Device (Default)\n");
+			for (i = 0; i < numDevices; i++) {
+				printf("%d. %s\n", i + 1, devices[i]);
+			}
+			printf("\n\n");
+			do {
+				ch = _getch();
+				i = atoi(&ch);
+			} while ((i < 0) || (i > numDevices));
+			if ((i != 0) && (strlen(devices[i-1]) < 256)) {
+				strcpy(deviceName, devices[i-1]);
+			}
+		}
+	}
+
+	if (strlen(deviceName) == 0) {
+		Device = alcOpenDevice(NULL); // this is supposed to select the "preferred device"
+	} else {
+		Device = alcOpenDevice((ALubyte*)deviceName); // have a name from enumeration process above, so use it...
+	}
 
 	if (Device == NULL)
 	{

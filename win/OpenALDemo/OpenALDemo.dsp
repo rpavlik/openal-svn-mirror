@@ -54,7 +54,7 @@ LINK32=link.exe
 # ADD LINK32 alut.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib winmm.lib /nologo /subsystem:console /machine:I386 /libpath:"..\openal32\release"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
-PreLink_Cmds=copy ..\openal32\release\openal32.dll .
+PreLink_Cmds=copy ..\openal32\release\openal32.dll wrap_oal.dll	copy ..\router\release\openal32.dll .
 PostBuild_Cmds=copy release\openaldemo.exe .
 # End Special Build Tool
 
@@ -84,7 +84,6 @@ LINK32=link.exe
 # ADD LINK32 alut.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib winmm.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept /libpath:"..\openal32\debug"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
-PreLink_Cmds=copy ..\openal32\debug\openal32.dll .
 PostBuild_Cmds=copy debug\openaldemo.exe .
 # End Special Build Tool
 
