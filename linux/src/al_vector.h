@@ -79,4 +79,11 @@ void _alVectorNormalize( ALfloat *d, ALfloat *s );
  */
 ALint _alVectorQuadrant( ALfloat *origin, ALfloat *v1 );
 
+/*
+ * _alVectorCrossProduct( ALfloat *d, ALfloat *v1, ALfloat *v2 )
+ *
+ * Returns cross product between v1 and v2, result in d.
+ */
+ALvoid _alVectorCrossProduct( ALfloat *d, ALfloat *v1, ALfloat *v2);
+
 #endif /* AL_VECTOR_H */

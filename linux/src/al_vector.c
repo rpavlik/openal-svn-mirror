@@ -284,3 +284,16 @@ ALfloat _alVectorIntersectAngle( ALfloat *origin1, ALfloat *point1,
 
 	return M_PI - theta;
 }
+
+/*
+ * _alVectorCrossProduct( ALfloat *d, ALfloat *v1, ALfloat *v2 )
+ *
+ * Returns cross product between v1 and v2, result in d.
+ */
+ALvoid _alVectorCrossProduct( ALfloat *d, ALfloat *v1, ALfloat *v2) {
+	d[0] = v1[1] * v2[2] - v1[2] * v2[1];
+	d[1] = v1[2] * v2[0] - v1[0] * v2[2];
+	d[2] = v1[0] * v2[1] - v1[1] * v2[0];
+
+	return;
+}
