@@ -3,12 +3,14 @@
 #include "glut.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include <sys/time.h>
 #include <math.h>
 #include "common.h"
 #ifdef MACOS
 #include <Events.h>
 #include <Timer.h>
+#endif
+#ifdef MAC_OS_X
+#include <sys/time.h>
 #endif
 
 // Globals
