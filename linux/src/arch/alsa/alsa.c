@@ -156,6 +156,7 @@ ALboolean set_write_alsa(void *handle,
 {
 	struct alsa_info *ai = handle;
 	snd_pcm_hw_params_t *setup;
+	snd_pcm_uframes_t buffer_size, period_size;
 	snd_pcm_t *phandle = 0;
 	int err, dir;
 
@@ -215,7 +216,13 @@ ALboolean set_write_alsa(void *handle,
 	err = snd_pcm_hw_params_set_channels(phandle, setup, ai->channels);
 	if(err < 0)
 	{
-		err = snd_pcm_hw_params_get_channels(setup);
+
+		#if (SND_LIB_MAJOR == 0)
+			err = snd_pcm_hw_params_get_channels(setup);
+		#else
+			snd_pcm_hw_params_get_channels(setup, &err);
+		#endif
+
 		if(err!= (int) (ai->channels)) {
 			_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
 				 "set_write_alsa: could not set channels: %s",snd_strerror(err));
@@ -253,11 +260,18 @@ ALboolean set_write_alsa(void *handle,
 		return AL_FALSE;
         }
 
-        _alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-         "set_write_alsa (info): Buffersize = %i (%i)",snd_pcm_hw_params_get_buffer_size(setup), *bufsiz);
-
-        _alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-         "set_write_alsa (info): Periodsize = %i",snd_pcm_hw_params_get_period_size(setup, &dir));
+	#if (SND_LIB_MAJOR == 0)
+		buffer_size = snd_pcm_hw_params_get_buffer_size(setup);
+		period_size = snd_pcm_hw_params_get_period_size(setup, &dir);
+	#else
+        	snd_pcm_hw_params_get_buffer_size(setup, &buffer_size);
+		snd_pcm_hw_params_get_period_size(setup, &period_size, &dir);
+	#endif
+	
+	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
+		"set_write_alsa (info): Buffersize = %i (%i)",buffer_size, *bufsiz);
+	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
+		"set_write_alsa (info): Periodsize = %i", period_size);
 
 	err = snd_pcm_hw_params(phandle, setup);
 	if(err < 0)
