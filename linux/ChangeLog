@@ -1,3 +1,15 @@
+2002-09-08  Christopher Purnell  <cjp@lost.org.uk>
+
+	* src/alc/alc_speaker.c
+	Changed _alcSpeakerMove() so that it creates a matrix itself from
+	the listener orientation and applies that to the speaker positions
+	instead of using _alRotatePointAboutAxis().  Also adjusted the
+	speaker positions for fourpoint.
+
+	* src/al_vector.c
+	* src/al_vector.h
+	Added a vector product function.
+	
 2002-09-07  Joseph Valenzuela  <jvalenzu@formosa>
 
 	* src/al_filter.c:
