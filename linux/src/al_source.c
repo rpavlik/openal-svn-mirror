@@ -1630,7 +1630,6 @@ static void _alSplitSourceQueue( ALuint cid,
 				 AL_buffer *samp,
 				 ALshort **buffers )
 {
-	int bufchannels = _al_ALCHANNELS(samp->format);
 	AL_source *src;
 	AL_buffer *nextsamp;
 	long mixable;

@@ -63,7 +63,9 @@ static void * esd_lib_handle = NULL;
 
 static int openal_load_esd_library(void)
 {
+#if OPENAL_DLOPEN_ESD
         char * error = NULL;
+#endif
     
 	if (esd_lib_handle != NULL)
 		return 1;  /* already loaded. */

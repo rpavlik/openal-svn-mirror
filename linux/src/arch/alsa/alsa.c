@@ -81,7 +81,9 @@ static snd_pcm_sframes_t (*psnd_pcm_hw_params_get_period_size)(const snd_pcm_hw_
 
 static int openal_load_alsa_library(void)
 {
+#if OPENAL_DLOPEN_ALSA
         char * error = NULL;
+#endif
     
 	if (alsa_lib_handle != NULL)
 		return 1;  /* already loaded. */

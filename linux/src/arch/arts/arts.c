@@ -68,7 +68,9 @@ static void * arts_lib_handle = NULL;
 
 static int openal_load_arts_library(void)
 {
+#if OPENAL_DLOPEN_ARTS
         char * error = NULL;
+#endif
     
 	if (arts_lib_handle != NULL)
 		return 1;  /* already loaded. */
