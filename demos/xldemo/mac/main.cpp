@@ -3,10 +3,13 @@
 #include "glut.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/time.h>
 #include <math.h>
 #include "common.h"
+#ifdef MACOS
 #include <Events.h>
 #include <Timer.h>
+#endif
 
 // Globals
 AVEnvironment g_Env;
@@ -19,9 +22,10 @@ const float PI = 3.1415926535f;
 
 float TimeDiff()
 {
+#ifdef MACOS
+    float newVal;
     static UnsignedWide lastTC;
     UnsignedWide oldTC;
-    float newVal;
     
     oldTC = lastTC;
     Microseconds(&lastTC);
@@ -33,8 +37,29 @@ float TimeDiff()
     {
         newVal = (((float)lastTC.hi-(float)oldTC.hi)*0xffffffff+((float)lastTC.lo - (float)oldTC.lo))/1000000;
     }
-    
-   return newVal;
+    return newVal;
+#endif
+#ifdef MAC_OS_X
+   static double oldTime = 0;
+   double newTime;
+   timeval newTimeVal;
+   float returnTimeDiff;
+   bool returnZero = false;
+
+   if (oldTime == 0) { returnZero = true; } else { returnZero = false; }
+
+   gettimeofday(&newTimeVal, NULL);
+   newTime = (double) newTimeVal.tv_sec + ((double) newTimeVal.tv_usec / 1000000);
+
+   returnTimeDiff =  (float) (newTime - oldTime);
+   oldTime = newTime;
+
+   if (returnZero == false) {
+      return returnTimeDiff;
+   } else {
+      return 0.0f;
+   }
+#endif
 }
 
 void display(void)
@@ -108,6 +133,7 @@ int main(int argc, char *argv[])
 	else
 		sz = 200;
 
+        glutInit(&argc,argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitWindowPosition(200, 100);
 	glutInitWindowSize(sz*1.33*3, sz*3);
