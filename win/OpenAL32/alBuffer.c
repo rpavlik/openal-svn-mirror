@@ -260,7 +260,7 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,ALvoid *data,AL
 	Context = alcGetCurrentContext();
 	SuspendContext(Context);
 
-	if (alIsBuffer(buffer))
+	if (alIsBuffer(buffer) && (buffer != 0))
 	{
 		ALBuf=((ALbuffer *)buffer);
 //		if ((ALBuf->state==UNUSED)&&(data))
@@ -357,7 +357,7 @@ ALAPI ALvoid ALAPIENTRY alGetBufferf(ALuint buffer,ALenum pname,ALfloat *value)
 
 	if (value)
 	{
-		if (alIsBuffer(buffer))
+		if (alIsBuffer(buffer)  && (buffer != 0))
 		{
 			ALBuf=((ALbuffer *)buffer);
 			switch(pname)
@@ -397,7 +397,7 @@ ALAPI ALvoid ALAPIENTRY alGetBufferi(ALuint buffer,ALenum pname,ALint *value)
 
 	if (value)
 	{
-		if (alIsBuffer(buffer))
+		if (alIsBuffer(buffer)  && (buffer != 0))
 		{
 			ALBuf=((ALbuffer *)buffer);
 			switch(pname)
