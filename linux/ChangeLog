@@ -1,3 +1,8 @@
+2004-05-18  Adam D. Moss  <adam@gimp.org>
+
+        * openal/linux/src/al_queue.c: Plug a memory leak... or at least
+        work around it.
+
 2004-02-02  Ryan C. Gordon  <ryan@epicgames.com>
 
 	* openal/linux/configure.in

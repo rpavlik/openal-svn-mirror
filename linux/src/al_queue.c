@@ -430,12 +430,8 @@ void _alSourceUnqueueBuffers(ALuint sid, ALsizei n, ALuint *bids ) {
 
 	for( i = 0; i < n; i++ )
 	{
-		/*
-		 * don't have to worry about current ref,
-		 * because it's illegal to remove past our
-		 * read index
-		 */
 		_alBidRemoveQueueRef( src->bid_queue.queue[i], src->sid );
+		_alBidRemoveCurrentRef( src->bid_queue.queue[i], src->sid );
 	}
 
 	/* resize */
