@@ -85,7 +85,7 @@ static int openal_load_alsa_library(void)
 	#if OPENAL_DLOPEN_ALSA
 		#define OPENAL_LOAD_ALSA_SYMBOL(x) p##x = dlsym(alsa_lib_handle, #x); \
                                                    error = dlerror(); \
-                                                   if (p##x == NULL) { \
+                                                   if ((error != NULL)||(p##x == NULL)) { \
                                                            fprintf(stderr,"Could not resolve ALSA symbol %s: %s\n", #x, ((error!=NULL)?(error):("(null)"))); \
                                                            dlclose(alsa_lib_handle); alsa_lib_handle = NULL; \
                                                            return 0; }
@@ -499,7 +499,6 @@ ALboolean set_write_alsa(void *handle,
 
 	if( (ai == NULL) || (ai->handle == NULL) )
 		return AL_FALSE;
-
 
 	ai->channels    = (unsigned int) _al_ALCHANNELS(*fmt);
 	ai->format      = (unsigned int) AL2ALSAFMT(*fmt);
