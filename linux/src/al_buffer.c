@@ -704,6 +704,7 @@ void alBufferData( ALuint  bid,
 				  buf->orig_buffers[i+2] = temp_copies[2];
 				  buf->orig_buffers[i+3] = temp_copies[3];				  
 			  }
+			  break;
 			case 6:
 			  assert(elementsof(buf->orig_buffers) >= 6);			  
 			  for(i = 0; i < elementsof(buf->orig_buffers); i += 6)
