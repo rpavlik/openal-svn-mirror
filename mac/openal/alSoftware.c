@@ -171,20 +171,18 @@ ALAPI ALvoid ALAPIENTRY alCalculateSourceParameters(ALuint source,ALuint numOutp
 			aluMatrixVector(Position,Matrix);
 			//3. Calculate distance attenuation
 			Distance=(ALfloat)sqrt(aluDotproduct(Position,Position));
-			if (DistanceModel!=AL_NONE)
-			{
-				if (DistanceModel==AL_INVERSE_DISTANCE_CLAMPED)
-				{
-					Distance=(Distance<MinDist?MinDist:Distance);
-					Distance=(Distance>MaxDist?MaxDist:Distance);
-				}
+			if (DistanceModel!=AL_NONE) {
+			     if (DistanceModel==AL_INVERSE_DISTANCE_CLAMPED) {
+				Distance=(Distance<MinDist?MinDist:Distance);
+				Distance=(Distance>MaxDist?MaxDist:Distance);
+			     }
+			     if (Distance != 0) {
 				DryMix=((DryMix)/(1.0f+Rolloff*((Distance-MinDist)/max(MinDist,FLT_MIN))));
 				WetMix=((WetMix)/(1.0f+RoomRolloff*((Distance-MinDist)/max(MinDist,FLT_MIN))));
-                                DryMix=((DryMix<=MaxVolume)?DryMix:MaxVolume);
-                                DryMix=((DryMix>=MinVolume)?DryMix:MinVolume);
-                                WetMix=((WetMix<=MaxVolume)?WetMix:MaxVolume);
-                                WetMix=((WetMix>=MinVolume)?WetMix:MinVolume);
+			     }
 			}
+		        DryMix=((DryMix<=MaxVolume)?DryMix:MaxVolume);
+                        DryMix=((DryMix>=MinVolume)?DryMix:MinVolume);
 			//4. Apply directional soundcones
 			SourceToListener[0]=-Position[0];	
 			SourceToListener[1]=-Position[1];
