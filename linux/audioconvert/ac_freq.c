@@ -17,8 +17,8 @@
 void acFreqMUL2(acAudioCVT *cvt, ALushort format) {
 	int i;
 	ALubyte *src, *dst;
-	src = (ALbyte *) cvt->buf + cvt->len_cvt;
-	dst = (ALbyte *) cvt->buf + cvt->len_cvt * 2;
+	src = (ALubyte *) cvt->buf + cvt->len_cvt;
+	dst = (ALubyte *) cvt->buf + cvt->len_cvt * 2;
 	
 	switch(format & 0xFF) {
 	case 8:
@@ -27,8 +27,21 @@ void acFreqMUL2(acAudioCVT *cvt, ALushort format) {
 			ALubyte *dst8 = (ALubyte*) dst;
 			src8 -= 1;
 			dst8 -= 2;
+			/* For the first sample to be processed (last sample
+			   in the buffer) there's no 'next' sample in the
+			   buffer to interpolate against.  So we use a value
+			   extrapolated (then dampened) from the previous
+			   sample in the buffer; this dampens (but doesn't
+			   eliminate :() the 'click' of the first sample. */
 			if (cvt->len_cvt > 1) {
-				dst8[0] = (src8[0]+src8[-1])/2;
+				int ex; /* extrapolated sample, damped */
+				ex = src8[0] + (src8[0]-(int)src8[-1])/8;
+				if ( ex > 255 )
+					ex = 255;
+				else if ( ex < 0 )
+					ex = 0;
+				dst8[0] = src8[0];
+				dst8[1] = ex;
 			} else {
 				dst8[0] = src8[0];
 			}
@@ -37,7 +50,7 @@ void acFreqMUL2(acAudioCVT *cvt, ALushort format) {
 				src8 -= 1;
 				dst8 -= 2;
 				dst8[0] = src8[0];
-				dst8[1] = (src8[0]+src8[1])/2;
+				dst8[1] = (src8[0]+(int)src8[1])/2;
 			}
 		} else if (format == AUDIO_S8) {
 			ALbyte *src8 = (ALbyte*) src;
@@ -45,7 +58,14 @@ void acFreqMUL2(acAudioCVT *cvt, ALushort format) {
 			src8 -= 1;
 			dst8 -= 2;
 			if (cvt->len_cvt > 1) {
-				dst8[0] = (src8[0]+src8[-1])/2;
+				int ex; /* extrapolated sample, damped */
+				ex = src8[0] + (src8[0]-(int)src8[-1])/8;
+				if ( ex > 127 )
+					ex = 127;
+				else if ( ex < -128 )
+					ex = -128;
+				dst8[0] = src8[0];
+				dst8[1] = ex;
 			} else {
 				dst8[0] = src8[0];
 			}
@@ -54,7 +74,7 @@ void acFreqMUL2(acAudioCVT *cvt, ALushort format) {
 				src8 -= 1;
 				dst8 -= 2;
 				dst8[0] = src8[0];
-				dst8[1] = (src8[0]+src8[1])/2;
+				dst8[1] = (src8[0]+(int)src8[1])/2;
 			}
 		}
 		break;
@@ -65,16 +85,23 @@ void acFreqMUL2(acAudioCVT *cvt, ALushort format) {
 			src16 -= 1;
 			dst16 -= 2;
 			if (cvt->len_cvt > 1) {
-				dst16[0] = (src16[0]+src16[-1])/2;
+				int ex; /* extrapolated sample, damped */
+				ex = src16[0] + (src16[0]-(int)src16[-1])/8;
+				if ( ex > 32767 )
+					ex = 32767;
+				else if ( ex < -32768 )
+					ex = -32768;
+				dst16[0] = src16[0];
+				dst16[1] = ex;
 			} else {
 				dst16[0] = src16[0];
+				dst16[1] = src16[0];
 			}
-			dst16[1] = src16[0];
 			for ( i=cvt->len_cvt/2-1; i; --i ) {
 				src16 -= 1;
 				dst16 -= 2;
 				dst16[0] = src16[0];
-				dst16[1] = (src16[0]+src16[1])/2;
+				dst16[1] = (src16[0]+(int)src16[1])/2;
 			}
 		} else if (format == AUDIO_U16) {
 			ALushort *src16 = (ALushort*) src;
@@ -82,7 +109,14 @@ void acFreqMUL2(acAudioCVT *cvt, ALushort format) {
 			src16 -= 1;
 			dst16 -= 2;
 			if (cvt->len_cvt > 1) {
-				dst16[0] = (src16[0]+src16[-1])/2;
+				int ex; /* extrapolated sample, damped */
+				ex = src16[0] + (src16[0]-(int)src16[-1])/8;
+				if ( ex > 65535 )
+					ex = 65535;
+				else if ( ex < 0 )
+					ex = 0;
+				dst16[0] = src16[0];
+				dst16[1] = ex;
 			} else {
 				dst16[0] = src16[0];
 			}
@@ -91,7 +125,7 @@ void acFreqMUL2(acAudioCVT *cvt, ALushort format) {
 				src16 -= 1;
 				dst16 -= 2;
 				dst16[0] = src16[0];
-				dst16[1] = (src16[0]+src16[1])/2;
+				dst16[1] = (src16[0]+(int)src16[1])/2;
 			}
 		} else {
 			/* this is a 16-bit format that doesn't correspond
