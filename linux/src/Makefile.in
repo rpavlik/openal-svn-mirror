@@ -8,7 +8,6 @@ INC=-I../../include -I../include -I../audioconvert -Iarch -I. @INCLUDES@
 LIBS=-L. @LIBS@
 MAKE=@MAKE@
 SO_EXT=@SHARED_LIBRARY_EXT@
-NASM=@NASM@
 RANLIB=@RANLIB@
 
 AL_OBJS=al_buffer.o al_listen.o al_ext.o \
@@ -48,7 +47,6 @@ EXT_OBJS=$(addsuffix .o, $(addprefix extensions/al_ext_, loki mp3 vorbis capture
 # loaded with load-extension via alrc)
 EXT_DLL_OBJS=$(addsuffix .o, $(addprefix extensions/al_ext_, ))
 
-MMX_OBJS=arch/i386/mix16.o
 i386_OBJS=arch/i386/floatmul.o
 PORTABLE_OBJS=arch/portable/floatmul.o
 
@@ -78,8 +76,6 @@ VERSION=$(MAJOR_VERSION).$(MINOR_VERSION).$(MICRO_VERSION)
 
 %.o : %.s al_siteconfig.h ../config.h
 	$(CPP) $(DEFINES) $< | $(AS) -o $@
-%.o : %.nasm
-	$(NASM) -f elf -o $@ $<
 %.o : %.c al_siteconfig.h ../config.h
 	$(CC) $(DEFINES) $(INC) $(CFLAGS) -c $< -o $@
 

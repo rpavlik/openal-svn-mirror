@@ -625,20 +625,3 @@ AC_DEFUN(AM_PROG_NM, [indir([AC_PROG_NM])])dnl
 
 dnl This is just to silence aclocal about the macro not being used
 ifelse([AC_DISABLE_FAST_INSTALL])dnl
-
-dnl MMX stuff
-AC_DEFUN(AC_HAS_MMX,
-[
-dnl init
-AC_MSG_CHECKING(for MMX (only works on linux))
-
-MMXBOOL=`grep mmx /proc/cpuinfo | wc -l`
-if test -z MMXBOOL; then
-	AC_MSG_RESULT(not mmx)
-	$2
-else
-	AC_MSG_RESULT(mmx)
-	$1
-fi
-])
-

@@ -499,18 +499,6 @@ fi
 
 dnl arch specific ASM files
 ARCH_OBJS="\$(PORTABLE_OBJS)"
-AC_ARG_ENABLE(arch-asm,
-[  --enable-arch-asm         enable arch specific asm     [default=no]],
-              ,   enable_asm_asm=no)
-if test x$enable_arch_asm = xyes; then
-	AC_PATH_PROG(HAVENASM, nasm, , $PATH)
-	if test ! -z $HAVENASM; then
-		NASM=$HAVENASM
-		AC_DEFINE(MMX_SUPPORT, 1, [undocumented])
-		AC_HAS_MMX( ARCH_OBJS="\$(MMX_OBJS) \$(PORTABLE_OBJS)", )
-	fi
-
-fi
 
 dnl check for ALSA headers
 AC_ARG_ENABLE(alsa,
