@@ -669,15 +669,6 @@ if test x$enable_dsound = xyes; then
 
 fi #   enable_dsound = yes
 
-dnl   enable emu10k1 backend?
-AC_ARG_ENABLE(emu10k1,
-[  --enable-emu10k1          enable emu10k1 backend       [default=no]],
-              ,   enable_emu10k1=no)
-if test x$enable_emu10k1 = xyes; then
-	AC_DEFINE(EMU10K1_SUPPORT, 1, [undocumented])
-	OS_OBJS="$OS_OBJS \$(EMU10K1_OBJS)"
-fi #   enable_emu10k1 = yes
-
 dnl Enable vorbis support
 AC_ARG_ENABLE(vorbis,
 [  --enable-vorbis           enable vorbis support        [default=no]],

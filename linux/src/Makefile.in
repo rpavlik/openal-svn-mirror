@@ -60,7 +60,6 @@ ESD_OBJS=arch/esd/esd.o
 SDL_OBJS=arch/sdl/sdl.o
 WAVEOUT_OBJS=arch/waveout/waveout.o
 NULL_OBJS=arch/null/null.o
-EMU10K1_OBJS=arch/emu10k1/emu10k1.o
 
 BSD_OBJS=arch/bsd/bsd_dsp.o
 IRIS_OBJS=arch/irix/iris.o
