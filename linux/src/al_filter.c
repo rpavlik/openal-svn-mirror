@@ -1272,10 +1272,17 @@ void alf_tpitch( UNUSED(ALuint cid),
 	/*
 	 * if pitch is out of range, return.
 	 */
-	if((*pitch <= 0.0) || (*pitch > 2.0)) {
+	if(*pitch <= 0.0f)
+	{
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
- 			"pitch out of range: %f", *pitch);
-		return;
+ 			"pitch out of range: %f, clamping", *pitch);
+		*pitch = 0.05f;
+	}
+	else if (*pitch > 2.0f)
+	{
+		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
+ 			"pitch out of range: %f, clamping", *pitch);
+		*pitch = 2.0f;
 	}
 
 	if(_alBufferIsCallback(samp) == AL_TRUE) {
