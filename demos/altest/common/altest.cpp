@@ -548,6 +548,7 @@ int main(int argc, char* argv[])
 		DisplayALError((ALbyte *) "alutLoadWAVFile footsteps.wav : ", error);
 		// Delete Buffers
 		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
+		printf("Failing to load a sample file -- check that they are in the working directory!\n");
 		exit(-1);
 	}
 
@@ -558,6 +559,7 @@ int main(int argc, char* argv[])
 		DisplayALError((ALbyte *) "alBufferData buffer 0 : ", error);
 		// Delete buffers
 		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
+		printf("Failing to load a sample file -- check that they are in the working directory!\n");
 		exit(-1);
 	}
 
@@ -572,6 +574,7 @@ int main(int argc, char* argv[])
 		DisplayALError((ALbyte *) "alutUnloadWAV : ", error);
 		// Delete buffers
 		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
+		printf("Failing to load a sample file -- check that they are in the working directory!\n");
 		exit(-1);
 	}
 
@@ -593,6 +596,7 @@ int main(int argc, char* argv[])
 		DisplayALError((ALbyte *) "alutLoadWAVFile ding.wav : ", error);
 		// Delete buffers
 		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
+		printf("Failing to load a sample file -- check that they are in the working directory!\n");
 		exit (-1);
 	}
 
@@ -603,6 +607,7 @@ int main(int argc, char* argv[])
 		DisplayALError((ALbyte *) "alBufferData buffer 1 : ", error);
 		// Delete buffers
 		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
+		printf("Failing to load a sample file -- check that they are in the working directory!\n");
 		exit(-1);
 	}
 	
@@ -617,6 +622,7 @@ int main(int argc, char* argv[])
 		DisplayALError((ALbyte *) "alutUnloadWAV : ", error);
 		// Delete buffers
 		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
+		printf("Failing to load a sample file -- check that they are in the working directory!\n");
 		exit(-1);
 	}
 
@@ -638,6 +644,7 @@ int main(int argc, char* argv[])
 		DisplayALError((ALbyte *) "alutLoadWAVFile wave1.wav : ", error);
 		// Delete Buffers
 		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
+		printf("Failing to load a sample file -- check that they are in the working directory!\n");
 		exit(-1);
 	}
 
@@ -648,6 +655,7 @@ int main(int argc, char* argv[])
 		DisplayALError((ALbyte *) "alBufferData buffer 2 : ", error);
 		// Delete buffers
 		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
+		printf("Failing to load a sample file -- check that they are in the working directory!\n");
 		exit(-1);
 	}
 
@@ -662,6 +670,7 @@ int main(int argc, char* argv[])
 		DisplayALError((ALbyte *) "alutUnloadWAV : ", error);
 		// Delete buffers
 		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
+		printf("Failing to load a sample file -- check that they are in the working directory!\n");
 		exit(-1);
 	}
 
@@ -683,6 +692,7 @@ int main(int argc, char* argv[])
 		DisplayALError((ALbyte *) "alutLoadWAVFile wave2.wav : ", error);
 		// Delete Buffers
 		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
+		printf("Failing to load a sample file -- check that they are in the working directory!\n");
 		exit(-1);
 	}
 
@@ -693,6 +703,7 @@ int main(int argc, char* argv[])
 		DisplayALError((ALbyte *) "alBufferData buffer 3 : ", error);
 		// Delete buffers
 		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
+		printf("Failing to load a sample file -- check that they are in the working directory!\n");
 		exit(-1);
 	}
 
@@ -707,6 +718,7 @@ int main(int argc, char* argv[])
 		DisplayALError((ALbyte *) "alutUnloadWAV : ", error);
 		// Delete buffers
 		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
+		printf("Failing to load a sample file -- check that they are in the working directory!\n");
 		exit(-1);
 	}
 
@@ -728,6 +740,7 @@ int main(int argc, char* argv[])
 		DisplayALError((ALbyte *) "alutLoadWAVFile wave3.wav : ", error);
 		// Delete Buffers
 		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
+		printf("Failing to load a sample file -- check that they are in the working directory!\n");
 		exit(-1);
 	}
 
@@ -738,6 +751,7 @@ int main(int argc, char* argv[])
 		DisplayALError((ALbyte *) "alBufferData buffer 4 : ", error);
 		// Delete buffers
 		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
+		printf("Failing to load a sample file -- check that they are in the working directory!\n");
 		exit(-1);
 	}
 
@@ -752,6 +766,7 @@ int main(int argc, char* argv[])
 		DisplayALError((ALbyte *) "alutUnloadWAV : ", error);
 		// Delete buffers
 		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
+		printf("Failing to load a sample file -- check that they are in the working directory!\n");
 		exit(-1);
 	}
 
@@ -773,6 +788,7 @@ int main(int argc, char* argv[])
 		DisplayALError((ALbyte *) "alutLoadWAVFile wave4.wav : ", error);
 		// Delete Buffers
 		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
+		printf("Failing to load a sample file -- check that they are in the working directory!\n");
 		exit(-1);
 	}
 
@@ -783,6 +799,7 @@ int main(int argc, char* argv[])
 		DisplayALError((ALbyte *) "alBufferData buffer 5 : ", error);
 		// Delete buffers
 		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
+		printf("Failing to load a sample file -- check that they are in the working directory!\n");
 		exit(-1);
 	}
 
@@ -797,6 +814,7 @@ int main(int argc, char* argv[])
 		DisplayALError((ALbyte *) "alutUnloadWAV : ", error);
 		// Delete buffers
 		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
+		printf("Failing to load a sample file -- check that they are in the working directory!\n");
 		exit(-1);
 	}
 
@@ -818,6 +836,7 @@ int main(int argc, char* argv[])
 		DisplayALError((ALbyte *) "alutLoadWAVFile stereo.wav : ", error);
 		// Delete Buffers
 		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
+		printf("Failing to load a sample file -- check that they are in the working directory!\n");
 		exit(-1);
 	}
 
@@ -828,6 +847,7 @@ int main(int argc, char* argv[])
 		DisplayALError((ALbyte *) "alBufferData buffer 6 : ", error);
 		// Delete buffers
 		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
+		printf("Failing to load a sample file -- check that they are in the working directory!\n");
 		exit(-1);
 	}
 
@@ -842,6 +862,7 @@ int main(int argc, char* argv[])
 		DisplayALError((ALbyte *) "alutUnloadWAV : ", error);
 		// Delete buffers
 		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
+		printf("Failing to load a sample file -- check that they are all in the working directory!\n");
 		exit(-1);
 	}
 
