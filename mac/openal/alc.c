@@ -18,6 +18,10 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
 
+#if defined(__APPLE__) & defined(__MACH__) // check for OS X
+#define MAC_OS_X
+#endif
+
 #ifdef MAC_OS_X
 #include <stdlib.h>
 #else

@@ -18,24 +18,25 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
 
+#include "globals.h" 
+#include "alError.h"
+#include "alSoftware.h"
+#include "alSource.h"
+#include "alBuffer.h"
+
 #ifndef MAC_OS_X
 #ifdef TARGET_CLASSIC
 #include <Sound.h>
 #else
 #include <Carbon/Carbon.h>
 #endif
+#include "sm.h"
 #else
 #include <stdlib.h>
 #include <string.h>
 #include "mutex.h"
+#include "sm_ca.h"
 #endif
-
-#include "sm.h"
-#include "globals.h" 
-#include "alError.h"
-#include "alSoftware.h"
-#include "alSource.h"
-#include "alBuffer.h"
  
 #pragma export on 
 
