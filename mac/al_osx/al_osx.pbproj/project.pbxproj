@@ -8,6 +8,7 @@
 		034768DDFF38A45A11DB9C8B = {
 			children = (
 				034768DEFF38A45A11DB9C8B,
+				9894C4410439726000A8006E,
 			);
 			isa = PBXGroup;
 			name = Products;
@@ -30,7 +31,6 @@
 //084
 		0867D690FE84028FC02AAC07 = {
 			buildStyles = (
-				4F0BB7EC011F40E904CA0E50,
 				4F0BB7ED011F40E904CA0E50,
 			);
 			hasScannedForEncodings = 1;
@@ -40,6 +40,7 @@
 			projectDirPath = "";
 			targets = (
 				0867D69CFE84028FC02AAC07,
+				9894C4180439726000A8006E,
 			);
 		};
 		0867D691FE84028FC02AAC07 = {
@@ -78,7 +79,7 @@
 				HEADER_SEARCH_PATHS = ../al;
 				INSTALL_PATH = "$(HOME)/Library/Frameworks";
 				LIBRARY_SEARCH_PATHS = "";
-				OPTIMIZATION_CFLAGS = "-O2";
+				OPTIMIZATION_CFLAGS = "-O3";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = OpenAL;
@@ -286,16 +287,6 @@
 //4F2
 //4F3
 //4F4
-		4F0BB7EC011F40E904CA0E50 = {
-			buildRules = (
-			);
-			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				OPTIMIZATION_CFLAGS = "-O0";
-			};
-			isa = PBXBuildStyle;
-			name = Development;
-		};
 		4F0BB7ED011F40E904CA0E50 = {
 			buildRules = (
 			);
@@ -379,6 +370,354 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
+		};
+		9894C4180439726000A8006E = {
+			buildPhases = (
+				9894C4190439726000A8006E,
+				9894C42F0439726000A8006E,
+				9894C4310439726000A8006E,
+				9894C43E0439726000A8006E,
+				9894C4400439726000A8006E,
+			);
+			buildSettings = {
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = "";
+				FRAMEWORK_VERSION = A;
+				HEADER_SEARCH_PATHS = ../al;
+				INSTALL_PATH = "$(HOME)/Library/Frameworks";
+				LIBRARY_SEARCH_PATHS = "";
+				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = OpenAL;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
+				WRAPPER_EXTENSION = framework;
+			};
+			dependencies = (
+			);
+			isa = PBXFrameworkTarget;
+			name = al_osx_debug;
+			productInstallPath = "$(HOME)/Library/Frameworks";
+			productName = al_osx;
+			productReference = 9894C4410439726000A8006E;
+			productSettingsXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>OpenAL</string>
+	<key>CFBundleGetInfoString</key>
+	<string>OpenAL</string>
+	<key>CFBundleIconFile</key>
+	<string></string>
+	<key>CFBundleIdentifier</key>
+	<string></string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>OpenAL</string>
+	<key>CFBundlePackageType</key>
+	<string>FMWK</string>
+	<key>CFBundleShortVersionString</key>
+	<string>OpenAL</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>1.0.1d1</string>
+	<key>CSResourcesFileMapped</key>
+	<true/>
+</dict>
+</plist>
+";
+		};
+		9894C4190439726000A8006E = {
+			buildActionMask = 2147483647;
+			files = (
+				9894C41A0439726000A8006E,
+				9894C41B0439726000A8006E,
+				9894C41C0439726000A8006E,
+				9894C41D0439726000A8006E,
+				9894C41E0439726000A8006E,
+				9894C41F0439726000A8006E,
+				9894C4200439726000A8006E,
+				9894C4210439726000A8006E,
+				9894C4220439726000A8006E,
+				9894C4230439726000A8006E,
+				9894C4240439726000A8006E,
+				9894C4250439726000A8006E,
+				9894C4260439726000A8006E,
+				9894C4270439726000A8006E,
+				9894C4280439726000A8006E,
+				9894C4290439726000A8006E,
+				9894C42A0439726000A8006E,
+				9894C42B0439726000A8006E,
+				9894C42C0439726000A8006E,
+				9894C42D0439726000A8006E,
+				9894C42E0439726000A8006E,
+			);
+			isa = PBXHeadersBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9894C41A0439726000A8006E = {
+			fileRef = F558C52B036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C41B0439726000A8006E = {
+			fileRef = F558C52E036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C41C0439726000A8006E = {
+			fileRef = F558C530036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C41D0439726000A8006E = {
+			fileRef = F558C532036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C41E0439726000A8006E = {
+			fileRef = F558C534036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C41F0439726000A8006E = {
+			fileRef = F558C536036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C4200439726000A8006E = {
+			fileRef = F558C538036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C4210439726000A8006E = {
+			fileRef = F558C53A036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C4220439726000A8006E = {
+			fileRef = F558C53C036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C4230439726000A8006E = {
+			fileRef = F558C552036A119601A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C4240439726000A8006E = {
+			fileRef = F558C553036A119601A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C4250439726000A8006E = {
+			fileRef = F558C555036A119601A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C4260439726000A8006E = {
+			fileRef = 984FDEC20433F5A20042B474;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C4270439726000A8006E = {
+			fileRef = 984FDEC30433F5A20042B474;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C4280439726000A8006E = {
+			fileRef = 984FDEC40433F5A20042B474;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C4290439726000A8006E = {
+			fileRef = 984FDEC50433F5A20042B474;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C42A0439726000A8006E = {
+			fileRef = 984FDEC60433F5A20042B474;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C42B0439726000A8006E = {
+			fileRef = 98AF1E61043534F4000D2D30;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C42C0439726000A8006E = {
+			fileRef = 98AF1E62043534F4000D2D30;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C42D0439726000A8006E = {
+			fileRef = 98AF1E6504353506000D2D30;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C42E0439726000A8006E = {
+			fileRef = 98AF1E6604353506000D2D30;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C42F0439726000A8006E = {
+			buildActionMask = 2147483647;
+			files = (
+				9894C4300439726000A8006E,
+			);
+			isa = PBXResourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9894C4300439726000A8006E = {
+			fileRef = 089C1666FE841158C02AAC07;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C4310439726000A8006E = {
+			buildActionMask = 2147483647;
+			files = (
+				9894C4320439726000A8006E,
+				9894C4330439726000A8006E,
+				9894C4340439726000A8006E,
+				9894C4350439726000A8006E,
+				9894C4360439726000A8006E,
+				9894C4370439726000A8006E,
+				9894C4380439726000A8006E,
+				9894C4390439726000A8006E,
+				9894C43A0439726000A8006E,
+				9894C43B0439726000A8006E,
+				9894C43C0439726000A8006E,
+				9894C43D0439726000A8006E,
+			);
+			isa = PBXSourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9894C4320439726000A8006E = {
+			fileRef = F558C52A036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C4330439726000A8006E = {
+			fileRef = F558C52C036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C4340439726000A8006E = {
+			fileRef = F558C52D036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C4350439726000A8006E = {
+			fileRef = F558C52F036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C4360439726000A8006E = {
+			fileRef = F558C531036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C4370439726000A8006E = {
+			fileRef = F558C533036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C4380439726000A8006E = {
+			fileRef = F558C535036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C4390439726000A8006E = {
+			fileRef = F558C537036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C43A0439726000A8006E = {
+			fileRef = F558C539036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C43B0439726000A8006E = {
+			fileRef = F558C53B036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C43C0439726000A8006E = {
+			fileRef = F558C53D036A116501A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C43D0439726000A8006E = {
+			fileRef = F558C554036A119601A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C43E0439726000A8006E = {
+			buildActionMask = 2147483647;
+			files = (
+				9894C43F0439726000A8006E,
+			);
+			isa = PBXFrameworksBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9894C43F0439726000A8006E = {
+			fileRef = 08FB77AAFE841565C02AAC07;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9894C4400439726000A8006E = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			isa = PBXRezBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9894C4410439726000A8006E = {
+			isa = PBXFrameworkReference;
+			path = OpenAL.framework;
+			refType = 3;
 		};
 		98AF1E61043534F4000D2D30 = {
 			fileEncoding = 30;
