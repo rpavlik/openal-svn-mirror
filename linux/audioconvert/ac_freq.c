@@ -33,7 +33,7 @@ void acFreqMUL2(acAudioCVT *cvt, ALushort format) {
 			   extrapolated (then dampened) from the previous
 			   sample in the buffer; this dampens (but doesn't
 			   eliminate :() the 'click' of the first sample. */
-			if (cvt->len_cvt > 1) {
+			if (cvt->len_cvt >= 2) {
 				int ex; /* extrapolated sample, damped */
 				ex = src8[0] + (src8[0]-(int)src8[-1])/8;
 				if ( ex > 255 )
@@ -57,7 +57,7 @@ void acFreqMUL2(acAudioCVT *cvt, ALushort format) {
 			ALbyte *dst8 = (ALbyte*) dst;
 			src8 -= 1;
 			dst8 -= 2;
-			if (cvt->len_cvt > 1) {
+			if (cvt->len_cvt >= 2) {
 				int ex; /* extrapolated sample, damped */
 				ex = src8[0] + (src8[0]-(int)src8[-1])/8;
 				if ( ex > 127 )
@@ -84,7 +84,7 @@ void acFreqMUL2(acAudioCVT *cvt, ALushort format) {
 			ALshort *dst16 = (ALshort*) dst;
 			src16 -= 1;
 			dst16 -= 2;
-			if (cvt->len_cvt > 1) {
+			if (cvt->len_cvt >= 4) {
 				int ex; /* extrapolated sample, damped */
 				ex = src16[0] + (src16[0]-(int)src16[-1])/8;
 				if ( ex > 32767 )
@@ -99,7 +99,7 @@ void acFreqMUL2(acAudioCVT *cvt, ALushort format) {
 					dst16[0] = src16[0];
 					dst16[1] = (src16[0]+(int)src16[1])/2;
 				}
-			} else if (cvt->len_cvt == 1) {
+			} else if (cvt->len_cvt == 2) {
 				dst16[0] = src16[0];
 				dst16[1] = src16[0];
 			}
@@ -108,7 +108,7 @@ void acFreqMUL2(acAudioCVT *cvt, ALushort format) {
 			ALushort *dst16 = (ALushort*) dst;
 			src16 -= 1;
 			dst16 -= 2;
-			if (cvt->len_cvt > 1) {
+			if (cvt->len_cvt >= 4) {
 				int ex; /* extrapolated sample, damped */
 				ex = src16[0] + (src16[0]-(int)src16[-1])/8;
 				if ( ex > 65535 )
@@ -123,7 +123,7 @@ void acFreqMUL2(acAudioCVT *cvt, ALushort format) {
 					dst16[0] = src16[0];
 					dst16[1] = (src16[0]+(int)src16[1])/2;
 				}
-			} else if (cvt->len_cvt == 1) {
+			} else if (cvt->len_cvt == 2) {
 				dst16[0] = src16[0];
 				dst16[1] = src16[0];
 			}
@@ -217,6 +217,11 @@ void acFreqSLOW(acAudioCVT *cvt, ALushort format) {
 				}
 			}
 			break;
+
+			default: {
+				/* unexpected */
+			}
+			break;
 		}
 	} else {
 		switch (format & 0xFF) {
@@ -246,6 +251,11 @@ void acFreqSLOW(acAudioCVT *cvt, ALushort format) {
 					output -= 1;
 					*output=((ALushort *)cvt->buf)[(int)ipos];
 				}
+			}
+			break;
+
+			default: {
+				/* unexpected */
 			}
 			break;
 		}

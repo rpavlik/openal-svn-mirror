@@ -1,3 +1,8 @@
+2004-01-07  Adam D. Moss  <adam@gimp.org>
+
+	* audioconvert/ac_freq.c: Fix another potential overenthusiasm
+	when frequency-upscaling a single 16-bit sample.	
+
 2003-12-26  Adam D. Moss  <adam@gimp.org>
 
 	* src/extensions/al_ext_loki.c: Use the correct sample size
