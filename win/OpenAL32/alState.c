@@ -516,6 +516,7 @@ ALAPI ALubyte * ALAPIENTRY alGetString(ALenum pname)
 			break;
 
 		default:
+			value=NULL;
 			alSetError(AL_INVALID_ENUM);
 			break;
 	}
