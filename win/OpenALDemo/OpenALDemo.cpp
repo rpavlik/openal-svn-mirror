@@ -112,6 +112,7 @@ int main(int argc, char* argv[])
 	if (alcIsExtensionPresent(NULL, (ALubyte*)"ALC_ENUMERATION_EXT") == AL_TRUE) { // try out enumeration extension
 		defaultDevice = (char *)alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
 		deviceList = (char *)alcGetString(NULL, ALC_DEVICE_SPECIFIER);
+		deviceList = (char *)alcGetString(NULL, ALC_DEVICE_SPECIFIER);
 		for (numDevices = 0; numDevices < 12; numDevices++) {devices[numDevices] = NULL;}
 		for (numDevices = 0; numDevices < 12; numDevices++) {
 			devices[numDevices] = deviceList;

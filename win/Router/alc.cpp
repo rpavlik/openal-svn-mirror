@@ -223,139 +223,93 @@ ALvoid BuildDeviceSpecifierList()
 	ALCdevice *device;
 	void *context;
 
-    //
-    // Directory[0] is the current directory
-    // Directory[1] is the current OpenAL32.dll directory
-    // Directory[2] is the system directory.
-    //
-    TCHAR dir[3][MAX_PATH + 1];
-    DWORD dirSize = 0;
-    int i;
-    HINSTANCE dll = 0;
-    ALCAPI_GET_STRING alcGetStringFxn = 0;
-	ALCAPI_IS_EXTENSION_PRESENT alcIsExtensionPresentFxn = 0;
-	ALCAPI_OPEN_DEVICE alcOpenDeviceFxn = 0;
-	ALCAPI_CREATE_CONTEXT alcCreateContextFxn = 0;
-	ALCAPI_MAKE_CONTEXT_CURRENT alcMakeContextCurrentFxn = 0;
-	ALCAPI_DESTROY_CONTEXT alcDestroyContextFxn = 0;
-	ALCAPI_CLOSE_DEVICE alcCloseDeviceFxn = 0;
 
-    //
-    // Construct our search paths.  We will search the current directory, the app directory, and then
-    // the system directory.
-    //
-    dirSize = GetCurrentDirectory(MAX_PATH, dir[0]);
-    _tcscat(dir[0], _T("\\"));
+	if (list[0] == 0) { // don't re-build list if it's already been done once...
 
-    GetModuleFileName(0, module, MAX_PATH);
-    _splitpath(module, fileDrive, fileDir, fileName, fileExt);
-    _tcscpy(dir[1], fileDrive);
-    _tcscat(dir[1], fileDir);
-    _tcscat(fileName, fileExt);
+		//
+		// Directory[0] is the current directory
+		// Directory[1] is the current OpenAL32.dll directory
+		// Directory[2] is the system directory.
+		//
+		TCHAR dir[3][MAX_PATH + 1];
+		DWORD dirSize = 0;
+		int i;
+		HINSTANCE dll = 0;
+		ALCAPI_GET_STRING alcGetStringFxn = 0;
+		ALCAPI_IS_EXTENSION_PRESENT alcIsExtensionPresentFxn = 0;
+		ALCAPI_OPEN_DEVICE alcOpenDeviceFxn = 0;
+		ALCAPI_CREATE_CONTEXT alcCreateContextFxn = 0;
+		ALCAPI_MAKE_CONTEXT_CURRENT alcMakeContextCurrentFxn = 0;
+		ALCAPI_DESTROY_CONTEXT alcDestroyContextFxn = 0;
+		ALCAPI_CLOSE_DEVICE alcCloseDeviceFxn = 0;
 
-    dirSize = GetSystemDirectory(dir[2], MAX_PATH);
-    _tcscat(dir[2], _T("\\"));
-	_tcscpy(systemAL, dir[2]);
-	_tcscat(systemAL, _T("OpenAL32.dll"));
+		//
+		// Construct our search paths.  We will search the current directory, the app directory, and then
+		// the system directory.
+		//
+		dirSize = GetCurrentDirectory(MAX_PATH, dir[0]);
+		_tcscat(dir[0], _T("\\"));
 
-    //
-    // Begin searching for additional OpenAL implementations.  Start with the current directory, but check if
-    // the current directory is the same as the application directory so we don't search it twice.
-    //
-    for(i = _tcsicmp(dir[0], dir[1]) != 0 ? 0 : 1; i < 3; i++)
-    {
-        _tcscpy(searchName, dir[i]);
-        _tcscat(searchName, _T("nvopenal.dll"));
-        searchHandle = FindFirstFile(searchName, &findData);
-        if(searchHandle != INVALID_HANDLE_VALUE)
-        {
-            while(TRUE)
-            {
-                //
-                // if this is an OpenAL32.dll, skip it -- it's probably a router and shouldn't be enumerated regardless
-                //
-				_tcscpy(searchName, dir[i]);
-                _tcscat(searchName, findData.cFileName);
-				TCHAR cmpName[MAX_PATH];
-				_tcscpy(cmpName, searchName);
-				_tcsupr(cmpName);
-				if (strstr(cmpName, "OPENAL32.DLL") == 0)
-                {
-                    //
-                    // Its not, so load it and see if the name matches.
-                    //
-                    dll = LoadLibrary(searchName);
-                    if(dll)
-                    {	
-						alcOpenDeviceFxn = (ALCAPI_OPEN_DEVICE)GetProcAddress(dll, "alcOpenDevice");
-						alcCreateContextFxn = (ALCAPI_CREATE_CONTEXT)GetProcAddress(dll, "alcCreateContext");
-						alcMakeContextCurrentFxn = (ALCAPI_MAKE_CONTEXT_CURRENT)GetProcAddress(dll, "alcMakeContextCurrent");
-						alcGetStringFxn = (ALCAPI_GET_STRING)GetProcAddress(dll, "alcGetString");
-						alcDestroyContextFxn = (ALCAPI_DESTROY_CONTEXT)GetProcAddress(dll, "alcDestroyContext");
-						alcCloseDeviceFxn = (ALCAPI_CLOSE_DEVICE)GetProcAddress(dll, "alcCloseDevice");
-						alcIsExtensionPresentFxn = (ALCAPI_IS_EXTENSION_PRESENT)GetProcAddress(dll, "alcIsExtensionPresent");
+		GetModuleFileName(0, module, MAX_PATH);
+		_splitpath(module, fileDrive, fileDir, fileName, fileExt);
+		_tcscpy(dir[1], fileDrive);
+		_tcscat(dir[1], fileDir);
+		_tcscat(fileName, fileExt);
 
-						if ((alcOpenDeviceFxn != 0) && 
-							(alcCreateContextFxn != 0) &&
-							(alcMakeContextCurrentFxn != 0) &&
-							(alcGetStringFxn != 0) &&
-							(alcDestroyContextFxn != 0) &&
-							(alcCloseDeviceFxn != 0) &&
-							(alcIsExtensionPresentFxn != 0)) {
+		dirSize = GetSystemDirectory(dir[2], MAX_PATH);
+		_tcscat(dir[2], _T("\\"));
+		_tcscpy(systemAL, dir[2]);
+		_tcscat(systemAL, _T("OpenAL32.dll"));
 
-							if (alcIsExtensionPresentFxn(NULL, (ALubyte *)"ALC_ENUMERATION_EXT")) {
-								// this DLL can enumerate devices -- so add complete list of devices
-								specifier = alcGetStringFxn(0, ALC_DEVICE_SPECIFIER);
-								do {
-									specifierSize = strlen((char*)specifier);
+		//
+		// Begin searching for additional OpenAL implementations.  Start with the current directory, but check if
+		// the current directory is the same as the application directory so we don't search it twice.
+		//
+		for(i = _tcsicmp(dir[0], dir[1]) != 0 ? 0 : 1; i < 3; i++)
+		{
+			_tcscpy(searchName, dir[i]);
+			_tcscat(searchName, _T("nvopenal.dll"));
+			searchHandle = FindFirstFile(searchName, &findData);
+			if(searchHandle != INVALID_HANDLE_VALUE)
+			{
+				while(TRUE)
+				{
+					//
+					// if this is an OpenAL32.dll, skip it -- it's probably a router and shouldn't be enumerated regardless
+					//
+					_tcscpy(searchName, dir[i]);
+					_tcscat(searchName, findData.cFileName);
+					TCHAR cmpName[MAX_PATH];
+					_tcscpy(cmpName, searchName);
+					_tcsupr(cmpName);
+					if (strstr(cmpName, "OPENAL32.DLL") == 0)
+					{
+						//
+						// Its not, so load it and see if the name matches.
+						//
+						dll = LoadLibrary(searchName);
+						if(dll)
+						{	
+							alcOpenDeviceFxn = (ALCAPI_OPEN_DEVICE)GetProcAddress(dll, "alcOpenDevice");
+							alcCreateContextFxn = (ALCAPI_CREATE_CONTEXT)GetProcAddress(dll, "alcCreateContext");
+							alcMakeContextCurrentFxn = (ALCAPI_MAKE_CONTEXT_CURRENT)GetProcAddress(dll, "alcMakeContextCurrent");
+							alcGetStringFxn = (ALCAPI_GET_STRING)GetProcAddress(dll, "alcGetString");
+							alcDestroyContextFxn = (ALCAPI_DESTROY_CONTEXT)GetProcAddress(dll, "alcDestroyContext");
+							alcCloseDeviceFxn = (ALCAPI_CLOSE_DEVICE)GetProcAddress(dll, "alcCloseDevice");
+							alcIsExtensionPresentFxn = (ALCAPI_IS_EXTENSION_PRESENT)GetProcAddress(dll, "alcIsExtensionPresent");
 
-									if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
-										if(specifierSize + listSize + 1 < MAX_PATH - 1)
-										{
-											strcpy((char*)list, (char*)specifier);
-											list += specifierSize + 1;
-										}
-									}
-									specifier += strlen((char *)specifier) + 1;
-								} while (strlen((char *)specifier) > 0);
-							} else {
-								// no enumeration ability, -- so just add default device to the list								
-								device = alcOpenDeviceFxn(NULL);
-								if (device != NULL) {
-									context = alcCreateContextFxn(device, NULL);
-									alcMakeContextCurrentFxn((ALCcontext *)context);
-									if (context != NULL) {
-										specifier = alcGetStringFxn(device, ALC_DEVICE_SPECIFIER);
-										specifierSize = strlen((char*)specifier);
-
-										if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
-											if(specifierSize + listSize + 1 < MAX_PATH - 1)
-											{
-												strcpy((char*)list, (char*)specifier);
-												list += specifierSize + 1;
-											}
-										}
-										alcMakeContextCurrentFxn((ALCcontext *)NULL);
-										alcDestroyContextFxn((ALCcontext *)context);
-										alcCloseDeviceFxn(device);
-									}
-								}
-							}
-						} else {
-							// handle legacy Creative DLLs which don't have alcIsExtensionPresentFxn exported (original Audigy, Live)
 							if ((alcOpenDeviceFxn != 0) && 
 								(alcCreateContextFxn != 0) &&
 								(alcMakeContextCurrentFxn != 0) &&
 								(alcGetStringFxn != 0) &&
 								(alcDestroyContextFxn != 0) &&
-								(alcCloseDeviceFxn != 0)) {
+								(alcCloseDeviceFxn != 0) &&
+								(alcIsExtensionPresentFxn != 0)) {
 
-								device = alcOpenDeviceFxn(NULL);
-								if (device != NULL) {
-									context = alcCreateContextFxn(device, NULL);
-									alcMakeContextCurrentFxn((ALCcontext *)context);
-									if (context != NULL) {
-										specifier = alcGetStringFxn(device, ALC_DEVICE_SPECIFIER);
+								if (alcIsExtensionPresentFxn(NULL, (ALubyte *)"ALC_ENUMERATION_EXT")) {
+									// this DLL can enumerate devices -- so add complete list of devices
+									specifier = alcGetStringFxn(0, ALC_DEVICE_SPECIFIER);
+									do {
 										specifierSize = strlen((char*)specifier);
 
 										if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
@@ -365,131 +319,131 @@ ALvoid BuildDeviceSpecifierList()
 												list += specifierSize + 1;
 											}
 										}
-										alcMakeContextCurrentFxn((ALCcontext *)NULL);
-										alcDestroyContextFxn((ALCcontext *)context);
-										alcCloseDeviceFxn(device);
-									}
-								}
+										specifier += strlen((char *)specifier) + 1;
+									} while (strlen((char *)specifier) > 0);
+								} else {
+									// no enumeration ability, -- so just add default device to the list								
+									device = alcOpenDeviceFxn(NULL);
+									if (device != NULL) {
+										context = alcCreateContextFxn(device, NULL);
+										alcMakeContextCurrentFxn((ALCcontext *)context);
+										if (context != NULL) {
+											specifier = alcGetStringFxn(device, ALC_DEVICE_SPECIFIER);
+											specifierSize = strlen((char*)specifier);
 
-							}
-						}
-
-                        FreeLibrary(dll);
-                        dll = 0;
-                    }
-                }
-
-                if(!FindNextFile(searchHandle, &findData))
-                {
-                    if(GetLastError() == ERROR_NO_MORE_FILES)
-                    {
-                        break;
-                    }
-                }
-            }
-
-            FindClose(searchHandle);
-            searchHandle = INVALID_HANDLE_VALUE;
-        }
-    }
-
-    //
-    // And again for the other DLL pattern match.
-    //
-    for(i = _tcsicmp(dir[0], dir[1]) != 0 ? 0 : 1; i < 3; i++)
-    {
-        _tcscpy(searchName, dir[i]);
-        _tcscat(searchName, _T("*oal.dll"));
-        searchHandle = FindFirstFile(searchName, &findData);
-        if(searchHandle != INVALID_HANDLE_VALUE)
-        {
-            while(TRUE)
-            {
-                //
-                // if this is an OpenAL32.dll, skip it -- it's probably a router and shouldn't be enumerated regardless
-                //
-				_tcscpy(searchName, dir[i]);
-                _tcscat(searchName, findData.cFileName);
-				TCHAR cmpName[MAX_PATH];
-				_tcscpy(cmpName, searchName);
-				_tcsupr(cmpName);
-				if (strstr(cmpName, "OPENAL32.DLL") == 0)
-                {
-                    //
-                    // Its not, so load it and see if the name matches.
-                    //
-					dll = LoadLibrary(searchName);
-                    if(dll)
-                    {
-						alcOpenDeviceFxn = (ALCAPI_OPEN_DEVICE)GetProcAddress(dll, "alcOpenDevice");
-						alcCreateContextFxn = (ALCAPI_CREATE_CONTEXT)GetProcAddress(dll, "alcCreateContext");
-						alcMakeContextCurrentFxn = (ALCAPI_MAKE_CONTEXT_CURRENT)GetProcAddress(dll, "alcMakeContextCurrent");
-						alcGetStringFxn = (ALCAPI_GET_STRING)GetProcAddress(dll, "alcGetString");
-						alcDestroyContextFxn = (ALCAPI_DESTROY_CONTEXT)GetProcAddress(dll, "alcDestroyContext");
-						alcCloseDeviceFxn = (ALCAPI_CLOSE_DEVICE)GetProcAddress(dll, "alcCloseDevice");
-						alcIsExtensionPresentFxn = (ALCAPI_IS_EXTENSION_PRESENT)GetProcAddress(dll, "alcIsExtensionPresent");
-
-						if ((alcOpenDeviceFxn != 0) && 
-							(alcCreateContextFxn != 0) &&
-							(alcMakeContextCurrentFxn != 0) &&
-							(alcGetStringFxn != 0) &&
-							(alcDestroyContextFxn != 0) &&
-							(alcCloseDeviceFxn != 0) &&
-							(alcIsExtensionPresentFxn != 0)) {
-
-							if (alcIsExtensionPresentFxn(NULL, (ALubyte *)"ALC_ENUMERATION_EXT")) {
-								// this DLL can enumerate devices -- so add complete list of devices
-								specifier = alcGetStringFxn(0, ALC_DEVICE_SPECIFIER);
-								do {
-									specifierSize = strlen((char*)specifier);
-
-									if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
-										if(specifierSize + listSize + 1 < MAX_PATH - 1)
-										{
-											strcpy((char*)list, (char*)specifier);
-											list += specifierSize + 1;
+											if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
+												if(specifierSize + listSize + 1 < MAX_PATH - 1)
+												{
+													strcpy((char*)list, (char*)specifier);
+													list += specifierSize + 1;
+												}
+											}
+											alcMakeContextCurrentFxn((ALCcontext *)NULL);
+											alcDestroyContextFxn((ALCcontext *)context);
+											alcCloseDeviceFxn(device);
 										}
 									}
-									specifier += strlen((char *)specifier) + 1;
-								} while (strlen((char *)specifier) > 0);
+								}
 							} else {
-								// no enumeration ability, -- so just add default device to the list								
-								device = alcOpenDeviceFxn(NULL);
-								if (device != NULL) {
-									context = alcCreateContextFxn(device, NULL);
-									alcMakeContextCurrentFxn((ALCcontext *)context);
-									if (context != NULL) {
-										specifier = alcGetStringFxn(device, ALC_DEVICE_SPECIFIER);
-										specifierSize = strlen((char*)specifier);
+								// handle legacy Creative DLLs which don't have alcIsExtensionPresentFxn exported (original Audigy, Live)
+								if ((alcOpenDeviceFxn != 0) && 
+									(alcCreateContextFxn != 0) &&
+									(alcMakeContextCurrentFxn != 0) &&
+									(alcGetStringFxn != 0) &&
+									(alcDestroyContextFxn != 0) &&
+									(alcCloseDeviceFxn != 0)) {
 
-										if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
-											if(specifierSize + listSize + 1 < MAX_PATH - 1)
-											{
-												strcpy((char*)list, (char*)specifier);
-												list += specifierSize + 1;
+									device = alcOpenDeviceFxn(NULL);
+									if (device != NULL) {
+										context = alcCreateContextFxn(device, NULL);
+										alcMakeContextCurrentFxn((ALCcontext *)context);
+										if (context != NULL) {
+											specifier = alcGetStringFxn(device, ALC_DEVICE_SPECIFIER);
+											specifierSize = strlen((char*)specifier);
+
+											if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
+												if(specifierSize + listSize + 1 < MAX_PATH - 1)
+												{
+													strcpy((char*)list, (char*)specifier);
+													list += specifierSize + 1;
+												}
 											}
+											alcMakeContextCurrentFxn((ALCcontext *)NULL);
+											alcDestroyContextFxn((ALCcontext *)context);
+											alcCloseDeviceFxn(device);
 										}
-										alcMakeContextCurrentFxn((ALCcontext *)NULL);
-										alcDestroyContextFxn((ALCcontext *)context);
-										alcCloseDeviceFxn(device);
 									}
+
 								}
 							}
-						} else {
-							// handle legacy Creative DLLs which don't have alcIsExtensionPresentFxn exported (original Audigy, Live)
+
+							FreeLibrary(dll);
+							dll = 0;
+						}
+					}
+
+					if(!FindNextFile(searchHandle, &findData))
+					{
+						if(GetLastError() == ERROR_NO_MORE_FILES)
+						{
+							break;
+						}
+					}
+				}
+
+				FindClose(searchHandle);
+				searchHandle = INVALID_HANDLE_VALUE;
+			}
+		}
+
+		//
+		// And again for the other DLL pattern match.
+		//
+		for(i = _tcsicmp(dir[0], dir[1]) != 0 ? 0 : 1; i < 3; i++)
+		{
+			_tcscpy(searchName, dir[i]);
+			_tcscat(searchName, _T("*oal.dll"));
+			searchHandle = FindFirstFile(searchName, &findData);
+			if(searchHandle != INVALID_HANDLE_VALUE)
+			{
+				while(TRUE)
+				{
+					//
+					// if this is an OpenAL32.dll, skip it -- it's probably a router and shouldn't be enumerated regardless
+					//
+					_tcscpy(searchName, dir[i]);
+					_tcscat(searchName, findData.cFileName);
+					TCHAR cmpName[MAX_PATH];
+					_tcscpy(cmpName, searchName);
+					_tcsupr(cmpName);
+					if (strstr(cmpName, "OPENAL32.DLL") == 0)
+					{
+						//
+						// Its not, so load it and see if the name matches.
+						//
+						dll = LoadLibrary(searchName);
+						if(dll)
+						{
+							alcOpenDeviceFxn = (ALCAPI_OPEN_DEVICE)GetProcAddress(dll, "alcOpenDevice");
+							alcCreateContextFxn = (ALCAPI_CREATE_CONTEXT)GetProcAddress(dll, "alcCreateContext");
+							alcMakeContextCurrentFxn = (ALCAPI_MAKE_CONTEXT_CURRENT)GetProcAddress(dll, "alcMakeContextCurrent");
+							alcGetStringFxn = (ALCAPI_GET_STRING)GetProcAddress(dll, "alcGetString");
+							alcDestroyContextFxn = (ALCAPI_DESTROY_CONTEXT)GetProcAddress(dll, "alcDestroyContext");
+							alcCloseDeviceFxn = (ALCAPI_CLOSE_DEVICE)GetProcAddress(dll, "alcCloseDevice");
+							alcIsExtensionPresentFxn = (ALCAPI_IS_EXTENSION_PRESENT)GetProcAddress(dll, "alcIsExtensionPresent");
+
 							if ((alcOpenDeviceFxn != 0) && 
 								(alcCreateContextFxn != 0) &&
 								(alcMakeContextCurrentFxn != 0) &&
 								(alcGetStringFxn != 0) &&
 								(alcDestroyContextFxn != 0) &&
-								(alcCloseDeviceFxn != 0)) {
+								(alcCloseDeviceFxn != 0) &&
+								(alcIsExtensionPresentFxn != 0)) {
 
-								device = alcOpenDeviceFxn(NULL);
-								if (device != NULL) {
-									context = alcCreateContextFxn(device, NULL);
-									alcMakeContextCurrentFxn((ALCcontext *)context);
-									if (context != NULL) {
-										specifier = alcGetStringFxn(device, ALC_DEVICE_SPECIFIER);
+								if (alcIsExtensionPresentFxn(NULL, (ALubyte *)"ALC_ENUMERATION_EXT")) {
+									// this DLL can enumerate devices -- so add complete list of devices
+									specifier = alcGetStringFxn(0, ALC_DEVICE_SPECIFIER);
+									do {
 										specifierSize = strlen((char*)specifier);
 
 										if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
@@ -499,38 +453,89 @@ ALvoid BuildDeviceSpecifierList()
 												list += specifierSize + 1;
 											}
 										}
-										alcMakeContextCurrentFxn((ALCcontext *)NULL);
-										alcDestroyContextFxn((ALCcontext *)context);
-										alcCloseDeviceFxn(device);
+										specifier += strlen((char *)specifier) + 1;
+									} while (strlen((char *)specifier) > 0);
+								} else {
+									// no enumeration ability, -- so just add default device to the list								
+									device = alcOpenDeviceFxn(NULL);
+									if (device != NULL) {
+										context = alcCreateContextFxn(device, NULL);
+										alcMakeContextCurrentFxn((ALCcontext *)context);
+										if (context != NULL) {
+											specifier = alcGetStringFxn(device, ALC_DEVICE_SPECIFIER);
+											specifierSize = strlen((char*)specifier);
+
+											if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
+												if(specifierSize + listSize + 1 < MAX_PATH - 1)
+												{
+													strcpy((char*)list, (char*)specifier);
+													list += specifierSize + 1;
+												}
+											}
+											alcMakeContextCurrentFxn((ALCcontext *)NULL);
+											alcDestroyContextFxn((ALCcontext *)context);
+											alcCloseDeviceFxn(device);
+										}
 									}
 								}
+							} else {
+								// handle legacy Creative DLLs which don't have alcIsExtensionPresentFxn exported (original Audigy, Live)
+								if ((alcOpenDeviceFxn != 0) && 
+									(alcCreateContextFxn != 0) &&
+									(alcMakeContextCurrentFxn != 0) &&
+									(alcGetStringFxn != 0) &&
+									(alcDestroyContextFxn != 0) &&
+									(alcCloseDeviceFxn != 0)) {
 
+									device = alcOpenDeviceFxn(NULL);
+									if (device != NULL) {
+										context = alcCreateContextFxn(device, NULL);
+										alcMakeContextCurrentFxn((ALCcontext *)context);
+										if (context != NULL) {
+											specifier = alcGetStringFxn(device, ALC_DEVICE_SPECIFIER);
+											specifierSize = strlen((char*)specifier);
+
+											if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
+												if(specifierSize + listSize + 1 < MAX_PATH - 1)
+												{
+													strcpy((char*)list, (char*)specifier);
+													list += specifierSize + 1;
+												}
+											}
+											alcMakeContextCurrentFxn((ALCcontext *)NULL);
+											alcDestroyContextFxn((ALCcontext *)context);
+											alcCloseDeviceFxn(device);
+										}
+									}
+
+								}
 							}
+
+							FreeLibrary(dll);
+							dll = 0;
 						}
+					}
 
-                        FreeLibrary(dll);
-                        dll = 0;
-                    }
-                }
+					if(!FindNextFile(searchHandle, &findData))
+					{
+						if(GetLastError() == ERROR_NO_MORE_FILES)
+						{
+							break;
+						}
+					}
+				}
 
-                if(!FindNextFile(searchHandle, &findData))
-                {
-                    if(GetLastError() == ERROR_NO_MORE_FILES)
-                    {
-                        break;
-                    }
-                }
-            }
+				FindClose(searchHandle);
+				searchHandle = INVALID_HANDLE_VALUE;
+			}
+		}
 
-            FindClose(searchHandle);
-            searchHandle = INVALID_HANDLE_VALUE;
-        }
-    }
+		//
+		// Put a terminating NULL on.
+		//
+		strcpy((char*)list, "\0");
+	}
 
-    //
-    // Put a terminating NULL on.
-    //
-    strcpy((char*)list, "\0");
     return;
 }
 
