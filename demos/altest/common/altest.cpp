@@ -182,6 +182,10 @@ EAXGet	eaxGet;						// EAXGet function, retrieved if EAX Extension is supported
 ALboolean g_bEAX;					// Boolean variable to indicate presence of EAX Extension 
 #endif
 
+#ifdef TEST_VORBIS
+unsigned int g_ovSize;
+#endif
+
 static ALenums enumeration[]={
 	// Types
 	{ (ALubyte *)"AL_INVALID",						AL_INVALID							},
@@ -810,15 +814,15 @@ int main(int argc, char* argv[])
 		struct _stat sbuf;
 		if (_fstat(fh->_file, &sbuf) != -1) {
 #endif
-			int size = sbuf.st_size;
-			ovdata = malloc(size);
+			g_ovSize = sbuf.st_size;
+			ovdata = malloc(g_ovSize);
 
 		        if (ovdata != NULL) {
-				fread(ovdata, 1, size, fh);
+				fread(ovdata, 1, g_ovSize, fh);
 
 			        // Copy boom.ogg data into AL Buffer 7
 				alGetError();
-				alBufferData(g_Buffers[7], AL_FORMAT_VORBIS_EXT, ovdata, size, freq);
+				alBufferData(g_Buffers[7], AL_FORMAT_VORBIS_EXT, ovdata, g_ovSize, freq);
 				error = alGetError();
 				if (error != AL_NO_ERROR) {
 					DisplayALError((ALbyte *) "alBufferData buffer 7 : ", error);
@@ -4202,7 +4206,7 @@ This test exercises Ogg Vorbis playback functionality.
 ALvoid I_VorbisTest()
 {
       ALint error;
-      ALbyte data[BSIZE];
+      ALbyte *data;
       ALuint source[3];
       ALuint tempBuffers[4];
       ALbyte ch;
@@ -4277,7 +4281,7 @@ ALvoid I_VorbisTest()
 				if ((error = alGetError()) != AL_NO_ERROR)
 					DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING : \n", error);
 				break;
-		        case '3':
+			case '3':
 				// Stop source
 				alSourceStop(source[1]);
 				if ((error = alGetError()) != AL_NO_ERROR)
@@ -4299,41 +4303,45 @@ ALvoid I_VorbisTest()
 					DisplayALError((ALbyte *) "alSourcePlay source 1 : ", error);
 		   				
 				break;
-		        case '4':
+			case '4':
 				// Stop source
 				alSourceStop(source[2]);
-				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError((ALbyte *) "alSourceStop source 2 : ", error);
-                                alSourcei(source[2], AL_BUFFER, 0);
+				if ((error = alGetError()) != AL_NO_ERROR) DisplayALError((ALbyte *) "alSourceStop source 2 : ", error);
+                alSourcei(source[2], AL_BUFFER, 0);
 		   
-                                // Queue buffers
+                // Queue buffers
 				FILE *fp;
-		                fp = fopen("boom.ogg", "rb");
-		                if (fp == NULL) {
-			           printf("Failed to open boom.ogg\n");
-				   break;
+		        fp = fopen("boom.ogg", "rb");
+		        if (fp == NULL) {
+					printf("Failed to open boom.ogg\n");
+					break;
 				}
 		   
-		                alGetError(); // clear error state
+		        alGetError(); // clear error state
 		   
-		                int actual;
-		                for (int loop = 0; loop < 4; loop++) {
-			           actual = fread(data, 1, 2000, fp);
-				   alBufferData(tempBuffers[loop], AL_FORMAT_VORBIS_EXT, data, actual, 0);
-		                }
-		                alSourceQueueBuffers(source[2], 4, tempBuffers);
-		   
-		                fclose(fp);
+		        int actual;
+				data = (char *)malloc(((g_ovSize / 4) + 1));
+				if (data != 0) {
+		        for (int loop = 0; loop < 4; loop++) {
+						actual = fread(data, 1, ((g_ovSize / 4) + 1), fp);
+						alBufferData(tempBuffers[loop], AL_FORMAT_VORBIS_EXT, data, actual, 0);
+					}
+					alSourceQueueBuffers(source[2], 4, tempBuffers);
+			   
+					fclose(fp);
 
-				// Set volume
-				alSourcef(source[2],AL_GAIN,0.5f);
-				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError((ALbyte *) "alSourcef 2 AL_GAIN : \n", error);
+					// Set volume
+					alSourcef(source[2],AL_GAIN,0.5f);
+					if ((error = alGetError()) != AL_NO_ERROR) DisplayALError((ALbyte *) "alSourcef 2 AL_GAIN : \n", error);
 
-				// Play source
-				alSourcePlay(source[2]);
-				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError((ALbyte *) "alSourcePlay source 2 : ", error);
+					// Play source
+					alSourcePlay(source[2]);
+					if ((error = alGetError()) != AL_NO_ERROR) DisplayALError((ALbyte *) "alSourcePlay source 2 : ", error);
+
+					free((void *)data);
+				} else {
+					printf("Failed memory allocation.\n");
+				}
 		   				
 				break;
 		}
