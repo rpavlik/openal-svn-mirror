@@ -545,9 +545,9 @@ void alSource3f( ALuint sid, ALenum param,
  * If any member of fv is out of range for the attribute, AL_INVALID_VALUE.
  *
  */
-void alSourcefv( ALuint sid, ALenum param, ALfloat *fv1 ) {
+void alSourcefv( ALuint sid, ALenum param, ALfloat *fv1 )
+{
 	AL_source *source;
-	AL_sourcestate *srcstate;
 	ALboolean inrange = AL_TRUE;
 
 	/*
@@ -662,9 +662,6 @@ void alSourcefv( ALuint sid, ALenum param, ALfloat *fv1 ) {
 		return;
 	}
 
-	srcstate = _alSourceQueueGetCurrentState( source );
-	assert( srcstate );
-	
 	switch( param ) {
 		case AL_POSITION:
 		  source->position.isset = AL_TRUE;
