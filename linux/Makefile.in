@@ -7,8 +7,19 @@ MAKE=@MAKE@
 MAJOR_VERSION=@MAJOR_VERSION@
 MINOR_VERSION=@MINOR_VERSION@
 MICRO_VERSION=@MICRO_VERSION@
-SO_EXT=@SHARED_LIBRARY_EXT@
 VERSION=$(MAJOR_VERSION).$(MINOR_VERSION).$(MICRO_VERSION)
+SO_EXT=@SHARED_LIBRARY_EXT@
+DO_MINOR_LIBS=@DO_MINOR_LIBS@
+INSTALL_DEPS=all
+
+# remind me to look up how to else in a makefile
+ifeq ($(DO_MINOR_LIBS),yes)
+INSTALL_DEPS+=install_minor_libs
+endif
+
+ifeq ($(DO_MINOR_LIBS),no)
+INSTALL_DEPS+=install_major_lib_only
+endif
 
 all: configure
 	cd jlib && $(MAKE) all
@@ -38,14 +49,19 @@ distclean:
 test:	all
 	cd test && $(MAKE)
 
-install: all
+install_minor_libs:
+	$(INSTALL) -m 755 src/libopenal.$(SO_EXT).$(VERSION) $(DESTLIB)
+	$(LN_S) -f $(DESTLIB)/libopenal.$(SO_EXT).$(VERSION) $(DESTLIB)/libopenal.$(SO_EXT).$(MAJOR_VERSION)
+	$(LN_S) -f $(DESTLIB)/libopenal.$(SO_EXT).$(VERSION) $(DESTLIB)/libopenal.so
+
+install_major_lib_only:
+	$(INSTALL) -m 755 src/libopenal.$(SO_EXT) $(DESTLIB)
+
+install: $(INSTALL_DEPS)
 	$(INSTALL) -d -m 755 $(DESTINC)
 	$(INSTALL) -d -m 755 $(DESTINC)/AL
 	$(INSTALL) -d -m 755 $(DESTLIB)
 	$(INSTALL) -m 755 src/libopenal.a $(DESTLIB)
-	$(INSTALL) -m 755 src/libopenal.$(SO_EXT).$(VERSION) $(DESTLIB)
-	$(LN_S) -f $(DESTLIB)/libopenal.$(SO_EXT).$(VERSION) $(DESTLIB)/libopenal.$(SO_EXT).$(MAJOR_VERSION)
-	$(LN_S) -f $(DESTLIB)/libopenal.$(SO_EXT).$(VERSION) $(DESTLIB)/libopenal.so
 	$(INSTALL) -m 444 ../include/AL/al.h $(DESTINC)/AL
 	$(INSTALL) -m 444 ../include/AL/alc.h $(DESTINC)/AL
 	$(INSTALL) -m 444 ../include/AL/alu.h $(DESTINC)/AL

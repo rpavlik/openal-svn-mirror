@@ -31,6 +31,7 @@ SHOULD_USE_FPIC=yes            # use -fPIC to compile position independent objs
 SHOULD_USE_WERROR=no           # turn warnings into errors
 SHARED_LIBRARY_EXT=so	       # shared library extension
 SHOULD_USE_RDYNAMIC=yes        # doesn't work on irix
+DO_MINOR_LIBS=yes              # wheether to copy foo.0.0
 
 # warns
 WFLAGS="-Wall -Wpointer-arith -W -Wbad-function-cast -Wcast-qual -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wimplicit-function-declaration -Waggregate-return -Winline -Wpointer-arith -Wstrict-prototypes -Wcast-align -Wcast-qual -fno-common"
@@ -192,6 +193,7 @@ case "$target" in
     SHARED_LIBRARY_EXT=dll       # shared library extension
     SHOULD_USE_FPIC=no      # all code is position independant, causes error
     SHADOW_WARN=no
+    DO_MINOR_LIBS=no
     REDUNDANT_DECLS_WARN=no 
     SHOULD_ENFORCE_ANSI=no ;;
     *darwin*)
@@ -201,6 +203,7 @@ case "$target" in
     SHARED_LIBRARY_EXT=dylib
     BROKEN_PTHREAD_FLAG=yes
     NO_PTHREAD_FLAG=yes
+    DO_MINOR_LIBS=no
     LIBS="$LIBS -I/System/Library/Frameworks/CoreAudio.framework/Headers/ -framework CoreAudio"
     AC_DEFINE(DARWIN_TARGET, 1, [undocumented])
     SHOULD_ENFORCE_ANSI=no
@@ -802,6 +805,7 @@ fi
 dnl define version
 AC_DEFINE_UNQUOTED(LAL_VERSION, "$VERSION", [undocumented])
 
+AC_SUBST(DO_MINOR_LIBS)
 AC_SUBST(NASM)
 AC_SUBST(RANLIB)
 AC_SUBST(CC)
