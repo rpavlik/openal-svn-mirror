@@ -2263,7 +2263,7 @@ ALvoid SA_Frequency(ALvoid)
 		alGenSources(1, testSources);
 		alSourcei(testSources[0], AL_BUFFER, g_Buffers[1]);
 	
-		printf("A source will be played eight times -- going from one-half to double it's native frequency (Press Return):\n");
+		printf("A source will be played fifteen times -- going from one-half to double it's native frequency (Press Return):\n");
 		CRToContinue();
 		alSourcei(testSources[0], AL_LOOPING, false);
 		for (i = 0; i < 15; i++)
