@@ -647,13 +647,15 @@ void _alcSetContext(int *attrlist, ALuint cid, AL_device *dev ) {
 	}
 
 	while(attrlist && (reading_keys == AL_TRUE)) {
+		void *t = 0;
+
 		rdr.key = *attrlist++;
 		if(rdr.key != ALC_INVALID)
 		{
 			rdr.val = *attrlist++;
 		}
 
-		void *t = realloc(cc->Flags,
+		t = realloc(cc->Flags,
 				  (2 + cc->NumFlags) * 2 * sizeof *cc->Flags);
 		if(t)
 		{
