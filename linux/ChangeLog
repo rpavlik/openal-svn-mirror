@@ -10,6 +10,16 @@
 	* Changelog
 	Removed "formosa." from my email
 
+	* src/arch/morphos/morphos_dispatcher.c
+	* src/arch/morphos/morphos_dispatcher.h
+	* src/arch/morphos/morphos_native.c
+	* src/arch/morphos/morphos_native.h
+	* src/mutex/morphosmutex.c
+	* src/mutex/morphosmutex.h
+	* src/threads/morphosthreads.c
+	* src/threads/morphosthreads.h
+	Added Ruediger Hanke <tomjoad@muenster.de>'s MorphOS files.
+	
 2003-01-06  Erik Greenwald <erik@smluc.org> <erik@math.smsu.edu>
 
 	* src/arch/bsd/bsd_dsp.c
