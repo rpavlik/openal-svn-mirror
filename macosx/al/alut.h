@@ -24,7 +24,6 @@
 #define ALUTAPI
 #define ALUTAPIENTRY
 
-#include <Carbon/Carbon.h>
 #include "al.h"
 
 #ifdef __cplusplus
