@@ -861,10 +861,6 @@ ALenum alGetEnumValue( const ALubyte *ename ) {
 		return AL_DOPPLER_FACTOR;
 	}
 
-	if(ustrcmp("AL_DISTANCE_SCALE", ename) == 0) {
-		return AL_DISTANCE_SCALE;
-	}
-
 	if(ustrcmp("AL_DOPPLER_VELOCITY", ename) == 0) {
 		return AL_DOPPLER_VELOCITY;
 	}

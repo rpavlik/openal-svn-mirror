@@ -1,5 +1,10 @@
 2005-03-31  Sven Panne  <sven.panne@aedion.de>
 
+	* include/AL/altypes.h, linux/src/al_ext.c: AL_DISTANCE_SCALE is
+	dead, Jim...
+
+	* include/AL/altypes.h: Removed useless #ifdef for ALvoid.
+
 	* include/AL/al.h, include/AL/alut.h, linux/doc/openal.texi,
 	linux/include/AL/alext.h, linux/include/AL/alexttypes.h,
 	linux/src/al_vector.c, linux/src/al_vector.h,

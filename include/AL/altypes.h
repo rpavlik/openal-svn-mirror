@@ -347,14 +347,6 @@ typedef ALdouble ALclampd;
  */
 #define AL_DOPPLER_VELOCITY                       0xC001
 
-#ifdef LINUX_AL
-/* no longer used -- will probably be removed */
-/**
- * Distance scaling
- */
-#define AL_DISTANCE_SCALE                         0xC002
-#endif
-
 /**
  * Distance models
  *
