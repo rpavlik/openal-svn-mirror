@@ -10,6 +10,11 @@
 
 #include <AL/alc.h>
 
+	/* is this right? */
+#define _AL_DEF_BUFSIZ _ALC_DEF_BUFSIZ
+
+void *grab_native(void);
+
 /* native bsd (/dev/dsp) stuff */
 void *grab_read_native(void);
 void *grab_write_native(void);
@@ -27,8 +32,8 @@ int   grab_mixerfd(void);
 void  native_blitbuffer(void *handle, void *data, int bytes);
 void  release_native(void *handle);
 
-float get_nativechannel(void *handle, ALCenum channel);
-int   set_nativechannel(void *handle, ALCenum channel, float volume);
+float get_nativechannel(void *handle, ALuint channel);
+int   set_nativechannel(void *handle, ALuint channel, float volume);
 
 void pause_nativedevice(void *handle);
 void resume_nativedevice(void *handle);

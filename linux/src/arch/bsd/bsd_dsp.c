@@ -15,7 +15,7 @@
 
 #include <assert.h>
 #include <fcntl.h>
-#include <machine/soundcard.h>
+#include <sys/soundcard.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -111,7 +111,7 @@ static int AL2BSDFMT(int fmt)
  *  dma buffer size.
  *
  */
-void *grab_native(void) {
+void *grab_write_native(void) {
 	const char *dsppath = "/dev/dsp";
 	int divisor = _alSpot(_AL_DEF_BUFSIZ) | (2<<16);
 
@@ -323,7 +323,7 @@ ALboolean set_write_native(UNUSED(void *handle),
 		     UNUSED(unsigned int *bufsiz),
 		     ALenum *fmt,
 		     unsigned int *speed) {
-	ALuint channels = _al_ALFORMAT(*fmt);
+	ALuint channels = _al_ALCHANNELS(*fmt);
 
 	if(dsp_fd < 0) {
 		return AL_FALSE;
@@ -374,4 +374,10 @@ ALboolean set_read_native(UNUSED(void *handle),
 		     UNUSED(ALenum *fmt),
 		     UNUSED(unsigned int *speed)) {
 	return AL_FALSE;
+}
+
+void *grab_read_native(void)
+{
+	fprintf(stderr,"grab_read_native Not implemented! (%s:%d)\n",__FILE__,__LINE__);
+	return;
 }
