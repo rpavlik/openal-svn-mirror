@@ -49,11 +49,11 @@ New Procedures and Functions
 	  many sources may share the same buffer, this sid allows the
 	  application to keep track of offsets and other state
 	  associated with each source instance.
-          
+
 	  uint bid
 	  --------
 	  The buffer id that the callback is associated with.
-          
+
           short *data
 	  -----------
           The memory area that the callback should populate
@@ -61,7 +61,7 @@ New Procedures and Functions
           enum format
 	  -----------
           The format the the output data should be in.
-          
+
           uint samples
 	  ------------
           The number of *samples* required.

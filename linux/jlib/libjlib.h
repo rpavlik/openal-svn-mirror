@@ -27,7 +27,7 @@ typedef struct h_list {
 typedef struct jhash {
 	jh_entry **table;
 	unsigned int items;
-	size_t capacity; 
+	size_t capacity;
 	h_list *keys;
 } jhash;
 

@@ -12,7 +12,7 @@
  * defined in software_time_filters or software_frequency_filters
  * is applied to each source that finds its way into the mixer.
  *
- * ApplyFilters takes a chunk of data from the original buffer 
+ * ApplyFilters takes a chunk of data from the original buffer
  * associated with the passed source.
  *
  * This chunk is understood to be that block of data samp->_orig_buffer
@@ -24,7 +24,7 @@
  *
  * Applying filters to a source does not (should not) change the original
  * pcm data.  ApplyFilters will split the original pcm data prior to
- * calling each filter, and filters should restrict themselves to 
+ * calling each filter, and filters should restrict themselves to
  * manipulating the passed data.
  *
  * time domain filters (those defines in software_time_filters) are
@@ -36,14 +36,14 @@
  *	AL_buffer *samp
  *		buffer that the source is associated with
  *	ALshort **buffers
- *		arrays of points to PCM data, one element per 
+ *		arrays of points to PCM data, one element per
  *		channel(left/right/etc)
  *	ALuint nc
  *		number of elements in buffers
  *	ALuint len
  *		byte length of each element in buffers
  *
- * Filters are expected to alter buffers[0..nc-1] in place.  After 
+ * Filters are expected to alter buffers[0..nc-1] in place.  After
  * the ApplyFilter iteration is over, the resulting data is mixed into
  * the main mix buffer and forgotten.  The data altered is cumulative,
  * that is to say, if two filters alf_f and alf_g occur in sequential
@@ -90,7 +90,7 @@
 
 #define USE_TPITCH_LOOKUP 1 /* icculus change here JIV FIXME */
 
-/* 
+/*
  * TPITCH_MAX sets the number of discrete values for AL_PITCH we can have.
  * You can set AL_PITCH to anything, but integer rounding will ensure that
  * it will fall beween MIN_SCALE and 2.0.
@@ -244,7 +244,7 @@ void _alDestroyFilters( void ) {
 	return;
 }
 
-/* 
+/*
  * _alApplyFilters( ALuint cid, ALuint sid )
  *
  * _alApplyFilters is called from the mixing function, and is passed
@@ -375,7 +375,7 @@ void _alApplyFilters( ALuint cid, ALuint sid ) {
 		}
 	}
 
-	/* 
+	/*
 	 * adjust len to account for end of sample, looping, etc
 	 */
 	if(filterlen > _alSourceBytesLeft(src, samp))
@@ -474,10 +474,10 @@ void _alApplyFilters( ALuint cid, ALuint sid ) {
  *    In BETWEEN, the gain is transitionally set to some value between
  *    what it would be in INSIDE and OUTSIDE.
  *
- * Well, okay that's still pretty goofy.  Folks who want to set a 
+ * Well, okay that's still pretty goofy.  Folks who want to set a
  * minimum attenuation can stil do so using AL_SOURCE_ATTENUATION_MIN.
  *
- * IMPLEMENTATION: 
+ * IMPLEMENTATION:
  * okay, we check the angle between the speaker position and
  * the source's direction vector, using the source's position
  * as the origin.  This angle we call theta.
@@ -660,7 +660,7 @@ void alf_coning( ALuint cid,
 
 		sa += _AL_CUTTOFF_ATTENUATION;
 		sa /= 2;
-	} else { 
+	} else {
 		/*
 		 * OUTSIDE:
 		 *
@@ -691,7 +691,7 @@ void alf_coning( ALuint cid,
  * As far as reverb implementations go, this sucks.  Should be
  * frequency based?
  *
- * Should be able to be applied in sequence for second order 
+ * Should be able to be applied in sequence for second order
  * approximations.
  *
  * FIXME: this is so ugly!  And consumes a ton of memory.
@@ -756,7 +756,7 @@ void alf_reverb( UNUSED(ALuint cid),
 	return;
 }
 
-/* 
+/*
  * alf_da
  *
  * alf_da implements distance attenuation.  We call compute_sa to get the
@@ -807,7 +807,7 @@ void alf_da( ALuint cid,
 	_alcUnlockContext( cid );
 
 	/*
-	 * 
+	 *
 	 * The source specific max is set to max at this point, but may be
 	 * altered below of the application has set it.
 	 */
@@ -1002,7 +1002,7 @@ static void init_tpitch_lookup( ALuint len ) {
  *    It's not a good idea to mess with src's pitch.  Some method of
  *    expressing this computation without changing the source's attributes
  *    should be used.
- * 
+ *
  */
 void alf_tdoppler( ALuint cid,
 		   AL_source *src,
@@ -1076,7 +1076,7 @@ void alf_tdoppler( ALuint cid,
 		 *
 		 * FIXME: use epsilon
 		 */
-		
+
 		return;
 	}
 
@@ -1178,7 +1178,7 @@ void alf_listenergain( ALuint cid,
 		       "listenergain: got NULL param" );
 		return;
 	}
-	
+
 	gain = * (ALfloat *) temp;
 
 	for(i = 0; i < nc; i++) {
@@ -1209,7 +1209,7 @@ static ALfloat compute_doppler_pitch( ALfloat *object1, ALfloat *o1_vel,
         ALfloat ratio;            /* Ratio of relative velocities */
 	ALfloat retval;           /* final doppler shift */
 
-        /* 
+        /*
          * Set up the "between" vector which points from one object to the
          * other
          */
@@ -1224,7 +1224,7 @@ static ALfloat compute_doppler_pitch( ALfloat *object1, ALfloat *o1_vel,
          * vector.
          *
          * The _alVectorDotp function is not set up for computing dot products
-         * for actual vectors (it works for three points that define two 
+         * for actual vectors (it works for three points that define two
          * vectors from a common origin), so I'll do it here.
          */
         obj1V  = o1_vel[0] * between[0];
@@ -1236,7 +1236,7 @@ static ALfloat compute_doppler_pitch( ALfloat *object1, ALfloat *o1_vel,
         obj2V += o2_vel[1] * between[1];
         obj2V += o2_vel[2] * between[2];
 
-        /* 
+        /*
          * Now compute the obj1/obj2 velocity ratio, taking into account
          * the propagation speed.  This formula is straight from the spec.
          */
@@ -1256,7 +1256,7 @@ static ALfloat compute_doppler_pitch( ALfloat *object1, ALfloat *o1_vel,
  *
  * this filter acts out AL_PITCH.
  *
- * This filter is implements AL_PITCH, but - oh-ho! - in the 
+ * This filter is implements AL_PITCH, but - oh-ho! - in the
  * time domain.  All that good fft mojo going to waste.
  */
 void alf_tpitch( UNUSED(ALuint cid),
@@ -1425,7 +1425,7 @@ void alf_tpitch( UNUSED(ALuint cid),
 				float firstsample = obufptr[offset];
 				float nextsample = obufptr[nextoffset];
 				int finalsample;
-				
+
 				/* do a little interpolation */
 				finalsample = lrintf(firstsample +
 				            frac * (nextsample - firstsample));
@@ -1441,7 +1441,7 @@ void alf_tpitch( UNUSED(ALuint cid),
 				int firstsample = obufptr[offset];
 				int nextsample = obufptr[nextoffset];
 				int finalsample;
-				
+
 				/* do a little interpolation */
 				finalsample = firstsample +
 				            frac * (nextsample - firstsample);
@@ -1469,7 +1469,7 @@ void alf_tpitch( UNUSED(ALuint cid),
 	 */
 	ipos = (int) (len * pitch);
 	src->srcParams.soundpos += bufchans * ipos * sizeof(ALshort);
-	
+
 	if(src->srcParams.soundpos > samp->size)
 	{
 		/*
@@ -1477,13 +1477,13 @@ void alf_tpitch( UNUSED(ALuint cid),
 		 *
 		 * Since we're handling the soundpos incrementing for
 		 * this source (usually done in _alMixSources), we have
-		 * to handle all the special cases here instead of 
+		 * to handle all the special cases here instead of
 		 * delegating them.
 		 *
-		 * These include callback, looping, and streaming 
+		 * These include callback, looping, and streaming
 		 * sources.  For now, we just handle looping and
-		 * normal sources, as callback sources will probably 
-		 * require added some special case logic to _alSplitSources 
+		 * normal sources, as callback sources will probably
+		 * require added some special case logic to _alSplitSources
 		 * to give up a little more breathing room.
 		 */
 		if( _alSourceIsLooping( src ) == AL_TRUE ) {
@@ -1517,7 +1517,7 @@ void alf_tpitch( UNUSED(ALuint cid),
  *
  * this filter acts out AL_PITCH.
  *
- * This filter is implements AL_PITCH, but - oh-ho! - in the 
+ * This filter is implements AL_PITCH, but - oh-ho! - in the
  * time domain.  All that good fft mojo going to waste.
  */
 void alf_tpitch( UNUSED(ALuint cid),
@@ -1556,8 +1556,8 @@ void alf_tpitch( UNUSED(ALuint cid),
 	 * if pitch is out of range, clamp.
 	 */
 	pitch = MIN(pitch, 2.0f);
-	pitch = MAX(pitch, MIN_PITCH);	
-	
+	pitch = MAX(pitch, MIN_PITCH);
+
 	/*
 	 *  We need len in samples, not bytes.
 	 */
@@ -1627,7 +1627,7 @@ void alf_tpitch( UNUSED(ALuint cid),
 				int firstsample = obufptr[(int) (j * pitch)];
 				int nextsample = obufptr[(int)((j+1) * pitch)];
 				int finalsample;
-				
+
 				/* do a little interpolation */
 				finalsample = firstsample +
 				            frac * (nextsample - firstsample);
@@ -1652,7 +1652,7 @@ void alf_tpitch( UNUSED(ALuint cid),
 	 */
 	ipos = (int) (len * pitch);
 	src->srcParams.soundpos += bufchans * ipos * sizeof(ALshort);
-	
+
 	if(src->srcParams.soundpos > samp->size)
 	{
 		/*
@@ -1660,13 +1660,13 @@ void alf_tpitch( UNUSED(ALuint cid),
 		 *
 		 * Since we're handling the soundpos incrementing for
 		 * this source (usually done in _alMixSources), we have
-		 * to handle all the special cases here instead of 
+		 * to handle all the special cases here instead of
 		 * delegating them.
 		 *
-		 * These include callback, looping, and streaming 
+		 * These include callback, looping, and streaming
 		 * sources.  For now, we just handle looping and
-		 * normal sources, as callback sources will probably 
-		 * require added some special case logic to _alSplitSources 
+		 * normal sources, as callback sources will probably
+		 * require added some special case logic to _alSplitSources
 		 * to give up a little more breathing room.
 		 */
 		if( _alSourceIsLooping( src ) == AL_TRUE ) {
@@ -1752,16 +1752,16 @@ static ALfloat compute_sa( ALfloat *source_pos, ALfloat source_max,
 
 	if( retval > 1.0 ) {
 		return 1.0;
-	} 
+	}
 
 	if(retval < _AL_CUTTOFF_ATTENUATION) {
 		return _AL_CUTTOFF_ATTENUATION;
 	}
-	
+
 	return retval;
 }
 
-/* 
+/*
  * alf_panning
  *
  */
@@ -1798,5 +1798,5 @@ void alf_panning( ALuint cid,
 		sa += 1.0;
 
 		src->srcParams.gain[i] *= sa;
-	}	
+	}
 }

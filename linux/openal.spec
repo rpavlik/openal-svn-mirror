@@ -1,5 +1,5 @@
 # This spec file is intended to be used to create a source RPM -- as there are too many configure variations possible to make a regular RPM worthwhile (so far).
-# 
+#
 # Instructions for building source RPM:
 # -- Create a copy of the docs, include, and linux folders and place in a folder named "openal"
 # -- Into the "openal" directory also copy the COPYING and README files
@@ -7,10 +7,10 @@
 # -- Place this archive into your /usr/src/redhat/SOURCES (or similar) folder
 # -- Change to the directory that contains this spec file and run	"rpm -bs openal.spec" (or rpmbuild -bs openal.# spec for RedHat 8.0 users)
 # -- This will give you a src RPM in your /usr/src/redhat/SRPMS (or similar) directory
-# 
-# 
-# 
-# 
+#
+#
+#
+#
 Name: OpenAL
 Summary: A portable audio API.
 Version: 0.0.6

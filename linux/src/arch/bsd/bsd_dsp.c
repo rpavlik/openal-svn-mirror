@@ -165,11 +165,11 @@ void native_blitbuffer(void *handle, void *dataptr, int bytes_to_write) {
 	int iterator = 0;
 	int err;
 	int fd;
-	
+
 	if(handle == NULL) {
 		return;
 	}
-	
+
 	fd = *(int *) handle;
 
 	for(iterator = bytes_to_write; iterator > 0; ) {
@@ -246,7 +246,7 @@ float get_nativechannel(UNUSED(void *handle), ALuint channel) {
  * Okay:
  *
  * Set audio channel expects an integer, in the range of
- * 0 - 100.  But wait!  It expects the integer to be 
+ * 0 - 100.  But wait!  It expects the integer to be
  * partitioned into a 16bit empty, L/R channel pair (high bits left,
  * low bits right), each 8 bit pair in the range 0 - 100.
  *
@@ -258,7 +258,7 @@ int set_nativechannel(UNUSED(void *handle), ALuint channel, float volume) {
 	unnormalizedvolume = volume * 100;
 	unnormalizedvolume <<= 8;
 	unnormalizedvolume += (volume * 100);
-	
+
 	channel = alcChannel_to_dsp_channel(channel);
 
 	if(ioctl(mixer_fd, MIXER_WRITE(channel), &unnormalizedvolume) < 0) {

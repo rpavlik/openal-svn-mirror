@@ -98,7 +98,7 @@ int main( int argc, char* argv[] ) {
 	int beats;
 	char note;
 	int i;
-	
+
 	dev = alcOpenDevice( NULL );
 	if( dev == NULL ) {
 		return 1;

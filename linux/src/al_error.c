@@ -88,7 +88,7 @@ ALenum alGetError( void ) {
 	 * after reading it.
 	 */
 	cc->alErrorIndex = 0;
-	
+
 	_alcDCUnlockContext();
 
 	return index;
@@ -183,10 +183,10 @@ void _alSetError( ALuint cid, ALenum param ) {
 		/*
 		 * Only set error if no previous error has been recorded.
 		 */
-		
+
 		cc->alErrorIndex = ErrorNo2index(param);
 	}
-		
+
 	if(_alShouldBombOnError_LOKI == AL_TRUE) {
 		raise(SIGABRT);
 	}
@@ -199,7 +199,7 @@ void _alSetError( ALuint cid, ALenum param ) {
  *
  * _alIsError returns AL_TRUE if the passed param is an error message,
  * AL_FALSE otherwise.
- * 
+ *
  */
 ALboolean _alIsError( ALenum param ) {
 	switch( param ) {

@@ -72,11 +72,11 @@ void acConvertEndian(acAudioCVT *cvt, ALushort format) {
 }
 
 
-/* Creates a set of audio filters to convert from one format to another. 
+/* Creates a set of audio filters to convert from one format to another.
    Returns -1 if the format conversion is not supported, or 1 if the
    audio filter is set up.
 */
-  
+
 int acBuildAudioCVT(acAudioCVT *cvt,
 	ALushort src_format, ALubyte src_channels, ALuint src_rate,
 	ALushort dst_format, ALubyte dst_channels, ALuint dst_rate) {
@@ -94,7 +94,7 @@ int acBuildAudioCVT(acAudioCVT *cvt,
 	{
 		cvt->filters[cvt->filter_index++] = acConvertEndian;
 	}
-	
+
 	/* Third filter: Sign conversion -- signed/unsigned */
 	if((src_format & 0x8000) != (dst_format & 0x8000)) {
 		cvt->filters[cvt->filter_index++] = acConvertSign;
@@ -128,7 +128,7 @@ int acBuildAudioCVT(acAudioCVT *cvt,
 	/* Last filter:  Mono/Stereo conversion */
 	if(src_channels != dst_channels) {
 		while((src_channels * 2) <= dst_channels) {
-			cvt->filters[cvt->filter_index++] = 
+			cvt->filters[cvt->filter_index++] =
 						acConvertStereo;
 			src_channels   *= 2;
 			cvt->len_mult  *= 2;

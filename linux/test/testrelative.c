@@ -102,7 +102,7 @@ int main( int argc, char* argv[] ) {
 	ALCdevice *dev;
 	time_t shouldend;
 	int attrlist[3];
-	
+
 	attrlist[0] = ALC_FREQUENCY;
 	attrlist[1] = 22050;
 	attrlist[2] = 0;

@@ -71,7 +71,7 @@ static void init( const char *fname ) {
 
 static void cleanup(void) {
 	alutExit();
-	
+
 #ifdef DMALLOC
 	dmalloc_verify(0);
 	dmalloc_log_unfreed();

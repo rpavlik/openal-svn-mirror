@@ -106,7 +106,7 @@ AL_rctree *alrc_car( AL_rctree *ls );
  */
 AL_rctree *alrc_cdr( AL_rctree *ls );
 
-/* 
+/*
  * scmtrue is returned by some of the rc_ functions.  It is probably advised
  * to remove it.
  */

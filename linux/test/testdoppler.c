@@ -61,7 +61,7 @@ static void init( const char *fname ) {
 
 		exit(1);
 	}
-	
+
 	alBufferData( boom, format, wave, size, freq );
 	free(wave); /* openal makes a local copy of wave data */
 
@@ -96,7 +96,7 @@ int main( int argc, char* argv[] ) {
 	if( dev == NULL ) {
 		return 1;
 	}
-	
+
 	cc = alcCreateContext( dev, NULL);
 	if(cc == NULL) {
 		alcCloseDevice( dev );

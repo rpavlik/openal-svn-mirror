@@ -42,7 +42,7 @@ ALfloat _alVectorMagnitudeAtZero( const ALfloat *v2 ) {
 ALfloat _alVectorMagnitude( const ALfloat *origin, const ALfloat *v2 ) {
 	ALfloat lsav[3];
 	ALfloat retval;
-		
+
 	_alVectorDistance( lsav, origin, v2 );
 
 	retval = sqrt( lsav[0] * lsav[0] +
@@ -50,7 +50,7 @@ ALfloat _alVectorMagnitude( const ALfloat *origin, const ALfloat *v2 ) {
 		       lsav[2] * lsav[2] );
 
 	retval = fabs( retval );
-        
+
 	return retval;
 
 }
@@ -62,7 +62,7 @@ ALfloat _alVectorMagnitude( const ALfloat *origin, const ALfloat *v2 ) {
  */
 void _alVectorNormalize( ALfloat *d, const ALfloat *s) {
 	ALfloat mag;
-	
+
 	mag = _alVectorMagnitudeAtZero( s );
 
 	if( mag == 0 ) {
@@ -79,12 +79,12 @@ void _alVectorNormalize( ALfloat *d, const ALfloat *s) {
 }
 
 /*
- * _alVectorDistance( ALfloat *retref, const ALfloat *v1, 
- *				     const ALfloat *v2 ) 
+ * _alVectorDistance( ALfloat *retref, const ALfloat *v1,
+ *				     const ALfloat *v2 )
  *
  * Places distance between two vectors in retref.
  */
-void _alVectorDistance( ALfloat *retref, const ALfloat *v1, 
+void _alVectorDistance( ALfloat *retref, const ALfloat *v1,
 			const ALfloat *v2 ) {
 	float fi1, fi2;
 	int i;
@@ -104,12 +104,12 @@ void _alVectorDistance( ALfloat *retref, const ALfloat *v1,
 }
 
 /*
- * _alVectorTranslate( ALfloat *d, const ALfloat *s, 
+ * _alVectorTranslate( ALfloat *d, const ALfloat *s,
  *		     const ALfloat *delta )
  *
  * translate s by delta, result in d
  */
-void _alVectorTranslate( ALfloat *d, const ALfloat *s, 
+void _alVectorTranslate( ALfloat *d, const ALfloat *s,
 			 const ALfloat *delta ) {
 	d[0] = s[0] + delta[0];
 	d[1] = s[1] + delta[1];
@@ -132,14 +132,14 @@ void _alVectorInverse( ALfloat *d, const ALfloat *s ) {
 }
 
 /*
- * _alVectorAngleBetween( const ALfloat *origin, const ALfloat *v1, 
+ * _alVectorAngleBetween( const ALfloat *origin, const ALfloat *v1,
  *                       const ALfloat *v2 )
  *
  * Returns the angle between two vectors, with origins at origin.
  *
  * FIXME: please check my math
  */
-ALfloat _alVectorAngleBetween( const ALfloat *origin, const ALfloat *v1, 
+ALfloat _alVectorAngleBetween( const ALfloat *origin, const ALfloat *v1,
                               const ALfloat *v2 ) {
 	ALfloat m1;     /* |v2| */
 	ALfloat m2;     /* |v1| */
@@ -162,12 +162,12 @@ ALfloat _alVectorAngleBetween( const ALfloat *origin, const ALfloat *v1,
 }
 
 /*
- * _alVectorDotp( const ALfloat *origin, const ALfloat *v1, 
+ * _alVectorDotp( const ALfloat *origin, const ALfloat *v1,
  *		const ALfloat *v2 )
  *
  * Returns dot product between v1 and v2, with origin at origin.
  */
-ALfloat _alVectorDotp( const ALfloat *origin, const ALfloat *v1, 
+ALfloat _alVectorDotp( const ALfloat *origin, const ALfloat *v1,
 		       const ALfloat *v2 ) {
 	ALfloat o_inverse[3];
 	ALfloat v1_trans[3];
@@ -187,12 +187,12 @@ ALfloat _alVectorDotp( const ALfloat *origin, const ALfloat *v1,
 }
 
 /*
- * _alVectorCrossProduct( ALfloat *d, const ALfloat *v1, 
+ * _alVectorCrossProduct( ALfloat *d, const ALfloat *v1,
  *			const ALfloat *v2 )
  *
  * Returns cross product between v1 and v2, result in d.
  */
-ALvoid _alVectorCrossProduct( ALfloat *d, const ALfloat *v1, 
+ALvoid _alVectorCrossProduct( ALfloat *d, const ALfloat *v1,
 			      const ALfloat *v2 ) {
 	d[0] = v1[1] * v2[2] - v1[2] * v2[1];
 	d[1] = v1[2] * v2[0] - v1[0] * v2[2];

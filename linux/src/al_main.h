@@ -24,11 +24,11 @@
     /* darwin os uses a cc based on gcc and have __GNUC__ defined.  */
     #if !defined(DARWIN_TARGET) || __APPLE_CC__ >= 1041
     #define UNUSED(x) x __attribute((unused))
-    #else 
-    #define UNUSED(x) x 
+    #else
+    #define UNUSED(x) x
     #endif /* DARWIN_TARGET */
 #else
-#define UNUSED(x) x 
+#define UNUSED(x) x
 #endif /* GNU_C_ */
 
 /*
@@ -337,7 +337,7 @@ ALboolean _alIsFinite( ALfloat v );
 
 #ifndef M_PI_4
 #define M_PI_4          (M_PI / 4.0f)
-#endif 
+#endif
 
 extern double sqrt( double x );
 extern double sin ( double a );

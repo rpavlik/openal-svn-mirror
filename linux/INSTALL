@@ -34,7 +34,7 @@ run ldconfig.
 
 ATTENTION:
 
-The following changes have taken place that may alter the manner in 
+The following changes have taken place that may alter the manner in
 which an installation works on your machine.  Please be advised:
 
 	- SDL is no longer required to build --- the conversion code

@@ -53,7 +53,7 @@ void *grab_write_arts(void) {
 	_alBlitBuffer = arts_blitbuffer;
 
 	fprintf(stderr, "arts grab audio ok\n");
-		
+
 	_alDebug(ALD_CONTEXT, __FILE__, __LINE__,
 		"arts grab audio ok");
 
@@ -107,7 +107,7 @@ ALboolean set_write_arts(UNUSED(void *handle),
 
 	/* FIXME: how do we know if this failed? */
 	arts_info.stream = arts_play_stream(*speed,
-					    chans, 
+					    chans,
 					    _al_formatbits(*fmt),
 					    genartskey());
 

@@ -47,8 +47,8 @@ extern ALuint _alcCCId;
  * canonical format, respectively.
  */
 extern const int canon_max, canon_min;
-				      
-				      
+
+
 
 /*
  * canon_format is the canonical format that we represent data internally as.
@@ -58,7 +58,7 @@ extern ALenum canon_format;
 /*
  * canon_speed is the sampling rate at which we internally represent data.
  */
-extern ALuint canon_speed;  
+extern ALuint canon_speed;
 
 /*
  * _alcDestroyAll( void )
@@ -206,7 +206,7 @@ void FL_alcUnlockContext( ALuint cid, const char *fn, int ln );
 /*
  * FL_alcLockAllContexts( const char *fn, int ln )
  *
- * Locks the mutex associated guarding all contexts, passing fn and ln to 
+ * Locks the mutex associated guarding all contexts, passing fn and ln to
  * _alLockPrintf for debugging purposes.
  */
 void FL_alcLockAllContexts( const char *fn, int ln );
@@ -214,7 +214,7 @@ void FL_alcLockAllContexts( const char *fn, int ln );
 /*
  * FL_alcUnlockAllContexts( const char *fn, int ln )
  *
- * Unlocks the mutex associated guarding all contexts, passing fn and ln to 
+ * Unlocks the mutex associated guarding all contexts, passing fn and ln to
  * _alLockPrintf for debugging purposes.
  */
 void FL_alcUnlockAllContexts( const char *fn, int ln );

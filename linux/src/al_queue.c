@@ -148,7 +148,7 @@ void alQueuei( ALuint sid, ALenum param, ALint i1 ) {
 		      sid, param, i1);
 
 		_alDCSetError(AL_INVALID_VALUE);
-		
+
 		SOURCEUNLOCK();
 		return;
 	}
@@ -167,7 +167,7 @@ void alQueuei( ALuint sid, ALenum param, ALint i1 ) {
 		  _alDebug(ALD_SOURCE, __FILE__, __LINE__,
 			"alQueuei: invalid or stubbed source param 0x%x",
 			param);
-			
+
 		  _alDCSetError(AL_ILLEGAL_ENUM);
 		  break;
 	}
@@ -444,7 +444,7 @@ void _alSourceUnqueueBuffers(ALuint sid, ALsizei n, ALuint *bids ) {
 
 	assert( tempqueue );
 	assert( tempstate );
-			
+
 	if((tempqueue == NULL) || (tempstate == NULL))
 	{
 		/*
@@ -475,7 +475,7 @@ void _alSourceUnqueueBuffers(ALuint sid, ALsizei n, ALuint *bids ) {
 	src->bid_queue.read_index -= (src->bid_queue.size - newsize);
 
 	/*
-	 * write_indesx too 
+	 * write_indesx too
 	 */
 	src->bid_queue.write_index -= (src->bid_queue.size - newsize);
 

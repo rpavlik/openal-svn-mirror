@@ -103,7 +103,7 @@ void fixup_function_pointers(void) {
 			"Could not GetProcAddress alBombOnError_LOKI\n");
 		exit(1);
 	}
-	
+
 	talBufferi = (void (*)(ALuint, ALenum, ALint ))
 		GP("alBufferi_LOKI");
 
@@ -135,7 +135,7 @@ void fixup_function_pointers(void) {
 		fprintf( stderr, "Could not GP alGenStreamingBuffers_LOKI\n");
 		exit(1);
 	}
-	
+
 	talutLoadRAW_ADPCMData = (ALboolean (*)(ALuint bid,ALvoid *data, ALuint size, ALuint freq,ALenum format)) GP("alutLoadRAW_ADPCMData_LOKI");
 	if( talutLoadRAW_ADPCMData == NULL ) {
 		fprintf( stderr, "Could not GP alutLoadRAW_ADPCMData_LOKI\n");

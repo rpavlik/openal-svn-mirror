@@ -91,7 +91,7 @@ void _alRcTreeFree( AL_rctree *node ) {
 		_alRcTreeFree( node->data.ccell.car );
 		_alRcTreeFree( node->data.ccell.cdr );
 	}
-	
+
 	/* remove reference from our list */
 	rlist_delete_rctree( node );
 

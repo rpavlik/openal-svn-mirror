@@ -3,7 +3,7 @@
  *
  * solaris_native.c
  *
- * functions related to the aquisition and management of the native 
+ * functions related to the aquisition and management of the native
  * audio on Solaris.
  *
  * This is a second-cut implementation.  Playback is well
@@ -11,11 +11,11 @@
  *   Yotam Gingold, April 28, 2001
  *   <ygingold@cs.brown.edu>
  *   <ygingold@stat.wvu.edu>
- * 
- * 
+ *
+ *
  * This is a crude first-cut implementation, which doesn't do any
- * sophisticated error handling at all yet.  
- *   John E. Stone, September 13, 2000 
+ * sophisticated error handling at all yet.
+ *   John E. Stone, September 13, 2000
  *   <johns@megapixel.com>
  *   <j.stone@acm.org>
  */
@@ -52,7 +52,7 @@ typedef struct {
 
 static const char *implement_me(const char *fn) {
 	static char retval[2048];
-	
+
 	sprintf(retval,
 	"%s is not implemented under Solaris.  Please contact %s for\n"
 	"information on how you can help get %s implemented on Solaris.\n",
@@ -70,20 +70,20 @@ void *grab_write_native(void) {
   int fd ;
   solaris_audio* saudio ;
   fprintf(stderr, "solaris_native: opening /dev/audio\n");
-  
+
   fd = open("/dev/audio", O_WRONLY | O_NONBLOCK );
   if (fd < 0) {
     perror("open /dev/audio");
     return NULL;
   }
-  
+
   if(fcntl(fd, F_SETFL, ~O_NONBLOCK) == -1) {
 	  perror("fcntl");
 	  fprintf(stderr,"fnctl error \n");
   }
-  
+
   fprintf(stderr, "Opened /dev/audio successfully\n");
-  
+
   saudio = (solaris_audio*) malloc( sizeof( solaris_audio ) ) ;
   if( saudio == NULL ) {
 	  close( fd ) ;
@@ -91,9 +91,9 @@ void *grab_write_native(void) {
   }
   saudio -> fd = fd ;
   AUDIO_INITINFO( &(saudio->ainfo) ) ;
-  
+
   _alBlitBuffer = native_blitbuffer;
-  
+
   return saudio ;
 }
 
@@ -101,29 +101,29 @@ void native_blitbuffer(void *handle,
 		       void *dataptr,
 		       int bytes_to_write) {
 	solaris_audio* sa ;
-	
+
 	// arch/bsd graft
 	struct timeval tv = { 1, 0 }; /* wait 1 sec max */
 	int iterator = 0;
 	int err;
 	fd_set sa_fd_set ;
-	
-	
+
+
 	//fprintf(stderr, "Writing to audio device bytes_to_write{ %d }...\n", bytes_to_write );
-	
+
 	if( handle == NULL )
 		return ;
 	sa = (solaris_audio*) handle ;
 	if( sa->fd == NULL )
 		return ;
-	
+
 	// This is the original write.
 	//write(sa->fd, (char *) dataptr, bytes_to_write);
-	
+
 	// This is the write() adapted from arch/bsd
-	
+
 	FD_SET(sa->fd, &sa_fd_set);
-	
+
 	for(iterator = bytes_to_write; iterator > 0; ) {
 		if(select(sa->fd + 1, NULL, &sa_fd_set, NULL, &tv) == 0) {
 			/* timeout occured, don't try and write */
@@ -132,10 +132,10 @@ void native_blitbuffer(void *handle,
 #endif
 			return;
 		}
-		
+
 		FD_ZERO(&sa_fd_set);
 		FD_SET(sa->fd, &sa_fd_set);
-		
+
 		assert(iterator > 0);
 		assert(iterator <= bytes_to_write);
 
@@ -151,25 +151,25 @@ void native_blitbuffer(void *handle,
 
 		iterator -= err;
 	};
-	
+
 	return;
 }
 
 void release_native(void *handle) {
   solaris_audio* sa ;
-  
+
   fprintf(stderr, "Closing audio device...\n");
-  
+
   if( handle == NULL )
 	  return ;
   sa = (solaris_audio*) handle ;
   if( sa->fd == NULL )
 	  return ;
-  
+
   close(sa->fd);
-  
+
   free( sa ) ;
-  
+
   return;
 }
 
@@ -210,27 +210,27 @@ ALboolean set_write_native(void *handle,
 		     ALenum *fmt,
 		     unsigned int *speed) {
   solaris_audio* sa ;
-  
+
   ALuint channels = _al_ALCHANNELS(*fmt);
-  
+
   if( handle == NULL )
 	  return AL_FALSE ;
   sa = (solaris_audio*) handle ;
-  
+
   if( sa->fd == NULL )
 	  return AL_FALSE ;
-  
+
   AUDIO_INITINFO(&(sa->ainfo));
   //if( ioctl(gaudio.fd, AUDIO_GETINFO, &(gaudio.ainfo)) < 0 )
   //return AL_FALSE ;
-  
+
   fprintf(stderr, "Setting audio device...\n");
   sa->ainfo.play.sample_rate = *speed;
   sa->ainfo.play.channels = channels;
   //fprintf(stderr, "solaris: set_write_native speed{ %d }, channels{ %d }, format{ %d }, buffer_size{ %u } \n", *speed, channels, *fmt, *bufsiz ) ;
   switch (*fmt) {
-    case AL_FORMAT_MONO8: 
-    case AL_FORMAT_STEREO8: 
+    case AL_FORMAT_MONO8:
+    case AL_FORMAT_STEREO8:
       //fprintf(stderr, "Setting Mono8/Stereo8... \n");
       sa->ainfo.play.precision = 8;
       sa->ainfo.play.encoding = AUDIO_ENCODING_LINEAR8;
@@ -246,18 +246,18 @@ ALboolean set_write_native(void *handle,
       //sa->ainfo.play.encoding = AUDIO_ENCODING_LINEAR;
       //#endif /* WORDS_BIGENDIAN */
       break;
-      
+
     default:
       fprintf(stderr, "Unsuported audio format:%d\n", *fmt);
       return AL_FALSE;
   }
-  
+
   sa->ainfo.play.buffer_size = *bufsiz;
-  
+
   //if (ioctl(gaudio.fd, AUDIO_SETINFO, &gaudio.ainfo) < 0)
   if (ioctl(sa->fd, AUDIO_SETINFO, &(sa->ainfo)) < 0)
     return AL_FALSE;
-  else  
+  else
     return AL_TRUE;
 }
 

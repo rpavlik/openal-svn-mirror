@@ -105,7 +105,7 @@ void _alcSpeakerMove( ALuint cid ) {
 		cc->_speaker_pos[1].pos[0],
 		cc->_speaker_pos[1].pos[1],
 		cc->_speaker_pos[1].pos[2]);
-	
+
 	_alMatrixFree(m);
 	_alMatrixFree(pm);
 	_alMatrixFree(rm);

@@ -1,7 +1,7 @@
 
 /* -*- mode: C; tab-width:8; c-basic-offset:8 -*-
  * vi:set ts=8:
- * 
+ *
  * al_listen.c
  *
  * Functions related to management and use of listeners.
@@ -240,7 +240,7 @@ void alGetListeneriv( ALenum pname, ALint *value ) {
 
 	cc = _alcDCGetContext();
 	if(cc == NULL) {
-		/* 
+		/*
 		 * There is no current context, which means that
 		 * we cannot set the error.  But if there is no
 		 * current context we should not have been able
@@ -248,7 +248,7 @@ void alGetListeneriv( ALenum pname, ALint *value ) {
 		 * default context.  So this is weird.
 		 *
 		 * In any case, set and error, unlock, and pray.
-		 */ 
+		 */
 		_alDCSetError( AL_ILLEGAL_COMMAND );
 		_alcDCUnlockContext();
 
@@ -339,7 +339,7 @@ void alGetListenerfv( ALenum param, ALfloat *values ) {
 	cc = _alcDCGetContext();
 
 	if(cc == NULL) {
-		/* 
+		/*
 		 * There is no current context, which means that
 		 * we cannot set the error.  But if there is no
 		 * current context we should not have been able
@@ -347,7 +347,7 @@ void alGetListenerfv( ALenum param, ALfloat *values ) {
 		 * default context.  So this is weird.
 		 *
 		 * In any case, set and error, unlock, and pray.
-		 */ 
+		 */
 
 		_alDCSetError( AL_ILLEGAL_COMMAND );
 		_alcDCUnlockContext();
@@ -358,7 +358,7 @@ void alGetListenerfv( ALenum param, ALfloat *values ) {
 	fv = _alDCGetListenerParam( param );
 	if( fv != NULL ) {
 		/*
-		 * we actually have a value for the param, so 
+		 * we actually have a value for the param, so
 		 * copy it and return.  Otherwise, set default
 		 * below or do conversion ( for ex GAIN_LINEAR->GAIN).
 		 */
@@ -465,7 +465,7 @@ void *_alGetListenerParam( ALuint cid, ALenum param ) {
 
 	cc = _alcGetContext( cid );
 	if(cc == NULL) {
-		/* 
+		/*
 		 * cid is an invalid context.	We can't set an error
 		 * here because this requires a valid context.
 		 */

@@ -40,7 +40,7 @@
  * buf_pool is a the bpool_t structure which we use to slab allocate
  * AL_buffers.
  */
-static bpool_t buf_pool;             
+static bpool_t buf_pool;
 
 /*
  * Mutex guarding buf_pool.
@@ -66,7 +66,7 @@ static void _alDestroyBuffer( void *buf );
  *
  * _alConvert takes the passed data and converts it from it's current
  * format (f_format) to the desired format (t_format), etc, returning
- * the converted data and setting retsize to the new size of the 
+ * the converted data and setting retsize to the new size of the
  * converted data.  The passed data must either be raw PCM data or
  * must correspond with one of the headered extension formats.
  *
@@ -116,7 +116,7 @@ static void _alBufferRemoveQueueRef( AL_buffer *buf, ALuint sid );
 /*
  * _alBufferAddCurrentRef( AL_buffer *buf, ALuint sid )
  *
- * adds a current reference to the AL_buffer *buf.  The reference refers 
+ * adds a current reference to the AL_buffer *buf.  The reference refers
  * to the source named by sid.
  *
  * If this reference is not removed, _alGet{Bid,Buffer}state will return
@@ -220,7 +220,7 @@ void alGenBuffers( ALsizei n, ALuint *buffer ) {
 	return;
 }
 
-/* 
+/*
  * alDeleteBuffers( ALsizei n, ALuint *buffers )
  *
  * Perform full deallocation of buffers[0..n-1].  If a member
@@ -233,11 +233,11 @@ void alGenBuffers( ALsizei n, ALuint *buffer ) {
  *
  * Well, that's not totally true.  I've tested deleting
  * buffers (obviously!) but there's a whole set of mojo where it
- * becomes possible to delete buffers in playing sources, which 
- * is bad bad bad. 
+ * becomes possible to delete buffers in playing sources, which
+ * is bad bad bad.
  *
  * The ref counting system is made to avoid that bad mojo by never
- * deleting buffers associated with playing sources.  *That* is 
+ * deleting buffers associated with playing sources.  *That* is
  * what is not well tested.
  *
  * Of course, the behaviour of deleting buffers which are currently
@@ -425,7 +425,7 @@ void alGetBufferfv( ALuint buffer, ALenum param, ALfloat *value ) {
 
 				alGetBufferiv( buffer, param, &temp );
 
-				/* 
+				/*
 				 * JIV FIXME
 				 *
 				 * how do we know if we've failed?
@@ -503,7 +503,7 @@ void alGetBufferi( ALuint buffer, ALenum param, ALint *value )
 	ALint safety_first[6];
 
 	/*
-	 * We don't have any vector buffer parameters, but we may 
+	 * We don't have any vector buffer parameters, but we may
 	 * in the future.
 	 */
 	alGetBufferiv( buffer, param, safety_first );
@@ -531,7 +531,7 @@ void alGetBufferf( ALuint buffer, ALenum param, ALfloat *value )
 	ALfloat safety_first[6];
 
 	/*
-	 * We don't have any vector buffer parameters, but we may 
+	 * We don't have any vector buffer parameters, but we may
 	 * in the future.
 	 */
 	alGetBufferfv( buffer, param, safety_first );
@@ -698,7 +698,7 @@ void alBufferData( ALuint  bid,
 			_alcDCLockContext();
 			_alDCSetError(AL_OUT_OF_MEMORY);
 			_alcDCUnlockContext();
-				  
+
 			_alUnlockBuffer();
 
 			return;
@@ -711,28 +711,28 @@ void alBufferData( ALuint  bid,
 			  {
 				  buf->orig_buffers[i] = temp_copies[0];
 			  }
-			  
+
 			  break;
 			case 2:
 			  for(i = 0; i < elementsof(buf->orig_buffers); i += 2)
 			  {
 				  buf->orig_buffers[i]   = temp_copies[0];
-				  buf->orig_buffers[i+1] = temp_copies[1];				  
+				  buf->orig_buffers[i+1] = temp_copies[1];
 			  }
-			  
+
 			  break;
 			case 4:
 			  assert(elementsof(buf->orig_buffers) >= 4);
 			  for(i = 0; i < elementsof(buf->orig_buffers); i += 4)
 			  {
 				  buf->orig_buffers[i]   = temp_copies[0];
-				  buf->orig_buffers[i+1] = temp_copies[1];				  
+				  buf->orig_buffers[i+1] = temp_copies[1];
 				  buf->orig_buffers[i+2] = temp_copies[2];
-				  buf->orig_buffers[i+3] = temp_copies[3];				  
+				  buf->orig_buffers[i+3] = temp_copies[3];
 			  }
 			  break;
 			case 6:
-			  assert(elementsof(buf->orig_buffers) >= 6);			  
+			  assert(elementsof(buf->orig_buffers) >= 6);
 			  for(i = 0; i < elementsof(buf->orig_buffers); i += 6)
 			  {
 				  buf->orig_buffers[i]   = temp_copies[0];
@@ -740,9 +740,9 @@ void alBufferData( ALuint  bid,
 				  buf->orig_buffers[i+2] = temp_copies[2];
 				  buf->orig_buffers[i+3] = temp_copies[3];
 				  buf->orig_buffers[i+4] = temp_copies[4];
-				  buf->orig_buffers[i+5] = temp_copies[5];				  
+				  buf->orig_buffers[i+5] = temp_copies[5];
 			  }
-			  
+
 			  break;
 			default:
 			  /* well this is weird */
@@ -819,7 +819,7 @@ AL_buffer *_alGetBuffer( ALuint bid ) {
  * Performs global initialization of buffer specific data
  * structures.
  *
- * Doesn't do much.  No default size, so we just initialize 
+ * Doesn't do much.  No default size, so we just initialize
  * the mutex.
  */
 ALboolean _alInitBuffers( void )
@@ -945,7 +945,7 @@ void _alDestroyBuffers( void ) {
 
 	return;
 }
-	
+
 /*
  * FL_alLockBuffer(UNUSED(const char *fn), UNUSED(int ln))
  *
@@ -1059,7 +1059,7 @@ ALboolean _alBufferIsCallback( AL_buffer *buf ) {
 
 /*
  * _alBufferDataWithCallback_LOKI( ALuint bid,
- *                                 int (*callback)( ALuint sid, 
+ *                                 int (*callback)( ALuint sid,
  *                                                  ALuint bid,
  *                                 ALshort *outdata,
  *                                 ALenum format,
@@ -1078,7 +1078,7 @@ ALboolean _alBufferIsCallback( AL_buffer *buf ) {
  * mostly ).
  */
 void _alBufferDataWithCallback_LOKI( ALuint bid,
-				     int (*callback)( ALuint sid, 
+				     int (*callback)( ALuint sid,
 						      ALuint bid,
 						      ALshort *outdata,
 						      ALenum format,
@@ -1188,7 +1188,7 @@ void _alBidCallDestroyCallbackSource( ALuint sid ) {
  *
  * _alConvert takes the passed data and converts it from it's current
  * format (f_format) to the desired format (t_format), etc, returning
- * the converted data and setting retsize to the new size of the 
+ * the converted data and setting retsize to the new size of the
  * converted data.  The passed data must either be raw PCM data or
  * must correspond with one of the headered extension formats.
  *
@@ -1226,12 +1226,12 @@ static void *_alConvert( ALvoid *data,
 			_alcDCLockContext();
 			_alDCSetError( AL_OUT_OF_MEMORY );
 			_alcDCUnlockContext();
-			
+
 			return NULL;
 		}
 
 		memcpy( retval, data, f_size );
-	
+
 		return retval;
 	}
 
@@ -1462,7 +1462,7 @@ void _alBidAddQueueRef(ALuint bid, ALuint sid) {
 /*
  * _alBidAddCurrentRef( ALuint bid, ALuint sid )
  *
- * adds a current reference to the buffer named by bid.  The reference refers 
+ * adds a current reference to the buffer named by bid.  The reference refers
  * to the source named by sid.
  *
  * If this reference is not removed, _alGet{Bid,Buffer}state will return
@@ -1490,7 +1490,7 @@ void _alBidAddCurrentRef( ALuint bid, ALuint sid ) {
 /*
  * _alBufferAddQueueRef( AL_buffer *buf, ALuint sid )
  *
- * adds a queue reference to the AL_buffer *buf.  The queue reference refers 
+ * adds a queue reference to the AL_buffer *buf.  The queue reference refers
  * to the source named by sid.
  *
  * If no current reference is added, and this queue reference is not deleted,
@@ -1524,7 +1524,7 @@ static void _alBufferAddQueueRef( AL_buffer *buf, ALuint sid ) {
 /*
  * _alBufferAddCurrentRef( AL_buffer *buf, ALuint sid )
  *
- * adds a current reference to the AL_buffer *buf.  The current reference refers 
+ * adds a current reference to the AL_buffer *buf.  The current reference refers
  * to the source named by sid.
  *
  * If this current reference is not removed, _alGet{Bid,Buffer}State will

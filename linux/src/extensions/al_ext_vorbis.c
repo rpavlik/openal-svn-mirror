@@ -44,7 +44,7 @@ typedef struct {
 	struct {
 		int size;
 		int offset; /* set by the source */
-	} fh; 
+	} fh;
 } VorbHandle;
 
 static ov_callbacks ov_fromdata = {
@@ -106,7 +106,7 @@ void alExtFini_03282000(void) {
 	return;
 }
 
-#endif 
+#endif
 
 static int signed_format(ALenum format);
 
@@ -152,7 +152,7 @@ ALboolean alutLoadVorbis_LOKI(ALuint bid,
 		free(vorb);
 		return AL_FALSE;
 	}
-	
+
 	memcpy(vorb->data, data, size);
 
 	vorb->fh.offset = 0;
@@ -338,7 +338,7 @@ static int vorbmap_insert(ALuint sid) {
 		   (vorbmap[i].sid == sid)) {
 			vorbmap[i].sid    = sid;
 			vorbmap[i].offset  = AL_FALSE;
-			
+
 			return i;
 		}
 	}
@@ -368,7 +368,7 @@ static void vorbmap_remove(ALuint sid) {
 		if(vorbmap[i].sid == sid) {
 			vorbmap[i].sid   = 0;
 			vorbmap[i].offset = AL_FALSE;
-			
+
 			return;
 		}
 	}

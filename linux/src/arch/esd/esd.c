@@ -67,7 +67,7 @@ void *grab_write_esd(void) {
 		fprintf(stderr, "esd open sound failed.\n");
 		return NULL;
 	}
-	
+
 	fmt = ESD_STREAM | ESD_PLAY;
 
 	switch(DEF_CHANNELS) {
@@ -92,7 +92,7 @@ void *grab_write_esd(void) {
 	_alBlitBuffer = esd_blitbuffer;
 
 	fprintf(stderr, "esd grab audio ok\n");
-		
+
 	_alDebug(ALD_CONTEXT, __FILE__, __LINE__,
 		"esd grab audio ok");
 

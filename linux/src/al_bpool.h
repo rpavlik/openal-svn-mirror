@@ -20,7 +20,7 @@
  * the relatively small allocations of AL_buffer objects can be combined into
  * a larger structure, in the hopes of reducing the effects of fragmentation.
  *
- * Each AL_buffer manipulated is actually a pointer to a bpool_node->data 
+ * Each AL_buffer manipulated is actually a pointer to a bpool_node->data
  * object.  The bpool->node inuse flag marks whether the AL_buffer in a bpool_node
  * object is currently "alloced" (in the sense that the application/library is
  * using it) or "dealloced".
@@ -29,7 +29,7 @@
  * bpool_node pool, in point of fact the size and the data itself.  Also, a
  * mapping of buffer ids (used internally and by the application) is present
  * to facilitate the easy conversion from buffer ids (which are in essence
- * arbitrary other than their requirement to be unique) and indexes into 
+ * arbitrary other than their requirement to be unique) and indexes into
  * the bpool_node pool.
  */
 typedef struct {
@@ -49,7 +49,7 @@ typedef struct {
  * overcomplicated method of pooling buffers to avoid memory
  * fragmentation.
  */
- 
+
 /*
  * bpool_init( bpool_t *bpool )
  *
@@ -57,7 +57,7 @@ typedef struct {
  */
 void bpool_init( bpool_t *bpool );
 
-/* 
+/*
  * bpool_alloc( bpool_t *bpool )
  *
  * allocates a buffer pool node from bpool, returns index or -1
@@ -95,7 +95,7 @@ ALboolean bpool_dealloc( bpool_t *bpool, ALuint bid,
  *
  * increase size of buffer pool object (bpool) until it can contain up to
  * newsize objects.  Return AL_TRUE if resize operation was successful,
- * AL_FALSE otherwise. 
+ * AL_FALSE otherwise.
  */
 ALboolean bpool_resize( bpool_t *bpool, size_t newsize );
 

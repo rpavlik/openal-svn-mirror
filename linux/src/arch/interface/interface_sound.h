@@ -76,7 +76,7 @@ ALboolean set_write_audiodevice( void *handle, ALuint *bufsiz,
  * from dataptr to the device specified by handle.  dataptr is an interleaved
  * array.
  */
-extern void (*_alBlitBuffer)( void *handle, 
+extern void (*_alBlitBuffer)( void *handle,
 			      void *dataptr,
 			      int bytes_to_write );
 

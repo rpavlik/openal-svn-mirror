@@ -27,7 +27,7 @@ static void *RunThread(void *data) {
 	fn = (ptfunc) data;
 
 	fn(NULL);
-	
+
 	pthread_exit(NULL);
 	return NULL;		/* Prevent compiler warning */
 }
@@ -36,7 +36,7 @@ static void *RunThread(void *data) {
 extern pthread_t *Posix_CreateThread(int (*fn)(void *), UNUSED(void *data)) {
 	pthread_attr_t type;
 	pthread_t *retval;
-	
+
 	retval = malloc(sizeof *retval);
 	if(retval == NULL) {
 		return NULL;
@@ -47,7 +47,7 @@ extern pthread_t *Posix_CreateThread(int (*fn)(void *), UNUSED(void *data)) {
 		fprintf(stderr, "Couldn't pthread_attr_init\n");
 		return NULL;
 	}
-	
+
 	pthread_attr_setdetachstate(&type, PTHREAD_CREATE_JOINABLE);
 
 	if(pthread_create(retval, &type, RunThread, (void *) fn) != 0) {

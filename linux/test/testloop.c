@@ -75,7 +75,7 @@ static void cleanup(void) {
 int main( int argc, char* argv[] ) {
 	ALCdevice *dev;
 	int attrlist[] = { ALC_FREQUENCY, 22050, 0 };
-			   
+
 	time_t shouldend, start;
 	ALint test = AL_FALSE;
 
@@ -88,7 +88,7 @@ int main( int argc, char* argv[] ) {
 	context_id = alcCreateContext( dev, attrlist);
 	if(context_id == NULL) {
 		alcCloseDevice( dev );
-		
+
 		exit(1);
 	}
 
@@ -105,11 +105,11 @@ int main( int argc, char* argv[] ) {
 	}
 
 	fprintf( stderr, "Loop for 4 seconds\n");
-	
+
 	alSourcePlay( moving_source );
 
 	shouldend = start = time( NULL );
-	
+
 	while( shouldend - start <= 4 ) {
 		shouldend = time(NULL);
 
@@ -137,7 +137,7 @@ int main( int argc, char* argv[] ) {
 
 
 	alcDestroyContext(context_id);
-	alcCloseDevice( dev );	
+	alcCloseDevice( dev );
 
 	cleanup();
 

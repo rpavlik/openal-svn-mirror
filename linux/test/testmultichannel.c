@@ -63,7 +63,7 @@ static void init( const char *fname ) {
 	      	/* talBufferi(boom, AL_CHANNELS, 2); */
 	      break;
 	}
-	
+
 	talBufferWriteData( boom, format, wave, size, freq, format );
 	free(wave); /* openal makes a local copy of wave data */
 

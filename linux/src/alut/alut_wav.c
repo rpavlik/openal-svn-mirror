@@ -58,7 +58,7 @@ ALboolean alutLoadWAV( const char *fname,
 	*freq   = (ALsizei) acFreq;
 	*size   = (ALsizei) acSize;
 	*bits   = (ALsizei) _al_formatbits(alFmt);
-	
+
 	_alDebug(ALD_CONVERT, __FILE__, __LINE__,
 		"alutLoadWAV %s with [alformat/size/bits/freq] = [0x%x/%d/%d]",
 		fname,
@@ -213,7 +213,7 @@ void alutLoadWAVMemory(ALbyte *memory,
 	*size   = (ALsizei) acSize;
 	*loop   = AL_FALSE; /* JIV FIXME */
 	/* *bits   = (ALsizei) _al_formatbits(alFmt); */
-	
+
 	_alDebug(ALD_CONVERT, __FILE__, __LINE__,
 		"alutLoadWAVMemory with [format/size/bits/freq] = [0x%x/%d/%d]",
 		*format, *size, *freq);

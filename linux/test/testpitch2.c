@@ -97,7 +97,7 @@ int main( int argc, char* argv[] ) {
 	ALfloat pitch = 1.0;
 	int beats;
 	char note;
-	
+
 	dev = alcOpenDevice( NULL );
 	if( dev == NULL ) {
 		return 1;

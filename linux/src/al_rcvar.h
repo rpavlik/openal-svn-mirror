@@ -15,7 +15,7 @@
  * opaque pointer to a lisp-like var.  Calling code shouldn't mess with it
  * directly.
  */
-typedef void *Rcvar; 
+typedef void *Rcvar;
 
 /*
  * Each AL_rctree has a type, which reflects how its data should be

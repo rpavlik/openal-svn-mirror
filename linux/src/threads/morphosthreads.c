@@ -103,7 +103,7 @@ extern void MorphOS_ExitThread(int retval)
 	if (NewGetTaskAttrs(NULL, &msg, sizeof(msg), TASKINFOTYPE_STARTUPMSG,
 							  TAG_DONE) && msg)
 		msg->tsm_Result = retval;
-	
+
 	/*RemTask(NULL);*/
 	return;
 }

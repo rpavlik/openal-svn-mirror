@@ -32,7 +32,7 @@ void Windows_DestroyMutex(MutexID mutex) {
 
 int Windows_TryLockMutex(MutexID mutex) {
 	BOOL err;
-	
+
 	err = TryEnterCriticalSection(mutex);
 
 	if(err == 0) {
@@ -41,14 +41,14 @@ int Windows_TryLockMutex(MutexID mutex) {
 
 	/* FIXME: we're reversing the meaning here.  We should actually
 	 * return -1 when err is 0 and 0 otherwise. */
-	
-	/* lock failed */	
+
+	/* lock failed */
 	return -1;
 }
 
 void Windows_LockMutex(MutexID mutex) {
 	EnterCriticalSection(mutex);
-	
+
 	return;
 
 }

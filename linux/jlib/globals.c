@@ -32,7 +32,7 @@
 #undef malloc
 #undef free
 #undef strdup
-#undef memset 
+#undef memset
 #undef memcpy
 #undef memmove
 
@@ -116,7 +116,7 @@ void *jv_realloc(void *p, size_t i, const char *s, unsigned int ln) {
 }
 void *jv_malloc(size_t i, const char *s, unsigned int ln) {
 	void *p = NULL;
-	
+
 	if(i == 0) {
 		fprintf(stderr,
 			"jmalloc silently ignoring 0 alloc from %s %d\n",
@@ -218,7 +218,7 @@ char *jv_strdup(const char *s, const char *file, unsigned int lnum) {
 
 	alloc_table = jhash_add(alloc_table,
 	                       jh_entry_alloc(retval, strlen(s), file, lnum));
-	
+
 	return retval;
 }
 
@@ -244,7 +244,7 @@ void jv_check_mem(void) {
 char *internal_strdup(const char *s) {
 	char *retval;
 	unsigned int i;
-	
+
 	i = strlen(s) + 1;
 
 	retval = malloc(i);

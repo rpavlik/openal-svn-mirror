@@ -26,7 +26,7 @@ static void _alBufferInit( AL_buffer *buf, ALuint bid );
  *
  * increase size of buffer pool object (bpool) until it can contain up to
  * newsize objects.  Return AL_TRUE if resize operation was successful,
- * AL_FALSE otherwise. 
+ * AL_FALSE otherwise.
  */
 ALboolean bpool_resize( bpool_t *bpool, size_t newsize ) {
 	void *temp;
@@ -72,7 +72,7 @@ ALboolean bpool_resize( bpool_t *bpool, size_t newsize ) {
 	return AL_TRUE;
 }
 
-/* 
+/*
  * bpool_alloc( bpool_t *bpool )
  *
  * allocates a buffer pool node from bpool, returns index or -1
@@ -93,7 +93,7 @@ int bpool_alloc( bpool_t *bpool ) {
 		if(bpool_resize(bpool, size) == AL_FALSE) {
 			return -1;
 		}
-		
+
 		bindex = bpool_first_free_index(bpool);
 	}
 

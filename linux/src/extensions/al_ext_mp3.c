@@ -74,7 +74,7 @@ void alExtFini_03282000(void) {
 	return;
 }
 
-#endif 
+#endif
 
 void MP3_DestroyCallback_Sid(ALuint sid);
 void MP3_DestroyCallback_Bid(ALuint bid);
@@ -150,7 +150,7 @@ ALint MP3_Callback(ALuint sid,
 		first  = MP3_Callback(sid, bid, outdata, format, freq, MAX_MPEG_READ);
 		second = MP3_Callback(sid, bid, outdata + MAX_MPEG_READ, format, freq, samples - MAX_MPEG_READ);
 		return first + second;
-		       
+
 	}
 
 	bps = _al_formatbits( format );
@@ -277,7 +277,7 @@ static int mp3map_insert(ALuint sid) {
 		   (mp3map[i].sid == sid)) {
 			mp3map[i].sid    = sid;
 			mp3map[i].offset  = AL_FALSE;
-			
+
 			return i;
 		}
 	}
@@ -306,7 +306,7 @@ static void mp3map_remove(ALuint sid) {
 		if(mp3map[i].sid == sid) {
 			mp3map[i].sid   = 0;
 			mp3map[i].offset = AL_FALSE;
-			
+
 			return;
 		}
 	}

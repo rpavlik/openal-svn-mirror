@@ -73,7 +73,7 @@ int spool_alloc(spool_t *spool) {
 		if(spool_resize(spool, spool->size * 2) == AL_FALSE) {
 			return -1;
 		}
-		
+
 		sindex = spool_first_free_index(spool);
 	}
 

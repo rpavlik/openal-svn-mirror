@@ -73,7 +73,7 @@ static ALshort *stereoptr = NULL; /*
 				   * scratch space for splitting multichannels
 				   * sources.
 				   */
-				   
+
 /*
  * special split source to handle callbacks
  */
@@ -110,7 +110,7 @@ void *_alSourceGetBufptr(AL_source *src, AL_buffer *buf, ALuint ind);
 /*
  * alIsSource( ALuint sid )
  *
- * Returns AL_TRUE if sid is a currently valid source id, 
+ * Returns AL_TRUE if sid is a currently valid source id,
  * AL_FALSE otherwise.
  */
 ALboolean alIsSource( ALuint sid )
@@ -129,7 +129,7 @@ ALboolean alIsSource( ALuint sid )
 /*
  * _alIsSource( ALuint sid )
  *
- * Returns AL_TRUE if sid is a currently valid source id, 
+ * Returns AL_TRUE if sid is a currently valid source id,
  * AL_FALSE otherwise.
  *
  * Assumes locked source
@@ -208,7 +208,7 @@ void alGenSources( ALsizei n, ALuint *buffer ) {
 		if( sindex == -1 ) {
 			/* We ran into a problem somewhere in
 			 * allocing a set of source ids.  Run
-			 * through the ones we did alloc, 
+			 * through the ones we did alloc,
 			 * realloc them, set error and return.
 			 *
 			 * FIXME: Should unlock, or have a non-locking
@@ -260,13 +260,13 @@ void alGenSources( ALsizei n, ALuint *buffer ) {
 void _alSource2D( AL_source *src ) {
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
 			"_alSource2D: source turned 2D");
-		
+
 	src->position.isset = AL_FALSE;
 	_alSourceGetParamDefault( AL_POSITION, src->position.data );
 
 	src->direction.isset = AL_FALSE;
 	_alSourceGetParamDefault( AL_DIRECTION, src->direction.data );
-	
+
 	src->coneinnerangle.isset = AL_FALSE;
 	_alSourceGetParamDefault( AL_CONE_INNER_ANGLE, &src->coneinnerangle.data );
 
@@ -350,9 +350,9 @@ void alSourcei( ALuint sid, ALenum param, ALint i1 )
 		 */
 		_alDebug(ALD_SOURCE, __FILE__, __LINE__,
 			"alSourcei: source id %d is not valid", sid);
-		
+
 		_alDCSetError( AL_INVALID_NAME );
-		
+
 		SOURCEUNLOCK();
 		return;
 	}
@@ -391,7 +391,7 @@ void alSourcei( ALuint sid, ALenum param, ALint i1 )
 		      sid, param, i1);
 
 		_alDCSetError( AL_INVALID_VALUE );
-		
+
 		SOURCEUNLOCK();
 		return;
 	}
@@ -444,7 +444,7 @@ void alSourcei( ALuint sid, ALenum param, ALint i1 )
 			_alDebug(ALD_SOURCE, __FILE__, __LINE__,
 				"alSourcei: invalid or stubbed source param 0x%x",
 				param );
-			
+
 			_alDCSetError( AL_ILLEGAL_ENUM );
 			break;
 	}
@@ -585,8 +585,8 @@ void alSourcefv( ALuint sid, ALenum param, ALfloat *fv1 )
 			return;
 			break;
 	}
-	
-	
+
+
 	SOURCELOCK();
 	source = _alDCGetSource( sid );
 
@@ -658,7 +658,7 @@ void alSourcefv( ALuint sid, ALenum param, ALfloat *fv1 )
 		_alDCSetError( AL_INVALID_VALUE );
 
 		SOURCEUNLOCK();
-		
+
 		return;
 	}
 
@@ -760,7 +760,7 @@ void alSourcefv( ALuint sid, ALenum param, ALfloat *fv1 )
 		default:
 		  _alDebug(ALD_SOURCE, __FILE__, __LINE__,
 			  "alSourcefv(%d): param 0x%x not valid", sid, param );
-		  
+
 		  _alDCSetError( AL_ILLEGAL_ENUM );
 		  break;
 	}
@@ -1036,10 +1036,10 @@ void alGetSource3f( ALuint sid, ALenum param,
 		/* silently ignore */
 		_alDebug( ALD_SOURCE, __FILE__, __LINE__,
 			"alGetSource3f: value passed is NULL" );
-		
+
 		return;
 	}
-	
+
 	alGetSourcefv( sid, param, safety_first );
 
 	if(value1)
@@ -1077,7 +1077,7 @@ void alGetSourcef( ALuint sid, ALenum param, ALfloat *value )
 		/* silently ignore */
 		_alDebug( ALD_SOURCE, __FILE__, __LINE__,
 			"alGetSourcef: value passed is NULL" );
-		
+
 		return;
 	}
 
@@ -1159,7 +1159,7 @@ void alGetSourcefv( ALuint sid, ALenum param, ALfloat *values ) {
 	if(src == NULL) {
 		_alDebug(ALD_SOURCE, __FILE__, __LINE__,
 			"alGetSourcefv: source id %d is invalid", sid);
-		
+
 		_alDCSetError( AL_INVALID_NAME );
 
 		SOURCEUNLOCK();
@@ -1171,7 +1171,7 @@ void alGetSourcefv( ALuint sid, ALenum param, ALfloat *values ) {
 
 		_alDebug( ALD_SOURCE, __FILE__, __LINE__,
 			"alGetSourcefv: values passed is NULL", values );
-		
+
 		SOURCEUNLOCK();
 
 		return;
@@ -1252,15 +1252,15 @@ void alGetSourcefv( ALuint sid, ALenum param, ALfloat *values ) {
 /*
  * _alGetSource( ALuint cid, ALuint sid )
  *
- * Returns the address of the source sid from the 
- * context cid, or NULL if the cid or sid is 
+ * Returns the address of the source sid from the
+ * context cid, or NULL if the cid or sid is
  * invalid.
  *
  * Assumes locked context
  */
 AL_source *_alGetSource( ALuint cid, ALuint sid ) {
 	AL_context *cc;
-	
+
 	cc  = _alcGetContext( cid );
 	if(cc == NULL) {
 		/*
@@ -1311,7 +1311,7 @@ void _alSplitSources( ALuint cid,
 	 * the first initialization and we need to allocate the
 	 * stereoptr (stereoptr being that buffer where we mix this
 	 * sort of thing).
-	 * 
+	 *
 	 * or buflen is equal to len and stereoptr is null because
 	 * the device was destroyed and then restarted.
 	 */
@@ -1397,7 +1397,7 @@ void _alSplitSources( ALuint cid,
 			return;
 		}
 	}
-	
+
 	if(_alSourceGetPendingBids(src) > 0)
 		assert(src->bid_queue.read_index < src->bid_queue.size );
 
@@ -1479,7 +1479,7 @@ static void _alSplitSourceCallback( ALuint cid,
 		/* FIXME:
 		 *
 		 * offset memset at resultsamps / width to end
-		 
+
 		 memset(stereoptr, 0, len);
 		 */
 
@@ -1586,7 +1586,7 @@ static void _alSplitSourceLooping( ALuint cid,
 			/* copy samp again and again */
 			for(i = mixable; i < (signed int) len; i += samp->size) {
 				int copylen;
-				
+
 				if(i + samp->size < len) {
 					copylen = samp->size;
 				} else {
@@ -1598,7 +1598,7 @@ static void _alSplitSourceLooping( ALuint cid,
 
 			for(i = 0; i < mixable; i += samp->size) {
 				int copylen;
-				
+
 				if(i + samp->size < (unsigned int) mixable) {
 					copylen = samp->size;
 				} else {
@@ -1683,9 +1683,9 @@ static void _alSplitSourceQueue( ALuint cid,
 #if 1
 	if( _alSourceBytesLeftByChannel(src, samp) <= 0)
 	{
-		
+
 		ALuint bid = 0;
-		
+
 		/* no data left in this buffer */
 		src->bid_queue.read_index++;
 		if(src->bid_queue.read_index >= src->bid_queue.size)
@@ -1762,7 +1762,7 @@ static void _alSplitSourceQueue( ALuint cid,
 			 "first buffer %d, second buffer %d",
 			 mixable, remaining);
 #endif
-		
+
 
 		for(i = 0; i < nc; i++) {
 			bufptr = _alSourceGetBufptr(src, samp, i);
@@ -1795,7 +1795,7 @@ static void _alSplitSourceQueue( ALuint cid,
 		len,
 		samp->size - src->srcParams.soundpos);
 #endif
-			
+
 	/*
 	 * We need to get data from more than one buffer
 	 */
@@ -1944,7 +1944,7 @@ static void _alMonoifyOffset1to4( ALshort **dsts, ALuint offset,
 	ALshort *dst1 = dsts[1];
 	ALshort *dst2 = dsts[2];
 	ALshort *dst3 = dsts[3];
-	
+
 	int len      = size / sizeof *src;
         int i;
 
@@ -1975,7 +1975,7 @@ static void _alMonoifyOffset2to4( ALshort **dsts, ALuint offset,
 	ALshort *dst1 = dsts[1];
 	ALshort *dst2 = dsts[2];
 	ALshort *dst3 = dsts[3];
-	
+
 	int len      = size / sizeof *src;
         int i;
 
@@ -2006,7 +2006,7 @@ static void _alMonoifyOffset4to4( ALshort **dsts, ALuint offset,
 	ALshort *dst1 = dsts[1];
 	ALshort *dst2 = dsts[2];
 	ALshort *dst3 = dsts[3];
-	
+
 	int len      = size / sizeof *src;
         int i;
 
@@ -2149,12 +2149,12 @@ void _alChannelify2Offset( ALshort *dst, ALuint offset,
 }
 
 /*
- *  _alChannelify4Offset( ALshort *dst, ALuint offset,  
- *                        ALshort **srcs, ALuint size ) 
+ *  _alChannelify4Offset( ALshort *dst, ALuint offset,
+ *                        ALshort **srcs, ALuint size )
  *
  * This function is like ChannelifyOffset, but specificly for those cases
  * where the number of channels in srcs is 4.
- *              
+ *
  * assumes locked context
  */
 void _alChannelify4Offset( ALshort *dst, ALuint offset,
@@ -2164,7 +2164,7 @@ void _alChannelify4Offset( ALshort *dst, ALuint offset,
 	ALshort *src2 = &srcs[2][offset / sizeof *srcs];
 	ALshort *src3 = &srcs[3][offset / sizeof *srcs];
         ALuint k;
-        
+
         size /= sizeof *dst; /* we need sample offsets */
 
         for( k = 0; k < size; k++ ) {
@@ -2172,12 +2172,12 @@ void _alChannelify4Offset( ALshort *dst, ALuint offset,
                 dst[1] = src1[k];
 		dst[2] = src2[k];
 		dst[3] = src3[k];
-  
+
                 dst += 4;
         }
-  
+
         return;
-}  
+}
 
 
 
@@ -2215,7 +2215,7 @@ void alDeleteSources( ALsizei n, ALuint *sources ) {
 	cc = _alcDCGetContext();
         if(cc == NULL) {
 		/*
-		 * No current context with which to evaluate the 
+		 * No current context with which to evaluate the
 		 * validity of the sources
 		 */
 		_alcDCUnlockContext();
@@ -2246,7 +2246,7 @@ void alDeleteSources( ALsizei n, ALuint *sources ) {
 		}
 
 		if((src->state == AL_PLAYING) || (src->state == AL_PAUSED)) {
-			/* 
+			/*
 			 * FIXME: illegal to delete playing source?
 			 */
 			_alDebug(ALD_SOURCE, __FILE__, __LINE__,
@@ -2272,7 +2272,7 @@ void alDeleteSources( ALsizei n, ALuint *sources ) {
 		}
 
 		if(src->state == AL_PLAYING) {
-			/* 
+			/*
 			 * FIXME: illegal to delete playing source?
 			 */
 			_alDebug(ALD_SOURCE, __FILE__, __LINE__,
@@ -2511,7 +2511,7 @@ void alSourceRewindv( ALsizei ns, ALuint *sids ) {
  * If ns < 0, sets AL_INVALID_VALUE.
  *
  * If sids[0..ns-1] are all valid source names, then for each source with
- * state AL_PLAYING or AL_PAUSED change the state to AL_STOPPED.  Otherwise, 
+ * state AL_PLAYING or AL_PAUSED change the state to AL_STOPPED.  Otherwise,
  * set AL_INVALID_NAME.
  */
 void alSourceStopv( ALsizei ns, ALuint *sids ) {
@@ -2752,7 +2752,7 @@ static void _alInitSource( ALuint sid ) {
 	AL_source *src;
 	AL_sourcestate *srcstate;
 	int i;
-	
+
 	src = _alDCGetSource( sid );
 	if(src == NULL) {
 		/* sid is invalid */
@@ -2793,7 +2793,7 @@ static void _alInitSource( ALuint sid ) {
 
 	src->direction.isset = AL_FALSE;
 	_alSourceGetParamDefault( AL_DIRECTION, src->direction.data );
-	
+
 	src->velocity.isset = AL_FALSE;
 	_alSourceGetParamDefault( AL_VELOCITY, src->velocity.data );
 
@@ -2834,7 +2834,7 @@ static void _alInitSource( ALuint sid ) {
 
 	src->isstreaming.isset = AL_FALSE;
 	_alSourceGetParamDefault( AL_STREAMING, &src->isstreaming.data );
- 
+
 	src->isrelative.isset = AL_FALSE;
 	_alSourceGetParamDefault( AL_SOURCE_RELATIVE, &src->isrelative.data );
 
@@ -2941,7 +2941,7 @@ void _alSourceParamApply( AL_source *src,
 	ALuint sampLen;
 	ALuint i;
 	ALfloat gain;
- 
+
 	sampLen = len / sizeof(ALshort); /* we pass sample length */
 
 	for(i = 0; i < nc; i++) {
@@ -3051,7 +3051,7 @@ ALint _alSourceBytesLeftByChannel(AL_source *src, AL_buffer *samp) {
 
 /*
  *
- * _alSourceIsQueue( AL_source * src ) 
+ * _alSourceIsQueue( AL_source * src )
  *
  * Returns AL_TRUE if source (src) has its queue set to AL_TRUE, AL_FALSE otherwise.
  */
@@ -3101,7 +3101,7 @@ ALboolean FL_alLockSource( UNUSED(const char *fn),
 	}
 
 	_alLockPrintf("_alLockSource", fn, ln);
-	
+
 	sindex = spool_sid_to_index( &cc->source_pool, sid );
 	if( sindex < 0 ) {
 		/* invalid sid */
@@ -3138,7 +3138,7 @@ ALboolean FL_alUnlockSource( UNUSED(const char *fn),
 	}
 
 	_alLockPrintf("_alUnlockSource", fn, ln);
-	
+
 	sindex = spool_sid_to_index( &cc->source_pool, sid );
 	if( sindex < 0 ) {
 		/* invalid sid */

@@ -67,7 +67,7 @@ struct { ALubyte *name; void *addr; } alExtension_03282000 [] = {
 	AL_EXT_PAIR(alGenStreamingBuffers_LOKI),
 	AL_EXT_PAIR(alcGetAudioChannel_LOKI),
 	AL_EXT_PAIR(alcSetAudioChannel_LOKI),
-	AL_EXT_PAIR(alBombOnError_LOKI),	
+	AL_EXT_PAIR(alBombOnError_LOKI),
 	AL_EXT_PAIR(alReverbScale_LOKI),
 	AL_EXT_PAIR(alReverbDelay_LOKI),
 	AL_EXT_PAIR(alBufferi_LOKI),
@@ -123,7 +123,7 @@ void alcSetAudioChannel_LOKI(ALuint channel, ALfloat volume) {
 
 static void _alcSetAudioChannel_LOKI(ALuint channel, ALfloat volume) {
 	AL_context *cc;
-	
+
 	cc = _alcDCGetContext();
 	if(cc == NULL) {
 		return;
@@ -435,7 +435,7 @@ void alBufferWriteData_LOKI( ALuint  bid,
 			_alcDCLockContext();
 			_alDCSetError(AL_OUT_OF_MEMORY);
 			_alcDCUnlockContext();
-				  
+
 			_alUnlockBuffer();
 
 			return;
@@ -448,28 +448,28 @@ void alBufferWriteData_LOKI( ALuint  bid,
 			  {
 				  buf->orig_buffers[i] = temp_copies[0];
 			  }
-			  
+
 			  break;
 			case 2:
 			  for(i = 0; i < elementsof(buf->orig_buffers); i += 2)
 			  {
 				  buf->orig_buffers[i]   = temp_copies[0];
-				  buf->orig_buffers[i+1] = temp_copies[1];				  
+				  buf->orig_buffers[i+1] = temp_copies[1];
 			  }
-			  
+
 			  break;
 			case 4:
 			  assert(elementsof(buf->orig_buffers) >= 4);
 			  for(i = 0; i < elementsof(buf->orig_buffers); i += 4)
 			  {
 				  buf->orig_buffers[i]   = temp_copies[0];
-				  buf->orig_buffers[i+1] = temp_copies[1];				  
+				  buf->orig_buffers[i+1] = temp_copies[1];
 				  buf->orig_buffers[i+2] = temp_copies[2];
-				  buf->orig_buffers[i+3] = temp_copies[3];				  
+				  buf->orig_buffers[i+3] = temp_copies[3];
 			  }
 			  break;
 			case 6:
-			  assert(elementsof(buf->orig_buffers) >= 6);			  
+			  assert(elementsof(buf->orig_buffers) >= 6);
 			  for(i = 0; i < elementsof(buf->orig_buffers); i += 6)
 			  {
 				  buf->orig_buffers[i]   = temp_copies[0];
@@ -477,9 +477,9 @@ void alBufferWriteData_LOKI( ALuint  bid,
 				  buf->orig_buffers[i+2] = temp_copies[2];
 				  buf->orig_buffers[i+3] = temp_copies[3];
 				  buf->orig_buffers[i+4] = temp_copies[4];
-				  buf->orig_buffers[i+5] = temp_copies[5];				  
+				  buf->orig_buffers[i+5] = temp_copies[5];
 			  }
-			  
+
 			  break;
 			default:
 			  /* well this is weird */
@@ -519,7 +519,7 @@ void alBufferWriteData_LOKI( ALuint  bid,
  *
  *  FIXME: this is the most horrible function ever.  I can only
  *  	   claim responsibility for 50% of the hideous horror that
- *  	   is this function.  Before you smite me to eternal damnation 
+ *  	   is this function.  Before you smite me to eternal damnation
  *  	   for the monstrosity that follows, please keep in mind that
  *  	   the remaining half of the horror belongs squarely on those
  *  	   who defined the semantics and side effects of this disgusting
@@ -709,7 +709,7 @@ ALsizei alBufferAppendWriteData_LOKI( ALuint   buffer,
 		/* reset size */
 		buf->size = newsize;
 
-		/* 
+		/*
 		 * set append
 		 */
 		buf->appendpos += psize / bufchan;
@@ -758,7 +758,7 @@ ALsizei alBufferAppendWriteData_LOKI( ALuint   buffer,
 			_alUnlockBuffer();
 			return 0;
 		}
-	
+
 		scratch.data = temp;
 		scratch.size = osamps * formatWidth;
 	}
@@ -847,7 +847,7 @@ ALsizei alBufferAppendWriteData_LOKI( ALuint   buffer,
  *
  *  FIXME: this is the most horrible function ever.  I can only
  *  	   claim responsibility for 50% of the hideous horror that
- *  	   is this function.  Before you smite me to eternal damnation 
+ *  	   is this function.  Before you smite me to eternal damnation
  *  	   for the monstrosity that follows, please keep in mind that
  *  	   the remaining half of the horror belongs squarely on those
  *  	   who defined the semantics and side effects of this disgusting
@@ -1013,7 +1013,7 @@ ALsizei alBufferAppendData_LOKI( ALuint   buffer,
 			osize, remainingspace, buf->appendpos, buf->streampos);
 
 		/* we must expand the size of our buffer */
-		newsize = buf->appendpos + psize; 
+		newsize = buf->appendpos + psize;
 
 		assert(newsize >= osize);
 
@@ -1035,7 +1035,7 @@ ALsizei alBufferAppendData_LOKI( ALuint   buffer,
 		/* reset size */
 		buf->size = newsize;
 
-		/* 
+		/*
 		 * set append
 		 */
 		buf->appendpos += psize;

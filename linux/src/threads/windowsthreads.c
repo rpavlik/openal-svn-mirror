@@ -44,7 +44,7 @@ extern int Windows_WaitThread(HANDLE waitfor) {
 		/* thread is still running, be nice and wait a bit */
 		_alMicroSleep(interval);
 	} while(tries--);
-	
+
 	retval = TerminateThread(waitfor, 0);
 
 	if(retval == 0) {
@@ -81,4 +81,4 @@ extern unsigned int Windows_SelfThread(void) {
 	return 	(unsigned int) GetCurrentThreadId();
 }
 
-	
+

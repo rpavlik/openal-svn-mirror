@@ -125,4 +125,4 @@ void alLokiTest( void *dummy );
 #define lal_GetGlobalScalar(s,t,r)   _alGetGlobalScalar(s,t,r)
 #define lal_GetGlobalVector(s,t,n,r) _alGetGlobalScalar(s,t,n,r)
 
-#endif /* _AL_EXT_H_ */ 
+#endif /* _AL_EXT_H_ */

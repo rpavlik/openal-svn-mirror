@@ -30,13 +30,13 @@
 /* Here's the hacky stuff */
 #ifdef SDL_SUPPORT
 #include "arch/sdl/sdl.h"
-#else 
+#else
 #define grab_read_sdl()               NULL
 #define grab_write_sdl()              NULL
 #define set_write_sdl(h,b,f,s)        AL_FALSE
 #define set_read_sdl(h,b,f,s)         AL_FALSE
-#define release_sdl(h)    
-#define sdl_blitbuffer(h,d,b) 
+#define release_sdl(h)
+#define sdl_blitbuffer(h,d,b)
 #endif /* SDL_SUPPORT */
 
 #ifdef ALSA_SUPPORT

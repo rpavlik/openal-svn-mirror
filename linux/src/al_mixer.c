@@ -52,7 +52,7 @@
 ALboolean volatile time_for_mixer_to_die = AL_FALSE;
 
 /* our thread ID, if async */
-ThreadID mixthread = NULL; 
+ThreadID mixthread = NULL;
 
 /*
  * MixManager is the ALMixManager we use, in conjunction with MixFunc, to
@@ -182,7 +182,7 @@ static void _alMixSources( void )
 	ALboolean isinqueue   = AL_FALSE;
 	ALuint pitr; /* pool iterator */
 	ALuint nc = _alcDCGetNumSpeakers();
-	
+
 	for(pitr = 0; pitr < mspool.size; pitr++)
 	{
 		if(mspool.pool[pitr].inuse == AL_FALSE)
@@ -456,7 +456,7 @@ void _alDestroyMixer( void )
 	{
 		/* we may we destroyed while paused, which is bad, but
 		 * not horrible.  Try to lock it.  If sucessful, then
-		 * we weren't locked before, so we unlock and Destroy.  
+		 * we weren't locked before, so we unlock and Destroy.
 		 * Otherwise, just unlock and destroy, since we aren't
 		 * going to be need async_mixer_iterate services anytime
 		 * soon anyway.
@@ -801,7 +801,7 @@ static ALboolean _alAllocMixSource( ALuint sid )
 		 *  The source in question has been stopped.  Promote to
 		 *  initial and play.
 		 */
-		
+
 		src->srcParams.soundpos = 0;
 		src->bid_queue.read_index = 0;
 		src->state = AL_INITIAL;
@@ -1006,7 +1006,7 @@ void _alAddSourceToMixer( ALuint sid )
 			 * No state change, but reset.
 			 */
 			src->srcParams.soundpos = 0;
-			
+
 			return;
 		default:
 			/* alloc a mix source */
@@ -1115,7 +1115,7 @@ int async_mixer_iterate(UNUSED(void *dummy)) {
 	time_for_mixer_to_die = AL_FALSE;
 
 	tlExitThread(0);
-	
+
 	return 0;
 }
 
@@ -1163,7 +1163,7 @@ static void _alAddBufferToStreamingList( ALuint bid ) {
 			return;
 		}
 	}
-	
+
 	return;
 }
 
@@ -1178,7 +1178,7 @@ static ALboolean _alTryLockMixerPause( void ) {
 	if(mlTryLockMutex( pause_mutex ) == 0) {
 		return AL_TRUE;
 	}
-	
+
 	return AL_FALSE;
 }
 
@@ -1371,6 +1371,6 @@ int sync_mixer_iterate(UNUSED(void *dummy))
 	{
 		_alcDCDeviceWrite( dataptr, bytes_to_write );
 	}
-	
+
 	return 0;
 }

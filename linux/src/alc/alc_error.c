@@ -128,7 +128,7 @@ static int index2ErrorNo(int ind) {
 ALCenum alcGetError( UNUSED(ALCdevice *dev) )
 {
 	ALCenum retval;
-	
+
 	retval = index2ErrorNo( alcErrorIndex );
 
 	/*
@@ -136,7 +136,7 @@ ALCenum alcGetError( UNUSED(ALCdevice *dev) )
 	 * after reading it.
 	 */
 	alcErrorIndex = 0;
-	
+
 	return retval;
 }
 
@@ -158,10 +158,10 @@ void _alcSetError( ALenum param ) {
 		/*
 		 * Only set error if no previous error has been recorded.
 		 */
-		
+
 		alcErrorIndex = setval;
 	}
-		
+
 	return;
 }
 

@@ -17,7 +17,7 @@
  * token extensions, base 0x20000
  */
 /**
- * Indicate the gain (volume amplification) applied, in a 
+ * Indicate the gain (volume amplification) applied, in a
  * normalized linear scale.  This affects the value retrieved
  * by AL_GAIN.
  *

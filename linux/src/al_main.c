@@ -58,7 +58,7 @@
 /*
  * mixer thread's ID, if it needs one
  */
-extern ThreadID mixthread; 
+extern ThreadID mixthread;
 
 /*
  * pcm buffers that filters act on
@@ -167,7 +167,7 @@ void _alExit( void ) {
 	/* we could be sync, so we check mixthread for a valid ID */
 	if(mixthread != NULL) {
 		time_for_mixer_to_die = AL_TRUE;
-		
+
 		tlWaitThread( mixthread );
 
 		while( time_for_mixer_to_die == AL_TRUE ) {
@@ -215,7 +215,7 @@ void _alExit( void ) {
 #ifdef DEBUG_STUB
 void _alStub( const char *str ) {
 	fprintf(stderr, "%s stub function\n", str);
-	
+
 	return;
 }
 #endif
@@ -428,7 +428,7 @@ void _alBuffersCopy(void **dsts, void **srcs, int len, int nc) {
 }
 
 /*
- * _alRotatePointAboutAxis( const ALfloat angle, ALfloat *point, 
+ * _alRotatePointAboutAxis( const ALfloat angle, ALfloat *point,
  *                          const ALfloat *axis )
  *
  * Rotates point angle radians about axis.
@@ -440,7 +440,7 @@ void _alBuffersCopy(void **dsts, void **srcs, int len, int nc) {
  * FIXME: check my math
  * FIXME: needs to check args
  */
-void _alRotatePointAboutAxis( const ALfloat angle, ALfloat *point, 
+void _alRotatePointAboutAxis( const ALfloat angle, ALfloat *point,
                               const ALfloat *axis ) {
 	ALmatrix *m;
 	ALmatrix *pm;
@@ -507,7 +507,7 @@ void _alRotatePointAboutAxis( const ALfloat angle, ALfloat *point,
 	for(i = 0; i < 3; i++) {
 		point[i] = rm->data[0][i];
 	}
-	
+
 	_alMatrixFree(m);
 	_alMatrixFree(pm);
 	_alMatrixFree(rm);
@@ -606,7 +606,7 @@ void _alMatrixFree(ALmatrix *m) {
  * slurp file named by fname to into *buffer, mallocing memory.
  */
 int _alSlurp(const char *fname, void **buffer) {
-	struct stat buf;	
+	struct stat buf;
 	FILE *fh;
 	ALint len;
 
@@ -897,7 +897,7 @@ ALfloat _alDBToLinear(ALfloat dBs) {
 		if(logtab[mid] < dBs) {
 			/* too low */
 			min = mid;
-		} else { 
+		} else {
 			/* too high */
 			max = mid;
 		}

@@ -33,5 +33,5 @@ void pause_nativedevice(void *handle);
 void resume_nativedevice(void *handle);
 
 ALsizei capture_nativedevice(void *handle, void *capture_buffer, int bufsiz);
-			  
+
 #endif /* WINDOWS_NATIVE_H_ */

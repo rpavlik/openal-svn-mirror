@@ -40,7 +40,7 @@ void MixAudio16_n( ALshort *dst, alMixEntry *entries, ALuint numents );
 /*
  * Mixing functions.
  *
- * These are specialized functions which mix each entry in entries to 
+ * These are specialized functions which mix each entry in entries to
  * destination.  They are called using a dispatch table generating by the
  * ALMixManager and ALMixFuncs.
  *

@@ -103,7 +103,7 @@ void _alBidRemoveQueueRef( ALuint bid, ALuint sid );
 /*
  * _alBidAddCurrentRef( ALuint bid, ALuint sid )
  *
- * adds a current reference to the buffer named by bid.  The reference refers 
+ * adds a current reference to the buffer named by bid.  The reference refers
  * to the source named by sid.
  *
  * If this reference is not removed, _alGet{Bid,Buffer}state will return
@@ -163,7 +163,7 @@ void _alNumBufferHint( ALuint num_buffers );
 
 /*
  * _alBufferDataWithCallback_LOKI( ALuint bid,
- *                                 int (*callback)( ALuint sid, 
+ *                                 int (*callback)( ALuint sid,
  *                                                  ALuint bid,
  *                                                  ALshort *outdata,
  *                                                  ALenum format,
@@ -182,7 +182,7 @@ void _alNumBufferHint( ALuint num_buffers );
  * mostly ).
  */
 void _alBufferDataWithCallback_LOKI( ALuint bid,
-					int (*callback)( ALuint sid, 
+					int (*callback)( ALuint sid,
 							 ALuint bid,
 							 ALshort *outdata,
 							 ALenum format,

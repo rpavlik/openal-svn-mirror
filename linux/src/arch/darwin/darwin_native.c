@@ -77,13 +77,13 @@ static void implement_me(const char *fn)
 /*********************************** OS callback proc *****************************/
 
 OSStatus deviceFillingProc (UNUSED(AudioDeviceID  inDevice), UNUSED(const AudioTimeStamp*  inNow), UNUSED(const AudioBufferList*  inInputData), UNUSED(const AudioTimeStamp*  inInputTime), AudioBufferList*  outOutputData, UNUSED(const AudioTimeStamp* inOutputTime), void* inClientData)
-{    
+{
     coreAudioDestination = (outOutputData->mBuffers[0]).mData;
 
     if (stillToPlay) playABuffer(NULL);
     else sync_mixer_iterate(NULL);
 
-    return 0;     
+    return 0;
 }
 
 /************************************** HAL Routines *********************************/
@@ -99,11 +99,11 @@ OSStatus GetAudioDevices (void **devices /*Dev IDs*/, short	*devicesAvailable /*
     Boolean	outWritable;
 
     DebugPrintf("OpenAL MOSX Backend : Build %d\n",buildID);
-    
+
     // find out how many audio devices there are, if any
-    err = AudioHardwareGetPropertyInfo(kAudioHardwarePropertyDevices, &outSize, &outWritable);	
+    err = AudioHardwareGetPropertyInfo(kAudioHardwarePropertyDevices, &outSize, &outWritable);
     if (err != NULL) return (err);
-   
+
     // calculate the number of device available
     *devicesAvailable = outSize / sizeof(AudioDeviceID);
     // Bail if there aren't any devices
@@ -111,13 +111,13 @@ OSStatus GetAudioDevices (void **devices /*Dev IDs*/, short	*devicesAvailable /*
 
     // make space for the devices we are about to get
     if (*devices != NULL) free(*devices);
-    *devices = malloc(outSize);						
+    *devices = malloc(outSize);
     // get an array of AudioDeviceIDs
-    err = AudioHardwareGetProperty(kAudioHardwarePropertyDevices, &outSize, (void *) *devices);	
+    err = AudioHardwareGetProperty(kAudioHardwarePropertyDevices, &outSize, (void *) *devices);
     if (err != NULL) free(*devices);
 #ifdef DEBUG_MAXIMUS
     DebugPrintf("Found %d Audio Device(s)\n",*devicesAvailable);
-    
+
     for (i=0; i<*devicesAvailable;i++)
     {
         UInt32 ID = ((UInt32*)(*devices))[i];
@@ -164,7 +164,7 @@ void *grab_write_native(void)
     error = GetAudioDevices (&devices ,&devicesAvailable);
     if (error != 0) goto Crash;
     libGlobals.deviceW = ((AudioDeviceID*)(devices))[0]; /* Selecting first device */
-    
+
     /* Getting buffer size */
     error = AudioDeviceGetPropertyInfo(libGlobals.deviceW, 0, 0, kAudioDevicePropertyBufferSize, &count, &outWritable);
     if (error != 0) goto Crash;
@@ -172,13 +172,13 @@ void *grab_write_native(void)
     if (error != 0) goto Crash;
     DebugPrintf("IOProperties : Buffersize = %d\n",
 		(int) libGlobals.deviceWBufferSize);
-    
+
     /* getting streams configs */
     error = AudioDeviceGetPropertyInfo(libGlobals.deviceW, 0, 0, kAudioDevicePropertyStreamConfiguration,  &count, &outWritable);
     if (error != 0) goto Crash;
     {
         libGlobals.deviceWBufferList = malloc(count);
-        
+
         error = AudioDeviceGetProperty(libGlobals.deviceW, 0, 0, kAudioDevicePropertyStreamConfiguration, &count, libGlobals.deviceWBufferList);
         if (error != 0) goto Crash;
 #ifdef DEBUG_MAXIMUS
@@ -186,7 +186,7 @@ void *grab_write_native(void)
 	    unsigned int i;
             DebugPrintf("IOProperties : Buffer number = %d\n",libGlobals.deviceWBufferList->mNumberBuffers);
             /*device->outStreamsInfo  = malloc(sizeof(StreamInfo) * device->totalOutputStreams);*/
-            for (i = 0; i < libGlobals.deviceWBufferList->mNumberBuffers; i++) 
+            for (i = 0; i < libGlobals.deviceWBufferList->mNumberBuffers; i++)
             {
                 DebugPrintf("  Buffer %d Properties : DataByteSize = %d\n",i,libGlobals.deviceWBufferList->mBuffers[i].mDataByteSize);
                 DebugPrintf("  Buffer %d Properties : NumberChannels = %d\n",i,libGlobals.deviceWBufferList->mBuffers[i].mNumberChannels);
@@ -205,7 +205,7 @@ void *grab_write_native(void)
     if (error != 0) goto Crash;
     error = AudioDeviceGetProperty(libGlobals.deviceW, 0, 0, kAudioDevicePropertyStreamFormats, &count, &libGlobals.deviceFormat);
     if (error != 0) goto Crash;
-    
+
 #ifndef DEBUG_MAXIMUS
     DebugPrintf("IOProperties : SampleRate = %f\n",libGlobals.deviceFormat.mSampleRate);
     DebugPrintf("IOProperties : FormatFlags = %d\n",(int)libGlobals.deviceFormat.mFormatFlags);
@@ -222,10 +222,10 @@ void *grab_write_native(void)
     if (error != 0) goto Crash;
 
     _alBlitBuffer = native_blitbuffer; /* Defines the blitbuffer function */
-    
+
     error = AudioDeviceAddIOProc(libGlobals.deviceW, deviceFillingProc, (void *) &libGlobals);	/* Creates the callback proc */
     if (error != 0) goto Crash;
-    
+
     return &libGlobals.deviceW;
 
 Crash :
@@ -258,11 +258,11 @@ ALboolean set_write_native(UNUSED(void *handle),
 	case AL_FORMAT_MONO16: *bufsiz = libGlobals.deviceWBufferSize/4;
                                 DebugPrintf("Init fmt : AL_FORMAT_MONO16\n");
 	break;
-	
+
 	case AL_FORMAT_STEREO16: *bufsiz = libGlobals.deviceWBufferSize/2;
                                 DebugPrintf("Init fmt : AL_FORMAT_STEREO16\n");
 	break;
-	
+
 	case AL_FORMAT_MONO8: *bufsiz = libGlobals.deviceWBufferSize/8;
                                 DebugPrintf("Init fmt : AL_FORMAT_MONO8\n");
 	break;
@@ -308,7 +308,7 @@ void  native_blitbuffer(void *handle, void *data, int bytes)
         fprintf(stderr,"Something wrong happened between CoreAudio and OpenAL.\n");
         return;
     }
-    
+
     // Gyom FIXME: Is this useful?
     assert(nativePreferedBuffSize <= bytes);
 

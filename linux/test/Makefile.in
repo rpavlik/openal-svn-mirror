@@ -47,5 +47,5 @@ distclean: clean
 
 libopenal: $(LIBOPENAL)
 
-$(LIBOPENAL): 
+$(LIBOPENAL):
 	(cd ../src && make all)

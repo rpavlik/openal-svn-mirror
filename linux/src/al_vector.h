@@ -36,18 +36,18 @@ void _alVectorDistance( ALfloat *d, const ALfloat *s1, const ALfloat *s2 );
  *
  * Rotate point about axis by angle.
  */
-void _alRotatePointAboutAxis( const ALfloat angle, ALfloat *point, 
+void _alRotatePointAboutAxis( const ALfloat angle, ALfloat *point,
                               const ALfloat *axis );
 
 /*
- * _alVectorAngleBetween( const ALfloat *origin, const ALfloat *v1, 
+ * _alVectorAngleBetween( const ALfloat *origin, const ALfloat *v1,
  *                       const ALfloat *v2 )
  *
  * Returns angle between two vectors with v1, v2 with shared origin.
- * 
+ *
  * NOTE: Always positive
  */
-ALfloat _alVectorAngleBetween( const ALfloat *origin, const ALfloat *v1, 
+ALfloat _alVectorAngleBetween( const ALfloat *origin, const ALfloat *v1,
                               const ALfloat *v2 );
 
 /*
@@ -55,7 +55,7 @@ ALfloat _alVectorAngleBetween( const ALfloat *origin, const ALfloat *v1,
  *
  * Returns dot product of v1 . v2 ( with shared origin )
  */
-ALfloat _alVectorDotp( const ALfloat *origin, const ALfloat *v1, 
+ALfloat _alVectorDotp( const ALfloat *origin, const ALfloat *v1,
                        const ALfloat *v2 );
 
 /*
@@ -80,12 +80,12 @@ void _alVectorInverse( ALfloat *d, const ALfloat *s );
 void _alVectorNormalize( ALfloat *d, const ALfloat *s );
 
 /*
- * _alVectorCrossProduct( ALfloat *d, const ALfloat *v1, 
+ * _alVectorCrossProduct( ALfloat *d, const ALfloat *v1,
  *			const ALfloat *v2 )
  *
  * Returns cross product between v1 and v2, result in d.
  */
-ALvoid _alVectorCrossProduct( ALfloat *d, const ALfloat *v1, 
+ALvoid _alVectorCrossProduct( ALfloat *d, const ALfloat *v1,
 			      const ALfloat *v2 );
 
 #endif /* AL_VECTOR_H */

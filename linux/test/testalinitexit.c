@@ -30,7 +30,7 @@ static void iterate( void ) {
 	 * the soundcard
 	 */
 	micro_sleep(800000);
-	
+
 	alcDestroyContext( context_id );
 }
 

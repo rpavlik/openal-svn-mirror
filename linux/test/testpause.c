@@ -72,7 +72,7 @@ static void init(const char *fname) {
 
 static void cleanup(void) {
 	alcDestroyContext(context_id);
-	
+
 #ifdef DMALLOC
 	dmalloc_verify(0);
 	dmalloc_log_unfreed();

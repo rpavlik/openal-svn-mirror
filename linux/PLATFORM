@@ -41,7 +41,7 @@ NOTE:
 	float get_nativechannel(void *handle, ALCenum channel);
 		Return (normalized) mixer level for device specified by handle
 		associated with channel.
-		
+
 	int set_nativechannel(void *handle, ALCenum channel, float volume);
 		Set mixer level for device specified by handle
 		associated with channel.

@@ -30,10 +30,10 @@
 
 
 #ifdef WORDS_BIGENDIAN
-#define RIFFMAGIC       0x52494646 
+#define RIFFMAGIC       0x52494646
 #define WAVEMAGIC       0x57415645
-#define FMTMAGIC        0x666D7420 
-#define DATAMAGIC	0x64617461 
+#define FMTMAGIC        0x666D7420
+#define DATAMAGIC	0x64617461
 #else
 #define RIFFMAGIC       0x46464952
 #define WAVEMAGIC       0x45564157
@@ -107,7 +107,7 @@ void *grab_write_waveout(void) {
 	retval->length = 0;
 
 	fprintf(stderr, "waveout grab audio %s\n", template);
-		
+
 	_alDebug(ALD_CONTEXT, __FILE__, __LINE__,
 		"waveout grab audio ok");
 
@@ -121,11 +121,11 @@ void *grab_read_waveout(void) {
 
 void waveout_blitbuffer(void *handle, void *dataptr, int bytes_to_write) {
 	waveout_t *whandle = NULL;
-	
+
 	if(handle == NULL) {
 		return;
 	}
-	
+
 	whandle = handle;
 
 	if(whandle->fh == NULL) {
@@ -135,7 +135,7 @@ void waveout_blitbuffer(void *handle, void *dataptr, int bytes_to_write) {
 	whandle->length += bytes_to_write;
 
 	/*
-	 * WAV files expect their PCM data in LE format.  If we are on 
+	 * WAV files expect their PCM data in LE format.  If we are on
 	 * big endian host, we need to convert the data in place.
 	 *
 	 */
@@ -146,7 +146,7 @@ void waveout_blitbuffer(void *handle, void *dataptr, int bytes_to_write) {
 	fwrite(dataptr, 1, bytes_to_write, whandle->fh);
 
 	_alMicroSleep(sleep_usec(whandle->speed, bytes_to_write));
-	
+
         return;
 }
 
@@ -185,7 +185,7 @@ static ALuint sleep_usec(ALuint speed, ALuint chunk) {
 		speed,
 		chunk,
 		retval);
-#endif 
+#endif
 
 	return retval;
 }
@@ -300,7 +300,7 @@ ALboolean set_write_waveout(void *handle,
 
 	whandle->speed    = *speed;
 	whandle->format   = *fmt;
-	whandle->channels = chans; 
+	whandle->channels = chans;
 	whandle->bitspersample = _al_formatbits(*fmt);
 
         return AL_TRUE;
@@ -318,7 +318,7 @@ ALboolean set_read_waveout(UNUSED(void *handle),
  * convert_to_little_endian( ALuint bps, void *data, int nbytes )
  *
  * Convert data in place to little endian format.  bps is the bits per
- * sample in data, nbytes is the length of data in bytes.  If bps is 8, 
+ * sample in data, nbytes is the length of data in bytes.  If bps is 8,
  * or the machine is little endian, this is a nop.
  *
  * FIXME:
@@ -339,7 +339,7 @@ static void convert_to_little_endian( ALuint bps, void *data, int nbytes )
 
 #ifndef WORDS_BIGENDIAN
 	/*
-	 * We're on a little endian machine.  The data is already in 
+	 * We're on a little endian machine.  The data is already in
 	 * little endian format.
 	 */
 	return;

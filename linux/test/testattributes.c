@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 		assert(Flags[NumFlags-1] == 0);
 	}
 
-	custom_context  = alcCreateContext(dev, attrlist);	
+	custom_context  = alcCreateContext(dev, attrlist);
 	if(custom_context == NULL)
 	{
 		alcCloseDevice( dev );
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 	alcMakeContextCurrent(custom_context);
-	
+
 	{
 		ALint NumFlags = 0;
 		ALint *Flags = 0;
@@ -110,14 +110,14 @@ int main(int argc, char *argv[])
 		/* must be 0 terminated */
 		assert(Flags[NumFlags-1] == 0);
 	}
-	
-	
- 
+
+
+
 
 	fixup_function_pointers();
 
 	alcDestroyContext(default_context);
 	alcDestroyContext(custom_context);
-	
+
 	return 0;
 }

@@ -4,7 +4,7 @@
  *
  * ac_misc.c
  *
- * misc. audioconvert funcs. 
+ * misc. audioconvert funcs.
  *
  * ripped straight from the SDL
  *
@@ -27,11 +27,11 @@
 #ifdef __GNUC__
     #ifndef DARWIN_TARGET /* darwin os uses a cc based on gcc and have __GNUC__ defined */
     #define UNUSED(x) x __attribute((unused))
-    #else 
-    #define UNUSED(x) x 
+    #else
+    #define UNUSED(x) x
     #endif /* DARWIN_TARGET */
 #else
-#define UNUSED(x) x 
+#define UNUSED(x) x
 #endif /* GNU_C_ */
 
 #define PCM_CODE        0x0001
@@ -139,7 +139,7 @@ int ac_is_wave(void *data) {
 	return 1;
 }
 
-void *acLoadWAV(void *data, ALuint *size, void **udata, 
+void *acLoadWAV(void *data, ALuint *size, void **udata,
 		ALushort *fmt, ALushort *chan, ALushort *freq) {
 	acAudioCVT endianConverter;
 
@@ -215,7 +215,7 @@ void *ac_wave_to_pcm(void *data, ALuint *size,
 		}
 	} while ((riffchunk.magic == WAVE) ||
 		 (riffchunk.magic == RIFF));
-		   
+
 	if(riffchunk.magic != FMT) {
 		fprintf(stderr,
 			"ouch II magic|FMT [0x%x|0x%x]\n",
@@ -251,7 +251,7 @@ void *ac_wave_to_pcm(void *data, ALuint *size,
 		  do {
 			length = ReadChunk(data, offset, &riffchunk);
 			offset += (length + 8);
-							
+
 			if(length < 0) {
 				fprintf(stderr,
 				"ouch III length|offset|magic\t[%ld|%d|0x%x]\n",
@@ -300,7 +300,7 @@ void *ac_wave_to_pcm(void *data, ALuint *size,
 			  fprintf(stderr, "Couldn't decode MS_ADPCM\n");
 #endif
 			  return NULL;
-		  } 
+		  }
 
 		  *size = length;
 		  return retval;
@@ -330,7 +330,7 @@ void *ac_wave_to_pcm(void *data, ALuint *size,
 			  fprintf(stderr, "Couldn't decode IMA_ADPCM\n");
 #endif
 			  return NULL;
-		  } 
+		  }
 
 		  *size = length;
 		  return retval;
@@ -366,7 +366,7 @@ void *ac_guess_wave_info(void *data, ALuint *size,
 		}
 	} while ((riffchunk.magic == WAVE) ||
 		 (riffchunk.magic == RIFF));
-		   
+
 
 	if(riffchunk.magic != FMT) {
 		fprintf(stderr, "ouch II magic|FMT"
@@ -481,7 +481,7 @@ static int MS_ADPCM_decode_FULL(ALubyte **audio_buf, ALuint *audio_len) {
 	encoded_len = *audio_len;
 	encoded = *audio_buf;
 	freeable = *audio_buf;
-	*audio_len = (encoded_len/MS_ADPCM_state_FULL.wavefmt.blockalign) * 
+	*audio_len = (encoded_len/MS_ADPCM_state_FULL.wavefmt.blockalign) *
 				MS_ADPCM_state_FULL.wSamplesPerBlock*
 				MS_ADPCM_state_FULL.wavefmt.channels*sizeof(ALshort);
 	*audio_buf = malloc(*audio_len);
@@ -659,7 +659,7 @@ void *ac_getWAVEadpcm_info(void *data, ALuint *size, void *spec) {
 		}
 	} while ((riffchunk.magic == WAVE) ||
 		 (riffchunk.magic == RIFF));
-		   
+
 	if(riffchunk.magic != FMT) {
 		fprintf(stderr, "returning NULL\n");
 		return NULL;
@@ -769,7 +769,7 @@ int RiffOffset(ALubyte *rawdata, ALint magic) {
 			((char *) &chunk.magic)[1],
 			((char *) &chunk.magic)[2],
 			((char *) &chunk.magic)[3]);
-			
+
 		fprintf(stderr,
 			"chunk.len   = %d\n", chunk.len);
 #endif

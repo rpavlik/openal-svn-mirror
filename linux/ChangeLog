@@ -1,3 +1,8 @@
+2003-06-20  Erik Greenwald <erik@smluc.org>
+
+	* (many)
+	Removed trailing spaces and tabs.
+
 2003-05-15  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
 
 	* src/arch/alsa/alsa.c:
@@ -6,7 +11,7 @@
 2003-05-07  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
 
 	* src/al_filter.c:
-	CHanged doppler to multiply existing pitch, if present.
+	Changed doppler to multiply existing pitch, if present.
 
 2003-04-01  J. Valenzuela  <jvalenzu@infinite-monkeys.org>
 
@@ -44,7 +49,7 @@
 	* src/threads/morphosthreads.c
 	* src/threads/morphosthreads.h
 	Added Ruediger Hanke <tomjoad@muenster.de>'s MorphOS files.
-	
+
 2003-01-06  Erik Greenwald <erik@smluc.org> <erik@math.smsu.edu>
 
 	* src/arch/bsd/bsd_dsp.c
@@ -86,7 +91,7 @@
         * src/al_source.c
         * src/al_source.h
 	Re-added Zoltan Ponekker's patch to fix queue looping.
-	
+
 2002-12-04  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
 
 	* src/al_filter.c
@@ -116,7 +121,7 @@
 
 	* src/al_filter.c
 	Fixed stupidity where source's gain wasn't being applied
-	to non distance attentuated sources.  
+	to non distance attentuated sources.
 
 2002-09-16  Christopher Purnell  <cjp@lost.org.uk>
 
@@ -154,7 +159,7 @@
 	* src/al_vector.c
 	* src/al_vector.h
 	Added a vector product function.
-	
+
 2002-09-07  Joseph Valenzuela  <jvalenzu@formosa>
 
 	* src/al_filter.c:
@@ -213,18 +218,18 @@
 	change style of orig_buffer allocation to reduce memory.  Now
 	channels in buf->orig_buffer may be duplicated, so freeing
 	requires uniq'ing orig_buffer[0..._ALC_MAX_CHANNELS].
-	
+
 	* /usr/local/cvs-repository/openal/linux/src/al_main.h
 
 	H to the Izzo
-	
+
 	* /usr/local/cvs-repository/openal/linux/src/al_source.c
 
 	Change variable name from rindex
 
 	* /usr/local/cvs-repository/openal/linux/src/mixaudio16.c
 	Add a little sanity to MixAudio16_n
-	
+
 	* /usr/local/cvs-repository/openal/linux/src/alc/alc_context.c
 	* /usr/local/cvs-repository/openal/linux/src/alc/alc_context.h
 	* /usr/local/cvs-repository/openal/linux/src/alc/alc_device.c
@@ -238,7 +243,7 @@
 	* /usr/local/cvs-repository/openal/linux/test/testlib.h
 
 	Added function pointer for alBufferWriteData_LOKI
-	
+
 	* /usr/local/cvs-repository/openal/linux/test/testmultichannel.c
 
 	Changed testmultichannel to use alBufferWriteData_LOKI
@@ -252,27 +257,27 @@
 
         * openal/linux/CREDITS
 	- vanity change
-	
+
 	* openal/linux/configure.in
 	- moved dl check out of darwin
-	
+
 	* openal/linux/audioconvert/ac_format.c
 	- don't remember
-	
+
 	* openal/linux/src/Makefile.in
 	- changes to aid darwin compilation
-	
+
 	* openal/linux/src/al_propagation.c
 	- remind me to remove this
-	
+
 	* openal/linux/src/mutex/mutexlib.h
 	* openal/linux/src/al_ext.c
 	* openal/linux/src/al_main.c
 	* openal/linux/src/al_siteconfig.h
-	
+
 	* openal/linux/test/Makefile.in
 	- changed tests to use static openal lib
-	
+
 	* openal/linux/test/testlib.c
 	* openal/linux/test/testlib.h
 	- goofy problem with duplicate symbol declarations,
@@ -327,7 +332,7 @@
 2001-01-25  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames.com>
 	* /openal/linux/configure.in
 	Simplified vorbis test.
-	
+
 	* /openal/linux/src/Makefile.in
 	Added al_mspool.c.
 
@@ -348,12 +353,12 @@
 	* /openal/linux/src/alc/alc_context.h
 
 	More comments.
-	
+
 	* /openal/linux/src/arch/darwin/Attic/TODO
 	* /openal/linux/src/arch/darwin/Attic/darwin_native.c
 
 	Darwin backend fixes.
-	
+
 	* /openal/linux/src/arch/interface/interface_sound.c
 	* /openal/linux/src/arch/linux/lin_dsp.c
 
@@ -525,13 +530,13 @@
 	removed fft and complex type stuff.
 	changed AL_GAIN_LINEAR to AL_GAIN_LINEAR_LOKI and moved the define
 	to the extension header.
-	
+
 
 
 2001-01-16  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames.com>
 
 	* /openal/linux/src/alc/alc_context.c
-	Added alcIsExtensionPresent, alcGetProcessAddress, alcGetEnumValue 
+	Added alcIsExtensionPresent, alcGetProcessAddress, alcGetEnumValue
 	( simply wrappers for now )
 
 2001-01-03  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames.com>
@@ -783,19 +788,19 @@
 2000-10-27  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames.com>
 	* /openal/linux/audioconvert/ac_endian.h
 	Fixes for big endian systems
-	
+
 	* /openal/linux/audioconvert/ac_misc.c
 	Fixes for big endian systems
-	
+
 	* /openal/linux/audioconvert/audioconvert.h
 	Changed audio defines to be endian native
-	
+
 	* /openal/linux/src/al_buffer.c
 	More comments
-	
+
 	* /openal/linux/src/arch/irix/iris.c
 	Fixes
-	
+
 	* /openal/linux/src/threads/posixthreads.c
 	Added extern definition of pthread_atfork for irix folk.
 
@@ -854,11 +859,11 @@
 2000-10-19  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames.com>
 	* /openal/linux/include/AL/alexttypes.h
 	Added ima format tokens.
-	
+
 	* /openal/linux/src/al_buffer.c
 	Added support for ima format tokens
 	Fixed bug for AL_BITS in alGetBufferi
-	
+
 	* /openal/linux/src/al_main.c
 	* /openal/linux/src/al_main.h
 	Added ima extension support in format converters
@@ -1096,7 +1101,7 @@
 	Updated context to remove extraneous channel parameter, instead
 	deriving channels from the format.
 	Updates for capture stuff.
-	
+
 	* openal/linux/src/arch/arts/arts.c
 	* openal/linux/src/arch/arts/arts.h
 	* openal/linux/src/arch/bsd/bsd_dsp.c
@@ -1344,38 +1349,38 @@
 
 	made AL_siteconfig.h first include in any file including string.h
 	(again!)
-	
+
 	added capture extention and other stuff.
 
 2000-09-19  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames-lan.com>
 	* openal/linux/src/al_debug.c
 	Fixed incorrect order of inclusion of al_siteconfig.h
-	
+
 	* openal/linux/src/al_filter.c
 	Added listener gain filter to apply listener gain to source
 	*after* min/max gain filter applied.
-	
+
 	* openal/linux/src/al_filter.h
 	Added prototype for listener gain filter.
-	
+
 	* openal/linux/src/al_mixer.c
 	Added and removed tlAtForkThread code
 	Debugging mania
-	
+
 	* openal/linux/src/al_source.c
 	Fixed stupid callback/looping intersection bug.
 	Added sanity check so that playing sources can't have their buffers
 	changed out from under them.
-	
+
 	* openal/linux/src/alut/alut_wav.c
 	Added/removed fprintfs
-	
+
 	* openal/linux/src/threads/posixthreads.c
 	Added Posix_AtForkThread code
-	
+
 	* openal/linux/src/threads/posixthreads.h
 	Added Posix_AtForkThread prototype
-	
+
 	* openal/linux/src/threads/threadlib.h
 	Added tlAtForkThread macro
 
@@ -1585,11 +1590,11 @@
 
 	* src/al_mixer.c
 	Added instantiation of mixer_iterate
-	
+
 	* src/al_mixer.h
 	Added comment.
 	Removed instantiation of mixer_iterate.
-	
+
 	* src/al_mixmanager.h
 	Added comment.
 
@@ -1598,10 +1603,10 @@
 
 	* test/testpitch4
 	Initial check in.
-	
+
 	* test/Makefile.in
 	Added testpitch3 and testpitch4 rules.
-	
+
 	* test/.cvsignore
 	Added testpitch3 and testpitch4 entries
 
@@ -1612,7 +1617,7 @@
 	Implemented full or no deallocation for buffers.
 	Fixed potential memory leak in failed buffer generation.
 	Fixed memory leak associated with bid vs index confusion
-	
+
 	* src/al_source.c
 	Implemented full or no deallocation for sources.
 	Fixed potential memory leak in failed source generation.
@@ -1623,7 +1628,7 @@
 	* src/al_filter.c
 	Altered tpitch init stuff to use more steps, and to also allocate
 	offset table in one big chunk to reduce memory fragmentation.
-	
+
 	* test/testbuffergendestroy.c
 	More verbose messages.
 
@@ -1640,7 +1645,7 @@
 2000-08-31  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames-lan.com>
 	* ChangeLog
 	Noted changes
-	
+
 	* src/al_ext.c
 	Fix for segfault caused by plugins missing alExtFini
 
@@ -1694,7 +1699,7 @@
 
 	* src/al_able.c
 	Removed unneeded include <math.h>
-	
+
 	* src/al_filter.c
 	Reordered includes to avoid M_PI collision on freebsd
 
@@ -1798,7 +1803,7 @@
 	Updated to use AL_GAIN_LINEAR
 
 	* test/testtime.c
-	Lowered buffersize to decrease latency	
+	Lowered buffersize to decrease latency
 
 	* test/teststream.c
 	Added multichannel call
@@ -1851,7 +1856,7 @@
 
 	* ChangeLog
 	Noted changes
-	
+
 	* al_mixer.c
 	Cleaned up delayed buffer deletions
 
@@ -1860,7 +1865,7 @@
 
 	* al_types.h
 	Added flag, ALB_PENDING_DELETE, to simplify delayed buffer
-	deletions. 
+	deletions.
 
 2000-08-20  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames-lan.com>
 	* ChangeLog
@@ -1868,38 +1873,38 @@
 
 	* acconfig.h
 	Added define for VORBIS_SUPPORT
-	
+
 	* configure.in
 	Added --enable flag for tentative vorbis support
-	
+
 	* src/Makefile.in
 	Added compilations rules for vorbis stuff, cleaned up extension
 	dependencies some.
-	
+
 	* src/al_main.c
 	Added code for vorbis extension
-	
+
 	* src/al_mixer.c
 	removed spurious fprintf
-	
+
 	* src/al_source.c
 	Fixed multichannel callbacks
-	
+
 	* src/extensions/al_ext_mp3.c
 	Don't remember
-	
+
 	* src/extensions/al_ext_vorbis.c
 	Initial extension for vorbis support
-	
+
 	* src/extensions/al_ext_vorbis.h
 	Initial extension for vorbis support
 
 	* test/.cvsignore
 	Added entry for testvorbis
-	
+
 	* test/Makefile.in
 	Added rule for testvorbis
-	
+
 	* test/testmp3.c
 	Changed in the process of fixing multichannel callbacks
 
@@ -1921,7 +1926,7 @@
 2000-08-18  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames-lan.com>
 	* src/al_mixer.c
 	Fixes for callback stuff
-	
+
 	* src/al_source.c
 	Fixes for callback stuff
 
@@ -1931,7 +1936,7 @@
 2000-08-18  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames-lan.com>
 	* src/al_mixer.c
 	Fixes for callback stuff
-	
+
 	* src/al_source.c
 	Fixes for callback stuff
 
@@ -1940,7 +1945,7 @@
 
 2000-08-09  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames-lan.com>
 	* INSTALL
-	Small note telling people to run ldconfig because of the 
+	Small note telling people to run ldconfig because of the
 	soname change.
 
 	* src/Makefile.in
@@ -1983,7 +1988,7 @@
 2000-08-07  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames-lan.com>
 	* ChangeLog
 	Noted changes
-	
+
 	* src/al_main.c:
 	updated vector_angle_between to correctly handle sign (so that the
 	angle correctly differentiates between left/right).
@@ -1992,7 +1997,7 @@
 
 	* src/al_main.h
 	added vector_quadrant prototype
-	
+
 	* src/extensions/al_ext_loki.c
 	Don't remember
 
@@ -2001,7 +2006,7 @@
 	Added support for mp3 extension to be compiled in library.  When
 	the smpeg changes are commited, this will be folded into the
 	regular library for transparant mp3 support.
-	
+
 	* test/test.c
 	* test/testalc.c
 	* test/testalut.c
@@ -2067,20 +2072,20 @@
 2000-08-04  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames-lan.com>
 	* src/al_main.c
 	Made a list, checked it twice.
-	
+
 	* src/al_main.h
 	Found out who was naughty and who was nice.
-	
+
 	* src/alc/alc_speaker.c
 	Added logic to handle an upside down listener.  This isn't well
 	tested and will need to be revised soon.
-	
+
 	* test/.cvsignore
 	Added entries for multiple test cases.
-	
+
 	* test/Makefile.in
 	Added rules for new test cases.
-	
+
 	* test/testlib.c
 	Nothing big.
 
@@ -2098,33 +2103,33 @@
 	used alBufferData without alutLoadWAV(which previously converted
 	data into canonical format) or because of the new multichannel
 	support.
-	
+
 	* src/al_filter.c
 	Fixed alt_tpitch so that multichannel buffers get handled in a
 	minimally proper way.  This still needs to be tested for feature
 	completeeness, but with a pitch of 1.0 this should work okay.
-	
-	* src/alut/alut_wav.c	
+
+	* src/alut/alut_wav.c
 	Changed alutLoadWAV so that it no longer automatically converts
 	data to canonical format (to aid use of multichannel buffers).
-	
+
 	* src/extensions/al_ext_loki.c
 	AL_BITS is not a valid setter any more for alBufferi_LOKI.
-	
+
 	* test/.cvsignore
 	Added testmultichannel entry
-	
+
 	* test/Makefile.in
 	Added testmultichannel rule
 
 	* test/testmultichannel
 	Program to aid in testing multichannel buffers.
-	
+
 
 2000-08-02  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames-lan.com>
 	* Changelog
 	Marked changes
-	
+
 	* src/al_mixer.c:
 	Cleaned up tremendously ugly StreamingList code a very little.
 	Sources with streaming buffers now work as advertised.
@@ -2134,10 +2139,10 @@
 
 	* test/.cvsignore
 	Added test programs and rawpcm.pcm
-	
+
 	* audioconvert/ac_helper.c
 	Reordered conversion filters to 8-bit samples get converte properly.
-	  
+
 	* src/al_filter.c
 	Nothing much.
 
@@ -2146,7 +2151,7 @@
 	hosed prematurely.
 
 	Added SOURCE_STATE to GetSourceParams, to avoid misleading debug
-	message. 
+	message.
 
 	* test/testalut.c
 	Adapted test to test files passed on command line.
@@ -2162,7 +2167,7 @@
 
  	* linux/ChangeLog
 	Noted changes
-	
+
 	* lots of files
 	Changed AL_ACTIVE to AL_PLAYING, per Bernd's request
 
@@ -2176,52 +2181,52 @@
 	* linux/doc/openal.texi
 	Added documentation for alBufferi_LOKI to Loki extension section.
 	Added FAQ question on alAttenuationScale_LOKI.
-	
+
 	* linux/include/AL/alkludgetypes.h
 	Changed enumeration base a little.
-	
+
 	* linux/src/al_buffer.c
 	Added support for multichannel buffers
 
 	* linux/src/al_buffer.h
 	Small cleanup
-	
+
 	* linux/src/al_ext.c
 	Change extension typedef to AL_extension
-	
+
 	* linux/src/al_main.c
 	Change extension typedef to AL_extension
-	
+
 	* linux/src/al_mixer.c
 	Added support for multichannel buffers
-	
+
 	* linux/src/al_source.c
 	Removed unused orientation paramater, added support for
 	multichannel buffers.
-	
+
 	* linux/src/al_types.h
 	Changed extension typedef to AL_extension
 	Corrected lame typedef that defined float6vparam to be a 3-element
 	type.
-	
+
 	* linux/src/extensions/al_ext_loki.c
 	Added alBufferi_LOKI, to allow multichannel buffers.
-	
+
 	* linux/src/extensions/al_ext_loki.h
 	Added alBufferi_LOKI, to allow multichannel buffers.
-	
+
 	* linux/test/Makefile.in
 	Added case for new test program teststream2
-	
+
 	* linux/test/testcallback.c
 	Don't remember
-	
+
 	* linux/test/testlib.c
 	Added code to fixup_function_pointers to load alBufferi_LOKI
-	
+
 	* linux/test/testlib.h
 	Added symbol that resolves to alBufferi_LOKI
-	
+
 	* linux/test/testpause3.c
 	Don't remember
 
@@ -2258,9 +2263,9 @@
 	So if you set native-use-select to #f, the linux native driver
 	won't use select.
 
-	
 
-	* doc/openal.texi: 
+
+	* doc/openal.texi:
 	Added FAQ section, and short description on how to enable ESD.
 
 2000-07-27  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames-lan.com>
@@ -2275,7 +2280,7 @@
 	associated with callback buffers get their source-destroy callback
 	called when the source is either implicitly or explicitly
 	stopped.
-	
+
 	* src/al_main.c src/al_main.h
 	changed slurp to _alSlurp
 
@@ -2284,13 +2289,13 @@
 
 2000-07-24  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames-lan.com>
 
-	* doc/openal.texi: 
+	* doc/openal.texi:
 	Fleshed out sections on errors a little bit.
 
 	* (src/arch/linux/lin_dsp.c)
 	Added an ioctl call to request the fragment size from the sound
 	card in set_native, so that weird bufsiz requests to set_native
-	(ie, requests which are not powers of two) that get implicitly set 
+	(ie, requests which are not powers of two) that get implicitly set
 	to some power of two are reported to the calling function
 	correctly.  A mismatch could potentially cause timing problems.
 
@@ -2312,9 +2317,9 @@
 	are:
 
 	GetErrorString       -- duplicated functionality (use GetString)
-	
+
 	Most _LOKI functions have been moved such that they require an
-	explicit GetProcAddress to resolve them.  The prototypes for these 
+	explicit GetProcAddress to resolve them.  The prototypes for these
 	functions are located in the documentation (openal.info).  Some
 	_LOKI functions have been removed.  A list of these are:
 
@@ -2338,5 +2343,5 @@
 	To aid future clarity, updates to the list of missing functions
 	and changes brought about by the new implementation will be made
 	directly to this ChangeLog entry, with a date appended when
-	needed.  That way, there will be one centralized location for that 
+	needed.  That way, there will be one centralized location for that
 	sort of information.

@@ -46,7 +46,7 @@ static lin_audio hardware_type = LA_NONE;
  * from dataptr to the device specified by handle.  dataptr is an interleaved
  * array.
  */
-void (*_alBlitBuffer)( void *handle, 
+void (*_alBlitBuffer)( void *handle,
 			      void *dataptr,
 			      int bytes_to_write );
 

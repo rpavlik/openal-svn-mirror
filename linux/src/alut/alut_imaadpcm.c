@@ -317,7 +317,7 @@ static int IMA_ADPCM_Callback(ALuint sid, ALuint bid,
 		/* do something */
 		bytesToRead = filebytesleft;
 		sampsToRead = bytesToRead/sizeof(ALshort);
-	} 
+	}
 
 	bytesToRead = sampsToRead * sizeof(ALshort);
 
@@ -333,7 +333,7 @@ static int IMA_ADPCM_Callback(ALuint sid, ALuint bid,
 
 	if(rb.bytesLeft <= 0) {
 		int copylen;
-		
+
 		if(filebytesleft >= sizeof(ALshort) * rb.blockSampSize) {
 			copylen = rb.blockSampSize;
 		} else {
@@ -376,10 +376,10 @@ static int IMA_ADPCM_Callback(ALuint sid, ALuint bid,
 		rb.readByteOffset = 0;
 		rb.bytesLeft   = rb.blockSampSize;
 
-		/* 
+		/*
 		 * looping happens at offset 0.
 		 *
-		 * Sorry, that's the way it has to be until I 
+		 * Sorry, that's the way it has to be until I
 		 * rewrite msadpcm_decode
 		 */
 		ismap_update(i, 0, state, &rb, &flen);

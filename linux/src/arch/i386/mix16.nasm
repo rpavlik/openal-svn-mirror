@@ -1,5 +1,5 @@
 	;; short *dst, short *src, int len
-	;;	
+	;;
 	global mix16_1
 mix16_1:	push ebp
 	mov ebp, esp
@@ -87,7 +87,7 @@ mix16_1:	push ebp
 	pop eax
 	mov esp, ebp
 	pop ebp
-	
+
 	emms
 	ret
 
@@ -112,7 +112,7 @@ mix16_1:	push ebp
 
 
 	;; short *dst, short **srcs, int len
-	;;	
+	;;
 	global mix16_2
 mix16_2:
 	push ebp
@@ -130,7 +130,7 @@ mix16_2:
 	jl .twocomp
 
 	;; load data
-	
+
 
 	mov edx, [ebx]	  ;; mov srcs[0] into edx
 	movq mm0, [eax]   ;; mov dst[0..3] into mm0
@@ -216,7 +216,7 @@ mix16_2:
 	pop eax
 	mov esp, ebp
 	pop ebp
-	
+
 	emms
 	ret
 
@@ -237,7 +237,7 @@ mix16_2:
 
 
 	;; short *dst, short **srcs, int len
-	;;	
+	;;
 	global mix16_3
 mix16_3:
 	push ebp
@@ -255,7 +255,7 @@ mix16_3:
 	jl .twocomp
 
 	;; load data
-	
+
 
 	mov edx, [ebx]	  ;; mov srcs[0] into edx
 	movq mm0, [eax]   ;; mov dst[0..3] into mm0
@@ -313,7 +313,7 @@ mix16_3:
 	add word [ebx+4], 4 ;; increment src[1]
 	sub ecx, 2          ;; decrement len
 	add word [ebx+8], 4 ;; increment src[2]
-	
+
 	jmp .twocomp
 
 ;; now for %1
@@ -351,7 +351,7 @@ mix16_3:
 	pop eax
 	mov esp, ebp
 	pop ebp
-	
+
 	emms
 	ret
 
@@ -372,7 +372,7 @@ mix16_3:
 
 
 	;; short *dst, short **srcs, int len
-	;;	
+	;;
 	global mix16_4
 mix16_4:
 	push ebp
@@ -459,7 +459,7 @@ mix16_4:
 	sub ecx, 2          ;; decrement len
 	add word [ebx+8], 4 ;; increment src[2]
 	add word [ebx+12], 4 ;; increment src[3]
-	
+
 	jmp .twocomp
 
 ;; now for %1
@@ -498,7 +498,7 @@ mix16_4:
 	pop eax
 	mov esp, ebp
 	pop ebp
-	
+
 	emms
 	ret
 
@@ -519,7 +519,7 @@ mix16_4:
 
 
 	;; short *dst, short **srcs, int len
-	;;	
+	;;
 	global mix16_5
 mix16_5:
 	push ebp
@@ -614,7 +614,7 @@ mix16_5:
 	add word [ebx+8], 4 ;; increment src[2]
 	add word [ebx+12], 4 ;; increment src[3]
 	add word [ebx+16], 4 ;; increment src[4]
-	
+
 	jmp .twocomp
 
 ;; now for %1
@@ -654,7 +654,7 @@ mix16_5:
 	pop eax
 	mov esp, ebp
 	pop ebp
-	
+
 	emms
 	ret
 
@@ -673,7 +673,7 @@ mix16_5:
 
 
 	;; short *dst, short **srcs, int len
-	;;	
+	;;
 	global mix16_6
 mix16_6:
 	push ebp
@@ -776,7 +776,7 @@ mix16_6:
 	add word [ebx+12], 4 ;; increment src[3]
 	add word [ebx+16], 4 ;; increment src[4]
 	add word [ebx+20], 4 ;; increment src[5]
-	
+
 	jmp .twocomp
 
 ;; now for %1
@@ -817,7 +817,7 @@ mix16_6:
 	pop eax
 	mov esp, ebp
 	pop ebp
-	
+
 	emms
 	ret
 
@@ -835,7 +835,7 @@ mix16_6:
 	ret
 
 	;; short *dst, short **srcs, int len
-	;;	
+	;;
 	global mix16_7
 mix16_7:
 	push ebp
@@ -950,7 +950,7 @@ mix16_7:
 	add word [ebx+16], 4 ;; increment src[4]
 	add word [ebx+20], 4 ;; increment src[5]
 	add word [ebx+24], 4 ;; increment src[6]
-	
+
 	jmp .twocomp
 
 ;; now for %1
@@ -992,7 +992,7 @@ mix16_7:
 	pop eax
 	mov esp, ebp
 	pop ebp
-	
+
 	emms
 	ret
 

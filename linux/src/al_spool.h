@@ -38,7 +38,7 @@ void spool_init( spool_t *spool );
  */
 int spool_alloc( spool_t *spool );
 
-/* 
+/*
  * spool_free( spool_t *spool, void (*freer_func)(void *) );
  *
  * Deallocates all source pool nodes in a source pool object.

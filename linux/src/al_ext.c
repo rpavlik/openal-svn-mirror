@@ -60,7 +60,7 @@ static void FL_alUnlockExtension( const char *fn, int ln );
 
 /* data structure storing extension library fini functions */
 static struct {
-	void (*pool[MAX_EXT_LIBS])(void); 
+	void (*pool[MAX_EXT_LIBS])(void);
 	int index;
 } FiniFunc;
 
@@ -137,7 +137,7 @@ static void _alExtPushFiniFunc( void (*func)(void) );
  * On the level of the specification, "Extension" is a
  * group of functions and/or tokens that express a particular
  * extended functionality of the API.
- * 
+ *
  * In terms of this implementation 'Extension' refers
  * to particular function that is registered in the
  * dictionary for fast GetProcAddress(). A simple dlsym()
@@ -259,7 +259,7 @@ void _alDestroyExtensionGroups( void ) {
 	return;
 }
 
-/** 
+/**
  * Extension support.
  */
 
@@ -267,7 +267,7 @@ void _alDestroyExtensionGroups( void ) {
  * alGetProcAddress( const ALubyte *fname )
  *
  * Obtain the address of a function (usually an extension) with the name
- * fname. All addresses are context-independent. 
+ * fname. All addresses are context-independent.
  */
 void *alGetProcAddress( const ALubyte *fname ) {
 	enode_t *retpair;
@@ -367,7 +367,7 @@ void _alDestroyExtensions( void ) {
 		FiniFunc.pool[i](); /* call fini funcs */
 		FiniFunc.index--;
 	}
-	
+
 	return;
 }
 
@@ -666,7 +666,7 @@ static void _alExtPushFiniFunc( void (*func)(void) ) {
  * alGetEnumValue( const ALubyte *ename )
  *
  * Returns the integer value of an enumeration (usually an extension)
- * with the name ename. 
+ * with the name ename.
  */
 ALenum alGetEnumValue( const ALubyte *ename ) {
 	if(ustrcmp("AL_INVALID", ename) == 0) {
@@ -748,11 +748,11 @@ ALenum alGetEnumValue( const ALubyte *ename ) {
 	if(ustrcmp("AL_BUFFERS_QUEUED", ename) == 0) {
 		return AL_BUFFERS_QUEUED;
 	}
-	
+
 	if(ustrcmp("AL_BUFFERS_PROCESSED", ename) == 0) {
 		return AL_BUFFERS_PROCESSED;
 	}
-	
+
 	if(ustrcmp("AL_ORIENTATION", ename) == 0) {
 		return AL_ORIENTATION;
 	}
@@ -920,75 +920,75 @@ ALenum alGetEnumValue( const ALubyte *ename ) {
 	if(ustrcmp("ALC_INVALID", ename) == 0) {
 		return ALC_INVALID;
 	}
-	
+
 	if(ustrcmp("ALC_FREQUENCY", ename) == 0) {
 		return ALC_FREQUENCY;
 	}
-	
+
 	if(ustrcmp("ALC_REFRESH", ename) == 0) {
 		return ALC_REFRESH;
 	}
-	
+
 	if(ustrcmp("ALC_SYNC", ename) == 0) {
 		return ALC_SYNC;
 	}
-	
+
 	if(ustrcmp("ALC_NO_ERROR", ename) == 0) {
 		return ALC_NO_ERROR;
 	}
-	
+
 	if(ustrcmp("ALC_INVALID_DEVICE", ename) == 0) {
 		return ALC_INVALID_DEVICE;
 	}
-	
+
 	if(ustrcmp("ALC_INVALID_CONTEXT", ename) == 0) {
 		return ALC_INVALID_CONTEXT;
 	}
-	
+
 	if(ustrcmp("ALC_INVALID_ENUM", ename) == 0) {
 		return ALC_INVALID_ENUM;
 	}
-		
+
 	if(ustrcmp("ALC_INVALID_VALUE", ename) == 0) {
 		return ALC_INVALID_VALUE;
 	}
-		
+
 	if(ustrcmp("ALC_OUT_OF_MEMORY", ename) == 0) {
 		return ALC_OUT_OF_MEMORY;
 	}
-	
+
 	if(ustrcmp("ALC_DEFAULT_DEVICE_SPECIFIER", ename) == 0) {
 		return ALC_DEFAULT_DEVICE_SPECIFIER;
 	}
-	
+
 	if(ustrcmp("ALC_DEVICE_SPECIFIER", ename) == 0) {
 		return ALC_DEVICE_SPECIFIER;
 	}
-	
+
 	if(ustrcmp("ALC_EXTENSIONS", ename) == 0) {
 		return ALC_EXTENSIONS;
 	}
-	
+
 	if(ustrcmp("ALC_MAJOR_VERSION", ename) == 0) {
 		return ALC_MAJOR_VERSION;
 	}
-	
+
 	if(ustrcmp("ALC_MINOR_VERSION", ename) == 0) {
 		return ALC_MINOR_VERSION;
 	}
-	
+
 	if(ustrcmp("ALC_ATTRIBUTES_SIZE", ename) == 0) {
 		return ALC_ATTRIBUTES_SIZE;
 	}
-	
+
 	if(ustrcmp("ALC_ALL_ATTRIBUTES", ename) == 0) {
 		return ALC_ALL_ATTRIBUTES;
 	}
-	
+
 	if(ustrcmp("ALC_FALSE", ename) == 0) {
 		return ALC_FALSE;
 	}
-	
+
 	if(ustrcmp("ALC_TRUE", ename) == 0) {
 		return ALC_TRUE;
 	}

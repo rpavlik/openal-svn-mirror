@@ -22,7 +22,7 @@ TODO:
 	    - implement routing on two cards
 
 	Testing:
-	  - callbacks with filters (alf_tpitch in particular) 
+	  - callbacks with filters (alf_tpitch in particular)
 	  - locking
 	  - more in general
 

@@ -164,7 +164,7 @@ int main(void) {
 		vec2[0], vec2[1], vec2[2],
 		point2[0], point2[1], point2[2],
 		vector_intersect_angle(vec1, point1, vec2, point2));
-			
+
 	/* vector intersect angle */
 	vec1[0] = 0.0; point1[0] = 4.0;
 	vec1[1] = 0.0; point1[1] = 0.0;

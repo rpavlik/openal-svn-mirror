@@ -115,7 +115,7 @@ int main( int argc, char* argv[] ) {
 		rsamps = 0;
 
 		while(rsamps < nsamps) {
-			micro_sleep( delay ); 
+			micro_sleep( delay );
 
 			waitfor = talBufferAppendWriteData(stereo,
 					AL_FORMAT_STEREO16,

@@ -147,7 +147,7 @@ ALboolean set_write_sdl(UNUSED(void *handle),
         sdl_info.spec.channels = channels;
         sdl_info.spec.samples  = *bufsiz / bytesPerSample;
         sdl_info.spec.format   = _al_AL2ACFMT(*fmt);
-        sdl_info.spec.callback = dummy; 
+        sdl_info.spec.callback = dummy;
 
         SDL_CloseAudio();
 

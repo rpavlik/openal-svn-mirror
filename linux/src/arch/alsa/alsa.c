@@ -6,12 +6,12 @@
 
     Dirk Ehlke
     EMail: dehlke@mip.informatik.uni-kiel.de
-    
+
     Multimedia Information Processing
     Christian-Albrechts-University of Kiel
 
     2002/06/13
-*/ 
+*/
 
 
 #ifndef _SVID_SOURCE
@@ -131,7 +131,7 @@ void *grab_write_alsa( void )
 	retval->framesize   = 0;
 	retval->bufframesize= 0;
         retval->periods     = 0;
-        
+
 	_alBlitBuffer = alsa_blitbuffer;
 
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
@@ -158,14 +158,14 @@ ALboolean set_write_alsa(void *handle,
 	snd_pcm_hw_params_t *setup;
 	snd_pcm_t *phandle = 0;
 	int err, dir;
-	
+
 	if( (ai == NULL) || (ai->handle == NULL) )
 	  return AL_FALSE;
 
 
-        ai->channels    = (unsigned int) _al_ALCHANNELS(*fmt); 
-        ai->format      = (unsigned int) AL2ALSAFMT(*fmt); 
-        ai->speed       = (unsigned int) *speed; 
+        ai->channels    = (unsigned int) _al_ALCHANNELS(*fmt);
+        ai->format      = (unsigned int) AL2ALSAFMT(*fmt);
+        ai->speed       = (unsigned int) *speed;
         ai->framesize   = (unsigned int) FRAMESIZE(ai->format, ai->channels);
 	ai->bufframesize= (snd_pcm_uframes_t) *bufsiz / ai->framesize * 4;
         ai->periods     = 2;
@@ -191,12 +191,12 @@ ALboolean set_write_alsa(void *handle,
 
 		return AL_FALSE;
 	}
-        
+
         /* set the interleaved read format */
         err = snd_pcm_hw_params_set_access(phandle, setup, SND_PCM_ACCESS_RW_INTERLEAVED);
         if (err < 0) {
         	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-			 "set_write_alsa: Could not set access type: %s",snd_strerror(err));                
+			 "set_write_alsa: Could not set access type: %s",snd_strerror(err));
                 return AL_FALSE;
         }
 
@@ -212,7 +212,7 @@ ALboolean set_write_alsa(void *handle,
 
 
 	/* channels */
-	err = snd_pcm_hw_params_set_channels(phandle, setup, ai->channels); 
+	err = snd_pcm_hw_params_set_channels(phandle, setup, ai->channels);
 	if(err < 0)
 	{
 		err = snd_pcm_hw_params_get_channels(setup);
@@ -223,7 +223,7 @@ ALboolean set_write_alsa(void *handle,
 			return AL_FALSE;
 		}
 	}
-        
+
 
 	/* sampling rate */
 	err = snd_pcm_hw_params_set_rate_near(phandle, setup, ai->speed, NULL);
@@ -235,30 +235,30 @@ ALboolean set_write_alsa(void *handle,
 		return AL_FALSE;
 	}
 	/* err is sampling rate if >= 0 */
-	ai->speed = (unsigned int) err; 
+	ai->speed = (unsigned int) err;
 
-	
-        /* Set number of periods. Periods used to be called fragments. */ 
+
+        /* Set number of periods. Periods used to be called fragments. */
         err = snd_pcm_hw_params_set_periods(phandle, setup, ai->periods, 0);
         if (err < 0) {
                 _alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
 			"set_write_alsa: %s\n", snd_strerror(err));
-		return AL_FALSE;       
+		return AL_FALSE;
         }
-        
-        err = snd_pcm_hw_params_set_buffer_size(phandle, setup, ai->bufframesize); 
+
+        err = snd_pcm_hw_params_set_buffer_size(phandle, setup, ai->bufframesize);
         if (err < 0) {
                 _alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
 			"set_write_alsa: %s\n", snd_strerror(err));
-		return AL_FALSE;       
+		return AL_FALSE;
         }
-        
+
         _alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
          "set_write_alsa (info): Buffersize = %i (%i)",snd_pcm_hw_params_get_buffer_size(setup), *bufsiz);
-             
+
         _alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
          "set_write_alsa (info): Periodsize = %i",snd_pcm_hw_params_get_period_size(setup, &dir));
-        
+
 	err = snd_pcm_hw_params(phandle, setup);
 	if(err < 0)
 	{
@@ -296,7 +296,7 @@ void alsa_blitbuffer(void *handle, void *data, int bytes)
 	phandle = ai->handle;
         channels= ai->channels;
         frames  = (snd_pcm_uframes_t) bytes / ai->framesize;
-	
+
 	while(data_len > 0)
 	{
 		err = snd_pcm_writei(phandle, pdata, frames);
@@ -318,7 +318,7 @@ void alsa_blitbuffer(void *handle, void *data, int bytes)
 		}
 		if(err < 0)
 		{
-                        err = snd_pcm_prepare(phandle); 
+                        err = snd_pcm_prepare(phandle);
 			if(err < 0)
 			{
 				const char *serr = snd_strerror(err);
@@ -333,7 +333,7 @@ void alsa_blitbuffer(void *handle, void *data, int bytes)
 
 	return;
 }
-	
+
 static int AL2ALSAFMT(ALenum format) {
 	switch(format) {
 		case AL_FORMAT_STEREO8:     return SND_PCM_FORMAT_U8;
@@ -342,7 +342,7 @@ static int AL2ALSAFMT(ALenum format) {
 		case AL_FORMAT_STEREO16:    return SND_PCM_FORMAT_S16;
 		case AL_FORMAT_MONO16:      return SND_PCM_FORMAT_S16;
 		case AL_FORMAT_QUAD16_LOKI: return SND_PCM_FORMAT_S16;
-		
+
 		default: break;
 	}
 	return -1;
@@ -360,7 +360,7 @@ static int FRAMESIZE(snd_pcm_format_t fmt, unsigned int chans) {
 			retval = 2;
 			break;
 		default:
-	                return -1;	        
+	                return -1;
 		        break;
 		}
 

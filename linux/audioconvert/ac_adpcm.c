@@ -7,10 +7,10 @@ Netherlands.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the names of Stichting Mathematisch
 Centrum or CWI not be used in advertising or publicity pertaining to
 distribution of the software without specific, written prior permission.
@@ -84,7 +84,7 @@ static int stepsizeTable[89] = {
     5894, 6484, 7132, 7845, 8630, 9493, 10442, 11487, 12635, 13899,
     15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767
 };
-    
+
 void
 ac_adpcm_coder(short indata[], char outdata[], int len,adpcm_state_t *state) {
 
@@ -129,7 +129,7 @@ ac_adpcm_coder(short indata[], char outdata[], int len,adpcm_state_t *state) {
 	*/
 	delta = 0;
 	vpdiff = (step >> 3);
-	
+
 	if ( diff >= step ) {
 	    delta = 4;
 	    diff -= step;
@@ -161,7 +161,7 @@ ac_adpcm_coder(short indata[], char outdata[], int len,adpcm_state_t *state) {
 
 	/* Step 5 - Assemble value, update index and step values */
 	delta |= sign;
-	
+
 	ind += indexTable[delta];
 	if ( ind < 0 ) ind = 0;
 	if ( ind > 88 ) ind = 88;
@@ -179,7 +179,7 @@ ac_adpcm_coder(short indata[], char outdata[], int len,adpcm_state_t *state) {
     /* Output last step, if needed */
     if ( !bufferstep )
       *outp++ = outputbuffer;
-    
+
     state->valprev = valpred;
     state->index = ind;
 }
@@ -211,9 +211,9 @@ int position)
     if(bufferstep) {
 	    inputbuffer = *inp++;
     }
-    
+
     for ( ; len > 0 ; len-- ) {
-	
+
 	/* Step 1 - get the delta value */
 	if ( bufferstep ) {
 	    delta = inputbuffer & 0xf;
@@ -569,7 +569,7 @@ int IMA_ADPCM_decode_FULL(alIMAADPCM_state_LOKI *istate,
 	unsigned int channels;
 
 
-	
+
 	/* Check to make sure we have enough variables in the state array */
 	channels = istate->wavefmt.channels;
 	if ( channels > NELEMS(istate->state) ) {
@@ -585,7 +585,7 @@ int IMA_ADPCM_decode_FULL(alIMAADPCM_state_LOKI *istate,
 	encoded_len = *audio_len;
 	encoded = *audio_buf;
 	freeable = *audio_buf;
-	*audio_len = (encoded_len/istate->wavefmt.blockalign) * 
+	*audio_len = (encoded_len/istate->wavefmt.blockalign) *
 				istate->wSamplesPerBlock*
 				istate->wavefmt.channels*sizeof(ALshort);
 

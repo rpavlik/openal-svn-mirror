@@ -126,7 +126,7 @@ void _alSourceTranslate( AL_source *src, ALfloat *delta );
  * Resets the srcParam settings gain and delay.  Does not affect srcParam
  * settings associated with sound position or the temporary scratch space.
  */
-void _alSourceParamReset( AL_source *src ); 
+void _alSourceParamReset( AL_source *src );
 
 /*
  * _alSourceParamApply( AL_source *src,

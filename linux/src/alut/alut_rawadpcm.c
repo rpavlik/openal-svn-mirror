@@ -75,7 +75,7 @@ ALboolean alutLoadRAW_ADPCMData_LOKI(ALuint bid,
 		}
 		RAW_first_time = AL_FALSE;
 	}
-	
+
 	persistent_data = malloc(size);
 	if(persistent_data == NULL) {
 		return AL_FALSE;
@@ -182,7 +182,7 @@ static int admap_insert(ALuint sid) {
 			admap[i].offset = 0;
 			admap[i].state.valprev = 0;
 			admap[i].state.index   = 0;
-			
+
 			return i;
 		}
 	}
@@ -276,7 +276,7 @@ static void admap_remove(ALuint sid) {
 			admap[i].offset        = 0;
 			admap[i].state.valprev = 0;
 			admap[i].state.index   = 0;
-			
+
 			return;
 		}
 	}

@@ -22,7 +22,7 @@ Dependencies
 Overview
 
         This extension provides format support for IMA ADPCM data.
-        Use of this extension allows the association of IMA ADPCM 
+        Use of this extension allows the association of IMA ADPCM
         in addition to PCM formats for buffer data.
 
 Issues

@@ -39,7 +39,7 @@ extern volatile ALboolean time_for_mixer_to_die;
  *
  * Create and initialize data structures needed by the mixing function.
  */
-ALboolean _alInitMixer( void ); 
+ALboolean _alInitMixer( void );
 
 /*
  * _alSetMixer( ALboolean synchronous )

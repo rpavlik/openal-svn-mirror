@@ -72,7 +72,7 @@ static void init( const char *fname ) {
 	alQueuei(   multis, AL_BUFFER, boom );
 	alQueuei(   multis, AL_BUFFER, boom );
 
-	return;	
+	return;
 }
 
 void cleanup(void) {

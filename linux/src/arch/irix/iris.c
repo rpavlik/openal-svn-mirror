@@ -3,7 +3,7 @@
  *
  * iris.c
  *
- * functions related to the aquisition and management of the native 
+ * functions related to the aquisition and management of the native
  * audio on IRIX.
  *
  */
@@ -125,7 +125,7 @@ int set_nativechannel(UNUSED(void *handle),
 void pause_nativedevice(UNUSED(void *handle)) {
 	/* This is the best i could find */
 	alDiscardFrames(alh->port, alGetFilled(alh->port));
- 
+
 	return;
 }
 

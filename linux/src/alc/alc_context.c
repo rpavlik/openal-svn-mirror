@@ -193,17 +193,17 @@ ALCenum alcMakeContextCurrent( ALCcontext *handle )
 					_alcSetError( ALC_INVALID_CONTEXT );
 
 					_alcUnlockAllContexts();
-					
+
 					return ALC_INVALID_CONTEXT;
 				}
-				
+
 				/*
 				 * inform current audio device about
 				 * impending stall.
 				 */
 				_alcDevicePause( cc->write_device );
 				_alcDevicePause( cc->read_device );
-				
+
 				_alcCCId = (ALuint) -1;
 				_alcUnlockAllContexts();
 			}
@@ -231,10 +231,10 @@ ALCenum alcMakeContextCurrent( ALCcontext *handle )
 		/* FIXME: wrong error */
 		_alcSetError( ALC_INVALID_CONTEXT );
 		_alcUnlockAllContexts( );
-					
+
 		return ALC_INVALID_CONTEXT;
 	}
-	
+
 	if( should_init_mixer == AL_TRUE ) {
 		/* Set up mixer thread */
 		if(_alInitMixer() == AL_FALSE) {
@@ -247,12 +247,12 @@ ALCenum alcMakeContextCurrent( ALCcontext *handle )
 	{
 		cc->write_device->cc = cc;
 	}
-	
+
 	if(cc->read_device)
 	{
 		cc->read_device->cc = cc;
 	}
-	
+
 	/* set mixer */
 	_alcDeviceWriteSet( cid );
 	_alcDeviceReadSet( cid );
@@ -438,7 +438,7 @@ void alcSuspendContext( ALCcontext *alcHandle )
 
 	if( cc->should_sync == AL_FALSE) {
 		/*
-		 * only asynchronous contexts can be 
+		 * only asynchronous contexts can be
 		 * suspended.
 		 */
 		cc->issuspended = AL_TRUE;
@@ -469,7 +469,7 @@ ALCcontext *alcCreateContext( struct _AL_device *dev, int *attrlist )
 
 	if( dev == NULL ) {
 		_alcSetError( ALC_INVALID_DEVICE );
-		
+
 		return NULL;
 	}
 
@@ -532,7 +532,7 @@ ALCenum _alcDestroyContext( AL_context *cc )
 	free(cc->Flags);
 	cc->Flags = 0;
 	cc->NumFlags = 0;
-	
+
 	_alDestroyListener( &cc->listener );
 	_alDestroySources( &cc->source_pool );
 
@@ -635,7 +635,7 @@ void _alcSetContext(int *attrlist, ALuint cid, AL_device *dev ) {
 	free(cc->Flags);
 	cc->Flags = 0;
 	cc->NumFlags = 0;
-	
+
 	/* Set our preferred mixer stats */
         if (dev->flags & ALCD_WRITE)
 	{
@@ -679,7 +679,7 @@ void _alcSetContext(int *attrlist, ALuint cid, AL_device *dev ) {
 				break;
 			case ALC_SOURCES_LOKI:
 				spool_resize(&cc->source_pool, rdr.val);
-								
+
 				_alDebug(ALD_CONTEXT,
 					__FILE__, __LINE__,
 					"ALC_SOURCES (%d)", rdr.val);
@@ -839,7 +839,7 @@ ALboolean _alcInUse(ALuint cid) {
 /*
  * FL_alcLockAllContexts( const char *fn, int ln )
  *
- * Locks the mutex associated guarding all contexts, passing fn and ln to 
+ * Locks the mutex associated guarding all contexts, passing fn and ln to
  * _alLockPrintf for debugging purposes.
  */
 void FL_alcLockAllContexts(UNUSED(const char *fn), UNUSED(int ln)) {
@@ -854,7 +854,7 @@ void FL_alcLockAllContexts(UNUSED(const char *fn), UNUSED(int ln)) {
 /*
  * FL_alcUnlockAllContexts( const char *fn, int ln )
  *
- * Unlocks the mutex associated guarding all contexts, passing fn and ln to 
+ * Unlocks the mutex associated guarding all contexts, passing fn and ln to
  * _alLockPrintf for debugging purposes.
  */
 void FL_alcUnlockAllContexts(UNUSED(const char *fn), UNUSED(int ln)) {
@@ -995,7 +995,7 @@ static void _alcReallocContexts(ALuint newsize) {
 		return;
 	}
 
-	/* resize context pool */	
+	/* resize context pool */
 	temp = realloc(al_contexts.pool, sizeof *al_contexts.pool * newsize);
 	if(temp == NULL) {
 		perror("_alcReallocContexts malloc");
@@ -1003,7 +1003,7 @@ static void _alcReallocContexts(ALuint newsize) {
 	}
 	al_contexts.pool = temp;
 
-	/* resize inuse flags */	
+	/* resize inuse flags */
 	temp = realloc(al_contexts.inuse, sizeof *al_contexts.inuse * newsize);
 	if(temp == NULL) {
 		perror("_alcReallocContexts malloc");
@@ -1011,7 +1011,7 @@ static void _alcReallocContexts(ALuint newsize) {
 	}
 	al_contexts.inuse = temp;
 
-	/* resize context map */	
+	/* resize context map */
 	temp = realloc(al_contexts.map, sizeof *al_contexts.map * newsize);
 	if(temp == NULL) {
 		perror("_alcReallocContexts malloc");
@@ -1155,7 +1155,7 @@ static void _alcDeviceReadSet( ALuint cid ) {
 
 	if ( cc->read_device != NULL ) {
 		err = _alcDeviceSet( cc->read_device );
-	
+
 		if( err != AL_TRUE) {
 			_alDebug(ALD_CONTEXT, __FILE__, __LINE__, "set_audiodevice failed.");
 
@@ -1187,7 +1187,7 @@ static void _alcDeviceWriteSet( ALuint cid ) {
 
 	if ( cc->write_device != NULL ) {
 		err = _alcDeviceSet( cc->write_device );
-	
+
 		if( err != AL_TRUE) {
 			_alDebug(ALD_CONTEXT, __FILE__, __LINE__, "set_audiodevice failed.");
 
@@ -1351,7 +1351,7 @@ ALsizei _alcDeviceRead( ALuint cid, ALvoid *dataptr, ALuint bytes_to_read )
 		return 0;
 	}
 
-	return capture_audiodevice(cc->read_device->handle, dataptr, bytes_to_read);	
+	return capture_audiodevice(cc->read_device->handle, dataptr, bytes_to_read);
 }
 
 /*
@@ -1459,12 +1459,12 @@ ALCdevice *alcGetContextsDevice(ALCcontext *handle)
 	{
 		_alcSetError( ALC_INVALID_CONTEXT );
 		_alcUnlockAllContexts( );
-					
+
 		return NULL;
 	}
 
 	dc = cc->write_device;
-	
+
 	/* just unlock contexts */
 	_alcUnlockAllContexts();
 
@@ -1538,7 +1538,7 @@ void alcGetIntegerv( ALCdevice *deviceHandle, ALenum  token,
 	{
 		return;
 	}
-		
+
 	switch(token)
 	{
 		  /* JIV FIXME: move major/minor to header

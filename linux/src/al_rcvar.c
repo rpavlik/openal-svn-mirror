@@ -385,7 +385,7 @@ void rc_foreach( Rcvar ls, Rcvar (*op)(Rcvar operand) ) {
 		_alDebug( ALD_CONFIG, __FILE__, __LINE__,
 			  "rc_foreach fail type = %s",
 			  rc_typestr( rc_type(ls )));
-		      
+
 		return;
 	}
 
@@ -465,7 +465,7 @@ static void print_prim( Rcvar obj ) {
 
 				print_prim(temp);
 			}
-			
+
 			if(lcdr) {
 				if(lcdr == rc_cdr(obj)) {
 					/* pair */

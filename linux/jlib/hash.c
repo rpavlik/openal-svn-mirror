@@ -130,7 +130,7 @@ h_list *h_list_add(h_list *keys, jh_entry *new) {
 	if(temp == NULL) {
 		perror("h_list_add malloc");
 		return keys;
-	} 
+	}
 
 	temp->p = new;
 
@@ -177,11 +177,11 @@ static h_list *h_list_delete(h_list *keys, jh_entry *he) {
 jhash *jhash_alloc (unsigned int size) {
 	jhash *retval = NULL;
 	unsigned int i = 0;
- 
+
 	if(size  < DEFAULT_HASHSIZE) {
 		size = DEFAULT_HASHSIZE;
 	}
-	
+
 	retval = malloc(sizeof *retval);
 	if(!retval) {
 		perror("jhash_alloc malloc");
@@ -207,8 +207,8 @@ jhash *jhash_alloc (unsigned int size) {
 }
 
 /*
- *  add jhash item he to jhash h.  We actually just store the pointer to 
- *  he so freeing he will result in bad mojo:  once put in h, the only 
+ *  add jhash item he to jhash h.  We actually just store the pointer to
+ *  he so freeing he will result in bad mojo:  once put in h, the only
  *  method used to free should be jhash_free
  */
 jhash *jhash_add(jhash *h, jh_entry *he) {
@@ -227,7 +227,7 @@ jhash *jhash_add(jhash *h, jh_entry *he) {
 			return NULL;
 		}
 	}
-	
+
 	if(h->capacity <= h->items) {
 		/*
 		 *  We should allocate more space.
@@ -304,7 +304,7 @@ jhash *jhash_delete(jhash *h, void *key) {
 	if(h == NULL) {
 		return NULL;
 	}
-	
+
 	/*
 	 *  Remove the key
 	 */
@@ -334,7 +334,7 @@ jhash *jhash_delete(jhash *h, void *key) {
 	 *  Iterate over keys until we find the right one.  Is it right
 	 *  to have to skip NULL ones?  Why am I getting NULL values?
 	 */
-	while((total_itr <= h->capacity) && 
+	while((total_itr <= h->capacity) &&
 		 (!h->table[lindex] || ((h->table[lindex]->p != key)))) {
 
 #ifdef DEBUG
@@ -358,14 +358,14 @@ jhash *jhash_delete(jhash *h, void *key) {
 			fprintf(stderr, "potentially illegal free %p, ignored\n",
 					key);
 		}
-		return h; 
+		return h;
 	}
 
 	h->keys = h_list_delete(h->keys, h->table[lindex]);
 
 	jh_entry_free(h->table[lindex]);
 	h->table[lindex] = NULL;
-   
+
 	h->items--;
 	return h;
 }
@@ -429,7 +429,7 @@ jhash *jhash_resize(jhash *h, size_t capacityrequest) {
 		perror("jhash_resize malloc");
 		return NULL;
 	}
-	
+
 	free_me = keywalker = h->keys;
 	while(keywalker) {
 		retval = jhash_add(retval, keywalker->p);
@@ -437,7 +437,7 @@ jhash *jhash_resize(jhash *h, size_t capacityrequest) {
 		keywalker = keywalker->next;
 		free(free_me);
 	}
- 
+
 	/*
 	 *  Can't use jhash_free because we want to retain the data pointed
 	 *  to by the tables.
@@ -456,7 +456,7 @@ jh_entry *jh_entry_alloc(void *p, unsigned int size,
 		perror("jh_entry_alloc malloc");
 		return NULL;
 	}
-		
+
 	retval->p	 = p;
 	retval->size	 = size;
 	retval->filename = internal_strdup(fn);

@@ -262,7 +262,7 @@ struct _AL_context;
 
 typedef struct _AL_device {
 	struct _AL_context *cc;
-	
+
 	void *handle;	     /*
 			      * pointer to something that is meaningful
 			      * to the OS's sound stuff

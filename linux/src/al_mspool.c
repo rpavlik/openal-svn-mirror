@@ -41,7 +41,7 @@ ALboolean _alMixPoolResize(_alMixPool *spool, size_t newsize)
 	{
 		spool->pool = malloc(newsize * sizeof *spool->pool);
 	}
-	else 
+	else
 	{
 		temp = realloc(spool->pool, newsize * sizeof(_alMixPoolNode));
 		if(temp == NULL)
@@ -79,7 +79,7 @@ int _alMixPoolAlloc( _alMixPool *spool )
 		{
 			return -1;
 		}
-		
+
 		msindex = _alMixPoolFirstFreeIndex(spool);
 	}
 

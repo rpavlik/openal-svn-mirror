@@ -4,7 +4,7 @@ SHARED_LIBRARY_EXT=dylib       # shared library extension
 CFLAGS="$CFLAGS -traditional-cpp  -fno-common" # use traditional preprocessor to enable __attribute__ ((unused)) without warning and fno-common for the dylib building
 
 linux/src/MakeFile.in line 116
-Added : 
+Added :
 libopenal.dylib: $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(ALUT_OBJS) extensions
 	$(CC) -dynamiclib -prebind \
 		-o libopenal.dylib \

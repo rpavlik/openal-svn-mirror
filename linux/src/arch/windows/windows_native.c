@@ -2,7 +2,7 @@
  *
  * windows_native.c
  *
- * functions related to the aquisition and management of the native 
+ * functions related to the aquisition and management of the native
  * audio on Windows.
  *
  */
@@ -55,7 +55,7 @@ static void CALLBACK WinFillAudio(UNUSED(HWAVEOUT hwo),
 	UNUSED(DWORD dwInstance),
 	UNUSED(DWORD dwParam1),
 	UNUSED(DWORD dwParam2)) {
-	
+
         /* Only service "buffer done playing" messages */
         if( uMsg == WOM_DONE ) {
 		mlUnlockMutex(mutex);
@@ -87,7 +87,7 @@ void *grab_write_native(void) {
 
 	audiobufs.index = 0;
 	mutex = mlCreateMutex();
-	
+
 	for(i = 0; i < MAX_AUDIOBUFS; i++) {
 		audiobufs.whdrs[i].lpData  = NULL;
 		audiobufs.whdrs[i].dwBufferLength = 0;
@@ -95,7 +95,7 @@ void *grab_write_native(void) {
 	}
 
 	_alBlitBuffer = native_blitbuffer;
-	
+
 	memset(pwfx, 0, sizeof *pwfx);
 
 	pwfx->wFormatTag      = DEF_FORMAT;
@@ -113,7 +113,7 @@ void *grab_write_native(void) {
 
 	if(err == MMSYSERR_NOERROR) {
 		fprintf(stderr, "got Windows native audio\n");
-		
+
 		return &WinAudioHandle.hwo;
 	}
 
@@ -235,7 +235,7 @@ ALboolean set_write_native(UNUSED(void *handle),
 
 	/* close previous instance */
 	waveOutClose(WinAudioHandle.hwo);
-	
+
 	memset(pwfx, 0, sizeof *pwfx);
 
 	pwfx->wFormatTag      = DEF_FORMAT;
@@ -282,7 +282,7 @@ ALboolean set_write_native(UNUSED(void *handle),
 
 		if(err != MMSYSERR_NOERROR) {
 			fprintf(stderr, "Could not prepare header: %d\n", err);
-			
+
 			return AL_FALSE;
 		}
 	}

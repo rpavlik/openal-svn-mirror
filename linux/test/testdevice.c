@@ -14,7 +14,7 @@
 int main( int argc, char* argv[] ) {
 	ALCdevice *dev;
 	const ALubyte *initstr = (const ALubyte *) "'( ( devices '( native null ) ) )";
-	
+
 	dev = alcOpenDevice( initstr );
 
 	sleep( 1 );

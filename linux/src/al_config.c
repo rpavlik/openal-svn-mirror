@@ -42,7 +42,7 @@
 
 #define alrc_cadr(ls) alrc_car(alrc_cdr(ls))
 
-/* 
+/*
  * our symbol table definition.  Simple binary tree.
  */
 typedef struct _AL_SymTab {
@@ -269,7 +269,7 @@ static struct _global_table {
 };
 
 /* string defining the default environment */
-static const char *default_environment = 
+static const char *default_environment =
 	"(define speaker-num 2)"
 	"(define display-banner #t)"
 	"(define source-gain 1.0)";
@@ -295,7 +295,7 @@ ALboolean _alParseConfig( void ) {
 		/* already been here */
 		return AL_TRUE;
 	}
-	
+
 	for(i = 0; global_primitive_table[i].symname != NULL; i++) {
 		temp = _alRcTreeAlloc();
 
@@ -374,7 +374,7 @@ static char *_alOpenRcFile( void ) {
 	if(retval == NULL) {
 		return NULL;
 	}
-		
+
 	fread(retval, filelen, 1, fh);
 	retval[filelen] = '\0';
 
@@ -402,7 +402,7 @@ static ALboolean is_float( const char *tokenname ) {
 	while(i--) {
 		c = tokenname[i];
 
-		if((isdigit(c) == 0) && 
+		if((isdigit(c) == 0) &&
 			(c != '-')   &&
 			(c != '.')) {
 			return AL_FALSE;
@@ -595,7 +595,7 @@ static AL_rctree *_alSymbolTableGet( AL_SymTab *head, const char *str ) {
 static AL_SymTab *_alSymbolTableAdd( AL_SymTab *head, const char *sym,
 				     AL_rctree *datum ) {
 	int i;
-	
+
 	if(head == NULL) {
 		head = _alSymbolTableAlloc();
 
@@ -789,7 +789,7 @@ static AL_rctree *load_ext_prim(UNUSED(AL_rctree *env), AL_rctree *args) {
 
 	/* copy data */
 	memcpy(fname, symname, len);
-	fname[len] = '\0'; 
+	fname[len] = '\0';
 
 	/* prepare retval */
 
@@ -1072,7 +1072,7 @@ AL_rctree *apply( AL_rctree *procobj, AL_rctree *args ) {
 
 	if( procobj->type != ALRC_CONSCELL) {
 		assert(0);
-		
+
 		return NULL;
 	}
 
@@ -1090,7 +1090,7 @@ AL_rctree *apply( AL_rctree *procobj, AL_rctree *args ) {
 		glsyms = _alSymbolTableAdd(glsyms,
 			alrc_car(prototype)->data.str.c_str,
 			_alEval( alrc_car( args )));
-		
+
 
 		prototype = alrc_cdr(prototype);
 		args = alrc_cdr(args);
@@ -1132,12 +1132,12 @@ static ALuint length( AL_rctree *ls ) {
 
 /*
  * _alSymbolTableRemove( AL_SymTab *table, const char *sym )
- *                       
+ *
  * Removes binding for symbol named by sym from table.
  */
 AL_SymTab *_alSymbolTableRemove( AL_SymTab *head, const char *sym ) {
 	int i;
-	
+
 	if(head == NULL) {
 		return NULL;
 	}
@@ -1284,7 +1284,7 @@ static AL_rctree *buildExp( const char *tokenstr, unsigned int *offset ) {
 	getTokenStr(tokenstr, buffer, offset, len);
 
 	retval = literalExp( buffer );
-	
+
 	free( buffer );
 
 	return retval;
@@ -1443,7 +1443,7 @@ static int getTokenStr( const char *data, char *outp,
 		start = offset;
 
 		offset += 2;
-	
+
 		if((data[offset] == '0') && (data[offset+1] == 'x')) {
 			/* in hex */
 			offset += 2;

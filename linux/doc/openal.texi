@@ -35,18 +35,18 @@ implementation.
 
 The idea behind OpenAL is a 3d positional spatialized sound library analogous
 to OpenGL: instead of micromanaging each aspect of sound playback and effect,
-the application writer may limit themselves to placing the sounds in the 
+the application writer may limit themselves to placing the sounds in the
 scene and letting the native OpenAL implementation determine the correct
 amount of pitch alteration, gain attenuation, phase shift, etc, required to
 render the sounds correctly.
 
-That's the goal, anyway.  
+That's the goal, anyway.
 
 @node FAQ, Goals, Introduction, Top
 
 Here are some of the most Frequently Asked Questions, and their answers.
 
-@menu 
+@menu
 * How do I enable ESD?::
 * Why doesn't this POS work with my Vortex card?::
 * How can I set the size of my world?::
@@ -129,7 +129,7 @@ is then played.
 
 @code{Buffers} are created with a call to @code{alGenBuffers}, which creates
 a set of buffer ids and binds them to buffers.  The buffer id is the only
-mechanism by which an application may refer to a buffer.  After its 
+mechanism by which an application may refer to a buffer.  After its
 useful lifetime is over, buffer ids should be deleted via the call
 @code{alDeleteBuffers}.
 
@@ -142,7 +142,7 @@ can be played.
 
 @code{Sources} are created with a call to @code{alGenSources}, which creates
 a set of source ids and binds them to sources.  The source id is the only
-mechanism by which an application may refer to a source.  After its 
+mechanism by which an application may refer to a source.  After its
 useful lifetime is over, source ids should be deleted via the call
 @code{alDeleteSources}.
 
@@ -277,12 +277,12 @@ commited.
 Source objects are by default localized. Sources
 take the PCM data provided in the specified Buffer,
 apply Source-specific modifications, and then
-submit them to be mixed according to spatial 
+submit them to be mixed according to spatial
 arrangement etc.
 
 @table @code
 
-@item void alGenSources( ALsizei n, ALuint* sources ) 
+@item void alGenSources( ALsizei n, ALuint* sources )
 @findex alGenSources
 
 Create n source object names, and populate sources[0..n-1]
@@ -363,20 +363,20 @@ attribute, @code{AL_ILLEGAL_ENUM} is set and no further operation is commited.
 @findex alSourcePlay
 Activate a source, start replay.  If sid is not a valid source name,
 @code{AL_INVALID_NAME} is set and no action occurs.  If the source
-specified by sid is in the state @code{AL_PLAYING}, this call is a 
+specified by sid is in the state @code{AL_PLAYING}, this call is a
 legal NOP.
 
 @item void alSourceStop( ALuint sid )
 @findex alSourceStop
 Change a source's state from @code{AL_PLAYING} to @code{AL_STOPPED}.  If
-sid is not a valid source name, @code{AL_INVALID_NAME} is set and no 
+sid is not a valid source name, @code{AL_INVALID_NAME} is set and no
 action occurs.  If the source is not in the state @code{AL_PLAYING},
 this call is a legal NOP.
 
 @item void alSourcePause( ALuint sid )
 @findex alSourcePause
 Change a source's state from @code{AL_PLAYING} to @code{AL_PAUSED}.  If
-sid is not a valid source name, @code{AL_INVALID_NAME} is set and no 
+sid is not a valid source name, @code{AL_INVALID_NAME} is set and no
 action occurs.  If the source is not in the state @code{AL_PLAYING},
 this call is a legal NOP.
 
@@ -462,11 +462,11 @@ otherwise.
 
 @item void alBufferData( ALuint id, ALenum format, ALvoid *data, ALsizei size, ALsizei freq )
 @findex alBufferData
-Specify the data to be filled into the buffer associated with id.  
+Specify the data to be filled into the buffer associated with id.
 
 @item ALsizei alBufferAppendData( ALuint buffer, ALenum format, ALvoid *data, ALsizei size, ALsizei freq )
 @findex alBufferAppendData
-                            
+
 Specify data to be filled into a looping buffer.  This takes the current
 position at the time of the call, and returns the number of samples
 written.
@@ -490,7 +490,7 @@ Extension support.
 @findex alIsExtensionPresent
 
 Obtain the address of a function (usually an extension)
-with the name fname. All addresses are context-independent. 
+with the name fname. All addresses are context-independent.
 
 @item void *alGetProcAddress( const ALubyte* fname )
 @findex alGetProcAddress
@@ -703,7 +703,7 @@ simultaneously.
 
 @item void *alcProcessContext( ALvoid *alcHandle )
 @findex alcProcessContext
-For synchronous operation (where the context specified by alcHandle 
+For synchronous operation (where the context specified by alcHandle
 was created using the @code{ALC_SYNC} context creation flag), this
 commits all the changes needed and writes the result to the audio
 backend.
@@ -749,7 +749,7 @@ Description of OpenAL utility functions goes here.
 @section OpenAL kludgey functions
 
 @code{alkludge.h} is a repository for stuff that need to either be
-discarded, rewritten, or thought out.  You should not rely on 
+discarded, rewritten, or thought out.  You should not rely on
 functions in @code{alkludge.h}, although it is unlikely that functions
 will be removed from it without some form of equivalent functionality
 being introduced in the regular library.
@@ -769,15 +769,15 @@ being introduced in the regular library.
 @tindex ALC_INVALID_CONTEXT
 @findex alGetError
 
-There are two types of errors in OpenAL: @code{alc} errors and @code{al} 
+There are two types of errors in OpenAL: @code{alc} errors and @code{al}
 errors.  @code{al} errors are context specific and one deep.  Only the
 first occurring error will be recorded, subsequent errors will not be
 recorded.  Errors may be retrieved via the @code{alGetError} call, after
 which the error in the current context will be set to
-@code{AL_NO_ERROR}, and subsequent errors will again alter the context's 
+@code{AL_NO_ERROR}, and subsequent errors will again alter the context's
 error state.
 
-@code{alc} errors are not context specific, and may be retrieved via the 
+@code{alc} errors are not context specific, and may be retrieved via the
 @code{alcGetError} call.  After a call to @code{alcGetError}, the
 context-global error variable is set to @code{ALC_NO_ERROR}.
 
@@ -804,7 +804,7 @@ support via plugins.
 If you retrieve the library via cvs, be sure to run the autogen.sh
 script provided.  It will build configure and config.h.in.
 
-After that, run configure with the options you want.  Run 
+After that, run configure with the options you want.  Run
 configure --help for available options.
 
 @node Filters, Configuration, Installation, Loki Implementation
@@ -857,7 +857,7 @@ The primitives are:
 @end example
 
 Performs a logical @code{and} on parameters, using short circuit
-evaluation.  Evaluates to true if none of the parameters 
+evaluation.  Evaluates to true if none of the parameters
 evaluate to false.
 
 @item or
@@ -918,7 +918,7 @@ There are some, but I haven't listed them here.
 @cindex Context variables
 
 @table @code
-@item devices 
+@item devices
 
 @code{devices} is a list of tokens (either strings or unquoted symbols)
 that OpenAL checks for in order to determine the sequence and types of
@@ -946,8 +946,8 @@ A typical invocation look like:
 ...which indicates to OpenAL that it should try to render audio to the
 SDL backend (if available), and failing that to try the native audio
 method for the platform in question, which usually means using the OSS
-drivers and @code{/dev/dsp}.  If each device specified in @code{devices} 
-fails, then the default behavior (@code{native}) is tried.  If that 
+drivers and @code{/dev/dsp}.  If each device specified in @code{devices}
+fails, then the default behavior (@code{native}) is tried.  If that
 fails, OpenAL will return a @code{NULL} context.
 
 @end table
@@ -957,10 +957,10 @@ fails, OpenAL will return a @code{NULL} context.
 @cindex Listener variables
 @node Types, Evaluation, Variables, Configuration
 
-Symbol values have associated type information.  Users should be 
+Symbol values have associated type information.  Users should be
 acquainted with the following types in ALRC:
 
-@itemize @bullet 
+@itemize @bullet
 
 @item ALRC_INVALID
 
@@ -1006,7 +1006,7 @@ A series of characters enclosed by '"'.
 @findex alGetProcAddress
 
 Loki's OpenAL implementation include some functions which are specific
-to the implementation.  These functions all have the suffix @code{_LOKI} 
+to the implementation.  These functions all have the suffix @code{_LOKI}
 to distinguish them.
 
 In order to use these extensions, the application will need to query
@@ -1026,7 +1026,7 @@ function type.
 @table @code
 
 Some of the Loki specific functionality is expressed in terms of
-Loki specific enumerate tokens passed to otherwise standard 
+Loki specific enumerate tokens passed to otherwise standard
 calls.
 
 @item AL_FORMAT_WAVE_EXT
@@ -1070,12 +1070,12 @@ implementation.  The prefix is included in this section for clarify.
 @vindex ALMAXDISTANCE
 
 @code{alAttenuationScale_LOKI} scales the units of the simulation.
-Without a call to this function, it is very likely that your application 
+Without a call to this function, it is very likely that your application
 will not sound correct.
 
 The default scaling factor in Loki's OpenAL is such that a listener
 placed at the origin will hear sounds attenuated until that point that
-the sounds are @code{ALMAXDISTANCE} units away.  @code{ALMAXDISTANCE} is 
+the sounds are @code{ALMAXDISTANCE} units away.  @code{ALMAXDISTANCE} is
 an arbitrary constant defined when including @code{AL/alkludge.h}.
 
 It is almost assured that the default scaling factor will be incorrect
@@ -1133,7 +1133,7 @@ and setting the listener gain.
 @findex alUnMute_LOKI
 
 @code{alUnMute_LOKI} performs the inverse operation of
-@code{alMute_LOKI}.  alUnMute_LOKI restores the volume of the simulation 
+@code{alMute_LOKI}.  alUnMute_LOKI restores the volume of the simulation
 to that which is was before calling @code{alMute_LOKI}.
 
 @item void alReverbScale_LOKI(ALuint sid, ALfloat param)
@@ -1158,7 +1158,7 @@ Don't use this.  You don't want it.
 @findex alBombOnError_LOKI
 @cindex error
 
-@code{alBombOnError_LOKI}, when called, will cause the implementation to 
+@code{alBombOnError_LOKI}, when called, will cause the implementation to
 abort on error, instead of just setting the per-context error and
 continuing.  This is useful only for debugging.  alc errors are not
 handled.
@@ -1182,7 +1182,7 @@ The parameters for @code{callback} are as such:
 
 @lisp
 	@code{ALuint sid}
-	The source id that this request is associated with.  Since many 
+	The source id that this request is associated with.  Since many
 	sources may share the same buffer, this sid allows the application
 	to keep track of offsets and other state associated with each
 	source instance.
@@ -1242,10 +1242,10 @@ OpenAL implementation checks for the presence of the functions
 are executed at dlopen and dlclose time, respectively.
 
 @menu
-* Includes and typedefs::       
-* Basics::                      
-* Getting symbol information::  
-* Adding Filters::              
+* Includes and typedefs::
+* Basics::
+* Getting symbol information::
+* Adding Filters::
 @end menu
 
 @node Includes and typedefs, Basics,  , Making your own
@@ -1522,14 +1522,14 @@ int main(int argc, char *argv[]) @{
 
 Support for streaming sounds rises from the API specification
 surrounding @code{alBufferAppendData}.  Streaming sources are understood
-to be sources whose @code{AL_BUFFER} parameter is a streaming buffer.  A 
+to be sources whose @code{AL_BUFFER} parameter is a streaming buffer.  A
 streaming buffer is a buffer created by a call to
 @code{alGenStreamingBuffer}, and can only be fed data using
-@code{alBufferAppendData}.  
+@code{alBufferAppendData}.
 
 Streaming sources have restrictions associated with them, and for the
 time being require special creation procedures.  Further specifications
-may remove some of these restrictions, but until further notice streaming 
+may remove some of these restrictions, but until further notice streaming
 sources will always be synchronized, and some of the filters may not
 apply to them.
 
@@ -1553,13 +1553,13 @@ Foo!
 @node Variable Index, Concept Index, Function Index, Top
 @comment    node-name,         next,       previous, up
 @unnumbered Variable Index
-     
+
 @printindex vr
 
 @node     Concept Index,     , Variable Index, Top
 @comment      node-name, next,       previous, up
 @unnumbered Concept Index
-     
+
 @printindex cp
 
 @summarycontents

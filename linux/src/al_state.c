@@ -30,7 +30,7 @@ ALboolean alGetBoolean( ALenum param )
 
 	return retval;
 }
-	
+
 ALint alGetInteger( ALenum param )
 {
 	ALint retval = -1;

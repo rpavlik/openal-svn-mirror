@@ -27,7 +27,7 @@ typedef struct _EnvironmentIASIG {
 
 	ALint   reflections;
 	ALfloat reflections_delay;
-	
+
 	ALint   reverb;
 	ALfloat reverb_delay;
 
@@ -78,7 +78,7 @@ ALboolean alIsEnvironmentIASIG( ALuint eid ) {
 	if(itr == NULL) {
 		return AL_FALSE;
 	}
-	
+
 
 	return AL_TRUE;
 }
@@ -116,7 +116,7 @@ void alEnvironmentiIASIG( ALuint id, ALenum param, ALint value ) {
 
 	switch(param) {
 		case AL_ENV_ROOM_IASIG:
-		  env->room        = value;	
+		  env->room        = value;
 		  break;
 		case AL_ENV_ROOM_HIGH_FREQUENCY_IASIG:
 		  env->room_hf     = value;
@@ -155,7 +155,7 @@ static void _alEnvironmentIASIGInit(EnvironmentIASIG *env) {
 
 	env->reflections          = -10000;
 	env->reflections_delay    = 0.02;
-	
+
 	env->reverb               = -10000;
 	env->reverb_delay         = 0.04;
 
