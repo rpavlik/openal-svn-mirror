@@ -1,3 +1,10 @@
+2002-12-17  Joseph Valenzuela  <jvalenzu@formosa.infinite-monkeys.org>
+	* src/al_queue.c
+	* src/al_mixer.c
+        * src/al_source.c
+        * src/al_source.h
+	Re-added Zoltan Ponekker's patch to fix queue looping.
+	
 2002-12-04  Joseph Valenzuela  <jvalenzu@formosa.infinite-monkeys.org>
 
 	* src/al_filter.c

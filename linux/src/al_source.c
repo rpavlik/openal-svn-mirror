@@ -1360,7 +1360,8 @@ void _alSplitSources( ALuint cid,
 
 	if(_alSourceBytesLeftByChannel(src, samp) < (ALint) len)
 	{
-		if(_alSourceIsLooping(src) == AL_TRUE )
+		if(_alSourceIsLooping(src) == AL_TRUE &&
+		   _alSourceIsQueue(src) == AL_FALSE )
 		{
 			/*
 			 * looping sources, when they need to wrap,
@@ -1689,6 +1690,7 @@ static void _alSplitSourceQueue( ALuint cid,
 		 */
 		_alDebug(ALD_SOURCE, __FILE__, __LINE__,
 		      "_alSplitSourceQueue: shouldn't happen");
+
 		return;
 	}
 
@@ -2980,6 +2982,21 @@ ALint _alSourceBytesLeft(AL_source *src, AL_buffer *samp) {
  */
 ALint _alSourceBytesLeftByChannel(AL_source *src, AL_buffer *samp) {
 	return samp->size - src->srcParams.soundpos;
+}
+
+/*
+ *
+ * _alSourceIsQueue( AL_source * src ) 
+ *
+ * Returns AL_TRUE if source (src) has its queue set to AL_TRUE, AL_FALSE otherwise.
+ */
+ALboolean _alSourceIsQueue( AL_source * src ) {
+
+	if ( src->islooping.isset == AL_TRUE &&
+	     src->islooping.data == AL_TRUE &&
+	     src->bid_queue.size > 1 ) return AL_TRUE;
+
+	return AL_FALSE;
 }
 
 /*

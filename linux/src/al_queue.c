@@ -154,7 +154,11 @@ void alQueuei( ALuint sid, ALenum param, ALint i1 ) {
 	}
 
 	switch(param) {
-		/* FIXME: add loop count */
+		case AL_LOOPING:
+		  src->islooping.isset=AL_TRUE;
+		  src->islooping.data=i1;
+		  break;
+
 		case AL_BUFFER:
 		  /* Append bid to end */
 		  _alSourceQueueAppend(src, i1);

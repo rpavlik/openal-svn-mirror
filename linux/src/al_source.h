@@ -231,6 +231,15 @@ ALint _alSourceBytesLeft( AL_source *src, AL_buffer *samp );
 ALint _alSourceBytesLeftByChannel( AL_source *src, AL_buffer *samp );
 
 /*
+ *
+ * ALboolean _alSourceIsQueue( AL_source * src )
+ *
+ * Returns AL_TRUE if the source (src) has its queue set to AL_TRUE,
+ * AL_FALSE otherwise.
+ */
+ALboolean _alSourceIsQueue( AL_source * src );
+
+/*
  * _alSourceIsLooping( AL_source *src )
  *
  * Returns AL_TRUE if the source (src) has its AL_LOOPING attribute set to

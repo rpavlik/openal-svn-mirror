@@ -318,7 +318,7 @@ static void _alMixSources( void )
 			 * end of sound.  streaming & looping are special
 			 * cases.
 			 */
-			if(islooping == AL_TRUE )
+			if(islooping == AL_TRUE && _alSourceIsQueue( src ) == AL_FALSE )
 			{
 				if(iscallback == AL_TRUE)
 				{
@@ -347,8 +347,22 @@ static void _alMixSources( void )
 			}
 			else if(!isstreaming && !isinqueue)
 			{
-				/* This buffer is solo */
-				itr->flags = ALM_DESTROY_ME;
+			    if ( _alSourceIsQueue( src ) )
+			     {
+			      _alDebug(ALD_QUEUE, __FILE__, __LINE__,
+			      "%d queue loop reset",src->sid );
+			      src->srcParams.new_readindex = 0;
+			      src->srcParams.new_soundpos = 0;
+                	      src->bid_queue.read_index =src->srcParams.new_readindex;
+			      src->srcParams.soundpos =  src->srcParams.new_soundpos;
+			      itr->flags = ALM_PLAY_ME;
+			     } else
+				{
+				    _alDebug(ALD_LOOP, __FILE__, __LINE__,
+				    "%d loop destroy",itr->sid);
+				    /* This buffer is solo */
+				    itr->flags = ALM_DESTROY_ME;
+				}
 			}
 		}
 
