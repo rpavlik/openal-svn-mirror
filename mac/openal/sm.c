@@ -88,13 +88,29 @@ void smPlaySegment(unsigned int source)
                 gSource[source].ptrSndHeader->numChannels = gBuffer[iBufferNum].channels;
                 switch (gBuffer[iBufferNum].frequency)
                 {
-                        case 11025:	gSource[source].ptrSndHeader->sampleRate = rate11khz;
-                                        break;
-                        case 22050: gSource[source].ptrSndHeader->sampleRate = rate22khz;
-                                        break;
-                        case 44100: gSource[source].ptrSndHeader->sampleRate = rate44khz;
-                                    break;
-                        default: gSource[source].ptrSndHeader->sampleRate = rate44khz;
+                        case 8000: 
+                            gSource[source].ptrSndHeader->sampleRate = rate8khz;
+                            break;
+                        case 11025: 
+                            gSource[source].ptrSndHeader->sampleRate = rate11khz;
+                            break;
+                        case 16000: 
+                            gSource[source].ptrSndHeader->sampleRate = rate16khz;
+                            break;
+                        case 22050: 
+                            gSource[source].ptrSndHeader->sampleRate = rate22khz;
+                            break;
+                        case 32000: 
+                            gSource[source].ptrSndHeader->sampleRate = rate32khz;
+                            break;
+                        case 44100: 
+                            gSource[source].ptrSndHeader->sampleRate = rate44khz;
+                            break;
+                        case 48000: 
+                            gSource[source].ptrSndHeader->sampleRate = rate48khz;
+                            break;
+                        default: 
+                            gSource[source].ptrSndHeader->sampleRate = rate44khz;
                 }
                 gSource[source].ptrSndHeader->loopStart = 0;
                 gSource[source].ptrSndHeader->loopEnd = 0;
