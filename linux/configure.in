@@ -23,7 +23,7 @@ INTERFACE_AGE=0
 BINARY_AGE=0
 VERSION=$MAJOR_VERSION.$MINOR_VERSION.$MICRO_VERSION
 REDUNDANT_DECLS_WARN=yes       # warnings about redudant decls
-SHOULD_ENFORCE_ANSI=yes        # whether we should use -ansi
+SHOULD_ENFORCE_ANSI=no         # whether we should use -ansi
 SHADOW_WARN=yes                # warn about shadow variables
 BROKEN_PTHREAD_FLAG=no         # BSD use -pthread, not -lpthread
 NO_PTHREAD_FLAG=no
@@ -65,8 +65,8 @@ fi
 AC_CANONICAL_SYSTEM
 
 dnl pity the poor fools with broken headers
-AC_DEFINE(_NO_STRING_INLINES, 1, [undocumented])
-AC_DEFINE(__NO_STRING_INLINES, 1, [undocumented])
+#AC_DEFINE(_NO_STRING_INLINES, 1, [undocumented])
+#AC_DEFINE(__NO_STRING_INLINES, 1, [undocumented])
 
 dnl optimization stuff
 

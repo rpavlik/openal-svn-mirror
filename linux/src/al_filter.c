@@ -78,10 +78,7 @@
 #include "alc/alc_context.h"
 #include "alc/alc_speaker.h"
 
-#define __USE_ISOC99 1
 #include <math.h>
-#undef  __USE_ISOC99
-
 #include <stdlib.h>
 #include <string.h>
 #include <float.h>
@@ -1389,6 +1386,23 @@ void alf_tpitch( UNUSED(ALuint cid),
 		 */
 		for(j = 0; j < clen; j++)
 		{
+#if USE_LRINT
+			{
+				int offset = offsets[j];
+				int nextoffset = offsets[j+1];
+				float frac = fractionals[j];
+				float firstsample = obufptr[offset];
+				float nextsample = obufptr[nextoffset];
+				int finalsample;
+				
+				/* do a little interpolation */
+				finalsample = lrintf(firstsample +
+				            frac * (nextsample - firstsample));
+
+				finalsample = MIN(finalsample, canon_max);
+				bufptr[j] =   MAX(finalsample, canon_min);
+			}
+#else
 			{
 				int offset = offsets[j];
 				int nextoffset = offsets[j+1];
@@ -1404,13 +1418,11 @@ void alf_tpitch( UNUSED(ALuint cid),
 				finalsample = MIN(finalsample, canon_max);
 				bufptr[j] =   MAX(finalsample, canon_min);
 			}
+#endif
 		}
 
-		/* JIV FIXME: use memset */
-		for( ; j < (ALint) len; j++)
-		{
-			bufptr[j] = 0;
-		}
+		/* zero off end */
+		memset(&bufptr[j], 0, (len-j)*sizeof *bufptr);
 	}
 
 	/*

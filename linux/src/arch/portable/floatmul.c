@@ -5,7 +5,11 @@
 
 void _alFloatMul( ALshort *bpt, ALfloat sa, ALuint len) {
 	while(len--) {
-		bpt[len] *= sa;
+#if USE_LRINT
+		bpt[len] = lrintf(bpt[len] * sa);
+#else
+		bpt[len] *= bpt[len] * sa;
+#endif
 	}
 
 	return;
