@@ -884,9 +884,9 @@ static ALboolean _alAllocMixSource( ALuint sid )
 	if(src->state != AL_PAUSED)
 	{
 		src->srcParams.soundpos = 0;
+		src->bid_queue.read_index     = 0;
 	}
 
-	src->bid_queue.read_index     = 0;
 	src->state		      = AL_PLAYING;
 
 	return AL_TRUE;
