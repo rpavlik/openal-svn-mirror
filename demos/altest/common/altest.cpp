@@ -4343,7 +4343,7 @@ ALvoid I_VorbisTest()
 	// Release resources
 	alSourceStop(source[0]);
 	alSourceStop(source[1]);
-	alSourceStop(source[3]);
+	alSourceStop(source[2]);
 	alDeleteBuffers(4, tempBuffers);
 	if ((error = alGetError()) != AL_NO_ERROR)
 		DisplayALError((ALbyte *) "alSourceStop : ", error);
