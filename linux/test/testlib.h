@@ -16,8 +16,8 @@ extern "C" {
 extern ALfloat	(*talcGetAudioChannel)(ALuint channel);
 extern void	(*talcSetAudioChannel)(ALuint channel, ALfloat volume);
 
-extern void	(*talMute)(ALvoid);
-extern void	(*talUnMute)(ALvoid);
+extern void	(*talMute)(void);
+extern void	(*talUnMute)(void);
 
 extern void	(*talReverbScale)(ALuint sid, ALfloat param);
 extern void	(*talReverbDelay)(ALuint sid, ALfloat param);
@@ -32,9 +32,9 @@ extern ALuint  (*talBufferAppendData)(ALuint bid, ALenum format, ALvoid *data, A
 extern ALuint  (*talBufferAppendWriteData)(ALuint bid, ALenum format, ALvoid *data, ALint freq, ALint samples, ALenum internalFormat);
 
 extern ALboolean (*alCaptureInit) ( ALenum format, ALuint rate, ALsizei bufferSize );
-extern ALboolean (*alCaptureDestroy) ( ALvoid );
-extern ALboolean (*alCaptureStart) ( ALvoid );
-extern ALboolean (*alCaptureStop) ( ALvoid );
+extern ALboolean (*alCaptureDestroy) ( void );
+extern ALboolean (*alCaptureStart) ( void );
+extern ALboolean (*alCaptureStop) ( void );
 extern ALsizei (*alCaptureGetData) ( ALvoid* data, ALsizei n, ALenum format, ALuint rate );
 
 /* new ones */

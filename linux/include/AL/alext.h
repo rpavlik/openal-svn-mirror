@@ -48,9 +48,9 @@ ALAPI ALsizei alBufferAppendWriteData_LOKI( ALuint   buffer,
 /* Capture api */
 
 ALAPI ALboolean alCaptureInit_EXT( ALenum format, ALuint rate, ALsizei bufferSize );
-ALAPI ALboolean alCaptureDestroy_EXT( ALvoid );
-ALAPI ALboolean alCaptureStart_EXT( ALvoid );
-ALAPI ALboolean alCaptureStop_EXT( ALvoid );
+ALAPI ALboolean alCaptureDestroy_EXT( void );
+ALAPI ALboolean alCaptureStart_EXT( void );
+ALAPI ALboolean alCaptureStop_EXT( void );
 
 /* Non-blocking device read */
 ALAPI ALsizei alCaptureGetData_EXT( ALvoid* data, ALsizei n, ALenum format, ALuint rate );

@@ -161,7 +161,7 @@ static ALboolean ReadWAVMemory(const ALvoid *data,
 }
 
 /* I'm such a nice guy */
-ALvoid alutLoadWAVFile(ALbyte *fname,
+void alutLoadWAVFile(ALbyte *fname,
 		       ALenum *format,
 		       ALvoid **data,
 		       ALsizei *size,

@@ -133,11 +133,11 @@ typedef ALsizei (*PFNALBUFFERAPPENDWRITEDATAPROC)( ALuint   buffer,
 
 typedef ALboolean (*PFNALCAPTUREINITPROC)( ALenum format, ALuint rate, ALsizei bufferSize );
 
-typedef ALboolean (*PFNALCAPTUREDESTROYPROC)( ALvoid );
+typedef ALboolean (*PFNALCAPTUREDESTROYPROC)( void );
 
-typedef ALboolean (*PFNALCAPTURESTARTPROC)( ALvoid );
+typedef ALboolean (*PFNALCAPTURESTARTPROC)( void );
 
-typedef ALboolean (*PFNALCAPTURESTOPPROC)( ALvoid );
+typedef ALboolean (*PFNALCAPTURESTOPPROC)( void );
 
 /* Non-blocking device read */
 typedef ALsizei (*PFNALCAPTUREGETDATAPROC)( ALvoid* data, ALsizei n, ALenum format, ALuint rate );

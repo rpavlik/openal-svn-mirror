@@ -104,7 +104,7 @@ ALboolean alCaptureInit_EXT( UNUSED(ALenum format),
 	return (capture_device != NULL);
 }
 
-ALboolean alCaptureDestroy_EXT( ALvoid )
+ALboolean alCaptureDestroy_EXT( void )
 {
 	ALuint cid;
 	AL_context *cc;
@@ -130,12 +130,12 @@ ALboolean alCaptureDestroy_EXT( ALvoid )
 	return AL_TRUE;
 }
 
-ALboolean alCaptureStart_EXT( ALvoid )
+ALboolean alCaptureStart_EXT( void )
 {
 	return AL_FALSE;
 }
 
-ALboolean alCaptureStop_EXT( ALvoid )
+ALboolean alCaptureStop_EXT( void )
 {
 	return AL_FALSE;
 }

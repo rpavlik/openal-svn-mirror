@@ -729,7 +729,7 @@ legal NOP.
 Destroy the context associated with @code{alcHandle}, freeing all
 associated objects and sources.
 
-@item ALCenum alcGetError( ALvoid );
+@item ALCenum alcGetError( void );
 @findex alcGetError
 
 Get the last @code{alc} error set.
@@ -1116,7 +1116,7 @@ set @code{AL_CHAN_MAIN_LOKI}, @code{AL_CHAN_PCM_LOKI}, and
 channel associated with the channel argument to the volume (the volume
 mapped to the settings appropriate for the backend, that is).
 
-@item void alMute_LOKI(ALvoid)
+@item void alMute_LOKI(void)
 @findex alMute_LOKI
 
 @code{alMute_LOKI} returns nothing and takes no argument.  After a call
@@ -1129,7 +1129,7 @@ The audio setting is preserved so that a subsequent call to
 This isn't really useful, as you can do the same with by just querying
 and setting the listener gain.
 
-@item void alUnMute_LOKI(ALvoid)
+@item void alUnMute_LOKI(void)
 @findex alUnMute_LOKI
 
 @code{alUnMute_LOKI} performs the inverse operation of

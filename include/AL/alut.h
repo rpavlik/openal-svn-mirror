@@ -50,7 +50,7 @@ extern "C" {
 #ifndef AL_NO_PROTOTYPES
 
 ALUTAPI void ALUTAPIENTRY alutInit(int *argc, char *argv[]);
-ALUTAPI void ALUTAPIENTRY alutExit(ALvoid);
+ALUTAPI void ALUTAPIENTRY alutExit(void);
 
 #ifdef LINUX_AL
 /* this function is Linux-specific and will probably be removed from this header */
@@ -69,7 +69,7 @@ ALUTAPI void ALUTAPIENTRY alutUnloadWAV(ALenum format, ALvoid *data, ALsizei siz
 
 #else
 ALUTAPI void      ALUTAPIENTRY (*alutInit)(int *argc, char *argv[]);
-ALUTAPI void 	  ALUTAPIENTRY (*alutExit)(ALvoid);
+ALUTAPI void 	  ALUTAPIENTRY (*alutExit)(void);
 
 #ifdef LINUX_AL
 /* this function is Linux-specific and will probably be removed from this header */

@@ -85,7 +85,7 @@ void _alVectorNormalize( ALfloat *d, const ALfloat *s );
  *
  * Returns cross product between v1 and v2, result in d.
  */
-ALvoid _alVectorCrossProduct( ALfloat *d, const ALfloat *v1,
+void _alVectorCrossProduct( ALfloat *d, const ALfloat *v1,
 			      const ALfloat *v2 );
 
 #endif /* AL_VECTOR_H */

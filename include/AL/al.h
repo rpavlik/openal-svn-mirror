@@ -105,7 +105,7 @@ ALAPI ALdouble ALAPIENTRY alGetDouble( ALenum param );
  * Error support.
  * Obtain the most recent error generated in the AL state machine.
  */
-ALAPI ALenum ALAPIENTRY alGetError( ALvoid );
+ALAPI ALenum ALAPIENTRY alGetError( void );
 
 /** 
  * Extension support.
@@ -370,7 +370,7 @@ ALAPI void ALAPIENTRY alDistanceModel( ALenum distanceModel );
       void                         (*alGetDoublev)( ALenum param,
                                                       ALdouble* data );
       const ALubyte*               (*alGetString)( ALenum param );
-      ALenum                       (*alGetError)( ALvoid );
+      ALenum                       (*alGetError)( void );
 
       /** 
        * Extension support.

@@ -56,8 +56,8 @@ void micro_sleep(unsigned int n) {
 
 ALfloat	(*talcGetAudioChannel)(ALuint channel);
 void	(*talcSetAudioChannel)(ALuint channel, ALfloat volume);
-void	(*talMute)(ALvoid);
-void	(*talUnMute)(ALvoid);
+void	(*talMute)(void);
+void	(*talUnMute)(void);
 void	(*talReverbScale)(ALuint sid, ALfloat param);
 void	(*talReverbDelay)(ALuint sid, ALfloat param);
 void	(*talBombOnError)(void);
@@ -66,9 +66,9 @@ void	(*talBufferWriteData)(ALuint bid, ALenum format, ALvoid *data, ALint size, 
 ALuint  (*talBufferAppendData)(ALuint bid, ALenum format, ALvoid *data, ALint freq, ALint samples);
 ALuint  (*talBufferAppendWriteData)(ALuint bid, ALenum format, ALvoid *data, ALint freq, ALint samples, ALenum internalFormat);
 ALboolean (*alCaptureInit) ( ALenum format, ALuint rate, ALsizei bufferSize );
-ALboolean (*alCaptureDestroy) ( ALvoid );
-ALboolean (*alCaptureStart) ( ALvoid );
-ALboolean (*alCaptureStop) ( ALvoid );
+ALboolean (*alCaptureDestroy) ( void );
+ALboolean (*alCaptureStart) ( void );
+ALboolean (*alCaptureStop) ( void );
 ALsizei (*alCaptureGetData) ( ALvoid* data, ALsizei n, ALenum format, ALuint rate );
 void (*talGenStreamingBuffers)(ALsizei n, ALuint *bids );
 ALboolean (*talutLoadRAW_ADPCMData)(ALuint bid,
@@ -87,8 +87,8 @@ void fixup_function_pointers(void) {
 	talcSetAudioChannel = (void (*)(ALuint channel, ALfloat volume))
 				GP("alcSetAudioChannel_LOKI");
 
-	talMute   = (void (*)(ALvoid)) GP("alMute_LOKI");
-	talUnMute = (void (*)(ALvoid)) GP("alUnMute_LOKI");
+	talMute   = (void (*)(void)) GP("alMute_LOKI");
+	talUnMute = (void (*)(void)) GP("alUnMute_LOKI");
 
 	talReverbScale = (void (*)(ALuint sid, ALfloat param))
 		GP("alReverbScale_LOKI");
@@ -114,9 +114,9 @@ void fixup_function_pointers(void) {
 	}
 
 	alCaptureInit    = (ALboolean (*)( ALenum, ALuint, ALsizei )) GP("alCaptureInit_EXT");
-	alCaptureDestroy = (ALboolean (*)( ALvoid )) GP("alCaptureDestroy_EXT");
-	alCaptureStart   = (ALboolean (*)( ALvoid )) GP("alCaptureStart_EXT");
-	alCaptureStop    = (ALboolean (*)( ALvoid )) GP("alCaptureStop_EXT");
+	alCaptureDestroy = (ALboolean (*)( void )) GP("alCaptureDestroy_EXT");
+	alCaptureStart   = (ALboolean (*)( void )) GP("alCaptureStart_EXT");
+	alCaptureStop    = (ALboolean (*)( void )) GP("alCaptureStop_EXT");
 	alCaptureGetData = (ALsizei (*)( ALvoid*, ALsizei, ALenum, ALuint )) GP("alCaptureGetData_EXT");
 
 

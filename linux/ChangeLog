@@ -1,5 +1,13 @@
 2005-03-31  Sven Panne  <sven.panne@aedion.de>
 
+	* include/AL/al.h, include/AL/alut.h, linux/doc/openal.texi,
+	linux/include/AL/alext.h, linux/include/AL/alexttypes.h,
+	linux/src/al_vector.c, linux/src/al_vector.h,
+	linux/src/alut/alut_wav.c, linux/src/extensions/al_ext_capture.c,
+	linux/test/testlib.c, linux/test/testlib.h: Follow the OpenGL
+	spirit in using ALvoid only in the context of opaque/unspecified
+	pointers.
+
 	* linux/src/arch/darwin/CVS_Update.txt,
 	linux/src/arch/darwin/Tests_Results.rtf: Added.
 
