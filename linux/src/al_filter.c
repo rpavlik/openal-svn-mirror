@@ -89,7 +89,7 @@
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
 #define MAX(a,b) (((a) < (b)) ? (b) : (a))
 
-#define USE_TPITCH_LOOKUP 1 /* icculus change here JIV FIXME */
+#define USE_TPITCH_LOOKUP 0 /* icculus change here JIV FIXME */
 
 /* 
  * TPITCH_MAX sets the number of discrete values for AL_PITCH we can have.
@@ -1604,15 +1604,20 @@ void alf_tpitch( UNUSED(ALuint cid),
 			/* make sure we don't go past end of last source */
 			assert(((j+1)*pitch)*2 <
 				samp->size - src->srcParams.soundpos);
-
 			{
-				int sample = obufptr[(int) (j * pitch)];
+				float foffset = j * pitch;
+				int offset = (int) foffset;
+				float frac = foffset - offset;
+				int firstsample = obufptr[(int) (j * pitch)];
 				int nextsample = obufptr[(int)((j+1) * pitch)];
-				float frac = 1/pitch;
+				int finalsample;
 				
 				/* do a little interpolation */
-				bufptr[j] = sample +
-				            frac * (nextsample - sample);
+				finalsample = firstsample +
+				            frac * (nextsample - firstsample);
+
+				finalsample = MIN(finalsample, canon_max);
+				bufptr[j] =   MAX(finalsample, canon_min);
 			}
 		}
 
