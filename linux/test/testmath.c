@@ -224,25 +224,5 @@ int main(void) {
 
 #endif
 
-	/* vector intersect angle */
-	vec1[0] = 3.0; point1[0] = 0.0;
-	vec1[1] = 0.2; point1[1] = 0.0;
-	vec1[2] = 0.0; point1[2] = 0.0;
-
-	vec2[0] = 0.0; point2[0] = 0.0;
-	vec2[1] = 4.0; point2[1] = 0.0;
-	vec2[2] = 0.0; point2[2] = 0.0;
-
-
-	fprintf(stderr, "\n\t ---- VECTOR ANGLE INTERSECT ACUTE -----\n"
-		"\t1: (%f %f %f) -> (%f %f %f)\n"
-		"\t2: (%f %f %f) -> (%f %f %f)\n"
-		"\t=== %f\n",
-		vec1[0], vec1[1], vec1[2],
-		point1[0], point1[1], point1[2],
-		vec2[0], vec2[1], vec2[2],
-		point2[0], point2[1], point2[2],
-		_alVectorIntersectAngle(vec1, point1, vec2, point2));
-
 	return 0;
 }

@@ -628,7 +628,7 @@ void alf_coning( ALuint cid,
 	_alDebug(ALD_SOURCE, __FILE__, __LINE__,
 		"alf_coning: sid %d icone %f ocone %f", src->sid, icone, ocone );
 
-	theta = fabs( _alVectorAngleBeween(sp, lp, srcDir) );
+	theta = _alVectorAngleBetween(sp, lp, srcDir);
 
 	if( theta <= (icone / 2.0f) ) {
 		/*

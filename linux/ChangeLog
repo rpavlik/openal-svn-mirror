@@ -1,3 +1,8 @@
+2003-04-01  J. Valenzuela  <jvalenzu@infinite-monkeys.org>
+
+	* misc
+	Joe Tennies's vector patches
+
 2003-03-23  Joseph Valenzuela  <jvalenzu@formosa.infinite-monkeys.org>
 
 	* src/al_source.c:

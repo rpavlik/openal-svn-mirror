@@ -428,7 +428,8 @@ void _alBuffersCopy(void **dsts, void **srcs, int len, int nc) {
 }
 
 /*
- * _alRotatePointAboutAxis( ALfloat angle, ALfloat *point, ALfloat *axis )
+ * _alRotatePointAboutAxis( const ALfloat angle, ALfloat *point, 
+ *                          const ALfloat *axis )
  *
  * Rotates point angle radians about axis.
  *
@@ -439,7 +440,8 @@ void _alBuffersCopy(void **dsts, void **srcs, int len, int nc) {
  * FIXME: check my math
  * FIXME: needs to check args
  */
-void _alRotatePointAboutAxis( ALfloat angle, ALfloat *point, ALfloat *axis ) {
+void _alRotatePointAboutAxis( const ALfloat angle, ALfloat *point, 
+                              const ALfloat *axis ) {
 	ALmatrix *m;
 	ALmatrix *pm;
 	ALmatrix *rm;
