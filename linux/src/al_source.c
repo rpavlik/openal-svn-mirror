@@ -619,7 +619,7 @@ void alSourcefv( ALuint sid, ALenum param, ALfloat *fv1 )
 		case AL_CONE_OUTER_GAIN:
 		case AL_GAIN:
 		case AL_GAIN_LINEAR_LOKI:
-		  inrange = _alCheckRangef( fv1[0], 0.0, 1.0 );
+		  inrange = _alCheckRangef( fv1[0], 0.0, FLT_MAX );
 		  break;
 		case AL_CONE_INNER_ANGLE:
 		case AL_CONE_OUTER_ANGLE:
