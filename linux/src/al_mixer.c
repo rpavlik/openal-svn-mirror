@@ -1210,7 +1210,7 @@ void _alUnlockMixerPause( void ) {
 /*
  * _alProcessFlags( void )
  *
- * The mixing function (_alMixSources), in the course of it's job marks the
+ * The mixing function (_alMixSources), in the course of its job marks the
  * mixsource nodes with commands that need to be executed after the completion
  * of the mixsource's iteration through the loop.  This is the function where
  * such things are done.
