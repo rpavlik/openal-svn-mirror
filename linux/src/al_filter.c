@@ -1325,7 +1325,7 @@ void alf_tpitch( UNUSED(ALuint cid),
 #if DEBUG_MEM
 	assert(clen - 1 < TPITCH_MAX);
 #endif
-	while(offsets[clen - 1] * sizeof(ALshort)
+	while(offsets[clen - 2] * sizeof(ALshort)
 		+ src->srcParams.soundpos >= samp->size) {
 		/* decrement clen until we won't suffer a buffer
 		 * overrun.
@@ -1394,15 +1394,20 @@ void alf_tpitch( UNUSED(ALuint cid),
 		 * a bit.
 		 */
 		for(j = 0; j < clen; j++) {
-#if DEBUG_MEM
+			int offset = offsets[j];
+			int nextoffset = offsets[j]+ (j == (int)len - 1)? 0 : 1;
+			int sample = obufptr[offset];
+			int nextsample = obufptr[nextoffset];
+			float frac = fractionals[j];
+
+#if DEBUG_MEM || 0
 			assert(j < TPITCH_MAX);
 			assert(offsets[j] < (int) len-1);
 #endif
 
+			
 			/* do a little interpolation */
-			bufptr[j] = obufptr[ offsets[j] ] +
-				fractionals[j] *
-				(obufptr[offsets[j] + 1] - obufptr[offsets[j]]);
+			bufptr[j] = sample + frac * (nextsample - sample);
 		}
 	}
 
