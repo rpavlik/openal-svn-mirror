@@ -1,3 +1,10 @@
+2002-09-08  Ryan C. Gordon  <ryan@epicgames.com>
+
+	* src/arch/sdl/sdl.c:
+	Changed sdl_blitbuffer() to call SDL_Delay(1) instead of SDL_Delay(0)
+	while waiting for space in the ring buffer to become available.
+	SDL_Delay(0) is almost universally a no-op, so this was eating the CPU.
+
 2002-09-08  Christopher Purnell  <cjp@lost.org.uk>
 
 	* src/alc/alc_speaker.c
@@ -17,6 +24,11 @@
 	table, but I think the result is more sound now.  Got a chance to
 	clean it up, may revisit soon to reduce memory fragmentation in
 	the tpitch lookup table.
+
+2002-09-05  Ryan C. Gordon  <ryan@epicgames.com>
+
+	* src/arch/sdl/sdl.c:
+	Patched to function, again.
 
 2002-09-05  Joseph Valenzuela  <jvalenzu@formosa>
 
