@@ -52,8 +52,8 @@ void alDistanceModel( ALenum distanceModel ) {
  * all values.
  */
 ALfloat _alDistanceNone( UNUSED(ALfloat dis),
-			 UNUSED(ALfloat gain),
 			 UNUSED(ALfloat rolloff),
+			 UNUSED(ALfloat gain),
 			 UNUSED(ALfloat ref),
 			 UNUSED(ALfloat max)) {
 	return gain;
