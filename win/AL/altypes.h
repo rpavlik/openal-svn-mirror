@@ -3,7 +3,7 @@
 
 /**
  * OpenAL cross platform audio library
- * Copyright (C) 1999-2000 by authors.
+ * Copyright (C) 1999-2003 by authors.
  * This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Library General Public
  *  License as published by the Free Software Foundation; either
@@ -42,7 +42,7 @@ typedef short ALshort;
 typedef unsigned short ALushort;
 
 /** OpenAL 32bit unsigned integer type. */
-typedef unsigned ALuint;
+typedef unsigned int ALuint;
 
 /** OpenAL 32bit signed integer type. */
 typedef int ALint;
@@ -320,10 +320,15 @@ typedef int ALenum;
 
 #define AL_INVERSE_DISTANCE                      0xD001
 #define AL_INVERSE_DISTANCE_CLAMPED              0xD002
- 
- /**
- * enables
+
+
+/**
+ * AL Extensions
  */
+
+/** Ogg Vorbis format specifier. */
+#define AL_FORMAT_VORBIS_EXT                     0x10003
+ 
 
 #ifdef __cplusplus
 }
