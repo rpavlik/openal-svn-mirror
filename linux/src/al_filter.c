@@ -96,7 +96,7 @@
  *
  * 2.0 is an arbitrary constant, and likely to be changed.
  */
-#define TPITCH_MAX       128
+#define TPITCH_MAX       256
 
 /*
  * The default software time domain filters.
