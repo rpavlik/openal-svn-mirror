@@ -849,6 +849,12 @@ void alf_da( ALuint cid,
 
 		isrel = _alGetSourceParam( src, AL_SOURCE_RELATIVE );
 		if ( isrel && *isrel ) {
+			_alSourceGetParamDefault(AL_GAIN_LINEAR_LOKI, &gain);
+
+			for(i = 0; i < _ALC_MAX_CHANNELS; i++) {
+				src->srcParams.gain[i] *= gain;
+			}
+
 			return;
 		}
 
