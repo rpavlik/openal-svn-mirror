@@ -14,7 +14,9 @@
 # define MACOS
 #endif
 #ifdef unix
+# ifndef LINUX
 # define LINUX
+# endif /* LINUX */
 #endif
 
 // general switches
