@@ -225,16 +225,20 @@ ALAPI ALboolean ALAPIENTRY alIsBuffer(ALuint uiBuffer)
 	SuspendContext(Context);
 
 	// Check through list of generated buffers for uiBuffer
-	ALBuf = g_pBuffers;
-	for (i = 0; i < g_uiBufferCount; i++)
-	{
-		if ((ALuint)ALBuf == uiBuffer)
+	if (uiBuffer == 0) {
+		result = AL_TRUE;
+	} else {
+		ALBuf = g_pBuffers;
+		for (i = 0; i < g_uiBufferCount; i++)
 		{
-			result = AL_TRUE;
-			break;
-		}
+			if ((ALuint)ALBuf == uiBuffer)
+			{
+				result = AL_TRUE;
+				break;
+			}
 
-		ALBuf = ALBuf->next;
+			ALBuf = ALBuf->next;
+		}
 	}
 
 	ProcessContext(Context);
