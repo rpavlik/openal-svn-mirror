@@ -1460,6 +1460,14 @@ void OALSource::CalculateDistanceAndAzimuth(Float32 *outDistance, Float32 *outAz
         Distance=0.0;
     }
         
+    if (!mOwningDevice->IsPreferredMixerAvailable() && (mReferenceDistance > 1.0))
+    {
+        // the pre 2.0 mixer does not have the DistanceParam property so everything needs to be scaled to the reference distance
+        Distance = Distance/mReferenceDistance;
+        if (Distance > mMaxDistance/mReferenceDistance) 
+            Distance = mMaxDistance/mReferenceDistance; // clamp the distance to the max distance
+    }
+
     *outDistance = Distance;
     *outAzimuth = Angle;
 }
