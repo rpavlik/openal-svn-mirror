@@ -39,6 +39,8 @@
 
 #include "audioconvert.h"
 
+#define USE_LOGTAB 1 /* icculus look here JIV FIXME */
+
 /* standard extensions
  *
  * To avoid having these built in (ie, using the plugin arch), don't
@@ -807,6 +809,7 @@ ALboolean _alIsZeroVector(ALfloat *fv)
  */
 ALfloat _alLinearToDB(ALfloat linear)
 {
+#if USE_LOGTAB
 	static const float logtab[] = {
 		0.00, 0.001, 0.002, 0.003, 0.004, 0.005, 0.01, 0.011,
 		0.012, 0.013, 0.014, 0.015, 0.016, 0.02, 0.021, 0.022,
@@ -835,6 +838,10 @@ ALfloat _alLinearToDB(ALfloat linear)
 	}
 
 	return logtab[(int) (logmax * linear)];
+#else
+	/* simple test */
+	return linear * linear;
+#endif
 }
 
 /*
@@ -845,6 +852,7 @@ ALfloat _alLinearToDB(ALfloat linear)
  * FIXME: So kludgey.
  */
 ALfloat _alDBToLinear(ALfloat dBs) {
+#if USE_LOGTAB
 	static const float logtab[] = {
 		0.00, 0.001, 0.002, 0.003, 0.004, 0.005, 0.01, 0.011,
 		0.012, 0.013, 0.014, 0.015, 0.016, 0.02, 0.021, 0.022,
@@ -896,6 +904,9 @@ ALfloat _alDBToLinear(ALfloat dBs) {
 	} while(last != mid);
 
 	return ((float) mid / logmax);
+#else
+	return sqrt(dBs);
+#endif
 }
 
 /*
