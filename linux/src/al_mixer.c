@@ -42,6 +42,8 @@
 
 #include "arch/interface/interface_sound.h"
 
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+
 /*
  * The mixing function checks this variable for equality with AL_TRUE.  When
  * this is the case, it exits.  The default is AL_FALSE.
@@ -167,7 +169,8 @@ static ALboolean _alTryLockMixerPause( void );
  *
  * assumes locked mixbuf
  */
-static void _alMixSources( void ) {
+static void _alMixSources( void )
+{
 	AL_buffer *samp;
 	AL_source *src;
 	int *sampid;
@@ -177,18 +180,23 @@ static void _alMixSources( void ) {
 	ALboolean islooping   = AL_FALSE;
 	ALboolean isstreaming = AL_FALSE;
 	ALboolean iscallback  = AL_FALSE;
+	ALboolean isinqueue   = AL_FALSE;
 	ALuint pitr; /* pool iterator */
-	ALuint nc = 2;
+	ALuint nc = _alcDCGetNumSpeakers();
 	
-	for(pitr = 0; pitr < mspool.size; pitr++) {
-		if(mspool.pool[pitr].inuse == AL_FALSE) {
+	for(pitr = 0; pitr < mspool.size; pitr++)
+	{
+		if(mspool.pool[pitr].inuse == AL_FALSE)
+		{
 			/* if not in use, can't be played anyway */
 			continue;
 		}
 
 		itr = _alMixPoolIndex( &mspool, pitr );
+		assert(itr);
 
-		if(!(itr->flags & ALM_PLAY_ME)) {
+		if(!(itr->flags & ALM_PLAY_ME))
+		{
 			/*
 			 * current mix source on the way out, so
 			 * ignore it
@@ -204,14 +212,16 @@ static void _alMixSources( void ) {
 			itr->sid);
 
 		/* check for paused context. */
-		if( _alcIsContextSuspended( itr->context_id ) == AL_TRUE ) {
+		if( _alcIsContextSuspended( itr->context_id ) == AL_TRUE )
+		{
 			continue;
 		}
 
 		_alLockSource( itr->context_id, itr->sid );
 
 		src = _alGetSource(itr->context_id, itr->sid);
-		if(src == NULL) {
+		if(src == NULL)
+		{
 			/* not a valid src */
 			itr->flags = ALM_DESTROY_ME;
 
@@ -220,14 +230,16 @@ static void _alMixSources( void ) {
 			continue;
 		}
 
-		if(src->state == AL_PAUSED) {
+		if(src->state == AL_PAUSED)
+		{
 			/* Paused sources don't get mixed */
 			_alUnlockSource( itr->context_id, itr->sid );
 			continue;
 		}
 
 		sampid = _alGetSourceParam(src, AL_BUFFER);
-		if(sampid == NULL) {
+		if(sampid == NULL)
+		{
 			/* source added with no buffer associated */
 			itr->flags = ALM_DESTROY_ME;
 
@@ -235,11 +247,13 @@ static void _alMixSources( void ) {
 				"No bid associated with sid %d", itr->sid);
 
 			_alUnlockSource( itr->context_id, itr->sid );
+
 			continue;
 		}
 
  		samp = _alGetBuffer(*sampid);
-		if(samp == NULL) {
+		if(samp == NULL)
+		{
 			/* source added with no valid buffer associated */
 			_alDebug(ALD_MIXER, __FILE__, __LINE__,
 				"no such bid [sid|bid] [%d|%d]",
@@ -254,6 +268,7 @@ static void _alMixSources( void ) {
 
 		/* get special needs */
 		islooping   = _alSourceIsLooping( src );
+		isinqueue   = _alSourceGetPendingBids( src ) > 0;
 		isstreaming = _alBidIsStreaming( *sampid );
 		iscallback  = _alBidIsCallback( *sampid );
 
@@ -265,26 +280,42 @@ static void _alMixSources( void ) {
 		 * we can ignore qualifications of samp->size because
 		 * we loop (ie, have infinite length).
 		 */
-		if( islooping == AL_FALSE ) {
-			/* Non looping source */
-			bytes_to_write = _alSourceBytesLeft(src, samp);
-		} else {
+		if( islooping == AL_TRUE )
+		{
+			/* looping sounds always have enough data */
 			bytes_to_write = bufsiz;
+		}
+		else if( isinqueue == AL_TRUE )
+		{
+			/*
+			 * queueing sounds are like looping sounds in that
+			 * we calculate the number of bytes to write not
+			 * just from the number of bytes left in this buffer.
+			 *
+			 * Well, because it is difficult to predict how 
+			 * much data we actually have available, just request
+			 * bufsiz and have SplitSourceQueue pad it out
+			 * with 0s.  This precludes looping queued buffers
+			 * at the moment.
+			 */
+			bytes_to_write = bufsiz;
+		}
+		else
+		{
+			/* completely normal sound */
+			bytes_to_write = _alSourceBytesLeft(src, samp);
 		}
 
 		/*
 		 * set written to either bufsiz or the number of bytes
 		 * left in the source.
 		 */
-		if(bytes_to_write > bufsiz) {
-			written = bufsiz;
-		} else {
-			written = bytes_to_write;
-		}
+		written = MIN(bytes_to_write, bufsiz);
 
 		_alAddDataToMixer( src->srcParams.outbuf, written );
 
-		if(_alSourceShouldIncrement(src) == AL_TRUE) {
+		if(_alSourceShouldIncrement(src) == AL_TRUE)
+		{
 			/*
 			 * soundpos is an offset into the original buffer
 			 * data, which is most likely mono.  We use nc (the
@@ -294,13 +325,35 @@ static void _alMixSources( void ) {
 			_alSourceIncrement(src, written / nc);
 		}
 
-		if(_alSourceBytesLeft(src, samp) <= 0) {
+		if((isinqueue == AL_TRUE) &&
+		   (src->srcParams.new_readindex >= 0))
+		{
+			/*
+			 * If new_readindex is set, so should be
+			 * new_soundpos.
+			 */
+			assert(src->srcParams.new_soundpos >= 0);
+
+			src->bid_queue.read_index =src->srcParams.new_readindex;
+			src->srcParams.soundpos =  src->srcParams.new_soundpos;
+
+			/*
+			 * Flag so that we don't do this again
+			 * until the next SplitSourceQueue.
+			 */
+			src->srcParams.new_readindex = -1;
+			src->srcParams.new_soundpos = -1;
+		}
+		else if(_alSourceBytesLeft(src, samp) <= 0)
+		{
 			/*
 			 * end of sound.  streaming & looping are special
 			 * cases.
 			 */
-			if(islooping == AL_TRUE ) {
-				if(iscallback == AL_TRUE) {
+			if(islooping == AL_TRUE )
+			{
+				if(iscallback == AL_TRUE)
+				{
 					_alDebug(ALD_LOOP, __FILE__, __LINE__,
 					"%d callback loop reset ", itr->sid);
 
@@ -323,39 +376,21 @@ static void _alMixSources( void ) {
 					 */
 					src->srcParams.soundpos %= samp->size;
 				}
-			} else if(isstreaming == AL_FALSE) {
-				/*
-				 * The source's current buffer is fini.  Do we 
-				 * go to the next buffer in the queue?
-				 */
-				if(src->bid_queue.read_index < src->bid_queue.size - 1) {
-					ALuint rindex = src->bid_queue.read_index;
-					ALuint bid    = src->bid_queue.queue[rindex];
-
-					/* There *is* another buffer.  We
-					 * count on SplitSources to wrap
-					 * around buffer queue entries so that
-					 * we get to artifact at crossings.
-					 */
-
-					/*
-					 * Change current state to queue for
-					 * this bid/sid pair
-					 */
-					_alBidRemoveCurrentRef(bid, itr->sid);
-					_alBidAddQueueRef(bid, itr->sid);
-
-					src->bid_queue.read_index++;
-
-					src->srcParams.soundpos = 0;
-					/* src->srcParams.soundpos -= samp->size; */
-
-
-				} else {
-					/* This buffer is solo */
-					itr->flags = ALM_DESTROY_ME;
-				}
 			}
+			else if(!isstreaming && !isinqueue)
+			{
+				/* This buffer is solo */
+				itr->flags = ALM_DESTROY_ME;
+			}
+		}
+
+		if(isinqueue && (_alSourceGetPendingBids(src) < 0))
+		{
+			/*
+			 * the read index might have been incremented
+			 * past our tolerance
+			 */
+			itr->flags = ALM_DESTROY_ME;
 		}
 
 		_alUnlockSource( itr->context_id, itr->sid );
@@ -374,13 +409,16 @@ static void _alMixSources( void ) {
  *
  * assumes that mixer and default context are locked
  */
-static ALuint _alAddDataToMixer( void *dataptr, ALuint bytes_to_write ) {
-	if(dataptr == NULL) {
+static ALuint _alAddDataToMixer( void *dataptr, ALuint bytes_to_write )
+{
+	if(dataptr == NULL)
+	{
 		/* Most likely, thread is waiting to die */
 		return 0;
 	}
 
-	if(bytes_to_write > bufsiz) {
+	if(bytes_to_write > bufsiz)
+	{
 		bytes_to_write = bufsiz;
 	}
 
@@ -479,11 +517,30 @@ static void _alDestroyMixSource( void *ms )
 	 * Update buffer state
 	 */
 	bid = _alGetSourceParam(src, AL_BUFFER);
-	if(bid == NULL) {
-		/* This shouldn't happend:  The buffer param of this
+
+	if(_alSourceQueuedBuffers(src) > 1)
+	{
+		int rindex = src->bid_queue.read_index;
+
+		rindex = MIN(rindex, src->bid_queue.size - 1);
+
+		assert( rindex >= 0 );
+		assert( rindex < src->bid_queue.size );
+
+		bid = &src->bid_queue.queue[rindex];
+	}
+	else if(bid == NULL)
+	{
+		/*
+		 * This shouldn't happend:  The buffer param of this
 		 * source is now invalid, but we're stopping it.  This
 		 * really is an ugly error: it most likely means that
 		 * there's a bug in the refcounting stuff somewhere.
+		 *
+		 * Actually, there's an exception to this.  For queued
+		 * sources, there will most likely be no buffer queued
+		 * at the end of the run.  So we have to special case
+		 * that.
 		 */
 		_alDebug(ALD_MIXER, __FILE__, __LINE__,
 		      "_alDestroyMixSource: no bid for source id %d",
@@ -498,10 +555,12 @@ static void _alDestroyMixSource( void *ms )
 
 	_alBidRemoveCurrentRef(*bid, src->sid);
 
-	if(src->bid_queue.size != 1) {
-		/* This is the last entry in the queue (or the source
+	if(src->bid_queue.size != 1)
+	{
+		/*
+		 * This is the last entry in the queue (or the source
 		 * was stopped) so we want to change the current state
-		 * for this bid/sid to queue
+		 * for this bid/sid to queue.
 		 */
 		_alBidAddQueueRef(*bid, src->sid);
 	}
@@ -511,15 +570,18 @@ static void _alDestroyMixSource( void *ms )
 	 * destructor on the source (because the source
 	 * is over.
 	 */
-	if(_alBidIsCallback(*bid) == AL_TRUE) {
+	if(_alBidIsCallback(*bid) == AL_TRUE)
+	{
 		_alBidCallDestroyCallbackSource(src->sid);
 	}
 
 	/* streaming sources */
-	if(_alBidIsStreaming(*bid) == AL_TRUE) {
-
-		for(i = 0; i < sbufs.size; i++) {
-			if(sbufs.streaming_buffers[i] == *bid) {
+	if(_alBidIsStreaming(*bid) == AL_TRUE)
+	{
+		for(i = 0; i < sbufs.size; i++)
+		{
+			if(sbufs.streaming_buffers[i] == *bid)
+			{
 				sbufs.streaming_buffers[i] = 0;
 				sbufs.items--;
 			}
@@ -532,7 +594,7 @@ static void _alDestroyMixSource( void *ms )
          * have all of its buffers processed, so read_index
          * should be the size of the queue.
 	 *
-	 * Hmmm, this is tricky, because many setter functions work off the
+	 * Hmmm, this is tricky, because many setter functions work of the
 	 * assumptions that read_index points to something valid!  Okay, we're
 	 * making the queue sourcestate getter ( used to access a lot of
 	 * stuff ) return NULL, or assert or whatever, should catch these
@@ -550,16 +612,19 @@ static void _alDestroyMixSource( void *ms )
  *
  * Create and initialize data structures needed by the mixing function.
  */
-ALboolean _alInitMixer( void ) {
+ALboolean _alInitMixer( void )
+{
 	bufsiz = _alcDCGetWriteBufsiz();
 
 	mix_mutex = mlCreateMutex();
-	if(mix_mutex == NULL) {
+	if(mix_mutex == NULL)
+	{
 		return AL_FALSE;
 	}
 
 	pause_mutex = mlCreateMutex();
-	if(pause_mutex == NULL) {
+	if(pause_mutex == NULL)
+	{
 		mlDestroyMutex( mix_mutex );
 		mix_mutex = NULL;
 
@@ -567,7 +632,8 @@ ALboolean _alInitMixer( void ) {
 	}
 
 	/* init Mixer funcs */
-	if( _alMixFuncInit(&MixFunc, MAXMIXSOURCES ) == AL_FALSE) {
+	if( _alMixFuncInit(&MixFunc, MAXMIXSOURCES ) == AL_FALSE)
+	{
 		mlDestroyMutex( mix_mutex );
 		mlDestroyMutex( pause_mutex );
 		mix_mutex = NULL;
@@ -577,7 +643,8 @@ ALboolean _alInitMixer( void ) {
 	}
 
 	/* init MixManager */
-	if(_alMixManagerInit(&MixManager, MAXMIXSOURCES) == AL_FALSE) {
+	if(_alMixManagerInit(&MixManager, MAXMIXSOURCES) == AL_FALSE)
+	{
 		mlDestroyMutex(mix_mutex);
 		mlDestroyMutex(pause_mutex);
 		mix_mutex = NULL;
@@ -601,7 +668,8 @@ ALboolean _alInitMixer( void ) {
  *
  * assumes locked context
  */
-void _alSetMixer( ALboolean synchronous ) {
+void _alSetMixer( ALboolean synchronous )
+{
 	AL_context *dc;
 	ALuint ex_format;
 	ALuint ex_speed;
@@ -686,7 +754,8 @@ void _alSetMixer( ALboolean synchronous ) {
  *
  * Assumes locked context
  */
-static ALboolean _alAllocMixSource( ALuint sid ) {
+static ALboolean _alAllocMixSource( ALuint sid )
+{
 	AL_source *src;
 	ALuint *bid;
 	_alMixSource *msrc;
@@ -773,7 +842,8 @@ static ALboolean _alAllocMixSource( ALuint sid ) {
 		_alAddBufferToStreamingList(*bid);
 	}
 
-	if( src->bid_queue.read_index < src->bid_queue.size - 1 ) {
+	if( src->bid_queue.read_index < src->bid_queue.size - 1 )
+	{
 		_alBidRemoveQueueRef(*bid, sid);
 	}
 
@@ -1186,17 +1256,20 @@ void _alProcessFlags( void ) {
 		}
 
 		itr = _alMixPoolIndex(&mspool, i);
-		if(itr == NULL) {
+		if(itr == NULL)
+		{
 			/* shouldn't happen */
 			continue;
 		}
 
-		if(itr->flags & ALM_DESTROY_ME) {
+		if(itr->flags & ALM_DESTROY_ME)
+		{
 			/* this source associated with this mixsource
 			 * has expired (either because it has been stopped
 			 * or just run out.  Remove it.
 			 */
-			if( alIsSource(itr->sid) == AL_FALSE ) {
+			if( alIsSource(itr->sid) == AL_FALSE )
+			{
 				/* sanity check */
 				continue;
 			}

@@ -26,9 +26,6 @@
     || defined(DEBUG_LISTENER) || defined(DEBUG_QUEUE)
 
 #define NEED_DEBUG
-#define ASSERT(p) assert(p)
-#else 
-#define ASSERT(p) 
 #endif /* debug stuff */
 
 #ifdef DEBUG_MAXIMUS
@@ -41,7 +38,8 @@
  * the general idea is that if the user configures openal with
  * --enable-debug-foo, only debug messages relavant to foo should be printed.
  */
-typedef enum _aldEnum {
+typedef enum _aldEnum
+{
 	ALD_INVALID,
 	ALD_CONVERT,
 	ALD_CONFIG,

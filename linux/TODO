@@ -8,9 +8,9 @@ TODO:
 	General:
 	  - check UNUSED (and eventually remove them)
 	  - clean up context create/destroy behaviour
-	  - implement IASIG stuff
 	  - make sure data format is consistent within openal
 	  - merge pool functions?
+	  - integrate memory reducing AL_buffer changed
 	  - comments, examples, documentation, testing
 
 	Filters:
@@ -28,3 +28,8 @@ TODO:
 	  - callbacks with filters (alf_tpitch in particular) 
 	  - locking
 	  - more in general
+
+	Extensions:
+	  - rewrite alBufferAppendFoo to use queueing
+	  - maybe remove GenStreaming?
+	  - maybe IASIG stuff

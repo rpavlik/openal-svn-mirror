@@ -14,14 +14,6 @@
 
 #include "posixmutex.h"
 
-#ifndef ASSERT
-#ifdef DEBUG
-#define ASSERT(x) assert(x)
-#else
-#define ASSERT(x)
-#endif /* DEBUG */
-#endif /* ASSERT */
-
 static pthread_mutex_t *_newMutex(void);
 
 pthread_mutex_t *Posix_CreateMutex(void) {
@@ -38,7 +30,7 @@ pthread_mutex_t *Posix_CreateMutex(void) {
 void Posix_DestroyMutex(pthread_mutex_t *mutex) {
 	if(pthread_mutex_destroy(mutex)) {
 		fprintf(stderr, "mutex %p busy\n", (void *) mutex);
-		ASSERT(0);
+		assert(0);
 		return;
 	}
 

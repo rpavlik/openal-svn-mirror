@@ -11,10 +11,10 @@
 #include <unistd.h>
 
 
-#define WAVEFILE      "boom.wav"
+#define WAVEFILE      "makepcm.wav"
 #define NUMSOURCES    1
 
-static void iterate( void );
+static void start( void );
 static void init( const char *fname );
 static void cleanup(void);
 
@@ -23,23 +23,14 @@ static ALuint multis;
 static void *context_id;
 static void *wave = NULL;
 
-static void iterate( void ) {
-	int i;
-
-	fprintf(stderr, "NOW\n");
+static void start( void )
+{
 	alSourcePlay( multis);
-	fprintf(stderr, "OVER\n");
-
-	micro_sleep(1000000);
 
 	return;
 }
 
 static void init( const char *fname ) {
-	ALfloat zeroes[] = { 0.0f, 0.0f,  0.0f };
-	ALfloat back[]   = { 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f };
-	ALfloat front[]  = { 0.0f, 0.0f,  1.0f, 0.0f, 1.0f, 0.0f };
-	ALfloat position[] = { 2.0f, 0.0f, -4.0f };
 	ALuint boom;
 	ALsizei size;
 	ALsizei bits;
@@ -47,10 +38,6 @@ static void init( const char *fname ) {
 	ALsizei format;
 	ALboolean err;
 	int i;
-
-	alListenerfv(AL_POSITION, zeroes );
-	alListenerfv(AL_VELOCITY, zeroes );
-	/* alListenerfv(AL_ORIENTATION, front ); */
 
 	alGenBuffers( 1, &boom );
 
@@ -66,13 +53,15 @@ static void init( const char *fname ) {
 
 	alGenSources( NUMSOURCES ,&multis);
 
-	alSourcefv( multis, AL_POSITION, position );
-	alSourcefv( multis, AL_VELOCITY, zeroes );
-	alSourcefv( multis, AL_ORIENTATION, back );
 	alSourcei(  multis, AL_LOOPING, AL_FALSE );
 	alSourcef(  multis, AL_GAIN_LINEAR_LOKI, 1.0);
 
-	alQueuei(   multis, AL_BUFFER, boom );
+
+	alQueuei( multis, AL_BUFFER, boom );
+	alQueuei( multis, AL_BUFFER, boom );
+	alQueuei( multis, AL_BUFFER, boom );
+	alQueuei( multis, AL_BUFFER, boom );
+	alQueuei( multis, AL_BUFFER, boom );
 
 	return;
 }
@@ -111,9 +100,13 @@ int main( int argc, char* argv[] ) {
 		init(argv[1]);
 	}
 
-	iterate();
+	start();
 
-	while(SourceIsPlaying(multis) == AL_TRUE) {
+	while(SourceIsPlaying(multis) == AL_TRUE)
+	{
+		micro_sleep(1000000);
+		micro_sleep(1000000);
+		micro_sleep(1000000);
 		micro_sleep(1000000);
 	}
 

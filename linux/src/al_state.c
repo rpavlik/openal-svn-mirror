@@ -217,7 +217,7 @@ const ALubyte *alGetString( ALenum param ) {
 
 	switch(param) {
 		case AL_VENDOR:
-			return (const ALubyte *) "Loki(R) Software";
+			return (const ALubyte *) "J. Valenzuela";
 			break;
 		case AL_VERSION:
 			return (const ALubyte *) LAL_VERSION;

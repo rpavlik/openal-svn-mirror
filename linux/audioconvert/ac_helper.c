@@ -45,7 +45,9 @@ void acConvertSign(acAudioCVT *cvt, ALushort format) {
 
 	format = (format ^ 0x8000);
 
-	return;
+	if (cvt->filters[++cvt->filter_index] ) {
+		cvt->filters[cvt->filter_index](cvt, format);
+	}
 }
 
 /* Toggle endianness */
@@ -63,6 +65,9 @@ void acConvertEndian(acAudioCVT *cvt, ALushort format) {
 
 	format = (format ^ 0x1000);
 
+	if (cvt->filters[++cvt->filter_index] ) {
+		cvt->filters[cvt->filter_index](cvt, format);
+	}
 }
 
 
@@ -213,8 +218,6 @@ int acBuildAudioCVT(acAudioCVT *cvt,
 }
 
 int acConvertAudio(acAudioCVT *cvt) {
-	int i;
-
 	/* Make sure there's data to convert */
 	if(cvt->buf == NULL) {
 #ifdef DEBUG_MAXIMUS
@@ -234,9 +237,7 @@ int acConvertAudio(acAudioCVT *cvt) {
 
 	/* Set up the conversion and go! */
 	cvt->filter_index = 0;
-	for(i = 0; cvt->filters[i]; i++) {
-		cvt->filters[i](cvt, cvt->src_format);
-	}
+	cvt->filters[0](cvt, cvt->src_format);
 
 	return 0;
 }

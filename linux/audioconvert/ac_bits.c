@@ -28,7 +28,9 @@ void acConvert16LSB( acAudioCVT *cvt, ALushort format ) {
 	format = ((format & ~0x0008) | AUDIO_U16LSB);
 	cvt->len_cvt *= 2;
 
-	return;
+	if ( cvt->filters[++cvt->filter_index] ) {
+		cvt->filters[cvt->filter_index](cvt, format);
+	}
 }
 
 /* Convert 8-bit to 16-bit - MSB */
@@ -47,6 +49,10 @@ void acConvert16MSB(acAudioCVT *cvt, ALushort format) {
 
 	format = ((format & ~0x0008) | AUDIO_U16MSB);
 	cvt->len_cvt *= 2;
+
+	if ( cvt->filters[++cvt->filter_index] ) {
+		cvt->filters[cvt->filter_index](cvt, format);
+	}
 }
 
 /* Convert 16-bit to 8-bit */
@@ -69,4 +75,8 @@ void acConvert8(acAudioCVT *cvt, ALushort format) {
 	format = ((format & ~0x9010) | AUDIO_U8);
 
 	cvt->len_cvt /= 2;
+
+	if ( cvt->filters[++cvt->filter_index] ) {
+		cvt->filters[cvt->filter_index](cvt, format);
+	}
 }

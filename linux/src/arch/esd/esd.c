@@ -15,6 +15,7 @@
 
 #include <AL/altypes.h>
 
+#include <assert.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -144,18 +145,18 @@ void esd_blitbuffer(void *handle, void *dataptr, int bytes_to_write)  {
 			/* timeout occured, don't try and write */
 			fprintf(stderr, "esd_blitbuffer: timeout occured\n");
 
-			ASSERT(0);
+			assert(0);
 			return;
 		}
 
-		ASSERT(iterator > 0);
-		ASSERT(iterator <= bytes_to_write);
+		assert(iterator > 0);
+		assert(iterator <= bytes_to_write);
 
 		err = write(fd,
 			    (char *) dataptr + bytes_to_write - iterator,
 			    iterator);
 		if(err < 0) {
-			ASSERT(0);
+			assert(0);
 #ifdef DEBUG_MAXIMUS
 			perror("write");
 #endif

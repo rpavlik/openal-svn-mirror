@@ -13,14 +13,6 @@
 
 #include "windowsmutex.h"
 
-#ifndef ASSERT
-#ifdef DEBUG
-#define ASSERT(x) assert(x)
-#else
-#define ASSERT(x)
-#endif /* DEBUG */
-#endif /* ASSERT */
-
 MutexID Windows_CreateMutex(void) {
 	MutexID retval;
 

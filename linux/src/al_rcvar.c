@@ -274,7 +274,7 @@ alrc_prim rc_toprim( Rcvar sym ) {
 	AL_rctree *r = sym;
 
 	if( rc_type(sym) != ALRC_PRIMITIVE ) {
-		ASSERT(0);
+		assert(0);
 
 		return NULL;
 	}
@@ -300,7 +300,7 @@ ALint rc_toint( Rcvar sym ) {
 			break;
 	}
 
-	ASSERT(0);
+	assert(0);
 
 	return 0;
 }
@@ -482,7 +482,7 @@ static void print_prim( Rcvar obj ) {
 			}
 			break;
 		case ALRC_INVALID:
-			ASSERT( 0 );
+			assert( 0 );
 			break;
 	}
 

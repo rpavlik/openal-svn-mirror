@@ -40,6 +40,7 @@ ALCdevice *alcOpenDevice( const ALubyte *deviceSpecifier ) {
 	Rcvar foo = NULL;
 	Rcvar direction = NULL;
 	Rcvar freq_sym = NULL;
+	Rcvar speakers = NULL;
 	UNUSED(Rcvar devices) = NULL;
 
 	if( num_devices == 0 ) {
@@ -54,6 +55,7 @@ ALCdevice *alcOpenDevice( const ALubyte *deviceSpecifier ) {
 	devices   = rc_lookup( "devices" );
 	direction = rc_lookup( "direction" );
 	freq_sym  = rc_lookup( "sampling-rate" );
+	speakers  = rc_lookup( "speaker-num" );
 
 	/* get the attributes requested in the args */
 	if( deviceSpecifier ) {
@@ -73,12 +75,17 @@ ALCdevice *alcOpenDevice( const ALubyte *deviceSpecifier ) {
 	}
 
 	if( freq_sym != NULL ) {
-		freq_sym = rc_define( "sampling-rate", alrc_quote( freq_sym ));
+		rc_define( "sampling-rate", alrc_quote( freq_sym ));
+	}
+
+	if( speakers != NULL ) {
+		rc_define( "speaker-num", alrc_quote( speakers ));
 	}
 
 	direction = rc_lookup( "direction" );
 	devices   = rc_lookup( "devices" );
 	freq_sym  = rc_lookup( "sampling-rate" );
+	speakers  = rc_lookup( "speaker-num" );
 
 	if( direction != NULL ) {
 		switch( rc_type( direction ) ) {
@@ -117,6 +124,22 @@ ALCdevice *alcOpenDevice( const ALubyte *deviceSpecifier ) {
 				_alDebug(ALD_CONVERT, __FILE__, __LINE__,
 					"invalid type %s for sampling-rate",
 					rc_typestr( rc_type( freq_sym ) ));
+				break;
+		}
+	}
+
+	if( speakers != NULL ) {
+		ALenum fmt;
+
+		switch(rc_type( speakers )) {
+			case ALRC_INTEGER:
+			case ALRC_FLOAT:
+				fmt = _al_formatscale( retval->format,
+						       rc_toint( speakers ) );
+				if ( fmt >= 0 )
+					retval->format = fmt;
+				break;
+			default:
 				break;
 		}
 	}

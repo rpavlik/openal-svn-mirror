@@ -12,6 +12,9 @@
 
 #include "mutex/mutexlib.h"
 
+#include <stddef.h>
+#include <sys/types.h>
+
 #define _ALC_MAX_CHANNELS    6
 #define _ALC_MAX_FILTERS     8
 
@@ -189,6 +192,15 @@ typedef struct _AL_source {
 
 	struct {
 		unsigned long soundpos; /* position into sound */
+
+		/*
+		 * It really makes more sense for split source to
+		 * maintain soundpos, so set these.  If this works
+		 * out move everything over to use them.
+		 */
+		ssize_t new_soundpos;
+		ssize_t new_readindex;
+
 		void *outbuf;           /* buffer where output data is stored */
 		ALuint delay[_ALC_MAX_CHANNELS];
 		ALfloat gain[_ALC_MAX_CHANNELS];
@@ -223,12 +235,14 @@ typedef struct _AL_capture {
 } AL_capture;
 
 /* pool structures */
-typedef struct {
+typedef struct
+{
 	AL_source data;
 	ALboolean inuse;
 } spool_node;
 
-typedef struct {
+typedef struct
+{
 	spool_node *pool;
 	ALuint size;
 	ALuint *map;        /* { sid, index } pair.  map[index] = sid */

@@ -791,6 +791,14 @@ ALenum alGetEnumValue( const ALubyte *ename ) {
 		return AL_FORMAT_STEREO16;
 	}
 
+	if(ustrcmp("AL_FORMAT_QUAD8_LOKI", ename) == 0) {
+		return AL_FORMAT_QUAD8_LOKI;
+	}
+
+	if(ustrcmp("AL_FORMAT_QUAD16_LOKI", ename) == 0) {
+		return AL_FORMAT_QUAD16_LOKI;
+	}
+
 	if(ustrcmp("AL_FREQUENCY", ename) == 0) {
 		return AL_FREQUENCY;
 	}

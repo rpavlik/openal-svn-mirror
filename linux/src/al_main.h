@@ -50,13 +50,6 @@ int _alLockPrintf( const char *str, const char *fn, int line );
 #define _al_ACformatbits(fmt) (fmt & 0x00FF)
 
 /*
- * _al_ALCHANNELS(fmt)
- *
- * evaluates to the number of channels in an openal format.
- */
-#define _al_ALCHANNELS(fmt) ((fmt==AL_FORMAT_MONO16)? 1 : ((fmt==AL_FORMAT_MONO8)?1:2))
-
-/*
  * ustrcmp(s1, s2)
  * ustrncmp(s1, s2, n)
  * ustrncpy(s1, s2, n)
@@ -145,6 +138,13 @@ ALenum _al_AC2ALFMT( ALuint acformat, ALuint channels );
  * combined with _al_ALCHANNELS.
  */
 ALushort _al_AL2ACFMT( ALenum alfmt );
+
+/*
+ * _al_ALCHANNELS(fmt)
+ *
+ * evaluates to the number of channels in an openal format.
+ */
+ALubyte  _al_ALCHANNELS(ALenum alformat);
 
 /*
  * _al_formatscale( ALenum format, ALuint new_channel_num )

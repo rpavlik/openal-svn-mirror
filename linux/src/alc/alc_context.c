@@ -915,13 +915,13 @@ ALint _alcGetNewContextId(void) {
 	cindex = al_contexts.size - 1;
 	cid = _alcGenerateNewCid();
 
-	ASSERT(al_contexts.inuse[cindex] == AL_FALSE);
+	assert(al_contexts.inuse[cindex] == AL_FALSE);
 
 	al_contexts.inuse[cindex] = AL_TRUE;
 	al_contexts.map[cindex]   = cid;
 
 	if(_alcInitContext(cid) == NULL) {
-		ASSERT(0);
+		assert(0);
 		return -1;
 	}
 
@@ -1049,7 +1049,7 @@ static ALuint _alcCidToIndex( ALuint cid ) {
  * Converts index to a cid, returning that.
  */
 static ALuint _alcIndexToCid(int index) {
-	ASSERT(index < (int) al_contexts.size);
+	assert(index < (int) al_contexts.size);
 
 	return al_contexts.map[index];
 }

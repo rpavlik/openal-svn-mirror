@@ -21,6 +21,7 @@
  */
 #include <AL/altypes.h>
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -135,8 +136,8 @@ void native_blitbuffer(void *handle,
 		FD_ZERO(&sa_fd_set);
 		FD_SET(sa->fd, &sa_fd_set);
 		
-		ASSERT(iterator > 0);
-		ASSERT(iterator <= bytes_to_write);
+		assert(iterator > 0);
+		assert(iterator <= bytes_to_write);
 
 		err = write(sa->fd,
 			    (char *) dataptr + bytes_to_write - iterator,

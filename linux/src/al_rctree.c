@@ -143,7 +143,7 @@ static void rlist_add_rctree( AL_rctree *node ) {
 	}
 
 	/* weird.  Do something here. */
-	ASSERT(0);
+	assert(0);
 
 	return;
 }
@@ -182,7 +182,7 @@ static void rlist_realloc( void ) {
 
 	temp = realloc( rlist.data, newsize * sizeof *rlist.data );
 	if(temp == NULL) {
-		ASSERT(0);
+		assert(0);
 		return;
 	}
 

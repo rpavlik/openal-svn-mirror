@@ -30,6 +30,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#ifdef WORDS_BIGENDIAN
+#define AFMT_S16 AFMT_S16_BE
+#else
+#define AFMT_S16 AFMT_S16_LE
+#endif /* WORDS_BIGENDIAN */
+
 #define DONTCARE ( 1 << 16)
 
 /* convert an alc channel to a linux dsp channel */
@@ -48,28 +54,34 @@ static int grab_mixerfd(void);
 
 /* set the params associated with a file descriptor */
 static int set_fd(int dsp_fd, ALboolean readable,
-		     ALuint *bufsiz,
-		     ALuint *fmt,
-		     ALuint *speed,
-		     ALuint *channels);
+			      ALuint *bufsiz,
+			      ALuint *fmt,
+			      ALuint *speed,
+			      ALuint *channels);
 
 
 extern const char *sys_errlist[];
 
 /* convert the format channel from /dev/dsp to openal format */
-static int LIN2ALFMT(int fmt, int channels) {
-	switch(fmt) {
+static int LIN2ALFMT(int fmt, int channels)
+{
+	switch(fmt)
+	{
 		case AFMT_U8:
-			switch(channels) {
+			switch(channels)
+			{
 				case 1: return AL_FORMAT_MONO8;
 				case 2: return AL_FORMAT_STEREO8;
+				case 4: return AL_FORMAT_QUAD8_LOKI;
 				default: return -1;
 			}
 			break;
-		case AFMT_S16_LE:
-			switch(channels) {
+		case AFMT_S16:
+			switch(channels)
+			{
 				case 1: return AL_FORMAT_MONO16;
 				case 2: return AL_FORMAT_STEREO16;
+				case 4: return AL_FORMAT_QUAD16_LOKI;
 				default: return -1;
 			}
 			break;
@@ -85,16 +97,19 @@ static int LIN2ALFMT(int fmt, int channels) {
 }
 
 /* convert the format channel from openal to /dev/dsp format */
-static int AL2LINFMT(int fmt) {
+static int AL2LINFMT(int fmt)
+{
 	switch(fmt) {
 		case AL_FORMAT_MONO16:
 		case AL_FORMAT_STEREO16:
-		  return AFMT_S16_LE;
-		  break;
+		case AL_FORMAT_QUAD16_LOKI:
+			return AFMT_S16;
+			break;
 		case AL_FORMAT_MONO8:
 		case AL_FORMAT_STEREO8:
-		  return AFMT_U8;
-		  break;
+		case AL_FORMAT_QUAD8_LOKI:
+			return AFMT_U8;
+			break;
 		default:
 #ifdef DEBUG_MAXIMUS
 		  fprintf(stderr, "unknown format 0x%x\n", fmt);
@@ -117,7 +132,8 @@ static int AL2LINFMT(int fmt) {
  *  dma buffer size.
  *
  */
-void *grab_write_native(void) {
+void *grab_write_native(void)
+{
 	static int write_fd;
 	Rcvar rc_use_select;
 	const char *writepath = lin_getwritepath();
@@ -180,7 +196,8 @@ void *grab_write_native(void) {
  *  dma buffer size.
  *
  */
-void *grab_read_native(void) {
+void *grab_read_native(void)
+{
 	static int read_fd;
 
 #ifndef CAPTURE_SUPPORT
@@ -478,7 +495,7 @@ void native_blitbuffer(void *handle, void *dataptr, int bytes_to_write) {
 
 	fd = *(int *) handle;
 
-	ASSERT( fd >= 0 );
+	assert( fd >= 0 );
 
 	for(iterator = bytes_to_write; iterator > 0; ) {
 		FD_ZERO(&dsp_fd_set);
@@ -497,8 +514,8 @@ void native_blitbuffer(void *handle, void *dataptr, int bytes_to_write) {
 			}
 		}
 
-		ASSERT(iterator > 0);
-		ASSERT(iterator <= bytes_to_write);
+		assert(iterator > 0);
+		assert(iterator <= bytes_to_write);
 
 		err = write(fd,
 			    (char *) dataptr + bytes_to_write - iterator,
@@ -509,7 +526,7 @@ void native_blitbuffer(void *handle, void *dataptr, int bytes_to_write) {
 			fprintf( stderr, "write error: ( fd %d error %s )\n",
 				fd, sys_errlist[ errno ] );
 #endif
-			ASSERT( 0 );
+			assert( 0 );
 			return;
 		}
 
@@ -523,7 +540,8 @@ static int set_fd(int dsp_fd, ALboolean readable,
 		     ALuint *bufsiz,
 		     ALuint *fmt,
 		     ALuint *speed,
-		     ALuint *channels) {
+		     ALuint *channels)
+{
 	struct audio_buf_info info;
 	int divisor = DONTCARE | _alSpot( *bufsiz );
 

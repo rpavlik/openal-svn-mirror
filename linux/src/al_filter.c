@@ -392,6 +392,7 @@ void _alApplyFilters( ALuint cid, ALuint sid ) {
 		_alSourceParamApply(src, mc, filterlen, (ALshort **) f_buffers.data);
 	}
 
+
 	/*
 	 * Take the resulting pcm data in f_buffers, and mix these into
 	 * the source's temporary output buffer.

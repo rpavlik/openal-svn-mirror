@@ -16,7 +16,8 @@
 /*
  *  MixSource state info.
  */
-typedef enum _alMixSourceEnum {
+typedef enum _alMixSourceEnum
+{
 	ALM_PLAY_ME        = (1<<0),
 	ALM_DESTROY_ME     = (1<<1),
 	ALM_STREAMING	   = (1<<2)
@@ -27,7 +28,8 @@ typedef enum _alMixSourceEnum {
  * queue.  Entries have a context id and source id, as well as some processing
  * flags.
  */
-typedef struct _alMixSource {
+typedef struct _alMixSource
+{
 	ALuint context_id;
 	ALuint sid;
 	_alMixSourceEnum flags;
@@ -37,7 +39,8 @@ typedef struct _alMixSource {
  * The _alMixPool is a type used to facilitate slab allocation of _alMixSource
  * entries.
  */
-typedef struct _alMixPoolNode {
+typedef struct _alMixPoolNode
+{
 	_alMixSource data;
 	ALboolean inuse;
 } _alMixPoolNode;
@@ -46,7 +49,8 @@ typedef struct _alMixPoolNode {
  * The _alMixPool is a type which contains _alMixPoolNode, in order to
  * facilitate slab allocation.
  */
-typedef struct _alMixPool {
+typedef struct _alMixPool
+{
 	_alMixPoolNode *pool;
 	ALuint size;
 } _alMixPool;

@@ -287,14 +287,13 @@ void *grab_read_audiodevice(void) {
 	return NULL;
 }
 
-ALboolean release_audiodevice(void *handle) {
+ALboolean release_audiodevice(void *handle)
+{
 	ALboolean retval = AL_TRUE;
-	int handle_fd;
 
-	if(handle == NULL) {
+	if(handle == NULL)
+	{
 		return AL_FALSE;
-	} else {
-		handle_fd = *((int *) handle);
 	}
 
 	switch(hardware_type) {

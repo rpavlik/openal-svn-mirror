@@ -75,7 +75,7 @@ if test x$enable_optimization = xyes; then
 enable_paranoid_locks=no
 enable_empty_locks=no
 
-CFLAGS="-O6 -fexpensive-optimizations -funroll-all-loops -funroll-loops -fomit-frame-pointer -finline-functions -ffast-math $CFLAGS"
+CFLAGS="-O6 -fexpensive-optimizations -funroll-all-loops -funroll-loops -fomit-frame-pointer -finline-functions -ffast-math $CFLAGS -DNDEBUG"
 
 dnl add -march
 case "$target" in 

@@ -589,7 +589,7 @@ ALsizei alBufferAppendWriteData_LOKI( ALuint   buffer,
 		/* we must expand the size of our buffer */
 		newsize = buf->appendpos + psize / bufchan;
 
-		ASSERT(newsize >= osize);
+		assert(newsize >= osize);
 
 		for(i = 0; i < buf->num_buffers; i++) {
 			temp = realloc(buf->orig_buffers[i], newsize);
@@ -915,7 +915,7 @@ ALsizei alBufferAppendData_LOKI( ALuint   buffer,
 		/* we must expand the size of our buffer */
 		newsize = buf->appendpos + psize; 
 
-		ASSERT(newsize >= osize);
+		assert(newsize >= osize);
 
 		for(i = 0; i < buf->num_buffers; i++) {
 			temp = realloc(buf->orig_buffers[i], newsize);
