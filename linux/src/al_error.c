@@ -76,7 +76,10 @@ ALenum alGetError( void ) {
 	cc = _alcDCGetContext();
 
 	if(cc == NULL)
+	{
+		_alcDCUnlockContext();
 		return 0;
+	}
 
 	index = index2ErrorNo(cc->alErrorIndex);
 
