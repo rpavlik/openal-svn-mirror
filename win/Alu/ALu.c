@@ -71,92 +71,201 @@ ALUAPI ALvoid ALUAPIENTRY aluNormalize(ALfloat *inVector)
 	}
 }
 
-ALUAPI ALvoid ALUAPIENTRY aluMatrixVector(ALfloat matrix[3][3],ALfloat *vector)
+ALUAPI __inline ALvoid ALUAPIENTRY aluMatrixVector(ALfloat *vector,ALfloat matrix[3][3])
 {
 	ALfloat result[3];
 
-	result[0]=matrix[0][0]*vector[0]+matrix[0][1]*vector[1]+matrix[0][2]*vector[2];
-	result[1]=matrix[1][0]*vector[0]+matrix[1][1]*vector[1]+matrix[1][2]*vector[2];
-	result[2]=matrix[2][0]*vector[0]+matrix[2][1]*vector[1]+matrix[2][2]*vector[2];
+	result[0]=vector[0]*matrix[0][0]+vector[1]*matrix[1][0]+vector[2]*matrix[2][0];
+	result[1]=vector[0]*matrix[0][1]+vector[1]*matrix[1][1]+vector[2]*matrix[2][1];
+	result[2]=vector[0]*matrix[0][2]+vector[1]*matrix[1][2]+vector[2]*matrix[2][2];
 	memcpy(vector,result,sizeof(result));
 }
 
-ALUAPI ALvoid ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint channels,ALfloat *drysend,ALfloat *wetsend,ALfloat *pitch)
+ALUAPI ALvoid ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint numOutputChannels,ALfloat *drysend,ALfloat *wetsend,ALfloat *pitch)
 {
 	ALfloat ListenerOrientation[6],ListenerPosition[3],ListenerVelocity[3];
+	ALfloat InnerAngle,OuterAngle,OuterGain,Angle,Distance,DryMix,WetMix;
 	ALfloat Direction[3],Position[3],Velocity[3],SourceToListener[3];
-	ALfloat InnerAngle,OuterAngle,OuterGain,Angle,Distance;
+	ALfloat MinVolume,MaxVolume,MinDist,MaxDist,Rolloff,RoomRolloff;
 	ALfloat Pitch,Volume,PanningFB,PanningLR,ListenerGain;
-	ALfloat MinVolume,MaxVolume,MinDist,MaxDist,Rolloff;
+	ALuint NumBufferChannels;
 	ALfloat U[3],V[3],N[3];
 	ALfloat DopplerFactor;
 	ALuint DistanceModel;
 	ALfloat Matrix[3][3];
 	ALint HeadRelative;
-	ALenum Error;
-	ALsource *ALSource;
-	ALbuffer *ALBuffer;
 	ALuint Buffer;
-	ALuint NumBufferChannels = 1;
+	ALenum Error;
 
 	if (alIsSource(source))
 	{
 		//Get global properties
 		alGetFloatv(AL_DOPPLER_FACTOR,&DopplerFactor);
 		alGetIntegerv(AL_DISTANCE_MODEL,&DistanceModel);
-		//Get source properties
-		ALSource = (ALsource*)source;
-		Pitch = ALSource->param[AL_PITCH-AL_CONE_INNER_ANGLE].data.f;
-		Volume = ALSource->param[AL_GAIN-AL_CONE_INNER_ANGLE].data.f;
-		MinVolume = ALSource->param[AL_MIN_GAIN-AL_CONE_INNER_ANGLE].data.f;
-		MaxVolume = ALSource->param[AL_MAX_GAIN-AL_CONE_INNER_ANGLE].data.f;
-		MinDist = ALSource->param[AL_REFERENCE_DISTANCE-AL_CONE_INNER_ANGLE].data.f;
-		MaxDist = ALSource->param[AL_MAX_DISTANCE-AL_CONE_INNER_ANGLE].data.f;
-		Rolloff = ALSource->param[AL_ROLLOFF_FACTOR-AL_CONE_INNER_ANGLE].data.f;
-
-		Position[0] = ALSource->param[AL_POSITION-AL_CONE_INNER_ANGLE].data.fv3[0];
-		Position[1] = ALSource->param[AL_POSITION-AL_CONE_INNER_ANGLE].data.fv3[1];
-		Position[2] = ALSource->param[AL_POSITION-AL_CONE_INNER_ANGLE].data.fv3[2];
 		
-		Velocity[0] = ALSource->param[AL_VELOCITY-AL_CONE_INNER_ANGLE].data.fv3[0];
-		Velocity[1] = ALSource->param[AL_VELOCITY-AL_CONE_INNER_ANGLE].data.fv3[1];
-		Velocity[2] = ALSource->param[AL_VELOCITY-AL_CONE_INNER_ANGLE].data.fv3[2];
-		
-		Direction[0] = ALSource->param[AL_DIRECTION-AL_CONE_INNER_ANGLE].data.fv3[0];
-		Direction[1] = ALSource->param[AL_DIRECTION-AL_CONE_INNER_ANGLE].data.fv3[1];
-		Direction[2] = ALSource->param[AL_DIRECTION-AL_CONE_INNER_ANGLE].data.fv3[2];
-
-		OuterGain = ALSource->param[AL_CONE_OUTER_GAIN-AL_CONE_INNER_ANGLE].data.f;
-		InnerAngle = ALSource->param[AL_CONE_INNER_ANGLE-AL_CONE_INNER_ANGLE].data.f;
-		OuterAngle = ALSource->param[AL_CONE_OUTER_ANGLE-AL_CONE_INNER_ANGLE].data.f;
-
-		HeadRelative = ALSource->relative;
-
 		//Get listener properties
 		alGetListenerf(AL_GAIN,&ListenerGain);
 		alGetListenerfv(AL_POSITION,ListenerPosition);
 		alGetListenerfv(AL_VELOCITY,ListenerVelocity);
 		alGetListenerfv(AL_ORIENTATION,ListenerOrientation);
 
-		//Get buffer info
-		Buffer = ALSource->param[AL_BUFFER-AL_CONE_INNER_ANGLE].data.i;
-		if (Buffer)
+		//Get source properties
+		alGetSourcef(source,AL_PITCH,&Pitch);
+		alGetSourcef(source,AL_GAIN,&Volume);
+		alGetSourcei(source,AL_BUFFER,&Buffer);
+		alGetSourcefv(source,AL_POSITION,Position);
+		alGetSourcefv(source,AL_VELOCITY,Velocity);
+		alGetSourcefv(source,AL_DIRECTION,Direction);
+		alGetSourcef(source,AL_MIN_GAIN,&MinVolume);
+		alGetSourcef(source,AL_MAX_GAIN,&MaxVolume);
+		alGetSourcef(source,AL_REFERENCE_DISTANCE,&MinDist);
+		alGetSourcef(source,AL_MAX_DISTANCE,&MaxDist);
+		alGetSourcef(source,AL_ROLLOFF_FACTOR,&Rolloff);
+		alGetSourcef(source,AL_CONE_OUTER_GAIN,&OuterGain);
+		alGetSourcef(source,AL_CONE_INNER_ANGLE,&InnerAngle);
+		alGetSourcef(source,AL_CONE_OUTER_ANGLE,&OuterAngle);
+		alGetSourcei(source,AL_SOURCE_RELATIVE,&HeadRelative);
+		
+		//Set working variables
+		DryMix=(ALfloat)(1.0f);
+		WetMix=(ALfloat)(0.0f);
+		RoomRolloff=(ALfloat)(0.0f);
+		
+		//Get buffer properties
+		alGetBufferi(Buffer,AL_CHANNELS,&NumBufferChannels);
+		//Only apply 3D calculations for mono buffers
+		if (NumBufferChannels==1)
 		{
-			ALBuffer = (ALbuffer*)Buffer;
-			NumBufferChannels = (((ALBuffer->format==AL_FORMAT_MONO8)||(ALBuffer->format==AL_FORMAT_MONO16))?1:2);
-		}
+			//1. Translate Listener to origin (convert to head relative)
+			if (HeadRelative==AL_FALSE)
+			{
+				Position[0]-=ListenerPosition[0];
+				Position[1]-=ListenerPosition[1];
+				Position[2]-=ListenerPosition[2];
+			}
+			//2. Align coordinate system axes
+			aluCrossproduct(&ListenerOrientation[0],&ListenerOrientation[3],U); // Right-vector
+			aluNormalize(U);								// Normalized Right-vector
+			memcpy(V,&ListenerOrientation[3],sizeof(V));	// Up-vector
+			aluNormalize(V);								// Normalized Up-vector
+			memcpy(N,&ListenerOrientation[0],sizeof(N));	// At-vector
+			aluNormalize(N);								// Normalized At-vector
+			Matrix[0][0]=U[0]; Matrix[0][1]=V[0]; Matrix[0][2]=-N[0];
+			Matrix[1][0]=U[1]; Matrix[1][1]=V[1]; Matrix[1][2]=-N[1];
+			Matrix[2][0]=U[2]; Matrix[2][1]=V[2]; Matrix[2][2]=-N[2];
+			aluMatrixVector(Position,Matrix);
+			//3. Calculate distance attenuation
+			Distance=(ALfloat)sqrt(aluDotproduct(Position,Position));
+			if (DistanceModel!=AL_NONE)
+			{
+				if (DistanceModel==AL_INVERSE_DISTANCE_CLAMPED)
+				{
+					Distance=(Distance<MinDist?MinDist:Distance);
+					Distance=(Distance>MaxDist?MaxDist:Distance);
+				}
+				if (Distance != 0) {
+					DryMix=((DryMix)/(1.0f+Rolloff*((Distance-MinDist)/__max(MinDist,FLT_MIN))));
+					WetMix=((WetMix)/(1.0f+RoomRolloff*((Distance-MinDist)/__max(MinDist,FLT_MIN))));
+				}
+			}
+			DryMix=((DryMix<=MaxVolume)?DryMix:MaxVolume);
+            DryMix=((DryMix>=MinVolume)?DryMix:MinVolume);
+			//4. Apply directional soundcones
+			SourceToListener[0]=-Position[0];	
+			SourceToListener[1]=-Position[1];
+			SourceToListener[2]=-Position[2];	
+			aluNormalize(Direction);
+			aluNormalize(SourceToListener);
+			Angle=(ALfloat)(180.0*acos(aluDotproduct(Direction,SourceToListener))/3.141592654f);
+			if ((Angle>=InnerAngle)&&(Angle<=OuterAngle))
+				Volume=(Volume*(1.0f+(OuterGain-1.0f)*(Angle-InnerAngle)/(OuterAngle-InnerAngle)));
+			else if (Angle>OuterAngle)
+				Volume=(Volume*(1.0f+(OuterGain-1.0f)                                           ));
+			//5. Calculate differential velocity
+			Velocity[0]-=ListenerVelocity[0];
+			Velocity[1]-=ListenerVelocity[1];
+			Velocity[2]-=ListenerVelocity[2];
+			aluMatrixVector(Velocity,Matrix);		
+			//6. Calculate doppler
+			if ((DopplerFactor!=0.0f)&&(Distance!=0.0f))
+				pitch[0]=(ALfloat)((Pitch*DopplerFactor)/(1.0+(aluDotproduct(Velocity,Position)/(343.0f*Distance))));
+			else
+				pitch[0]=(ALfloat)((Pitch			   )/(1.0+(aluDotproduct(Velocity,Position)/(343.0f         ))));
+			//7. Convert normalized position into font/back panning
+			if (Distance != 0.0f)
+			{
+				aluNormalize(Position);
+				PanningLR=(0.5f+0.5f*Position[0]);
+				PanningFB=(0.5f+0.5f*Position[2]);
+			}
+			else
+			{
+				PanningLR=0.5f;	
+				PanningFB=0.5f;
+			}
 
-		// If this is a Stereo Source - just apply the correct volume levels + pitch (1.0f)
-		if (NumBufferChannels == 2)
+			//8. Convert front/back panning into channel volumes
+			switch (numOutputChannels)
+			{
+				case 1:
+					drysend[0]=(Volume*ListenerGain*DryMix*(ALfloat)1.0f								  );	//Direct
+					wetsend[0]=(Volume*ListenerGain*DryMix*(ALfloat)1.0f								  );	//Room
+					break;																					
+				case 2:
+					drysend[0]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((1.0f-PanningLR)				  ));	//FL Direct
+					drysend[1]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((     PanningLR)				  ));	//FR Direct
+					wetsend[0]=(Volume*ListenerGain*WetMix*(ALfloat)sqrt((1.0f-PanningLR)				  ));	//FL Room
+					wetsend[1]=(Volume*ListenerGain*WetMix*(ALfloat)sqrt((     PanningLR)				  ));	//FR Room
+			 		break;
+				case 3:
+					drysend[0]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((1.0f-PanningLR)				  ));	//FL Direct
+					drysend[1]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((     PanningLR)				  ));	//FR Direct
+					drysend[2]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((     PanningFB)				  ));	//SUR Direct
+					wetsend[0]=(Volume*ListenerGain*WetMix*(ALfloat)sqrt((1.0f-PanningLR)				  ));	//FL Room
+					wetsend[1]=(Volume*ListenerGain*WetMix*(ALfloat)sqrt((     PanningLR)				  ));	//FR Room
+					break;
+				case 4:
+					drysend[0]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((1.0f-PanningLR)*(1.0f-PanningFB)));	//FL Direct
+					drysend[1]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((     PanningLR)*(1.0f-PanningFB)));	//FR Direct
+					drysend[2]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((1.0f-PanningLR)*(     PanningFB)));	//RL Direct
+					drysend[3]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((     PanningLR)*(     PanningFB)));	//RR Direct
+					wetsend[0]=(Volume*ListenerGain*WetMix*(ALfloat)sqrt((1.0f-PanningLR)				  ));	//FL Room
+					wetsend[1]=(Volume*ListenerGain*WetMix*(ALfloat)sqrt((     PanningLR)				  ));	//FR Room
+					break;
+				case 5:
+					if (PanningLR<0.5f)
+					{
+						drysend[0]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((1.0f-2.0f*PanningLR)*(1.0f-PanningFB)));//FL Direct
+						drysend[1]=(Volume*ListenerGain*DryMix*(ALfloat)0.0f                                        );//FR Direct
+						drysend[2]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((     2.0f*PanningLR)*(1.0f-PanningFB)));//FC Direct
+						drysend[3]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((1.0f-     PanningLR)*(     PanningFB)));//RL Direct
+						drysend[4]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((          PanningLR)*(     PanningFB)));//RR Direct
+					}
+					else
+					{
+						drysend[0]=(Volume*ListenerGain*DryMix*(ALfloat)0.0f                                        );//FL Direct
+						drysend[1]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((2.0f*PanningLR-1.0f)*(1.0f-PanningFB)));//FR Direct
+						drysend[2]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((2.0f-2.0f*PanningLR)*(1.0f-PanningFB)));//FC Direct
+						drysend[3]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((1.0f-     PanningLR)*(     PanningFB)));//RL Direct
+						drysend[4]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((          PanningLR)*(     PanningFB)));//RR Direct
+					}
+					wetsend[0]=(Volume*ListenerGain*WetMix*(ALfloat)sqrt((1.0f-PanningLR)                 ));	//FL Room
+					wetsend[1]=(Volume*ListenerGain*WetMix*(ALfloat)sqrt((     PanningLR)                 ));	//FR Room
+					break; 
+				default:
+					break;
+			}	
+		}
+		else
 		{
-			switch (channels)
+			//1. Stereo buffers always play from front left/front right
+			switch (numOutputChannels)
 			{
 				case 1:
 					drysend[0]=(Volume*1.0f*ListenerGain);
 					wetsend[0]=(Volume*0.0f*ListenerGain);
 					break;
 				case 2:
-				default:
 					drysend[0]=(Volume*1.0f*ListenerGain);
 					drysend[1]=(Volume*1.0f*ListenerGain);
 					wetsend[0]=(Volume*0.0f*ListenerGain);
@@ -165,134 +274,32 @@ ALUAPI ALvoid ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint chan
 				case 3:
 					drysend[0]=(Volume*1.0f*ListenerGain);
 					drysend[1]=(Volume*1.0f*ListenerGain);
-					drysend[2]=(Volume*1.0f*ListenerGain);
+					drysend[2]=(Volume*0.0f*ListenerGain);
 					wetsend[0]=(Volume*0.0f*ListenerGain);
 					wetsend[1]=(Volume*0.0f*ListenerGain);
-					wetsend[2]=(Volume*0.0f*ListenerGain);
 					break;
 				case 4:
 					drysend[0]=(Volume*1.0f*ListenerGain);
 					drysend[1]=(Volume*1.0f*ListenerGain);
-					drysend[2]=(Volume*1.0f*ListenerGain);
-					drysend[3]=(Volume*1.0f*ListenerGain);
+					drysend[2]=(Volume*0.0f*ListenerGain);
+					drysend[3]=(Volume*0.0f*ListenerGain);
 					wetsend[0]=(Volume*0.0f*ListenerGain);
 					wetsend[1]=(Volume*0.0f*ListenerGain);
-					wetsend[2]=(Volume*0.0f*ListenerGain);
-					wetsend[3]=(Volume*0.0f*ListenerGain);
+					break;
+				case 5:
+					drysend[0]=(Volume*1.0f*ListenerGain);
+					drysend[1]=(Volume*1.0f*ListenerGain);
+					drysend[2]=(Volume*0.0f*ListenerGain);
+					drysend[3]=(Volume*0.0f*ListenerGain);
+					drysend[4]=(Volume*0.0f*ListenerGain);
+					wetsend[0]=(Volume*1.0f*ListenerGain);
+					wetsend[1]=(Volume*1.0f*ListenerGain);
+					break;
+				default:
 					break;
 			}
-
-			pitch[0] = 1.0f;
-
-			return;
+			pitch[0]=(ALfloat)(Pitch);
 		}
-
-		//1. Translate Listener to origin (convert to head relative)
-		if (HeadRelative==AL_FALSE)
-		{
-			Position[0]-=ListenerPosition[0];
-			Position[1]-=ListenerPosition[1];
-			Position[2]-=ListenerPosition[2];
-		}
-		//2. Align coordinate system axes
-		ListenerOrientation[2]=-ListenerOrientation[2]; // convert to right handed
-		ListenerOrientation[5]=-ListenerOrientation[5]; // convert to right handed
-		
-		aluCrossproduct(&ListenerOrientation[3],&ListenerOrientation[0],U);
-		aluNormalize(U);
-		aluCrossproduct(&ListenerOrientation[0],U,V);
-		aluNormalize(V);
-		memcpy(N,&ListenerOrientation[0],sizeof(N));
-		aluNormalize(N);
-		Matrix[0][0]=U[0]; Matrix[0][1]=V[0]; Matrix[0][2]=N[0];
-		Matrix[1][0]=U[1]; Matrix[1][1]=V[1]; Matrix[1][2]=N[1];
-		Matrix[2][0]=U[2]; Matrix[2][1]=V[2]; Matrix[2][2]=N[2];
-		aluMatrixVector(Matrix,Position);
-		//3. Calculate distance attenuation
-		Distance=(ALfloat)sqrt(aluDotproduct(Position,Position));
-		if (DistanceModel!=AL_NONE)
-		{
-			if (DistanceModel==AL_INVERSE_DISTANCE_CLAMPED)
-			{
-				Distance=(Distance<MinDist?MinDist:Distance);
-				Distance=(Distance>MaxDist?MaxDist:Distance);
-			}
-			Volume=(Volume*ListenerGain*MinDist)/(MinDist+Rolloff*(Distance-MinDist));
-		}
-		else
-			Volume=(Volume*ListenerGain        );
-		//4. Apply directional soundcones
-		SourceToListener[0]=-Position[0];	
-		SourceToListener[1]=-Position[1];
-		SourceToListener[2]=-Position[2];	
-		aluNormalize(Direction);
-		aluNormalize(SourceToListener);
-		Angle=(ALfloat)(180.0*acos(aluDotproduct(Direction,SourceToListener))/3.141592654f);
-		if ((Angle>=InnerAngle)&&(Angle<=OuterAngle))
-			Volume=(Volume*(1.0f+(OuterGain-1.0f)*(Angle-InnerAngle)/(OuterAngle-InnerAngle)));
-		else if (Angle>OuterAngle)
-			Volume=(Volume*(1.0f+(OuterGain-1.0f)                                           ));
-		//5. Calculate differential velocity
-		Velocity[0]-=ListenerVelocity[0];
-		Velocity[1]-=ListenerVelocity[1];
-		Velocity[2]-=ListenerVelocity[2];
-		aluMatrixVector(Matrix,Velocity);		
-		//6. Calculate doppler
-		if ((DopplerFactor!=0.0f)&&(Distance!=0.0f))
-			pitch[0]=(ALfloat)((Pitch*DopplerFactor)/(1.0+(aluDotproduct(Velocity,Position)/(343.0f*Distance))));
-		else
-			pitch[0]=(ALfloat)((Pitch			   )/(1.0+(aluDotproduct(Velocity,Position)/(343.0f         ))));
-		//7. Convert into channel volumes
-		if (Distance != 0)
-		{
-			aluNormalize(Position);
-			if (Position[0]<0)
-				PanningLR=(ALfloat)(0.5-0.4*sqrt(-Position[0]));
-			else
-				PanningLR=(ALfloat)(0.5+0.4*sqrt( Position[0]));
-			if (Position[2]<0)
-				PanningFB=(ALfloat)(0.5-0.4*sqrt(-Position[2]));
-			else
-				PanningFB=(ALfloat)(0.5+0.4*sqrt( Position[2]));
-		}
-		else
-		{
-			PanningLR=0.5;	
-			PanningFB=0.5;
-		}
-
-		switch (channels)
-		{
-			case 1:
-				drysend[0]=(Volume*1.0f  );
-				wetsend[0]=(Volume*0.0f  );
-				break;
-			case 2:
-			default:
-				drysend[0]=(Volume*1.0f  *(ALfloat)sqrt(1.0f-PanningLR));
-				drysend[1]=(Volume*1.0f  *(ALfloat)sqrt(     PanningLR));
-				wetsend[0]=(Volume*0.0f  *(ALfloat)sqrt(1.0f-PanningLR));
-				wetsend[1]=(Volume*0.0f  *(ALfloat)sqrt(     PanningLR));
-			 	break;
-			case 3:
-				drysend[0]=(Volume*1.0f  *(ALfloat)sqrt(1.0f-PanningLR));
-				drysend[1]=(Volume*1.0f  *(ALfloat)sqrt(     PanningLR));
-				drysend[2]=(Volume*1.0f  *(ALfloat)sqrt(     PanningFB));
-				wetsend[0]=(Volume*0.0f  *(ALfloat)sqrt(1.0f-PanningLR));
-				wetsend[1]=(Volume*0.0f  *(ALfloat)sqrt(     PanningLR));
-				wetsend[2]=(Volume*0.0f  *(ALfloat)sqrt(     PanningFB));
-				break;
-			case 4:
-				drysend[0]=(Volume*1.0f  *(ALfloat)sqrt((1.0f-PanningLR)*(1.0f-PanningFB)));
-				drysend[1]=(Volume*1.0f  *(ALfloat)sqrt((     PanningLR)*(1.0f-PanningFB)));
-				drysend[2]=(Volume*1.0f  *(ALfloat)sqrt((1.0f-PanningLR)*(     PanningFB)));
-				drysend[3]=(Volume*1.0f  *(ALfloat)sqrt((     PanningLR)*(     PanningFB)));
-				wetsend[0]=(Volume*0.0f  *(ALfloat)sqrt((1.0f-PanningLR)*(1.0f-PanningFB)));
-				wetsend[1]=(Volume*0.0f  *(ALfloat)sqrt((     PanningLR)*(1.0f-PanningFB)));
-				wetsend[2]=(Volume*0.0f  *(ALfloat)sqrt((1.0f-PanningLR)*(     PanningFB)));
-				wetsend[3]=(Volume*0.0f  *(ALfloat)sqrt((     PanningLR)*(     PanningFB)));
-				break;
-		}	
 		Error=alGetError();
 	}
 }
