@@ -47,7 +47,6 @@
 			projectDirPath = "";
 			targets = (
 				D864D1520524E2470004026D,
-				8A5B26B5058E8FA90054F7C1,
 				0867D69CFE84028FC02AAC07,
 			);
 		};
@@ -86,12 +85,14 @@
 				0867D6A2FE84028FC02AAC07,
 			);
 			buildSettings = {
+				DEBUGGING_SYMBOLS = NO;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
-				FRAMEWORK_SEARCH_PATHS = /Volumes/Ultraman/XMen/CoreAudio/build;
+				FRAMEWORK_SEARCH_PATHS = "";
 				FRAMEWORK_VERSION = A;
 				HEADER_SEARCH_PATHS = "";
 				INSTALL_PATH = "$(HOME)/Library/Frameworks";
+				JAVA_COMPILER_DEBUGGING_SYMBOLS = NO;
 				LIBRARY_SEARCH_PATHS = "";
 				OPTIMIZATION_CFLAGS = "-O3";
 				OTHER_LDFLAGS = "";
@@ -483,35 +484,6 @@
 			settings = {
 			};
 		};
-		8A5B26B5058E8FA90054F7C1 = {
-			buildPhases = (
-			);
-			buildSettings = {
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = All;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
-			};
-			dependencies = (
-				8A5B26B6058E8FAF0054F7C1,
-				8A5B26B7058E8FB10054F7C1,
-			);
-			isa = PBXAggregateTarget;
-			name = All;
-			productName = All;
-		};
-		8A5B26B6058E8FAF0054F7C1 = {
-			isa = PBXTargetDependency;
-			target = 0867D69CFE84028FC02AAC07;
-			targetProxy = 8A81CFF10591182D002AFBCD;
-		};
-		8A5B26B7058E8FB10054F7C1 = {
-			isa = PBXTargetDependency;
-			target = D864D1520524E2470004026D;
-			targetProxy = 8A81CFF20591182D002AFBCD;
-		};
 		8A60BA5E05DDBA2C00326D6F = {
 			buildActionMask = 8;
 			dstPath = /Developer/Examples/CoreAudio/OpenAL;
@@ -663,20 +635,6 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
-		};
-		8A81CFF10591182D002AFBCD = {
-			containerPortal = 0867D690FE84028FC02AAC07;
-			isa = PBXContainerItemProxy;
-			proxyType = 1;
-			remoteGlobalIDString = 0867D69CFE84028FC02AAC07;
-			remoteInfo = al_osx_basic;
-		};
-		8A81CFF20591182D002AFBCD = {
-			containerPortal = 0867D690FE84028FC02AAC07;
-			isa = PBXContainerItemProxy;
-			proxyType = 1;
-			remoteGlobalIDString = D864D1520524E2470004026D;
-			remoteInfo = openal.dylib;
 		};
 		8A8658CD06091D33003B7BB5 = {
 			fileEncoding = 4;
@@ -1169,10 +1127,11 @@
 				8A60BA5E05DDBA2C00326D6F,
 			);
 			buildSettings = {
+				DEBUGGING_SYMBOLS = NO;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
-				FRAMEWORK_SEARCH_PATHS = /Volumes/Ultraman/XMen/CoreAudio/build;
-				INSTALL_PATH = /Developer/Examples/CoreAudio/OpenAL;
+				FRAMEWORK_SEARCH_PATHS = "";
+				JAVA_COMPILER_DEBUGGING_SYMBOLS = NO;
 				LIBRARY_STYLE = DYNAMIC;
 				OPTIMIZATION_CFLAGS = "-O3";
 				OTHER_LIBTOOL_FLAGS = "";
@@ -1186,7 +1145,6 @@
 			);
 			isa = PBXLibraryTarget;
 			name = openal.dylib;
-			productInstallPath = /Developer/Examples/CoreAudio/OpenAL;
 			productName = openal.dylib;
 			productReference = D864D1530524E2470004026D;
 		};
