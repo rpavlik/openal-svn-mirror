@@ -258,7 +258,11 @@ typedef struct _time_filter_set {
 	time_filter *filter;
 } time_filter_set;
 
+struct _AL_context;
+
 typedef struct _AL_device {
+	struct _AL_context *cc;
+	
 	void *handle;	     /*
 			      * pointer to something that is meaningful
 			      * to the OS's sound stuff
@@ -317,6 +321,9 @@ typedef struct _AL_context {
 	ALenum distance_model;
 	ALfloat (*distance_func)( ALfloat gain, ALfloat rolloff,
 				  ALfloat dis, ALfloat ref, ALfloat max );
+
+	ALint *Flags;
+	ALint NumFlags;
 } AL_context;
 
 typedef struct _alMixEntry {

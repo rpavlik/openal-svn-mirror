@@ -1,3 +1,18 @@
+2003-01-02  Joseph Valenzuela  <jvalenzu@formosa.infinite-monkeys.org>
+
+	* test/.cvsignore
+	* test/testattributes.c
+	* test/Makefile.in
+	Added attribute testing
+
+	* src/al_types.h
+	Added space for flag saving, context/device association.
+
+	* src/alc/alc_context.c
+	* src/alc/alc_device.c
+	* src/alc/alc_device.h
+	Context attribute management
+
 2002-12-30  Joseph Valenzuela  <jvalenzu@formosa.infinite-monkeys.org>
 
 	* openal/linux/src/al_mixer.c

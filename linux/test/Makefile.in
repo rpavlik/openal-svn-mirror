@@ -18,7 +18,7 @@ TEST_PROGS=testreverb testda testmulti testalut testtime  \
 	   testmultimp3 testpitch3 testpitch4 testqueue testqueue2       \
 	   testqueue3 testcapture testmp32 testleak testmulticontext      \
 	   testleak2 testmulticontext2 teststartstop testdevice \
-	   teststrings testcpp
+	   teststrings testcpp testattributes
 
 INC=-I../src -I../include -I../../include -I../audioconvert @INCLUDES@
 LIBOPENAL=../src/libopenal.a

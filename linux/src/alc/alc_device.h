@@ -38,4 +38,12 @@ void _alcDeviceResume( AL_device *dev );
  */
 ALboolean _alcDeviceSet( AL_device *dev );
 
+/*
+ * _alcGetDevicesContext(ALCdevice *dev);
+ *
+ * Return the current context in use with a device.
+ *
+ */
+AL_context *_alcGetDevicesContext(AL_device *dev);
+
 #endif /* _ALC_DEVICE_H_ */

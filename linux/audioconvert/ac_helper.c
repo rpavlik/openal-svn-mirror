@@ -16,6 +16,7 @@
 #include "AL/altypes.h"
 #include "al_siteconfig.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -158,6 +159,8 @@ int acBuildAudioCVT(acAudioCVT *cvt,
 		int len_mult;
 		double len_ratio;
 		void (*rate_cvt)(acAudioCVT *, ALushort );
+
+		assert(src_rate != 0);
 
 		if ( src_rate > dst_rate ) {
 			hi_rate   = src_rate;

@@ -242,6 +242,17 @@ ALCenum alcMakeContextCurrent( ALCcontext *handle )
 		}
 	}
 
+	/* set device's current context */
+	if(cc->write_device)
+	{
+		cc->write_device->cc = cc;
+	}
+	
+	if(cc->read_device)
+	{
+		cc->read_device->cc = cc;
+	}
+	
 	/* set mixer */
 	_alcDeviceWriteSet( cid );
 	_alcDeviceReadSet( cid );
@@ -516,8 +527,12 @@ ALCcontext *alcCreateContext( struct _AL_device *dev, int *attrlist )
  *
  * FIXME: should assume that *all contexts* are locked?
  */
-ALCenum _alcDestroyContext( AL_context *cc ) {
-
+ALCenum _alcDestroyContext( AL_context *cc )
+{
+	free(cc->Flags);
+	cc->Flags = 0;
+	cc->NumFlags = 0;
+	
 	_alDestroyListener( &cc->listener );
 	_alDestroySources( &cc->source_pool );
 
@@ -616,28 +631,51 @@ void _alcSetContext(int *attrlist, ALuint cid, AL_device *dev ) {
 		return;
 	}
 
+	/* get ready to copy attrlist */
+	free(cc->Flags);
+	cc->Flags = 0;
+	cc->NumFlags = 0;
+	
 	/* Set our preferred mixer stats */
         if (dev->flags & ALCD_WRITE)
+	{
 		cc->write_device = dev;
+	}
         if (dev->flags & ALCD_READ)
+	{
 		cc->read_device = dev;
+	}
 
 	while(attrlist && (reading_keys == AL_TRUE)) {
 		rdr.key = *attrlist++;
+		if(rdr.key != ALC_INVALID)
+		{
+			rdr.val = *attrlist++;
+		}
+
+		void *t = realloc(cc->Flags,
+				  (2 + cc->NumFlags) * 2 * sizeof *cc->Flags);
+		if(t)
+		{
+			cc->Flags = t;
+
+			cc->Flags[2 * cc->NumFlags] = rdr.key;
+			cc->Flags[2 * cc->NumFlags + 1] = rdr.val;
+
+			cc->NumFlags++;
+		}
 
 		switch(rdr.key) {
 			case ALC_FREQUENCY:
-				rdr.val = *attrlist++;
 				canon_speed = rdr.val;
 
 				_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
 					"cc->external_speed = %d", rdr.val );
 				break;
 			case ALC_REFRESH:
-				refresh_rate = *attrlist++;
+			        refresh_rate = rdr.val;
 				break;
 			case ALC_SOURCES_LOKI:
-				rdr.val = *attrlist++;
 				spool_resize(&cc->source_pool, rdr.val);
 								
 				_alDebug(ALD_CONTEXT,
@@ -645,13 +683,9 @@ void _alcSetContext(int *attrlist, ALuint cid, AL_device *dev ) {
 					"ALC_SOURCES (%d)", rdr.val);
 				break;
 			case ALC_BUFFERS_LOKI:
-				rdr.val = *attrlist++;
-
 				_alNumBufferHint( rdr.val );
 				break;
 			case ALC_SYNC:
-				rdr.val = *attrlist++;
-
 				if(rdr.val == AL_TRUE) {
 					cc->should_sync = AL_TRUE;
 				} else {
@@ -751,6 +785,9 @@ AL_context *_alcInitContext( ALuint cid ) {
 	 */
 	cc->distance_model = AL_INVERSE_DISTANCE;
 	cc->distance_func  = _alDistanceInverse;
+
+	cc->Flags = 0;
+	cc->NumFlags = 0;
 
 	return cc;
 }
@@ -1432,10 +1469,6 @@ ALCdevice *alcGetContextsDevice(ALCcontext *handle)
 	return dc;
 }
 
-
-
-
-
 const ALubyte *alcGetString( ALCdevice *dev, ALenum token )
 {
 	switch(token)
@@ -1478,10 +1511,26 @@ const ALubyte *alcGetString( ALCdevice *dev, ALenum token )
 	return (const ALubyte *) "";
 }
 
-void alcGetIntegerv( UNUSED(ALCdevice *deviceHandle), ALenum  token,
+AL_context *_alcGetDevicesContext(ALCdevice *deviceHandle)
+{
+	if(!deviceHandle)
+	{
+		_alcSetError(ALC_INVALID_DEVICE);
+
+		return 0;
+	}
+
+	return deviceHandle->cc;
+}
+
+void alcGetIntegerv( ALCdevice *deviceHandle, ALenum  token,
 		     ALsizei  size , ALint *dest )
 {
-	UNUSED(AL_context *cc);
+	AL_context *cc = _alcGetDevicesContext(deviceHandle);
+	if(!cc)
+	{
+		return;
+	}
 
 	if((dest == NULL) || (size == 0))
 	{
@@ -1492,17 +1541,30 @@ void alcGetIntegerv( UNUSED(ALCdevice *deviceHandle), ALenum  token,
 	{
 		  /* JIV FIXME: move major/minor to header
 		     and copy attributes at context creation
-		     time
+		     time.
+		     Check size
 		   */
 		case ALC_MAJOR_VERSION:
 		  *dest = 1;
+		  break;
 		case ALC_MINOR_VERSION:
 		  *dest = 0;
-		case ALC_ATTRIBUTES_SIZE:
-		  *dest = 1;
-		case ALC_ALL_ATTRIBUTES:
-		  *dest = 0;
 		  break;
+		case ALC_ATTRIBUTES_SIZE:
+		  *dest = 2 * cc->NumFlags + 1;
+		  break;
+		case ALC_ALL_ATTRIBUTES:
+		{
+			int i;
+
+			for(i = 0; i < 2 * cc->NumFlags; i++)
+			{
+				dest[i] = cc->Flags[i];
+			}
+
+			dest[2 * cc->NumFlags] = 0;
+		}
+		break;
 		default:
 		  _alcSetError(ALC_INVALID_ENUM);
 		  break;
