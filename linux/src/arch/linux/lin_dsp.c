@@ -60,8 +60,6 @@ static int set_fd(int dsp_fd, ALboolean readable,
 			      ALuint *channels);
 
 
-extern const char *sys_errlist[];
-
 /* convert the format channel from /dev/dsp to openal format */
 static int LIN2ALFMT(int fmt, int channels)
 {
@@ -524,7 +522,7 @@ void native_blitbuffer(void *handle, void *dataptr, int bytes_to_write) {
 		if(err < 0) {
 #ifdef DEBUG_MAXIMUS
 			fprintf( stderr, "write error: ( fd %d error %s )\n",
-				fd, sys_errlist[ errno ] );
+				fd, strerror(err));
 #endif
 			assert( 0 );
 			return;
