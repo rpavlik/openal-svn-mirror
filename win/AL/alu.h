@@ -20,7 +20,7 @@ ALUAPI ALshort	ALUAPIENTRY aluF2S(ALfloat value);
 ALUAPI ALvoid	ALUAPIENTRY aluCrossproduct(ALfloat *inVector1,ALfloat *inVector2,ALfloat *outVector);
 ALUAPI ALfloat	ALUAPIENTRY aluDotproduct(ALfloat *inVector1,ALfloat *inVector2);
 ALUAPI ALvoid	ALUAPIENTRY aluNormalize(ALfloat *inVector);
-ALUAPI ALvoid	ALUAPIENTRY aluMatrixVector(ALfloat matrix[3][3],ALfloat *vector);
+ALUAPI ALvoid	ALUAPIENTRY aluMatrixVector(ALfloat *vector,ALfloat matrix[3][3]);
 ALUAPI ALvoid	ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint channels,ALfloat *drysend,ALfloat *wetsend,ALfloat *pitch);
 ALUAPI ALvoid	ALUAPIENTRY aluMixData(ALvoid *context,ALvoid *buffer,ALsizei size,ALenum format);
 ALUAPI ALvoid	ALUAPIENTRY aluSetReverb(ALvoid *Reverb,ALuint Environment);
@@ -31,4 +31,3 @@ ALUAPI ALvoid	ALUAPIENTRY aluReverb(ALvoid *Reverb,ALfloat Buffer[][2],ALsizei B
 #endif
 
 #endif
-
