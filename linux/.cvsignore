@@ -11,3 +11,4 @@ English.pbproj
 English.lproj
 build
 .DS_Store
+autom4te.cache
