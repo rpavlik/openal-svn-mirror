@@ -1633,7 +1633,7 @@ static void _alSplitSourceQueue( ALuint cid,
 	AL_source *src;
 	AL_buffer *nextsamp;
 	long mixable;
-	long remaining;
+	ALuint remaining;
 	char *bufptr;
 	ALuint nextbid;
 	void *nextpcm;
