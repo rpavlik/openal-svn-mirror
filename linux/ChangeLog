@@ -1,3 +1,8 @@
+2003-03-23  Joseph Valenzuela  <jvalenzu@formosa.infinite-monkeys.org>
+
+	* src/al_source.c:
+	Sunil's updated patch
+
 2003-03-21  Joseph Valenzuela  <jvalenzu@formosa.infinite-monkeys.org>
 
 	* src/al_source.c

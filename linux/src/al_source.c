@@ -1805,7 +1805,9 @@ static void _alSplitSourceQueue( ALuint cid,
 
 		if( src->bid_queue.read_index >= src->bid_queue.size )
 		{
+#if DEBUG_QUEUE
 			fprintf(stderr, "end of buffer queue\n" );
+#endif
 
 			/*
 			 * Read past the last buffer and we still
@@ -1818,7 +1820,7 @@ static void _alSplitSourceQueue( ALuint cid,
 				       0, len - collected_bytes);
 			}
 
-			src->srcParams.new_readindex=src->bid_queue.read_index;
+			src->srcParams.new_readindex= 0;
 			src->srcParams.new_soundpos = 0;
 
 			src->bid_queue.read_index = old_readindex;
@@ -1834,14 +1836,15 @@ static void _alSplitSourceQueue( ALuint cid,
 
 		mixable = samp->size - src->srcParams.soundpos;
 
-		if(mixable > (int) len)
+		if(mixable > (int) (len - collected_bytes))
 		{
-			mixable = len;
-			new_soundpos = mixable;
+			mixable = len - collected_bytes;
+			new_soundpos = src->srcParams.soundpos + mixable;
 		}
 		else
 		{
 			src->bid_queue.read_index++;
+			new_soundpos = 0;
 		}
 
 		/* copy from current buffer */
@@ -1854,8 +1857,7 @@ static void _alSplitSourceQueue( ALuint cid,
 
 		collected_bytes += mixable;
 
-		src->srcParams.soundpos = 0;
-		new_soundpos = 0;
+		src->srcParams.soundpos = new_soundpos;
 	}
 
 	src->srcParams.new_readindex = src->bid_queue.read_index;
