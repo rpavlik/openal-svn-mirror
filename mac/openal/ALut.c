@@ -169,6 +169,31 @@ void convert_c2pstr(char *string)
 	}
 	string[0] = length;
 }
+
+/* *****
+OSStatus FSPathMakeFSSpec(const UInt8 *path, FSSpec *spec, Boolean *isDirectory)
+{
+	OSStatus	result;
+	FSRef		ref;
+	
+	// check parameters 
+	require_action(NULL != spec, BadParameter, result = paramErr);
+	
+	// convert the POSIX path to an FSRef 
+	result = FSPathMakeRef(path, &ref, isDirectory);
+	require_noerr(result, FSPathMakeRef);
+	
+	// and then convert the FSRef to an FSSpec 
+	result = FSGetCatalogInfo(&ref, kFSCatInfoNone, NULL, NULL, spec, NULL);
+	require_noerr(result, FSGetCatalogInfo);
+	
+FSGetCatalogInfo:
+FSPathMakeRef:
+BadParameter:
+
+	return ( result );
+}
+*/
  
 ALUTAPI ALvoid ALUTAPIENTRY alutLoadWAVFile(ALbyte *file,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq)
 {
@@ -178,22 +203,21 @@ ALUTAPI ALvoid ALUTAPIENTRY alutLoadWAVFile(ALbyte *file,ALenum *format,ALvoid *
 	WAVSmplHdr_Struct SmplHdr;
 	WAVFmtHdr_Struct FmtHdr;
 	FSSpec sfFile;
+        FSRef ref;
 	short fRefNum;
 	long numBytes;
 	int i;
-	char filename[255];
 	
 	*format=AL_FORMAT_MONO16;
 	*data=NULL;
 	*size=0;
 	*freq=22050;
 	
-	strcpy(filename, file);
-	convert_c2pstr(filename);
-	
-	if (filename)
-	{		
-		if (FSMakeFSSpec(0,0,(const unsigned char *)filename,&sfFile) == 0)
+	if (file)
+	{
+            if (FSPathMakeRef(file, &ref, NULL) == 0)
+            {
+                if (FSGetCatalogInfo(&ref, kFSCatInfoNone, NULL, NULL, &sfFile, NULL) == 0)
 		{
 		    FSpOpenDF(&sfFile, fsRdPerm, &fRefNum);
 		    
@@ -276,6 +300,7 @@ ALUTAPI ALvoid ALUTAPIENTRY alutLoadWAVFile(ALbyte *file,ALenum *format,ALvoid *
 			}
 			FSClose(fRefNum);
 		}
+            }
 	}
 }
 
@@ -286,8 +311,6 @@ ALUTAPI ALvoid ALUTAPIENTRY alutLoadWAVMemory(ALbyte *memory,ALenum *format,ALvo
 	WAVFileHdr_Struct FileHdr;
 	WAVSmplHdr_Struct SmplHdr;
 	WAVFmtHdr_Struct FmtHdr;
-	FSSpec sfFile;
-	short fRefNum;
 	int i;
 	ALbyte *Stream;
 	
