@@ -35,7 +35,7 @@ ALAPI ALvoid ALAPIENTRY alListenerf(ALenum pname,ALfloat value)
 		switch(pname) 
 		{
 		case AL_GAIN:
-			if (value>=0.0f)
+			if (value >= 0.0f)
 			{
 				if (value != Context->Listener.Gain)
 				{

@@ -10,18 +10,20 @@
 #include "AL/altypes.h"
 #include "AL/alctypes.h"
 #include "alu.h"
+#include "windows.h"
+#include "mmsystem.h"
+#include "dsound.h"
 #include "alBuffer.h"
 #include "alError.h"
 #include "alExtension.h"
 #include "alListener.h"
 #include "alSource.h"
 #include "alState.h"
-#include "windows.h"
-#include "dsound.h"
+#include "alThunk.h"
 
 #define NUMWAVEBUFFERS	4
 
-typedef struct ALCdevice_struct 
+typedef struct ALCdevice_struct
 {
  	ALenum		LastError;
  	ALboolean	InUse;
@@ -52,16 +54,16 @@ typedef struct ALCdevice_struct
 	//mmTimer
 	MMRESULT	timer;
 } ALCdevice;
-  
-typedef struct ALCcontext_struct 
+
+typedef struct ALCcontext_struct
 {
 	ALlistener	Listener;
-	
+
 	ALsource *	Source;
 	ALuint		SourceCount;
 
-	ALuint		alPrivateSource;	// Guarantees that there is always one Source in existence
-	
+    ALuint      alPrivateSource;    // Guarantees that there is always one Source in existence
+
 	ALenum		LastError;
 	ALboolean	InUse;
 	ALboolean	Valid;
@@ -85,7 +87,7 @@ typedef struct ALCcontext_struct
 
 ALCvoid alcUpdateContext(ALCcontext *context,ALuint type,ALuint name);
 ALint LinearGainToDB(float flGain);
-ALvoid SetGlobalRolloffFactor();
+ALvoid SetGlobalRolloffFactor(ALsource *ALSource);
 
 #ifdef __cplusplus
 extern "C"

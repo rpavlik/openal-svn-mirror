@@ -546,7 +546,7 @@ ALvoid BufferTest(ALvoid)
 	ALint	error;
 	char ch;
 
-	ALfloat source0Pos[]={ 2.0, 0.0,-2.0};	// Front and right of the listener
+	ALfloat source0Pos[]={ 1.0, 0.0,-1.0};	// Front and right of the listener
 	ALfloat source0Vel[]={ 0.0, 0.0, 0.0};
 	
 	alGenSources(1,source);
@@ -649,10 +649,10 @@ ALvoid PositionTest(ALvoid)
 	ALuint	source[2];
 	ALbyte	ch;
 
-	ALfloat source0Pos[]={ -2.0, 0.0, 2.0};	// Behind and to the left of the listener
+	ALfloat source0Pos[]={ -1.0, 0.0, 1.0};	// Behind and to the left of the listener
 	ALfloat source0Vel[]={ 0.0, 0.0, 0.0};
 
-	ALfloat source1Pos[]={ 2.0, 0.0, -2.0};	// Front and to the right of the listener
+	ALfloat source1Pos[]={ 1.0, 0.0, -1.0};	// Front and to the right of the listener
 	ALfloat source1Vel[]={ 0.0, 0.0, 0.0};
 
 	alGenSources(2,source);
@@ -786,10 +786,10 @@ ALvoid LoopingTest(ALvoid)
 	ALboolean bLooping0 = AL_FALSE;
 	ALboolean bLooping1 = AL_FALSE;
 
-	ALfloat source0Pos[]={ 0.0, 0.0, 0.0};	// Front left of the listener
+	ALfloat source0Pos[]={ -1.0, 0.0, -1.0};	// Front left of the listener
 	ALfloat source0Vel[]={ 0.0, 0.0, 0.0};
 
-	ALfloat source1Pos[]={ 2.0, 0,0, -2.0};		// Front right of the listener
+	ALfloat source1Pos[]={ 1.0, 0,0, -1.0};		// Front right of the listener
 	ALfloat source1Vel[]={ 0.0, 0.0, 0,0};
 
 	// Clear Error Code
@@ -945,10 +945,10 @@ ALvoid EAXTest(ALvoid)
 	ALint	Obstruction;
 	EAXBUFFERPROPERTIES eaxBufferProp0;
 
-	ALfloat source0Pos[]={ -2.0, 0.0, 2.0};	// Behind and to the left of the listener
+	ALfloat source0Pos[]={ -1.0, 0.0, 1.0};	// Behind and to the left of the listener
 	ALfloat source0Vel[]={ 0.0, 0.0, 0.0};
 
-	ALfloat source1Pos[]={ 2.0, 0.0,-2.0};	// Front and right of the listener
+	ALfloat source1Pos[]={ 1.0, 0.0,-1.0};	// Front and right of the listener
 	ALfloat source1Vel[]={ 0.0, 0.0, 0.0};
 
 	alGenSources(2,source);
@@ -1133,7 +1133,7 @@ ALvoid QueueTest(ALvoid)
 	ALuint  *buffersremoved;
 	ALboolean bLooping;
 	ALint	BuffersInQueue, BuffersProcessed;
-	ALfloat source0Pos[]={ 0.0, 0.0, -2.0};	// Immediately in front of listener
+	ALfloat source0Pos[]={ 0.0, 0.0, -1.0};	// Immediately in front of listener
 	ALfloat source0Vel[]={ 0.0, 0.0, 0.0};
 	ALuint	Buffer;
 	ALint	i;
@@ -1444,7 +1444,7 @@ ALvoid FreqTest(ALvoid)
 	ALint	error;
 	ALuint	source[1];
 	ALbyte	ch;
-	ALfloat source0Pos[]={ 2.0, 0.0,-2.0};	// Front and right of the listener
+	ALfloat source0Pos[]={ 1.0, 0.0,-1.0};	// Front and right of the listener
 	ALfloat source0Vel[]={ 0.0, 0.0, 0.0};
 
 
@@ -1534,7 +1534,7 @@ ALvoid StereoTest(ALvoid)
 	ALint	BuffersInQueue, BuffersProcessed;
 	ALbyte	ch;
 	ALboolean bLoop = true;
-	ALfloat source0Pos[]={ 2.0, 0.0,-2.0};	// Front and right of the listener
+	ALfloat source0Pos[]={ 1.0, 0.0,-1.0};	// Front and right of the listener
 	ALfloat source0Vel[]={ 0.0, 0.0, 0.0};
 
 	alGenSources(1,source);
@@ -1576,7 +1576,7 @@ ALvoid StereoTest(ALvoid)
 					DisplayALError("alSourcei 0 AL_BUFFER buffer 6 (stereo) : \n", error);
 
 				// Set volume
-				alSourcef(source[0],AL_GAIN,0.5f);
+				alSourcef(source[0],AL_GAIN,1.0f);
 				if ((error = alGetError()) != AL_NO_ERROR)
 					DisplayALError("alSourcef 0 AL_GAIN : \n", error);
 
@@ -1717,10 +1717,10 @@ ALvoid GainTest(ALvoid)
 	ALuint	source[2];
 	ALbyte	ch;
 
-	ALfloat source0Pos[]={ 2.0, 0.0,-2.0};	// Front and right of the listener
+	ALfloat source0Pos[]={ 1.0, 0.0,-1.0};	// Front and right of the listener
 	ALfloat source0Vel[]={ 0.0, 0.0, 0.0};
 
-	ALfloat source1Pos[]={-2.0, 0.0,-2.0};
+	ALfloat source1Pos[]={-1.0, 0.0,-1.0};
 	ALfloat source1Vel[]={ 0.0, 0.0, 0.0};
 
 	alGenSources(2,source);
@@ -1956,7 +1956,7 @@ ALvoid StreamingTest(ALvoid)
 		return;
 	}
 
-	alSourcef(Sources[0], AL_GAIN, 0.5f);
+	alSourcef(Sources[0], AL_GAIN, 1.0f);
 	if ((error = alGetError()) != AL_NO_ERROR)
 		DisplayALError("alSourcef AL_GAIN : ", error);
 
@@ -2399,8 +2399,8 @@ ALvoid SourceRollOffTest()
 	ALuint	source[2];
 	ALbyte	ch;
 
-	ALfloat source0Pos[]={ -10.0, 0.0, 10.0};	// Behind and to the left of the listener
-	ALfloat source1Pos[]={ 10.0, 0.0, -10.0};	// Front and to the right of the listener
+	ALfloat source0Pos[]={ -3.0, 0.0, 3.0};	// Behind and to the left of the listener
+	ALfloat source1Pos[]={ 3.0, 0.0, -3.0};	// Front and to the right of the listener
 
 	alGenSources(2,source);
 	if ((error = alGetError()) != AL_NO_ERROR)

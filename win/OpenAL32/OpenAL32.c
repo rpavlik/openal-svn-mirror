@@ -20,15 +20,17 @@
 
 #include <windows.h>
 #include "Include/alBuffer.h"
+#include "Include/alThunk.h"
 
 BOOL APIENTRY DllMain(HANDLE hModule,DWORD ul_reason_for_call,LPVOID lpReserved)
 {
     // Perform actions based on the reason for calling.
-    switch(ul_reason_for_call) 
-    { 
+    switch(ul_reason_for_call)
+    {
         case DLL_PROCESS_ATTACH:
          // Initialize once for each new process.
          // Return FALSE to fail DLL load.
+            ALTHUNK_INIT();
             break;
 
         case DLL_THREAD_ATTACH:
@@ -42,8 +44,9 @@ BOOL APIENTRY DllMain(HANDLE hModule,DWORD ul_reason_for_call,LPVOID lpReserved)
         case DLL_PROCESS_DETACH:
          // Perform any necessary cleanup.
 			ReleaseALBuffers();
+            ALTHUNK_EXIT();
             break;
-    }    
+    }
 	return TRUE;
 }
 

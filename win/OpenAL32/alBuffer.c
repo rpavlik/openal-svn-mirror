@@ -18,7 +18,7 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
 
-#include <stdlib.h> 
+#include <stdlib.h>
 #include <stdio.h>
 #include "Include/alMain.h"
 #include "AL/al.h"
@@ -69,7 +69,7 @@ ALAPI ALvoid ALAPIENTRY alGenBuffers(ALsizei n,ALuint *puiBuffers)
 				if (g_pBuffers)
 				{
 					memset(g_pBuffers, 0, sizeof(ALbuffer));
-					puiBuffers[i]=(ALuint)g_pBuffers;
+                    puiBuffers[i]=(ALuint)ALTHUNK_ADDENTRY(g_pBuffers);
 					g_pBuffers->state=UNUSED;
 					g_uiBufferCount++;
 					i++;
@@ -83,7 +83,7 @@ ALAPI ALvoid ALAPIENTRY alGenBuffers(ALsizei n,ALuint *puiBuffers)
 				while (ALBuf->next)
 					ALBuf=ALBuf->next;
 			}
-			
+
 			// Create all the new Buffers
 			while ((ALBuf)&&(i<n))
 			{
@@ -91,7 +91,7 @@ ALAPI ALvoid ALAPIENTRY alGenBuffers(ALsizei n,ALuint *puiBuffers)
 				if (ALBuf->next)
 				{
 					memset(ALBuf->next, 0, sizeof(ALbuffer));
-					puiBuffers[i] = (ALuint)ALBuf->next;
+                    puiBuffers[i] = (ALuint)ALTHUNK_ADDENTRY(ALBuf->next);
 					ALBuf->next->previous = ALBuf;
 					ALBuf->next->state = UNUSED;
 					g_uiBufferCount++;
@@ -146,11 +146,11 @@ ALAPI ALvoid ALAPIENTRY alDeleteBuffers(ALsizei n, const ALuint *puiBuffers)
 			// Check that all the buffers are valid and can actually be deleted
 			for (i = 0; i < n; i++)
 			{
-				// Check for valid Buffer ID or NULL buffer
-				if ((alIsBuffer(puiBuffers[i])) || (puiBuffers[i] == 0))
+				// Check for valid Buffer ID (can be NULL buffer)
+				if (alIsBuffer(puiBuffers[i]))
 				{
 					// If not the NULL buffer, check that the reference count is 0
-					ALBuf = ((ALbuffer *)puiBuffers[i]);
+                    ALBuf = ((ALbuffer *)ALTHUNK_LOOKUPENTRY(puiBuffers[i]));
 					if (ALBuf)
 					{
 						if (ALBuf->refcount != 0)
@@ -174,7 +174,7 @@ ALAPI ALvoid ALAPIENTRY alDeleteBuffers(ALsizei n, const ALuint *puiBuffers)
 			{
 				for (i = 0; i < n; i++)
 				{
-					ALBuf=((ALbuffer *)puiBuffers[i]);
+                    ALBuf=((ALbuffer *)ALTHUNK_LOOKUPENTRY(puiBuffers[i]));
 					if (ALBuf)
 					{
 						if (ALBuf->previous)
@@ -190,11 +190,12 @@ ALAPI ALvoid ALAPIENTRY alDeleteBuffers(ALsizei n, const ALuint *puiBuffers)
 							free(ALBuf->data);
 
 						// Release buffer structure
-						memset(ALBuf, 0, sizeof(ALbuffer));
+                        ALTHUNK_REMOVEENTRY(puiBuffers[i]);
+                        memset(ALBuf, 0, sizeof(ALbuffer));
 						g_uiBufferCount--;
 						free(ALBuf);
-					}
-				}
+                    }
+                }
 			}
 		}
 		else
@@ -219,19 +220,21 @@ ALAPI ALboolean ALAPIENTRY alIsBuffer(ALuint uiBuffer)
 	ALCcontext *Context;
 	ALboolean result=AL_FALSE;
 	ALbuffer *ALBuf;
+    ALbuffer *TgtALBuf;
 	unsigned int i;
-	
+
 	Context = alcGetCurrentContext();
 	SuspendContext(Context);
 
-	// Check through list of generated buffers for uiBuffer
-	if (uiBuffer == 0) {
-		result = AL_TRUE;
-	} else {
+	if (uiBuffer)
+	{
+		TgtALBuf = (ALbuffer *)ALTHUNK_LOOKUPENTRY(uiBuffer);
+
+		// Check through list of generated buffers for uiBuffer
 		ALBuf = g_pBuffers;
 		for (i = 0; i < g_uiBufferCount; i++)
 		{
-			if ((ALuint)ALBuf == uiBuffer)
+			if (ALBuf == TgtALBuf)
 			{
 				result = AL_TRUE;
 				break;
@@ -240,6 +243,11 @@ ALAPI ALboolean ALAPIENTRY alIsBuffer(ALuint uiBuffer)
 			ALBuf = ALBuf->next;
 		}
 	}
+	else
+	{
+		result = AL_TRUE;
+	}
+
 
 	ProcessContext(Context);
 
@@ -262,7 +270,7 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,const ALvoid *d
 
 	if (alIsBuffer(buffer) && (buffer != 0))
 	{
-		ALBuf=((ALbuffer *)buffer);
+        ALBuf=((ALbuffer *)ALTHUNK_LOOKUPENTRY(buffer));
 		if ((ALBuf->refcount==0)&&(data))
 		{
 			switch(format)
@@ -272,7 +280,7 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,const ALvoid *d
 					if (ALBuf->data)
 					{
 						ALBuf->format=AL_FORMAT_MONO16;
-						for (i=0;i<size/sizeof(ALubyte);i++) 
+						for (i=0;i<size/sizeof(ALubyte);i++)
 							ALBuf->data[i]=(ALshort)((((ALubyte *)data)[i]-128)<<8);
 						ALBuf->size=size/sizeof(ALubyte)*sizeof(ALshort);
 						ALBuf->frequency=freq;
@@ -299,7 +307,7 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,const ALvoid *d
 					if (ALBuf->data)
 					{
 						ALBuf->format=AL_FORMAT_STEREO16;
-						for (i=0;i<size/sizeof(ALubyte);i++) 
+						for (i=0;i<size/sizeof(ALubyte);i++)
 							ALBuf->data[i]=(ALshort)((((ALubyte *)data)[i]-128)<<8);
 						ALBuf->size=size/sizeof(ALubyte)*sizeof(ALshort);
 						ALBuf->frequency=freq;
@@ -331,7 +339,7 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,const ALvoid *d
 			// Buffer is in use, or data is a NULL pointer
 			alSetError(AL_INVALID_VALUE);
 		}
-	} 
+	}
 	else
 	{
 		// Invalid Buffer Name
@@ -356,9 +364,9 @@ ALAPI ALvoid ALAPIENTRY alGetBufferf(ALuint buffer,ALenum pname,ALfloat *value)
 
 	if (value)
 	{
-		if (alIsBuffer(buffer)  && (buffer != 0))
+		if (alIsBuffer(buffer) && (buffer != 0))
 		{
-			ALBuf=((ALbuffer *)buffer);
+            ALBuf=((ALbuffer *)ALTHUNK_LOOKUPENTRY(buffer));
 			switch(pname)
 			{
 				default:
@@ -396,9 +404,9 @@ ALAPI ALvoid ALAPIENTRY alGetBufferi(ALuint buffer,ALenum pname,ALint *value)
 
 	if (value)
 	{
-		if (alIsBuffer(buffer)  && (buffer != 0))
+		if (alIsBuffer(buffer) && (buffer != 0))
 		{
-			ALBuf=((ALbuffer *)buffer);
+            ALBuf=((ALbuffer *)ALTHUNK_LOOKUPENTRY(buffer));
 			switch(pname)
 			{
 				case AL_FREQUENCY:
@@ -421,7 +429,7 @@ ALAPI ALvoid ALAPIENTRY alGetBufferi(ALuint buffer,ALenum pname,ALint *value)
 					alSetError(AL_INVALID_ENUM);
 					break;
 			}
-		} 
+		}
 		else
 		{
 			// Invalid Buffer Name
@@ -467,7 +475,7 @@ ALvoid ReleaseALBuffers(ALvoid)
 		// Release sample data
 		if (ALBuffer->data)
 			free(ALBuffer->data);
-		
+
 		// Release Buffer structure
 		ALBufferTemp = ALBuffer;
 		ALBuffer = ALBuffer->next;

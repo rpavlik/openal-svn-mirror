@@ -22,6 +22,7 @@
 #include "OpenAL32/Include/alMain.h"
 #include "AL/al.h"
 #include "AL/alc.h"
+#define SPEEDOFSOUNDMETRESPERSEC	(343.3f)
 
 ALUAPI ALint ALUAPIENTRY aluF2L(ALfloat Value)
 {
@@ -90,8 +91,9 @@ ALUAPI ALvoid ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint numO
 	ALfloat Pitch,Volume,PanningFB,PanningLR,ListenerGain;
 	ALuint NumBufferChannels;
 	ALfloat U[3],V[3],N[3];
-	ALfloat DopplerFactor,DopplerVelocity;
-	ALfloat ProjectedVelocity,ProjectedListenerVelocity;
+	ALfloat DopplerFactor, DopplerVelocity;
+	ALfloat flProjectedVelocity;
+	ALfloat flProjectedListenerVelocity;
 	ALuint DistanceModel;
 	ALfloat Matrix[3][3];
 	ALint HeadRelative;
@@ -102,8 +104,9 @@ ALUAPI ALvoid ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint numO
 	{
 		//Get global properties
 		alGetFloatv(AL_DOPPLER_FACTOR,&DopplerFactor);
-		alGetFloatv(AL_DOPPLER_VELOCITY,&DopplerVelocity);
 		alGetIntegerv(AL_DISTANCE_MODEL,&DistanceModel);
+		alGetFloatv(AL_DOPPLER_VELOCITY,&DopplerVelocity);
+		DopplerVelocity *= SPEEDOFSOUNDMETRESPERSEC;
 		
 		//Get listener properties
 		alGetListenerf(AL_GAIN,&ListenerGain);
@@ -165,17 +168,20 @@ ALUAPI ALvoid ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint numO
 					Distance=(Distance<MinDist?MinDist:Distance);
 					Distance=(Distance>MaxDist?MaxDist:Distance);
 				}
-				if (Distance != 0) {
+				if (Distance!=0)
+				{
 					DryMix=((DryMix)/(1.0f+Rolloff*((Distance-MinDist)/__max(MinDist,FLT_MIN))));
 					WetMix=((WetMix)/(1.0f+RoomRolloff*((Distance-MinDist)/__max(MinDist,FLT_MIN))));
 				}
 			}
-			DryMix=((DryMix<=MaxVolume)?DryMix:MaxVolume);
-            DryMix=((DryMix>=MinVolume)?DryMix:MinVolume);
+			DryMix=__min(DryMix,MaxVolume);
+			DryMix=__max(DryMix,MinVolume);
+			WetMix=__min(WetMix,MaxVolume);
+			WetMix=__max(WetMix,MinVolume);
 			//4. Apply directional soundcones
-			SourceToListener[0]=-Position[0];	
+			SourceToListener[0]=-Position[0];
 			SourceToListener[1]=-Position[1];
-			SourceToListener[2]=-Position[2];	
+			SourceToListener[2]=-Position[2];
 			aluNormalize(Direction);
 			aluNormalize(SourceToListener);
 			Angle=(ALfloat)(180.0*acos(aluDotproduct(Direction,SourceToListener))/3.141592654f);
@@ -183,16 +189,26 @@ ALUAPI ALvoid ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint numO
 				Volume=(Volume*(1.0f+(OuterGain-1.0f)*(Angle-InnerAngle)/(OuterAngle-InnerAngle)));
 			else if (Angle>OuterAngle)
 				Volume=(Volume*(1.0f+(OuterGain-1.0f)                                           ));
-			//5. Calculate doppler
-            ProjectedVelocity = aluDotproduct(Velocity, SourceToListener);
-            ProjectedListenerVelocity = aluDotproduct(ListenerVelocity, SourceToListener);
-            if (fabs(DopplerFactor) < 1.0e-6)
-            {
-                    ProjectedVelocity *= DopplerFactor;
-                    ProjectedListenerVelocity *= DopplerFactor;
-            }
-            pitch[0] = (DopplerVelocity - ProjectedListenerVelocity)/
-                            (DopplerVelocity + ProjectedVelocity);
+
+			//5. Calculate Velocity
+			flProjectedVelocity = aluDotproduct(Velocity,SourceToListener);
+			flProjectedListenerVelocity = aluDotproduct(ListenerVelocity,SourceToListener);
+
+			if (flProjectedVelocity >= DopplerVelocity)
+				flProjectedVelocity = (DopplerVelocity - FLT_MIN);
+			else if (flProjectedVelocity <= -DopplerVelocity)
+				flProjectedVelocity = -(DopplerVelocity - FLT_MIN);
+
+			if (flProjectedListenerVelocity >= DopplerVelocity)
+				flProjectedListenerVelocity = (DopplerVelocity - FLT_MIN);
+			else if (flProjectedListenerVelocity <= -DopplerVelocity)
+				flProjectedListenerVelocity = -(DopplerVelocity - FLT_MIN);
+
+			if (DopplerFactor != 0.0f)
+				pitch[0] = Pitch * DopplerFactor * (DopplerVelocity - flProjectedListenerVelocity)/(DopplerVelocity - flProjectedVelocity);
+			else
+				pitch[0] = Pitch;
+
             //6. Convert normalized position into font/back panning
 			if (Distance != 0.0f)
 			{
@@ -202,7 +218,7 @@ ALUAPI ALvoid ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint numO
 			}
 			else
 			{
-				PanningLR=0.5f;	
+				PanningLR=0.5f;
 				PanningFB=0.5f;
 			}
 
@@ -210,53 +226,18 @@ ALUAPI ALvoid ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint numO
 			switch (numOutputChannels)
 			{
 				case 1:
-					drysend[0]=(Volume*ListenerGain*DryMix*(ALfloat)1.0f								  );	//Direct
-					wetsend[0]=(Volume*ListenerGain*DryMix*(ALfloat)1.0f								  );	//Room
-					break;																					
+					drysend[0]=(Volume*ListenerGain*DryMix*(ALfloat)1.0f				  );	//Direct
+					wetsend[0]=(Volume*ListenerGain*DryMix*(ALfloat)1.0f				  );	//Room
+					break;
 				case 2:
-					drysend[0]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((1.0f-PanningLR)				  ));	//FL Direct
-					drysend[1]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((     PanningLR)				  ));	//FR Direct
-					wetsend[0]=(Volume*ListenerGain*WetMix*(ALfloat)sqrt((1.0f-PanningLR)				  ));	//FL Room
-					wetsend[1]=(Volume*ListenerGain*WetMix*(ALfloat)sqrt((     PanningLR)				  ));	//FR Room
+					drysend[0]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((1.0f-PanningLR)));	//FL Direct
+					drysend[1]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((     PanningLR)));	//FR Direct
+					wetsend[0]=(Volume*ListenerGain*WetMix*(ALfloat)sqrt((1.0f-PanningLR)));	//FL Room
+					wetsend[1]=(Volume*ListenerGain*WetMix*(ALfloat)sqrt((     PanningLR)));	//FR Room
 			 		break;
-				case 3:
-					drysend[0]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((1.0f-PanningLR)				  ));	//FL Direct
-					drysend[1]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((     PanningLR)				  ));	//FR Direct
-					drysend[2]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((     PanningFB)				  ));	//SUR Direct
-					wetsend[0]=(Volume*ListenerGain*WetMix*(ALfloat)sqrt((1.0f-PanningLR)				  ));	//FL Room
-					wetsend[1]=(Volume*ListenerGain*WetMix*(ALfloat)sqrt((     PanningLR)				  ));	//FR Room
-					break;
-				case 4:
-					drysend[0]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((1.0f-PanningLR)*(1.0f-PanningFB)));	//FL Direct
-					drysend[1]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((     PanningLR)*(1.0f-PanningFB)));	//FR Direct
-					drysend[2]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((1.0f-PanningLR)*(     PanningFB)));	//RL Direct
-					drysend[3]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((     PanningLR)*(     PanningFB)));	//RR Direct
-					wetsend[0]=(Volume*ListenerGain*WetMix*(ALfloat)sqrt((1.0f-PanningLR)				  ));	//FL Room
-					wetsend[1]=(Volume*ListenerGain*WetMix*(ALfloat)sqrt((     PanningLR)				  ));	//FR Room
-					break;
-				case 5:
-					if (PanningLR<0.5f)
-					{
-						drysend[0]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((1.0f-2.0f*PanningLR)*(1.0f-PanningFB)));//FL Direct
-						drysend[1]=(Volume*ListenerGain*DryMix*(ALfloat)0.0f                                        );//FR Direct
-						drysend[2]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((     2.0f*PanningLR)*(1.0f-PanningFB)));//FC Direct
-						drysend[3]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((1.0f-     PanningLR)*(     PanningFB)));//RL Direct
-						drysend[4]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((          PanningLR)*(     PanningFB)));//RR Direct
-					}
-					else
-					{
-						drysend[0]=(Volume*ListenerGain*DryMix*(ALfloat)0.0f                                        );//FL Direct
-						drysend[1]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((2.0f*PanningLR-1.0f)*(1.0f-PanningFB)));//FR Direct
-						drysend[2]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((2.0f-2.0f*PanningLR)*(1.0f-PanningFB)));//FC Direct
-						drysend[3]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((1.0f-     PanningLR)*(     PanningFB)));//RL Direct
-						drysend[4]=(Volume*ListenerGain*DryMix*(ALfloat)sqrt((          PanningLR)*(     PanningFB)));//RR Direct
-					}
-					wetsend[0]=(Volume*ListenerGain*WetMix*(ALfloat)sqrt((1.0f-PanningLR)                 ));	//FL Room
-					wetsend[1]=(Volume*ListenerGain*WetMix*(ALfloat)sqrt((     PanningLR)                 ));	//FR Room
-					break; 
 				default:
 					break;
-			}	
+			}
 		}
 		else
 		{
@@ -273,30 +254,6 @@ ALUAPI ALvoid ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint numO
 					wetsend[0]=(Volume*0.0f*ListenerGain);
 					wetsend[1]=(Volume*0.0f*ListenerGain);
 			 		break;
-				case 3:
-					drysend[0]=(Volume*1.0f*ListenerGain);
-					drysend[1]=(Volume*1.0f*ListenerGain);
-					drysend[2]=(Volume*0.0f*ListenerGain);
-					wetsend[0]=(Volume*0.0f*ListenerGain);
-					wetsend[1]=(Volume*0.0f*ListenerGain);
-					break;
-				case 4:
-					drysend[0]=(Volume*1.0f*ListenerGain);
-					drysend[1]=(Volume*1.0f*ListenerGain);
-					drysend[2]=(Volume*0.0f*ListenerGain);
-					drysend[3]=(Volume*0.0f*ListenerGain);
-					wetsend[0]=(Volume*0.0f*ListenerGain);
-					wetsend[1]=(Volume*0.0f*ListenerGain);
-					break;
-				case 5:
-					drysend[0]=(Volume*1.0f*ListenerGain);
-					drysend[1]=(Volume*1.0f*ListenerGain);
-					drysend[2]=(Volume*0.0f*ListenerGain);
-					drysend[3]=(Volume*0.0f*ListenerGain);
-					drysend[4]=(Volume*0.0f*ListenerGain);
-					wetsend[0]=(Volume*1.0f*ListenerGain);
-					wetsend[1]=(Volume*1.0f*ListenerGain);
-					break;
 				default:
 					break;
 			}
@@ -366,12 +323,12 @@ ALUAPI ALvoid ALUAPIENTRY aluMixData(ALvoid *context,ALvoid *buffer,ALsizei size
 				State = ALSource->state;
 				while ((State==AL_PLAYING)&&(j<SamplesToDo))
 				{
-					aluCalculateSourceParameters((ALuint)ALSource,OUTPUTCHANNELS,DrySend,WetSend,&Pitch);
+                    aluCalculateSourceParameters((ALuint)ALSource->source,OUTPUTCHANNELS,DrySend,WetSend,&Pitch);
 					//Get buffer info
 					Buffer = ALSource->param[AL_BUFFER-AL_CONE_INNER_ANGLE].data.i;
 					if (Buffer)
 					{
-						ALBuffer = (ALbuffer*)Buffer;
+                        ALBuffer = (ALbuffer*)ALTHUNK_LOOKUPENTRY(Buffer);
 
 						Data = ALBuffer->data;
 						Bits = (((ALBuffer->format==AL_FORMAT_MONO8)||(ALBuffer->format==AL_FORMAT_STEREO8))?8:16);
@@ -386,7 +343,6 @@ ALUAPI ALvoid ALUAPIENTRY aluMixData(ALvoid *context,ALvoid *buffer,ALsizei size
 						DataPosFrac=ALSource->position_fraction;
 						//Figure out how many samples we can mix.
 						BufferSize=(ALuint)((((ALfloat)DataSize)-(((ALfloat)DataPosInt)+(((ALfloat)DataPosFrac)/(1L<<FRACTIONBITS))))/Pitch);
-//						BufferSize=(ALuint)(((ALfloat)(DataSize-DataPosInt))/Pitch)+1;
 						BufferSize=(BufferSize<(SamplesToDo-j)?BufferSize:(SamplesToDo-j));
 						//Actual sample mixing loop
 						Data+=DataPosInt*Channels;
@@ -397,17 +353,17 @@ ALUAPI ALvoid ALUAPIENTRY aluMixData(ALvoid *context,ALvoid *buffer,ALsizei size
 							switch (Channels)
 							{
 								case 0x01:
-									value=(ALshort) (((Data[k]*((1L<<FRACTIONBITS)-fraction))+(Data[k+1]*(fraction)))>>FRACTIONBITS);
+                                    value=(ALshort)(((Data[k]*((1L<<FRACTIONBITS)-fraction))+(Data[k+1]*(fraction)))>>FRACTIONBITS);
 									DryBuffer[j][0]+=((ALfloat)value)*DrySend[0];
 									DryBuffer[j][1]+=((ALfloat)value)*DrySend[1];
 									WetBuffer[j][0]+=((ALfloat)value)*WetSend[0];
 									WetBuffer[j][1]+=((ALfloat)value)*WetSend[1];
 									break;
 								case 0x02:
-									value=(ALshort) (((Data[k*2  ]*((1L<<FRACTIONBITS)-fraction))+(Data[k*2+2]*(fraction)))>>FRACTIONBITS);
+                                    value=(ALshort)(((Data[k*2  ]*((1L<<FRACTIONBITS)-fraction))+(Data[k*2+2]*(fraction)))>>FRACTIONBITS);
 									DryBuffer[j][0]+=((ALfloat)value)*DrySend[0];
 									WetBuffer[j][0]+=((ALfloat)value)*WetSend[0];
-									value=(ALshort) (((Data[k*2+1]*((1L<<FRACTIONBITS)-fraction))+(Data[k*2+3]*(fraction)))>>FRACTIONBITS);
+                                    value=(ALshort)(((Data[k*2+1]*((1L<<FRACTIONBITS)-fraction))+(Data[k*2+3]*(fraction)))>>FRACTIONBITS);
 									DryBuffer[j][1]+=((ALfloat)value)*DrySend[1];
 									WetBuffer[j][1]+=((ALfloat)value)*WetSend[1];
 									break;
@@ -424,9 +380,9 @@ ALUAPI ALvoid ALUAPIENTRY aluMixData(ALvoid *context,ALvoid *buffer,ALsizei size
 						ALSource->position_fraction=DataPosFrac;
 					}
 					//Handle looping sources
-				DataPosFrac+=increment; //one more step
-				DataPosInt+=(DataPosFrac>>FRACTIONBITS);
-				DataPosFrac=(DataPosFrac&FRACTIONMASK);
+					DataPosFrac+=increment; //one more step
+					DataPosInt+=(DataPosFrac>>FRACTIONBITS);
+					DataPosFrac=(DataPosFrac&FRACTIONMASK);
 					if ((!Buffer)||(DataPosInt>=DataSize))
 					{
 						//queueing
@@ -440,11 +396,13 @@ ALUAPI ALvoid ALUAPIENTRY aluMixData(ALvoid *context,ALvoid *buffer,ALsizei size
 								{
 									if (BufferListItem)
 									{
-										if (!Looping) BufferListItem->bufferstate=PROCESSED;
+										if (!Looping)
+											BufferListItem->bufferstate=PROCESSED;
 										BufferListItem = BufferListItem->next;
 									}
 								}
-								if (!Looping) ALSource->BuffersProcessed++;
+								if (!Looping)
+									ALSource->BuffersProcessed++;
 								if (BufferListItem)
 									ALSource->param[AL_BUFFER-AL_CONE_INNER_ANGLE].data.i=BufferListItem->buffer;
 								ALSource->position=0;
@@ -453,23 +411,23 @@ ALUAPI ALvoid ALUAPIENTRY aluMixData(ALvoid *context,ALvoid *buffer,ALsizei size
 							}
 							else
 							{
-								alSourceStop((ALuint)ALSource);
+                                alSourceStop((ALuint)ALSource->source);
 								Looping = ALSource->param[AL_LOOPING-AL_CONE_INNER_ANGLE].data.i;
 								if (Looping)
 								{
-									alSourceRewind((ALuint)ALSource);
-									alSourcePlay((ALuint)ALSource);
+                                    alSourceRewind((ALuint)ALSource->source);
+                                    alSourcePlay((ALuint)ALSource->source);
 								}
 							}
 						}
 						else
 						{
-							alSourceStop((ALuint)ALSource);
+                            alSourceStop((ALuint)ALSource->source);
 							Looping = ALSource->param[AL_LOOPING-AL_CONE_INNER_ANGLE].data.i;
 							if (Looping)
 							{
-								alSourceRewind((ALuint)ALSource);
-								alSourcePlay((ALuint)ALSource);
+                                alSourceRewind((ALuint)ALSource->source);
+                                alSourcePlay((ALuint)ALSource->source);
 							}
 						}
 					}

@@ -46,7 +46,7 @@ extern "C" {
 
 typedef struct ALbufferlistitem
 {
-	ALuint				buffer;
+    ALuint              buffer;
 	ALuint				bufferstate;
 	ALuint				flag;
 	struct ALbufferlistitem	*next;
@@ -54,9 +54,9 @@ typedef struct ALbufferlistitem
 
 typedef struct ALsource_struct
 {
-	struct 
+	struct
 	{
-		union 
+		union
 		{
 			ALfloat fv3[3];
 			ALfloat fv6[6];
@@ -103,6 +103,8 @@ typedef struct ALsource_struct
 
 	ALuint		DSFrequency;			// Frequency of DS Buffer
 	ALuint		Silence;				// Bytes of silence added to a Paused or Stopped source
+
+    ALuint      source;                 // Index to itself
 
 	ALuint		CurrentState;
 	ALboolean	DSBufferPlaying;
