@@ -1,5 +1,10 @@
 2004-06-30  Adam D. Moss  <adam@gimp.org>
 
+        * openal/linux/src/al_doppler.c: Permit a DOPPLER_FACTOR of 0 as
+        per the spec.  Noticed by Jason Daly <jdaly@ist.ucf.edu>
+
+2004-06-30  Adam D. Moss  <adam@gimp.org>
+
         * openal/linux/src/al_filter.c: Doppler fixes based on a patch
         from Jason Daly <jdaly@ist.ucf.edu> with an additional fix.
 

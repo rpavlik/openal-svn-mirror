@@ -15,10 +15,10 @@
 #include <AL/al.h>
 #include <stdlib.h>
 
-#define MIN_DOPPLER 0.001
-#define MAX_DOPPLER 40000
+#define MIN_DOPPLER 0.0
+#define MAX_DOPPLER 40000.0
 #define MIN_DOPPLER_VELOCITY 0.001
-#define MAX_DOPPLER_VELOCITY 40000
+#define MAX_DOPPLER_VELOCITY 40000.0
 
 /*
  * alDopplerFactor( ALfloat value )
