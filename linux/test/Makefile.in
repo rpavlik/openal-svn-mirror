@@ -24,6 +24,13 @@ INC=-I../src -I../include -I../../include -I../audioconvert @INCLUDES@
 LIBOPENAL=../src/libopenal.a
 LIBS=testlib.o -L../src $(LIBOPENAL) @LIBS@
 
+SUBDIRS :=
+RM_RF := $(RM) -r
+CLEAN_FILES := testlib.o $(TEST_PROGS)
+DISTCLEAN_FILES := Makefile
+MAINTAINER_CLEAN_FILES :=
+REPO_CLEAN_FILES :=
+
 % : %.c ../config.h testlib.o
 	$(CC) $(INC) $(DEFS) $(CFLAGS) $< -o $@ $(LIBS)
 
@@ -35,16 +42,25 @@ all: testlib.o $(LIBOPENAL) $(TEST_PROGS) ../src/libopenal.a
 testlib.o : testlib.c testlib.h ../config.h
 	$(CC) $(INC) $(DEFS) $(CFLAGS) -c testlib.c -o testlib.o
 
-clean:
-	rm -f testlib.o
-	rm -f $(TEST_PROGS)
-	rm -f core
-	rm -f gmon.out
-
-distclean: clean
-	rm -Rf Makefile
-
 libopenal: $(LIBOPENAL)
 
 $(LIBOPENAL):
 	(cd ../src && make all)
+
+clean:
+	for i in "" $(SUBDIRS) ; do test -z "$$i" || ( cd $$i && $(MAKE) clean ) done
+	$(RM_RF) __rm_food $(CLEAN_FILES)
+
+distclean:
+	for i in "" $(SUBDIRS) ; do test -z "$$i" || ( cd $$i && $(MAKE) distclean ) done
+	$(RM_RF) __rm_food $(CLEAN_FILES) $(DISTCLEAN_FILES)
+
+maintainer-clean:
+	for i in "" $(SUBDIRS) ; do test -z "$$i" || ( cd $$i && $(MAKE) maintainer-clean ) done
+	$(RM_RF) __rm_food $(CLEAN_FILES) $(DISTCLEAN_FILES) $(MAINTAINER_CLEAN_FILES)
+
+repo-clean:
+	for i in "" $(SUBDIRS) ; do test -z "$$i" || ( cd $$i && $(MAKE) repo-clean ) done
+	$(RM_RF) __rm_food $(CLEAN_FILES) $(DISTCLEAN_FILES) $(MAINTAINER_CLEAN_FILES) $(REPO_CLEAN_FILES)
+
+.PHONY: all clean distclean maintainer-clean repo-clean

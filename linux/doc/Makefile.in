@@ -1,17 +1,36 @@
 MAKEINFO  = @MAKEINFO@
 TEXI_OBJS = openal.info
 
+SUBDIRS :=
+RM_RF := $(RM) -r
+CLEAN_FILES := $(TEXI_OBJS)
+DISTCLEAN_FILES := Makefile
+MAINTAINER_CLEAN_FILES :=
+REPO_CLEAN_FILES :=
+
 .SUFFIXES: .texi .info
 %.info : %.texi ../config.h
 	$(MAKEINFO) $<
 
 all:	$(TEXI_OBJS)
 
-clean:
-	-rm -f $(TEXI_OBJS)
-
 install:
 	@echo "blah blah blah blah blah"
 
-distclean: clean
-	-rm -Rf Makefile
+clean:
+	for i in "" $(SUBDIRS) ; do test -z "$$i" || ( cd $$i && $(MAKE) clean ) done
+	$(RM_RF) __rm_food $(CLEAN_FILES)
+
+distclean:
+	for i in "" $(SUBDIRS) ; do test -z "$$i" || ( cd $$i && $(MAKE) distclean ) done
+	$(RM_RF) __rm_food $(CLEAN_FILES) $(DISTCLEAN_FILES)
+
+maintainer-clean:
+	for i in "" $(SUBDIRS) ; do test -z "$$i" || ( cd $$i && $(MAKE) maintainer-clean ) done
+	$(RM_RF) __rm_food $(CLEAN_FILES) $(DISTCLEAN_FILES) $(MAINTAINER_CLEAN_FILES)
+
+repo-clean:
+	for i in "" $(SUBDIRS) ; do test -z "$$i" || ( cd $$i && $(MAKE) repo-clean ) done
+	$(RM_RF) __rm_food $(CLEAN_FILES) $(DISTCLEAN_FILES) $(MAINTAINER_CLEAN_FILES) $(REPO_CLEAN_FILES)
+
+.PHONY: all install clean distclean maintainer-clean repo-clean

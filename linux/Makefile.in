@@ -13,6 +13,13 @@ SO_EXT=@SHARED_LIBRARY_EXT@
 DO_MINOR_LIBS=@DO_MINOR_LIBS@
 INSTALL_DEPS=all
 
+SUBDIRS := audioconvert doc jlib src test
+RM_RF := $(RM) -r
+CLEAN_FILES :=
+DISTCLEAN_FILES := config.cache config.log config.status configure.lineno configure.status.lineno Makefile config.h openal-config openal.pc tags TAGS
+MAINTAINER_CLEAN_FILES := autom4te.cache
+REPO_CLEAN_FILES := config.h.in configure
+
 # remind me to look up how to else in a makefile
 ifeq ($(DO_MINOR_LIBS),yes)
 INSTALL_DEPS+=install_minor_libs
@@ -32,20 +39,6 @@ tags:
 
 etags:
 	etags `find . -name "*.[ch]" -print`
-
-clean:
-	cd jlib && $(MAKE) clean
-	cd doc && $(MAKE) clean
-	cd src && $(MAKE) clean
-	cd audioconvert && $(MAKE) clean
-
-distclean:
-	cd jlib && $(MAKE) distclean
-	cd doc && $(MAKE) distclean
-	cd src && $(MAKE) distclean
-	cd audioconvert && $(MAKE) distclean
-	cd test && $(MAKE) distclean
-	-rm -Rf Makefile config.log config.cache config.status tags gmon.out
 
 test:	all
 	cd test && $(MAKE)
@@ -78,8 +71,25 @@ install: $(INSTALL_DEPS)
 	$(INSTALL) -m 444 include/AL/alext.h $(DESTINC)/AL
 	$(INSTALL) -m 444 include/AL/alexttypes.h $(DESTINC)/AL
 
+clean:
+	for i in "" $(SUBDIRS) ; do test -z "$$i" || ( cd $$i && $(MAKE) clean ) done
+	$(RM_RF) __rm_food $(CLEAN_FILES)
+
+distclean:
+	for i in "" $(SUBDIRS) ; do test -z "$$i" || ( cd $$i && $(MAKE) distclean ) done
+	$(RM_RF) __rm_food $(CLEAN_FILES) $(DISTCLEAN_FILES)
+
+maintainer-clean:
+	for i in "" $(SUBDIRS) ; do test -z "$$i" || ( cd $$i && $(MAKE) maintainer-clean ) done
+	$(RM_RF) __rm_food $(CLEAN_FILES) $(DISTCLEAN_FILES) $(MAINTAINER_CLEAN_FILES)
+
+repo-clean:
+	for i in "" $(SUBDIRS) ; do test -z "$$i" || ( cd $$i && $(MAKE) repo-clean ) done
+	$(RM_RF) __rm_food $(CLEAN_FILES) $(DISTCLEAN_FILES) $(MAINTAINER_CLEAN_FILES) $(REPO_CLEAN_FILES)
+
 configure: configure.ac
 	@echo "configure.ac newer than configure...Please re-./configure"
 	autoconf
 	@exit 1
 
+.PHONY: all tags etags test install_minor_libs install_major_lib_only install clean distclean maintainer-clean repo-clean
