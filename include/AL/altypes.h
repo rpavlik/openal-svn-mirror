@@ -54,11 +54,7 @@ typedef unsigned int ALsizei;
 #endif
 
 /** OpenAL void type (for params, not returns). */
-#ifdef LINUX_AL
 typedef void ALvoid;
-#else
-#define ALvoid void
-#endif
 
 /** OpenAL enumerations. */
 typedef int ALenum;
