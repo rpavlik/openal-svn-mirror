@@ -1,7 +1,7 @@
 CC=@CC@
 CFLAGS=@CFLAGS@
-TEST_PROGS=test
-T_OBJS=test.o
+TEST_PROG=test_ac
+T_OBJS=test_ac.o
 AC_OBJS=ac_bits.o               \
 	ac_freq.o               \
 	ac_helper.o             \
@@ -39,8 +39,8 @@ libaudioconvert.a: $(AC_OBJS)
 libaudioconvert.so: $(AC_OBJS)
 	$(CC) -shared -o libaudioconvert.so.$(VERSION) $(AC_OBJS)
 
-test: libaudioconvert $(T_OBJS)
-	$(CC) $(CFLAGS) -o test $(T_OBJS) $(LIBS)
+$(TEST_PROG): libaudioconvert $(T_OBJS)
+	$(CC) $(CFLAGS) -o $(TEST_PROG) $(T_OBJS) $(LIBS)
 
 clean:
 	for i in "" $(SUBDIRS) ; do test -z "$$i" || ( cd $$i && $(MAKE) clean ) done

@@ -1,5 +1,14 @@
 2005-03-23  Sven Panne  <sven.panne@aedion.de>
 
+	* linux/audioconvert/Makefile.in: The test audioconvert test
+	program is now called "test_ac". Using plain "test" could have
+	been very surprising depending on your shell/PATH/..., because it
+	is a very common shell builtin.
+
+	* linux/audioconvert/test.c: Removed.
+
+	* linux/audioconvert/test_ac.c: Added.
+
 	* linux/Makefile.in, linux/audioconvert/Makefile.in,
 	linux/doc/Makefile.in, linux/jlib/Makefile.in
 	linux/src/Makefile.in, linux/test/Makefile.in: Unified *clean
