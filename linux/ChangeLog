@@ -1,3 +1,8 @@
+2005-03-25  Sven Panne  <sven.panne@aedion.de>
+
+	* linux/src/al_config.c: As mentioned in the docs, try system wide
+	config file in /etc if no user-specific one is found.
+
 2005-03-23  Sven Panne  <sven.panne@aedion.de>
 
 	* Makefile.in, config-osx.h, configure.ac, openal-config.in,

@@ -364,6 +364,15 @@ static char *_alOpenRcFile( void ) {
 
 		/* for later malloc, get size */
 		filelen = buf.st_size;
+	} else {
+		/* try system wide OpenAL config file */
+		sprintf(pathname, "/etc/%s", _AL_FNAME);
+		if(stat(pathname, &buf) != -1) {
+			fh = fopen(pathname, "rb");
+
+			/* for later malloc, get size */
+			filelen = buf.st_size;
+		}
 	}
 
 	if( fh == NULL ) {
