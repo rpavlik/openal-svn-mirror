@@ -916,5 +916,81 @@ ALenum alGetEnumValue( const ALubyte *ename ) {
 		return AL_ENV_HIGH_FREQUENCY_REFERENCE_IASIG;
 	}
 
+	if(ustrcmp("ALC_INVALID", ename) == 0) {
+		return ALC_INVALID;
+	}
+	
+	if(ustrcmp("ALC_FREQUENCY", ename) == 0) {
+		return ALC_FREQUENCY;
+	}
+	
+	if(ustrcmp("ALC_REFRESH", ename) == 0) {
+		return ALC_REFRESH;
+	}
+	
+	if(ustrcmp("ALC_SYNC", ename) == 0) {
+		return ALC_SYNC;
+	}
+	
+	if(ustrcmp("ALC_NO_ERROR", ename) == 0) {
+		return ALC_NO_ERROR;
+	}
+	
+	if(ustrcmp("ALC_INVALID_DEVICE", ename) == 0) {
+		return ALC_INVALID_DEVICE;
+	}
+	
+	if(ustrcmp("ALC_INVALID_CONTEXT", ename) == 0) {
+		return ALC_INVALID_CONTEXT;
+	}
+	
+	if(ustrcmp("ALC_INVALID_ENUM", ename) == 0) {
+		return ALC_INVALID_ENUM;
+	}
+		
+	if(ustrcmp("ALC_INVALID_VALUE", ename) == 0) {
+		return ALC_INVALID_VALUE;
+	}
+		
+	if(ustrcmp("ALC_OUT_OF_MEMORY", ename) == 0) {
+		return ALC_OUT_OF_MEMORY;
+	}
+	
+	if(ustrcmp("ALC_DEFAULT_DEVICE_SPECIFIER", ename) == 0) {
+		return ALC_DEFAULT_DEVICE_SPECIFIER;
+	}
+	
+	if(ustrcmp("ALC_DEVICE_SPECIFIER", ename) == 0) {
+		return ALC_DEVICE_SPECIFIER;
+	}
+	
+	if(ustrcmp("ALC_EXTENSIONS", ename) == 0) {
+		return ALC_EXTENSIONS;
+	}
+	
+	if(ustrcmp("ALC_MAJOR_VERSION", ename) == 0) {
+		return ALC_MAJOR_VERSION;
+	}
+	
+	if(ustrcmp("ALC_MINOR_VERSION", ename) == 0) {
+		return ALC_MINOR_VERSION;
+	}
+	
+	if(ustrcmp("ALC_ATTRIBUTES_SIZE", ename) == 0) {
+		return ALC_ATTRIBUTES_SIZE;
+	}
+	
+	if(ustrcmp("ALC_ALL_ATTRIBUTES", ename) == 0) {
+		return ALC_ALL_ATTRIBUTES;
+	}
+	
+	if(ustrcmp("ALC_FALSE", ename) == 0) {
+		return ALC_FALSE;
+	}
+	
+	if(ustrcmp("ALC_TRUE", ename) == 0) {
+		return ALC_TRUE;
+	}
+
 	return 0;
 }
