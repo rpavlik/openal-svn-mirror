@@ -167,7 +167,7 @@ ALboolean set_write_alsa(void *handle,
         ai->format      = (unsigned int) AL2ALSAFMT(*fmt); 
         ai->speed       = (unsigned int) *speed; 
         ai->framesize   = (unsigned int) FRAMESIZE(ai->format, ai->channels);
-        ai->bufframesize= (snd_pcm_uframes_t) *bufsiz / ai->framesize;
+	ai->bufframesize= (snd_pcm_uframes_t) *bufsiz / ai->framesize * 4;
         ai->periods     = 2;
 
         _alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
