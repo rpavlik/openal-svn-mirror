@@ -132,9 +132,9 @@ void alGetSource3f(ALint sid, ALenum param,
 #include <memory.h>
 #include <math.h>
 #include <string.h>
-#include <al.h>
-#include <alc.h>
-#include <alut.h>
+#include <openal/al.h>
+#include <openal/alc.h>
+#include <openal/alut.h>
 #include <unistd.h>
 #define SWAPBYTES
 #endif

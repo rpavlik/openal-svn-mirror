@@ -61,8 +61,8 @@
 		0867D69AFE84028FC02AAC07 = {
 			children = (
 				08FB77AAFE841565C02AAC07,
-				98E82AA70471B67B005F25BE,
-				98E82AAA0471B68A005F25BE,
+				985B853E0471BF5B005F25BE,
+				985B85410471BF69005F25BE,
 			);
 			isa = PBXGroup;
 			name = "External Frameworks and Libraries";
@@ -363,6 +363,42 @@
 		};
 		984FDECB0433F5A20042B474 = {
 			fileRef = 984FDEC60433F5A20042B474;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		985B853E0471BF5B005F25BE = {
+			isa = PBXFrameworkReference;
+			name = Ogg.framework;
+			path = /Library/Frameworks/Ogg.framework;
+			refType = 0;
+		};
+		985B853F0471BF5B005F25BE = {
+			fileRef = 985B853E0471BF5B005F25BE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		985B85400471BF5B005F25BE = {
+			fileRef = 985B853E0471BF5B005F25BE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		985B85410471BF69005F25BE = {
+			isa = PBXFrameworkReference;
+			name = Vorbis.framework;
+			path = /Library/Frameworks/Vorbis.framework;
+			refType = 0;
+		};
+		985B85420471BF69005F25BE = {
+			fileRef = 985B85410471BF69005F25BE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		985B85430471BF69005F25BE = {
+			fileRef = 985B85410471BF69005F25BE;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -1034,8 +1070,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				98E3876E0447B9DC00A8006E,
-				98E82AA80471B67B005F25BE,
-				98E82AAB0471B68A005F25BE,
+				985B853F0471BF5B005F25BE,
+				985B85420471BF69005F25BE,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1370,8 +1406,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				98E3879B0447B9FB00A8006E,
-				98E82AA90471B67B005F25BE,
-				98E82AAC0471B68A005F25BE,
+				985B85400471BF5B005F25BE,
+				985B85430471BF69005F25BE,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1393,42 +1429,6 @@
 			isa = PBXFrameworkReference;
 			path = OpenAL.framework;
 			refType = 3;
-		};
-		98E82AA70471B67B005F25BE = {
-			isa = PBXFrameworkReference;
-			name = Ogg.framework;
-			path = /System/Library/Frameworks/Ogg.framework;
-			refType = 0;
-		};
-		98E82AA80471B67B005F25BE = {
-			fileRef = 98E82AA70471B67B005F25BE;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		98E82AA90471B67B005F25BE = {
-			fileRef = 98E82AA70471B67B005F25BE;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		98E82AAA0471B68A005F25BE = {
-			isa = PBXFrameworkReference;
-			name = Vorbis.framework;
-			path = /System/Library/Frameworks/Vorbis.framework;
-			refType = 0;
-		};
-		98E82AAB0471B68A005F25BE = {
-			fileRef = 98E82AAA0471B68A005F25BE;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		98E82AAC0471B68A005F25BE = {
-			fileRef = 98E82AAA0471B68A005F25BE;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 //980
 //981
