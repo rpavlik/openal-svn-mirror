@@ -1,3 +1,4 @@
+LN_S=@LN_S@
 AS=as
 CC=@CC@
 CPP=/lib/cpp
@@ -88,11 +89,11 @@ REPO_CLEAN_FILES :=
 %.def : %.a libopenal.a
 	dlltool -a $< --output-def $@
 
-all: libopenal.a libopenal.$(SO_EXT) extensions $(TEST_PROGS)
+all: libopenal.a libopenal.$(SO_EXT) $(EXT_OBJS) $(EXT_DLL_OBJS) $(TEST_PROGS)
 
 libopenal: libopenal.a libopenal.$(SO_EXT)
 
-libopenal.a: $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(ALUT_OBJS) extensions
+libopenal.a: $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(ALUT_OBJS) $(EXT_OBJS) $(EXT_DLL_OBJS)
 	ar cru libopenal.a \
 		$(AL_OBJS)   \
 		$(ALC_OBJS)  \
@@ -101,8 +102,10 @@ libopenal.a: $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(ALUT_OBJS) extensions
 		$(EXT_OBJS)
 	$(RANLIB) libopenal.a
 
+libopenal.so: libopenal.so.$(VERSION)
+	$(LN_S) -f libopenal.so.$(VERSION) libopenal.so
 
-libopenal.so: $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(ALUT_OBJS) extensions
+libopenal.so.$(VERSION): $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(ALUT_OBJS) $(EXT_OBJS) $(EXT_DLL_OBJS)
 	$(CC) -shared \
 		-Wl,"-soname,libopenal.so.$(MAJOR_VERSION)" \
 		-o libopenal.so.$(VERSION) \
@@ -115,13 +118,13 @@ libopenal.so: $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(ALUT_OBJS) extensions
 		$(LIBS)
 
 libopenal.dll:  $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(ALUT_OBJS) libopenal.def \
-	extensions
+	$(EXT_OBJS) $(EXT_DLL_OBJS)
 	dlltool -k --dllname libopenal.dll --output-lib $@ --def libopenal.def
 
 # after ensuring some compatibilty issues, bump major up and
 # add copmatbility flag
 #-compatibility_version $(MAJOR_VERSION).$(MINOR_VERSION)
-libopenal.dylib: $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(ALUT_OBJS) extensions
+libopenal.dylib: $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(ALUT_OBJS) $(EXT_OBJS) $(EXT_DLL_OBJS)
 	$(CC) -dynamiclib -prebind -undefined suppress -flat_namespace -o libopenal.dylib -install_name libopenal.dylib -current_version $(MAJOR_VERSION).$(MINOR_VERSION).$(MICRO_VERSION) \
 		$(LDFLAGS)     \
 		$(AL_OBJS)     \
@@ -130,9 +133,6 @@ libopenal.dylib: $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(ALUT_OBJS) extensions
 		$(ALUT_OBJS)   \
 		$(EXT_OBJS)    \
 		$(LIBS)
-
-# extension mojo
-extensions: $(EXT_OBJS) $(EXT_DLL_OBJS)
 
 $(EXT_OBJS): %.o : %.c ../config.h
 	$(CC) $(DEFINES) $(INC) $(CFLAGS) -c $< -o $@
@@ -156,4 +156,4 @@ repo-clean:
 	for i in "" $(SUBDIRS) ; do test -z "$$i" || ( cd $$i && $(MAKE) repo-clean ) done
 	$(RM_RF) __rm_food $(CLEAN_FILES) $(DISTCLEAN_FILES) $(MAINTAINER_CLEAN_FILES) $(REPO_CLEAN_FILES)
 
-.PHONY: all extensions clean distclean maintainer-clean repo-clean
+.PHONY: all clean distclean maintainer-clean repo-clean

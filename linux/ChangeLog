@@ -1,5 +1,7 @@
 2005-03-23  Sven Panne  <sven.panne@aedion.de>
 
+	* linux/src/Makefile.in: Avoid useless relinking.
+
 	* linux/audioconvert/Makefile.in: The test audioconvert test
 	program is now called "test_ac". Using plain "test" could have
 	been very surprising depending on your shell/PATH/..., because it
