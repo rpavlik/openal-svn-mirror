@@ -1,5 +1,11 @@
 2004-05-18  Adam D. Moss  <adam@gimp.org>
 
+        * openal/linux/src/arch/irix/iris.c: New IRIX backend from
+        Erik Hofman <erik@ehofman.com>, supports 4-channel audio and
+        more flexible config.
+
+2004-05-18  Adam D. Moss  <adam@gimp.org>
+
         * openal/linux/src/al_buffer.c: buf->queue_list.size is not the
         same thing as buf->queue_list.items; don't use one when we mean
         the other, or strangeness may occur.
