@@ -1,3 +1,13 @@
+2004-01-29  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
+
+	* openal/include/AL/altypes.h
+	* openal/include/AL/alctypes.h
+	Type consolidation, minor number bump
+
+	* openal/linux/src/al_buffer.h
+	* openal/linux/src/al_buffer.c
+	AL_CURRENT/AL_QUEUED to AL_PROCESSED/AL_PENDING
+
 2004-01-07  Adam D. Moss  <adam@gimp.org>
 
 	* audioconvert/ac_freq.c: Fix another potential overenthusiasm

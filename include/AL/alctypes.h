@@ -15,20 +15,26 @@ typedef int ALCenum;
 /* bad value */
 #define ALC_INVALID                              0
 
-/**
- * followed by <int> Hz
- */
-#define ALC_FREQUENCY                            0x100
+/* Boolean False. */
+#define ALC_FALSE                                0
+
+/* Boolean True. */
+#define ALC_TRUE                                 1
 
 /**
  * followed by <int> Hz
  */
-#define ALC_REFRESH                              0x101
+#define ALC_FREQUENCY                            0x1007
+
+/**
+ * followed by <int> Hz
+ */
+#define ALC_REFRESH                              0x1008
 
 /**
  * followed by AL_TRUE, AL_FALSE
  */
-#define ALC_SYNC                                 0x102
+#define ALC_SYNC                                 0x1009
 
 /**
  * errors
@@ -37,52 +43,46 @@ typedef int ALCenum;
 /**
  * No error
  */
-#define ALC_NO_ERROR                             0
+#define ALC_NO_ERROR                             ALC_FALSE
 
 /**
  * No device
  */
-#define ALC_INVALID_DEVICE                       0x200
+#define ALC_INVALID_DEVICE                       0xA001
 
 /**
  * invalid context ID
  */
-#define ALC_INVALID_CONTEXT                      0x201
+#define ALC_INVALID_CONTEXT                      0xA002
 
 /**
  * bad enum
  */
-#define ALC_INVALID_ENUM                         0x202
+#define ALC_INVALID_ENUM                         0xA003
 
 /**
  * bad value
  */
-#define ALC_INVALID_VALUE                        0x203
+#define ALC_INVALID_VALUE                        0xA004
 
 /**
  * Out of memory.
  */
-#define ALC_OUT_OF_MEMORY                        0x204
+#define ALC_OUT_OF_MEMORY                        0xA005
 
 
 
 /**
  * The Specifier string for default device
  */
-#define ALC_DEFAULT_DEVICE_SPECIFIER             0x300
-#define ALC_DEVICE_SPECIFIER                     0x301
-#define ALC_EXTENSIONS                           0x302
+#define ALC_DEFAULT_DEVICE_SPECIFIER             0x1004
+#define ALC_DEVICE_SPECIFIER                     0x1005
+#define ALC_EXTENSIONS                           0x1006
 
-#define ALC_MAJOR_VERSION                        0x303
-#define ALC_MINOR_VERSION                        0x304
+#define ALC_MAJOR_VERSION                        0x1000
+#define ALC_MINOR_VERSION                        0x1001
 
-#define ALC_ATTRIBUTES_SIZE                      0x305
-#define ALC_ALL_ATTRIBUTES                       0x306
-
-/**
- * Not sure if the following are conformant
- */
-#define ALC_FALSE                                0
-#define ALC_TRUE                                 (!(ALC_FALSE))
+#define ALC_ATTRIBUTES_SIZE                      0x1002
+#define ALC_ALL_ATTRIBUTES                       0x1003
 
 #endif /* _ALCTYPES_H */

@@ -100,7 +100,7 @@ static void _alBufferDestroyCallbackBuffer( AL_buffer *buf );
  * refers to the source named by sid.
  *
  * If no current reference is added, and this queue reference is not deleted,
- * _alGet{Bid,Buffer}State will return AL_QUEUED.
+ * _alGet{Bid,Buffer}State will return AL_PENDING.
  *
  */
 static void _alBufferAddQueueRef( AL_buffer *buf, ALuint sid );
@@ -120,7 +120,7 @@ static void _alBufferRemoveQueueRef( AL_buffer *buf, ALuint sid );
  * to the source named by sid.
  *
  * If this reference is not removed, _alGet{Bid,Buffer}state will return
- * AL_CURRENT.
+ * AL_PROCESSED.
  */
 static void _alBufferAddCurrentRef( AL_buffer *buf, ALuint sid );
 
@@ -1436,7 +1436,7 @@ void _alBidRemoveCurrentRef(ALuint bid, ALuint sid) {
  * refers to the source named by sid.
  *
  * If no current reference is added, and this queue reference is not deleted,
- * _alGet{Bid,Buffer}State will return AL_QUEUED.
+ * _alGet{Bid,Buffer}State will return AL_PENDING.
  *
  */
 void _alBidAddQueueRef(ALuint bid, ALuint sid) {
@@ -1466,7 +1466,7 @@ void _alBidAddQueueRef(ALuint bid, ALuint sid) {
  * to the source named by sid.
  *
  * If this reference is not removed, _alGet{Bid,Buffer}state will return
- * AL_CURRENT.
+ * AL_PROCESSED.
  */
 void _alBidAddCurrentRef( ALuint bid, ALuint sid ) {
 	AL_buffer *buf;
@@ -1494,7 +1494,7 @@ void _alBidAddCurrentRef( ALuint bid, ALuint sid ) {
  * to the source named by sid.
  *
  * If no current reference is added, and this queue reference is not deleted,
- * _alGet{Bid,Buffer}State will return AL_QUEUED.
+ * _alGet{Bid,Buffer}State will return AL_PENDING.
  *
  * assumes locked context, buffers
  */
@@ -1528,7 +1528,7 @@ static void _alBufferAddQueueRef( AL_buffer *buf, ALuint sid ) {
  * to the source named by sid.
  *
  * If this current reference is not removed, _alGet{Bid,Buffer}State will
- * return AL_QUEUED.
+ * return AL_PENDING.
  *
  * assumes locked context, buffers
  */
@@ -1605,7 +1605,7 @@ static void _alBufferRemoveCurrentRef( AL_buffer *buf, ALuint sid ) {
 /*
  * _alGetBidState( ALuint bid )
  *
- * Returns the state (one of AL_UNUSED, AL_CURRENT, AL_QUEUED) associated
+ * Returns the state (one of AL_UNUSED, AL_PROCESSED, AL_PENDING) associated
  * with a buffer.
  *
  * assumes locked buffers
@@ -1626,19 +1626,22 @@ ALenum _alGetBidState( ALuint bid ) {
  * _alGetBufferState( AL_buffer *buffer )
  *
  * Returns the state associated with the AL_buffer *buffer.  If there is even
- * one current ref, AL_CURRENT is returned.  If there are no current
- * references and one queued ref, AL_QUEUED is returned.  If there are no
+ * one current ref, AL_PROCESED is returned.  If there are no current
+ * references and one queued ref, AL_PENDING is returned.  If there are no
  * current or queued references, AL_UNUSED is returned.
  *
  * assumes locked buffers.
  */
-ALenum _alGetBufferState( AL_buffer *buffer ) {
-	if(buffer->current_list.items > 0) {
-		return AL_CURRENT;
+ALenum _alGetBufferState( AL_buffer *buffer )
+{
+	if(buffer->current_list.items > 0)
+	{
+		return AL_PROCESSED;
 	}
 
-	if(buffer->queue_list.items > 0) {
-		return AL_QUEUED;
+	if(buffer->queue_list.items > 0)
+	{
+		return AL_PENDING;
 	}
 
 	return AL_UNUSED;

@@ -61,22 +61,22 @@ AL_buffer *_alGetBufferFromSid( ALuint cid, ALuint sid );
 /*
  * _alGetBidState( ALuint bid )
  *
- * Returns one member of the set AL_UNUSED, AL_CURRENT, or AL_QUEUED.  If the
+ * Returns one member of the set AL_UNUSED, AL_PROCESSED, or AL_PENDING.  If the
  * AL_buffer named by bid is not being used by a playing source, AL_UNUSED is
  * returned.  If it is being used by a playing source, but is part of a queue
- * and is not the current buffer being played, AL_QUEUED is returned.
- * Otherwise, AL_CURRENT is returned.
+ * and is not the current buffer being played, AL_PENDING is returned.
+ * Otherwise, AL_PROCESSED is returned.
  */
 ALenum _alGetBidState( ALuint bid );
 
 /*
  * _alGetBufferState( AL_buffer *buffer )
  *
- * Returns one member of the set AL_UNUSED, AL_CURRENT, or AL_QUEUED.  If the
+ * Returns one member of the set AL_UNUSED, AL_PROCESSED, or AL_PENDING.  If the
  * AL_buffer (buffer) is not being used by a playing source, AL_UNUSED is
  * returned.  If it is being used by a playing source, but is part of a queue
- * and is not the current buffer being played, AL_QUEUED is returned.
- * Otherwise, AL_CURRENT is returned.
+ * and is not the current buffer being played, AL_PENDING is returned.
+ * Otherwise, AL_PROCESSED is returned.
  */
 ALenum _alGetBufferState( AL_buffer *buffer );
 
@@ -87,7 +87,7 @@ ALenum _alGetBufferState( AL_buffer *buffer );
  * refers to the source named by sid.
  *
  * If no current reference is added, and this queue reference is not deleted,
- * _alGet{Bid,Buffer}State will return AL_QUEUED.
+ * _alGet{Bid,Buffer}State will return AL_PENDING.
  *
  */
 void _alBidAddQueueRef( ALuint bid, ALuint sid );
@@ -107,7 +107,7 @@ void _alBidRemoveQueueRef( ALuint bid, ALuint sid );
  * to the source named by sid.
  *
  * If this reference is not removed, _alGet{Bid,Buffer}state will return
- * AL_CURRENT.
+ * AL_PROCESSED.
  */
 void _alBidAddCurrentRef( ALuint bid, ALuint sid );
 

@@ -67,10 +67,15 @@ typedef ALdouble ALclampd;
  * Indicate the type of AL_SOURCE.
  * Sources can be spatialized 
  */
-#define AL_SOURCE_TYPE                            0x0200
+#define AL_SOURCE_TYPE                            0x200
+
+/** Indicate source has absolute coordinates. */
+#define AL_SOURCE_ABSOLUTE                       0x201
 
 /** Indicate Source has relative coordinates. */
-#define AL_SOURCE_RELATIVE                        0x0202
+#define AL_SOURCE_RELATIVE                        0x202
+
+
 
 /**
  * Directional source, inner cone angle, in degrees.
@@ -182,6 +187,14 @@ typedef ALdouble ALclampd;
 #define AL_ORIENTATION                            0x100F
 
 /**
+ * Specify the channel mask. (Creative)
+ * Type:	 ALuint
+ * Range:	 [0 - 255]
+ */
+#define AL_CHANNEL_MASK                           0x3000
+
+
+/**
  * Source state information.
  */
 #define AL_SOURCE_STATE                           0x1010
@@ -195,13 +208,6 @@ typedef ALdouble ALclampd;
  */
 #define AL_BUFFERS_QUEUED                         0x1015
 #define AL_BUFFERS_PROCESSED                      0x1016
-
-/**
- * Buffer states
- */
-#define AL_PENDING                                0x1017
-#define AL_PROCESSED                              0x1018
-
 
 /** Sound samples: format specifier. */
 #define AL_FORMAT_MONO8                           0x1100
@@ -256,6 +262,7 @@ typedef ALdouble ALclampd;
 #define AL_BITS                                   0x2002
 #define AL_CHANNELS                               0x2003
 #define AL_SIZE                                   0x2004
+#define AL_DATA                                   0x2005
 
 /**
  * Buffer state.
@@ -263,8 +270,9 @@ typedef ALdouble ALclampd;
  * Not supported for public use (yet).
  */
 #define AL_UNUSED                                 0x2010
-#define AL_QUEUED                                 0x2011
-#define AL_CURRENT                                0x2012
+#define AL_PENDING                                0x2011
+#define AL_PROCESSED                              0x2012
+
 
 /** Errors: No Error. */
 #define AL_NO_ERROR                               AL_FALSE
@@ -278,6 +286,7 @@ typedef ALdouble ALclampd;
  * Invalid parameter passed to AL call.
  */
 #define AL_ILLEGAL_ENUM                           0xA002
+#define AL_INVALID_ENUM                           0xA002
 
 /** 
  * Invalid enum parameter value.
@@ -288,6 +297,8 @@ typedef ALdouble ALclampd;
  * Illegal call.
  */
 #define AL_ILLEGAL_COMMAND                        0xA004
+#define AL_INVALID_OPERATION                      0xA004
+
   
 /**
  * No mojo.
