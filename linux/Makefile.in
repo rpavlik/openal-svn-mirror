@@ -50,6 +50,7 @@ test:	all
 	cd test && $(MAKE)
 
 install_minor_libs:
+	$(INSTALL) -d -m 755 $(DESTLIB)
 	$(INSTALL) -m 755 src/libopenal.$(SO_EXT).$(VERSION) $(DESTLIB)
 	$(LN_S) -f $(DESTLIB)/libopenal.$(SO_EXT).$(VERSION) $(DESTLIB)/libopenal.$(SO_EXT).$(MAJOR_VERSION)
 	$(LN_S) -f $(DESTLIB)/libopenal.$(SO_EXT).$(VERSION) $(DESTLIB)/libopenal.so
