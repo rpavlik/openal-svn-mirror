@@ -887,7 +887,7 @@ void alGetSourceiv( ALuint sid, ALenum param, ALint *retref )
 
 	/*
 	 * get param value, and store it in temp.  We need it
-	 * more most, but not all, of the following params enums.
+	 * for most, but not all, of the following params enums.
 	 */
 	temp = _alGetSourceParam( src, param );
 	if(temp != NULL) {
