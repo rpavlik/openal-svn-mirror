@@ -70,6 +70,26 @@
 	}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// TEMPORARY
+// This build flag should be on if you do not have a copy of AudioUnitProperties.h that
+// defines the struct MixerDistanceParams and the constant kAudioUnitProperty_3DMixerDistanceParams
+
+#define MIXER_PARAMS_UNDEFINED 1
+
+#if MIXER_PARAMS_UNDEFINED
+typedef struct MixerDistanceParams {
+			Float32		mReferenceDistance;
+			Float32		mMaxDistance;
+			Float32		mMaxAttenuation;
+} MixerDistanceParams;
+
+enum {
+	kAudioUnitProperty_3DMixerDistanceParams   = 3010
+};
+#endif
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // OALSource
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -772,21 +792,24 @@ void	OALSource::Play()
 			Float32	testAttenuation  = 20 * log10(mReferenceDistance / (mReferenceDistance + (mRollOffFactor * (mMaxDistance -  mReferenceDistance))));
             testAttenuation *= -1.0;
 
-			// Set the MixerDistanceParams for the new bus if necessary
-			MixerDistanceParams		distanceParams;
-			outSize = sizeof(distanceParams);
-			result = AudioUnitGetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, &outSize);
-
-			if  ((result == noErr) 	&& ((distanceParams.mReferenceDistance != mReferenceDistance) 	||
-                                        (distanceParams.mMaxDistance != mMaxDistance)				||
-                                        (distanceParams.mMaxAttenuation != testAttenuation)))
-
+			if (mOwningDevice->IsPreferredMixerAvailable())
 			{
-				distanceParams.mReferenceDistance = mReferenceDistance;
-				distanceParams.mMaxDistance = mMaxDistance;
-				distanceParams.mMaxAttenuation = testAttenuation;
-				
-				AudioUnitSetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, sizeof(distanceParams));
+				// Set the MixerDistanceParams for the new bus if necessary
+				MixerDistanceParams		distanceParams;
+				outSize = sizeof(distanceParams);
+				result = AudioUnitGetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, &outSize);
+
+				if  ((result == noErr) 	&& ((distanceParams.mReferenceDistance != mReferenceDistance) 	||
+											(distanceParams.mMaxDistance != mMaxDistance)				||
+											(distanceParams.mMaxAttenuation != testAttenuation)))
+
+				{
+					distanceParams.mReferenceDistance = mReferenceDistance;
+					distanceParams.mMaxDistance = mMaxDistance;
+					distanceParams.mMaxAttenuation = testAttenuation;
+					
+					AudioUnitSetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, sizeof(distanceParams));
+				}
 			}
 		}	
 
