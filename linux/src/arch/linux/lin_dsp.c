@@ -42,7 +42,7 @@
  *  or it is ignored, which is not good. Thanks to 4Front for tracking this
  *  down.   --ryan.
  */
-#define DONTCARE ( 32 << 16)
+#define DONTCARE ( 8 << 16)
 
 /* convert an alc channel to a linux dsp channel */
 static int alcChannel_to_dsp_channel(ALuint alcc);
