@@ -86,7 +86,7 @@
 				FRAMEWORK_SEARCH_PATHS = "";
 				FRAMEWORK_VERSION = A;
 				HEADER_SEARCH_PATHS = "";
-				INSTALL_PATH = "$(HOME)/Library/Frameworks";
+				INSTALL_PATH = "@executable_path/../Frameworks";
 				LIBRARY_SEARCH_PATHS = "";
 				OPTIMIZATION_CFLAGS = "-O3";
 				OTHER_LDFLAGS = "";
@@ -99,7 +99,7 @@
 			);
 			isa = PBXFrameworkTarget;
 			name = al_osx_basic;
-			productInstallPath = "$(HOME)/Library/Frameworks";
+			productInstallPath = "@executable_path/../Frameworks";
 			productName = al_osx;
 			productReference = 034768DEFF38A45A11DB9C8B;
 			productSettingsXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
@@ -581,7 +581,7 @@
 				FRAMEWORK_SEARCH_PATHS = "";
 				FRAMEWORK_VERSION = A;
 				HEADER_SEARCH_PATHS = "";
-				INSTALL_PATH = "$(HOME)/Library/Frameworks";
+				INSTALL_PATH = "@executable_path/../Frameworks";
 				LIBRARY_SEARCH_PATHS = "";
 				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_LDFLAGS = "";
@@ -594,7 +594,7 @@
 			);
 			isa = PBXFrameworkTarget;
 			name = al_osx_basic_debug;
-			productInstallPath = "$(HOME)/Library/Frameworks";
+			productInstallPath = "@executable_path/../Frameworks";
 			productName = al_osx;
 			productReference = 9894C4410439726000A8006E;
 			productSettingsXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
@@ -936,7 +936,7 @@
 				FRAMEWORK_SEARCH_PATHS = "";
 				FRAMEWORK_VERSION = A;
 				HEADER_SEARCH_PATHS = "";
-				INSTALL_PATH = "$(HOME)/Library/Frameworks";
+				INSTALL_PATH = "@executable_path/../Frameworks";
 				LIBRARY_SEARCH_PATHS = "";
 				OPTIMIZATION_CFLAGS = "-O3";
 				OTHER_CFLAGS = "-DVORBIS_EXTENSION";
@@ -950,7 +950,7 @@
 			);
 			isa = PBXFrameworkTarget;
 			name = al_osx_vorbis;
-			productInstallPath = "$(HOME)/Library/Frameworks";
+			productInstallPath = "@executable_path/../Frameworks";
 			productName = al_osx;
 			productReference = 98E387700447B9DC00A8006E;
 			productSettingsXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
@@ -1272,7 +1272,7 @@
 				FRAMEWORK_SEARCH_PATHS = "";
 				FRAMEWORK_VERSION = A;
 				HEADER_SEARCH_PATHS = "";
-				INSTALL_PATH = "$(HOME)/Library/Frameworks";
+				INSTALL_PATH = "@executable_path/../Frameworks";
 				LIBRARY_SEARCH_PATHS = /sw/lib;
 				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "-DVORBIS_EXTENSION";
@@ -1286,7 +1286,7 @@
 			);
 			isa = PBXFrameworkTarget;
 			name = al_osx_vorbis_debug;
-			productInstallPath = "$(HOME)/Library/Frameworks";
+			productInstallPath = "@executable_path/../Frameworks";
 			productName = al_osx;
 			productReference = 98E3879D0447B9FB00A8006E;
 			productSettingsXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
