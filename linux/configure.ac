@@ -4,6 +4,7 @@ AC_INIT([OpenAL library], [0.0.8], [openal-devel@opensource.creative.com], [open
 AC_PREREQ([2.58])
 AC_CONFIG_SRCDIR([doc/openal.texi])
 AC_CONFIG_HEADER([config.h])
+AC_SUBST([PACKAGE_VERSION_MAJOR], [`echo $PACKAGE_VERSION | sed 's/^\(@<:@^.@:>@*\)\(\.\{0,1\}\(.*\)\)$/\1'/`])
 
 # Checks for programs.
 AC_PROG_CC
@@ -12,20 +13,6 @@ AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_LN_S
 
-# Making releases:
-#   MICRO_VERSION += 1;
-#   INTERFACE_AGE += 1;
-#   BINARY_AGE += 1;
-# if any functions have been added, set INTERFACE_AGE to 0.
-# if backwards compatibility has been broken,
-# set BINARY_AGE and INTERFACE_AGE to 0.
-
-MAJOR_VERSION=0
-MINOR_VERSION=0
-MICRO_VERSION=8
-INTERFACE_AGE=0
-BINARY_AGE=0
-VERSION=$MAJOR_VERSION.$MINOR_VERSION.$MICRO_VERSION
 REDUNDANT_DECLS_WARN=yes       # warnings about redudant decls
 SHOULD_ENFORCE_ANSI=no         # whether we should use -ansi
 SHADOW_WARN=yes                # warn about shadow variables
@@ -39,13 +26,6 @@ DO_MINOR_LIBS=yes              # wheether to copy foo.0.0
 
 # warns
 WFLAGS="-Wall -W -Wbad-function-cast -Wcast-qual -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wimplicit-function-declaration -Waggregate-return -Winline -Wpointer-arith -fno-common"
-
-AC_SUBST([MAJOR_VERSION])
-AC_SUBST([MINOR_VERSION])
-AC_SUBST([MICRO_VERSION])
-AC_SUBST([INTERFACE_AGE])
-AC_SUBST([BINARY_AGE])
-AC_SUBST([VERSION])
 
 # We start off with a blank requirement.
 requirements=""
@@ -787,9 +767,6 @@ fi
 
 # Da domb!
 AC_DEFINE(BOMB, 1, [undocumented])
-
-# define version
-AC_DEFINE_UNQUOTED(LAL_VERSION, "$VERSION", [undocumented])
 
 AC_SUBST([DO_MINOR_LIBS])
 AC_SUBST([NASM])

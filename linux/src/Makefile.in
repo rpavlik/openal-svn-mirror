@@ -69,14 +69,12 @@ WINDOWS_OBJS=arch/windows/windows_native.o
 
 AL_OBJS+=$(INTERFACE_OBJS) @OS_OBJS@ @ARCH_OBJS@ @SYS_THREAD_OBJS@ @SYS_MUTEX_OBJS@
 
-MAJOR_VERSION=@MAJOR_VERSION@
-MINOR_VERSION=@MINOR_VERSION@
-MICRO_VERSION=@MICRO_VERSION@
-VERSION=$(MAJOR_VERSION).$(MINOR_VERSION).$(MICRO_VERSION)
+PACKAGE_VERSION_MAJOR=@PACKAGE_VERSION_MAJOR@
+PACKAGE_VERSION=@PACKAGE_VERSION@
 
 SUBDIRS :=
 RM_RF := $(RM) -r
-CLEAN_FILES := $(AL_OBJS) $(ALC_OBJS) $(ALUT_OBJS) $(EXT_OBJS) $(EXT_DLL_OBJS) libopenal.a libopenal.$(SO_EXT) libopenal.$(SO_EXT).$(MAJOR_VERSION) libopenal.$(SO_EXT).$(VERSION)
+CLEAN_FILES := $(AL_OBJS) $(ALC_OBJS) $(ALUT_OBJS) $(EXT_OBJS) $(EXT_DLL_OBJS) libopenal.a libopenal.$(SO_EXT) libopenal.$(SO_EXT).$(PACKAGE_VERSION_MAJOR) libopenal.$(SO_EXT).$(PACKAGE_VERSION)
 DISTCLEAN_FILES := Makefile
 MAINTAINER_CLEAN_FILES :=
 REPO_CLEAN_FILES :=
@@ -102,13 +100,13 @@ libopenal.a: $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(ALUT_OBJS) $(EXT_OBJS) $(EXT_DL
 		$(EXT_OBJS)
 	$(RANLIB) libopenal.a
 
-libopenal.so: libopenal.so.$(VERSION)
-	$(LN_S) -f libopenal.so.$(VERSION) libopenal.so
+libopenal.so: libopenal.so.$(PACKAGE_VERSION)
+	$(LN_S) -f libopenal.so.$(PACKAGE_VERSION) libopenal.so
 
-libopenal.so.$(VERSION): $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(ALUT_OBJS) $(EXT_OBJS) $(EXT_DLL_OBJS)
+libopenal.so.$(PACKAGE_VERSION): $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(ALUT_OBJS) $(EXT_OBJS) $(EXT_DLL_OBJS)
 	$(CC) -shared \
-		-Wl,"-soname,libopenal.so.$(MAJOR_VERSION)" \
-		-o libopenal.so.$(VERSION) \
+		-Wl,"-soname,libopenal.so.$(PACKAGE_VERSION_MAJOR)" \
+		-o libopenal.so.$(PACKAGE_VERSION) \
 		$(LDFLAGS)     \
 		$(AL_OBJS)     \
 		$(ALC_OBJS)    \
@@ -121,11 +119,8 @@ libopenal.dll:  $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(ALUT_OBJS) libopenal.def \
 	$(EXT_OBJS) $(EXT_DLL_OBJS)
 	dlltool -k --dllname libopenal.dll --output-lib $@ --def libopenal.def
 
-# after ensuring some compatibilty issues, bump major up and
-# add copmatbility flag
-#-compatibility_version $(MAJOR_VERSION).$(MINOR_VERSION)
 libopenal.dylib: $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(ALUT_OBJS) $(EXT_OBJS) $(EXT_DLL_OBJS)
-	$(CC) -dynamiclib -prebind -undefined suppress -flat_namespace -o libopenal.dylib -install_name libopenal.dylib -current_version $(MAJOR_VERSION).$(MINOR_VERSION).$(MICRO_VERSION) \
+	$(CC) -dynamiclib -prebind -undefined suppress -flat_namespace -o libopenal.dylib -install_name libopenal.dylib -current_version $(PACKAGE_VERSION) \
 		$(LDFLAGS)     \
 		$(AL_OBJS)     \
 		$(ALC_OBJS)    \

@@ -1,5 +1,10 @@
 2005-03-23  Sven Panne  <sven.panne@aedion.de>
 
+	* Makefile.in, config-osx.h, configure.ac, openal-config.in,
+	openal.pc.in, audioconvert/Makefile.in, src/Makefile.in,
+	src/al_state.c: Centralize and simplify versionitis; everything is
+	derived from the PACKAGE_VERSION defined via AC_INIT now.
+
 	* linux/src/Makefile.in: Avoid useless relinking.
 
 	* linux/audioconvert/Makefile.in: The test audioconvert test

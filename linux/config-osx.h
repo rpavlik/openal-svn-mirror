@@ -25,7 +25,6 @@
 /* #undef DMALLOC_FUNC_CHECK */
 /* #undef JLIB */
 
-#define LAL_VERSION "0.0.6"
 /* #undef PARANOID_LOCKS */
 /* #undef EMPTY_LOCKS */
 

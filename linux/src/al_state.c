@@ -253,7 +253,7 @@ const ALubyte *alGetString( ALenum param ) {
 			return (const ALubyte *) "J. Valenzuela";
 			break;
 		case AL_VERSION:
-			return (const ALubyte *) LAL_VERSION;
+			return (const ALubyte *) PACKAGE_VERSION;
 			break;
 		case AL_RENDERER:
 			return (const ALubyte *) "Software";
