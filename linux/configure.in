@@ -792,7 +792,7 @@ CFLAGS="$CFLAGS $WFLAGS"
 
 dnl okay, rdynamic okay?
 if test x$SHOULD_USE_RDYNAMIC = xyes; then
-AC_DEFINE_UNQUOTED(RDYNAMIC, "-rdynamic", 1, [undocumented])
+AC_DEFINE_UNQUOTED(RDYNAMIC, "-rdynamic", [undocumented])
 fi
 
 dnl Da domb!
