@@ -1172,7 +1172,7 @@ ALAPI ALvoid ALAPIENTRY alSourcePause(ALuint source)
 				Source->state=AL_PAUSED;
 				Source->inuse=AL_FALSE;
 			}
-			Source->update1 = STATE;
+			Source->update1 |= STATE;
             alcUpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 		}
 		else
