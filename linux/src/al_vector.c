@@ -49,7 +49,7 @@ ALfloat _alVectorMagnitude( const ALfloat *origin, const ALfloat *v2 ) {
 		       lsav[1] * lsav[1] +
 		       lsav[2] * lsav[2] );
 
-	retval = abs( retval );
+	retval = fabs( retval );
         
 	return retval;
 
