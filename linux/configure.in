@@ -34,7 +34,7 @@ SHOULD_USE_RDYNAMIC=yes        # doesn't work on irix
 DO_MINOR_LIBS=yes              # wheether to copy foo.0.0
 
 # warns
-WFLAGS="-Wall -Wpointer-arith -W -Wbad-function-cast -Wcast-qual -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wimplicit-function-declaration -Waggregate-return -Winline -Wpointer-arith -Wstrict-prototypes -Wcast-align -Wcast-qual -fno-common"
+WFLAGS="-Wall -W -Wbad-function-cast -Wcast-qual -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wimplicit-function-declaration -Waggregate-return -Winline -Wpointer-arith -fno-common"
 
 AC_SUBST(MAJOR_VERSION)
 AC_SUBST(MINOR_VERSION)
