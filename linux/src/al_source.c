@@ -3039,16 +3039,30 @@ void *_alGetSourceParam(AL_source *source, ALenum param )
 {
 	if( _alSourceIsParamSet( source, param ) == AL_FALSE )
 	{
+		if(param == AL_BUFFER)
+			assert(0);
+
 		return NULL;
 	}
 
 	switch( param )
 	{
 		case AL_BUFFER:
+			if( source->bid_queue.read_index >=
+			    source->bid_queue.size )
+			{
+				int size = source->bid_queue.size;
+
+				/* often the case for size one queues */
+				return &source->bid_queue.queue[size - 1];
+			}
+			else
 			if( source->bid_queue.size > 0 )
 			{
 				int rindex = source->bid_queue.read_index;
+				int size = source->bid_queue.size;
 
+				assert(rindex < size);
 				return &source->bid_queue.queue[rindex];
 			}
 			else
@@ -3118,6 +3132,8 @@ void *_alGetSourceParam(AL_source *source, ALenum param )
 			break;
 	}
 
+		if(param == AL_BUFFER)
+			assert(0);
 	return NULL;
 }
 
@@ -3127,14 +3143,6 @@ void *_alGetSourceParam(AL_source *source, ALenum param )
  * Returns AL_TRUE if param is set for source, AL_FALSE otherwise.
  */
 ALboolean _alSourceIsParamSet( AL_source *source, ALenum param ) {
-	AL_sourcestate *srcstate;
-
-	srcstate = _alSourceQueueGetCurrentState( source );
-	if(!srcstate)
-		return AL_FALSE;
-	assert(srcstate);
-
-
 	switch( param ) {
 		case AL_BUFFER:
 		case AL_SOURCE_STATE:

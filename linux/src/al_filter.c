@@ -1281,7 +1281,7 @@ void alf_tpitch( UNUSED(ALuint cid),
 		_alDebug(ALD_BUFFER, __FILE__, __LINE__,
 		      "No tpitch support for callbacks yet");
 
-		_alSetError(cid, AL_ILLEGAL_COMMAND);
+		/* _alSetError(cid, AL_ILLEGAL_COMMAND); */
 		return;
 	}
 

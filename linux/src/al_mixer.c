@@ -956,7 +956,8 @@ ALboolean _alRemoveSourceFromMixer( ALuint sid ) {
  * assumes that context is locked
  * assumes that mixbuf is locked
  */
-void _alAddSourceToMixer( ALuint sid ) {
+void _alAddSourceToMixer( ALuint sid )
+{
 	AL_source *src;
 
 	src = _alDCGetSource( sid );
