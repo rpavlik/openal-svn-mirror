@@ -17,7 +17,6 @@
 #define tlKillThread(t)            Posix_KillThread(t)
 #define tlSelfThread()             Posix_SelfThread()
 #define tlExitThread(r)            Posix_ExitThread(r);
-#define tlAtForkThread(p1, p2, c)  Posix_AtForkThread(p1, p2, c)
 
 #elif defined USE_WINDOWSTHREADS
 #include "windowsthreads.h"
@@ -27,7 +26,6 @@
 #define tlKillThread(t)      Windows_KillThread(t)
 #define tlSelfThread()       Windows_SelfThread()
 #define tlExitThread(r)      Windows_ExitThread(r);
-#define tlAtForkThread(p1, p2, c)
 
 #elif defined USE_MORPHOSTHREADS
 #include "morphosthreads.h"
@@ -37,7 +35,6 @@
 #define tlKillThread(t)      MorphOS_KillThread(t)
 #define tlSelfThread()       MorphOS_SelfThread()
 #define tlExitThread(r)      MorphOS_ExitThread(r);
-#define tlAtForkThread(p1, p2, c)
 
 #else /* USE_WINDOWSTHREADS */
 
@@ -47,7 +44,6 @@ typedef void *ThreadID;
 #define tlWaitThread(t)
 #define tlKillThread(t)
 #define tlExitThread(r)
-#define tlAtForkThread(p1, p2, c)
 
 #endif /* USE_POSIXTHREADS */
 

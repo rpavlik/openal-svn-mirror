@@ -50,15 +50,4 @@ extern unsigned int Posix_SelfThread( void );
  */
 extern void Posix_ExitThread( int retval );
 
-/*
- * Posix_AtForkThread( void (*prepare)( void ),
- *                     void (*parent)( void ),
- *                     void (*child)( void ));
- *
- * Sets up handlers to be called when a process forks.
- */
-extern int Posix_AtForkThread( void (*prepare)( void ),
-			       void (*parent)( void ),
-			       void (*child)( void ));
-
 #endif /* POSIX_THREADS_H_ */

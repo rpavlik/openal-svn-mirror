@@ -15,10 +15,6 @@
 
 #include "al_main.h"
 
-#if defined(IRIX_TARGET) || defined(SOLARIS_TARGET)
-extern int pthread_atfork(void (*)(void), void (*)(void), void (*)(void));
-#endif
-
 typedef int (*ptfunc)(void *);
 
 static void *RunThread(void *data) {
@@ -101,11 +97,3 @@ extern void Posix_ExitThread(int retval) {
 
 	return;
 }
-
-#if !defined(DARWIN_TARGET) && !defined(BSD_TARGET)
-extern int Posix_AtForkThread(void (*prepare)(void),
-			  void (*parent)(void),
-			  void (*child)(void)) {
-	return pthread_atfork(prepare, parent, child);
-}
-#endif
