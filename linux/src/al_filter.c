@@ -317,7 +317,7 @@ void _alApplyFilters( ALuint cid, ALuint sid ) {
 	}
 
 #if USE_TPITCH_LOOKUP
-	if(tpitch_lookup.len < len)
+	if(tpitch_lookup.len < (ALuint) len)
 	{
 		init_tpitch_lookup(len);
 	}
@@ -928,7 +928,6 @@ void alf_da( ALuint cid,
  */
 static void init_tpitch_lookup( ALuint len ) {
 	ALfloat scale;
-	void *temp;
 	ALuint i;
 
 	if(tpitch_lookup.len >= len) {
@@ -1326,7 +1325,7 @@ void alf_tpitch( UNUSED(ALuint cid),
 	 * Iterate over each buffers[0..nc-1]
 	 */
 	for(i = 0; i < nc; i++) {
-		ALuint clen = len;
+		ALint clen = len;
 		int j;
 
 		/*
@@ -1408,7 +1407,7 @@ void alf_tpitch( UNUSED(ALuint cid),
 		}
 
 		/* JIV FIXME: use memset */
-		for( ; j < len; j++)
+		for( ; j < (ALint) len; j++)
 		{
 			bufptr[j] = 0;
 		}
