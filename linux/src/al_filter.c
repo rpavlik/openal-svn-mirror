@@ -111,6 +111,7 @@ static time_filter_set software_time_filters[] = {
 	{ "da",            alf_da },
 	{ "reverb",        alf_reverb },
 	{ "coning",        alf_coning },
+	{ "panning",       alf_panning },
 	{ "minmax",        alf_minmax },
 	{ "listenergain",  alf_listenergain },
 	{ { 0 },     NULL }
@@ -498,7 +499,7 @@ void alf_coning( ALuint cid,
 	ALfloat sa;  /* speaker attenuation */
 	ALfloat *sp; /* source position  */
 	ALfloat *sd; /* source direction */
-	ALfloat *speaker_pos; /* speaker position */
+	ALfloat *lp; /* listener position */
 	ALfloat theta; /* angle between listener and source's direction
 			* vector, with the source's position as origin.
 			*/
@@ -523,6 +524,8 @@ void alf_coning( ALuint cid,
 		_alcUnlockContext( cid );
 		return;
 	}
+
+	lp = _alGetListenerParam( cid, AL_POSITION );
 
 	/*
 	 * The source specific max is set to max at this point, but may be
@@ -621,59 +624,56 @@ void alf_coning( ALuint cid,
 	_alDebug(ALD_SOURCE, __FILE__, __LINE__,
 		"alf_coning: sid %d icone %f ocone %f", src->sid, icone, ocone );
 
-	for(i = 0; i < nc; i++) {
-		speaker_pos = _alcGetSpeakerPosition(cid, i);
-		theta = fabs( _alVectorAngleBeween(sp, speaker_pos, srcDir) );
+	theta = fabs( _alVectorAngleBeween(sp, lp, srcDir) );
 
-		if( theta <= (icone / 2.0f) ) {
-			/*
-			 * INSIDE:
-			 *
-			 * attenuate normally
-			 */
-			_alDebug(ALD_SOURCE, __FILE__, __LINE__,
-				"alf_coning: sid %d speaker %d theta %f INSIDE",
-				src->sid, i, theta );
+	if( theta <= (icone / 2.0f) ) {
+		/*
+		 * INSIDE:
+		 *
+		 * attenuate normally
+		 */
+		_alDebug(ALD_SOURCE, __FILE__, __LINE__,
+			"alf_coning: sid %d theta %f INSIDE",
+			src->sid, theta );
 
-			/*
-			 * speaker[i] is in inner cone, don't do
-			 * anything.
-			 */
-			sa = compute_sa( sp, smax, ref, gain, rolloff,
-					 speaker_pos, df );
-		} else if( theta <= ( ocone / 2.0f) ) {
-			/*
-			 * BETWEEN:
-			 *
-			 * kind of cheesy, but we average the INSIDE
-			 * and OUTSIDE attenuation.
-			 */
-			_alDebug(ALD_SOURCE, __FILE__, __LINE__,
-				"alf_coning: sid %d speaker %d theta %f BETWEEN",
-				src->sid, i, theta);
+		/*
+		 * speaker[i] is in inner cone, don't do
+		 * anything.
+		 */
+		sa = compute_sa( sp, smax, ref, gain, rolloff, lp, df );
+	} else if( theta <= ( ocone / 2.0f) ) {
+		/*
+		 * BETWEEN:
+		 *
+		 * kind of cheesy, but we average the INSIDE
+		 * and OUTSIDE attenuation.
+		 */
+		_alDebug(ALD_SOURCE, __FILE__, __LINE__,
+			"alf_coning: sid %d theta %f BETWEEN",
+			src->sid, theta);
 
-			sa = compute_sa( sp, smax, ref, gain, rolloff,
-					 speaker_pos, df );
+		sa = compute_sa( sp, smax, ref, gain, rolloff, lp, df );
 
-			sa += _AL_CUTTOFF_ATTENUATION;
-			sa /= 2;
-		} else { 
-			/*
-			 * OUTSIDE:
-			 *
-			 * Set to attenuation_min
-			 */
-			_alDebug(ALD_SOURCE, __FILE__, __LINE__,
-				"alf_coning: sid %d speaker %d theta %f OUTSIDE",
-				src->sid, i, theta );
+		sa += _AL_CUTTOFF_ATTENUATION;
+		sa /= 2;
+	} else { 
+		/*
+		 * OUTSIDE:
+		 *
+		 * Set to attenuation_min
+		 */
+		_alDebug(ALD_SOURCE, __FILE__, __LINE__,
+			"alf_coning: sid %d theta %f OUTSIDE",
+			src->sid, theta );
 
-			if( outergain < _AL_CUTTOFF_ATTENUATION ) {
-				sa = _AL_CUTTOFF_ATTENUATION;
-			} else {
-				sa = outergain;
-			}
+		if( outergain < _AL_CUTTOFF_ATTENUATION ) {
+			sa = _AL_CUTTOFF_ATTENUATION;
+		} else {
+			sa = outergain;
 		}
+	}
 
+	for(i = 0; i < nc; i++) {
 		/* set gain, to be applied in SourceParamApply */
 		src->srcParams.gain[i] *= sa;
 	}
@@ -777,7 +777,6 @@ void alf_da( ALuint cid,
 	     UNUSED(ALuint len)) {
 	AL_context *cc;
 	ALfloat *sp; /* source position */
-	ALfloat *sd; /* speaker position */
 	ALfloat sa;  /* speaker attenuation */
 	ALfloat *listener_position;
 	ALfloat *temp;
@@ -905,11 +904,10 @@ void alf_da( ALuint cid,
 		_alSourceGetParamDefault( AL_ROLLOFF_FACTOR, &rolloff );
 	}
 
-	for(i = 0; i < nc; i++) {
-		sd = _alcGetSpeakerPosition( cid, i );
-		sa = compute_sa( sp, smax, ref, gain, rolloff,
-				 sd, df );
+	sa = compute_sa( sp, smax, ref, gain, rolloff,
+			 listener_position, df );
 
+	for(i = 0; i < nc; i++) {
 		src->srcParams.gain[i] *= sa;
 	}
 
@@ -1728,4 +1726,44 @@ static ALfloat compute_sa( ALfloat *source_pos, ALfloat source_max,
 	}
 	
 	return retval;
+}
+
+/* 
+ * alf_panning
+ *
+ */
+
+void alf_panning( ALuint cid,
+                 AL_source *src,
+                 UNUSED(AL_buffer *samp),
+                 UNUSED(ALshort **buffers),
+                 ALuint nc,
+                 UNUSED(ALuint len) ) {
+	ALfloat *lp; /* listener position */
+	ALfloat *sp; /* source position */
+	ALfloat *sd; /* speaker position */
+	ALfloat m;
+	ALfloat sa;
+	ALuint i;
+
+	lp = _alGetListenerParam( cid, AL_POSITION );
+	sp = _alGetSourceParam(src, AL_POSITION );
+
+	if ((sp == NULL) || (lp == NULL)) {
+		return;
+	}
+
+	m = _alVectorMagnitude(lp, sp);
+	if (m == 0) {
+		/* should this use epsilon? */
+		return;
+	}
+
+	for (i = 0; i < nc; i++) {
+		sd = _alcGetSpeakerPosition(cid, i);
+		sa = _alVectorDotp(lp, sp, sd) / m;
+		sa += 1.0;
+
+		src->srcParams.gain[i] *= sa;
+	}	
 }

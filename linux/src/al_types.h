@@ -16,7 +16,7 @@
 #include <sys/types.h>
 
 #define _ALC_MAX_CHANNELS    6
-#define _ALC_MAX_FILTERS     8
+#define _ALC_MAX_FILTERS     9
 
 #define _ALF_MAX_NAME        15
 #define _AL_MAX_DISTANCE     (60.0f)

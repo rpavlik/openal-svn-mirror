@@ -87,6 +87,13 @@ time_filter alf_tdoppler;
 time_filter alf_minmax;
 
 /*
+ * alf_panning
+ *
+ * Panning filter.
+ */
+time_filter alf_panning;
+
+/*
  * alf_listenergain
  *
  * Applies the listener gain to a source.

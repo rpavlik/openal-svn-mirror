@@ -11,12 +11,6 @@
 #include "alc_context.h"
 #include "AL/altypes.h"
 
-/*
- * _ALC_SPEAKER_DISTANCE is the default distance of each speaker from the
- * origin.
- */
-#define _ALC_SPEAKER_DISTANCE 5.0f
-
 typedef enum {
 	ALS_LEFT,
 	ALS_RIGHT,

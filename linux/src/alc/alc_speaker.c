@@ -146,13 +146,9 @@ void _alcSpeakerInit( ALuint cid ) {
 	lpos = lis->Position;
 
 	/*
-	 * _alGetFloatv( AL_DISTANCE_SCALE, &sdis );
-	 *
-	 * Don't use AL_DISTANCE_SCALE because this might not be 
-	 * the current context.
+	 * A speaker distance of one simplifies the math later.
 	 */
 	sdis = 1.0f;
-	sdis *= _ALC_SPEAKER_DISTANCE;
 
 	_alDebug(ALD_CONTEXT, __FILE__, __LINE__,
 		"_alcSpeakerInit: ( sdis %f )", sdis );
