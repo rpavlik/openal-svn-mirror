@@ -1,10 +1,13 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_INIT([OpenAL library], [0.0.8], [openal-devel@opensource.creative.com], [openal])
-AC_PREREQ([2.58])
+AC_PREREQ([2.50])
 AC_CONFIG_SRCDIR([doc/openal.texi])
 AC_CONFIG_HEADER([config.h])
 AC_SUBST([PACKAGE_VERSION_MAJOR], [`echo $PACKAGE_VERSION | sed 's/^\(@<:@^.@:>@*\)\(\.\{0,1\}\(.*\)\)$/\1'/`])
+
+# Compatibility hack for older autoconf versions
+m4_ifdef([AS_HELP_STRING], [], [AC_DEFUN([AS_HELP_STRING], [AC_HELP_STRING($][@)])])
 
 # Checks for programs.
 

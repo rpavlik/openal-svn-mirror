@@ -1,5 +1,8 @@
 2005-03-31  Sven Panne  <sven.panne@aedion.de>
 
+	* linux/configure.ac: Add a compatibility hack for older autoconf
+	versions, so we require version >2.50 only now.
+
 	* include/AL/altypes.h, linux/src/al_ext.c: AL_DISTANCE_SCALE is
 	dead, Jim...
 
