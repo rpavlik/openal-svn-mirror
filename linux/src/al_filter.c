@@ -1312,14 +1312,19 @@ void alf_tpitch( UNUSED(ALuint cid),
 	 */
 	offsets = tpitch_lookup.offsets[ l_index ];
 
+#if DEBUG_MEM
 	assert(l_index < TPITCH_MAX);
+#endif
 
 	/*
 	 *  adjust clen until we can safely avoid an overrun.
 	 */
-	clen = MIN(TPITCH_MAX, len);
+	/* clen = MIN(TPITCH_MAX, len); */
+	clen = len;
 
+#if DEBUG_MEM
 	assert(clen - 1 < TPITCH_MAX);
+#endif
 	while(offsets[clen - 1] * sizeof(ALshort)
 		+ src->srcParams.soundpos >= samp->size) {
 		/* decrement clen until we won't suffer a buffer
@@ -1347,8 +1352,10 @@ void alf_tpitch( UNUSED(ALuint cid),
 		obufptr  = samp->orig_buffers[i];
 		obufptr += src->srcParams.soundpos / sizeof *obufptr;
 
+#if DEBUG_MEM
 		assert(samp->orig_buffers[i]);
 		assert(src->srcParams.soundpos < samp->size);
+#endif
 
 		if(l_index == tpitch_lookup.middle ) {
 			/* when this predicate is true, the pitch is
@@ -1375,8 +1382,10 @@ void alf_tpitch( UNUSED(ALuint cid),
 		offsets = tpitch_lookup.offsets[ l_index ];
 		fractionals = tpitch_lookup.fractionals[ l_index ];
 
+#if DEBUG_MEM
 		assert(offsets);
 		assert(fractionals);
+#endif
 
 		/*
 		 * this is where the "resampling" takes place.  We do a
@@ -1385,13 +1394,15 @@ void alf_tpitch( UNUSED(ALuint cid),
 		 * a bit.
 		 */
 		for(j = 0; j < clen; j++) {
+#if DEBUG_MEM
 			assert(j < TPITCH_MAX);
 			assert(offsets[j] < (int) len-1);
+#endif
 
 			/* do a little interpolation */
 			bufptr[j] = obufptr[ offsets[j] ] +
 				fractionals[j] *
-				( obufptr[ offsets[j] + 1] - obufptr[ offsets[j] ] );
+				(obufptr[offsets[j] + 1] - obufptr[offsets[j]]);
 		}
 	}
 
