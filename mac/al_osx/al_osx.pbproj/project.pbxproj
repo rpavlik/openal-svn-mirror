@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 38;
+	objectVersion = 39;
 	objects = {
 		034768DDFF38A45A11DB9C8B = {
 			children = (
@@ -16,11 +16,15 @@
 			isa = PBXGroup;
 			name = Products;
 			refType = 4;
+			sourceTree = "<group>";
 		};
 		034768DEFF38A45A11DB9C8B = {
+			explicitFileType = wrapper.framework;
+			fallbackIsa = PBXFileReference;
 			isa = PBXFrameworkReference;
 			path = OpenAL.framework;
 			refType = 3;
+			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 //030
 //031
@@ -33,6 +37,8 @@
 //083
 //084
 		0867D690FE84028FC02AAC07 = {
+			buildSettings = {
+			};
 			buildStyles = (
 				4F0BB7ED011F40E904CA0E50,
 			);
@@ -59,6 +65,7 @@
 			isa = PBXGroup;
 			name = al_osx;
 			refType = 4;
+			sourceTree = "<group>";
 		};
 		0867D69AFE84028FC02AAC07 = {
 			children = (
@@ -70,6 +77,7 @@
 			isa = PBXGroup;
 			name = "External Frameworks and Libraries";
 			refType = 4;
+			sourceTree = "<group>";
 		};
 		0867D69CFE84028FC02AAC07 = {
 			buildPhases = (
@@ -210,6 +218,7 @@
 			isa = PBXGroup;
 			name = Resources;
 			refType = 4;
+			sourceTree = "<group>";
 		};
 		089C1666FE841158C02AAC07 = {
 			children = (
@@ -219,13 +228,16 @@
 			name = InfoPlist.strings;
 			path = "";
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		089C1667FE841158C02AAC07 = {
 			fileEncoding = 10;
 			isa = PBXFileReference;
+			lastKnownFileType = text.plist.strings;
 			name = English;
 			path = English.lproj/InfoPlist.strings;
 			refType = 4;
+			sourceTree = "<group>";
 		};
 		089C1668FE841158C02AAC07 = {
 			fileRef = 089C1666FE841158C02AAC07;
@@ -267,6 +279,7 @@
 			isa = PBXGroup;
 			name = Source;
 			refType = 4;
+			sourceTree = "<group>";
 		};
 //080
 //081
@@ -283,7 +296,9 @@
 			);
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				OTHER_CFLAGS = "\U0001-D__MACOSX__";
+				ZERO_LINK = NO;
 			};
 			isa = PBXBuildStyle;
 			name = Deployment;
@@ -301,23 +316,29 @@
 		981B79980523A3AD00940F97 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.c;
 			name = mutex.c;
 			path = ../openal/mutex.c;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		981B79990523A3AD00940F97 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
 			name = mutex.h;
 			path = ../openal/mutex.h;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		981B799B0523A3AD00940F97 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
 			name = sm_ca.h;
 			path = ../openal/sm_ca.h;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		981B799C0523A3AD00940F97 = {
 			fileRef = 981B79980523A3AD00940F97;
@@ -392,10 +413,13 @@
 			};
 		};
 		981B79AD0523A4A500940F97 = {
+			fallbackIsa = PBXFileReference;
 			isa = PBXFrameworkReference;
+			lastKnownFileType = wrapper.framework;
 			name = CoreAudio.framework;
 			path = /System/Library/Frameworks/CoreAudio.framework;
 			refType = 0;
+			sourceTree = "<absolute>";
 		};
 		981B79AE0523A4A500940F97 = {
 			fileRef = 981B79AD0523A4A500940F97;
@@ -422,10 +446,13 @@
 			};
 		};
 		981B79B20523A4BB00940F97 = {
+			fallbackIsa = PBXFileReference;
 			isa = PBXFrameworkReference;
+			lastKnownFileType = wrapper.framework;
 			name = vecLib.framework;
 			path = /System/Library/Frameworks/vecLib.framework;
 			refType = 0;
+			sourceTree = "<absolute>";
 		};
 		981B79B30523A4BB00940F97 = {
 			fileRef = 981B79B20523A4BB00940F97;
@@ -454,37 +481,47 @@
 		984FDEC20433F5A20042B474 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
 			name = al.h;
 			path = ../al/al.h;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		984FDEC30433F5A20042B474 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
 			name = alc.h;
 			path = ../al/alc.h;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		984FDEC40433F5A20042B474 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
 			name = alctypes.h;
 			path = ../al/alctypes.h;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		984FDEC50433F5A20042B474 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
 			name = altypes.h;
 			path = ../al/altypes.h;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		984FDEC60433F5A20042B474 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
 			name = alut.h;
 			path = ../al/alut.h;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		984FDEC70433F5A20042B474 = {
 			fileRef = 984FDEC20433F5A20042B474;
@@ -532,10 +569,13 @@
 			};
 		};
 		985B853E0471BF5B005F25BE = {
+			fallbackIsa = PBXFileReference;
 			isa = PBXFrameworkReference;
+			lastKnownFileType = file;
 			name = Ogg.framework;
 			path = /Library/Frameworks/Ogg.framework;
 			refType = 0;
+			sourceTree = "<absolute>";
 		};
 		985B853F0471BF5B005F25BE = {
 			fileRef = 985B853E0471BF5B005F25BE;
@@ -550,10 +590,13 @@
 			};
 		};
 		985B85410471BF69005F25BE = {
+			fallbackIsa = PBXFileReference;
 			isa = PBXFrameworkReference;
+			lastKnownFileType = file;
 			name = Vorbis.framework;
 			path = /Library/Frameworks/Vorbis.framework;
 			refType = 0;
+			sourceTree = "<absolute>";
 		};
 		985B85420471BF69005F25BE = {
 			fileRef = 985B85410471BF69005F25BE;
@@ -882,9 +925,12 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		9894C4410439726000A8006E = {
+			explicitFileType = wrapper.framework;
+			fallbackIsa = PBXFileReference;
 			isa = PBXFrameworkReference;
 			path = OpenAL.framework;
 			refType = 3;
+			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		989FD9DC0444FB92005F25BE = {
 			children = (
@@ -897,6 +943,7 @@
 			isa = PBXGroup;
 			name = al_headers;
 			refType = 4;
+			sourceTree = "<group>";
 		};
 		989FD9DE0444FC33005F25BE = {
 			children = (
@@ -906,20 +953,25 @@
 			isa = PBXGroup;
 			name = vorbis;
 			refType = 4;
+			sourceTree = "<group>";
 		};
 		98A1D34A043B7D7E005F25BE = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.c;
 			name = vorbisrtn.c;
 			path = ../openal/vorbis/vorbisrtn.c;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		98A1D34B043B7D7E005F25BE = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
 			name = vorbisrtn.h;
 			path = ../openal/vorbis/vorbisrtn.h;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		98E387440447B9DC00A8006E = {
 			buildPhases = (
@@ -1254,9 +1306,12 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		98E387700447B9DC00A8006E = {
+			explicitFileType = wrapper.framework;
+			fallbackIsa = PBXFileReference;
 			isa = PBXFrameworkReference;
 			path = OpenAL.framework;
 			refType = 3;
+			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		98E387710447B9FB00A8006E = {
 			buildPhases = (
@@ -1590,9 +1645,12 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		98E3879D0447B9FB00A8006E = {
+			explicitFileType = wrapper.framework;
+			fallbackIsa = PBXFileReference;
 			isa = PBXFrameworkReference;
 			path = OpenAL.framework;
 			refType = 3;
+			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 //980
 //981
@@ -1694,9 +1752,12 @@
 			productReference = D864D1530524E2470004026D;
 		};
 		D864D1530524E2470004026D = {
+			explicitFileType = "compiled.mach-o.dylib";
+			fallbackIsa = PBXFileReference;
 			isa = PBXLibraryReference;
 			path = openal.dylib;
 			refType = 3;
+			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		D864D1540524E27B0004026D = {
 			fileRef = F558C553036A119601A8006E;
@@ -1887,9 +1948,11 @@
 		D864D1A00524FDB90004026D = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.c;
 			name = sm_ca.c;
 			path = ../openal/sm_ca.c;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		D864D1A10524FDB90004026D = {
 			fileRef = D864D1A00524FDB90004026D;
@@ -1940,142 +2003,182 @@
 		F558C52A036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.c;
 			name = alBuffer.c;
 			path = ../openal/alBuffer.c;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		F558C52B036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
 			name = alBuffer.h;
 			path = ../openal/alBuffer.h;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		F558C52C036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.c;
 			name = alc.c;
 			path = ../openal/alc.c;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		F558C52D036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.c;
 			name = alEnvironment.c;
 			path = ../openal/alEnvironment.c;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		F558C52E036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
 			name = alEnvironment.h;
 			path = ../openal/alEnvironment.h;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		F558C52F036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.c;
 			name = alError.c;
 			path = ../openal/alError.c;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		F558C530036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
 			name = alError.h;
 			path = ../openal/alError.h;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		F558C531036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.c;
 			name = alExtension.c;
 			path = ../openal/alExtension.c;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		F558C532036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
 			name = alExtension.h;
 			path = ../openal/alExtension.h;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		F558C533036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.c;
 			name = alListener.c;
 			path = ../openal/alListener.c;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		F558C534036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
 			name = alListener.h;
 			path = ../openal/alListener.h;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		F558C535036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.c;
 			name = alMain.c;
 			path = ../openal/alMain.c;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		F558C536036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
 			name = alMain.h;
 			path = ../openal/alMain.h;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		F558C537036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.c;
 			name = alSoftware.c;
 			path = ../openal/alSoftware.c;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		F558C538036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
 			name = alSoftware.h;
 			path = ../openal/alSoftware.h;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		F558C539036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.c;
 			name = alSource.c;
 			path = ../openal/alSource.c;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		F558C53A036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
 			name = alSource.h;
 			path = ../openal/alSource.h;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		F558C53B036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.c;
 			name = alState.c;
 			path = ../openal/alState.c;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		F558C53C036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
 			name = alState.h;
 			path = ../openal/alState.h;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		F558C53D036A116501A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.c;
 			name = ALut.c;
 			path = ../openal/ALut.c;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		F558C53E036A116501A8006E = {
 			fileRef = F558C52A036A116501A8006E;
@@ -2200,16 +2303,20 @@
 		F558C552036A119601A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
 			name = globals.h;
 			path = ../openal/globals.h;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		F558C553036A119601A8006E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
 			name = globaltypes.h;
 			path = ../openal/globaltypes.h;
 			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		F558C556036A119601A8006E = {
 			fileRef = F558C552036A119601A8006E;

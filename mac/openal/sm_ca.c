@@ -974,7 +974,7 @@ void no_smInit(void){
     if (error != kAudioHardwareNoError) goto Crash;
 	
     libGlobals.deviceFormats = (AudioStreamBasicDescription *) malloc(count);
-	error = AudioDeviceGetProperty(libGlobals.deviceW, 0, 0, kAudioDevicePropertyStreamFormats, &count, &libGlobals.deviceFormats);
+	error = AudioDeviceGetProperty(libGlobals.deviceW, 0, 0, kAudioDevicePropertyStreamFormats, &count, libGlobals.deviceFormats);
 	if (error != kAudioHardwareNoError) goto Crash;
 	
 	error = AudioDeviceGetPropertyInfo(libGlobals.deviceW, 0, 0, kAudioDevicePropertyStreamFormat,  &count, &outWritable);
@@ -1025,29 +1025,32 @@ void no_smTerminate(void){
 	OSStatus	error = 0;
     UInt32	count;
 	Boolean	outWritable;
+
+	if (INITIALIZED==TRUE) {
+		free(mixbuf);
+		free(volbuf);
+		free(mixbuf2);
+		free(mixbuf3);
+		free(mixbuf4);
+		free(mixbuf5);
+		free(mixbuf6);
+		AudioDeviceStop(libGlobals.deviceW, deviceFillingProc);
+		AudioDeviceRemoveIOProc(libGlobals.deviceW, deviceFillingProc);
 	
-	free(mixbuf);
-	free(volbuf);
-	free(mixbuf2);
-	free(mixbuf3);
-	free(mixbuf4);
-	free(mixbuf5);
-	free(mixbuf6);
-	AudioDeviceStop(libGlobals.deviceW, deviceFillingProc);
-	AudioDeviceRemoveIOProc(libGlobals.deviceW, deviceFillingProc);
+		error = AudioDeviceGetPropertyInfo(libGlobals.deviceW, 0, 0, kAudioDevicePropertyBufferSize, &count, &outWritable);
+		if (error != kAudioHardwareNoError) goto Crash;
+		error = AudioDeviceGetProperty(libGlobals.deviceW, 0, 0, kAudioDevicePropertyBufferSize, &count, &libGlobals.deviceWBufferSize);
+		if (error != kAudioHardwareNoError) goto Crash;
+		error = AudioDeviceSetProperty(	libGlobals.deviceW, 0, 0, FALSE, kAudioDevicePropertyBufferSize, count, &originalPreferedBuffSize);
+		if (error != kAudioHardwareNoError) goto Crash;
 	
-	error = AudioDeviceGetPropertyInfo(libGlobals.deviceW, 0, 0, kAudioDevicePropertyBufferSize, &count, &outWritable);
-    if (error != kAudioHardwareNoError) goto Crash;
-	error = AudioDeviceGetProperty(libGlobals.deviceW, 0, 0, kAudioDevicePropertyBufferSize, &count, &libGlobals.deviceWBufferSize);
-	if (error != kAudioHardwareNoError) goto Crash;
-	error = AudioDeviceSetProperty(	libGlobals.deviceW, 0, 0, FALSE, kAudioDevicePropertyBufferSize, count, &originalPreferedBuffSize);
-	if (error != kAudioHardwareNoError) goto Crash;
+		free(libGlobals.deviceFormats);
+		free(libGlobals.deviceWBufferList);
 	
-	free(libGlobals.deviceWBufferList);
-	free(libGlobals.deviceFormats);
-	
-	mlDestroyMutex(mix_mutex);
+		mlDestroyMutex(mix_mutex);
+	}
 	return;
+	
 Crash :
     libGlobals.deviceW = NULL;
     exit(1);

@@ -104,10 +104,6 @@ ALUTAPI ALvoid ALUTAPIENTRY alutInit(ALint *argc,ALbyte **argv)
 	ALCdevice *Device;
 	
  	Device=alcOpenDevice(NULL);  //Open device
-    
-#ifdef MAC_OS_X
-        no_smInit();
-#endif
  	
  	if (Device != NULL)
  	{
@@ -134,10 +130,6 @@ ALUTAPI ALvoid ALUTAPIENTRY alutExit(ALvoid)
 	alcDestroyContext(Context);
 	//Close device
 	alcCloseDevice(Device);
-        
-#ifdef MAC_OS_X
-        no_smTerminate();
-#endif
 	
 	// call alExit -- legacy call
 	alExit();

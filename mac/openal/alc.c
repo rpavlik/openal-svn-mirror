@@ -127,6 +127,11 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(ALCubyte *deviceName)
 	if (pOpenDevice == 0)
 	{
 		pOpenDevice = &pOpenDevice; // put in a valid memory address
+		
+#ifdef MAC_OS_X
+        no_smInit();
+#endif
+
 		return pOpenDevice;
 	} else
 	{
@@ -136,6 +141,10 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(ALCubyte *deviceName)
 
 ALCAPI void ALCAPIENTRY alcCloseDevice( ALCdevice *dev )
 {
+#ifdef MAC_OS_X
+	no_smTerminate();
+#endif
+
 	pOpenDevice = 0;
 }
 
