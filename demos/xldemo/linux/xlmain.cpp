@@ -1,10 +1,10 @@
 #include "GL/glut.h"
 #include <math.h>
 #include <stdlib.h>
-#include "../COMMON/common.h"
+#include "../common/common.h"
 #include <sys/time.h>
 #include <unistd.h>
-#include "../COMMON/audioenv.h"
+#include "../common/audioenv.h"
 
 // Globals
 AVEnvironment g_Env;

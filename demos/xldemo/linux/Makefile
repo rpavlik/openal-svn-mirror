@@ -11,7 +11,7 @@ CFLAGS = $(COMPILERFLAGS) $(INCLUDE)
 CXXFLAGS = $(COMPILERFLAGS) $(INCLUDE)
 
 LIBRARIES = -lopenal -lglut -lGL -lGLU -lXmu -lXext -lXi -lX11 -lpthread -ldl
-COMMONOBJS = ../COMMON/audioenv.o ../COMMON/common.o ../COMMON/object.o ../COMMON/textout.o ../COMMON/Obstruct.o
+COMMONOBJS = ../common/audioenv.o ../common/common.o ../common/object.o ../common/textout.o ../common/Obstruct.o
 
 .SUFFIXES: .cpp .c .o
 .c.o:
@@ -22,7 +22,7 @@ COMMONOBJS = ../COMMON/audioenv.o ../COMMON/common.o ../COMMON/object.o ../COMMO
 all : xldemo
 
 xldemo : $(COMMONOBJS) xlmain.o 
-	$(CXX) $(CXXFLAGS) -o xldemo $(LIBDIR) xlmain.o ../COMMON/audioenv.o ../COMMON/common.o ../COMMON/object.o ../COMMON/textout.o ../COMMON/Obstruct.o $(LIBRARIES)  
+	$(CXX) $(CXXFLAGS) -o xldemo $(LIBDIR) xlmain.o ../common/audioenv.o ../common/common.o ../common/object.o ../common/textout.o ../common/Obstruct.o $(LIBRARIES)  
 
 clean:
 	-rm -f $(COMMONOBJS) xldemo xlmain.o
