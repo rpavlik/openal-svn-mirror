@@ -59,7 +59,7 @@
 #include <al/al.h>
 #include <al/alc.h>
 #include <al/alut.h>
-#endif
+#endif // _WIN32
 
 #ifdef LINUX
 #include <stdio.h>
@@ -91,23 +91,7 @@
 #define AL_INVALID_OPERATION AL_ILLEGAL_COMMAND
 #endif
 
-void alGetSource3f(ALint sid, ALenum param,
-		   ALfloat *f1, ALfloat *f2, ALfloat *f3)
-{
-	ALfloat safety_first[6];
-
-	if(!f1 || !f2 || !f3)
-	{
-		return;
-	}
-
-	alGetSourcefv(sid, param, safety_first);
-
-	*f1 = safety_first[0];
-	*f2 = safety_first[1];
-	*f3 = safety_first[3];
-}
-#endif
+#endif // LINUX
 
 #ifdef __MACOS__
 #include <stdio.h>
@@ -122,7 +106,7 @@ void alGetSource3f(ALint sid, ALenum param,
 #include <eax.h>
 #include <Timer.h>
 #define SWAPBYTES
-#endif
+#endif // MACOS
 
 #ifdef MAC_OS_X
 #include <sys/types.h>
@@ -138,7 +122,7 @@ void alGetSource3f(ALint sid, ALenum param,
 #include <openal/alut.h>
 #include <unistd.h>
 #define SWAPBYTES
-#endif
+#endif // MAC_OS_X
 
 #if TEST_VORBIS
 #include <AL/alext.h>
