@@ -7,7 +7,9 @@
  */
 #include "al_siteconfig.h"
 #include <stdio.h>
+#include <string.h>
 
+#include "AL/al.h"
 #include "al_ext_needed.h"
 #include "al_ext_mp3.h"
 

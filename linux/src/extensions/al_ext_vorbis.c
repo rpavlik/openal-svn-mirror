@@ -12,6 +12,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "al_ext_needed.h"
 #include "al_ext_vorbis.h"
