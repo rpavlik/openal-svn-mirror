@@ -12,6 +12,18 @@
 	Fixed stupidity where source's gain wasn't being applied
 	to non distance attentuated sources.  
 
+2002-09-16  Christopher Purnell  <cjp@lost.org.uk>
+
+	* src/al_filter.c
+	* src/al_filter.h
+	* src/al_types.h
+	Added a panning filter.  This calculates the directional speaker gains
+	in a way that is independant of distance.
+
+        * src/alc/alc_speaker.c
+        * src/alc/alc_speaker.h
+	Speaker distace now has a value of 1 to simplify the math.
+
 2002-09-09  Ryan C. Gordon  <ryan@epicgames.com>
 
 	* src/alc/alc_context.c:
