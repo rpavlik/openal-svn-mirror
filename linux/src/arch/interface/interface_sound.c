@@ -35,7 +35,6 @@ typedef enum {
 	LA_ESD,     /* esd backend */
 	LA_WAVEOUT, /* wavefile output backend */
 	LA_NULL,    /* no output backend */
-	LA_EMU10K1
 } lin_audio;
 
 /* represents which backend we are using */
@@ -149,14 +148,6 @@ void *grab_write_audiodevice(void) {
 				return retval;
 			}
 		}
-
-		if(strcmp(adevname, "emu10k1") == 0) {
-			retval = grab_write_emu10k1();
-			if(retval != NULL) {
-				hardware_type = LA_EMU10K1;
-				return retval;
-			}
-		}
 	}
 
 	/* no device list specified, try native or fail */
@@ -267,14 +258,6 @@ void *grab_read_audiodevice(void) {
 				return retval;
 			}
 		}
-
-		if(strcmp(adevname, "emu10k1") == 0) {
-			retval = grab_write_emu10k1();
-			if(retval != NULL) {
-				hardware_type = LA_EMU10K1;
-				return retval;
-			}
-		}
 	}
 
 	/* no device list specified, try native or fail */
@@ -317,9 +300,6 @@ ALboolean release_audiodevice(void *handle)
 		  break;
 		case LA_SDL:
 		  release_sdl(handle);
-		  break;
-		case LA_EMU10K1:
-		  release_emu10k1(handle);
 		  break;
 		default:
 		  fprintf(stderr,
@@ -409,9 +389,6 @@ ALsizei capture_audiodevice(void *handle, void *capture_buffer, int bufsiz) {
 		case LA_NATIVE:
 		  bytes = capture_nativedevice(handle, capture_buffer, bufsiz);
 		  break;
-		case LA_EMU10K1:
-		  bytes = capture_emu10k1(handle, capture_buffer, bufsiz);
-		  break;
 		case LA_ALSA:
 		  bytes = capture_alsa(handle, capture_buffer, bufsiz);
 		  break;
@@ -469,8 +446,6 @@ ALboolean set_write_audiodevice(void *handle,
 		  return set_write_waveout(handle, bufsiz, fmt, speed);
 		case LA_NULL:
 		  return set_write_null(handle, bufsiz, fmt, speed);
-		case LA_EMU10K1:
-		  return set_write_emu10k1(handle, bufsiz, fmt, speed);
 		case LA_NONE:
 		default:
 		  fprintf(stderr,
@@ -502,8 +477,6 @@ ALboolean set_read_audiodevice(void *handle,
 		  return set_read_waveout(handle, bufsiz, fmt, speed);
 		case LA_NULL:
 		  return set_read_null(handle, bufsiz, fmt, speed);
-		case LA_EMU10K1:
-		  return set_read_emu10k1(handle, bufsiz, fmt, speed);
 		case LA_NONE:
 		default:
 		  fprintf(stderr,

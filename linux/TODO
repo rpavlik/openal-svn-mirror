@@ -18,8 +18,6 @@ TODO:
 	    - implement missing functions
 	  windows native:
 	    - implement dsound backend
-	  emu10k1:
-	    - implement routing on two cards
 
 	Testing:
 	  - callbacks with filters (alf_tpitch in particular)

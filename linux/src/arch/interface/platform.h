@@ -97,16 +97,4 @@
 #define null_blitbuffer(h,d,b)
 #endif /* NULL_SUPPORT */
 
-#ifdef EMU10K1_SUPPORT
-#include "arch/emu10k1/emu10k1.h"
-#else
-#define grab_read_emu10k1()	      NULL
-#define grab_write_emu10k1()	      NULL
-#define set_read_emu10k1(h,b,f,s)     AL_FALSE
-#define set_write_emu10k1(h,b,f,s)    AL_FALSE
-#define release_emu10k1(h)
-#define emu10k1_blitbuffer(h,d,b)
-#define capture_emu10k1(h,d,b)        0
-#endif /* NULL_SUPPORT */
-
 #endif /* PLATFORM_H_ */
