@@ -1,5 +1,13 @@
 2005-03-18  Sven Panne  <sven.panne@aedion.de>
 
+	* linux/audioconvert/ac_misc.c: Removed type punning, newer gcc
+	don't like it. Made ReadChunk a bit nicer on the way.
+
+	* linux/acinclude.m4, linux/aclocal.m4, linux/configure.ac,
+	linux/src/Makefile.in: Removed MMX stuff, it is not working
+	currently, the time of MMX detection is wrong, and even leads to
+	compile-time errors.
+
 	* linux/Makefile.in, linux/PLATFORM, linux/configure.ac,
 	linux/configure.in: Renamed configure.in to configure.ac, the
 	former is a misnomer, see the autoconf documentation.

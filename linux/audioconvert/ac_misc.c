@@ -75,25 +75,23 @@ static ALint MS_ADPCM_nibble_FULL(struct MS_ADPCM_decodestate_FULL *state,
 static int MS_ADPCM_decode_FULL(ALubyte **audio_buf, ALuint *audio_len);
 static int InitMS_ADPCM(alWaveFMT_LOKI *format);
 
-static int ReadChunk(void *src, int offset, Chunk *chunk);
 static int ac_isWAVEadpcm(void *data, ALuint size, int encoding);
 
 /* read riff chunk */
-static int ReadChunk(void *srcp, int offset, Chunk *chunk) {
+static void ReadChunk(void *srcp, int *offset, Chunk *chunk) {
 	ALuint reader;
 	ALubyte *src = srcp;
 
-	src += offset;
+	src += *offset;
 
 	memcpy((void *) &reader, (void *) src, 4);
 	chunk->magic    = swap32le(reader);
 
 	memcpy((void *) &reader, (void *) (src+4), 4);
 	chunk->length   = swap32le(reader);
+	*offset += chunk->length + 8;
 
 	chunk->data     = (void *) (src+8);
-
-	return chunk->length;
 }
 
 void *ac_guess_info(void *data, ALuint *size,
@@ -197,22 +195,15 @@ void *acLoadWAV(void *data, ALuint *size, void **udata,
  */
 void *ac_wave_to_pcm(void *data, ALuint *size,
 		ALushort *fmt, ALushort *chan, ALushort *freq) {
-	void *retval;
+	ALubyte *retval;
 	alWaveFMT_LOKI *format;
 	Chunk riffchunk = { 0, 0, 0 };
 	int offset = 12;
-	long length;
 	alIMAADPCM_state_LOKI ima_decoder;
 	ALuint tempfreq;
 
 	do {
-		offset += (length=ReadChunk(data, offset, &riffchunk)) + 8;
-		if(length < 0) {
-			fprintf(stderr,
-				"ouch length|offset [%ld|%d]\n",
-				length, offset);
-			return NULL;
-		}
+		ReadChunk(data, &offset, &riffchunk);
 	} while ((riffchunk.magic == WAVE) ||
 		 (riffchunk.magic == RIFF));
 
@@ -249,18 +240,10 @@ void *ac_wave_to_pcm(void *data, ALuint *size,
 		  }
 
 		  do {
-			length = ReadChunk(data, offset, &riffchunk);
-			offset += (length + 8);
-
-			if(length < 0) {
-				fprintf(stderr,
-				"ouch III length|offset|magic\t[%ld|%d|0x%x]\n",
-					length, offset, riffchunk.magic);
-				return NULL;
-			}
+			ReadChunk(data, &offset, &riffchunk);
 		  } while(riffchunk.magic != DATA);
 
-		  retval = malloc(length);
+		  retval = malloc(riffchunk.length);
 		  if(retval == NULL) {
 			  return NULL;
 		  }
@@ -271,9 +254,9 @@ void *ac_wave_to_pcm(void *data, ALuint *size,
 		  	"[%s:%d] do we need to convert to host native format here?\n",
 			__FILE__, __LINE__);
 #endif
-		  memcpy(retval, riffchunk.data, length);
+		  memcpy(retval, riffchunk.data, riffchunk.length);
 
-		  *size = length;
+		  *size = riffchunk.length;
 		  return retval;
 		  break;
 		case MS_ADPCM_CODE:
@@ -288,21 +271,18 @@ void *ac_wave_to_pcm(void *data, ALuint *size,
 		  }
 
 		  do {
-			length = ReadChunk(data, offset, &riffchunk);
-			offset += length + 8;
-
+			ReadChunk(data, &offset, &riffchunk);
 			retval = riffchunk.data;
 		  } while (riffchunk.magic != DATA);
 
-		  if(MS_ADPCM_decode_FULL((ALubyte **) &retval,
-			  	     (ALuint *) &length) < 0) {
+		  if(MS_ADPCM_decode_FULL(&retval, &riffchunk.length) < 0) {
 #ifdef DEBUG
 			  fprintf(stderr, "Couldn't decode MS_ADPCM\n");
 #endif
 			  return NULL;
 		  }
 
-		  *size = length;
+		  *size = riffchunk.length;
 		  return retval;
 		  break;
 		case IMA_ADPCM_CODE:
@@ -317,22 +297,18 @@ void *ac_wave_to_pcm(void *data, ALuint *size,
 		  }
 
 		  do {
-			length = ReadChunk(data, offset, &riffchunk);
-			offset += length + 8;
-
+			ReadChunk(data, &offset, &riffchunk);
 			retval = riffchunk.data;
 		  } while (riffchunk.magic != DATA);
 
-		  if(IMA_ADPCM_decode_FULL(&ima_decoder,
-			  		   (ALubyte **) &retval,
-			  	           (ALuint *) &length) < 0) {
+		  if(IMA_ADPCM_decode_FULL(&ima_decoder, &retval, &riffchunk.length) < 0) {
 #ifdef DEBUG_CONVERT
 			  fprintf(stderr, "Couldn't decode IMA_ADPCM\n");
 #endif
 			  return NULL;
 		  }
 
-		  *size = length;
+		  *size = riffchunk.length;
 		  return retval;
 		  break;
 		default:
@@ -352,18 +328,9 @@ void *ac_guess_wave_info(void *data, ALuint *size,
 	alWaveFMT_LOKI *format;
 	Chunk riffchunk = { 0, 0, 0 };
 	int offset = 12;
-	long length;
 
 	do {
-		length=ReadChunk(data, offset, &riffchunk);
-		offset += (length + 8);
-
-		if(length < 0) {
-			fprintf(stderr, "ouch length|offset"
-				"[%ld|%d]\n",
-				length, offset);
-			return NULL;
-		}
+		ReadChunk(data, &offset, &riffchunk);
 	} while ((riffchunk.magic == WAVE) ||
 		 (riffchunk.magic == RIFF));
 
@@ -399,21 +366,14 @@ void *ac_guess_wave_info(void *data, ALuint *size,
 		  }
 
 		  do {
-			length = ReadChunk(data, offset, &riffchunk);
-			offset += (length + 8);
-			if(length < 0) {
-				fprintf(stderr,
-				"ouch III length|offset|magic\t[%ld|%d|0x%x]\n",
-					length, offset, riffchunk.magic);
-				return NULL;
-			}
+			ReadChunk(data, &offset, &riffchunk);
 		  } while ((riffchunk.magic == FACT) ||
 			   (riffchunk.magic == FMT)  ||
 			   (riffchunk.magic == LIST) ||
 			   (riffchunk.magic == WAVE) ||
 			   (riffchunk.magic == RIFF));
 
-		  *size = length;
+		  *size = riffchunk.length;
 
 		  return riffchunk.data;
 		  break;
@@ -610,15 +570,9 @@ static int ac_isWAVEadpcm(void *data, UNUSED(ALuint size), int encoding) {
 	alWaveFMT_LOKI *format;
 	Chunk riffchunk = { 0, 0, 0 };
 	int offset = 12;
-	long length;
 
 	do {
-		length = ReadChunk(data, offset, &riffchunk);
-		offset += (length + 8);
-
-		if(length < 0) {
-			return -1;
-		}
+		ReadChunk(data, &offset, &riffchunk);
 	} while ((riffchunk.magic == WAVE) ||
 		 (riffchunk.magic == RIFF));
 
@@ -647,16 +601,12 @@ void *ac_getWAVEadpcm_info(void *data, ALuint *size, void *spec) {
 	alIMAADPCM_state_LOKI *ias;
 	Chunk riffchunk = { 0, 0, 0 };
 	int offset = 12;
-	long length;
 	ALubyte *ext_format_reader;
 	ALushort reader16;
 	int i;
 
 	do {
-		offset += (length=ReadChunk(data, offset, &riffchunk)) + 8;
-		if(length < 0) {
-			return NULL;
-		}
+		ReadChunk(data, &offset, &riffchunk);
 	} while ((riffchunk.magic == WAVE) ||
 		 (riffchunk.magic == RIFF));
 
@@ -668,13 +618,11 @@ void *ac_getWAVEadpcm_info(void *data, ALuint *size, void *spec) {
 	format = (alWaveFMT_LOKI *) riffchunk.data;
 
 	do {
-		length = ReadChunk(data, offset, &riffchunk);
-		offset += length + 8;
-
+		ReadChunk(data, &offset, &riffchunk);
 		retval = riffchunk.data;
 	} while (riffchunk.magic != DATA);
 
-	*size = length;
+	*size = riffchunk.length;
 
 	switch(swap16le(format->encoding)) {
 		case MS_ADPCM_CODE:
