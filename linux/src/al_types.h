@@ -216,6 +216,9 @@ typedef struct _AL_source {
 	ALfloat reverb_scale;
 	ALint   reverb_delay;
 
+	/* true mixing rate of the source */
+	ALfloat mixrate;
+	
 	ALuint sid; /* our identifier */
 } AL_source;
 

@@ -700,7 +700,6 @@ void alSourcefv( ALuint sid, ALenum param, ALfloat *fv1 )
 		   *
 		   */
 		  source->flags      |= ALS_NEEDPITCH;
-		  source->pitch.isset = AL_TRUE;
 		  break;
 		case AL_MIN_GAIN:
 		  source->attenuationmin.isset = AL_TRUE;
@@ -728,7 +727,13 @@ void alSourcefv( ALuint sid, ALenum param, ALfloat *fv1 )
 			source->pitch.isset = AL_FALSE;
 			source->pitch.data  = 1.0;
 
-			source->flags &= ~ALS_NEEDPITCH;
+			/*
+			 * If velocity is set, then doppler may 
+			 * change the pitch.
+			 */
+			if (!source->velocity.isset) {
+				source->flags &= ~ALS_NEEDPITCH;
+			}
 		  } else {
 		  	source->pitch.isset = AL_TRUE;
 		  	source->pitch.data  = fv1[0];
@@ -2803,6 +2808,11 @@ static void _alInitSource( ALuint sid ) {
 	src->reverb_scale = 0.25;
 	src->reverb_delay = 0.00;
 
+	/*
+	 * initialize default mix rate
+	 */
+	src->mixrate = 1.0;
+	
 	/*
 	 * initialize gain
 	 */

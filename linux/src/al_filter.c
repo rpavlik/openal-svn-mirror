@@ -1022,6 +1022,16 @@ void alf_tdoppler( ALuint cid,
 	ALfloat doppler_velocity;
 	ALfloat doppler_pitch;
 
+	/* initialize the mixrate */
+	if(src->pitch.isset == AL_TRUE)
+	{
+		src->mixrate = src->pitch.data;
+	}
+	else
+	{
+		src->mixrate = 1.0;
+	}
+
 	/* lock context, get context specific stuff */
 	_alcLockContext( cid );
 
@@ -1089,26 +1099,19 @@ void alf_tdoppler( ALuint cid,
 	doppler_pitch = compute_doppler_pitch(lp, lv, sp, sv,
 					doppler_factor, doppler_velocity);
 
-	if(src->pitch.isset == AL_TRUE)
-	{
-		src->pitch.data *= doppler_pitch;
-	}
-	else
-	{
-		src->pitch.data = doppler_pitch;
-	}
+	src->mixrate *= doppler_pitch;
 
 #ifdef DEBUG
-	if(src->pitch.data < MIN_PITCH)
+	if(src->mixrate < MIN_PITCH)
 	{
 		_alDebug(ALD_FILTER, __FILE__, __LINE__,
-			 "Clamping src->pitch.data %f\n",
-			 src->pitch.data);
+			 "Clamping src->mixrate %f\n",
+			 src->mixrate);
 	}
 #endif
 
-	src->pitch.data = MAX(src->pitch.data, MIN_PITCH);
-	src->pitch.data = MIN(src->pitch.data, 2.0f);
+	src->mixrate = MAX(src->mixrate, MIN_PITCH);
+	src->mixrate = MIN(src->mixrate, 2.0f);
 
 	return;
 }
@@ -1241,7 +1244,7 @@ static ALfloat compute_doppler_pitch( ALfloat *object1, ALfloat *o1_vel,
          * the propagation speed.  This formula is straight from the spec.
          */
         obj1V = speed + obj1V;
-        obj2V = speed - obj2V;
+        obj2V = speed + obj2V;
         ratio = obj1V / obj2V;
 
         /* Finally, scale by the doppler factor */
@@ -1273,17 +1276,16 @@ void alf_tpitch( UNUSED(ALuint cid),
 	int *offsets;        /* pointer to set of offsets in lookup table */
 	float *fractionals;  /* pointer to set of fractionals in lookup table */
 	int bufchans;
-	ALfloat *ppitch, pitch;
+	ALfloat pitch;
 
-	ppitch = _alGetSourceParam( src, AL_PITCH );
-	if(ppitch == NULL) {
+	pitch = src->mixrate;
+	
+	if (pitch == 1.0 && !(src->flags & ALS_NEEDPITCH)) {
 		/*
-		 * if pitch is unset, default or invalid, return.
+		 * mixrate is at the default, so changing pitch is unnecessary.
 		 */
 		return;
 	}
-
-	pitch = *ppitch;
 
 	bufchans = _al_ALCHANNELS(samp->format); /* we need bufchans to
 						      * scale our increment
@@ -1533,17 +1535,16 @@ void alf_tpitch( UNUSED(ALuint cid),
 	ALuint i;
 	ALuint clen;
 	int bufchans;
-	ALfloat *ppitch, pitch;
+	ALfloat pitch;
 
-	ppitch = _alGetSourceParam( src, AL_PITCH );
-	if(ppitch == NULL) {
+	pitch = src->mixrate;
+	
+	if (pitch == 1.0 && !(src->flags & ALS_NEEDPITCH)) {
 		/*
-		 * if pitch is unset, default or invalid, return.
+		 * mixrate is at the default, so changing pitch is unnecessary.
 		 */
 		return;
 	}
-
-	pitch = *ppitch;
 
 	bufchans = _al_ALCHANNELS(samp->format); /* we need bufchans to
 						      * scale our increment
