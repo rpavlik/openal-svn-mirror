@@ -93,6 +93,7 @@ typedef struct {
 	ALshort data;
 } AL_shortparam;
 
+
 typedef struct _AL_extension {
 	const ALubyte *name;
 	void *addr;
@@ -119,12 +120,12 @@ typedef struct _AL_bufsourcelist {
 typedef struct {
 	ALuint bid;         /* unique identifier */
 
-	/* original data in unadulturated form */
-	void *orig_buffers[_ALC_MAX_CHANNELS];
+	void *orig_buffers[_ALC_MAX_CHANNELS];    /* original buffer: unadulturated */
+	ALuint num_buffers; /* number of populated channels in orig_buffers */
 
 	Bufenum flags;
+	/* int refcount; */
 
-	/* format information of original data */
 	ALuint  size;
 	ALshort format;
 	ALuint  freq;
@@ -200,7 +201,7 @@ typedef struct _AL_source {
 		ssize_t new_soundpos;
 		ssize_t new_readindex;
 
-		void *outbuf; /* buffer where output data is stored */
+		void *outbuf;           /* buffer where output data is stored */
 		ALuint delay[_ALC_MAX_CHANNELS];
 		ALfloat gain[_ALC_MAX_CHANNELS];
 	} srcParams; /* values refreshed each iteration through SplitSources */
