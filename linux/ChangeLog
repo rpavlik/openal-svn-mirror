@@ -1,3 +1,10 @@
+2002-09-07  Joseph Valenzuela  <jvalenzu@formosa>
+
+	* al_filter.c
+	Messed with pitch again.  Both removed and reintroduced lookup
+	table, but I think the result is more sound now.  Going to clean
+	it up a little more later.
+
 2002-09-05  Joseph Valenzuela  <jvalenzu@formosa>
 
 	* configure.in, al_debug.h, al_debug.c
