@@ -42,10 +42,8 @@ ALCAPI ALCcontext * ALCAPIENTRY alcCreateContext( ALCdevice *dev,
  *  several active contexts. But al* calls
  *  only affect the current context.
  */
-/* ***** GH
-TEMPORARY ifdef -- Linux will switch to bool
-*/
-#ifdef __GNUC__
+#ifdef LINUX_AL
+/* spec has return value as ALCboolean */
 ALCAPI ALCenum ALCAPIENTRY alcMakeContextCurrent( ALCcontext *alcHandle );
 #else
 ALCAPI ALCboolean ALCAPIENTRY alcMakeContextCurrent(ALCcontext *alcHandle);
@@ -56,10 +54,8 @@ ALCAPI ALCboolean ALCAPIENTRY alcMakeContextCurrent(ALCcontext *alcHandle);
  * context.
  */
 
-/* ***** GH
- * temporary fix for Windows compilation
- */
-#ifdef __GNUC__
+#ifdef LINUX_AL
+/* spec has return value as void */
 ALCAPI ALCcontext * ALCAPIENTRY alcProcessContext( ALCcontext *alcHandle );
 #else
 ALCAPI ALvoid ALCAPIENTRY alcProcessContext(ALCcontext* context);
@@ -71,10 +67,8 @@ ALCAPI ALvoid ALCAPIENTRY alcProcessContext(ALCcontext* context);
  */
 ALCAPI void ALCAPIENTRY alcSuspendContext( ALCcontext *alcHandle );
 
-/* ***** GH
- * temporary fix to benefit Windows compilation
- */
-#ifdef __GNUC__
+#ifdef LINUX_AL
+/* spec has return value as void */
 ALCAPI ALCenum ALCAPIENTRY alcDestroyContext( ALCcontext *alcHandle );
 #else
 ALCAPI ALvoid ALCAPIENTRY alcDestroyContext(ALCcontext* context);
@@ -84,15 +78,12 @@ ALCAPI ALCenum ALCAPIENTRY alcGetError( ALCdevice *dev );
 
 ALCAPI ALCcontext * ALCAPIENTRY alcGetCurrentContext( ALvoid );
 
-/* ***** GH
- * temporary change for Windows compilation
- */
-#ifdef __GNUC__
-ALCAPI ALCdevice *alcOpenDevice( const ALubyte *tokstr );
+#ifdef LINUX_AL
+ALCAPI ALCdevice ALCAPIENTRY *alcOpenDevice( const ALubyte *tokstr );
 #else
-ALCAPI ALCdevice *alcOpenDevice( ALubyte *tokstr );
+ALCAPI ALCdevice ALCAPIENTRY *alcOpenDevice( ALubyte *tokstr );
 #endif
-ALCAPI void alcCloseDevice( ALCdevice *dev );
+ALCAPI void ALCAPIENTRY alcCloseDevice( ALCdevice *dev );
 
 ALCAPI ALCboolean ALCAPIENTRY alcIsExtensionPresent(ALCdevice *device, ALCubyte *extName);
 ALCAPI ALCvoid  * ALCAPIENTRY alcGetProcAddress(ALCdevice *device, ALCubyte *funcName);
@@ -105,43 +96,57 @@ ALCAPI ALCdevice* ALCAPIENTRY alcGetContextsDevice(ALCcontext *context);
  * Query functions
  */
 
-/* ***** GH
- * temporary fix for Windows compilation
- */
-#ifdef __GNUC__
-const ALCubyte * alcGetString( ALCdevice *deviceHandle, ALCenum token );
+#ifdef LINUX_AL
+const ALCubyte * ALCAPIENTRY alcGetString( ALCdevice *deviceHandle, ALCenum token );
 #else
 ALCAPI ALubyte* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param);
 #endif
-#ifdef __GNUC__
-void alcGetIntegerv( ALCdevice *deviceHandle, ALCenum  token , ALCsizei  size , ALCint *dest );
+#ifdef LINUX_AL
+ALCAPI void ALCAPIENTRY alcGetIntegerv( ALCdevice *deviceHandle, ALCenum  token , ALCsizei  size , ALCint *dest );
 #else
 ALCAPI ALCvoid ALCAPIENTRY alcGetIntegerv(ALCdevice *device,ALCenum param,ALCsizei size,ALCint *data);
 #endif
 
 #else
       ALCAPI ALCcontext *    ALCAPIENTRY (*alcCreateContext)( ALCdevice *dev, ALCint* attrlist );
-/* ***** GH
-TEMPORARY ifdef -- Linux will switch to bool
-*/
-#ifdef __GNUC__
+#ifdef LINUX_AL
       ALCAPI ALCenum	     ALCAPIENTRY (*alcMakeContextCurrent)( ALCcontext *alcHandle );
 #else
       ALCAPI ALCboolean      ALCAPIENTRY (*alcMakeContextCurrent)(ALCcontext *context);
 #endif
+#ifdef LINUX_AL
       ALCAPI ALCcontext *    ALCAPIENTRY (*alcProcessContext)( ALCcontext *alcHandle );
+#else
+      ALCAPI ALCvoid *       ALCAPIENTRY (*alcProcessContext)( ALCcontext *alcHandle );
+#endif
       ALCAPI void            ALCAPIENTRY (*alcSuspendContext)( ALCcontext *alcHandle );
+#ifdef LINUX_AL
       ALCAPI ALCenum	     ALCAPIENTRY (*alcDestroyContext)( ALCcontext *alcHandle );
+#else
+      ALCAPI ALvoid	     ALCAPIENTRY (*alcDestroyContext)( ALCcontext* context );
+#endif
       ALCAPI ALCenum	     ALCAPIENTRY (*alcGetError)( ALCdevice *dev );
       ALCAPI ALCcontext *    ALCAPIENTRY (*alcGetCurrentContext)( ALCvoid );
+#ifdef LINUX_AL
       ALCAPI ALCdevice *     ALCAPIENTRY (*alcOpenDevice)( const ALCubyte *tokstr );
+#else
+      ALCAPI ALCdevice *     ALCAPIENTRY (*alcOpenDevice)( ALubyte *tokstr );
+#endif
       ALCAPI void            ALCAPIENTRY (*alcCloseDevice)( ALCdevice *dev );
       ALCAPI ALCboolean      ALCAPIENTRY (*alcIsExtensionPresent)( ALCdevice *device, ALCubyte *extName );
       ALCAPI ALCvoid  *      ALCAPIENTRY (*alcGetProcAddress)(ALCdevice *device, ALCubyte *funcName );
       ALCAPI ALCenum         ALCAPIENTRY (*alcGetEnumValue)(ALCdevice *device, ALCubyte *enumName);
       ALCAPI ALCdevice*      ALCAPIENTRY (*alcGetContextsDevice)(ALCcontext *context);
+#ifdef LINUX_AL
       ALCAPI const ALCubyte* ALCAPIENTRY (*alcGetString)( ALCdevice *deviceHandle, ALCenum token );
+#else
+      ALCAPI ALCubyte*       ALCAPIENTRY (*alcGetString)( ALCdevice *deviceHandle, ALCenum token );
+#endif
+#ifdef LINUX_AL
       ALCAPI void            ALCAPIENTRY (*alcGetIntegerv*)( ALCdevice *deviceHandle, ALCenum  token , ALCsizei  size , ALCint *dest );
+#else
+      ALCAPI ALCvoid         ALCAPIENTRY (*alcGetIntegerv*)( ALCdevice *deviceHandle, ALCenum  token , ALCsizei  size , ALCint *dest );
+#endif
 
 #endif /* AL_NO_PROTOTYPES */
 

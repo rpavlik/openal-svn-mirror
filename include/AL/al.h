@@ -91,10 +91,7 @@ ALAPI void ALAPIENTRY alGetFloatv( ALenum param, ALfloat* data );
 ALAPI void ALAPIENTRY alGetDoublev( ALenum param, ALdouble* data );
 
 /** State retrieval. */
-/* ***** GH
- * temporary fix to benefit Windows compilation -- fix soon
-*/
-#ifdef __GNUC__
+#ifdef LINUX_AL
 ALAPI const ALubyte* ALAPIENTRY alGetString( ALenum param );
 #else
 ALAPI ALubyte* ALAPIENTRY alGetString( ALenum param );
@@ -118,10 +115,7 @@ ALAPI ALenum ALAPIENTRY alGetError( ALvoid );
  * Obtain the address of a function (usually an extension)
  *  with the name fname. All addresses are context-independent. 
  */
-/* ***** GH
- * temporary fix for Windows
- */
-#ifdef __GNUC__
+#ifdef LINUX_AL
 ALAPI ALboolean ALAPIENTRY alIsExtensionPresent( const ALubyte* fname );
 #else
 ALAPI ALboolean ALAPIENTRY alIsExtensionPresent( ALubyte* fname );
@@ -133,10 +127,7 @@ ALAPI ALboolean ALAPIENTRY alIsExtensionPresent( ALubyte* fname );
  * Obtain the address of a function (usually an extension)
  *  with the name fname. All addresses are context-independent. 
  */
-/* ***** GH
- * temporary fix for Windows compilation
- */
-#ifdef __GNUC__
+#ifdef LINUX_AL
 ALAPI void* ALAPIENTRY alGetProcAddress( const ALubyte* fname );
 #else
 ALAPI void* ALAPIENTRY alGetProcAddress( ALubyte* fname );
@@ -194,10 +185,8 @@ ALAPI void ALAPIENTRY alListenerfv( ALenum pname, ALfloat* param );
  */
 ALAPI void ALAPIENTRY alGetListeneri( ALenum pname, ALint* value );
 ALAPI void ALAPIENTRY alGetListenerf( ALenum pname, ALfloat* value );
-  /* ***** GH
-TEMPORARY ifdef -- alGetListeneriv doesn't exist on Win/Mac
-  */
-#ifdef __GNUC__
+#ifdef LINUX_AL
+/* not defined under Windows and MacOS */
 ALAPI void ALAPIENTRY alGetListeneriv( ALenum pname, ALint* value );
 #endif
 ALAPI void ALAPIENTRY alGetListenerfv( ALenum pname, ALfloat* values );
@@ -235,10 +224,8 @@ ALAPI void ALAPIENTRY alSourcefv( ALuint sid, ALenum param, ALfloat* values );
 
 /** Get an integer parameter for a Source object. */
 ALAPI void ALAPIENTRY alGetSourcei( ALuint sid,  ALenum pname, ALint* value );
-  /* ***** GH
-TEMPORARY ifdef -- alGetSourceiv doesn't exist on Win/Mac
-  */
-#ifdef __GNUC__
+#ifdef LINUX_AL
+/* not defined under Windows and MacOS */
 ALAPI void ALAPIENTRY alGetSourceiv( ALuint sid,  ALenum pname, ALint* values );
 #endif
 ALAPI void ALAPIENTRY alGetSourcef( ALuint sid, ALenum pname, ALfloat* value );
@@ -309,10 +296,8 @@ ALAPI void ALAPIENTRY alBufferData( ALuint   buffer,
 
 ALAPI void ALAPIENTRY alGetBufferi( ALuint buffer, ALenum param, ALint*   value );
 ALAPI void ALAPIENTRY alGetBufferf( ALuint buffer, ALenum param, ALfloat* value );
-  /* ***** GH
-TEMPORARY ifdef -- alGetbufferiv/fv doesn't exist on Win/Mac
-  */
-#ifdef __GNUC__
+#ifdef LINUX_AL
+/* not defined under Windows and MacOS */
 ALAPI void ALAPIENTRY alGetBufferiv( ALuint buffer, ALenum param, ALint *v);
 ALAPI void ALAPIENTRY alGetBufferfv( ALuint buffer, ALenum param, ALfloat *v);
 #endif
@@ -332,12 +317,8 @@ ALAPI void ALAPIENTRY alGetBufferfv( ALuint buffer, ALenum param, ALfloat *v);
  */
 
 
-/* ***** GH
- TEMPORARY #ifdef below to remove IASIG section of the header under Linux -- will be removed from Linux soon too...
-*/
-
-#ifdef __GNUC__
-
+#ifdef LINUX_AL
+/* IASIG stuff never really used -- will probably be removed from Linux as well */
 /**
  * EXTENSION: IASIG Level 2 Environment.
  * Environment object generation.
@@ -367,10 +348,8 @@ ALAPI void ALAPIENTRY alEnvironmentfIASIG( ALuint eid, ALenum param, ALuint valu
 ALAPI void ALAPIENTRY alSourceQueueBuffers( ALuint sid, ALsizei numEntries, ALuint *bids );
 ALAPI void ALAPIENTRY alSourceUnqueueBuffers( ALuint sid, ALsizei numEntries, ALuint *bids );
 
-  /* ***** GH 
-TEMPORARY ifdef to remove alQueuei except under Linux -- it will be removed there too soon...
-  */
-#ifdef __GNUC__
+#ifdef LINUX_AL
+/* function no longer used */
 ALAPI void ALAPIENTRY alQueuei( ALuint sid, ALenum param, ALint value );
 #endif
 
@@ -402,22 +381,33 @@ ALAPI void ALAPIENTRY alDistanceModel( ALenum distanceModel );
                                                       ALfloat* data );
       void                         (*alGetDoublev)( ALenum param,
                                                       ALdouble* data );
-      const ALubyte*               (*GetString)( ALenum param );
+#ifdef LINUX_AL
+      const ALubyte*               (*alGetString)( ALenum param );
+#else
+      ALubyte*                     (*alGetString)( ALenum param );
+#endif
       ALenum                       (*alGetError)( ALvoid );
 
       /** 
        * Extension support.
        * Query existance of extension
        */
+#ifdef LINUX_AL
       ALboolean                (*alIsExtensionPresent)(const ALubyte* fname );
+#else
+      ALboolean                (*alIsExtensionPresent)(ALubyte* fname );
+#endif
 
       /** 
        * Extension support.
        * Obtain the address of a function (usually an extension)
        *  with the name fname. All addresses are context-independent. 
        */
+#ifdef LINUX_AL
       void*                (*alGetProcAddress)( const ALubyte* fname );
-      
+#else
+      void*                (*alGetProcAddress)( ALubyte* fname );
+#endif      
 
       /**
        * Extension support.
@@ -453,10 +443,7 @@ ALAPI void ALAPIENTRY alDistanceModel( ALenum distanceModel );
       void              (*alGetListeneri)( ALenum pname, ALint* value );
       void              (*alGetListenerf)( ALenum pname, ALfloat* value );
 
-  /* ***** GH
-TEMPORARY ifdef -- alGetListeneriv doesn't exist on Win/Mac
-  */
-#ifdef __GNUC__
+#ifdef LINUX_AL
       void              (*alGetListeneriv)( ALenum pname, ALint* values );
 #endif
       void              (*alGetListenerfv)( ALenum pname, ALfloat* values );
@@ -497,10 +484,7 @@ TEMPORARY ifdef -- alGetListeneriv doesn't exist on Win/Mac
       void                (*alGetSourcei)( ALuint sid,
                               ALenum pname, ALint* value );
 
-  /* ***** GH
-TEMPORARY ifdef -- alGetSourceiv doesn't exist on Win/Mac
-  */
-#ifdef __GNUC__
+#ifdef LINUX_AL
       /** Get an integer parameter for a Source object. */
       void                (*alGetSourceiv)( ALuint sid,
                               ALenum pname, ALint* values );
@@ -581,20 +565,14 @@ TEMPORARY ifdef -- alGetSourceiv doesn't exist on Win/Mac
                                       ALenum param, ALint*   value );
       void                (*alGetBufferf)( ALuint buffer,
                                       ALenum param, ALfloat* value );
-  /* ***** GH
-TEMPORARY ifdef -- alGetBufferiv doesn't exist on Win/Mac
-  */
-#ifdef __GNUC__
+#ifdef LINUX_AL
       void                (*alGetBufferiv)( ALuint buffer,
                                       ALenum param, ALint*   value );
       void                (*alGetBufferfv)( ALuint buffer,
                                       ALenum param, ALfloat* value );
 #endif
 
-/* ***** GH
- TEMPORARY #ifdef below to remove IASIG section of the header under Linux -- will be removed from Linux soon too...
-*/
-#ifdef __GNUC__
+#ifdef LINUX_AL
 /**
  * EXTENSION: IASIG Level 2 Environment.
  * Environment object generation.
@@ -619,10 +597,7 @@ TEMPORARY ifdef -- alGetBufferiv doesn't exist on Win/Mac
       /**
        * Queue stuff
        */
-  /* ***** GH
-TEMPORARY ifdef to keep alQueuei out of non-Linux header -- will be removed from Linux soon too...
-  */
-#ifdef __GNUC__
+#ifdef LINUX_AL
       void              (*alQueuei)(ALuint sid, ALenum param, ALint value );
 #endif
       void              (*alSourceUnqueueBuffers)(ALuint sid, ALsizei numEntries, ALuint *bids );

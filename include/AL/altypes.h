@@ -1,14 +1,24 @@
 #ifndef _AL_TYPES_H_
 #define _AL_TYPES_H_
 
+/* define platform type */
+#if !defined(MACINTOSH_AL) && !defined(LINUX_AL) && !defined(WINDOWS_AL)
+  #ifdef __APPLE__
+    #define MACINTOSH_AL
+    #else
+    #ifdef _WIN32
+      #define WINDOWS_AL
+    #else
+      #define LINUX_AL
+    #endif
+  #endif
+#endif
+
 /** OpenAL bool type. */
 typedef char ALboolean;
 
 /** OpenAL 8bit signed byte. */
-/* ***** GH
- * temporary ifdef for Windows
- */
-#ifdef __GNUC__
+#ifdef LINUX_AL
 typedef signed char ALbyte;
 #else
 typedef char ALbyte;
@@ -37,21 +47,18 @@ typedef double ALdouble;
 
 /** OpenAL 32bit type. */
 /** OpenAL 8bit signed byte. */
-/* ***** GH
- * temporary ifdef for Windows
- */
-#ifdef __GNUC__
+#ifdef LINUX_AL
 typedef signed int ALsizei;
 #else
 typedef unsigned int ALsizei;
 #endif
 
 /** OpenAL void type (for params, not returns). */
-#ifdef __GNUC__
+#ifdef LINUX_AL
 typedef void ALvoid;
 #else
 #define ALvoid void
-#endif /* __GNUC__ */
+#endif
 
 /** OpenAL enumerations. */
 typedef int ALenum;
@@ -140,10 +147,8 @@ typedef ALdouble ALclampd;
  */
 #define AL_LOOPING                                0x1007
 
-/* ***** GH
-TEMPORARY ifdef -- will be removed
-*/
-#ifdef __GNUC__
+#ifdef LINUX_AL
+/* no longer used -- will probably be removed */
 /**
  * Indicate whether source is meant to be streaming.
  * Type: ALboolean?
@@ -173,10 +178,7 @@ TEMPORARY ifdef -- will be removed
  */
 #define AL_GAIN                                   0x100A
 
-/* ***** GH
-TEMPORARY ifdef -- will be removed
-*/
-#ifdef __GNUC__
+#ifdef LINUX_AL
 /* byte offset into source (in canon format).  -1 if source
  * is not playing.  Don't set this, get this.
  *
@@ -349,10 +351,8 @@ TEMPORARY ifdef -- will be removed
  */
 #define AL_DOPPLER_VELOCITY                       0xC001
 
-/* ***** GH
-TEMPORARY ifdef -- will be removed
-*/
-#ifdef __GNUC__
+#ifdef LINUX_AL
+/* no longer used -- will probably be removed */
 /**
  * Distance scaling
  */
@@ -371,10 +371,9 @@ TEMPORARY ifdef -- will be removed
 #define AL_INVERSE_DISTANCE_CLAMPED               0xD002
 
 
-/* ***** GH
-TEMPORARY ifdef -- will be removed
-*/
-#ifdef __GNUC__
+#ifdef LINUX_AL
+
+/* all the IASIG stuff was never used -- will probably be removed */
 
 /**
  * enables
