@@ -183,6 +183,10 @@ case "$target" in
     REDUNDANT_DECLS_WARN=no 
     SHOULD_ENFORCE_ANSI=no ;;
     *darwin*)
+    # I think darwin can use dlopen with fink, but
+    # I don't want to require fink
+    AC_DEFINE(NODLOPEN)
+    SHARED_LIBRARY_EXT=dylib
     BROKEN_PTHREAD_FLAG=yes
     NO_PTHREAD_FLAG=yes
     LIBS="$LIBS -I/System/Library/Frameworks/CoreAudio.framework/Headers/ -framework CoreAudio"
