@@ -1382,7 +1382,7 @@ ALvoid FA_GetBufferProperties(ALvoid)
 	alGetBufferi(g_Buffers[0], AL_CHANNELS, &ch);
 	alGetBufferi(g_Buffers[0], AL_SIZE, &size);
 	
-	passNULL = !(alIsBuffer(0));  // the NULL buffer should cause alIsBuffer to be FALSE
+	passNULL = alIsBuffer(0);  // the NULL buffer should cause alIsBuffer to be TRUE (non-annotated 1.0 spec, pg 26)
 
 	if ((freq == 44100) && (bits == 16) && (ch == 1) && (size == 282626) && (passNULL == true))
 	{
