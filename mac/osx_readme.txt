@@ -1,7 +1,11 @@
-For the moment, there are two ways to build OpenAL for OS X.  The CodeWarrior project will
-not be maintained any longer, so will eventually go out of date.
+The openal/mac branch of code is no longer the preferred OS X codebase -- it's been replaced
+by openal/macosx.  This codebase is mainly useful for OS 8 and 9, but you can still compile
+it under OS X if you wish.
 
 Compiling using CodeWarrior:
+
+[NOTE: The CodeWarrior project has not been maintained for a while, so it may require some updating
+to make it work properly.]
 
 Run the osx_prebuild script, and then compile and link using the CodeWarrior 7 project.  After
 running the script, a build directory will have been created which contains a complete OpenAL
@@ -24,4 +28,3 @@ Vorbis framework, you'll first need to run the autogen.sh script, which will
 give you an error because it can't find the Ogg library.  Ignore the error
 and continue by using the Project Builder project file -- it will be able to
 build the framework.
-
