@@ -1,5 +1,11 @@
 2004-06-30  Adam D. Moss  <adam@gimp.org>
 
+        * openal/linux/test/testdopper.c: A more realistic and helpful
+        doppler test -- move the source towards, through, and away from
+        the listener.
+
+2004-06-30  Adam D. Moss  <adam@gimp.org>
+
         * openal/linux/src/arch/alsa/alsa.c: Nonsensical partial revertion to
         work around problem experienced by Prakash K. Cheemplavam.  My
         respect for ALSA has slowly eroded close to the negative by now.

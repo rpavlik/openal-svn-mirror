@@ -24,12 +24,19 @@ static void *wave = NULL;
 static time_t start;
 static void *cc; /* al context */
 
+static ALfloat srcposition[] = { 0.1f, 0.0f, -4.0f };
+
 static void iterate( void ) {
 	static ALfloat speed[3] = { 0.0, 0.0, 0.0 };
 
 	speed[2] += .0005;
 
+        srcposition[0] += speed[0];
+        srcposition[1] += speed[1];
+        srcposition[2] += speed[2];
+
 	alSourcefv( moving_source, AL_VELOCITY, speed );
+	alSourcefv( moving_source, AL_POSITION, srcposition );
 	micro_sleep(20000);
 
 	return;
@@ -39,7 +46,6 @@ static void init( const char *fname ) {
 	ALfloat zeroes[] = { 0.0f, 0.0f,  0.0f };
 	ALfloat back[]   = { 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f };
 	ALfloat front[]  = { 0.0f, 0.0f,  1.0f, 0.0f, 1.0f, 0.0f };
-	ALfloat position[] = { 0.0f, 0.0f, -4.0f };
 	ALuint boom;
 	ALsizei size;
 	ALsizei bits;
@@ -67,7 +73,7 @@ static void init( const char *fname ) {
 
 	alGenSources( 1, &moving_source);
 
-	alSourcefv( moving_source, AL_POSITION, position );
+	alSourcefv( moving_source, AL_POSITION, srcposition );
 	alSourcefv( moving_source, AL_VELOCITY, zeroes );
 	alSourcefv( moving_source, AL_DIRECTION, back );
 	alSourcei(  moving_source, AL_BUFFER, boom );
