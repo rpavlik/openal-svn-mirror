@@ -86,6 +86,9 @@
 #include <string.h>
 #include <float.h>
 
+#define MIN(a,b) (((a) < (b)) ? (a) : (b))
+#define MAX(a,b) (((a) < (b)) ? (b) : (a))
+
 /* 
  * TPITCH_MAX sets the number of discrete values for AL_PITCH we can have.
  * You can set AL_PITCH to anything, but integer rounding will ensure that
@@ -1309,11 +1312,14 @@ void alf_tpitch( UNUSED(ALuint cid),
 	 */
 	offsets = tpitch_lookup.offsets[ l_index ];
 
+	assert(l_index < TPITCH_MAX);
+
 	/*
 	 *  adjust clen until we can safely avoid an overrun.
 	 */
-	clen = len;
+	clen = MIN(TPITCH_MAX, len);
 
+	assert(clen - 1 < TPITCH_MAX);
 	while(offsets[clen - 1] * sizeof(ALshort)
 		+ src->srcParams.soundpos >= samp->size) {
 		/* decrement clen until we won't suffer a buffer
@@ -1341,6 +1347,9 @@ void alf_tpitch( UNUSED(ALuint cid),
 		obufptr  = samp->orig_buffers[i];
 		obufptr += src->srcParams.soundpos / sizeof *obufptr;
 
+		assert(samp->orig_buffers[i]);
+		assert(src->srcParams.soundpos < samp->size);
+
 		if(l_index == tpitch_lookup.middle ) {
 			/* when this predicate is true, the pitch is
 			 * equal to 1, which means there is no change.
@@ -1366,6 +1375,9 @@ void alf_tpitch( UNUSED(ALuint cid),
 		offsets = tpitch_lookup.offsets[ l_index ];
 		fractionals = tpitch_lookup.fractionals[ l_index ];
 
+		assert(offsets);
+		assert(fractionals);
+
 		/*
 		 * this is where the "resampling" takes place.  We do a
 		 * very little bit on unrolling here, and it shouldn't
@@ -1373,6 +1385,9 @@ void alf_tpitch( UNUSED(ALuint cid),
 		 * a bit.
 		 */
 		for(j = 0; j < clen; j++) {
+			assert(j < TPITCH_MAX);
+			assert(offsets[j] < (int) len-1);
+
 			/* do a little interpolation */
 			bufptr[j] = obufptr[ offsets[j] ] +
 				fractionals[j] *
