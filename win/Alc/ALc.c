@@ -2441,7 +2441,7 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(ALCubyte *deviceName)
 	ALboolean bUseDS;
 	ALboolean bUseDS3D;
 	ALboolean bDeviceFound = AL_FALSE;
-	ALuint numSources;
+	ALint numSources;
 
 	bUseDS = AL_FALSE;
 	bUseDS3D = AL_FALSE;
