@@ -239,6 +239,7 @@ void _alDestroyFilters( void ) {
 		tpitch_lookup.offsets[i] = 0;
 		tpitch_lookup.fractionals[i] = 0;
 	}
+	tpitch_lookup.len = 0;
 #endif
 
 	return;
