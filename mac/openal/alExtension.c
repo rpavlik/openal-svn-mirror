@@ -25,6 +25,7 @@
 
 #ifdef MAC_OS_X
 #include <mach-o/dyld.h>
+#include "vorbis/codec.h"
 #endif
 
 #pragma export on 

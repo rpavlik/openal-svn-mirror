@@ -44,7 +44,7 @@
 #define INITGUID
 #define OPENAL
 
-//#define TEST_VORBIS // enable for ogg vorbis testing
+#define TEST_VORBIS // enable for ogg vorbis testing
 //#define TEST_EAX // enable for EAX testing
 
 #ifdef _WIN32
