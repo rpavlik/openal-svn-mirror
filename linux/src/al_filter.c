@@ -1063,6 +1063,11 @@ void alf_tdoppler( ALuint cid,
 		return;
 	}
 
+        if (fabs(doppler_factor - 1.0E-6) < 0) {
+                /* doppler factor set to zero, no doppler effect */
+                return;
+        }
+
 	if(sv == NULL) {
 		/*
 		 * if unset, set to the velocity to the
@@ -1240,15 +1245,23 @@ static ALfloat compute_doppler_pitch( ALfloat *object1, ALfloat *o1_vel,
         obj2V += o2_vel[2] * between[2];
 
         /*
+         * Apply the Doppler factor by modifying the source and listener
+         * velocities.  This will exaggerate or reduce the Doppler
+         * effect as expected.
+         */
+        obj1V *= factor;
+        obj2V *= factor;
+
+        /*
          * Now compute the obj1/obj2 velocity ratio, taking into account
          * the propagation speed.  This formula is straight from the spec.
          */
-        obj1V = speed + obj1V;
+        obj1V = speed - obj1V;
         obj2V = speed + obj2V;
         ratio = obj1V / obj2V;
 
-        /* Finally, scale by the doppler factor */
-	retval = factor * ratio;
+        /* Finally, return the ratio */
+	retval = ratio;
 
 	return retval;
 }

@@ -1,5 +1,10 @@
 2004-06-30  Adam D. Moss  <adam@gimp.org>
 
+        * openal/linux/src/al_filter.c: Doppler fixes based on a patch
+        from Jason Daly <jdaly@ist.ucf.edu> with an additional fix.
+
+2004-06-30  Adam D. Moss  <adam@gimp.org>
+
         * openal/linux/test/testdoppler.c: A more realistic and helpful
         doppler test -- move the source towards, through, and away from
         the listener, while accelerating constantly.
