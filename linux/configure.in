@@ -792,7 +792,7 @@ if test $MAKE = none; then
 fi
 
 dnl define version
-AC_DEFINE_UNQUOTED(LAL_VERSION, "$VERSION", 1, [undocumented])
+AC_DEFINE_UNQUOTED(LAL_VERSION, "$VERSION", [undocumented])
 
 AC_SUBST(NASM)
 AC_SUBST(RANLIB)

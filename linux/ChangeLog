@@ -1,3 +1,8 @@
+2002-07-18  Joseph I. Valenzuela  <jvalenzu@forbidden.loungenet.org>
+
+	* fix bug that incorrectly reported LAL_VERSION as 1
+ 	  instead of "0.0.6"
+
 2002-07-12  Joseph Valenzuela  <jvalenzu@formosa>
 
 	* /usr/local/cvs-repository/openal/linux/Makefile.in
