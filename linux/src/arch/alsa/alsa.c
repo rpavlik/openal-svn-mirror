@@ -32,7 +32,91 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#if OPENAL_DLOPEN_ALSA
+#include <dlfcn.h>
+#endif
+
 #include <alsa/asoundlib.h>
+
+static void *alsa_lib_handle = NULL;
+static int (*psnd_pcm_hw_params_malloc)(snd_pcm_hw_params_t **ptr) = NULL;
+static void (*psnd_pcm_hw_params_free)(snd_pcm_hw_params_t *obj) = NULL;
+static const char *(*psnd_strerror)(int errnum) = NULL;
+static size_t (*psnd_pcm_info_sizeof)(void) = NULL;
+static int (*psnd_pcm_close)(snd_pcm_t *pcm) = NULL;
+static int (*psnd_pcm_hw_params)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params) = NULL;
+static int (*psnd_pcm_hw_params_any)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params) = NULL;
+static int (*psnd_pcm_hw_params_set_access)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_access_t access) = NULL;
+static int (*psnd_pcm_hw_params_set_buffer_size)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_uframes_t val) = NULL;
+static int (*psnd_pcm_hw_params_set_channels)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val) = NULL;
+static int (*psnd_pcm_hw_params_set_format)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_format_t val) = NULL;
+static int (*psnd_pcm_hw_params_set_periods)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val, int dir) = NULL;
+static int (*psnd_pcm_hw_params_set_rate)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val, int dir) = NULL;
+static int (*psnd_pcm_hw_params_set_rate_near)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int *val, int *dir) = NULL;
+static size_t (*psnd_pcm_hw_params_sizeof)(void) = NULL;
+static int (*psnd_pcm_prepare)(snd_pcm_t *pcm) = NULL;
+static snd_pcm_sframes_t (*psnd_pcm_readi)(snd_pcm_t *pcm, void *buffer, snd_pcm_uframes_t size) = NULL;
+static int (*psnd_pcm_resume)(snd_pcm_t *pcm) = NULL;
+static snd_pcm_sframes_t (*psnd_pcm_writei)(snd_pcm_t *pcm, const void *buffer, snd_pcm_uframes_t size) = NULL;
+static int (*psnd_pcm_hw_params_set_period_size)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_uframes_t val, int dir) = NULL;
+static int (*psnd_pcm_open)(snd_pcm_t **pcm, const char *name,
+                     snd_pcm_stream_t stream, int mode) = NULL;
+
+/* !!! FIXME: hhm...this is a problem. */
+#if (SND_LIB_MAJOR == 0)
+static int (*psnd_pcm_hw_params_get_buffer_size)(const snd_pcm_hw_params_t *params) = NULL;
+static int (*psnd_pcm_hw_params_get_channels)(const snd_pcm_hw_params_t *params) = NULL;
+static snd_pcm_sframes_t (*psnd_pcm_hw_params_get_period_size)(const snd_pcm_hw_params_t *params, int *dir) = NULL;
+#else
+static int (*psnd_pcm_hw_params_get_buffer_size)(const snd_pcm_hw_params_t *params,
+                                          snd_pcm_uframes_t *val) = NULL;
+static int (*psnd_pcm_hw_params_get_channels)(const snd_pcm_hw_params_t *params, unsigned int *val) = NULL;
+static snd_pcm_sframes_t (*psnd_pcm_hw_params_get_period_size)(const snd_pcm_hw_params_t *params, snd_pcm_uframes_t *frames, int *dir) = NULL;
+#endif
+
+static int openal_load_alsa_library(void)
+{
+	if (alsa_lib_handle != NULL)
+		return 1;  /* already loaded. */
+
+	#if OPENAL_DLOPEN_ALSA
+		#define OPENAL_LOAD_ALSA_SYMBOL(x) if ((p##x = dlsym(alsa_lib_handle, #x)) == NULL) { return 0; }
+		alsa_lib_handle = dlopen("libasound.so", RTLD_LAZY | RTLD_GLOBAL);
+		if (alsa_lib_handle == NULL)
+			return 0;
+	#else
+		#define OPENAL_LOAD_ALSA_SYMBOL(x) p##x = x;
+		alsa_lib_handle = (void *) 0xF00DF00D;
+	#endif
+
+	OPENAL_LOAD_ALSA_SYMBOL(snd_strerror);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_info_sizeof);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_malloc);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_free);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_open);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_close);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_any);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_get_buffer_size);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_get_channels);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_get_period_size);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_set_access);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_set_buffer_size);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_set_channels);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_set_format);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_set_period_size);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_set_periods);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_set_rate);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_set_rate_near);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_sizeof);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_open);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_prepare);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_readi);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_resume);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_writei);
+
+	return 1;
+}
 
 /* alsa stuff */
 #define DEFAULT_DEVICE "plughw:0,0"
@@ -69,7 +153,7 @@ void *release_alsa(void *handle)
 	if(handle == NULL)
 	  return NULL;
 
-	snd_pcm_close(ai->handle);
+	psnd_pcm_close(ai->handle);
 
 	free(ai);
 
@@ -83,12 +167,15 @@ void *grab_read_alsa( void )
 	char card_name[256];
 	int err;
 
+	if (!openal_load_alsa_library())
+		return NULL;
+
 	get_in_device_name(card_name, 256);
 
-	err = snd_pcm_open(&handle, card_name, SND_PCM_STREAM_CAPTURE, SND_PCM_NONBLOCK);
+	err = psnd_pcm_open(&handle, card_name, SND_PCM_STREAM_CAPTURE, SND_PCM_NONBLOCK);
 	if(err < 0)
 	{
-		const char *serr = snd_strerror(err);
+		const char *serr = psnd_strerror(err);
 
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
 				"grab_alsa: init failed: %s\n", serr);
@@ -168,12 +255,15 @@ void *grab_write_alsa( void )
 	char card_name[256];
 	int err;
 
+	if (!openal_load_alsa_library())
+		return NULL;
+
 	get_out_device_name(card_name, 256);
 
-	err = snd_pcm_open(&handle, card_name, SND_PCM_STREAM_PLAYBACK, 0);
+	err = psnd_pcm_open(&handle, card_name, SND_PCM_STREAM_PLAYBACK, 0);
 	if(err < 0)
 	{
-		const char *serr = snd_strerror(err);
+		const char *serr = psnd_strerror(err);
 
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
 			"grab_alsa: init failed: %s\n", serr);
@@ -239,93 +329,101 @@ ALboolean set_read_alsa( void *handle,
 
 	phandle = ai->handle;
 
-	snd_pcm_hw_params_alloca(&setup);
-	err = snd_pcm_hw_params_any(phandle, setup);
+	psnd_pcm_hw_params_malloc(&setup);
+	err = psnd_pcm_hw_params_any(phandle, setup);
 	if(err < 0)
 	{
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-				"set_read_alsa: Could not query parameters: %s",snd_strerror(err));
+				"set_read_alsa: Could not query parameters: %s",psnd_strerror(err));
 
+		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
 	}
 
 	/* set the interleaved read format */
-	err = snd_pcm_hw_params_set_access(phandle, setup, SND_PCM_ACCESS_RW_INTERLEAVED);
+	err = psnd_pcm_hw_params_set_access(phandle, setup, SND_PCM_ACCESS_RW_INTERLEAVED);
 	if (err < 0) {
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-				"set_read_alsa: Could not set access type: %s",snd_strerror(err));
+				"set_read_alsa: Could not set access type: %s",psnd_strerror(err));
+		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
 	}
 
 	/* set format */
-	err = snd_pcm_hw_params_set_format(phandle, setup, ai->format);
+	err = psnd_pcm_hw_params_set_format(phandle, setup, ai->format);
 	if(err < 0)
 	{
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-				"set_read_alsa: could not set format: %s",snd_strerror(err));
+				"set_read_alsa: could not set format: %s",psnd_strerror(err));
 
+		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
 	}
 
 
 	/* channels */
-	err = snd_pcm_hw_params_set_channels(phandle, setup, ai->channels);
+	err = psnd_pcm_hw_params_set_channels(phandle, setup, ai->channels);
 	if(err < 0)
 	{
 #if (SND_LIB_MAJOR == 0)
-		err = snd_pcm_hw_params_get_channels(setup);
+		err = psnd_pcm_hw_params_get_channels(setup);
 #else
-		snd_pcm_hw_params_get_channels(setup, &err);
+		psnd_pcm_hw_params_get_channels(setup, &err);
 #endif
 
 		if (err != (int) (ai->channels)) {
 			_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-					"set_read_alsa: could not set channels: %s",snd_strerror(err));
+					"set_read_alsa: could not set channels: %s",psnd_strerror(err));
 
+			psnd_pcm_hw_params_free(setup);
 			return AL_FALSE;
 		}
 	}
 
 
 	/* sampling rate */
-	err = snd_pcm_hw_params_set_rate(phandle, setup, ai->speed, 0);
+	err = psnd_pcm_hw_params_set_rate(phandle, setup, ai->speed, 0);
 	if(err < 0)
 	{
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-				"set_read_alsa: could not set speed: %s",snd_strerror(err));
+				"set_read_alsa: could not set speed: %s",psnd_strerror(err));
 
+		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
 	}
 
 	/* Set number of periods. Periods used to be called fragments. */
-	err = snd_pcm_hw_params_set_period_size(phandle, setup, 4096, 0);
+	err = psnd_pcm_hw_params_set_period_size(phandle, setup, 4096, 0);
 	if (err < 0) {
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-				"set_read_alsa: %s\n", snd_strerror(err));
+				"set_read_alsa: %s\n", psnd_strerror(err));
+		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
 	}
 
-	err = snd_pcm_hw_params_set_periods(phandle, setup, ai->periods, 0);
+	err = psnd_pcm_hw_params_set_periods(phandle, setup, ai->periods, 0);
 	if (err < 0) {
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-				"set_read_alsa: %s\n", snd_strerror(err));
+				"set_read_alsa: %s\n", psnd_strerror(err));
+		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
 	}
 
-	err = snd_pcm_hw_params_set_buffer_size(phandle, setup, ai->bufframesize);
+	err = psnd_pcm_hw_params_set_buffer_size(phandle, setup, ai->bufframesize);
 	if (err < 0) {
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
 				"set_read_alsa: %s, size: %d, speed: %d\n",
-				snd_strerror(err), ai->bufframesize, ai->speed);
+				psnd_strerror(err), ai->bufframesize, ai->speed);
+		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
 	}
 
 #if (SND_LIB_MAJOR == 0)
-	buffer_size = snd_pcm_hw_params_get_buffer_size(setup);
-	period_size = snd_pcm_hw_params_get_period_size(setup, &dir);
+	buffer_size = psnd_pcm_hw_params_get_buffer_size(setup);
+	period_size = psnd_pcm_hw_params_get_period_size(setup, &dir);
 #else
-	snd_pcm_hw_params_get_buffer_size(setup, &buffer_size);
-	snd_pcm_hw_params_get_period_size(setup, &period_size, &dir);
+	psnd_pcm_hw_params_get_buffer_size(setup, &buffer_size);
+	psnd_pcm_hw_params_get_period_size(setup, &period_size, &dir);
 #endif
 
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
@@ -334,19 +432,21 @@ ALboolean set_read_alsa( void *handle,
 			"set_read_alsa (info): Periodsize = %i", period_size);
 	*bufsiz = buffer_size * ai->framesize;
 
-	err = snd_pcm_hw_params(phandle, setup);
+	err = psnd_pcm_hw_params(phandle, setup);
 	if(err < 0)
 	{
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-				"set_read_alsa: %s\n", snd_strerror(err));
+				"set_read_alsa: %s\n", psnd_strerror(err));
+		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
 	}
 
-	err = snd_pcm_prepare(phandle);
+	err = psnd_pcm_prepare(phandle);
 	if(err < 0)
 	{
 		_alDebug(ALD_MAXIMUS,  __FILE__, __LINE__,
-				"set_read_alsa %s\n", snd_strerror(err));
+				"set_read_alsa %s\n", psnd_strerror(err));
+		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
 	}
 
@@ -354,6 +454,7 @@ ALboolean set_read_alsa( void *handle,
 			"set_read_alsa: handle: %p, phandle: %p\n", handle, phandle);
 	ai->setup_read = 1;
 
+	psnd_pcm_hw_params_free(setup);
 	return AL_TRUE;
 }
 
@@ -391,88 +492,95 @@ ALboolean set_write_alsa(void *handle,
 
 	phandle = ai->handle;
 
-	snd_pcm_hw_params_alloca(&setup);
-	err = snd_pcm_hw_params_any(phandle, setup);
+	psnd_pcm_hw_params_malloc(&setup);
+	err = psnd_pcm_hw_params_any(phandle, setup);
 	if(err < 0)
 	{
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-				"set_write_alsa: Could not query parameters: %s",snd_strerror(err));
+				"set_write_alsa: Could not query parameters: %s",psnd_strerror(err));
 
+		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
 	}
 
 	/* set the interleaved write format */
-	err = snd_pcm_hw_params_set_access(phandle, setup, SND_PCM_ACCESS_RW_INTERLEAVED);
+	err = psnd_pcm_hw_params_set_access(phandle, setup, SND_PCM_ACCESS_RW_INTERLEAVED);
 	if (err < 0) {
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-				"set_write_alsa: Could not set access type: %s",snd_strerror(err));
+				"set_write_alsa: Could not set access type: %s",psnd_strerror(err));
+		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
 	}
 
 	/* set format */
-	err = snd_pcm_hw_params_set_format(phandle, setup, ai->format);
+	err = psnd_pcm_hw_params_set_format(phandle, setup, ai->format);
 	if(err < 0)
 	{
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-				"set_write_alsa: could not set format: %s",snd_strerror(err));
+				"set_write_alsa: could not set format: %s",psnd_strerror(err));
 
+		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
 	}
 
 
 	/* channels */
-	err = snd_pcm_hw_params_set_channels(phandle, setup, ai->channels);
+	err = psnd_pcm_hw_params_set_channels(phandle, setup, ai->channels);
 	if(err < 0)
 	{
 #if (SND_LIB_MAJOR == 0)
-		err = snd_pcm_hw_params_get_channels(setup);
+		err = psnd_pcm_hw_params_get_channels(setup);
 #else
-		snd_pcm_hw_params_get_channels(setup, &err);
+		psnd_pcm_hw_params_get_channels(setup, &err);
 #endif
 
 		if (err!= (int) (ai->channels)) {
 			_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-					"set_write_alsa: could not set channels: %s",snd_strerror(err));
+					"set_write_alsa: could not set channels: %s",psnd_strerror(err));
 
+			psnd_pcm_hw_params_free(setup);
 			return AL_FALSE;
 		}
 	}
 
 
 	/* sampling rate */
-	err = snd_pcm_hw_params_set_rate_near(phandle, setup, &ai->speed, NULL);
+	err = psnd_pcm_hw_params_set_rate_near(phandle, setup, &ai->speed, NULL);
 	if(err < 0)
 	{
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-				"set_write_alsa: could not set speed: %s",snd_strerror(err));
+				"set_write_alsa: could not set speed: %s",psnd_strerror(err));
 
+		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
 	} else if (err > 0) /* err is sampling rate if > 0 */
 		ai->speed = (unsigned int) err;
 
 
 	/* Set number of periods. Periods used to be called fragments. */
-	err = snd_pcm_hw_params_set_periods(phandle, setup, ai->periods, 0);
+	err = psnd_pcm_hw_params_set_periods(phandle, setup, ai->periods, 0);
 	if (err < 0) {
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-				"set_write_alsa: %s\n", snd_strerror(err));
+				"set_write_alsa: %s\n", psnd_strerror(err));
+		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
 	}
 
-	err = snd_pcm_hw_params_set_buffer_size(phandle, setup, ai->bufframesize);
+	err = psnd_pcm_hw_params_set_buffer_size(phandle, setup, ai->bufframesize);
 	if (err < 0) {
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
 				"set_write_alsa: %s, size: %d, speed: %d\n",
-				snd_strerror(err), ai->bufframesize, ai->speed);
+				psnd_strerror(err), ai->bufframesize, ai->speed);
+		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
 	}
 
 #if (SND_LIB_MAJOR == 0)
-	buffer_size = snd_pcm_hw_params_get_buffer_size(setup);
-	period_size = snd_pcm_hw_params_get_period_size(setup, &dir);
+	buffer_size = psnd_pcm_hw_params_get_buffer_size(setup);
+	period_size = psnd_pcm_hw_params_get_period_size(setup, &dir);
 #else
-	snd_pcm_hw_params_get_buffer_size(setup, &buffer_size);
-	snd_pcm_hw_params_get_period_size(setup, &period_size, &dir);
+	psnd_pcm_hw_params_get_buffer_size(setup, &buffer_size);
+	psnd_pcm_hw_params_get_period_size(setup, &period_size, &dir);
 #endif
 
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
@@ -480,19 +588,21 @@ ALboolean set_write_alsa(void *handle,
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
 			"set_write_alsa (info): Periodsize = %i", period_size);
 
-	err = snd_pcm_hw_params(phandle, setup);
+	err = psnd_pcm_hw_params(phandle, setup);
 	if(err < 0)
 	{
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-				"set_alsa: %s\n", snd_strerror(err));
+				"set_alsa: %s\n", psnd_strerror(err));
+		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
 	}
 
-	err = snd_pcm_prepare(phandle);
+	err = psnd_pcm_prepare(phandle);
 	if(err < 0)
 	{
 		_alDebug(ALD_MAXIMUS,  __FILE__, __LINE__,
-				"set_alsa %s\n", snd_strerror(err));
+				"set_alsa %s\n", psnd_strerror(err));
+		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
 	}
 
@@ -500,6 +610,7 @@ ALboolean set_write_alsa(void *handle,
 			"set_write_alsa: handle: %p, phandle: %p\n", handle, phandle);
 	ai->setup_write = 1;
 
+	psnd_pcm_hw_params_free(setup);
 	return AL_TRUE;
 }
 
@@ -524,7 +635,7 @@ void alsa_blitbuffer(void *handle, void *data, int bytes)
 
 	while(data_len > 0)
 	{
-		err = snd_pcm_writei(phandle, pdata, frames);
+		err = psnd_pcm_writei(phandle, pdata, frames);
 		switch(err)
 		{
 			case -EAGAIN:
@@ -533,7 +644,7 @@ void alsa_blitbuffer(void *handle, void *data, int bytes)
 			case -ESTRPIPE:
 				do
 				{
-					err = snd_pcm_resume(phandle);
+					err = psnd_pcm_resume(phandle);
 				} while ( err == -EAGAIN );
 				break;
 			default:
@@ -543,10 +654,10 @@ void alsa_blitbuffer(void *handle, void *data, int bytes)
 		}
 		if(err < 0)
 		{
-                        err = snd_pcm_prepare(phandle);
+                        err = psnd_pcm_prepare(phandle);
 			if(err < 0)
 			{
-				const char *serr = snd_strerror(err);
+				const char *serr = psnd_strerror(err);
 
 				_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
                                  "alsa_blitbuffer: %s\n", serr);
@@ -577,13 +688,13 @@ ALsizei capture_alsa(void *handle,
 	frames = (snd_pcm_uframes_t) bufsize / ai->framesize;
 
 grab:
-	ret = snd_pcm_readi (phandle, pdata, frames);
+	ret = psnd_pcm_readi (phandle, pdata, frames);
 	if (ret < 0) {
 		if (ret == -EAGAIN)
 			return 0;
 		else if (ret == -EPIPE) {
 			fprintf(stderr, "Error, overrun occurred, trying to recover.\n");
-			ret = snd_pcm_prepare(phandle);
+			ret = psnd_pcm_prepare(phandle);
 			if (ret < 0)
 				fprintf(stderr, "Unable to recover: %d\n", ret);
 			else

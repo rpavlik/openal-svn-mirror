@@ -518,8 +518,22 @@ if test x$enable_alsa = xyes; then
 	SHADOW_WARN=no
 	REDUNDANT_DECLS_WARN=no
         AC_DEFINE(ALSA_SUPPORT, 1, [undocumented])
-    	OS_OBJS="$OS_OBJS \$(ALSA_OBJS)"
-	LIBS="$LIBS -lasound")
+    	OS_OBJS="$OS_OBJS \$(ALSA_OBJS)",
+    enable_alsa=no)
+fi
+
+dnl
+AC_ARG_ENABLE(alsa,
+[  --enable-alsa-dlopen      dlopen alsa libs at runtime  [default=no]],
+              ,   enable_alsa_dlopen=no)
+
+if test x$enable_alsa = xyes; then
+  if test x$enable_alsa_dlopen = xyes; then
+    AC_DEFINE(OPENAL_DLOPEN_ALSA, 1, [undocumented])
+  else
+    AC_DEFINE(OPENAL_DLOPEN_ALSA, 0, [undocumented])
+	LIBS="$LIBS -lasound"
+  fi
 fi
 
 dnl frequency based functions, should they be included?
