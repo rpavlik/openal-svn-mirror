@@ -3,6 +3,8 @@ LN_S=@LN_S@
 DESTDIR=@prefix@/
 DESTINC=$(DESTDIR)include
 DESTLIB=$(DESTDIR)lib
+DESTBIN=$(DESTDIR)bin
+DESTPKG=$(DESTLIB)/pkgconfig/
 MAKE=@MAKE@
 MAJOR_VERSION=@MAJOR_VERSION@
 MINOR_VERSION=@MINOR_VERSION@
@@ -63,6 +65,10 @@ install: $(INSTALL_DEPS)
 	$(INSTALL) -d -m 755 $(DESTINC)
 	$(INSTALL) -d -m 755 $(DESTINC)/AL
 	$(INSTALL) -d -m 755 $(DESTLIB)
+	$(INSTALL) -d -m 755 $(DESTBIN)
+	$(INSTALL) -d -m 755 $(DESTPKG)
+	$(INSTALL) -m 755 openal-config $(DESTBIN)
+	$(INSTALL) -m 444 openal.pc $(DESTPKG)
 	$(INSTALL) -m 755 src/libopenal.a $(DESTLIB)
 	$(INSTALL) -m 444 ../include/AL/al.h $(DESTINC)/AL
 	$(INSTALL) -m 444 ../include/AL/alc.h $(DESTINC)/AL
