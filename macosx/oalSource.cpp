@@ -1262,7 +1262,19 @@ void	OALSource::Stop()
 		mOwningDevice->SetBusAsAvailable (mCurrentPlayBus);
 		mCurrentPlayBus = kSourceNeedsBus;		
 
-        Reset();    // join the buffer lists and mark the buffers as unprocessed
+		// move all the remaining unprocessed buffers into the inactive queue so GetProcessedBuffers will 
+		// return the correct value in the AL_STOPPED state
+        while (mBufferQueueActive->Size() > 0)
+        {
+            // Get buffer #i from Active List
+            BufferInfo	*staleBufferInfo = mBufferQueueActive->Get(0);
+            mBufferQueueActive->SetBufferAsProcessed(0);
+            // Append it to Inactive List
+            mBufferQueueInactive->AppendBuffer(staleBufferInfo->mBufferToken, staleBufferInfo->mBuffer, staleBufferInfo->mACToken);
+            // Remove it from Active List
+            mBufferQueueActive->RemoveQueueEntryByIndex(0);
+        }
+
         mState = AL_STOPPED;
 	}
     
@@ -1992,6 +2004,10 @@ void OALSource::CalculateDistanceAndAzimuth(Float32 *outDistance, Float32 *outAz
                 dopplerShift = 1.0;     // default at No shift
                 
     *outDopplerShift = dopplerShift;    // initialize
+
+	SourceToListener[0]=0;	  // initialize
+	SourceToListener[1]=0;    // initialize
+	SourceToListener[2]=0;    // initialize
         
     tPosition[0] = mPosition[0];
 	tPosition[1] = mPosition[1];
@@ -2073,7 +2089,8 @@ void OALSource::CalculateDistanceAndAzimuth(Float32 *outDistance, Float32 *outAz
 
             Float32 ProjectedSourceVelocity = aluDotproduct(SourceVelocity, SourceToListener);
             Float32 ProjectedListenerVelocity = aluDotproduct(ListenerVelocity, SourceToListener);
-            if (fabs(DopplerFactor) < 1.0e-6)
+			
+            if (fabsf(DopplerFactor) < 1.0e-6)
             {
                 ProjectedSourceVelocity *= DopplerFactor;
                 ProjectedListenerVelocity *= DopplerFactor;
@@ -2099,14 +2116,16 @@ void OALSource::CalculateDistanceAndAzimuth(Float32 *outDistance, Float32 *outAz
             #endif
             }
 
-            dopplerShift = ((mOwningContext->GetDopplerVelocity() - ProjectedListenerVelocity)/(mOwningContext->GetDopplerVelocity() + ProjectedSourceVelocity));
-                                      
-            // limit the pitch shifting to 3 octave up or down
+			dopplerShift = (  (mOwningContext->GetDopplerVelocity() - ProjectedListenerVelocity) / (mOwningContext->GetDopplerVelocity() + ProjectedSourceVelocity)  );
+			if (isnan(dopplerShift))
+				dopplerShift = 1.0;
+																		                                        
+            // limit the pitch shifting to 4 octaves up and 3 octaves down
             if (dopplerShift > 1.0)
             {
                 dopplerShift *= DopplerFactor;
-                if (dopplerShift > 8.0)
-                    dopplerShift = 8.0;
+                if (dopplerShift > 16.0)
+                    dopplerShift = 16.0;
             }
             else 
             {
