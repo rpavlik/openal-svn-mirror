@@ -72,6 +72,11 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
+#ifdef TEST_VORBIS
+#include <AL/alext.h>
+#include <AL/alexttypes.h>
+#endif
+
 #ifdef OSX_FRAMEWORK
 #include <OpenAL/al.h>
 #include <OpenAL/alc.h>
@@ -171,12 +176,6 @@ ALuint	g_Buffers[NUM_BUFFERS];		// Array of Buffers
 EAXSet	eaxSet;						// EAXSet function, retrieved if EAX Extension is supported
 EAXGet	eaxGet;						// EAXGet function, retrieved if EAX Extension is supported
 ALboolean g_bEAX;					// Boolean variable to indicate presence of EAX Extension 
-#endif
-
-#ifdef TEST_VORBIS
-// vorbis extension
-typedef ALboolean (vorbisLoader)(ALuint, ALvoid *, ALint);
-vorbisLoader *alutLoadVorbisp = NULL;
 #endif
 
 static ALenums enumeration[]={
@@ -800,6 +799,7 @@ int main(int argc, char* argv[])
      if (stat("boom.ogg", &sbuf) != -1) 
      {
         int size;
+	int freq;
 	size = sbuf.st_size;
 	void *data;
 	data = malloc(size);
@@ -811,20 +811,16 @@ int main(int argc, char* argv[])
 	     if (fh != NULL) 
 	       {
 		  fread(data, size, 1, fh);
-		  
-		  alutLoadVorbisp = (vorbisLoader *) alGetProcAddress((ALubyte *) "alutLoadVorbis_LOKI");
-		  if (alutLoadVorbisp != NULL) 
-		    {		       
-		       // Copy boom.ogg data into AL Buffer 7
-		       if (alutLoadVorbisp(g_Buffers[7], data, size) != AL_TRUE) {
-			  DisplayALError((ALbyte *) "alBufferData buffer 7 : ", error);
-			  // Delete buffers
-			  alDeleteBuffers(NUM_BUFFERS, g_Buffers);
-			  exit(-1);
-		       }
-		    }
-		  
-		  
+		  // Copy boom.ogg data into AL Buffer 7
+		  alGetError();
+		  alBufferData(g_Buffers[7], AL_FORMAT_VORBIS_EXT, data, size, freq);
+		  error = alGetError();
+		  if (error != AL_NO_ERROR) {
+		    DisplayALError((ALbyte *) "alBufferData buffer 7 : ", error);
+		    // Delete buffers
+		    alDeleteBuffers(NUM_BUFFERS, g_Buffers);
+		    exit(-1);
+		  }
 	       }
 	     
 	     // Unload boom.ogg
