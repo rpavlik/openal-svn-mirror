@@ -161,7 +161,8 @@ ALboolean alutLoadVorbis_LOKI(ALuint bid,
 	err = ov_open_callbacks(vorb, &vorb->of, data, size, ov_fromdata);
 	if(err < 0) {
 		fprintf(stderr, "vorbis problems\n");
-
+		free(vorb->data);
+		free(vorb);
 		return AL_FALSE;
 	}
 
@@ -234,10 +235,8 @@ ALint Vorbis_Callback(UNUSED(ALuint sid),
 			if(ret == OV_HOLE)
 				continue;
 
-			if(ret == 0) {
-				/* eof */
-				fprintf(stderr, "eof\n");
-
+			if(ret <= 0) {
+				/* eof or error */
 				vorbmap_update(index, 0, 0);
 				return 0;
 			}
@@ -377,8 +376,10 @@ static void vorbmap_remove(ALuint sid) {
 	return;
 }
 
-static void VorbHandle_delete(UNUSED(VorbHandle *vorb)) {
-	fprintf(stderr, "VorbHandle_delete\n");
+static void VorbHandle_delete(VorbHandle *vorb) {
+	ov_clear(&vorb->of);
+	free(vorb->data);
+	free(vorb);
 
 	return;
 }
