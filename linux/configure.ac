@@ -470,12 +470,16 @@ AC_ARG_ENABLE([alsa],
                 [enable the alsa backend @<:@default=no@:>@])])
 
 if test "x$enable_alsa" = xyes; then
-    AC_CHECK_HEADER(alsa/asoundlib.h,
-	SHADOW_WARN=no
-	REDUNDANT_DECLS_WARN=no
-        AC_DEFINE(ALSA_SUPPORT, 1, [undocumented])
-    	OS_OBJS="$OS_OBJS \$(ALSA_OBJS)",
-    enable_alsa=no)
+    AC_CHECK_HEADERS([time.h])
+    AC_CHECK_HEADER([alsa/asoundlib.h],
+      [SHADOW_WARN=no
+       REDUNDANT_DECLS_WARN=no
+       AC_DEFINE(ALSA_SUPPORT, 1, [undocumented])
+       OS_OBJS="$OS_OBJS \$(ALSA_OBJS)"],
+      [enable_alsa=no],
+      [#if HAVE_TIME_H
+#include <time.h>
+#endif])
 fi
 
 AC_ARG_ENABLE([alsa-dlopen],

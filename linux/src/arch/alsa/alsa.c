@@ -40,6 +40,9 @@
 #include <dlfcn.h>
 #endif
 
+#if HAVE_TIME_H
+#include <time.h>
+#endif
 #include <alsa/asoundlib.h>
 
 static void *alsa_lib_handle = NULL;

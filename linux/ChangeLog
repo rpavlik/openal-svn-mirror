@@ -1,5 +1,8 @@
 2005-03-25  Sven Panne  <sven.panne@aedion.de>
 
+	* linux/src/configure.ac: <alsa/asoundlib.h> needs <time.h> when
+	ISO C99 is enabled.
+
 	* linux/src/al_config.c: As mentioned in the docs, try system wide
 	config file in /etc if no user-specific one is found.
 
