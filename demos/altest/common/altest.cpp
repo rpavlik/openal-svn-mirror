@@ -44,6 +44,8 @@
 #define INITGUID
 #define OPENAL
 
+#define TEST_VORBIS // enable for ogg vorbis testing
+
 #ifdef _WIN32
 #include <windows.h>	// For timeGetTime()
 #include <stdio.h>
@@ -63,8 +65,11 @@
 #include <ctype.h>
 #include <memory.h>
 #include <math.h>
+#ifndef __USE_BSD
 #define __USE_BSD
+#endif
 #include <unistd.h>
+#include <sys/stat.h>
 
 #ifdef OSX_FRAMEWORK
 #include <OpenAL/al.h>
@@ -167,6 +172,12 @@ EAXGet	eaxGet;						// EAXGet function, retrieved if EAX Extension is supported
 #endif
 ALboolean g_bEAX;					// Boolean variable to indicate presence of EAX Extension 
 ALuint	g_Buffers[NUM_BUFFERS];		// Array of Buffers
+
+#ifdef TEST_VORBIS
+// vorbis extension
+typedef ALboolean (vorbisLoader)(ALuint, ALvoid *, ALint);
+vorbisLoader *alutLoadVorbisp = NULL;
+#endif
 
 static ALenums enumeration[]={
 	// Types
@@ -778,20 +789,43 @@ int main(int argc, char* argv[])
 	}
 
 #ifdef TEST_VORBIS
-	// Load mono.ogg
-
-	// Copy mono.ogg data into AL Buffer 7
-	alBufferData(g_Buffers[7],format,data,size,freq);
-	if ((error = alGetError()) != AL_NO_ERROR)
-	{
-		DisplayALError((ALbyte *) "alBufferData buffer 7 : ", error);
-		// Delete buffers
-		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
-		exit(-1);
-	}
-
-	// Unload mono.ogg
-        free(data);
+     // Load boom.ogg
+     struct stat sbuf;
+     if (stat("boom.ogg", &sbuf) != -1) 
+     {
+        int size;
+	size = sbuf.st_size;
+	void *data;
+	data = malloc(size);
+	
+	if (data != NULL) 
+	  {
+	     FILE *fh;
+	     fh = fopen("boom.ogg", "rb");
+	     if (fh != NULL) 
+	       {
+		  fread(data, size, 1, fh);
+		  
+		  alutLoadVorbisp = (vorbisLoader *) alGetProcAddress((ALubyte *) "alutLoadVorbis_LOKI");
+		  if (alutLoadVorbisp != NULL) 
+		    {		       
+		       // Copy boom.ogg data into AL Buffer 7
+		       if (alutLoadVorbisp(g_Buffers[7], data, size) != AL_TRUE) {
+			  DisplayALError((ALbyte *) "alBufferData buffer 7 : ", error);
+			  // Delete buffers
+			  alDeleteBuffers(NUM_BUFFERS, g_Buffers);
+			  exit(-1);
+		       }
+		    }
+		  
+		  
+	       }
+	     
+	     // Unload boom.ogg
+	     free(data);
+	     fclose(fh);
+	  }
+     }
 #endif
 
 	// Check for EAX extension
@@ -4155,14 +4189,14 @@ ALvoid I_VorbisTest()
 		return;
 	}
 
-	buffers[0] = g_Buffers[6];
-	buffers[1] = g_Buffers[6];
+	buffers[0] = g_Buffers[7];
+	buffers[1] = g_Buffers[7];
 
-	printf("Stereo Test\n");
+	printf("Vorbis Test\n");
 	printf("Press '1' to play an Ogg Vorbis buffer on source 0\n");
 	printf("Press '2' to toggle looping on / off\n");
 	printf("Press 'q' to quit\n");
-	printf("Looping is on\n");
+	printf("Looping is off\n");
 
 	do
 	{
@@ -4177,7 +4211,7 @@ ALvoid I_VorbisTest()
 					DisplayALError((ALbyte *) "alSourceStop source 0 : ", error);
 
 				// Attach new buffer
-				alSourcei(source[0],AL_BUFFER, g_Buffers[6]);
+				alSourcei(source[0],AL_BUFFER, g_Buffers[7]);
 				if ((error = alGetError()) != AL_NO_ERROR)
 					DisplayALError((ALbyte *) "alSourcei 0 AL_BUFFER buffer 6 (stereo) : \n", error);
 
@@ -4195,6 +4229,13 @@ ALvoid I_VorbisTest()
 				alSourcePlay(source[0]);
 				if ((error = alGetError()) != AL_NO_ERROR)
 					DisplayALError((ALbyte *) "alSourcePlay source 0 : ", error);
+		   
+		                // delay until done playing
+/*				ALint state;
+				alGetSourceiv(source[0], AL_SOURCE_STATE, &state);
+		                while (state == AL_PLAYING) {
+			          sleep(1);
+		                } */
 				
 				break;
 			case '2':
