@@ -1857,7 +1857,7 @@ static void _alSplitSourceQueue( ALuint cid,
  *
  * Copies the interleaved data from src[0..(src_size/2)-1] to
  * dstret[0..dest_channels-1], splitting it into seperate channels.
- * src_channels describes the period of the channel repitition in src,
+ * src_channels describes the period of the channel repetition in src,
  * dest_channels describes the number of independant buffers in dstref.
  * src_size is the size of src in bytes, and offset is the offset into each
  * seperate channel in dstref where the copying begins.
