@@ -1,8 +1,12 @@
 #ifndef _ALCTYPES_H_
 #define _ALCTYPES_H_
 
+#if !defined(_WIN32)
 struct _AL_device;
 typedef struct _AL_device ALCdevice;
+
+typedef void ALCcontext;
+#endif /* _WIN32 */
 
 typedef int ALCenum;
 
