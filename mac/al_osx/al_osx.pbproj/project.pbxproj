@@ -33,6 +33,7 @@
 				4F0BB7EC011F40E904CA0E50,
 				4F0BB7ED011F40E904CA0E50,
 			);
+			hasScannedForEncodings = 1;
 			isa = PBXProject;
 			mainGroup = 0867D691FE84028FC02AAC07;
 			productRefGroup = 034768DDFF38A45A11DB9C8B;
@@ -123,7 +124,6 @@
 </dict>
 </plist>
 ";
-			shouldUseHeadermap = 1;
 		};
 		0867D69DFE84028FC02AAC07 = {
 			buildActionMask = 2147483647;
@@ -298,120 +298,140 @@
 //F53
 //F54
 		F558C52A036A116501A8006E = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alBuffer.c;
 			path = ../openal/alBuffer.c;
 			refType = 2;
 		};
 		F558C52B036A116501A8006E = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alBuffer.h;
 			path = ../../openal/alBuffer.h;
 			refType = 3;
 		};
 		F558C52C036A116501A8006E = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alc.c;
 			path = ../../openal/alc.c;
 			refType = 3;
 		};
 		F558C52D036A116501A8006E = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alEnvironment.c;
 			path = ../../openal/alEnvironment.c;
 			refType = 3;
 		};
 		F558C52E036A116501A8006E = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alEnvironment.h;
 			path = ../../openal/alEnvironment.h;
 			refType = 3;
 		};
 		F558C52F036A116501A8006E = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alError.c;
 			path = ../../openal/alError.c;
 			refType = 3;
 		};
 		F558C530036A116501A8006E = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alError.h;
 			path = ../../openal/alError.h;
 			refType = 3;
 		};
 		F558C531036A116501A8006E = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alExtension.c;
 			path = ../../openal/alExtension.c;
 			refType = 3;
 		};
 		F558C532036A116501A8006E = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alExtension.h;
 			path = ../../openal/alExtension.h;
 			refType = 3;
 		};
 		F558C533036A116501A8006E = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alListener.c;
 			path = ../../openal/alListener.c;
 			refType = 3;
 		};
 		F558C534036A116501A8006E = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alListener.h;
 			path = ../../openal/alListener.h;
 			refType = 3;
 		};
 		F558C535036A116501A8006E = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alMain.c;
 			path = ../../openal/alMain.c;
 			refType = 3;
 		};
 		F558C536036A116501A8006E = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alMain.h;
 			path = ../../openal/alMain.h;
 			refType = 3;
 		};
 		F558C537036A116501A8006E = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alSoftware.c;
 			path = ../../openal/alSoftware.c;
 			refType = 3;
 		};
 		F558C538036A116501A8006E = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alSoftware.h;
 			path = ../../openal/alSoftware.h;
 			refType = 3;
 		};
 		F558C539036A116501A8006E = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alSource.c;
 			path = ../../openal/alSource.c;
 			refType = 3;
 		};
 		F558C53A036A116501A8006E = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alSource.h;
 			path = ../../openal/alSource.h;
 			refType = 3;
 		};
 		F558C53B036A116501A8006E = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alState.c;
 			path = ../../openal/alState.c;
 			refType = 3;
 		};
 		F558C53C036A116501A8006E = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = alState.h;
 			path = ../../openal/alState.h;
 			refType = 3;
 		};
 		F558C53D036A116501A8006E = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = ALut.c;
 			path = ../../openal/ALut.c;
@@ -538,24 +558,28 @@
 			};
 		};
 		F558C552036A119601A8006E = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = globals.h;
 			path = ../../openal/globals.h;
 			refType = 3;
 		};
 		F558C553036A119601A8006E = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = globaltypes.h;
 			path = ../../openal/globaltypes.h;
 			refType = 3;
 		};
 		F558C554036A119601A8006E = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = sm.c;
 			path = ../../openal/sm.c;
 			refType = 3;
 		};
 		F558C555036A119601A8006E = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = sm.h;
 			path = ../../openal/sm.h;

@@ -27,7 +27,16 @@
 
 ALAPI ALboolean ALAPIENTRY alIsExtensionPresent(ALubyte *extName)
 {
-	return AL_FALSE;
+    ALboolean extPresent;
+    
+    extPresent = AL_FALSE;
+    
+    if (!strcmp(extName, "AL_EXT_vorbis")) {
+        // check for required libraries
+            // set function pointers
+    }
+    
+    return extPresent;
 }
 
 ALAPI ALvoid * ALAPIENTRY alGetProcAddress(ALubyte *fname)
