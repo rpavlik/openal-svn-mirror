@@ -21,6 +21,11 @@
 
 
 #ifdef MMX_SUPPORT
+#error MMX support needs more work.  Do not enable it unless you plan to fix it.
+#endif
+
+
+#ifdef MMX_SUPPORT
 extern void mix16_1( ALshort *dst, ALshort *src,  int len );
 extern void mix16_2( ALshort *dst, ALshort **src, int len );
 extern void mix16_3( ALshort *dst, ALshort **src, int len );

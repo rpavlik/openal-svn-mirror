@@ -1,3 +1,9 @@
+2004-09-10  Adam D. Moss  <adam@gimp.org>
+
+        * openal/linux/src/mixaudio16.c: Issue an error if we've tried
+        to compile with the broken MMX support enabled and we're not
+        a genius.
+
 2004-06-30  Adam D. Moss  <adam@gimp.org>
 
         * openal/linux/src/al_doppler.c: Permit a DOPPLER_FACTOR of 0 as
