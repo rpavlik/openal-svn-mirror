@@ -8,7 +8,7 @@
 #include "audioenv.h"
 #include "Obstruct.h"
 
-#ifndef LINUX // use EAX for Windows and MacOS
+#ifdef WINDOWS
 #define USE_EAX
 #endif
 
@@ -178,7 +178,7 @@ int AudioEnv::LoadFile (char *filename, bool loop)
    alutLoadWAVFile(filename, &format, &data, &size, &freq, &looping);
    alBufferData (buffer[nextBuffer], format, data, size, freq);
 #endif
-#ifdef MACOS
+#if defined(MACOS) | defined(MAC_OS_X)
    ALsizei size, freq;
    ALenum format;
    ALvoid *data;

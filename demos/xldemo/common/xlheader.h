@@ -28,6 +28,17 @@
 #include "alut.h"
 #endif
 
+#ifdef MAC_OS_X
+#include <stdio.h>
+#include <math.h>
+#include <string.h>
+#include <al.h>
+#include <alc.h>
+#include <alut.h>
+#include <glut.h>
+#endif
+
+
 #ifdef LINUX
 #include "GL/glut.h"
 #include <stdio.h>

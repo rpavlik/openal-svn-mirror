@@ -10,8 +10,12 @@
 #ifdef _WIN32
 # define WINDOWS
 #endif
+#if defined(__APPLE__) & defined(__MACH__) // check for OS X
+#define MAC_OS_X
+#else
 #ifdef __MACOS__
 # define MACOS
+#endif
 #endif
 #ifdef unix
 # ifndef LINUX
