@@ -1,6 +1,10 @@
 #ifndef TESTLIB_H_
 #define TESTLIB_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 #include "../src/al_siteconfig.h"
 #include "AL/altypes.h"
 #include "../config.h"
@@ -44,5 +48,9 @@ extern ALboolean (*talutLoadMS_ADPCMData)(ALuint bid,
 void micro_sleep(unsigned int n);
 void fixup_function_pointers(void);
 ALboolean SourceIsPlaying(ALuint sid);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* TESTLIB_H_ */

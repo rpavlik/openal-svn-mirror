@@ -80,3 +80,7 @@ testleak
 testmulticontext
 testleak2
 testmulticontext2
+testdevice
+testgendelbuffer_error
+testgendelsource_error
+testcpp
