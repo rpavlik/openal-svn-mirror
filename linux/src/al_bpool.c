@@ -10,6 +10,10 @@
 #define AL_FIRST_BUFFER_ID  0x8000
 #define MINBUFFERS          20
 
+#ifndef elementsof
+#define elementsof(a) ((sizeof(a)) / (sizeof *(a)))
+#endif
+
 /*
  * _alBufferInit( AL_buffer *buf, ALuint bid )
  *
@@ -287,7 +291,7 @@ static void _alBufferInit( AL_buffer *buf, ALuint bid ) {
 
 	buf->num_buffers = _alcDCGetNumSpeakers();
 
-	for(i = 0; i < buf->num_buffers; i++) {
+	for(i = 0; i < elementsof(buf->orig_buffers); i++) {
 		buf->orig_buffers[i] = NULL;
 	}
 
