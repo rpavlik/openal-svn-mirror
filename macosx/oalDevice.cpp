@@ -384,19 +384,27 @@ void	OALDevice::ConfigureGraphForChannelLayout()
 	result = AudioUnitSetProperty (mMixerUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 0, &format, outSize);
 		THROW_RESULT
 
-    if (!mPreferred3DMixerExists)
-    {
-        // explicitly set the channel layout, pre 2.0 mixer is just 5.0 and stereo
-        // the output AU will then be configured correctly when the mixer is connected to it later
-        AudioChannelLayout		layout;
-         
-        layout.mChannelLayoutTag = (mCurrentMixerChannelCount == 5) ? kAudioChannelLayoutTag_AudioUnit_5_0 : kAudioChannelLayoutTag_Stereo;	
-        layout.mChannelBitmap = 0;			
-        layout.mNumberChannelDescriptions = 0;
+    // explicitly set the channel layout, pre 2.0 mixer is just 5.0 and stereo
+    // the output AU will then be configured correctly when the mixer is connected to it later
+    AudioChannelLayout		layout;
+     
+    if (mCurrentMixerChannelCount == 5)
+        layout.mChannelLayoutTag = kAudioChannelLayoutTag_AudioUnit_5_0;
+    else if (mCurrentMixerChannelCount == 4)
+        layout.mChannelLayoutTag = (mPreferred3DMixerExists == true) ? kAudioChannelLayoutTag_AudioUnit_4 : kAudioChannelLayoutTag_Stereo;
+    else
+        layout.mChannelLayoutTag = kAudioChannelLayoutTag_Stereo;
+    
+    layout.mChannelBitmap = 0;			
+    layout.mNumberChannelDescriptions = 0;
 
-        outSize = sizeof(layout);
-        result = AudioUnitSetProperty (mMixerUnit, kAudioUnitProperty_AudioChannelLayout, kAudioUnitScope_Output, 0, &layout, outSize);
-    }
+    // it isn't currently necessary to explicitly set the mixer's output channel layout but it might in the future if there were more
+    // than one layout usable by the current channel count. It doesn't hurt to set this property.
+    outSize = sizeof(layout);
+    result = AudioUnitSetProperty (mMixerUnit, kAudioUnitProperty_AudioChannelLayout, kAudioUnitScope_Output, 0, &layout, outSize);
+
+	result = AudioUnitSetProperty (mOutputUnit, kAudioUnitProperty_AudioChannelLayout, kAudioUnitScope_Input, 0, &layout, outSize);
+		THROW_RESULT
     
 	return;
 }
