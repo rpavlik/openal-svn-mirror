@@ -1,6 +1,6 @@
 2004-06-30  Adam D. Moss  <adam@gimp.org>
 
-        * openal/linux/test/testdopper.c: A more realistic and helpful
+        * openal/linux/test/testdoppler.c: A more realistic and helpful
         doppler test -- move the source towards, through, and away from
         the listener, while accelerating constantly.
 
