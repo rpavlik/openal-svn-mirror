@@ -43,6 +43,7 @@
 #include "arch/interface/interface_sound.h"
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 /*
  * The mixing function checks this variable for equality with AL_TRUE.  When
@@ -312,7 +313,10 @@ static void _alMixSources( void )
 		 */
 		written = MIN(bytes_to_write, bufsiz);
 
-		_alAddDataToMixer( src->srcParams.outbuf, written );
+		if(written)
+		{
+			_alAddDataToMixer( src->srcParams.outbuf, written );
+		}
 
 		if(_alSourceShouldIncrement(src) == AL_TRUE)
 		{
@@ -433,12 +437,28 @@ static ALuint _alAddDataToMixer( void *dataptr, ALuint bytes_to_write )
  *
  * Deallocate data allocated in _alInitMixer.
  */
-void _alDestroyMixer( void ) {
-	if( mix_mutex != NULL ) {
+void _alDestroyMixer( void )
+{
+	if( mix_mutex != NULL )
+	{
 		mlDestroyMutex( mix_mutex );
+		mix_mutex = NULL;
 	}
 
-	if( pause_mutex != NULL ) {
+	_alMixPoolFree( &mspool, _alDestroyMixSource );
+	mspool.size = 0;
+
+	mixthread = NULL;
+
+	_alMixFuncDestroy(&MixFunc);
+	_alMixManagerDestroy(&MixManager);
+
+	free(mixbuf.data);
+	mixbuf.data   = NULL;
+	mixbuf.length = 0;
+
+	if( pause_mutex != NULL )
+	{
 		/* we may we destroyed while paused, which is bad, but
 		 * not horrible.  Try to lock it.  If sucessful, then
 		 * we weren't locked before, so we unlock and Destroy.  
@@ -453,22 +473,9 @@ void _alDestroyMixer( void ) {
 					*/
 
 		mlDestroyMutex( pause_mutex );
+		pause_mutex = NULL;
 	}
 
-	_alMixPoolFree( &mspool, _alDestroyMixSource );
-	mspool.size = 0;
-
-	mixthread   = NULL;
-	pause_mutex = NULL;
-	mix_mutex   = NULL;
-
-	_alMixFuncDestroy(&MixFunc);
-	_alMixManagerDestroy(&MixManager);
-
-	free( mixbuf.data );
-
-	mixbuf.data   = NULL;
-	mixbuf.length = 0;
 
 	return;
 }
@@ -711,22 +718,27 @@ void _alSetMixer( ALboolean synchronous )
 		/* to */
 		_al_AL2ACFMT(ex_format),
 		_al_ALCHANNELS(ex_format),/* ignore channel settings.  We handle this */
-		ex_speed) < 0) {
+		ex_speed) < 0)
+	{
 		_alDebug(ALD_CONVERT, __FILE__, __LINE__,
 			"Couldn't build audio convertion data structure.");
 	}
 
-	if( s16le.len_ratio > 1.0 ) {
+	if( s16le.len_mult > 1.0 )
+	{
 		/*
 		 * we always alloc the larger value, because
 		 * we need the extra space
 		 */
-		mixbuf.length = bufsiz * s16le.len_ratio;
+		mixbuf.length = bufsiz * s16le.len_mult;
 	} else {
 		mixbuf.length = bufsiz;
 	}
 
-	mixbuf.data   = realloc( mixbuf.data, mixbuf.length );
+	free(mixbuf.data);
+	mixbuf.data = malloc(mixbuf.length);
+	assert(mixbuf.data);
+
 	s16le.buf     = mixbuf.data;
 	s16le.len     = bufsiz;
 
@@ -1053,42 +1065,6 @@ void FL_alUnlockMixBuf(UNUSED(const char *fn), UNUSED(int ln)) {
 }
 
 /*
- * sync_mixer_iterate(UNUSED(void *dummy))
- *
- * non-threaded version of top level mixing function.  Called many times.
- */
-int sync_mixer_iterate(UNUSED(void *dummy)) {
-	ALshort *dataptr = mixbuf.data;
-	int bytes_to_write = 0;
-
-	/* clear buffer */
-	memset( dataptr, 0, bufsiz );
-
-	_alLockMixBuf();
-
-	_alMixSources();
-
-	_alProcessFlags();
-
-	_alUnlockMixBuf();
-
-	/* we've accumulated sources, now mix */
-	_alMixManagerMix(&MixManager, &MixFunc, mixbuf.data);
-
-	if(acConvertAudio(&s16le) < 0) {
-		_alDebug(ALD_CONVERT, __FILE__, __LINE__,
-			"Couldn't execute conversion from canon.");
-		return -1;
-	}
-
-	bytes_to_write = s16le.len_cvt;
-
-	_alcDCDeviceWrite( dataptr, bytes_to_write );
-	
-	return 0;
-}
-
-/*
  * async_mixer_iterate(UNUSED(void *dummy))
  *
  * threaded version of top level mixing function.  Doesn't end until the last
@@ -1101,7 +1077,8 @@ int async_mixer_iterate(UNUSED(void *dummy)) {
 	memset(mixbuf.data, 0, mixbuf.length);
 
 	do {
-		if(_alTryLockMixerPause() == AL_TRUE) {
+		if(_alTryLockMixerPause() == AL_TRUE)
+		{
 			_alLockMixBuf();
 
 			_alMixSources();
@@ -1113,7 +1090,8 @@ int async_mixer_iterate(UNUSED(void *dummy)) {
 			/* we've accumulated sources, now mix */
 			_alMixManagerMix( &MixManager, &MixFunc, mixbuf.data );
 
-			if(acConvertAudio(&s16le) < 0) {
+			if(acConvertAudio(&s16le) < 0)
+			{
 				_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
 				"Couldn't execute conversion from canon.");
 				/*
@@ -1125,7 +1103,10 @@ int async_mixer_iterate(UNUSED(void *dummy)) {
 
 			bytes_to_write = s16le.len_cvt;
 
-			_alcDCDeviceWrite( mixbuf.data, bytes_to_write );
+			if(bytes_to_write)
+			{
+				_alcDCDeviceWrite(mixbuf.data, bytes_to_write);
+			}
 
 			/* clear buffer */
 			memset(mixbuf.data, 0, mixbuf.length);
@@ -1356,3 +1337,43 @@ void _alProcessFlags( void ) {
 	return;
 }
 
+/*
+ * sync_mixer_iterate(UNUSED(void *dummy))
+ *
+ * non-threaded version of top level mixing function.  Called many times.
+ */
+int sync_mixer_iterate(UNUSED(void *dummy))
+{
+	ALshort *dataptr = mixbuf.data;
+	int bytes_to_write = 0;
+
+	/* clear buffer */
+	if(dataptr)
+	{
+		memset( dataptr, 0, bufsiz );
+	}
+
+	_alLockMixBuf();
+	_alMixSources();
+	_alProcessFlags();
+	_alUnlockMixBuf();
+
+	/* we've accumulated sources, now mix */
+	_alMixManagerMix(&MixManager, &MixFunc, mixbuf.data);
+
+	if(acConvertAudio(&s16le) < 0)
+	{
+		_alDebug(ALD_CONVERT, __FILE__, __LINE__,
+			"Couldn't execute conversion from canon.");
+		return -1;
+	}
+
+	bytes_to_write = s16le.len_cvt;
+
+	if(dataptr)
+	{
+		_alcDCDeviceWrite( dataptr, bytes_to_write );
+	}
+	
+	return 0;
+}
