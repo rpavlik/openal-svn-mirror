@@ -28,6 +28,11 @@ pthread_mutex_t *Posix_CreateMutex(void) {
 }
 
 void Posix_DestroyMutex(pthread_mutex_t *mutex) {
+	if(!mutex)
+	{
+		return;
+	}
+
 	if(pthread_mutex_destroy(mutex)) {
 		fprintf(stderr, "mutex %p busy\n", (void *) mutex);
 		assert(0);
@@ -41,6 +46,11 @@ void Posix_DestroyMutex(pthread_mutex_t *mutex) {
 
 
 int Posix_TryLockMutex(pthread_mutex_t *mutex) {
+	if(!mutex)
+	{
+		return -1;
+	}
+
 	if(pthread_mutex_trylock(mutex) == EBUSY) {
 		return -1;
 	}
@@ -49,10 +59,20 @@ int Posix_TryLockMutex(pthread_mutex_t *mutex) {
 }
 
 void Posix_LockMutex(pthread_mutex_t *mutex) {
+	if(!mutex)
+	{
+		return;
+	}
+
 	pthread_mutex_lock(mutex);
 }
 
 void Posix_UnlockMutex(pthread_mutex_t *mutex) {
+	if(!mutex)
+	{
+		return;
+	}
+
 	pthread_mutex_unlock(mutex);
 }
 
