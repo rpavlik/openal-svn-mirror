@@ -1694,17 +1694,25 @@ static void _alSplitSourceQueue( ALuint cid,
 		return;
 	}
 
+	assert(len >= 0);	
+	assert(src->srcParams.soundpos >= 0);
+
 	/*
 	 *
 	 * First, test whether we can get enough data to fill the
 	 * request with the current buffer's data ( minus current sound
 	 * pos ) plus the next buffer's data.
 	 */
-	if( samp->size - src->srcParams.soundpos + nextsamp->size >= len )
+	if( samp->size + nextsamp->size >= len + src->srcParams.soundpos )
 	{
-		/* printf( "filling from one buffer\n" ); */
-		/* we can fill the request */
+#if DEBUG_QUEUE
+		_alDebug(ALD_QUEUE, __FILE__, __LINE__,
+			 "Queue filling from two buffers ( size + nextsize (%d) vs soundpos + len %d",
+			samp->size + nextsamp->size,
+			 len + src->srcParams.soundpos);
+#endif
 
+		/* we can fill the request */
 		mixable = _alSourceBytesLeftByChannel(src, samp);
 		remaining = 0;
 
@@ -1714,7 +1722,14 @@ static void _alSplitSourceQueue( ALuint cid,
 		 * in case samp->size < len, we don't want
 		 * to overwrite with the memcpy
 		 */
-		remaining = (len * bufchannels) - mixable;
+		remaining = len - mixable;
+
+#if DEBUG_QUEUE
+		_alDebug(ALD_QUEUE, __FILE__, __LINE__,
+			 "first buffer %d, second buffer %d",
+			 mixable, remaining);
+#endif
+		
 
 		for(i = 0; i < nc; i++) {
 			bufptr = _alSourceGetBufptr(src, samp, i);
@@ -1725,11 +1740,21 @@ static void _alSplitSourceQueue( ALuint cid,
 		}
 
 		src->srcParams.new_readindex = src->bid_queue.read_index + 1;
-		src->srcParams.new_soundpos = remaining;
+		src->srcParams.new_soundpos = nextsamp->size - remaining;
+
+		if(remaining >= nextsamp->size)
+		{
+			/* we read all of the next buffer */
+			src->srcParams.new_readindex++;
+		}
 
 		return;
 	}
 
+	fprintf(stderr, "Splitting from multiple needed %d left %d\n",
+		len,
+		samp->size - src->srcParams.soundpos);
+			
 	/*
 	 * We need to get data from more than one buffer
 	 */
@@ -1739,7 +1764,7 @@ static void _alSplitSourceQueue( ALuint cid,
 
 		if( src->bid_queue.read_index >= src->bid_queue.size )
 		{
-			/* printf( "end of buffer queue\n" ); */
+			fprintf(stderr, "end of buffer queue\n" );
 
 			/*
 			 * Read past the last buffer and we still
@@ -1760,10 +1785,6 @@ static void _alSplitSourceQueue( ALuint cid,
 
 			return;
 		}
-
-		/*
-		printf( "spanning two buffers\n" );
-		*/
 
 		assert(src->bid_queue.read_index < src->bid_queue.size );
 
@@ -1793,6 +1814,7 @@ static void _alSplitSourceQueue( ALuint cid,
 		collected_bytes += mixable;
 
 		src->srcParams.soundpos = 0;
+		new_soundpos = 0;
 	}
 
 	src->srcParams.new_readindex = src->bid_queue.read_index;

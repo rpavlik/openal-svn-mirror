@@ -1,3 +1,10 @@
+2002-12-30  Joseph Valenzuela  <jvalenzu@formosa.infinite-monkeys.org>
+
+	* openal/linux/src/al_mixer.c
+	* openal/linux/src/al_source.c
+	Fix assertions for queue mixing, not done yet.
+
+
 2002-12-17  Joseph Valenzuela  <jvalenzu@formosa.infinite-monkeys.org>
 	* src/al_queue.c
 	* src/al_mixer.c

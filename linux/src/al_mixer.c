@@ -306,6 +306,23 @@ static void _alMixSources( void )
 			src->srcParams.soundpos =  src->srcParams.new_soundpos;
 
 			/*
+			 * Sanity check so that we don't read past the size
+ 			 * of the next buffer in the queue.
+ 			 */
+
+#if DEBUG_QUEUE
+			if(src->bid_queue.read_index < src->bid_queue.size)
+			{
+				ALint ri = src->bid_queue.read_index;
+				ALint bid = src->bid_queue.queue[ri];
+				AL_buffer *samp = _alGetBuffer(bid);
+
+				assert(samp);
+				assert(src->srcParams.soundpos < samp->size);
+			}
+#endif
+
+			/*
 			 * Flag so that we don't do this again
 			 * until the next SplitSourceQueue.
 			 */
