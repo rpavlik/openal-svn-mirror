@@ -1,9 +1,6 @@
 TODO:
-	Before 1.0 release:
-	  - check tokens/functions to make sure 100% interface
-	  - remove deprecated functions/tokens
-	  - remove deprecated Loki extensions
-	  - update callback extension
+	Compliance:
+	  - > 1.0 listener and source gain
 
 	General:
 	  - check UNUSED (and eventually remove them)
