@@ -1,3 +1,9 @@
+2002-09-09  Ryan C. Gordon  <ryan@epicgames.com>
+
+	* src/alc/alc_context.c:
+	Moved call to _alcSpeakerInit() to prevent segfault from referencing
+	the context's write_device before it was initialized.
+
 2002-09-08  Ryan C. Gordon  <ryan@epicgames.com>
 
 	* src/arch/sdl/sdl.c:

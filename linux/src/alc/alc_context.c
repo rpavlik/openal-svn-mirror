@@ -475,6 +475,7 @@ ALCcontext *alcCreateContext( struct _AL_device *dev, int *attrlist )
 
 		/* get a context name for the new context */
 		cid = _alcGetNewContextId();
+		_alcSpeakerInit( cid );
 
 		/* misc library initialization */
 		_alInit();
@@ -720,8 +721,6 @@ AL_context *_alcInitContext( ALuint cid ) {
 	cc->doppler_velocity  = 1.0;
 
 	_alInitListener(&cc->listener);
-
-        _alcSpeakerInit( cid );
 
 	/* nothing is enabled by default */
 	cc->enable_flags = 0;
