@@ -604,9 +604,12 @@ void alBufferData( ALuint  bid,
 		case AL_FORMAT_IMA_ADPCM_STEREO16_EXT:
 			break;
 		default:
+			_alDebug(ALD_BUFFER, __FILE__, __LINE__,
+				"alBufferData: unknown format 0x%x", format);
 			_alcDCLockContext();
 			_alDCSetError(AL_INVALID_VALUE);
 			_alcDCUnlockContext();
+			return;
 			break;
 	}
 
