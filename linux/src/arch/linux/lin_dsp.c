@@ -36,7 +36,13 @@
 #define AFMT_S16 AFMT_S16_LE
 #endif /* WORDS_BIGENDIAN */
 
-#define DONTCARE ( 1 << 16)
+/*
+ * DONTCARE was (1 << 16), but that breaks 4Front's commercial drivers.
+ *  According to their reference manual, it musts be (2 << 16) or higher
+ *  or it is ignored, which is not good. Thanks to 4Front for tracking this
+ *  down.   --ryan.
+ */
+#define DONTCARE ( 32 << 16)
 
 /* convert an alc channel to a linux dsp channel */
 static int alcChannel_to_dsp_channel(ALuint alcc);
@@ -575,7 +581,6 @@ static int set_fd(int dsp_fd, ALboolean readable,
 		     ALuint *channels)
 {
 	struct audio_buf_info info;
-	int divisor = DONTCARE | _alSpot( *bufsiz );
 
 	if(dsp_fd < 0) {
 		return -1;
@@ -586,11 +591,18 @@ static int set_fd(int dsp_fd, ALboolean readable,
 		 *bufsiz, *fmt, *speed, *channels );
 #endif
 
+
+#if 0 /* This code breaks 4Front's commercial drivers. Just say no. --ryan. */
+{
+	int divisor = DONTCARE | _alSpot( *bufsiz );
 	if( ioctl(dsp_fd, SNDCTL_DSP_SETFRAGMENT, &divisor ) < 0) {
 #ifdef DEBUG
 		perror("ioctl SETFRAGMENT");
 #endif
 	}
+}
+#endif
+
 
 	/* reset card defaults */
 	if(ioctl(dsp_fd, SNDCTL_DSP_RESET, NULL) < 0) {
