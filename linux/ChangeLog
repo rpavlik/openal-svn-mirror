@@ -13,6 +13,9 @@
 	* src/alc/alc_device.h
 	Context attribute management
 
+	* src/al_source.c
+	Addition queue fixes.
+
 2002-12-30  Joseph Valenzuela  <jvalenzu@formosa.infinite-monkeys.org>
 
 	* openal/linux/src/al_mixer.c

@@ -1680,8 +1680,41 @@ static void _alSplitSourceQueue( ALuint cid,
 	old_soundpos = src->srcParams.soundpos;
 	old_readindex = src->bid_queue.read_index;
 
-	nextbid = src->bid_queue.queue[src->bid_queue.read_index + 1];
+#if 1
+	if( _alSourceBytesLeftByChannel(src, samp) <= 0)
+	{
+		
+		ALuint bid = 0;
+		
+		/* no data left in this buffer */
+		src->bid_queue.read_index++;
+		if(src->bid_queue.read_index >= src->bid_queue.size)
+		{
+			/* JIV FIXME: breaks queue looping? */
+			if(_alSourceIsLooping(src))
+			{
+				src->bid_queue.read_index = 0;
+			}
+			else
+			{
+				/* JIV FIXME: doesn't mix last queue bit */
 
+				return;
+			}
+		}
+
+		bid  = src->bid_queue.queue[src->bid_queue.read_index];
+		samp = _alGetBuffer(bid);
+
+		src->srcParams.soundpos = 0;
+
+		/* ho ho ho ho */
+		_alSplitSources(cid, sourceid, nc, len, samp, buffers);
+		return;
+	}
+#endif
+
+	nextbid = src->bid_queue.queue[src->bid_queue.read_index + 1];
 	nextsamp = _alGetBuffer(nextbid);
 	if(nextsamp == NULL)
 	{
@@ -1694,8 +1727,8 @@ static void _alSplitSourceQueue( ALuint cid,
 		return;
 	}
 
-	assert(len >= 0);	
-	assert(src->srcParams.soundpos >= 0);
+/* 	assert(len >= 0); */
+/* 	assert(src->srcParams.soundpos >= 0); */
 
 	/*
 	 *
@@ -1747,6 +1780,12 @@ static void _alSplitSourceQueue( ALuint cid,
 			/* we read all of the next buffer */
 			src->srcParams.new_readindex++;
 		}
+
+#if DEBUG_QUEUE
+		_alDebug(ALD_QUEUE, __FILE__, __LINE__,
+			 "SplitSourceQueue, read_index is now %d",
+			 src->srcParams.new_readindex);
+#endif
 
 		return;
 	}
