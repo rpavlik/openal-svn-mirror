@@ -1367,7 +1367,6 @@ ALvoid FA_QueuingUnderrunStates(ALvoid)
 	ALuint error;
 	ALint tempInt;
 	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
-	ALfloat	sourceOri[]={1.0,0.0,0.0, 0.0,1.0,0.0};
 	bool localResultOK;
 
 	printf("\nQueuing Underrun States Test. ");
@@ -1481,7 +1480,6 @@ ALvoid SA_SourceGain(ALvoid)
 {
 	ALuint testSources[2];
 	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
-	ALfloat	sourceOri[]={1.0,0.0,0.0, 0.0,1.0,0.0};
 
 	printf("Source Gain Test:");
 	if (ContinueOrSkip())
@@ -1526,7 +1524,6 @@ ALvoid SA_ListenerGain(ALvoid)
 {	
 	ALuint testSources[2];
 	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
-	ALfloat	sourceOri[]={1.0,0.0,0.0, 0.0,1.0,0.0};
 
 	printf("Listener Gain Test:");
 	if (ContinueOrSkip())
@@ -1575,7 +1572,6 @@ ALvoid SA_Position(ALvoid)
 	ALuint testSources[2];
 	int i;
 	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
-	ALfloat	sourceOri[]={1.0,0.0,0.0, 0.0,1.0,0.0};
 	ALfloat tempFVect[6];
 
 	printf("Position Test:");
@@ -1660,7 +1656,6 @@ ALvoid SA_SourceRelative(ALvoid)
 	ALuint testSources[2];
 	int i;
 	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
-	ALfloat	sourceOri[]={1.0,0.0,0.0, 0.0,1.0,0.0};
 
 	printf("Source Relative Test:");
 	if (ContinueOrSkip())
@@ -1718,7 +1713,6 @@ ALvoid SA_ListenerOrientation (ALvoid)
 {	
 	ALuint testSources[2];
 	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
-	ALfloat	sourceOri[]={1.0,0.0,0.0, 0.0,1.0,0.0};
 
 	printf("Listener Orientation Test:");
 	if (ContinueOrSkip())
@@ -1813,9 +1807,9 @@ ALvoid SA_SourceCone (ALvoid)
 {	
 	ALuint testSources[2];
 	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
-	ALfloat	sourceOri[]={0.0,0.0,1.0, 0.0,1.0,0.0};
-	ALfloat	sourceOri2[]={1.0,0.0,1.0, 0.0,1.0,0.0};
-	ALfloat	sourceOri3[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
+	ALfloat	sourceDir[]={0.0,0.0,1.0};
+	ALfloat	sourceDir2[]={1.0,0.0,1.0};
+	ALfloat	sourceDir3[]={0.0,0.0,-1.0};
 
 	printf("Source Cone Test:");
 	if (ContinueOrSkip())
@@ -1832,17 +1826,17 @@ ALvoid SA_SourceCone (ALvoid)
 		alSourcef(testSources[0], AL_CONE_OUTER_ANGLE, 270.0);
 		alSourcef(testSources[0], AL_CONE_OUTER_GAIN, (float)0.01);
 		alSource3f(testSources[0], AL_POSITION, 0.0, 0.0, -1.0);
-		alSourcefv(testSources[0], AL_DIRECTION, sourceOri);
+		alSourcefv(testSources[0], AL_DIRECTION, sourceDir);
 		alSourcePlay(testSources[0]);
 		
 		printf("The source will now point between the inner and outer cones, and should be at medium volume. (Press Return):\n");
 		CRToContinue();
-		alSourcefv(testSources[0], AL_DIRECTION, sourceOri2);
+		alSourcefv(testSources[0], AL_DIRECTION, sourceDir2);
 		alSourcePlay(testSources[0]);
 
 		printf("The source will now point behind the outer cone and will be at low volume. (Press Return):\n");
 		CRToContinue();
-		alSourcefv(testSources[0], AL_DIRECTION, sourceOri3);
+		alSourcefv(testSources[0], AL_DIRECTION, sourceDir3);
 		alSourcePlay(testSources[0]);
 		
 		CRForNextTest();
@@ -1863,7 +1857,6 @@ ALvoid SA_MinMaxGain(ALvoid)
 {	
 	ALuint testSources[2];
 	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
-	ALfloat	sourceOri[]={1.0,0.0,0.0, 0.0,1.0,0.0};
 
 	printf("MIN/MAX Gain Test:");
 	if (ContinueOrSkip())
@@ -1924,7 +1917,6 @@ ALvoid SA_ReferenceDistance(ALvoid)
 {
 	ALuint testSources[2];
 	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
-	ALfloat	sourceOri[]={1.0,0.0,0.0, 0.0,1.0,0.0};
 
 	printf("Reference Distance Test:");
 	if (ContinueOrSkip())
@@ -1970,7 +1962,6 @@ ALvoid SA_RolloffFactor(ALvoid)
 {
 	ALuint testSources[2];
 	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
-	ALfloat	sourceOri[]={1.0,0.0,0.0, 0.0,1.0,0.0};
 
 	printf("Rolloff Factor Test:");
 	if (ContinueOrSkip())
@@ -2019,7 +2010,6 @@ ALvoid SA_DistanceModel(ALvoid)
 {	
 	ALuint testSources[2];
 	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
-	ALfloat	sourceOri[]={1.0,0.0,0.0, 0.0,1.0,0.0};
 
 	printf("Distance Model Test:");
 	if (ContinueOrSkip())
@@ -2091,7 +2081,7 @@ ALvoid SA_Doppler(ALvoid)
 	ALuint testSources[2];
 	int i;
 	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
-	ALfloat	sourceOri[]={1.0,0.0,0.0, 0.0,1.0,0.0};
+	ALfloat	sourceDir[]={1.0,0.0,0.0};
 
 	printf("Doppler Test:");
 	if (ContinueOrSkip())
@@ -2106,7 +2096,7 @@ ALvoid SA_Doppler(ALvoid)
 		alSourcei(testSources[0], AL_LOOPING, true);
 		alSource3f(testSources[0], AL_POSITION, -100.0, 0.0, 0.0);
 		alSource3f(testSources[0], AL_VELOCITY, 10.0, 0.0, 0.0);
-		alSourcefv(testSources[0], AL_ORIENTATION, sourceOri);
+		alSourcefv(testSources[0], AL_DIRECTION, sourceDir);
 		alSourcePlay(testSources[0]);
 		for (i = -100; i < 100; i++)
 		{
@@ -2162,7 +2152,6 @@ ALvoid SA_Frequency(ALvoid)
 	ALuint testSources[2];
 	int i;
 	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
-	ALfloat	sourceOri[]={1.0,0.0,0.0, 0.0,1.0,0.0};
 
 	printf("Frequency Test:");
 	if (ContinueOrSkip())
@@ -2201,7 +2190,6 @@ ALvoid SA_Stereo(ALvoid)
 	ALuint testSources[2];
 	ALuint error;
 	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
-	ALfloat	sourceOri[]={1.0,0.0,0.0, 0.0,1.0,0.0};
 
 	printf("Stereo Test:");
 	if (ContinueOrSkip())
@@ -2265,7 +2253,6 @@ ALvoid SA_QueuingUnderrunPerformance(ALvoid)
 	ALuint error;
 	ALint tempInt;
 	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
-	ALfloat	sourceOri[]={1.0,0.0,0.0, 0.0,1.0,0.0};
 
 	printf("Queuing Underrun Performance Test:");
 	if (ContinueOrSkip())
