@@ -1,3 +1,14 @@
+2002-09-05  Joseph Valenzuela  <jvalenzu@formosa>
+
+	* configure.in, al_debug.h, al_debug.c
+	added ALD_FILTER debug category
+
+	* al_filter.c
+	added non lookup table version of alf_tpitch for ryan
+
+	* foo
+	bar
+
 2002-07-18  Joseph I. Valenzuela  <jvalenzu@forbidden.loungenet.org>
 
 	* fix bug that incorrectly reported LAL_VERSION as 1
