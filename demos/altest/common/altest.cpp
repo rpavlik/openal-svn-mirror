@@ -63,6 +63,8 @@
 #include <ctype.h>
 #include <memory.h>
 #include <math.h>
+#define __USE_BSD
+#include <unistd.h>
 
 #ifdef OSX_FRAMEWORK
 #include <OpenAL/al.h>
@@ -348,6 +350,9 @@ void delay_ms(unsigned int ms)
 #ifdef MAC_OS_X
 	usleep(ms * 1000);
 #endif
+#ifdef LINUX
+	usleep(ms * 1000);
+#endif   
 #ifdef _WIN32
 	int startTime;
 	startTime = timeGetTime();
