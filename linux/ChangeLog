@@ -1,76 +1,122 @@
+2005-03-15  Sven Panne  <sven.panne@aedion.de>
+
+	* linux/Makefile.in: Make relative versioning links to dynamic
+	libraries instead of absolute ones. Among other things, it makes
+	it possible to have relocatable packages, which is very nice for
+	non-root users.
+
+	* include/AL/alext.h, linux/src/al_main.c, linux/src/al_main.h,
+	linux/src/alc/alc_context.c, linux/src/alc/alc_context.h,
+	linux/src/extensions/al_ext_vorbis.c: Fixed the const-correctness
+	of _alIsZeroVector, _alcSetContext and alutLoadVorbis_LOKI. Note
+	that Ogg Vorbis' headers are not const-correct, so we still get a
+	warning, this time for the 3rd parameter of ov_open_callbacks,
+	which is a const pointer in reality.
+
+	Corrected the first argument of _alcSetContext (ALCint vs. int).
+
+	Removed a few incorrect UNUSED().
+
+	* linux/src/al_source.c: Fixed a signed/unsigned comparison
+	warning.
+
+	* linux/src/al_source.c, linux/src/arch/alsa/alsa.c,
+	linux/src/arch/arts/arts.c, linux/src/arch/esd/esd.c:
+	Removed/#if'd a few unused variables.
+
+	* linux/src/arch/alsa/alsa.c: Synchronized the type of
+	psnd_pcm_hw_params_get_period_size with the corresponding ALSA 1.x
+	prototype.
+
+	ALSA versioning is still handled incorrectly when
+	OPENAL_DLOPEN_ALSA is defined: Consider the case when e.g. the
+	library was compiled against a 1.x ALSA (i.e. SND_LIB_MAJOR != 0),
+	but at runtime dlvsym() finds a ALSA_0.9.0rc4 version of a given
+	function. The function is then still called like it has a 1.x
+	signature, leading to incorrect parameter passing.
+
+	The right way to handle this versionitis would be to remember
+	which version was found and use the corresponding interface
+	later. If only an unversioned symbol could be found, assuming the
+	1.x signature is probably the right thing nowadays.
+
+	* linux/src/extensions/al_ext_mp3.c,
+	linux/src/extensions/al_ext_vorbis.c: Added missing #includes to
+	get the prototypes for memset, memcpy, and alGetProcAddress.
+
 2005-01-28  Adam D. Moss  <adam@steambird.com>
 
-        * linux/configure.in, linux/openal.spec: Bump version to 0.0.8
+	* linux/configure.in, linux/openal.spec: Bump version to 0.0.8
 
 2005-01-28  Adam D. Moss  <adam@steambird.com>
 
-        * generate/install openal-config and openal.pc(pkgconfig) files
+	* generate/install openal-config and openal.pc(pkgconfig) files
         for OpenAL (Patches by D. Hageman <dhageman@dracken.com>)
 
 2004-11-28  Adam D. Moss  <adam@steambird.com>
 
-        * src/arch/alsa/alsa.c: commit a fixed version of patch by Dino
+	* src/arch/alsa/alsa.c: commit a fixed version of patch by Dino
         Puller <dino@e4a.it> to be more lenient with accepted buffer sizes
         from the hardware.
 
 2004-09-10  Adam D. Moss  <adam@steambird.com>
 
-        * openal/linux/src/mixaudio16.c: Issue an error if we've tried
+	* openal/linux/src/mixaudio16.c: Issue an error if we've tried
         to compile with the broken MMX support enabled and we're not
         a genius.
 
 2004-06-30  Adam D. Moss  <adam@steambird.com>
 
-        * openal/linux/src/al_doppler.c: Permit a DOPPLER_FACTOR of 0 as
+	* openal/linux/src/al_doppler.c: Permit a DOPPLER_FACTOR of 0 as
         per the spec.  Noticed by Jason Daly <jdaly@ist.ucf.edu>
 
 2004-06-30  Adam D. Moss  <adam@steambird.com>
 
-        * openal/linux/src/al_filter.c: Doppler fixes based on a patch
+	* openal/linux/src/al_filter.c: Doppler fixes based on a patch
         from Jason Daly <jdaly@ist.ucf.edu> with an additional fix.
 
 2004-06-30  Adam D. Moss  <adam@steambird.com>
 
-        * openal/linux/test/testdoppler.c: A more realistic and helpful
+	* openal/linux/test/testdoppler.c: A more realistic and helpful
         doppler test -- move the source towards, through, and away from
         the listener, while accelerating constantly.
 
 2004-06-30  Adam D. Moss  <adam@steambird.com>
 
-        * openal/linux/src/arch/alsa/alsa.c: Nonsensical partial revertion to
+	* openal/linux/src/arch/alsa/alsa.c: Nonsensical partial revertion to
         work around problem experienced by Prakash K. Cheemplavam.  My
         respect for ALSA has slowly eroded close to the negative by now.
 
 2004-06-25  Adam D. Moss  <adam@steambird.com>
 
-        * openal/linux/src/arch/alsa/alsa.c: Preferentially load symbol
+	* openal/linux/src/arch/alsa/alsa.c: Preferentially load symbol
         versions which are known to be good, before falling back to generic
         unversioned symbols.  This avoids picking up random crappy interface
         versions in the dlsym roulette.
 
 2004-06-25  Adam D. Moss  <adam@steambird.com>
 
-        * openal/linux/src/configure.in
-        * openal/linux/src/arch/arts/arts.c
-        * openal/linux/src/arch/esd/esd.c: From Marco Ziech <mmz@gmx.net>:
+	* openal/linux/src/configure.in
+	* openal/linux/src/arch/arts/arts.c
+	* openal/linux/src/arch/esd/esd.c: From Marco Ziech <mmz@gmx.net>:
         Add option to load arts and esd libraries at run-time.
 
 2004-06-25  Adam D. Moss  <adam@steambird.com>
 
-        * openal/linux/src/arch/alsa/alsa.c
-        * openal/linux/src/alc/alc_context.c: If _alcDeviceSet() fails then
+	* openal/linux/src/arch/alsa/alsa.c
+	* openal/linux/src/alc/alc_context.c: If _alcDeviceSet() fails then
         return straight after setting the error code, instead of proceeding
         to call _alSetMixer().  This stops AL going into a tight loop if
         a driver's set_write_???() fails.
 
 2004-06-25  Adam D. Moss  <adam@steambird.com>
 
-        * openal/linux/src/arch/alsa/alsa.c: Fix from Marco Ziech <mmz@gmx.net>
+	* openal/linux/src/arch/alsa/alsa.c: Fix from Marco Ziech <mmz@gmx.net>
         for more correct dlsym error handling.
 
 2004-06-04  Adam D. Moss  <adam@steambird.com>
 
-        * openal/linux/src/arch/alsa/alsa.c: Fixes from Marco Ziech
+	* openal/linux/src/arch/alsa/alsa.c: Fixes from Marco Ziech
         <mmz@gmx.net>: Fixes for ALSA backend - fix some bugs
         in alsa_blitbuffer, including handling of EPIPE.  Also init ALSA
         in non-blocking mode so that ALSA init can potentially properly fail
@@ -78,7 +124,7 @@
 
 2004-05-29  Adam D. Moss  <adam@steambird.com>
 
-        * openal/linux/src/al_queue.c: Assert fix from
+	* openal/linux/src/al_queue.c: Assert fix from
         Erik Hofman <erik@ehofman.com>
 
 2004-05-23  Adam D. Moss  <adam@steambird.com>
@@ -93,19 +139,19 @@
 
 2004-05-18  Adam D. Moss  <adam@steambird.com>
 
-        * openal/linux/src/arch/irix/iris.c: New IRIX backend from
+	* openal/linux/src/arch/irix/iris.c: New IRIX backend from
         Erik Hofman <erik@ehofman.com>, supports 4-channel audio and
         more flexible config.
 
 2004-05-18  Adam D. Moss  <adam@steambird.com>
 
-        * openal/linux/src/al_buffer.c: buf->queue_list.size is not the
+	* openal/linux/src/al_buffer.c: buf->queue_list.size is not the
         same thing as buf->queue_list.items; don't use one when we mean
         the other, or strangeness may occur.
 
 2004-05-18  Adam D. Moss  <adam@steambird.com>
 
-        * openal/linux/src/al_queue.c: Plug a memory leak... or at least
+	* openal/linux/src/al_queue.c: Plug a memory leak... or at least
         work around it.
 
 2004-02-02  Ryan C. Gordon  <ryan@epicgames.com>
@@ -260,8 +306,8 @@
 2002-12-17  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
 	* src/al_queue.c
 	* src/al_mixer.c
-        * src/al_source.c
-        * src/al_source.h
+	* src/al_source.c
+	* src/al_source.h
 	Re-added Zoltan Ponekker's patch to fix queue looping.
 
 2002-12-04  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
@@ -271,8 +317,8 @@
 
 	* src/al_queue.c
 	* src/al_mixer.c
-        * src/al_source.c
-        * src/al_source.h
+	* src/al_source.c
+	* src/al_source.h
 	Added Zoltan Ponekker's patch to consolidate queue looping.
 
 2002-11-19  Joseph Valenzuela  <jvalenzu@formosa>
@@ -303,8 +349,8 @@
 	Added a panning filter.  This calculates the directional speaker gains
 	in a way that is independant of distance.
 
-        * src/alc/alc_speaker.c
-        * src/alc/alc_speaker.h
+	* src/alc/alc_speaker.c
+	* src/alc/alc_speaker.h
 	Speaker distace now has a value of 1 to simplify the math.
 
 2002-09-09  Ryan C. Gordon  <ryan@epicgames.com>
@@ -365,7 +411,7 @@
 
 	* /usr/local/cvs-repository/openal/linux/Makefile.in
 	* /usr/local/cvs-repository/openal/linux/aclocal.m4
-        * /usr/local/cvs-repository/openal/linux/autogen.sh
+	* /usr/local/cvs-repository/openal/linux/autogen.sh
 	* /usr/local/cvs-repository/openal/linux/configure.in
 
 	Joseph Carter's patches to enable compilation with recent
@@ -427,7 +473,7 @@
 
 2002-05-06  Joseph Valenzuela  <jvalenzu@formosa>
 
-        * openal/linux/CREDITS
+	* openal/linux/CREDITS
 	- vanity change
 
 	* openal/linux/configure.in

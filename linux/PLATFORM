@@ -1,5 +1,5 @@
 To add a new platform:
-	1) Add target mojo to configure.in
+	1) Add target mojo to configure.ac
 	2) Add target mojo to arch/interface/platform.h
 	3) Create a directory under arch, a la arch/bsd
 

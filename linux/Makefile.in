@@ -79,8 +79,8 @@ install: $(INSTALL_DEPS)
 	$(INSTALL) -m 444 include/AL/alext.h $(DESTINC)/AL
 	$(INSTALL) -m 444 include/AL/alexttypes.h $(DESTINC)/AL
 
-configure: configure.in
-	@echo "configure.in newer than configure...Please re-./configure"
+configure: configure.ac
+	@echo "configure.ac newer than configure...Please re-./configure"
 	autoconf
 	@exit 1
 
