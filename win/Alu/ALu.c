@@ -90,7 +90,8 @@ ALUAPI ALvoid ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint numO
 	ALfloat Pitch,Volume,PanningFB,PanningLR,ListenerGain;
 	ALuint NumBufferChannels;
 	ALfloat U[3],V[3],N[3];
-	ALfloat DopplerFactor;
+	ALfloat DopplerFactor,DopplerVelocity;
+	ALfloat ProjectedVelocity,ProjectedListenerVelocity;
 	ALuint DistanceModel;
 	ALfloat Matrix[3][3];
 	ALint HeadRelative;
@@ -101,6 +102,7 @@ ALUAPI ALvoid ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint numO
 	{
 		//Get global properties
 		alGetFloatv(AL_DOPPLER_FACTOR,&DopplerFactor);
+		alGetFloatv(AL_DOPPLER_VELOCITY,&DopplerVelocity);
 		alGetIntegerv(AL_DISTANCE_MODEL,&DistanceModel);
 		
 		//Get listener properties
@@ -181,17 +183,17 @@ ALUAPI ALvoid ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint numO
 				Volume=(Volume*(1.0f+(OuterGain-1.0f)*(Angle-InnerAngle)/(OuterAngle-InnerAngle)));
 			else if (Angle>OuterAngle)
 				Volume=(Volume*(1.0f+(OuterGain-1.0f)                                           ));
-			//5. Calculate differential velocity
-			Velocity[0]-=ListenerVelocity[0];
-			Velocity[1]-=ListenerVelocity[1];
-			Velocity[2]-=ListenerVelocity[2];
-			aluMatrixVector(Velocity,Matrix);		
-			//6. Calculate doppler
-			if ((DopplerFactor!=0.0f)&&(Distance!=0.0f))
-				pitch[0]=(ALfloat)((Pitch*DopplerFactor)/(1.0+(aluDotproduct(Velocity,Position)/(343.0f*Distance))));
-			else
-				pitch[0]=(ALfloat)((Pitch			   )/(1.0+(aluDotproduct(Velocity,Position)/(343.0f         ))));
-			//7. Convert normalized position into font/back panning
+			//5. Calculate doppler
+            ProjectedVelocity = aluDotproduct(Velocity, SourceToListener);
+            ProjectedListenerVelocity = aluDotproduct(ListenerVelocity, SourceToListener);
+            if (fabs(DopplerFactor) < 1.0e-6)
+            {
+                    ProjectedVelocity *= DopplerFactor;
+                    ProjectedListenerVelocity *= DopplerFactor;
+            }
+            pitch[0] = (DopplerVelocity - ProjectedListenerVelocity)/
+                            (DopplerVelocity + ProjectedVelocity);
+            //6. Convert normalized position into font/back panning
 			if (Distance != 0.0f)
 			{
 				aluNormalize(Position);
@@ -204,7 +206,7 @@ ALUAPI ALvoid ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint numO
 				PanningFB=0.5f;
 			}
 
-			//8. Convert front/back panning into channel volumes
+			//7. Convert front/back panning into channel volumes
 			switch (numOutputChannels)
 			{
 				case 1:
