@@ -1,12 +1,18 @@
 2005-03-25  Sven Panne  <sven.panne@aedion.de>
 
-	* configure.ac, src/al_config.c, src/al_debug.c, src/al_ext.c,
-	src/al_main.c, src/al_rcvar.c, src/arch/alsa/alsa.c,
-	src/arch/arts/arts.c, src/arch/esd/esd.c,
-	src/arch/linux/lin_dsp.c, src/arch/solaris/solaris_native.c,
-	src/arch/waveout/waveout.c, src/arch/windows/windows_native.c,
-	src/extensions/al_ext_capture.c: Never use strcpy/strcyt/sprintf,
-	use their safe relatives strncpy/strncat/snprintf instead.
+	* linux/test/teststrings.c: Fixed context/device handling to make
+	valgrind's memory leak checker happy plus a few cosmetic changes.
+
+	* linux/configure.ac, linux/src/al_config.c, linux/src/al_debug.c,
+	linux/src/al_ext.c, linux/src/al_main.c, linux/src/al_rcvar.c,
+	linux/src/arch/alsa/alsa.c, linux/src/arch/arts/arts.c,
+	linux/src/arch/esd/esd.c, linux/src/arch/linux/lin_dsp.c,
+	linux/src/arch/solaris/solaris_native.c,
+	linux/src/arch/waveout/waveout.c,
+	linux/src/arch/windows/windows_native.c,
+	linux/src/extensions/al_ext_capture.c: Never use
+	strcpy/strcyt/sprintf, use their safe relatives
+	strncpy/strncat/snprintf instead.
 
 	* linux/src/configure.ac: <alsa/asoundlib.h> needs <time.h> when
 	ISO C99 is enabled.
@@ -16,10 +22,12 @@
 
 2005-03-23  Sven Panne  <sven.panne@aedion.de>
 
-	* Makefile.in, config-osx.h, configure.ac, openal-config.in,
-	openal.pc.in, audioconvert/Makefile.in, src/Makefile.in,
-	src/al_state.c: Centralize and simplify versionitis; everything is
-	derived from the PACKAGE_VERSION defined via AC_INIT now.
+	* linux/Makefile.in, linux/config-osx.h, linux/configure.ac,
+	linux/openal-config.in, linux/openal.pc.in,
+	linux/audioconvert/Makefile.in, linux/src/Makefile.in,
+	linux/src/al_state.c: Centralize and simplify versionitis;
+	everything is derived from the PACKAGE_VERSION defined via AC_INIT
+	now.
 
 	* linux/src/Makefile.in: Avoid useless relinking.
 

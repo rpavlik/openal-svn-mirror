@@ -1,30 +1,27 @@
-#include "testlib.h"
-
+#include <stdlib.h>
+#include <stdio.h>
 #include <AL/al.h>
 #include <AL/alc.h>
 
-#include <stdlib.h>
-#include <stdio.h>
-
 int main( int argc, char* argv[] )
 {
-	ALCcontext *context_id = NULL;
-	ALCdevice *dev = NULL;
+	ALCcontext *context_id;
+	ALCdevice *dev;
 
 	int attrlist[] = { ALC_FREQUENCY, 44100,
 			   0 };
 
 	dev = alcOpenDevice( NULL );
 	if( dev == NULL ) {
-		exit( 1 );
+		return EXIT_FAILURE;
 	}
 
 	context_id = alcCreateContext( dev, attrlist );
 	if( context_id == NULL ) {
 		alcCloseDevice( dev );
-
-		exit( 1 );
+		return EXIT_FAILURE;
 	}
+	alcMakeContextCurrent( context_id );
 
 	printf( "AL_VENDOR: %s\n", alGetString( AL_VENDOR ) );
 	printf( "AL_VERSION: %s\n", alGetString( AL_VERSION ) );
@@ -35,7 +32,9 @@ int main( int argc, char* argv[] )
 		printf( "Found AL_LOKI_attenuation_scale\n" );
 	}
 
+	alcMakeContextCurrent( NULL );
 	alcDestroyContext( context_id );
+	alcCloseDevice( dev );
 
-	return 0;
+	return EXIT_SUCCESS;
 }
