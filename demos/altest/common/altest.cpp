@@ -4321,7 +4321,7 @@ ALvoid I_VorbisTest()
 		   
 		                int actual;
 		                for (int loop = 0; loop < 4; loop++) {
-			           actual = fread(data, 1, 5000, fp);
+			           actual = fread(data, 1, 2000, fp);
 				   alBufferData(tempBuffers[loop], AL_FORMAT_VORBIS_EXT, data, actual, 0);
 		                }
 		                alSourceQueueBuffers(source[2], 4, tempBuffers);
