@@ -1,7 +1,3 @@
-/*
- * The following header is a modified version of the equivalent Xiphorphorus Ogg Vorbis header -- their copyright notification is maintained below.
- */
-
 /********************************************************************
  *                                                                  *
  * THIS FILE IS PART OF THE OggVorbis SOFTWARE CODEC SOURCE CODE.   *
@@ -25,7 +21,7 @@
 extern "C" {
 #endif
 
-#include "os_types.h"
+#include <os_types.h>
 
 typedef struct {
   long endbyte;
@@ -113,72 +109,66 @@ typedef struct {
 
 /* Ogg BITSTREAM PRIMITIVES: bitstream ************************/
 
-#ifndef EXTERN
-#define EXTERN
-#endif
-
-typedef char * char_ptr;
-
-EXTERN void  (*oggpack_writeinit) (oggpack_buffer *b);
-EXTERN void  (*oggpack_writetrunc) (oggpack_buffer *b,long bits);
-EXTERN void  (*oggpack_writealign) (oggpack_buffer *b);
-EXTERN void  (*oggpack_writecopy) (oggpack_buffer *b,void *source,long bits);
-EXTERN void  (*oggpack_reset) (oggpack_buffer *b);
-EXTERN void  (*oggpack_writeclear) (oggpack_buffer *b);
-EXTERN void  (*oggpack_readinit) (oggpack_buffer *b,unsigned char *buf,int bytes);
-EXTERN void  (*oggpack_write) (oggpack_buffer *b,unsigned long value,int bits);
-EXTERN long  (*oggpack_look) (oggpack_buffer *b,int bits);
-EXTERN long  (*oggpack_look1) (oggpack_buffer *b);
-EXTERN void  (*oggpack_adv) (oggpack_buffer *b,int bits);
-EXTERN void  (*oggpack_adv1) (oggpack_buffer *b);
-EXTERN long  (*oggpack_read) (oggpack_buffer *b,int bits);
-EXTERN long  (*oggpack_read1) (oggpack_buffer *b);
-EXTERN long  (*oggpack_bytes) (oggpack_buffer *b);
-EXTERN long  (*oggpack_bits) (oggpack_buffer *b);
-EXTERN unsigned char (*oggpack_get_buffer) (oggpack_buffer *b);
+extern void  oggpack_writeinit(oggpack_buffer *b);
+extern void  oggpack_writetrunc(oggpack_buffer *b,long bits);
+extern void  oggpack_writealign(oggpack_buffer *b);
+extern void  oggpack_writecopy(oggpack_buffer *b,void *source,long bits);
+extern void  oggpack_reset(oggpack_buffer *b);
+extern void  oggpack_writeclear(oggpack_buffer *b);
+extern void  oggpack_readinit(oggpack_buffer *b,unsigned char *buf,int bytes);
+extern void  oggpack_write(oggpack_buffer *b,unsigned long value,int bits);
+extern long  oggpack_look(oggpack_buffer *b,int bits);
+extern long  oggpack_look1(oggpack_buffer *b);
+extern void  oggpack_adv(oggpack_buffer *b,int bits);
+extern void  oggpack_adv1(oggpack_buffer *b);
+extern long  oggpack_read(oggpack_buffer *b,int bits);
+extern long  oggpack_read1(oggpack_buffer *b);
+extern long  oggpack_bytes(oggpack_buffer *b);
+extern long  oggpack_bits(oggpack_buffer *b);
+extern unsigned char *oggpack_get_buffer(oggpack_buffer *b);
 
 /* Ogg BITSTREAM PRIMITIVES: encoding **************************/
 
-EXTERN int   (*ogg_stream_packetin) (ogg_stream_state *os, ogg_packet *op);
-EXTERN int   (*ogg_stream_pageout) (ogg_stream_state *os, ogg_page *og);
-EXTERN int   (*ogg_stream_flush) (ogg_stream_state *os, ogg_page *og);
+extern int      ogg_stream_packetin(ogg_stream_state *os, ogg_packet *op);
+extern int      ogg_stream_pageout(ogg_stream_state *os, ogg_page *og);
+extern int      ogg_stream_flush(ogg_stream_state *os, ogg_page *og);
 
 /* Ogg BITSTREAM PRIMITIVES: decoding **************************/
 
-EXTERN int    (*ogg_sync_init) (ogg_sync_state *oy);
-EXTERN int    (*ogg_sync_clear) (ogg_sync_state *oy);
-EXTERN int    (*ogg_sync_reset) (ogg_sync_state *oy);
-EXTERN int    (*ogg_sync_destroy) (ogg_sync_state *oy);
+extern int      ogg_sync_init(ogg_sync_state *oy);
+extern int      ogg_sync_clear(ogg_sync_state *oy);
+extern int      ogg_sync_reset(ogg_sync_state *oy);
+extern int	ogg_sync_destroy(ogg_sync_state *oy);
 
-EXTERN char_ptr   (*ogg_sync_buffer) (ogg_sync_state *oy, long size);
-EXTERN int    (*ogg_sync_wrote) (ogg_sync_state *oy, long bytes);
-EXTERN long   (*ogg_sync_pageseek) (ogg_sync_state *oy,ogg_page *og);
-EXTERN int    (*ogg_sync_pageout) (ogg_sync_state *oy, ogg_page *og);
-EXTERN int    (*ogg_stream_pagein) (ogg_stream_state *os, ogg_page *og);
-EXTERN int    (*ogg_stream_packetout) (ogg_stream_state *os,ogg_packet *op);
-EXTERN int    (*ogg_stream_packetpeek) (ogg_stream_state *os,ogg_packet *op);
+extern char    *ogg_sync_buffer(ogg_sync_state *oy, long size);
+extern int      ogg_sync_wrote(ogg_sync_state *oy, long bytes);
+extern long     ogg_sync_pageseek(ogg_sync_state *oy,ogg_page *og);
+extern int      ogg_sync_pageout(ogg_sync_state *oy, ogg_page *og);
+extern int      ogg_stream_pagein(ogg_stream_state *os, ogg_page *og);
+extern int      ogg_stream_packetout(ogg_stream_state *os,ogg_packet *op);
+extern int      ogg_stream_packetpeek(ogg_stream_state *os,ogg_packet *op);
 
 /* Ogg BITSTREAM PRIMITIVES: general ***************************/
 
-EXTERN int    (*ogg_stream_init) (ogg_stream_state *os,int serialno);
-EXTERN int    (*ogg_stream_clear) (ogg_stream_state *os);
-EXTERN int    (*ogg_stream_reset) (ogg_stream_state *os);
-EXTERN int    (*ogg_stream_reset_serialno) (ogg_stream_state *os,int serialno);
-EXTERN int    (*ogg_stream_destroy) (ogg_stream_state *os);
-EXTERN int    (*ogg_stream_eos) (ogg_stream_state *os);
+extern int      ogg_stream_init(ogg_stream_state *os,int serialno);
+extern int      ogg_stream_clear(ogg_stream_state *os);
+extern int      ogg_stream_reset(ogg_stream_state *os);
+extern int      ogg_stream_reset_serialno(ogg_stream_state *os,int serialno);
+extern int      ogg_stream_destroy(ogg_stream_state *os);
+extern int      ogg_stream_eos(ogg_stream_state *os);
 
-EXTERN void   (*ogg_page_checksum_set) (ogg_page *og);
+extern void     ogg_page_checksum_set(ogg_page *og);
 
-EXTERN int    (*ogg_page_version) (ogg_page *og);
-EXTERN int    (*ogg_page_continued) (ogg_page *og);
-EXTERN int    (*ogg_page_bos) (ogg_page *og);
-EXTERN int    (*ogg_page_eos) (ogg_page *og);
-EXTERN ogg_int64_t  (*ogg_page_granulepos) (ogg_page *og);
-EXTERN int    (*ogg_page_serialno) (ogg_page *og);
-EXTERN long   (*ogg_page_pageno) (ogg_page *og);
-EXTERN int    (*ogg_page_packets) (ogg_page *og);
+extern int      ogg_page_version(ogg_page *og);
+extern int      ogg_page_continued(ogg_page *og);
+extern int      ogg_page_bos(ogg_page *og);
+extern int      ogg_page_eos(ogg_page *og);
+extern ogg_int64_t  ogg_page_granulepos(ogg_page *og);
+extern int      ogg_page_serialno(ogg_page *og);
+extern long     ogg_page_pageno(ogg_page *og);
+extern int      ogg_page_packets(ogg_page *og);
 
-EXTERN void   (*ogg_packet_clear) (ogg_packet *op);
+extern void     ogg_packet_clear(ogg_packet *op);
 
 
 #ifdef __cplusplus

@@ -1,7 +1,3 @@
-/*
- * The following header is a modified version of the equivalent Xiphorphorus Ogg Vorbis header -- their copyright is maintained below.
- */
-
 /********************************************************************
  *                                                                  *
  * THIS FILE IS PART OF THE OggVorbis SOFTWARE CODEC SOURCE CODE.   *
@@ -81,7 +77,7 @@
 #else
 
 #  include <sys/types.h>
-#  include "config_types.h"
+#  include <config_types.h>
 
 #endif
 

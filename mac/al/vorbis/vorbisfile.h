@@ -1,7 +1,3 @@
-/*
- * The following header is a modified version of the equivalent Xiphorphorus Ogg Vorbis header -- their copyright notification is maintained below.
- */
-
 /********************************************************************
  *                                                                  *
  * THIS FILE IS PART OF THE OggVorbis SOFTWARE CODEC SOURCE CODE.   *
@@ -90,46 +86,42 @@ typedef struct OggVorbis_File {
 
 } OggVorbis_File;
 
-#ifndef EXTERN
-#define EXTERN
-#endif
-
-EXTERN int (*ov_clear)(OggVorbis_File *vf);
-EXTERN int (*ov_open)(FILE *f,OggVorbis_File *vf,char *initial,long ibytes);
-EXTERN int (*ov_open_callbacks)(void *datasource, OggVorbis_File *vf,
+extern int ov_clear(OggVorbis_File *vf);
+extern int ov_open(FILE *f,OggVorbis_File *vf,char *initial,long ibytes);
+extern int ov_open_callbacks(void *datasource, OggVorbis_File *vf,
 		char *initial, long ibytes, ov_callbacks callbacks);
 
-EXTERN int (*ov_test)(FILE *f,OggVorbis_File *vf,char *initial,long ibytes);
-EXTERN int (*ov_test_callbacks)(void *datasource, OggVorbis_File *vf,
+extern int ov_test(FILE *f,OggVorbis_File *vf,char *initial,long ibytes);
+extern int ov_test_callbacks(void *datasource, OggVorbis_File *vf,
 		char *initial, long ibytes, ov_callbacks callbacks);
-EXTERN int (*ov_test_open)(OggVorbis_File *vf);
+extern int ov_test_open(OggVorbis_File *vf);
 
-EXTERN long (*ov_bitrate)(OggVorbis_File *vf,int i);
-EXTERN long (*ov_bitrate_instant)(OggVorbis_File *vf);
-EXTERN long (*ov_streams)(OggVorbis_File *vf);
-EXTERN long (*ov_seekable)(OggVorbis_File *vf);
-EXTERN long (*ov_serialnumber)(OggVorbis_File *vf,int i);
+extern long ov_bitrate(OggVorbis_File *vf,int i);
+extern long ov_bitrate_instant(OggVorbis_File *vf);
+extern long ov_streams(OggVorbis_File *vf);
+extern long ov_seekable(OggVorbis_File *vf);
+extern long ov_serialnumber(OggVorbis_File *vf,int i);
 
-EXTERN ogg_int64_t (*ov_raw_total)(OggVorbis_File *vf,int i);
-EXTERN ogg_int64_t (*ov_pcm_total)(OggVorbis_File *vf,int i);
-EXTERN double (*ov_time_total)(OggVorbis_File *vf,int i);
+extern ogg_int64_t ov_raw_total(OggVorbis_File *vf,int i);
+extern ogg_int64_t ov_pcm_total(OggVorbis_File *vf,int i);
+extern double ov_time_total(OggVorbis_File *vf,int i);
 
-EXTERN int (*ov_raw_seek)(OggVorbis_File *vf,ogg_int64_t pos);
-EXTERN int (*ov_pcm_seek)(OggVorbis_File *vf,ogg_int64_t pos);
-EXTERN int (*ov_pcm_seek_page)(OggVorbis_File *vf,ogg_int64_t pos);
-EXTERN int (*ov_time_seek)(OggVorbis_File *vf,double pos);
-EXTERN int (*ov_time_seek_page)(OggVorbis_File *vf,double pos);
+extern int ov_raw_seek(OggVorbis_File *vf,ogg_int64_t pos);
+extern int ov_pcm_seek(OggVorbis_File *vf,ogg_int64_t pos);
+extern int ov_pcm_seek_page(OggVorbis_File *vf,ogg_int64_t pos);
+extern int ov_time_seek(OggVorbis_File *vf,double pos);
+extern int ov_time_seek_page(OggVorbis_File *vf,double pos);
 
-EXTERN ogg_int64_t (*ov_raw_tell)(OggVorbis_File *vf);
-EXTERN ogg_int64_t (*ov_pcm_tell)(OggVorbis_File *vf);
-EXTERN double (*ov_time_tell)(OggVorbis_File *vf);
+extern ogg_int64_t ov_raw_tell(OggVorbis_File *vf);
+extern ogg_int64_t ov_pcm_tell(OggVorbis_File *vf);
+extern double ov_time_tell(OggVorbis_File *vf);
 
-EXTERN vorbis_info_ptr (*ov_info)(OggVorbis_File *vf,int link);
-EXTERN vorbis_comment_ptr (*ov_comment)(OggVorbis_File *vf,int link);
+extern vorbis_info *ov_info(OggVorbis_File *vf,int link);
+extern vorbis_comment *ov_comment(OggVorbis_File *vf,int link);
 
-EXTERN long (*ov_read_float)(OggVorbis_File *vf,float ***pcm_channels,int samples,
+extern long ov_read_float(OggVorbis_File *vf,float ***pcm_channels,int samples,
 			  int *bitstream);
-EXTERN long (*ov_read)(OggVorbis_File *vf,char *buffer,int length,
+extern long ov_read(OggVorbis_File *vf,char *buffer,int length,
 		    int bigendianp,int word,int sgned,int *bitstream);
 
 #ifdef __cplusplus

@@ -19,8 +19,10 @@
  */
 
 #include "globaltypes.h"
+#include <ogg.h>
 
-ALboolean ov_setVorbisFunctionPointers(void *pLib);
-ALboolean ov_setOggFunctionPointers(void *pLib);
-ALboolean ov_setVorbisFileFunctionPointers(void *pLib);
+size_t ov_read_func (void *ptr, size_t size, size_t nmemb, void *datasource);
+int ov_seek_func (void *datasource, ogg_int64_t offset, int whence);
+int ov_close_func (void *datasource);
+long ov_tell_func (void *datasource);
 void ov_fillBuffer(ALbuffer *pBuffer);

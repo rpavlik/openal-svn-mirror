@@ -1,7 +1,3 @@
-/*
- * The following header is a modified version of the equivalent Xiphorphorus Ogg Vorbis header -- their copyright notification is maintained below.
- */
-
 /********************************************************************
  *                                                                  *
  * THIS FILE IS PART OF THE OggVorbis SOFTWARE CODEC SOURCE CODE.   *
@@ -27,7 +23,7 @@ extern "C"
 {
 #endif /* __cplusplus */
 
-#include "ogg.h"
+#include <ogg.h>
 
 typedef struct vorbis_info{
   int version;
@@ -56,8 +52,6 @@ typedef struct vorbis_info{
 
   void *codec_setup;
 } vorbis_info;
-
-typedef vorbis_info * vorbis_info_ptr;
 
 /* vorbis_dsp_state buffers the current vorbis audio
    analysis/synthesis state.  The DSP state belongs to a specific
@@ -153,8 +147,6 @@ typedef struct vorbis_comment{
 
 } vorbis_comment;
 
-typedef vorbis_comment * vorbis_comment_ptr;
-
 
 /* libvorbis encodes in two abstraction layers; first we perform DSP
    and produce a packet (see docs/analysis.txt).  The packet is then
@@ -170,54 +162,50 @@ typedef vorbis_comment * vorbis_comment_ptr;
 
 /* Vorbis PRIMITIVES: general ***************************************/
 
-#ifndef EXTERN
-#define EXTERN
-#endif
+extern void     vorbis_info_init(vorbis_info *vi);
+extern void     vorbis_info_clear(vorbis_info *vi);
+extern int      vorbis_info_blocksize(vorbis_info *vi,int zo);
+extern void     vorbis_comment_init(vorbis_comment *vc);
+extern void     vorbis_comment_add(vorbis_comment *vc, char *comment); 
+extern void     vorbis_comment_add_tag(vorbis_comment *vc, 
+				       char *tag, char *contents);
+extern char    *vorbis_comment_query(vorbis_comment *vc, char *tag, int count);
+extern int      vorbis_comment_query_count(vorbis_comment *vc, char *tag);
+extern void     vorbis_comment_clear(vorbis_comment *vc);
 
-typedef float ** float_ptr_ptr;
-
-EXTERN void (*vorbis_info_init) (vorbis_info *vi);
-EXTERN void (*vorbis_info_clear) (vorbis_info *vi);
-EXTERN int  (*vorbis_info_blocksize) (vorbis_info *vi,int zo);
-EXTERN void (*vorbis_comment_init) (vorbis_comment *vc);
-EXTERN void (*vorbis_comment_add) (vorbis_comment *vc, char *comment); 
-EXTERN void (*vorbis_comment_add_tag) (vorbis_comment *vc, char *tag, char *contents);
-EXTERN char_ptr (*vorbis_comment_query) (vorbis_comment *vc, char *tag, int count);
-EXTERN int  (*vorbis_comment_query_count) (vorbis_comment *vc, char *tag);
-EXTERN void (*vorbis_comment_clear) (vorbis_comment *vc);
-
-EXTERN int  (*vorbis_block_init) (vorbis_dsp_state *v, vorbis_block *vb);
-EXTERN int  (*vorbis_block_clear) (vorbis_block *vb);
-EXTERN void (*vorbis_dsp_clear) (vorbis_dsp_state *v);
+extern int      vorbis_block_init(vorbis_dsp_state *v, vorbis_block *vb);
+extern int      vorbis_block_clear(vorbis_block *vb);
+extern void     vorbis_dsp_clear(vorbis_dsp_state *v);
 
 /* Vorbis PRIMITIVES: analysis/DSP layer ****************************/
 
-EXTERN int  (*vorbis_analysis_init) (vorbis_dsp_state *v,vorbis_info *vi);
-EXTERN int  (*vorbis_commentheader_out) (vorbis_comment *vc, ogg_packet *op);
-EXTERN int  (*vorbis_analysis_headerout) (vorbis_dsp_state *v,
+extern int      vorbis_analysis_init(vorbis_dsp_state *v,vorbis_info *vi);
+extern int      vorbis_commentheader_out(vorbis_comment *vc, ogg_packet *op);
+extern int      vorbis_analysis_headerout(vorbis_dsp_state *v,
 					  vorbis_comment *vc,
 					  ogg_packet *op,
 					  ogg_packet *op_comm,
 					  ogg_packet *op_code);
-EXTERN float_ptr_ptr (*vorbis_analysis_buffer) (vorbis_dsp_state *v,int vals);
-EXTERN int   (*vorbis_analysis_wrote) (vorbis_dsp_state *v,int vals);
-EXTERN int   (*vorbis_analysis_blockout) (vorbis_dsp_state *v,vorbis_block *vb);
-EXTERN int   (*vorbis_analysis) (vorbis_block *vb,ogg_packet *op);
+extern float  **vorbis_analysis_buffer(vorbis_dsp_state *v,int vals);
+extern int      vorbis_analysis_wrote(vorbis_dsp_state *v,int vals);
+extern int      vorbis_analysis_blockout(vorbis_dsp_state *v,vorbis_block *vb);
+extern int      vorbis_analysis(vorbis_block *vb,ogg_packet *op);
 
-EXTERN int   (*vorbis_bitrate_addblock) (vorbis_block *vb);
-EXTERN int   (*vorbis_bitrate_flushpacket) (vorbis_dsp_state *vd, ogg_packet *op);
+extern int      vorbis_bitrate_addblock(vorbis_block *vb);
+extern int      vorbis_bitrate_flushpacket(vorbis_dsp_state *vd,
+					   ogg_packet *op);
 
 /* Vorbis PRIMITIVES: synthesis layer *******************************/
-EXTERN int   (*vorbis_synthesis_headerin) (vorbis_info *vi,vorbis_comment *vc,
+extern int      vorbis_synthesis_headerin(vorbis_info *vi,vorbis_comment *vc,
 					  ogg_packet *op);
 
-EXTERN int   (*vorbis_synthesis_init) (vorbis_dsp_state *v,vorbis_info *vi);
-EXTERN int   (*vorbis_synthesis) (vorbis_block *vb,ogg_packet *op);
-EXTERN int   (*vorbis_synthesis_trackonly) (vorbis_block *vb,ogg_packet *op);
-EXTERN int   (*vorbis_synthesis_blockin) (vorbis_dsp_state *v,vorbis_block *vb);
-EXTERN int   (*vorbis_synthesis_pcmout) (vorbis_dsp_state *v,float ***pcm);
-EXTERN int   (*vorbis_synthesis_read) (vorbis_dsp_state *v,int samples);
-EXTERN long  (*vorbis_packet_blocksize) (vorbis_info *vi,ogg_packet *op);
+extern int      vorbis_synthesis_init(vorbis_dsp_state *v,vorbis_info *vi);
+extern int      vorbis_synthesis(vorbis_block *vb,ogg_packet *op);
+extern int      vorbis_synthesis_trackonly(vorbis_block *vb,ogg_packet *op);
+extern int      vorbis_synthesis_blockin(vorbis_dsp_state *v,vorbis_block *vb);
+extern int      vorbis_synthesis_pcmout(vorbis_dsp_state *v,float ***pcm);
+extern int      vorbis_synthesis_read(vorbis_dsp_state *v,int samples);
+extern long     vorbis_packet_blocksize(vorbis_info *vi,ogg_packet *op);
 
 /* Vorbis ERRORS and return codes ***********************************/
 

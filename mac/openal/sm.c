@@ -30,7 +30,7 @@
 #include "alSoftware.h"
 #include "sm.h"
 
-#ifdef MAC_OS_X
+#ifdef VORBIS_EXTENSION
 #include "vorbisrtn.h"
 #endif
  
@@ -70,7 +70,7 @@ void smPlaySegment(unsigned int source)
                 // data on every pass and put it into the uncompressed data part of the buffer, then tell SM to play it; won't need
                 // pointer to read/write location in uncompressed data or uncompressedSize member of buffer
                     if (gBuffer[iBufferNum].uncompressedData == NULL) {
-#ifdef MAC_OS_X
+#ifdef VORBIS_EXTENSION
                         ov_fillBuffer(&gBuffer[iBufferNum]);
 #endif
                     }

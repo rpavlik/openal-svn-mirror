@@ -1,7 +1,3 @@
-/*
- * The following header is a modified version of the equivalent Xiphorphorus Ogg Vorbis header.
- */
-
 #ifndef __CONFIG_TYPES_H__
 #define __CONFIG_TYPES_H__
 
