@@ -95,14 +95,15 @@ typedef struct {
 
 /* Temporary storage buffer size */
 #define BUF_SIZE	64
-#define CHECK_FRAMES	64
+#define MAX_DELTA	8
+#define CHECK_FRAMES	4
 #define MAX_DEVICES	2
 
 /*
  * Local funtion foreward declaration.
  */
-static void sync_ports(void *handle);
 static void check_sync(void *handle);
+static void sync_ports(void *handle);
 static int grab_device_byname(const char *name);
 
 
@@ -234,7 +235,7 @@ void native_blitbuffer(void *handle,
     static int check_ = CHECK_FRAMES;
     _ALhandle *alh = (_ALhandle *)handle;
     int sample_width = (alh->output[0].sampleWidth / 8);
-    int frame_size = sample_width * alh->output[0]._numChannels_avail;
+    int frame_size = sample_width * alh->output[0].numChannels;
     int frames_to_write, frame_no, i;
     char **buf, *ptr;
 
@@ -248,7 +249,7 @@ void native_blitbuffer(void *handle,
     /*
      * Setup a buffer for each audio port.
      */
-    frames_to_write = bytes_to_write / alh->output[0]._numChannels_avail;
+    frames_to_write = bytes_to_write / alh->numOutputPorts;
 
     buf = (char **)calloc(alh->numOutputPorts, sizeof(char *));
     for (i=0; i < alh->numOutputPorts; i++)
@@ -352,6 +353,9 @@ void pause_nativedevice(void *handle)
     for (i=0; i < alh->numOutputPorts; i++)
         alSetParams(alh->output[i].device, &params, 1);
 
+    if (alh->numOutputPorts > 1)
+        sync_ports(handle);
+
     return;
 }
 
@@ -360,6 +364,9 @@ void resume_nativedevice(void *handle)
     _ALhandle *alh = (_ALhandle *)handle;
     ALpv params;
     int i;
+
+    if (alh->numOutputPorts > 1)
+        sync_ports(handle);
 
     params.param = AL_INPUT_RATE;
     params.value.i = alh->input.sampleRate;
@@ -462,7 +469,7 @@ ALboolean set_write_native(void *handle,
          * and the number of audio channels.
          */
         result = alSetChannels(alh->output[0].config, alh->output[0].numChannels);
-        alSetQueueSize(alh->output[0].config, alh->output[0].sampleRate/10);
+        alSetQueueSize(alh->output[0].config, alh->output[0].sampleRate*alh->output[0].numChannels/10);
     }
 
     alSetSampFmt(alh->output[0].config, AL_SAMPFMT_TWOSCOMP);
@@ -490,8 +497,6 @@ ALboolean set_write_native(void *handle,
                 return AL_FALSE;
             }
         }
-
-        return AL_TRUE;
     }
     else
     {
@@ -509,6 +514,9 @@ ALboolean set_write_native(void *handle,
         }
     }
 
+    if (alh->numOutputPorts > 1)
+        sync_ports(alh);
+
     return AL_TRUE;
 }
 
@@ -524,12 +532,10 @@ ALboolean set_read_native(UNUSED(void *handle),
 /*
  * Local function definitions
  */
-#define MAXDEVS 2
-
 static void check_sync(void *handle)
 {
     _ALhandle *alh = (_ALhandle *)handle;
-    stamp_t msc[MAXDEVS];
+    stamp_t msc[MAX_DEVICES];
     int need_sync = 0;
     stamp_t buf_delta_msc;
     stamp_t ref_delta_msc;
@@ -548,7 +554,7 @@ static void check_sync(void *handle)
 
     ref_delta_msc = msc[0];
 
-    for (i = 1; i < alh->numOutputPorts; i++) {
+    for (i = 0; i < alh->numOutputPorts; i++) {
         /*
          * For each port, see how far ahead or behind
          * the first port we are, and keep track of the
@@ -556,7 +562,7 @@ static void check_sync(void *handle)
          * number.
          */
         buf_delta_msc = msc[i] - alh->output[i].offset;
-        if (buf_delta_msc != ref_delta_msc) {
+        if (abs(buf_delta_msc - ref_delta_msc) > MAX_DELTA) {
             need_sync++;
         }
     }
@@ -571,8 +577,8 @@ static void sync_ports(void *handle)
     _ALhandle *alh = (_ALhandle *)handle;
     double nanosec_per_frame = (1000000000.0)/alh->output[0].sampleRate;
     stamp_t buf_delta_msc;
-    stamp_t msc[MAXDEVS];
-    stamp_t ust[MAXDEVS];
+    stamp_t msc[MAX_DEVICES];
+    stamp_t ust[MAX_DEVICES];
     int corrected;
     int i;
 
@@ -598,8 +604,8 @@ static void sync_ports(void *handle)
      * see offset[i] = 0.
      */
 
-    alh->output[0].offset = 0;         /* by definition */
-    for (i = 1; i < alh->numOutputPorts; i++) {
+    /* alh->output[0].offset = 0;         / * by definition */
+    for (i = 0; i < alh->numOutputPorts; i++) {
         stamp_t msc0 = 
            msc[i] + (stamp_t)((double) (ust[0] - ust[i]) / (nanosec_per_frame));
         alh->output[i].offset = msc0 - msc[0];
@@ -618,11 +624,10 @@ static void sync_ports(void *handle)
         }
 
         max_delta_msc = msc[0];
-
-        for (i = 1; i < alh->numOutputPorts; i++) {
+        for (i = 0; i < alh->numOutputPorts; i++) {
             /*
              * For each port, see how far ahead or behind
-             * the first port we are, and keep track of the
+             * the furthest port we are, and keep track of the
              * minimum. in a moment, we'll bring all the ports to this
              * number.
              */
@@ -634,8 +639,7 @@ static void sync_ports(void *handle)
 
         for (i = 0; i < alh->numOutputPorts; i++) {
             buf_delta_msc = msc[i] - alh->output[i].offset;
-            if (buf_delta_msc != max_delta_msc) {
-
+            if (abs(buf_delta_msc - max_delta_msc) > MAX_DELTA ) {
                 alDiscardFrames(alh->output[i].port,
                                 (int)(max_delta_msc-buf_delta_msc));
                 corrected++;
