@@ -76,11 +76,11 @@ MINOR_VERSION=@MINOR_VERSION@
 MICRO_VERSION=@MICRO_VERSION@
 VERSION=$(MAJOR_VERSION).$(MINOR_VERSION).$(MICRO_VERSION)
 
-%.o : %.s ../config.h
+%.o : %.s al_siteconfig.h ../config.h
 	$(CPP) $(DEFINES) $< | $(AS) -o $@
 %.o : %.nasm
 	$(NASM) -f elf -o $@ $<
-%.o : %.c ../config.h
+%.o : %.c al_siteconfig.h ../config.h
 	$(CC) $(DEFINES) $(INC) $(CFLAGS) -c $< -o $@
 
 %.def : %.a libopenal.a
