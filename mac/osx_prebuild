@@ -1,8 +1,0 @@
-#!/bin/tcsh
-
-if (-d build) then
-  echo "Build directory already exists. Done."
-else
-  echo "Build directory does not exist. Creating Framework structure..."
-  tar zxf osx_build_dir.tgz
-endif
