@@ -37,8 +37,11 @@ void *pVorbisLib = NULL;
 ALAPI ALboolean ALAPIENTRY alIsExtensionPresent(ALubyte *extName)
 {
     ALboolean extPresent;
+    ALboolean havePointers;
+    NSSymbol tmpSymbol;
     
     extPresent = AL_FALSE;
+    havePointers = AL_TRUE;
 
 #ifdef MAC_OS_X
     if (!strcmp(extName, "AL_EXT_vorbis")) {
@@ -50,8 +53,11 @@ ALAPI ALboolean ALAPIENTRY alIsExtensionPresent(ALubyte *extName)
         }
         
         // set function pointers
+        tmpSymbol = NSLookupSymbolInImage(pVorbisLib, "_vorbis_info_init", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+        vorbis_info_init = NSAddressOfSymbol(tmpSymbol);
+        if (vorbis_info_init == NULL) { havePointers = AL_FALSE; };
             
-        if (pVorbisLib != NULL) {
+        if ((pVorbisLib != NULL) && (havePointers == AL_TRUE)) {
           extPresent = AL_TRUE;
         }
     }

@@ -145,6 +145,10 @@
 				984FDEC90433F5A20042B474,
 				984FDECA0433F5A20042B474,
 				984FDECB0433F5A20042B474,
+				98AF1E63043534F4000D2D30,
+				98AF1E64043534F4000D2D30,
+				98AF1E6704353506000D2D30,
+				98AF1E6804353506000D2D30,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -247,6 +251,10 @@
 				F558C52F036A116501A8006E,
 				F558C530036A116501A8006E,
 				F558C531036A116501A8006E,
+				98AF1E61043534F4000D2D30,
+				98AF1E62043534F4000D2D30,
+				98AF1E6504353506000D2D30,
+				98AF1E6604353506000D2D30,
 				F558C532036A116501A8006E,
 				F558C533036A116501A8006E,
 				F558C534036A116501A8006E,
@@ -368,6 +376,58 @@
 		};
 		984FDECB0433F5A20042B474 = {
 			fileRef = 984FDEC60433F5A20042B474;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		98AF1E61043534F4000D2D30 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = codec.h;
+			path = /Users/garinh/prog/openal/mac/al/vorbis/codec.h;
+			refType = 0;
+		};
+		98AF1E62043534F4000D2D30 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = config_types.h;
+			path = /Users/garinh/prog/openal/mac/al/vorbis/config_types.h;
+			refType = 0;
+		};
+		98AF1E63043534F4000D2D30 = {
+			fileRef = 98AF1E61043534F4000D2D30;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		98AF1E64043534F4000D2D30 = {
+			fileRef = 98AF1E62043534F4000D2D30;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		98AF1E6504353506000D2D30 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = ogg.h;
+			path = /Users/garinh/prog/openal/mac/al/vorbis/ogg.h;
+			refType = 0;
+		};
+		98AF1E6604353506000D2D30 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = os_types.h;
+			path = /Users/garinh/prog/openal/mac/al/vorbis/os_types.h;
+			refType = 0;
+		};
+		98AF1E6704353506000D2D30 = {
+			fileRef = 98AF1E6504353506000D2D30;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		98AF1E6804353506000D2D30 = {
+			fileRef = 98AF1E6604353506000D2D30;
 			isa = PBXBuildFile;
 			settings = {
 			};
