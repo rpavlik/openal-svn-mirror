@@ -6,6 +6,10 @@
  * Temporary hack.
  */
 #include "al_siteconfig.h"
+
+#include "AL/al.h"
+#include "AL/alext.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -15,8 +19,6 @@
 #include "al_buffer.h"
 #include "al_ext.h"
 #include "alc/alc_context.h"
-
-#include "AL/alext.h"
 
 #ifdef WORDS_BIGENDIAN
 #define BIGENDIAN 1
