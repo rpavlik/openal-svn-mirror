@@ -441,7 +441,53 @@ int main(int argc, char* argv[])
 
 	// Initialize Open AL manually
 	//Open device
- 	Device=alcOpenDevice((ALubyte*)"DirectSound3D");
+	char deviceName[256];
+	char *defaultDevice;
+	char *deviceList;
+	char *devices[12];
+	int numDevices, numDefaultDevice, i;
+
+	sprintf(deviceName, "");
+	if (alcIsExtensionPresent(NULL, (ALubyte*)"ALC_ENUMERATION_EXT") == AL_TRUE) { // try out enumeration extension
+		defaultDevice = (char *)alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
+		deviceList = (char *)alcGetString(NULL, ALC_DEVICE_SPECIFIER);
+		for (numDevices = 0; numDevices < 12; numDevices++) {devices[numDevices] = NULL;}
+		for (numDevices = 0; numDevices < 12; numDevices++) {
+			devices[numDevices] = deviceList;
+			if (strcmp(devices[numDevices], defaultDevice) == 0) {
+				numDefaultDevice = numDevices;
+			}
+			deviceList += strlen(deviceList);
+			if (deviceList[0] == 0) {
+				if (deviceList[1] == 0) {
+					break;
+				} else {
+					deviceList += 1;
+				}
+			}
+		}
+		if (devices[numDevices] != NULL) {
+			numDevices++;
+			printf("\nEnumeration extension found -- select an output device:\n");
+			for (i = 0; i < numDevices; i++) {
+				printf("%d. %s\n", (i + 1), devices[i]);
+			}
+			printf("\n\n");
+			do {
+				ch = _getch();
+				i = atoi(&ch);
+			} while ((i < 1) || (i > numDevices));
+			if (strlen(devices[i-1]) < 256) {
+				strcpy(deviceName, devices[i-1]);
+			}
+		}
+	}
+
+	if (strlen(deviceName) == 0) {
+		Device = alcOpenDevice(NULL); // this is supposed to select the "preferred device"
+	} else {
+		Device = alcOpenDevice((ALubyte*)deviceName); // have a name from enumeration process above, so use it...
+	}
 	//Create context(s)
 	Context=alcCreateContext(Device,NULL);
 	//Set active context
@@ -1374,7 +1420,7 @@ This test checks that OpenAL can retrieve buffer properties properly.
 ALvoid FA_GetBufferProperties(ALvoid)
 {
 	ALint freq, bits, ch, size;
-	bool passNULL;
+	ALboolean passNULL;
 
 	printf("\nGet Buffer Properties Test. ");
 	alGetBufferi(g_Buffers[0], AL_FREQUENCY, &freq);
@@ -1384,7 +1430,7 @@ ALvoid FA_GetBufferProperties(ALvoid)
 	
 	passNULL = alIsBuffer(0);  // the NULL buffer should cause alIsBuffer to be TRUE (non-annotated 1.0 spec, pg 26)
 
-	if ((freq == 44100) && (bits == 16) && (ch == 1) && (size == 282626) && (passNULL == true))
+	if ((freq == 44100) && (bits == 16) && (ch == 1) && (size == 282626) && (passNULL == AL_TRUE))
 	{
 		printf("PASSED.");
 	} else
@@ -2250,7 +2296,7 @@ This test alters the frequency of a playing source.
 ALvoid SA_Frequency(ALvoid)
 {	
 	ALuint testSources[2];
-	float root12 = pow (2, 1/12.0);
+	float root12 = (float)(pow (2, 1/12.0));
 	float increments[15] = { -12, -10, -8, -7, -5, -3, -1, 0,
 				 2, 4, 5, 7, 9, 11, 12 };
 	int i;
