@@ -1849,7 +1849,33 @@ ALvoid SA_ListenerOrientation (ALvoid)
 		alSourcePlay(testSources[0]);
 		delay_ms(4000);
 		alSourceStop(testSources[0]);
-		
+
+	        printf("The listener will now be oriented down the +Y axis and with a +Z 'up' vector.  The sound should be to the left. (Press Return):\n");
+		CRToContinue();
+		listenerOri[0]=0.0;
+		listenerOri[1]=1.0;
+		listenerOri[2]=0.0;
+		listenerOri[3]=0.0;
+		listenerOri[4]=0.0;
+		listenerOri[5]=1.0;
+		alListenerfv(AL_ORIENTATION, listenerOri);
+		alSourcePlay(testSources[0]);
+		delay_ms(4000);
+		alSourceStop(testSources[0]);
+
+	        printf("The listener will now be oriented down the -Y axis and with a +Z 'up' vector.  The sound should be to the right. (Press Return):\n");
+		CRToContinue();
+		listenerOri[0]=0.0;
+		listenerOri[1]=-1.0;
+		listenerOri[2]=0.0;
+		listenerOri[3]=0.0;
+		listenerOri[4]=0.0;
+		listenerOri[5]=1.0;
+		alListenerfv(AL_ORIENTATION, listenerOri);
+		alSourcePlay(testSources[0]);
+		delay_ms(4000);
+		alSourceStop(testSources[0]);
+
 		CRForNextTest();
 		alListenerf(AL_GAIN,1.0f);
 		alListener3f(AL_POSITION, 0.0, 0.0, 0.0);
