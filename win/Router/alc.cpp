@@ -775,7 +775,7 @@ HINSTANCE FindDllWithMatchingSpecifier(TCHAR* dllSearchPattern, char* specifier,
 
     //
     // Directory[0] is the current directory
-    // Directory[1] is the current OpenAL32.dll directory
+    // Directory[1] is the current app directory
     // Directory[2] is the system directory.
     //
     TCHAR dir[3][MAX_PATH + 1];
