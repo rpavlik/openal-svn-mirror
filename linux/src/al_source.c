@@ -1686,6 +1686,13 @@ static void _alSplitSourceQueue( ALuint cid,
 
 		bid  = src->bid_queue.queue[src->bid_queue.read_index];
 		samp = _alGetBuffer(bid);
+		if(samp == NULL)
+		{
+			_alDebug(ALD_SOURCE, __FILE__, __LINE__,
+				 "_alSplitSourceQueue: null buffer");
+
+			return;
+		}
 
 		src->srcParams.soundpos = 0;
 
