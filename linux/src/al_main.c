@@ -785,11 +785,11 @@ ALboolean _alCheckRangeb(ALboolean b) {
 }
 
 /*
- * _alIsZeroVector( ALfloat *fv1 )
+ * ALboolean _alIsZeroVector( const ALfloat *fv1 )
  *
  * Returns true if fv1 == { 0.0f, 0.0f, 0.0f }
  */
-ALboolean _alIsZeroVector(ALfloat *fv)
+ALboolean _alIsZeroVector(const ALfloat *fv)
 {
 	if(fv[0] != 0.0f) {
 		return AL_FALSE;

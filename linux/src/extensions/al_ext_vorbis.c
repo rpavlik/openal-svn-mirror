@@ -123,12 +123,12 @@ static void vorbmap_update(int i, ALuint offset, ALint current_section);
 static void vorbmap_remove(ALuint sid);
 
 ALboolean alutLoadVorbis_LOKI(ALuint bid,
-			      UNUSED(ALvoid *data),
-			      UNUSED(ALint size)) {
+			      const ALvoid *data,
+			      ALint size) {
 	static void (*alBufferi)(ALuint, ALenum, ALint) = NULL;
 	VorbHandle *vorb;
 	int err;
-	UNUSED(vorbis_info *vi);
+	vorbis_info *vi;
 
 	if(alBufferi == NULL) {
 		alBufferi = (void (*)(ALuint, ALenum, ALint))
@@ -159,6 +159,7 @@ ALboolean alutLoadVorbis_LOKI(ALuint bid,
 	vorb->fh.offset = 0;
 	vorb->fh.size   = size;
 
+	/* NOTE: Ogg Vorbis' header are not const-correct, so we get a warning for "data" below! */
 	err = ov_open_callbacks(vorb, &vorb->of, data, size, ov_fromdata);
 	if(err < 0) {
 		fprintf(stderr, "vorbis problems\n");

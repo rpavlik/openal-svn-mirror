@@ -278,11 +278,11 @@ ALboolean _alCheckRangef( ALfloat val, ALfloat min, ALfloat max );
 ALboolean _alCheckRangeb( ALboolean val );
 
 /*
- * _alIsZeroVector( ALfloat *fv1 )
+ * ALboolean _alIsZeroVector( const ALfloat *fv1 )
  *
  * Returns true if fv1 == { 0.0f, 0.0f, 0.0f }
  */
-ALboolean _alIsZeroVector( ALfloat *fv1 );
+ALboolean _alIsZeroVector( const ALfloat *fv1 );
 
 /*
  * the buffers that sources are split into in SplitSources and

@@ -614,12 +614,12 @@ AL_context *_alcGetContext( ALuint cid ) {
 
 
 /*
- * _alcSetContext( int *attrlist, ALuint cid, AL_device *dev )
+ * void _alcSetContext( const ALCint *attrlist, ALuint cid, AL_device *dev )
  *
  * Sets context id paramaters according to an attribute list and device.
  *
  */
-void _alcSetContext(int *attrlist, ALuint cid, AL_device *dev ) {
+void _alcSetContext(const ALCint *attrlist, ALuint cid, AL_device *dev ) {
 	AL_context *cc;
 	ALboolean reading_keys = AL_TRUE;
 	struct { int key; int val; } rdr;

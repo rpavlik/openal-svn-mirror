@@ -9,6 +9,7 @@
 #define _ALC_CONTEXT_H_
 
 #include "AL/altypes.h"
+#include "AL/alctypes.h"
 
 #include "../al_types.h"
 #include "../al_attenuation.h"
@@ -90,11 +91,11 @@ AL_context *_alcGetContext( ALuint cid );
 ALboolean _alcIsContext( ALuint cid );
 
 /*
- * _alcSetContext( int *attrlist, ALuint cid, AL_device *dev )
+ * void _alcSetContext( const ALCint *attrlist, ALuint cid, AL_device *dev )
  *
  * Sets context id paramaters according to an attribute list and device.
  */
-void _alcSetContext( int *attrlist, ALuint cid, AL_device *dev );
+void _alcSetContext( const ALCint *attrlist, ALuint cid, AL_device *dev );
 
 /*
  * _alcGetNewContextId( void )

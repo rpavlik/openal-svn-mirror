@@ -56,7 +56,7 @@ ALAPI ALboolean alCaptureStop_EXT( ALvoid );
 ALAPI ALsizei alCaptureGetData_EXT( ALvoid* data, ALsizei n, ALenum format, ALuint rate );
 
 /* custom loaders */
-ALAPI ALboolean alutLoadVorbis_LOKI(ALuint bid, ALvoid *data, ALint size);
+ALAPI ALboolean alutLoadVorbis_LOKI(ALuint bid, const ALvoid *data, ALint size);
 ALAPI ALboolean ALAPIENTRY alutLoadRAW_ADPCMData_LOKI(ALuint bid, ALvoid *data,
 						      ALuint size, ALuint freq,
 						      ALenum format);
