@@ -18,6 +18,10 @@
 #define _SVID_SOURCE
 #endif /* _SVID_SOURCE */
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif /* _GNU_SOURCE */
+
 #include "arch/interface/interface_sound.h"
 #include "arch/alsa/alsa.h"
 
@@ -82,13 +86,29 @@ static int openal_load_alsa_library(void)
 	if (alsa_lib_handle != NULL)
 		return 1;  /* already loaded. */
 
+        /* versioned symbol fetching macro, or NULL if no dlvsym available */
+#ifdef _GNU_SOURCE
+#define AL_DLVSYM dlvsym
+#else
+#define AL_DLVSYM(a,b,c) NULL
+#endif
+
+        /* ALSA uses symbol versioning, which is usually a good thing except
+           that it turns dlsym() into a lottery.  So, we look for known-good
+           symbol versions first before falling back to unversioned symbols. */
+        /* this is our current preferred symbol versioning order:
+           ALSA_0.9.0rc4 > (generic) */
 	#if OPENAL_DLOPEN_ALSA
-		#define OPENAL_LOAD_ALSA_SYMBOL(x) p##x = dlsym(alsa_lib_handle, #x); \
+		#define OPENAL_LOAD_ALSA_SYMBOL(x) p##x = AL_DLVSYM(alsa_lib_handle, #x, "ALSA_0.9.0rc4"); \
                                                    error = dlerror(); \
                                                    if ((error != NULL)||(p##x == NULL)) { \
-                                                           fprintf(stderr,"Could not resolve ALSA symbol %s: %s\n", #x, ((error!=NULL)?(error):("(null)"))); \
-                                                           dlclose(alsa_lib_handle); alsa_lib_handle = NULL; \
-                                                           return 0; }
+                                                           p##x = dlsym(alsa_lib_handle, #x); \
+                                                           error = dlerror(); \
+                                                           if ((error != NULL)||(p##x == NULL)) { \
+                                                                   fprintf(stderr,"Could not resolve ALSA symbol %s: %s\n", #x, ((error!=NULL)?(error):("(null)"))); \
+                                                                   dlclose(alsa_lib_handle); alsa_lib_handle = NULL; \
+                                                                   return 0; } else _alDebug(ALD_MAXIMUS, __FILE__, __LINE__, "got %s", #x); \
+                                                   } else _alDebug(ALD_MAXIMUS, __FILE__, __LINE__, "got %s", #x "@ALSA_0.9rc4");
                 dlerror(); /* clear error state */
 		alsa_lib_handle = dlopen("libasound.so.2", RTLD_LAZY | RTLD_GLOBAL);
                 error = dlerror();
@@ -587,8 +607,9 @@ ALboolean set_write_alsa(void *handle,
 		ai->speed = (unsigned int) err;
                 if (ai->speed > 200000) {
                         /* This can happen, and is the precursor to other Bad
-                           Things.  I don't know why it happens, but at least
-                           we can detect it and fail gracefully. */
+                           Things.  It usually means we dlsym()d a crappy interface
+                           version instead of known-good one, and our list of preferential
+                           interfaces may need updating. */
                         _alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
                                  "set_write_alsa: hw speed %u not sane.  failing.", ai->speed);
                         psnd_pcm_hw_params_free(setup);

@@ -1,5 +1,12 @@
 2004-06-25  Adam D. Moss  <adam@gimp.org>
 
+        * openal/linux/src/arch/alsa/alsa.c: Preferentially load symbol
+        versions which are known to be good, before falling back to generic
+        unversioned symbols.  This avoids picking up random crappy interface
+        versions in the dlsym roulette.
+
+2004-06-25  Adam D. Moss  <adam@gimp.org>
+
         * openal/linux/src/configure.in
         * openal/linux/src/arch/arts/arts.c
         * openal/linux/src/arch/esd/esd.c: From Marco Ziech <mmz@gmx.net>:
