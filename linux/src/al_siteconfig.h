@@ -9,7 +9,7 @@
 #include "../config-osx.h"
 #else
 #include "../config.h"
-#endif // DARWIN_PBBUILDER
+#endif /* DARWIN_PBBUILDER */
 
 #ifdef DMALLOC
 /* do nothing */

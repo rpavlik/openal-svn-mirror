@@ -285,9 +285,7 @@ static void _alBufferInit( AL_buffer *buf, ALuint bid ) {
 		return;
 	}
 
-	buf->num_buffers = _alcDCGetNumSpeakers();
-
-	for(i = 0; i < buf->num_buffers; i++) {
+	for(i = 0; i < _ALC_MAX_CHANNELS; i++) {
 		buf->orig_buffers[i] = NULL;
 	}
 

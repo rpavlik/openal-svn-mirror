@@ -1,3 +1,8 @@
+2002-05-06  Joseph I. Valenzuela  <jvalenzu@forbidden.loungenet.org>
+
+	* src/al_siteconfig.h
+	- doh!
+
 2002-05-06  Joseph Valenzuela  <jvalenzu@formosa>
 
         * openal/linux/CREDITS

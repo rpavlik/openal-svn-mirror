@@ -641,14 +641,20 @@ void alBufferData( ALuint  bid,
 	 */
 	_alLockBuffer();
 
-	if(buf->size < retsize) {
+	if(buf->size < retsize)
+	{
 		void *temp;
 
-		for(i = 0; i < buf->num_buffers; i++) {
+		/*
+		 * New system is like this:  allocate data for the amount
+                 * of data needed for each channel.
+                 */
+		assert( _al_ALCHANNELS(tformat) == 1 );
+
+		for(i = 0; i < _al_ALCHANNELS(tformat); i++)
+		{
 			temp = realloc(buf->orig_buffers[i], retsize);
-			if(temp == NULL) {
-				/* FIXME: do something */
-			}
+			assert(temp); /* FIXME: do something */
 
 			buf->orig_buffers[i] = temp;
 		}
@@ -657,9 +663,10 @@ void alBufferData( ALuint  bid,
 	_alMonoify((ALshort **) buf->orig_buffers,
 		   cdata,
 		   retsize / _al_ALCHANNELS(tformat),
-		   buf->num_buffers, _al_ALCHANNELS(tformat));
+		   _al_ALCHANNELS(tformat),
+		   _al_ALCHANNELS(tformat));
 
-	buf->size          = retsize / _al_ALCHANNELS(tformat);
+	buf->size = retsize / _al_ALCHANNELS(tformat);
 
 	_alUnlockBuffer();
 
@@ -822,7 +829,7 @@ static void _alDestroyBuffer( void *bufp ) {
 		buf->destroy_buffer_callback = NULL;
 	}
 
-	for(i = 0; i < buf->num_buffers; i++) {
+	for(i = 0; i < _ALC_MAX_CHANNELS; i++) {
 		free( buf->orig_buffers[i] );
 		buf->orig_buffers[i] = NULL;
 	}
@@ -1018,7 +1025,7 @@ void _alBufferDataWithCallback_LOKI( ALuint bid,
 		return;
 	}
 
-	for(i = 0; i < buf->num_buffers; i++) {
+	for(i = 0; i < _ALC_MAX_CHANNELS; i++) {
 		free( buf->orig_buffers[i] );
 		buf->orig_buffers[i] = NULL;
 	}

@@ -78,28 +78,28 @@ static ALshort *stereoptr = NULL; /*
  * special split source to handle callbacks
  */
 static void _alSplitSourceCallback(ALuint cid,
-		     ALuint sourceid,
-		     ALint nc, ALuint len,
-		     AL_buffer *samp,
-		     ALshort **buffers);
+				   ALuint sourceid,
+				   ALint nc, ALuint len,
+				   AL_buffer *samp,
+				   ALshort **buffers);
 /*
  * special split source to handle looping end case (wrap-around).
  */
 static void _alSplitSourceLooping(ALuint cid,
-		     ALuint sourceid,
-		     ALint nc, ALuint len,
-		     AL_buffer *samp,
-		     ALshort **buffers);
+				  ALuint sourceid,
+				  ALint nc, ALuint len,
+				  AL_buffer *samp,
+				  ALshort **buffers);
 
 /*
  * special split source to handle buffer queue transitions
  * (wrap-around).
  */
 static void _alSplitSourceQueue(ALuint cid,
-		     ALuint sourceid,
-		     ALint nc, ALuint len,
-		     AL_buffer *samp,
-		     ALshort **buffers);
+				ALuint sourceid,
+				ALint nc, ALuint len,
+				AL_buffer *samp,
+				ALshort **buffers);
 
 /*
  * get a channel pointer into the buffer's data, scaled by the source's
@@ -1350,6 +1350,7 @@ void _alSplitSources( ALuint cid,
 	for(i = 0; i < _alcGetNumSpeakers(cid); i++)
 	{
 		bufptr = _alSourceGetBufptr(src, samp, i);
+		assert(bufptr);
 
 		memcpy(buffers[i], bufptr, len);
 	}
@@ -1433,7 +1434,6 @@ static void _alSplitSourceCallback( ALuint cid,
 		 * we want this to end.  please.
 		 * What a cheat.
 		 */
-
 		src->srcParams.soundpos = samp->size + nc * resultsamps * sizeof **buffers;
 	}
 
@@ -1446,7 +1446,7 @@ static void _alSplitSourceCallback( ALuint cid,
 	 * since we're decoding it, copy it to the orig_buffers so we only
 	 * have to do it once.
 	 */
-	_alMonoify(buffers, stereoptr, len, samp->num_buffers, bufchannels);
+	_alMonoify(buffers, stereoptr, len, bufchannels, bufchannels);
 
 	samp->size += nc * resultsamps * sizeof **buffers;
 
@@ -2899,6 +2899,8 @@ void *_alSourceGetBufptr( AL_source *src, AL_buffer *buf, ALuint index ) {
 	ALbyte *retval;
 	ALuint pos = src->srcParams.soundpos;
 
+	assert(index <= _ALC_MAX_CHANNELS);
+
 	retval = buf->orig_buffers[index];
 
 	return retval + pos;
@@ -2912,7 +2914,7 @@ void *_alSourceGetBufptr( AL_source *src, AL_buffer *buf, ALuint index ) {
  * byte length of a simple array, with 1 channel's worth of data.
  */
 ALint _alSourceBytesLeft(AL_source *src, AL_buffer *samp) {
-	ALuint nc = samp->num_buffers;
+	ALuint nc = _al_ALCHANNELS(samp->format);
 
 	return nc * _alSourceBytesLeftByChannel(src, samp);
 }
