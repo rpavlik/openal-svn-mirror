@@ -15,7 +15,7 @@
 		};
 		034768DEFF38A45A11DB9C8B = {
 			isa = PBXFrameworkReference;
-			path = openal.framework;
+			path = OpenAL.framework;
 			refType = 3;
 		};
 //030
@@ -80,7 +80,7 @@
 				OPTIMIZATION_CFLAGS = "-O2";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
-				PRODUCT_NAME = openal;
+				PRODUCT_NAME = OpenAL;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
 				WRAPPER_EXTENSION = framework;
@@ -99,7 +99,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>openal</string>
+	<string>OpenAL</string>
 	<key>CFBundleGetInfoString</key>
 	<string>OpenAL</string>
 	<key>CFBundleIconFile</key>
