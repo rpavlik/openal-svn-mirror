@@ -1,5 +1,0 @@
-ALTest contains a series of OpenAL tests.  These tests will form
-the basis for testing the quality of OpenAL implementations.
-
-To compile the tests, go to the directory for your OS and use the
-native build environment there.
