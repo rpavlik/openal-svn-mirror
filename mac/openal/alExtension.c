@@ -26,14 +26,14 @@
 #ifdef MAC_OS_X
 #include <mach-o/dyld.h>
 #include "vorbis/codec.h"
+#include "vorbis/vorbisfile.h"
 #include "vorbisrtn.h"
 #endif
 
 #pragma export on 
 
 #ifdef MAC_OS_X
-void *pVorbisLib = NULL;
-void *pOggLib = NULL;
+void *pVorbisFileLib = NULL;
 #endif
 
 ALAPI ALboolean ALAPIENTRY alIsExtensionPresent(ALubyte *extName)
@@ -47,27 +47,18 @@ ALAPI ALboolean ALAPIENTRY alIsExtensionPresent(ALubyte *extName)
 #ifdef MAC_OS_X
     if (!strcmp(extName, "AL_EXT_vorbis")) {
         // check for required libraries
-        pVorbisLib = (void *) NSAddImage("libvorbis.dylib", NSADDIMAGE_OPTION_RETURN_ON_ERROR);
-        if (pVorbisLib == NULL) {
+        pVorbisFileLib = (void *) NSAddImage("libvorbisfile.dylib", NSADDIMAGE_OPTION_RETURN_ON_ERROR);
+        if (pVorbisFileLib == NULL) {
           // try Fink loc if first try fails
-          pVorbisLib = (void *) NSAddImage("/sw/lib/libvorbis.dylib", NSADDIMAGE_OPTION_RETURN_ON_ERROR);
-        }
-        
-        pOggLib = (void *) NSAddImage("libogg.dylib", NSADDIMAGE_OPTION_RETURN_ON_ERROR);
-        if (pOggLib == NULL) {
-          // try Fink loc if first try fails
-          pOggLib = (void *) NSAddImage("/sw/lib/libogg.dylib", NSADDIMAGE_OPTION_RETURN_ON_ERROR);
+          pVorbisFileLib = (void *) NSAddImage("/sw/lib/libvorbisfile.dylib", NSADDIMAGE_OPTION_RETURN_ON_ERROR);
         }
         
         // set function pointers
-        if ((pVorbisLib != NULL) && (pOggLib != NULL)) {
-            havePointers = ov_setVorbisFunctionPointers(pVorbisLib);
-            if (havePointers == AL_TRUE) {
-                havePointers = ov_setOggFunctionPointers(pOggLib);
-            }
+        if (pVorbisFileLib != NULL) {
+            havePointers = ov_setVorbisFileFunctionPointers(pVorbisFileLib);
         }
             
-        if ((pVorbisLib != NULL) && (pOggLib != NULL) && (havePointers == AL_TRUE)) {
+        if ((pVorbisFileLib != NULL) && (havePointers == AL_TRUE)) {
           extPresent = AL_TRUE;
         }
     }

@@ -151,6 +151,7 @@
 				98AF1E6704353506000D2D30,
 				98AF1E6804353506000D2D30,
 				98A1D34F043B7D7E005F25BE,
+				986F619D04439DCE00A8006E,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -244,6 +245,7 @@
 				F558C52A036A116501A8006E,
 				984FDEC20433F5A20042B474,
 				984FDEC30433F5A20042B474,
+				986F619C04439DCE00A8006E,
 				984FDEC40433F5A20042B474,
 				984FDEC50433F5A20042B474,
 				984FDEC60433F5A20042B474,
@@ -375,6 +377,25 @@
 			settings = {
 			};
 		};
+		986F619C04439DCE00A8006E = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = vorbisfile.h;
+			path = /Users/garinh/prog/openal/mac/al/vorbis/vorbisfile.h;
+			refType = 0;
+		};
+		986F619D04439DCE00A8006E = {
+			fileRef = 986F619C04439DCE00A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		986F619E04439DCE00A8006E = {
+			fileRef = 986F619C04439DCE00A8006E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		9894C4180439726000A8006E = {
 			buildPhases = (
 				9894C4190439726000A8006E,
@@ -463,6 +484,7 @@
 				9894C42D0439726000A8006E,
 				9894C42E0439726000A8006E,
 				98A1D34D043B7D7E005F25BE,
+				986F619E04439DCE00A8006E,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;

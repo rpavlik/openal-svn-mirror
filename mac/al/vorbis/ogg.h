@@ -1,5 +1,5 @@
 /*
- * The following header is a modified version of the equivalent Xiphorphorus Ogg Vorbis header -- their copyright is maintained below.
+ * The following header is a modified version of the equivalent Xiphorphorus Ogg Vorbis header -- their copyright notification is maintained below.
  */
 
 /********************************************************************
@@ -117,6 +117,8 @@ typedef struct {
 #define EXTERN
 #endif
 
+typedef char * char_ptr;
+
 EXTERN void  (*oggpack_writeinit) (oggpack_buffer *b);
 EXTERN void  (*oggpack_writetrunc) (oggpack_buffer *b,long bits);
 EXTERN void  (*oggpack_writealign) (oggpack_buffer *b);
@@ -148,7 +150,7 @@ EXTERN int    (*ogg_sync_clear) (ogg_sync_state *oy);
 EXTERN int    (*ogg_sync_reset) (ogg_sync_state *oy);
 EXTERN int    (*ogg_sync_destroy) (ogg_sync_state *oy);
 
-EXTERN char   (*ogg_sync_buffer) (ogg_sync_state *oy, long size);
+EXTERN char_ptr   (*ogg_sync_buffer) (ogg_sync_state *oy, long size);
 EXTERN int    (*ogg_sync_wrote) (ogg_sync_state *oy, long bytes);
 EXTERN long   (*ogg_sync_pageseek) (ogg_sync_state *oy,ogg_page *og);
 EXTERN int    (*ogg_sync_pageout) (ogg_sync_state *oy, ogg_page *og);

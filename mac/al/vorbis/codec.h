@@ -1,5 +1,5 @@
 /*
- * The following header is a modified version of the equivalent Xiphorphorus Ogg Vorbis header -- their copyright is maintained below.
+ * The following header is a modified version of the equivalent Xiphorphorus Ogg Vorbis header -- their copyright notification is maintained below.
  */
 
 /********************************************************************
@@ -56,6 +56,8 @@ typedef struct vorbis_info{
 
   void *codec_setup;
 } vorbis_info;
+
+typedef vorbis_info * vorbis_info_ptr;
 
 /* vorbis_dsp_state buffers the current vorbis audio
    analysis/synthesis state.  The DSP state belongs to a specific
@@ -151,6 +153,8 @@ typedef struct vorbis_comment{
 
 } vorbis_comment;
 
+typedef vorbis_comment * vorbis_comment_ptr;
+
 
 /* libvorbis encodes in two abstraction layers; first we perform DSP
    and produce a packet (see docs/analysis.txt).  The packet is then
@@ -170,13 +174,15 @@ typedef struct vorbis_comment{
 #define EXTERN
 #endif
 
+typedef float ** float_ptr_ptr;
+
 EXTERN void (*vorbis_info_init) (vorbis_info *vi);
 EXTERN void (*vorbis_info_clear) (vorbis_info *vi);
 EXTERN int  (*vorbis_info_blocksize) (vorbis_info *vi,int zo);
 EXTERN void (*vorbis_comment_init) (vorbis_comment *vc);
 EXTERN void (*vorbis_comment_add) (vorbis_comment *vc, char *comment); 
 EXTERN void (*vorbis_comment_add_tag) (vorbis_comment *vc, char *tag, char *contents);
-EXTERN char (*vorbis_comment_query) (vorbis_comment *vc, char *tag, int count);
+EXTERN char_ptr (*vorbis_comment_query) (vorbis_comment *vc, char *tag, int count);
 EXTERN int  (*vorbis_comment_query_count) (vorbis_comment *vc, char *tag);
 EXTERN void (*vorbis_comment_clear) (vorbis_comment *vc);
 
@@ -193,7 +199,7 @@ EXTERN int  (*vorbis_analysis_headerout) (vorbis_dsp_state *v,
 					  ogg_packet *op,
 					  ogg_packet *op_comm,
 					  ogg_packet *op_code);
-EXTERN float (*vorbis_analysis_buffer) (vorbis_dsp_state *v,int vals);
+EXTERN float_ptr_ptr (*vorbis_analysis_buffer) (vorbis_dsp_state *v,int vals);
 EXTERN int   (*vorbis_analysis_wrote) (vorbis_dsp_state *v,int vals);
 EXTERN int   (*vorbis_analysis_blockout) (vorbis_dsp_state *v,vorbis_block *vb);
 EXTERN int   (*vorbis_analysis) (vorbis_block *vb,ogg_packet *op);

@@ -22,6 +22,7 @@
 #include <mach-o/dyld.h>
 #define EXTERN extern
 #include "vorbis/codec.h"
+#include "vorbis/vorbisfile.h"
 #include "vorbisrtn.h"
 #include "math.h"
 
@@ -339,6 +340,117 @@ ALboolean ov_setOggFunctionPointers(void *pLib)
     tmpSymbol = NSLookupSymbolInImage(pLib, "_ogg_packet_clear", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
     ogg_packet_clear = NSAddressOfSymbol(tmpSymbol);
     if (ogg_packet_clear == NULL) { return AL_FALSE; }
+
+    return AL_TRUE;
+}
+
+ALboolean ov_setVorbisFileFunctionPointers(void *pLib) 
+{
+    NSSymbol tmpSymbol;
+
+    tmpSymbol = NSLookupSymbolInImage(pLib, "_ov_clear", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    ov_clear = NSAddressOfSymbol(tmpSymbol);
+    if (ov_clear == NULL) { return AL_FALSE; }
+    
+    tmpSymbol = NSLookupSymbolInImage(pLib, "_ov_open", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    ov_open = NSAddressOfSymbol(tmpSymbol);
+    if (ov_open == NULL) { return AL_FALSE; }
+    
+    tmpSymbol = NSLookupSymbolInImage(pLib, "_ov_open_callbacks", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    ov_open_callbacks = NSAddressOfSymbol(tmpSymbol);
+    if (ov_open_callbacks == NULL) { return AL_FALSE; }
+    
+    tmpSymbol = NSLookupSymbolInImage(pLib, "_ov_test", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    ov_test = NSAddressOfSymbol(tmpSymbol);
+    if (ov_test == NULL) { return AL_FALSE; }
+    
+    tmpSymbol = NSLookupSymbolInImage(pLib, "_ov_test_callbacks", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    ov_test_callbacks = NSAddressOfSymbol(tmpSymbol);
+    if (ov_test_callbacks == NULL) { return AL_FALSE; }
+    
+    tmpSymbol = NSLookupSymbolInImage(pLib, "_ov_test_open", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    ov_test_open = NSAddressOfSymbol(tmpSymbol);
+    if (ov_test_open == NULL) { return AL_FALSE; }
+    
+    tmpSymbol = NSLookupSymbolInImage(pLib, "_ov_bitrate", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    ov_bitrate = NSAddressOfSymbol(tmpSymbol);
+    if (ov_bitrate == NULL) { return AL_FALSE; }
+    
+    tmpSymbol = NSLookupSymbolInImage(pLib, "_ov_bitrate_instant", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    ov_bitrate_instant = NSAddressOfSymbol(tmpSymbol);
+    if (ov_bitrate_instant == NULL) { return AL_FALSE; }
+    
+    tmpSymbol = NSLookupSymbolInImage(pLib, "_ov_streams", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    ov_streams = NSAddressOfSymbol(tmpSymbol);
+    if (ov_streams == NULL) { return AL_FALSE; }
+    
+    tmpSymbol = NSLookupSymbolInImage(pLib, "_ov_seekable", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    ov_seekable = NSAddressOfSymbol(tmpSymbol);
+    if (ov_seekable == NULL) { return AL_FALSE; }
+    
+    tmpSymbol = NSLookupSymbolInImage(pLib, "_ov_serialnumber", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    ov_serialnumber = NSAddressOfSymbol(tmpSymbol);
+    if (ov_serialnumber == NULL) { return AL_FALSE; }
+    
+    tmpSymbol = NSLookupSymbolInImage(pLib, "_ov_raw_total", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    ov_raw_total = NSAddressOfSymbol(tmpSymbol);
+    if (ov_raw_total == NULL) { return AL_FALSE; }
+    
+    tmpSymbol = NSLookupSymbolInImage(pLib, "_ov_pcm_total", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    ov_pcm_total = NSAddressOfSymbol(tmpSymbol);
+    if (ov_pcm_total == NULL) { return AL_FALSE; }
+    
+    tmpSymbol = NSLookupSymbolInImage(pLib, "_ov_time_total", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    ov_time_total = NSAddressOfSymbol(tmpSymbol);
+    if (ov_time_total == NULL) { return AL_FALSE; }
+    
+    tmpSymbol = NSLookupSymbolInImage(pLib, "_ov_raw_seek", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    ov_raw_seek = NSAddressOfSymbol(tmpSymbol);
+    if (ov_raw_seek == NULL) { return AL_FALSE; }
+    
+    tmpSymbol = NSLookupSymbolInImage(pLib, "_ov_pcm_seek", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    ov_pcm_seek = NSAddressOfSymbol(tmpSymbol);
+    if (ov_pcm_seek == NULL) { return AL_FALSE; }
+    
+    tmpSymbol = NSLookupSymbolInImage(pLib, "_ov_pcm_seek_page", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    ov_pcm_seek_page = NSAddressOfSymbol(tmpSymbol);
+    if (ov_pcm_seek_page == NULL) { return AL_FALSE; }
+    
+    tmpSymbol = NSLookupSymbolInImage(pLib, "_ov_time_seek", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    ov_time_seek = NSAddressOfSymbol(tmpSymbol);
+    if (ov_time_seek == NULL) { return AL_FALSE; }
+    
+    tmpSymbol = NSLookupSymbolInImage(pLib, "_ov_time_seek_page", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    ov_time_seek_page = NSAddressOfSymbol(tmpSymbol);
+    if (ov_time_seek_page == NULL) { return AL_FALSE; }
+    
+    tmpSymbol = NSLookupSymbolInImage(pLib, "_ov_raw_tell", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    ov_raw_tell = NSAddressOfSymbol(tmpSymbol);
+    if (ov_raw_tell == NULL) { return AL_FALSE; }
+    
+    tmpSymbol = NSLookupSymbolInImage(pLib, "_ov_pcm_tell", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    ov_pcm_tell = NSAddressOfSymbol(tmpSymbol);
+    if (ov_pcm_tell == NULL) { return AL_FALSE; }
+    
+    tmpSymbol = NSLookupSymbolInImage(pLib, "_ov_time_tell", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    ov_time_tell = NSAddressOfSymbol(tmpSymbol);
+    if (ov_time_tell == NULL) { return AL_FALSE; }
+    
+    tmpSymbol = NSLookupSymbolInImage(pLib, "_ov_info", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    ov_info = NSAddressOfSymbol(tmpSymbol);
+    if (ov_info == NULL) { return AL_FALSE; }
+    
+    tmpSymbol = NSLookupSymbolInImage(pLib, "_ov_comment", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    ov_comment = NSAddressOfSymbol(tmpSymbol);
+    if (ov_comment == NULL) { return AL_FALSE; }
+    
+    tmpSymbol = NSLookupSymbolInImage(pLib, "_ov_read_float", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    ov_read_float = NSAddressOfSymbol(tmpSymbol);
+    if (ov_read_float == NULL) { return AL_FALSE; }
+    
+    tmpSymbol = NSLookupSymbolInImage(pLib, "_ov_read", NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    ov_read = NSAddressOfSymbol(tmpSymbol);
+    if (ov_read == NULL) { return AL_FALSE; }
 
     return AL_TRUE;
 }

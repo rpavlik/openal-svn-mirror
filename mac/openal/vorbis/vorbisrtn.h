@@ -22,4 +22,5 @@
 
 ALboolean ov_setVorbisFunctionPointers(void *pLib);
 ALboolean ov_setOggFunctionPointers(void *pLib);
+ALboolean ov_setVorbisFileFunctionPointers(void *pLib);
 void ov_fillBuffer(ALbuffer *pBuffer);
