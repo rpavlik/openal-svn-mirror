@@ -1,8 +1,13 @@
 #ifndef ALC_CONTEXT_H_
 #define ALC_CONTEXT_H_
 
+#if defined(__MACH__) && defined(__APPLE__)
+#include <OpenAL/altypes.h>
+#include <OpenAL/alctypes.h>
+#else
 #include <AL/altypes.h>
 #include <AL/alctypes.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {

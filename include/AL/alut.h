@@ -1,8 +1,13 @@
 #ifndef _ALUT_H_
 #define _ALUT_H_
 
+#if defined(__MACH__) && defined(__APPLE__)
+#include <OpenAL/altypes.h>
+#include <OpenAL/aluttypes.h>
+#else
 #include <AL/altypes.h>
 #include <AL/aluttypes.h>
+#endif
 
 #ifdef _WIN32
 #define ALAPI         __declspec(dllexport)
