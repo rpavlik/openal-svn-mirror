@@ -101,7 +101,7 @@ int _alDebug( aldEnum level, const char *fn, int ln, const char *format, ... )
 	}
 
 	va_start(ap, format);
-	vsnprintf(formatbuf, 256, format, ap);
+	vsnprintf(formatbuf, sizeof formatbuf, format, ap);
 	va_end(ap);
 
 	return fprintf(stderr, "%s\t[%s:%d] %s\n",
@@ -138,4 +138,16 @@ const char *ald2str( aldEnum l ) {
 	}
 
 	return NULL;
+}
+
+int _alDebugPrintf( const char *format, ... )
+{
+	static char formatbuf[256];
+
+	va_list ap;
+	va_start(ap, format);
+	vsnprintf(formatbuf, sizeof formatbuf, format, ap);
+	va_end(ap);
+
+	return fprintf(stderr, "%s", formatbuf);
 }

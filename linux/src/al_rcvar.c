@@ -161,7 +161,7 @@ ALboolean rc_tobool(Rcvar symp) {
 		return AL_FALSE;
 	}
 
-	return sym->data.i;
+	return sym->data.b;
 }
 
 /*

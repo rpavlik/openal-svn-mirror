@@ -70,5 +70,6 @@ typedef enum _aldEnum
  *
  */
 int _alDebug( aldEnum level, const char *fn, int ln, const char *format, ... );
+int _alDebugPrintf( const char *format, ... );
 
 #endif

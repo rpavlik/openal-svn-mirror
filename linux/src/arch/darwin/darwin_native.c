@@ -19,9 +19,11 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "al_main.h"
 #include "al_debug.h"
+#include "al_rcvar.h"
 #include "alc/alc_context.h"
 
 #define maxBuffer 25 /*number of buffers to use (1 buffer = 11.61 ms with my sound card, this may vary) */
@@ -55,16 +57,24 @@ static unsigned int	nativePreferedBuffSize;
 
 /************************************* PROTOTYPES *********************************/
 
-void implement_me(const char *fn);
+static void implement_me(const char *fn);
 OSStatus deviceFillingProc (AudioDeviceID  inDevice, const AudioTimeStamp*  inNow, const AudioBufferList*  inInputData, const AudioTimeStamp*  inInputTime, AudioBufferList* outOutputData, const AudioTimeStamp* inOutputTime, void* inClientData);
 
 OSStatus GetAudioDevices (void **devices /*Dev IDs*/, short	*devicesAvailable /*Dev number*/);
 
 /************************************** UTILITIES *********************************/
 
-void implement_me(const char *fn)
+static int NoPrintf( UNUSED(const char *format), ... )
 {
-    fprintf(stderr,"[darwin_native.c] : %s is not implemented.\nPlease contact gborios@free.fr for information or help.\n", fn);
+	return 0;
+}
+
+static int (*DebugPrintf)( const char *format, ... ) = NoPrintf;
+
+
+static void implement_me(const char *fn)
+{
+	DebugPrintf("[darwin_native.c] : %s is not implemented.\nPlease contact gborios@free.fr for information or help.\n", fn);
 }
 
 /*********************************** OS callback proc *****************************/
@@ -107,7 +117,7 @@ OSStatus GetAudioDevices (void **devices /*Dev IDs*/, short	*devicesAvailable /*
     UInt32 	outSize;
     Boolean	outWritable;
 
-    printf("OpenAL MOSX Backend : Build %d\n",buildID);
+    DebugPrintf("OpenAL MOSX Backend : Build %d\n",buildID);
     
     // find out how many audio devices there are, if any
     err = AudioHardwareGetPropertyInfo(kAudioHardwarePropertyDevices, &outSize, &outWritable);	
@@ -125,16 +135,16 @@ OSStatus GetAudioDevices (void **devices /*Dev IDs*/, short	*devicesAvailable /*
     err = AudioHardwareGetProperty(kAudioHardwarePropertyDevices, &outSize, (void *) *devices);	
     if (err != NULL) free(*devices);
 #ifdef DEBUG_MAXIMUS
-    printf("Found %d Audio Device(s)\n",*devicesAvailable);
+    DebugPrintf("Found %d Audio Device(s)\n",*devicesAvailable);
     
     for (i=0; i<*devicesAvailable;i++)
     {
         UInt32 ID = ((UInt32*)(*devices))[i];
         err =  AudioDeviceGetPropertyInfo(ID, 0, 0, kAudioDevicePropertyDeviceName,  &outSize, &outWritable);
         err = AudioDeviceGetProperty(ID, 0, 0, kAudioDevicePropertyDeviceName, &outSize, cStr);
-        printf("Device #%d : %s",ID,cStr);
+        DebugPrintf("Device #%d : %s",ID,cStr);
         err = AudioDeviceGetProperty(ID, 0, 0, kAudioDevicePropertyDeviceManufacturer, &outSize, cStr);
-        printf(" (%s)\n",cStr);
+        DebugPrintf(" (%s)\n",cStr);
 
     }
 #endif
@@ -157,7 +167,18 @@ void *grab_write_native(void)
     void *	devices = 0;
     short	devicesAvailable;
     Boolean	outWritable;
-   
+
+    Rcvar native_debug = rc_lookup("native-backend-debug");
+    if((rc_type(native_debug) == ALRC_BOOL) &&
+       (rc_tobool(native_debug) == AL_TRUE))
+    {
+	    DebugPrintf = _alDebugPrintf;
+    }
+    else
+    {
+	    DebugPrintf = NoPrintf;
+    }
+
     /* Look for audio devices */
     error = GetAudioDevices (&devices ,&devicesAvailable);
     if (error != 0) goto Crash;
@@ -168,9 +189,8 @@ void *grab_write_native(void)
     if (error != 0) goto Crash;
     error = AudioDeviceGetProperty(libGlobals.deviceW, 0, 0, kAudioDevicePropertyBufferSize, &count, &libGlobals.deviceWBufferSize);
     if (error != 0) goto Crash;
-    printf("IOProperties : Buffersize = %d\n",(int)libGlobals.deviceWBufferSize);
-    
-    
+    DebugPrintf("IOProperties : Buffersize = %d\n",
+		(int) libGlobals.deviceWBufferSize);
     
     /* getting streams configs */
     error = AudioDeviceGetPropertyInfo(libGlobals.deviceW, 0, 0, kAudioDevicePropertyStreamConfiguration,  &count, &outWritable);
@@ -182,14 +202,14 @@ void *grab_write_native(void)
         if (error != 0) goto Crash;
 #ifdef DEBUG_MAXIMUS
        {
-            int i;
-            printf("IOProperties : Buffer number = %d\n",libGlobals.deviceWBufferList->mNumberBuffers);
+	    unsigned int i;
+            DebugPrintf("IOProperties : Buffer number = %d\n",libGlobals.deviceWBufferList->mNumberBuffers);
             /*device->outStreamsInfo  = malloc(sizeof(StreamInfo) * device->totalOutputStreams);*/
             for (i = 0; i < libGlobals.deviceWBufferList->mNumberBuffers; i++) 
             {
-                printf("  Buffer %d Properties : DataByteSize = %d\n",i,libGlobals.deviceWBufferList->mBuffers[i].mDataByteSize);
-                printf("  Buffer %d Properties : NumberChannels = %d\n",i,libGlobals.deviceWBufferList->mBuffers[i].mNumberChannels);
-                printf("  Buffer %d Properties : Data = %d\n",i,libGlobals.deviceWBufferList->mBuffers[i].mData);
+                DebugPrintf("  Buffer %d Properties : DataByteSize = %d\n",i,libGlobals.deviceWBufferList->mBuffers[i].mDataByteSize);
+                DebugPrintf("  Buffer %d Properties : NumberChannels = %d\n",i,libGlobals.deviceWBufferList->mBuffers[i].mNumberChannels);
+                DebugPrintf("  Buffer %d Properties : Data = %d\n",i,libGlobals.deviceWBufferList->mBuffers[i].mData);
                 /*error = GetPhysicalFormatCount(device, i + 1, &device->outStreamsInfo[i].pFormatCount, false);
                 device->outStreamsInfo[i].pFormatMenuSelection = 1;
 
@@ -206,13 +226,13 @@ void *grab_write_native(void)
     if (error != 0) goto Crash;
     
 #ifndef DEBUG_MAXIMUS
-    printf("IOProperties : SampleRate = %f\n",libGlobals.deviceFormat.mSampleRate);
-    printf("IOProperties : FormatFlags = %d\n",(int)libGlobals.deviceFormat.mFormatFlags);
-    printf("IOProperties : BytesPerPacket = %d\n",(int)libGlobals.deviceFormat.mBytesPerPacket);
-    printf("IOProperties : FramesPerPacket = %d\n",(int)libGlobals.deviceFormat.mFramesPerPacket);
-    printf("IOProperties : BytesPerFrame = %d\n",(int)libGlobals.deviceFormat.mBytesPerFrame);
-    printf("IOProperties : ChannelsPerFrame = %d\n",(int)libGlobals.deviceFormat.mChannelsPerFrame);
-    printf("IOProperties : BitsPerChannel = %d\n",(int)libGlobals.deviceFormat.mBitsPerChannel);
+    DebugPrintf("IOProperties : SampleRate = %f\n",libGlobals.deviceFormat.mSampleRate);
+    DebugPrintf("IOProperties : FormatFlags = %d\n",(int)libGlobals.deviceFormat.mFormatFlags);
+    DebugPrintf("IOProperties : BytesPerPacket = %d\n",(int)libGlobals.deviceFormat.mBytesPerPacket);
+    DebugPrintf("IOProperties : FramesPerPacket = %d\n",(int)libGlobals.deviceFormat.mFramesPerPacket);
+    DebugPrintf("IOProperties : BytesPerFrame = %d\n",(int)libGlobals.deviceFormat.mBytesPerFrame);
+    DebugPrintf("IOProperties : ChannelsPerFrame = %d\n",(int)libGlobals.deviceFormat.mChannelsPerFrame);
+    DebugPrintf("IOProperties : BitsPerChannel = %d\n",(int)libGlobals.deviceFormat.mBitsPerChannel);
 #endif
 
     error = AudioDeviceGetPropertyInfo(libGlobals.deviceW, 0, 0, kAudioDevicePropertyStreamFormat,  &count, &outWritable);
@@ -228,7 +248,7 @@ void *grab_write_native(void)
     return &libGlobals.deviceW;
 
 Crash :
-    fprintf(stderr,"An error occured during void *grab_write_native()\n");
+    DebugPrintf("An error occured during void *grab_write_native()\n");
     libGlobals.deviceW = NULL;
     return NULL;
 }
@@ -241,8 +261,8 @@ ALboolean set_write_native(UNUSED(void *handle),
 {
     OSStatus		error = 0;
     unsigned short 	i;
-    
-    fprintf(stderr,"Init Speed : %d\n",*speed);
+
+    DebugPrintf("Init Speed : %d\n",*speed);
     
     *fmt = AL_FORMAT_STEREO16;
     *speed = (unsigned int)libGlobals.deviceFormat.mSampleRate;
@@ -273,18 +293,18 @@ ALboolean set_write_native(UNUSED(void *handle),
     switch(alWriteFormat)
     {
 	case AL_FORMAT_STEREO8:*bufsiz = libGlobals.deviceWBufferSize/4;
-                                fprintf(stderr,"Init fmt : AL_FORMAT_STEREO8\n");
+                                DebugPrintf("Init fmt : AL_FORMAT_STEREO8\n");
         break;
 	case AL_FORMAT_MONO16: *bufsiz = libGlobals.deviceWBufferSize/4;
-                                fprintf(stderr,"Init fmt : AL_FORMAT_MONO16\n");
+                                DebugPrintf("Init fmt : AL_FORMAT_MONO16\n");
 	break;
 	
 	case AL_FORMAT_STEREO16: *bufsiz = libGlobals.deviceWBufferSize/2;
-                                fprintf(stderr,"Init fmt : AL_FORMAT_STEREO16\n");
+                                DebugPrintf("Init fmt : AL_FORMAT_STEREO16\n");
 	break;
 	
 	case AL_FORMAT_MONO8: *bufsiz = libGlobals.deviceWBufferSize/8;
-                                fprintf(stderr,"Init fmt : AL_FORMAT_MONO8\n");
+                                DebugPrintf("Init fmt : AL_FORMAT_MONO8\n");
 	break;
 
 	default: break;
@@ -317,14 +337,14 @@ int   grab_mixerfd(void)
 
 void  native_blitbuffer(void *handle, void *data, int bytes)
 {
-    UInt32	i;   
+    unsigned int i;   
    
     if (handle == NULL) return;
 
     switch(alWriteFormat)
     {
 	case AL_FORMAT_STEREO16:
-	    for (i = 0; i<bytes/nativePreferedBuffSize;i++)
+	    for (i = 0; i < bytes/nativePreferedBuffSize; i++)
 	    {
 		    assert(nativePreferedBuffSize <= bytes);
 		    assert(nativePreferedBuffSize <= libGlobals.deviceWBufferSize/2);
@@ -348,7 +368,7 @@ void  native_blitbuffer(void *handle, void *data, int bytes)
             return;
 
 	default:
-                fprintf(stderr,"Format not recognized... Try again ;-)");
+                DebugPrintf("Format not recognized... Try again ;-)");
                 break;
     }
 }

@@ -12,6 +12,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /*
  * AL_RcTreeNodes are used to help manage AL_rctrees.
@@ -62,9 +63,12 @@ AL_rctree *_alRcTreeAlloc( void ) {
 		return NULL;
 	}
 
+	memset(retval, 0, sizeof *retval);
+
 	rlist_add_rctree( retval );
 
 	retval->type      = ALRC_INVALID;
+
 	retval->data.proc = 0;
 	retval->data.ccell.car = NULL;
 	retval->data.ccell.cdr = NULL;
