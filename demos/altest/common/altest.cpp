@@ -59,7 +59,6 @@
 #include <al/al.h>
 #include <al/alc.h>
 #include <al/alut.h>
-#include <eax.h>
 #endif
 
 #ifdef LINUX
@@ -73,11 +72,6 @@
 #endif
 #include <unistd.h>
 #include <sys/stat.h>
-
-#if TEST_VORBIS
-#include <AL/alext.h>
-#include <AL/alexttypes.h>
-#endif
 
 #ifdef OSX_FRAMEWORK
 #include <OpenAL/al.h>
@@ -144,6 +138,15 @@ void alGetSource3f(ALint sid, ALenum param,
 #include <openal/alut.h>
 #include <unistd.h>
 #define SWAPBYTES
+#endif
+
+#if TEST_VORBIS
+#include <AL/alext.h>
+#include <AL/alexttypes.h>
+#endif
+
+#if TEST_EAX
+#include <eax.h>
 #endif
 
 #define NUM_BUFFERS 8	// Number of buffers to be Generated
