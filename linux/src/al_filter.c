@@ -380,7 +380,9 @@ void _alApplyFilters( ALuint cid, ALuint sid ) {
 	 */
 	if(filterlen > _alSourceBytesLeft(src, samp))
 	{
-		if(_alSourceIsLooping( src ) == AL_FALSE )
+		/* John Quigley's patch, check it out -- jiv */
+               if((_alSourceIsLooping( src ) == AL_FALSE)
+                        && (src->srcParams.new_readindex == -1))
 		{
 			/* Non looping source */
 			filterlen = _alSourceBytesLeft(src, samp);
