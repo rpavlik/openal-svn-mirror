@@ -450,7 +450,7 @@ void alcSuspendContext( ALCcontext *alcHandle )
 }
 
 /*
- * alcCreateContext( struct _AL_device *dev, int *attrlist )
+ * alcCreateContext( struct _AL_device *dev, ALCint *attrlist )
  *
  * Allocates, initialiaes, and returns an AL_context handle, suitable for
  * passing to other alc functions.  Uses dev as the write device for the
@@ -463,7 +463,7 @@ void alcSuspendContext( ALCcontext *alcHandle )
  *
  * FIXME: not as well tested as I'd like.
  */
-ALCcontext *alcCreateContext( struct _AL_device *dev, int *attrlist )
+ALCcontext *alcCreateContext( struct _AL_device *dev, ALCint *attrlist )
 {
 	ALint cid;
 
@@ -1417,32 +1417,32 @@ ALboolean _alcIsContextSuspended( ALuint cid ) {
 }
 
 /*
- * alcIsExtensionPresent( UNUSED(ALCdevice *device), ALubyte *extName )
+ * alcIsExtensionPresent( UNUSED(ALCdevice *device), ALCubyte *extName )
  *
  * Returns AL_TRUE if the alc extension extName is present, AL_FALSE
  * otherwise.
  */
-ALboolean alcIsExtensionPresent( UNUSED(ALCdevice *device), ALubyte *extName ) {
+ALCboolean alcIsExtensionPresent( UNUSED(ALCdevice *device), ALCubyte *extName ) {
 	return alIsExtensionPresent( extName );
 }
 
 /*
- * alcGetProcAddress( UNUSED(ALCdevice *device), ALubyte *funcName ).
+ * alcGetProcAddress( UNUSED(ALCdevice *device), ALCubyte *funcName ).
  *
  * Returns the alc extension function named funcName, or NULL if it doesn't
  * exist.
  */
-ALvoid *alcGetProcAddress( UNUSED(ALCdevice *device), ALubyte *funcName )
+ALCvoid *alcGetProcAddress( UNUSED(ALCdevice *device), ALCubyte *funcName )
 {
 	return alGetProcAddress( funcName );
 }
 
 /*
- * alcGetEnumValue( ALCdevice *device, ALubyte *enumName )
+ * alcGetEnumValue( ALCdevice *device, ALCubyte *enumName )
  *
  * Returns enum value for enumName.
  */
-ALenum alcGetEnumValue( UNUSED(ALCdevice *device), ALubyte *enumName ) {
+ALCenum alcGetEnumValue( UNUSED(ALCdevice *device), ALCubyte *enumName ) {
 	return alGetEnumValue( enumName );
 }
 
@@ -1471,7 +1471,7 @@ ALCdevice *alcGetContextsDevice(ALCcontext *handle)
 	return dc;
 }
 
-const ALubyte *alcGetString( ALCdevice *dev, ALenum token )
+const ALCubyte *alcGetString( ALCdevice *dev, ALCenum token )
 {
 	switch(token)
 	{
@@ -1525,8 +1525,8 @@ AL_context *_alcGetDevicesContext(ALCdevice *deviceHandle)
 	return deviceHandle->cc;
 }
 
-void alcGetIntegerv( ALCdevice *deviceHandle, ALenum  token,
-		     ALsizei  size , ALint *dest )
+void alcGetIntegerv( ALCdevice *deviceHandle, ALCenum  token,
+		     ALCsizei  size , ALCint *dest )
 {
 	AL_context *cc = _alcGetDevicesContext(deviceHandle);
 	if(!cc)

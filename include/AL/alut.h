@@ -5,8 +5,8 @@
 #include "aluttypes.h"
 
 #ifdef _WIN32
-#define ALAPI         __declspec(dllexport)
-#define ALAPIENTRY    __cdecl
+#define ALUTAPI
+#define ALUTAPIENTRY    __cdecl
 #define AL_CALLBACK
 #else  /* _WIN32 */
 
@@ -16,12 +16,12 @@
 #endif /* TARGET_OS_MAC */
 #endif /* TARGET_OS_MAC */
 
-#ifndef ALAPI
-#define ALAPI
+#ifndef ALUTAPI
+#define ALUTAPI
 #endif
 
-#ifndef ALAPIENTRY
-#define ALAPIENTRY
+#ifndef ALUTAPIENTRY
+#define ALUTAPIENTRY
 #endif
 
 #ifndef AL_CALLBACK
@@ -36,47 +36,57 @@ extern "C" {
 
 #ifndef AL_NO_PROTOTYPES
 
-ALAPI void ALAPIENTRY alutInit(int *argc, char *argv[]);
-ALAPI void ALAPIENTRY alutExit(ALvoid);
+ALUTAPI void ALAPIENTRY alutInit(int *argc, char *argv[]);
+ALUTAPI void ALAPIENTRY alutExit(ALvoid);
 
-ALAPI ALboolean ALAPIENTRY alutLoadWAV( const char *fname,
+  /* ***** GH
+TEMPORARY ifdef -- Linux-implementation-specific function
+  */
+#ifdef __GNUC__
+ALUTAPI ALboolean ALUTAPIENTRY alutLoadWAV( const char *fname,
                         ALvoid **wave,
 			ALsizei *format,
 			ALsizei *size,
 			ALsizei *bits,
 			ALsizei *freq );
+#endif
 
-ALAPI void ALAPIENTRY alutLoadWAVFile(ALbyte *file,
+ALUTAPI void ALUTAPIENTRY alutLoadWAVFile(ALbyte *file,
 				      ALenum *format,
 				      ALvoid **data,
 				      ALsizei *size,
 				      ALsizei *freq,
 				      ALboolean *loop);
-ALAPI void ALAPIENTRY alutLoadWAVMemory(ALbyte *memory,
+ALUTAPI void ALUTAPIENTRY alutLoadWAVMemory(ALbyte *memory,
 					ALenum *format,
 					ALvoid **data,
 					ALsizei *size,
 					ALsizei *freq,
 					ALboolean *loop);
-ALAPI void ALAPIENTRY alutUnloadWAV(ALenum format,
+ALUTAPI void ALUTAPIENTRY alutUnloadWAV(ALenum format,
 				    ALvoid *data,
 				    ALsizei size,
 				    ALsizei freq);
 
 #else
-      void 	(*alutInit)(int *argc, char *argv[]);
-      void 	(*alutExit)(ALvoid);
+ALUTAPI void      ALUTAPIENTRY (*alutInit)(int *argc, char *argv[]);
+ALUTAPI void 	  ALUTAPIENTRY (*alutExit)(ALvoid);
 
-      ALboolean 	(*alutLoadWAV)( const char *fname,
+  /* ***** GH
+TEMPORARY ifdef -- Linux-implementation-specific function
+  */
+#ifdef __GNUC__
+ALUTAPI ALboolean ALUTAPIENTRY (*alutLoadWAV)( const char *fname,
                         ALvoid **wave,
 			ALsizei *format,
 			ALsizei *size,
 			ALsizei *bits,
 			ALsizei *freq );
+#endif
 
-      void (*alutLoadWAVFile(ALbyte *file,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq,ALboolean *loop);
-      void (*alutLoadWAVMemory)(ALbyte *memory,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq,ALboolean *loop);
-      void (*alutUnloadWAV)(ALenum format,ALvoid *data,ALsizei size,ALsizei freq);
+ALUTAPI void      ALUTAPIENTRY (*alutLoadWAVFile(ALbyte *file,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq,ALboolean *loop);
+ALUTAPI void      ALUTAPIENTRY (*alutLoadWAVMemory)(ALbyte *memory,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq,ALboolean *loop);
+ALUTAPI void      ALUTAPIENTRY (*alutUnloadWAV)(ALenum format,ALvoid *data,ALsizei size,ALsizei freq);
 
 
 #endif /* AL_NO_PROTOTYPES */

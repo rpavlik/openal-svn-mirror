@@ -125,6 +125,10 @@ typedef ALdouble ALclampd;
  */
 #define AL_LOOPING                                0x1007
 
+/* ***** GH
+TEMPORARY ifdef -- will be removed
+*/
+#ifdef __GNUC__
 /**
  * Indicate whether source is meant to be streaming.
  * Type: ALboolean?
@@ -132,6 +136,7 @@ typedef ALdouble ALclampd;
  * Default: FALSE.
  */
 #define AL_STREAMING                              0x1008
+#endif
 
 /**
  * Indicate the buffer to provide sound samples. 
@@ -153,6 +158,10 @@ typedef ALdouble ALclampd;
  */
 #define AL_GAIN                                   0x100A
 
+/* ***** GH
+TEMPORARY ifdef -- will be removed
+*/
+#ifdef __GNUC__
 /* byte offset into source (in canon format).  -1 if source
  * is not playing.  Don't set this, get this.
  *
@@ -160,6 +169,7 @@ typedef ALdouble ALclampd;
  * Range: -1 - +inf
  */
 #define AL_BYTE_LOKI                              0x100C
+#endif
 
 /*
  * Indicate minimum source attenuation
@@ -324,10 +334,15 @@ typedef ALdouble ALclampd;
  */
 #define AL_DOPPLER_VELOCITY                       0xC001
 
+/* ***** GH
+TEMPORARY ifdef -- will be removed
+*/
+#ifdef __GNUC__
 /**
  * Distance scaling
  */
 #define AL_DISTANCE_SCALE                         0xC002
+#endif
 
 /**
  * Distance models
@@ -340,6 +355,11 @@ typedef ALdouble ALclampd;
 #define AL_INVERSE_DISTANCE                       0xD001
 #define AL_INVERSE_DISTANCE_CLAMPED               0xD002
 
+
+/* ***** GH
+TEMPORARY ifdef -- will be removed
+*/
+#ifdef __GNUC__
 
 /**
  * enables
@@ -445,6 +465,6 @@ typedef ALdouble ALclampd;
  */
 #define AL_ENV_HIGH_FREQUENCY_REFERENCE_IASIG     0x300B
 
-
+#endif
 
 #endif
