@@ -140,14 +140,12 @@ ALboolean set_write_sdl(UNUSED(void *handle),
 		ALenum *fmt,
 		ALuint *speed) {
 	ALuint bytesPerSample   = _al_formatbits(*fmt) >> 3;
-	ALuint bufsizPot        = _alSpot( *bufsiz ); /* smallest power of two that
-						 * meets or exceeds bufsiz */
 	ALuint channels = _al_ALCHANNELS(*fmt);
 
+        memset(&sdl_info, '\0', sizeof (sdl_info));
         sdl_info.spec.freq     = *speed;
         sdl_info.spec.channels = channels;
-        sdl_info.spec.samples  = bufsizPot / bytesPerSample;
-        sdl_info.spec.size     = bufsizPot;
+        sdl_info.spec.samples  = *bufsiz / bytesPerSample;
         sdl_info.spec.format   = _al_AL2ACFMT(*fmt);
         sdl_info.spec.callback = dummy; 
 
