@@ -42,15 +42,15 @@ void acFreqMUL2(acAudioCVT *cvt, ALushort format) {
 					ex = 0;
 				dst8[0] = src8[0];
 				dst8[1] = ex;
-			} else {
+				for ( i=cvt->len_cvt-1; i; --i ) {
+					src8 -= 1;
+					dst8 -= 2;
+					dst8[0] = src8[0];
+					dst8[1] = (src8[0]+(int)src8[1])/2;
+				}
+			} else if (cvt->len_cvt == 1) {
 				dst8[0] = src8[0];
-			}
-			dst8[1] = src8[0];
-			for ( i=cvt->len_cvt-1; i; --i ) {
-				src8 -= 1;
-				dst8 -= 2;
-				dst8[0] = src8[0];
-				dst8[1] = (src8[0]+(int)src8[1])/2;
+				dst8[1] = src8[0];
 			}
 		} else if (format == AUDIO_S8) {
 			ALbyte *src8 = (ALbyte*) src;
@@ -66,15 +66,15 @@ void acFreqMUL2(acAudioCVT *cvt, ALushort format) {
 					ex = -128;
 				dst8[0] = src8[0];
 				dst8[1] = ex;
+				for ( i=cvt->len_cvt-1; i; --i ) {
+					src8 -= 1;
+					dst8 -= 2;
+					dst8[0] = src8[0];
+					dst8[1] = (src8[0]+(int)src8[1])/2;
+				}
 			} else {
 				dst8[0] = src8[0];
-			}
-			dst8[1] = src8[0];
-			for ( i=cvt->len_cvt-1; i; --i ) {
-				src8 -= 1;
-				dst8 -= 2;
-				dst8[0] = src8[0];
-				dst8[1] = (src8[0]+(int)src8[1])/2;
+				dst8[1] = src8[0];
 			}
 		}
 		break;
@@ -93,15 +93,15 @@ void acFreqMUL2(acAudioCVT *cvt, ALushort format) {
 					ex = -32768;
 				dst16[0] = src16[0];
 				dst16[1] = ex;
-			} else {
+				for ( i=cvt->len_cvt/2-1; i; --i ) {
+					src16 -= 1;
+					dst16 -= 2;
+					dst16[0] = src16[0];
+					dst16[1] = (src16[0]+(int)src16[1])/2;
+				}
+			} else if (cvt->len_cvt == 1) {
 				dst16[0] = src16[0];
 				dst16[1] = src16[0];
-			}
-			for ( i=cvt->len_cvt/2-1; i; --i ) {
-				src16 -= 1;
-				dst16 -= 2;
-				dst16[0] = src16[0];
-				dst16[1] = (src16[0]+(int)src16[1])/2;
 			}
 		} else if (format == AUDIO_U16) {
 			ALushort *src16 = (ALushort*) src;
@@ -117,15 +117,15 @@ void acFreqMUL2(acAudioCVT *cvt, ALushort format) {
 					ex = 0;
 				dst16[0] = src16[0];
 				dst16[1] = ex;
-			} else {
+				for ( i=cvt->len_cvt/2-1; i; --i ) {
+					src16 -= 1;
+					dst16 -= 2;
+					dst16[0] = src16[0];
+					dst16[1] = (src16[0]+(int)src16[1])/2;
+				}
+			} else if (cvt->len_cvt == 1) {
 				dst16[0] = src16[0];
-			}
-			dst16[1] = src16[0];
-			for ( i=cvt->len_cvt/2-1; i; --i ) {
-				src16 -= 1;
-				dst16 -= 2;
-				dst16[0] = src16[0];
-				dst16[1] = (src16[0]+(int)src16[1])/2;
+				dst16[1] = src16[0];
 			}
 		} else {
 			/* this is a 16-bit format that doesn't correspond

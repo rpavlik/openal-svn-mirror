@@ -1,3 +1,9 @@
+2003-12-23  Adam D. Moss  <adam@gimp.org>
+
+	* audioconvert/ac_freq.c: Fix some minor brainos in the
+	interpolated resample*2, and (more critically) don't do
+	extraneous bad things when cvt->len_cvt==0.
+
 2003-11-11  Adam D. Moss  <adam@gimp.org>
 
 	* src/al_debug.c: Fix an implicit declaration: the man
