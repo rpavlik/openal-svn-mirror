@@ -1392,6 +1392,12 @@ ALvoid SA_StringQueries(ALvoid)
 		unsigned char *tempString;
 #endif /* __linux */
 
+		ALCcontext* pContext;
+		ALCdevice* pDevice;
+		pContext = alcGetCurrentContext();
+		pDevice = alcGetContextsDevice(pContext);
+		tempString = alcGetString(pDevice, ALC_DEVICE_SPECIFIER);
+		printf("OpenAL Context Device Specifier is '%s'\n", tempString);
 		tempString = alGetString(AL_RENDERER);
 		printf("OpenAL Renderer is '%s'\n", tempString);
 		tempString = alGetString(AL_VERSION);
