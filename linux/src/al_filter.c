@@ -1602,8 +1602,10 @@ void alf_tpitch( UNUSED(ALuint cid),
 		for(j = 0; j < clen; j++)
 		{
 			/* make sure we don't go past end of last source */
+#if DEBUG_FILTER
 			assert(((j+1)*pitch)*2 <
 				samp->size - src->srcParams.soundpos);
+#endif
 			{
 				float foffset = j * pitch;
 				int offset = (int) foffset;
