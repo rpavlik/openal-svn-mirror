@@ -150,6 +150,7 @@ static ALfloat compute_sa( ALfloat *source_pos, ALfloat source_max,
 			   ALfloat df( ALfloat dist, ALfloat rolloff, ALfloat gain,
 			   	       ALfloat ref, ALfloat max ));
 
+#if USE_TPITCH_LOOKUP
 /*
  * our quick lookup table for our time domain pitch filter.
  *
@@ -187,6 +188,7 @@ static struct {
 
 /* func associated with our tpitch lookup */
 static void init_tpitch_lookup(ALuint len);
+#endif
 
 static ALfloat compute_doppler_pitch(ALfloat *object1, ALfloat *o1_vel,
 			       ALfloat *object2, ALfloat *o2_vel,
@@ -205,6 +207,7 @@ void _alInitTimeFilters( time_filter_set *tf_ptr_ref ) {
 		tf_ptr_ref[i] = software_time_filters[i];
 	} while(software_time_filters[i++].filter != NULL);
 
+#if USE_TPITCH_LOOKUP
 	/*
 	 * init tpitch_loopup only if it hasn't been initialized
 	 * yet.
@@ -220,6 +223,7 @@ void _alInitTimeFilters( time_filter_set *tf_ptr_ref ) {
 			tpitch_lookup.offsets[i] = NULL;
 		}
 	}
+#endif
 
 	return;
 }
@@ -230,6 +234,7 @@ void _alInitTimeFilters( time_filter_set *tf_ptr_ref ) {
  * Deallocates data structures used by the filters and helper functions.
  */
 void _alDestroyFilters( void ) {
+#if USE_TPITCH_LOOKUP
 	ALuint i;
 
 	free( tpitch_lookup.rawoffsets );
@@ -241,6 +246,7 @@ void _alDestroyFilters( void ) {
 	for(i = 0; i < TPITCH_MAX; i++) {
 		tpitch_lookup.offsets[i] = NULL;
 	}
+#endif
 
 	return;
 }
@@ -299,11 +305,13 @@ void _alApplyFilters( ALuint cid, ALuint sid ) {
 	 * about to be split.  We allocate more space in case of a
 	 * multichannel source.
 	 */
-	if(f_buffers.len < len / sizeof (ALshort)) {
+	if(f_buffers.len < len / sizeof (ALshort))
+	{
 		void *temp;
 		ALuint newlen = len * _al_ALCHANNELS(samp->format);
 
-		for(i = 0; i < mc; i++) {
+		for(i = 0; i < mc; i++)
+		{
 			temp = realloc(f_buffers.data[i], newlen);
 			if(temp == NULL) {
 				/* FIXME: do something */
@@ -312,12 +320,14 @@ void _alApplyFilters( ALuint cid, ALuint sid ) {
 			f_buffers.data[i] = temp;
 		}
 
-		f_buffers.len   = newlen;
+		f_buffers.len = newlen;
 	}
 
+#if USE_TPITCH_LOOKUP
 	if(tpitch_lookup.len < len / sizeof (ALshort)) {
 		init_tpitch_lookup(len / sizeof (ALshort));
 	}
+#endif
 
 	src  = _alGetSource(cid, sid);
 	if(src == NULL) {
@@ -352,6 +362,7 @@ void _alApplyFilters( ALuint cid, ALuint sid ) {
 	if(boolp != NULL) {
 		_alDebug(ALD_SOURCE, __FILE__, __LINE__,
 		"_alApplyFilters: sid %d relative boolp = %d", sid, *boolp );
+
 		if(*boolp == AL_TRUE) {
 			/* This is a RELATIVE source, which means we must
 			 * translate it before applying any sort of positional
@@ -373,28 +384,34 @@ void _alApplyFilters( ALuint cid, ALuint sid ) {
 	/* 
 	 * adjust len to account for end of sample, looping, etc
 	 */
-	if(filterlen > _alSourceBytesLeft(src, samp)) {
-		if(_alSourceIsLooping( src ) == AL_FALSE ) {
+	if(filterlen > _alSourceBytesLeft(src, samp))
+	{
+		if(_alSourceIsLooping( src ) == AL_FALSE )
+		{
 			/* Non looping source */
 			filterlen = _alSourceBytesLeft(src, samp);
 		}
 	}
 
-	if(filterlen > 0) {
+	if(filterlen > 0)
+	{
 		cc_tfilters = _alcGetTimeFilters(cid);
 
 		/* apply time domain filters */
-		for(i = 0; cc_tfilters[i].filter != NULL; i++) {
+		for(i = 0; cc_tfilters[i].filter != NULL; i++)
+		{
 			tf = cc_tfilters[i].filter;
 
-			tf(cid, src, samp, (ALshort **) f_buffers.data, mc, filterlen);
+			tf(cid, src, samp, (ALshort **) f_buffers.data,
+			   mc, filterlen);
 		}
 
 		/*
 		 *  Apply gain and delay for filters that don't actually touch
 		 *  the data ( alf_da).
 		 */
-		_alSourceParamApply(src, mc, filterlen, (ALshort **) f_buffers.data);
+		_alSourceParamApply(src, mc, filterlen,
+				    (ALshort **) f_buffers.data);
 	}
 
 
@@ -908,6 +925,7 @@ void alf_da( ALuint cid,
 	return;
 }
 
+#if USE_TPITCH_LOOKUP
 /*
  * init_tpitch_lookup( ALuint len )
  *
@@ -991,6 +1009,7 @@ static void init_tpitch_lookup( ALuint len ) {
 
 	return;
 }
+#endif
 
 /*
  * alf_tdoppler
@@ -1503,6 +1522,7 @@ void alf_tpitch( UNUSED(ALuint cid),
 	ALshort *bufptr  = NULL;  /* pointer to buffers[0..nc-1] */
 	ALint ipos = 0;   /* used to store offsets temporarily */
 	ALuint i;
+	ALuint clen;
 	int bufchans;
 	ALfloat *ppitch, pitch;
 
@@ -1561,13 +1581,30 @@ void alf_tpitch( UNUSED(ALuint cid),
 		 */
 		bufptr = buffers[i];
 
+		clen = len;
+
+		/* don't run past end */
+		if(((clen + 1) * pitch * sizeof(ALshort)) >=
+		   (samp->size - src->srcParams.soundpos))
+		{
+			clen = samp->size - src->srcParams.soundpos;
+			clen /= pitch;
+			clen /= sizeof(ALshort);
+			clen -= 1;
+		}
+
 		/*
 		 * this is where the "resampling" takes place.  We do a
 		 * very little bit on unrolling here, and it shouldn't
 		 * be necessary, but seems to improve performance quite
 		 * a bit.
 		 */
-		for(j = 0; j < len; j++) {
+		for(j = 0; j < clen; j++)
+		{
+			/* make sure we don't go past end of last source */
+			assert(((j+1)*pitch)*2 <
+				samp->size - src->srcParams.soundpos);
+
 			{
 				int sample = obufptr[(int) (j * pitch)];
 				int nextsample = obufptr[(int)((j+1) * pitch)];
@@ -1577,6 +1614,12 @@ void alf_tpitch( UNUSED(ALuint cid),
 				bufptr[j] = sample +
 				            frac * (nextsample - sample);
 			}
+		}
+
+		/* JIV FIXME: use memset */
+		for( ; j < len; j++)
+		{
+			bufptr[j] = 0;
 		}
 	}
 
