@@ -23,7 +23,7 @@
     defined(DEBUG_EXT)    || defined(DEBUG_SOURCE) || defined(DEBUG_STREAMING)\
     || defined(DEBUG_MATH) || defined(DEBUG_MEM) || defined(DEBUG_CONTEXT)    \
     || defined(DEBUG_MAXIMUS) || defined(DEBUG_BUFFER)                        \
-    || defined(DEBUG_LISTENER) || defined(DEBUG_QUEUE)
+    || defined(DEBUG_LISTENER) || defined(DEBUG_QUEUE) || defined(DEBUG_FILTER)
 
 #define NEED_DEBUG
 #endif /* debug stuff */
@@ -58,6 +58,7 @@ typedef enum _aldEnum
 	ALD_BUFFER,
 	ALD_LISTENER,
 	ALD_QUEUE,
+	ALD_FILTER,
 	ALD_MAXMAXMAX = 0x7fffffff
 } aldEnum;
 

@@ -29,7 +29,7 @@ static const char *ald2str( aldEnum type );
  */
 int _alDebug( aldEnum level, const char *fn, int ln, const char *format, ... )
 {
-	static char formatbuf[1024]; /* JIV FIXME */
+	static char formatbuf[256];
 	int count;
 
 	va_list ap;
@@ -85,6 +85,9 @@ int _alDebug( aldEnum level, const char *fn, int ln, const char *format, ... )
 #ifndef DEBUG_QUEUE
 	if(level == ALD_QUEUE) return 0;
 #endif
+#ifndef DEBUG_FILTER
+	if(level == ALD_FILTER) return 0;
+#endif
 #ifndef DEBUG_MIXER
 	if(level == ALD_MIXER) return 0;
 #endif
@@ -98,7 +101,7 @@ int _alDebug( aldEnum level, const char *fn, int ln, const char *format, ... )
 	}
 
 	va_start(ap, format);
-	vsprintf(formatbuf, format, ap);
+	vsnprintf(formatbuf, 256, format, ap);
 	va_end(ap);
 
 	return fprintf(stderr, "%s\t[%s:%d] %s\n",
@@ -130,6 +133,7 @@ const char *ald2str( aldEnum l ) {
 		case ALD_STREAMING: return "STREAM";
 		case ALD_MEM:       return "MEM";
 		case ALD_QUEUE:     return "QUEUE";
+		case ALD_FILTER:     return "FILTER";
 		default: break;
 	}
 
