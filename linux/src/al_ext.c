@@ -8,6 +8,7 @@
 #include "al_siteconfig.h"
 
 #include <AL/al.h>
+#include <AL/alexttypes.h>
 
 #include "al_main.h"
 #include "al_types.h"

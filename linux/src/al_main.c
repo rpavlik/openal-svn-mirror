@@ -11,6 +11,7 @@
 
 #include <AL/al.h>
 #include <AL/alc.h>
+#include <AL/alexttypes.h>
 
 #include "al_debug.h"
 #include "al_types.h"

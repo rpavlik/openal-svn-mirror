@@ -19,9 +19,9 @@ TEST_PROGS=testreverb testda testmulti testalut testtime  \
 	   testleak2 testmulticontext2 teststartstop testdevice \
 	   teststrings
 
-LIBS=testlib.o -L../src -lopenal @LIBS@
 INC=-I../src -I../include -I../../include -I../audioconvert @INCLUDES@
 LIBOPENAL=../src/libopenal.a
+LIBS=testlib.o -L../src $(LIBOPENAL) @LIBS@
 MAKE=@MAKE@
 
 % : %.c ../config.h testlib.o

@@ -38,7 +38,7 @@
 
 #else /* USE_WINDOWSMUTEX */
 
-/* #warning "No mutex package?" */
+#error "No mutex package"
 
 #endif /* USE_POSIXMUTEX */
 

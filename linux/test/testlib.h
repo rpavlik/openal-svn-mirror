@@ -8,43 +8,41 @@
 /*
  * function pointer for LOKI extensions
  */
-ALfloat	(*talcGetAudioChannel)(ALuint channel);
-void	(*talcSetAudioChannel)(ALuint channel, ALfloat volume);
+extern ALfloat	(*talcGetAudioChannel)(ALuint channel);
+extern void	(*talcSetAudioChannel)(ALuint channel, ALfloat volume);
 
-void	(*talMute)(ALvoid);
-void	(*talUnMute)(ALvoid);
+extern void	(*talMute)(ALvoid);
+extern void	(*talUnMute)(ALvoid);
 
-void	(*talReverbScale)(ALuint sid, ALfloat param);
-void	(*talReverbDelay)(ALuint sid, ALfloat param);
-void	(*talBombOnError)(void);
+extern void	(*talReverbScale)(ALuint sid, ALfloat param);
+extern void	(*talReverbDelay)(ALuint sid, ALfloat param);
+extern void	(*talBombOnError)(void);
 
-void	(*talBufferi)(ALuint bid, ALenum param, ALint value);
+extern void	(*talBufferi)(ALuint bid, ALenum param, ALint value);
 
-ALuint  (*talBufferAppendData)(ALuint bid, ALenum format, ALvoid *data, ALint freq, ALint samples);
-ALuint  (*talBufferAppendWriteData)(ALuint bid, ALenum format, ALvoid *data, ALint freq, ALint samples, ALenum internalFormat);
+extern ALuint  (*talBufferAppendData)(ALuint bid, ALenum format, ALvoid *data, ALint freq, ALint samples);
+extern ALuint  (*talBufferAppendWriteData)(ALuint bid, ALenum format, ALvoid *data, ALint freq, ALint samples, ALenum internalFormat);
 
-ALboolean (*alCaptureInit) ( ALenum format, ALuint rate, ALsizei bufferSize );
-ALboolean (*alCaptureDestroy) ( ALvoid );
-ALboolean (*alCaptureStart) ( ALvoid );
-ALboolean (*alCaptureStop) ( ALvoid );
-ALsizei (*alCaptureGetData) ( ALvoid* data, ALsizei n, ALenum format, ALuint rate );
+extern ALboolean (*alCaptureInit) ( ALenum format, ALuint rate, ALsizei bufferSize );
+extern ALboolean (*alCaptureDestroy) ( ALvoid );
+extern ALboolean (*alCaptureStart) ( ALvoid );
+extern ALboolean (*alCaptureStop) ( ALvoid );
+extern ALsizei (*alCaptureGetData) ( ALvoid* data, ALsizei n, ALenum format, ALuint rate );
 
 /* new ones */
-void (*talGenStreamingBuffers)(ALsizei n, ALuint *bids );
-ALboolean (*talutLoadRAW_ADPCMData)(ALuint bid,
+extern void (*talGenStreamingBuffers)(ALsizei n, ALuint *bids );
+extern ALboolean (*talutLoadRAW_ADPCMData)(ALuint bid,
 				ALvoid *data, ALuint size, ALuint freq,
 				ALenum format);
-ALboolean (*talutLoadIMA_ADPCMData)(ALuint bid,
+extern ALboolean (*talutLoadIMA_ADPCMData)(ALuint bid,
 				ALvoid *data, ALuint size, ALuint freq,
 				ALenum format);
-ALboolean (*talutLoadMS_ADPCMData)(ALuint bid,
+extern ALboolean (*talutLoadMS_ADPCMData)(ALuint bid,
 				ALvoid *data, ALuint size, ALuint freq,
 				ALenum format);
 
 void micro_sleep(unsigned int n);
-
 void fixup_function_pointers(void);
-
 ALboolean SourceIsPlaying(ALuint sid);
 
 #endif /* TESTLIB_H_ */

@@ -5,7 +5,11 @@
  * Wrap site specific config stuff
  */
 
+#ifdef DARWIN_PBBUILDER
+#include "../config-osx.h"
+#else
 #include "../config.h"
+#endif // DARWIN_PBBUILDER
 
 #ifdef DMALLOC
 /* do nothing */

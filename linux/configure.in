@@ -32,7 +32,7 @@ SHARED_LIBRARY_EXT=so	       # shared library extension
 SHOULD_USE_RDYNAMIC=yes        # doesn't work on irix
 
 # warns
-WFLAGS="-Wall -Wpointer-arith -W -Wbad-function-cast -Wcast-qual -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wimplicit-function-declaration -Waggregate-return -Winline -Wpointer-arith -Wstrict-prototypes -Wcast-align -Wcast-qual"
+WFLAGS="-Wall -Wpointer-arith -W -Wbad-function-cast -Wcast-qual -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wimplicit-function-declaration -Waggregate-return -Winline -Wpointer-arith -Wstrict-prototypes -Wcast-align -Wcast-qual -fno-common"
 
 AC_SUBST(MAJOR_VERSION)
 AC_SUBST(MINOR_VERSION)
@@ -135,16 +135,18 @@ AC_PROG_CC
 AC_PROG_CPP
 AC_C_BIGENDIAN
 
+dnl library stuff
 dnl I'm afraid we need libm
 case "$target" in 
     *darwin*)
+    RANLIB=ranlib
     AC_CHECK_LIB(m, sin, LIBS="$LIBS -lm", echo "don't need libm...") ;;
     *)
+    RANLIB=echo ranlib
+    dnl Should be allow dlopen of extensions?
+    AC_CHECK_LIB(dl, dlopen, LIBS="$LIBS -ldl", AC_DEFINE(NODLOPEN) echo "Can't dlopen extensions." )
     AC_CHECK_LIB(m, sin, LIBS="$LIBS -lm", echo "I'm afraid you'll need libm."; exit 1) ;;
 esac
-
-dnl Should be allow dlopen of extensions?
-AC_CHECK_LIB(dl, dlopen, LIBS="$LIBS -ldl", AC_DEFINE(NODLOPEN) echo "Can't dlopen extensions." )
 
 dnl Special OS objs for target systems
 case "$target" in
@@ -791,6 +793,7 @@ dnl define version
 AC_DEFINE_UNQUOTED(LAL_VERSION, "$VERSION")
 
 AC_SUBST(NASM)
+AC_SUBST(RANLIB)
 AC_SUBST(CC)
 AC_SUBST(CFLAGS)
 AC_SUBST(DEFINES)
