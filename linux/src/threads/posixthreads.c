@@ -102,7 +102,7 @@ extern void Posix_ExitThread(int retval) {
 	return;
 }
 
-#ifndef DARWIN_TARGET
+#if !defined(DARWIN_TARGET) && !defined(BSD_TARGET)
 extern int Posix_AtForkThread(void (*prepare)(void),
 			  void (*parent)(void),
 			  void (*child)(void)) {
