@@ -1,3 +1,18 @@
+2005-01-28  Adam D. Moss  <adam@gimp.org>
+
+        * linux/configure.in, linux/openal.spec: Bump version to 0.0.8
+
+2005-01-28  Adam D. Moss  <adam@gimp.org>
+
+        * generate/install openal-config and openal.pc(pkgconfig) files
+        for OpenAL (Patches by D. Hageman <dhageman@dracken.com>)
+
+2004-11-28  Adam D. Moss  <adam@gimp.org>
+
+        * src/arch/alsa/alsa.c: commit a fixed version of patch by Dino
+        Puller <dino@e4a.it> to be more lenient with accepted buffer sizes
+        from the hardware.
+
 2004-09-10  Adam D. Moss  <adam@gimp.org>
 
         * openal/linux/src/mixaudio16.c: Issue an error if we've tried
