@@ -46,8 +46,24 @@ ALAPI ALboolean ALAPIENTRY alutLoadWAV( const char *fname,
 			ALsizei *bits,
 			ALsizei *freq );
 
-#else
+ALAPI void ALAPIENTRY alutLoadWAVFile(ALbyte *file,
+				      ALenum *format,
+				      ALvoid **data,
+				      ALsizei *size,
+				      ALsizei *freq,
+				      ALboolean *loop);
+ALAPI void ALAPIENTRY alutLoadWAVMemory(ALbyte *memory,
+					ALenum *format,
+					ALvoid **data,
+					ALsizei *size,
+					ALsizei *freq,
+					ALboolean *loop);
+ALAPI void ALAPIENTRY alutUnloadWAV(ALenum format,
+				    ALvoid *data,
+				    ALsizei size,
+				    ALsizei freq);
 
+#else
       void 	(*alutInit)(int *argc, char *argv[]);
       void 	(*alutExit)(ALvoid);
 
@@ -57,6 +73,10 @@ ALAPI ALboolean ALAPIENTRY alutLoadWAV( const char *fname,
 			ALsizei *size,
 			ALsizei *bits,
 			ALsizei *freq );
+
+      void (*alutLoadWAVFile(ALbyte *file,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq,ALboolean *loop);
+      void (*alutLoadWAVMemory)(ALbyte *memory,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq,ALboolean *loop);
+      void (*alutUnloadWAV)(ALenum format,ALvoid *data,ALsizei size,ALsizei freq);
 
 
 #endif /* AL_NO_PROTOTYPES */
