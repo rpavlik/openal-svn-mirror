@@ -22,29 +22,28 @@
 #include "Include/alBuffer.h"
 #include "Include/alThunk.h"
 
+CRITICAL_SECTION g_mutex;
+
 BOOL APIENTRY DllMain(HANDLE hModule,DWORD ul_reason_for_call,LPVOID lpReserved)
 {
     // Perform actions based on the reason for calling.
     switch(ul_reason_for_call)
     {
         case DLL_PROCESS_ATTACH:
-         // Initialize once for each new process.
-         // Return FALSE to fail DLL load.
             ALTHUNK_INIT();
+			InitializeCriticalSection(&g_mutex);
             break;
 
         case DLL_THREAD_ATTACH:
-         // Do thread-specific initialization.
             break;
 
         case DLL_THREAD_DETACH:
-         // Do thread-specific cleanup.
             break;
 
         case DLL_PROCESS_DETACH:
-         // Perform any necessary cleanup.
 			ReleaseALBuffers();
             ALTHUNK_EXIT();
+			DeleteCriticalSection(&g_mutex);
             break;
     }
 	return TRUE;

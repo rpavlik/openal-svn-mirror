@@ -41,7 +41,7 @@ ALAPI ALvoid ALAPIENTRY alListenerf(ALenum pname,ALfloat value)
 				{
 					Context->Listener.Gain = value;
 					Context->Listener.update1 |= LVOLUME;
-					alcUpdateContext(Context, ALLISTENER, 0);
+					UpdateContext(Context, ALLISTENER, 0);
 				}
 			}
 			else
@@ -86,7 +86,7 @@ ALAPI ALvoid ALAPIENTRY alListener3f(ALenum pname,ALfloat v1,ALfloat v2,ALfloat 
 				Context->Listener.Position[1] = v2;
 				Context->Listener.Position[2] = v3;
 				Context->Listener.update1 |= LPOSITION;
-				alcUpdateContext(Context, ALLISTENER, 0);
+				UpdateContext(Context, ALLISTENER, 0);
 			}
 			break;
 
@@ -99,7 +99,7 @@ ALAPI ALvoid ALAPIENTRY alListener3f(ALenum pname,ALfloat v1,ALfloat v2,ALfloat 
 				Context->Listener.Velocity[1] = v2;
 				Context->Listener.Velocity[2] = v3;
 				Context->Listener.update1 |= LVELOCITY;
-				alcUpdateContext(Context, ALLISTENER, 0);
+				UpdateContext(Context, ALLISTENER, 0);
 			}
 			break;
 
@@ -142,7 +142,7 @@ ALAPI ALvoid ALAPIENTRY alListenerfv(ALenum pname, const ALfloat *values)
 					Context->Listener.Position[1] = values[1];
 					Context->Listener.Position[2] = values[2];
 					Context->Listener.update1 |= LPOSITION;
-					alcUpdateContext(Context, ALLISTENER, 0);
+					UpdateContext(Context, ALLISTENER, 0);
 				}
 				break;
 
@@ -155,7 +155,7 @@ ALAPI ALvoid ALAPIENTRY alListenerfv(ALenum pname, const ALfloat *values)
 					Context->Listener.Velocity[1] = values[1];
 					Context->Listener.Velocity[2] = values[2];
 					Context->Listener.update1 |= LVELOCITY;
-					alcUpdateContext(Context, ALLISTENER, 0);
+					UpdateContext(Context, ALLISTENER, 0);
 				}
 				break;
 
@@ -175,7 +175,7 @@ ALAPI ALvoid ALAPIENTRY alListenerfv(ALenum pname, const ALfloat *values)
 					Context->Listener.Up[1] = values[4];
 					Context->Listener.Up[2] = values[5];
 					Context->Listener.update1 |= LORIENTATION;
-					alcUpdateContext(Context, ALLISTENER, 0);
+					UpdateContext(Context, ALLISTENER, 0);
 				}
 				break;
 

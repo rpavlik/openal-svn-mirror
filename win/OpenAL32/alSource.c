@@ -68,8 +68,7 @@ ALAPI ALvoid ALAPIENTRY alGenSources(ALsizei n,ALuint *sources)
 								Context->SourceCount++;
 								i++;
 
-                                alcUpdateContext(Context, ALSOURCE, (ALuint)Context->Source->source);
-
+                                UpdateContext(Context, ALSOURCE, (ALuint)Context->Source->source);
 							}
 
 							Source=Context->Source;
@@ -98,7 +97,7 @@ ALAPI ALvoid ALAPIENTRY alGenSources(ALsizei n,ALuint *sources)
 								Context->SourceCount++;
 								i++;
 
-                                alcUpdateContext(Context, ALSOURCE, (ALuint)Source->next->source);
+                                UpdateContext(Context, ALSOURCE, (ALuint)Source->next->source);
 
 								Source=Source->next;
 							}
@@ -204,9 +203,9 @@ ALAPI ALvoid ALAPIENTRY alDeleteSources(ALsizei n, const ALuint *sources)
 									free(ALBufferList);
 								}
 
-								// Call alcUpdateContext with SDELETE flag to perform context specific deletion of source
+								// Call UpdateContext with SDELETE flag to perform context specific deletion of source
 								ALSource->update1 = SDELETE;
-                                alcUpdateContext(Context, ALSOURCE, (ALuint)ALSource->source);
+                                UpdateContext(Context, ALSOURCE, (ALuint)ALSource->source);
 
 								// Decrement Source count
 								Context->SourceCount--;
@@ -225,6 +224,10 @@ ALAPI ALvoid ALAPIENTRY alDeleteSources(ALsizei n, const ALuint *sources)
 								free(ALSource);
                             }
 						}
+
+						// Update RollOff (only actually relevant if emulating RollOff using Global RollOff Factor)
+						if (Context->Device->lpDS3DListener)
+							SetRollOffFactor(0);
 					}
 				}
 				else
@@ -312,7 +315,7 @@ ALAPI ALvoid ALAPIENTRY alSourcef(ALuint source,ALenum pname,ALfloat value)
 						{
 							Source->param[pname-AL_CONE_INNER_ANGLE].data.f=value;
 							Source->update1 |= FREQUENCY;
-                            alcUpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+                            UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 						}
 					}
 					else
@@ -329,7 +332,7 @@ ALAPI ALvoid ALAPIENTRY alSourcef(ALuint source,ALenum pname,ALfloat value)
 						{
 							Source->param[pname-AL_CONE_INNER_ANGLE].data.f=value;
 							Source->update1 |= CONEANGLES;
-                            alcUpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+                            UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 						}
 					}
 					else
@@ -345,7 +348,7 @@ ALAPI ALvoid ALAPIENTRY alSourcef(ALuint source,ALenum pname,ALfloat value)
 						{
 							Source->param[AL_GAIN-AL_CONE_INNER_ANGLE].data.f = value;
 							Source->update1 |= VOLUME;
-                            alcUpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+                            UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 						}
 					}
 					else
@@ -370,7 +373,7 @@ ALAPI ALvoid ALAPIENTRY alSourcef(ALuint source,ALenum pname,ALfloat value)
 							else if (pname == AL_ROLLOFF_FACTOR)
 								Source->update1 |= ROLLOFFFACTOR;
 
-                            alcUpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+                            UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 						}
 					}
 					else
@@ -393,7 +396,7 @@ ALAPI ALvoid ALAPIENTRY alSourcef(ALuint source,ALenum pname,ALfloat value)
 							if (pname == AL_CONE_OUTER_GAIN)
 							{
 								Source->update1 |= CONEOUTSIDEVOLUME;
-                                alcUpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+                                UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 							}
 						}
 					}
@@ -461,7 +464,7 @@ ALAPI ALvoid ALAPIENTRY alSourcefv(ALuint source,ALenum pname, const ALfloat *va
 							else if (pname == AL_DIRECTION)
 								Source->update1 |= ORIENTATION;
 
-                            alcUpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+                            UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 						}
 						break;
 
@@ -527,7 +530,7 @@ ALAPI ALvoid ALAPIENTRY alSource3f(ALuint source,ALenum pname,ALfloat v1,ALfloat
 						else if (pname == AL_DIRECTION)
 							Source->update1 |= ORIENTATION;
 
-                        alcUpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+                        UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 					}
 					break;
 				default:
@@ -579,7 +582,7 @@ ALAPI ALvoid ALAPIENTRY alSourcei(ALuint source,ALenum pname,ALint value)
 						{
                             Source->relative=(ALboolean)value;
 							Source->update1 |= MODE;
-                            alcUpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+                            UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 						}
 					}
 					else
@@ -596,7 +599,7 @@ ALAPI ALvoid ALAPIENTRY alSourcei(ALuint source,ALenum pname,ALint value)
 						{
 							Source->param[pname-AL_CONE_INNER_ANGLE].data.f = (float)value;
 							Source->update1 |= CONEANGLES;
-                            alcUpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+                            UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 						}
 					}
 					else
@@ -612,7 +615,7 @@ ALAPI ALvoid ALAPIENTRY alSourcei(ALuint source,ALenum pname,ALint value)
 						{
 							Source->param[pname-AL_CONE_INNER_ANGLE].data.i = value;
 							Source->update1 |= LOOPED;
-                            alcUpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+                            UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 						}
 					}
 					else
@@ -649,7 +652,7 @@ ALAPI ALvoid ALAPIENTRY alSourcei(ALuint source,ALenum pname,ALint value)
 							Source->NumBuffersRemovedFromQueue = Counter;
 							Source->SizeOfBufferDataRemovedFromQueue = DataSize;
 							Source->update1 |= SUNQUEUE;
-							alcUpdateContext(Context, ALSOURCE, source);
+							UpdateContext(Context, ALSOURCE, source);
 
 							// Add the buffer to the queue (as long as it is NOT the NULL buffer, AND it is
 							// more than 0 bytes long)
@@ -673,7 +676,7 @@ ALAPI ALvoid ALAPIENTRY alSourcei(ALuint source,ALenum pname,ALint value)
 								Source->SizeOfBufferDataAddedToQueue = DataSize;
 								Source->NumBuffersAddedToQueue = 1;
 								Source->update1 |= SQUEUE;
-								alcUpdateContext(Context, ALSOURCE, source);
+								UpdateContext(Context, ALSOURCE, source);
 							}
 
 							// Set Buffers Processed
@@ -696,7 +699,7 @@ ALAPI ALvoid ALAPIENTRY alSourcei(ALuint source,ALenum pname,ALint value)
 				case AL_SOURCE_STATE:
 					Source->state=value;
 					Source->update1 |= STATE;
-                    alcUpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+                    UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 					break;
 
 				default:
@@ -1013,7 +1016,7 @@ ALAPI ALvoid ALAPIENTRY alSourcePlay(ALuint source)
 				}
 
 				Source->update1 |= STATE;
-				alcUpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+				UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 			}
 			else
 			{
@@ -1119,7 +1122,7 @@ ALAPI ALvoid ALAPIENTRY alSourcePlayv(ALsizei n, const ALuint *sources)
 						}
 
 						Source->update1 |= STATE;
-		                alcUpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+		                UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 					}
 					else
 					{
@@ -1173,7 +1176,7 @@ ALAPI ALvoid ALAPIENTRY alSourcePause(ALuint source)
 				Source->inuse=AL_FALSE;
 			}
 			Source->update1 |= STATE;
-            alcUpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+            UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 		}
 		else
 		{
@@ -1228,7 +1231,7 @@ ALAPI ALvoid ALAPIENTRY alSourcePausev(ALsizei n, const ALuint *sources)
 						Source->inuse=AL_FALSE;
 					}
 					Source->update1 |= STATE;
-                    alcUpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+                    UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 				}
 			}
 		}
@@ -1276,7 +1279,7 @@ ALAPI ALvoid ALAPIENTRY alSourceStop(ALuint source)
 				}
 			}
 			Source->update1 |= STATE;
-            alcUpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+            UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 		}
 		else
 		{
@@ -1339,7 +1342,7 @@ ALAPI ALvoid ALAPIENTRY alSourceStopv(ALsizei n, const ALuint *sources)
 						}
 					}
 					Source->update1 |= STATE;
-                    alcUpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+                    UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 				}
 			}
 		}
@@ -1391,7 +1394,7 @@ ALAPI ALvoid ALAPIENTRY alSourceRewind(ALuint source)
 					Source->param[AL_BUFFER-AL_CONE_INNER_ANGLE].data.i = Source->queue->buffer;
 			}
 			Source->update1 |= STATE;
-            alcUpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+            UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 		}
 		else
 		{
@@ -1458,7 +1461,7 @@ ALAPI ALvoid ALAPIENTRY alSourceRewindv(ALsizei n, const ALuint *sources)
 							Source->param[AL_BUFFER-AL_CONE_INNER_ANGLE].data.i = Source->queue->buffer;
 					}
 					Source->update1 |= STATE;
-                    alcUpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+                    UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 				}
 			}
 		}
@@ -1623,7 +1626,7 @@ ALAPI ALvoid ALAPIENTRY alSourceQueueBuffers( ALuint source, ALsizei n, const AL
 				ALSource->SizeOfBufferDataAddedToQueue = DataSize;
 				ALSource->NumBuffersAddedToQueue = n;
 				ALSource->update1 |= SQUEUE;
-				alcUpdateContext(Context, ALSOURCE, source);
+				UpdateContext(Context, ALSOURCE, source);
 			}
 		}
 		else
@@ -1726,7 +1729,7 @@ ALAPI ALvoid ALAPIENTRY alSourceUnqueueBuffers( ALuint source, ALsizei n, ALuint
 				ALSource->BuffersAddedToDSBuffer -= ALSource->NumBuffersRemovedFromQueue;
 
 				ALSource->update1 |= SUNQUEUE;
-				alcUpdateContext(Context, ALSOURCE, source);
+				UpdateContext(Context, ALSOURCE, source);
 			}
 			else
 			{

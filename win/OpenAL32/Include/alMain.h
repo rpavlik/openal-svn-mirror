@@ -25,7 +25,6 @@
 
 typedef struct ALCdevice_struct
 {
- 	ALenum		LastError;
  	ALboolean	InUse;
  	ALboolean	Valid;
 
@@ -33,26 +32,38 @@ typedef struct ALCdevice_struct
 	ALuint		Channels;
 	ALenum		Format;
 
-	ALint		MajorVersion;
-	ALint		MinorVersion;
-
 	ALubyte		szDeviceName[256];
 
 	// Maximum number of sources that can be created
 	ALuint		MaxNoOfSources;
 
-	//DirectSound
-	LPDIRECTSOUND DShandle;
-	LPDIRECTSOUNDBUFFER DSpbuffer;
-	LPDIRECTSOUNDBUFFER DSsbuffer;
-	LPDIRECTSOUND3DLISTENER DS3dlistener;
-
-	//waveOut
-	HWAVEOUT	handle;
+	// MMSYSTEM Device
+	ALboolean	bWaveShutdown;
+	HANDLE		hWaveHdrEvent;
+	HANDLE		hWaveThreadEvent;
+	HANDLE		hWaveThread;
+	ALuint		ulWaveThreadID;
+	ALint		lWaveBuffersCommitted;
+	HWAVEOUT	hWaveHandle;
 	WAVEHDR		buffer[NUMWAVEBUFFERS];
 
-	//mmTimer
-	MMRESULT	timer;
+	// DirectSound and DirectSound3D Devices
+	LPDIRECTSOUND			lpDS;
+
+	// DirectSound Device
+	LPDIRECTSOUNDBUFFER		DSpbuffer;
+	LPDIRECTSOUNDBUFFER		DSsbuffer;
+	MMRESULT				ulDSTimerID;
+
+	// DirectSound3D Device
+	LPDIRECTSOUND3DLISTENER lpDS3DListener;
+	ALboolean				bEAX30;
+	ALboolean				bEAX40;
+	ALuint					ulDS3DTimerInterval;
+	ALuint					ulDS3DTimerID;
+
+	// EAXUnified
+	void					*lpEAXListener;
 } ALCdevice;
 
 typedef struct ALCcontext_struct
@@ -79,15 +90,20 @@ typedef struct ALCcontext_struct
 
 	ALCdevice * Device;
 
+	ALboolean	bUseAverageRollOff;
+
 	struct ALCcontext_struct *previous;
 	struct ALCcontext_struct *next;
 }  ALCcontext;
 
 #endif
 
-ALCvoid alcUpdateContext(ALCcontext *context,ALuint type,ALuint name);
+ALCvoid UpdateContext(ALCcontext *context,ALuint type,ALuint name);
 ALint LinearGainToDB(float flGain);
-ALvoid SetGlobalRolloffFactor(ALsource *ALSource);
+
+void InitializeRollOffCalculations(ALCcontext *pContext);
+void SetRollOffFactor(ALsource *pSource);
+//ALvoid SetGlobalRolloffFactor(ALsource *ALSource);
 
 #ifdef __cplusplus
 extern "C"

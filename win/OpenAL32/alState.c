@@ -539,7 +539,7 @@ ALAPI ALvoid ALAPIENTRY alDopplerFactor(ALfloat value)
 			{
 				Context->DopplerFactor = value;
 				Context->Listener.update1 = LDOPPLERFACTOR;
-				alcUpdateContext(Context, ALLISTENER, 0);
+				UpdateContext(Context, ALLISTENER, 0);
 			}
 		}
 		else
@@ -573,7 +573,7 @@ ALAPI ALvoid ALAPIENTRY alDopplerVelocity(ALfloat value)
 			{
 				Context->DopplerVelocity=value;
 				Context->Listener.update1 = LDOPPLERVELOCITY;
-				alcUpdateContext(Context, ALLISTENER, 0);
+				UpdateContext(Context, ALLISTENER, 0);
 			}
 		}
 		else
@@ -610,7 +610,7 @@ ALAPI ALvoid ALAPIENTRY alDistanceModel(ALenum value)
 				{
 					Context->DistanceModel = value;
 					Context->Listener.update1 = LDISTANCEMODEL;
-					alcUpdateContext(Context, ALLISTENER, 0);
+					UpdateContext(Context, ALLISTENER, 0);
 				}
 				break;
 
