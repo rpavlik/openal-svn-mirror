@@ -108,6 +108,7 @@ typedef struct ALsource_struct
 
 	ALuint		CurrentState;
 	ALboolean	DSBufferPlaying;
+	ALuint		ulDelta;				// Difference between Play and Write Cursor in DS3D Buffer at Source play time
 
 	EAXBUFFERPROPERTIES EAX20BP;
 

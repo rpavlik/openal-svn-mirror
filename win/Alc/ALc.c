@@ -1456,7 +1456,10 @@ void CALLBACK DirectSound3DProc(UINT uID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR
 	for (loop=0;loop < ulSourceCount;loop++)
 	{
 		if ((g_pForceSourceUpdate) && (g_pForceSourceUpdate != ALSource))
+		{
+			ALSource = ALSource->next;
 			continue;
+		}
 
 		if (ALSource->DSBufferPlaying)
 		{
@@ -1836,7 +1839,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 	DSBUFFERDESC DSBDescription;
 	DS3DBUFFER DS3DBuffer;
 	ALfloat Dir[3], Pos[3], Vel[3];
-	ALuint	BuffersToSkip, DataPlayed, DataCount, TotalDataSize;
+	ALuint	DataPlayed, DataCount, TotalDataSize;
 	ALint	BufferSize, DataCommitted;
 	ALint	Relative;
     ALuint Freq, State, Channels, outerAngle, innerAngle;
@@ -1844,7 +1847,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 	ALvoid *lpPart1, *lpPart2;
 	ALuint	Part1Size, Part2Size, DataSize;
 	ALuint DataToCopy, PlayCursor, WriteCursor;
-    ALuint BufferID, Loop, i;
+    ALuint BufferID;
 	ALbufferlistitem *ALBufferListItem;
 	ALbufferlistitem *ALBufferListTemp;
 	ALint	volume;
@@ -1946,18 +1949,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 
 				if (ALSource->play)
 				{
-					// If Source is already playing, we need to restart it from the beginning
-					if (ALSource->CurrentState == AL_PLAYING)
-					{
-						// Mark all buffers in the queue as PENDING
-						ALBufferListItem = ALSource->queue;
-						while (ALBufferListItem != NULL)
-						{
-							ALBufferListItem->bufferstate = PENDING;
-							ALBufferListItem = ALBufferListItem->next;
-						}
-					}
-					else if (ALSource->CurrentState == AL_PAUSED)
+					if (ALSource->CurrentState == AL_PAUSED)
 					{
 						// If paused, just restart the DS buffer, and nothing else
 						IDirectSoundBuffer_Play((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,0,0,DSBPLAY_LOOPING);
@@ -1975,33 +1967,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 					ALSource->FinishedQueue = AL_FALSE;
 					ALSource->Silence = 0;
 
-					// If looping has been enabled, make sure that all buffers are PENDING
-					Loop = ALSource->param[AL_LOOPING-AL_CONE_INNER_ANGLE].data.i;
-
-					if (Loop == AL_TRUE)
-					{
-						ALBufferListItem = ALSource->queue;
-						while (ALBufferListItem != NULL)
-						{
-							ALBufferListItem->bufferstate = PENDING;
-							ALBufferListItem = ALBufferListItem->next;
-						}
-						ALSource->BuffersProcessed = 0;
-					}
-
-					// Find position in buffer queue
-					BuffersToSkip = ALSource->BuffersAddedToDSBuffer;
-
-					if (BuffersToSkip > ALSource->BuffersInQueue)
-					{
-						BuffersToSkip = BuffersToSkip % ALSource->BuffersInQueue;
-					}
-
 					ALBufferListItem = ALSource->queue;
-					for (i = 0; i < BuffersToSkip; i++)
-					{
-						ALBufferListItem = ALBufferListItem->next;
-					}
 
 					// Mark any buffers at the start of the list as processed if they have bufferID == 0, or
 					// if they have length 0 bytes
@@ -2034,21 +2000,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 					BufferID = ALBufferListItem->buffer;
                     ALSource->param[AL_BUFFER-AL_CONE_INNER_ANGLE].data.i = BufferID;
 
-					// Calculate how much data still to play
-                    DataSize = ((ALbuffer*)ALTHUNK_LOOKUPENTRY(BufferID))->size;
-					ALSource->DataStillToPlay = DataSize - ALSource->BufferPosition;
-
-					ALBufferListTemp = ALBufferListItem;
-
-					while (ALBufferListTemp->next != NULL)
-					{
-						if (ALBufferListTemp->next->buffer)
-                            DataSize = ((ALbuffer*)ALTHUNK_LOOKUPENTRY(ALBufferListTemp->next->buffer))->size;
-						else
-							DataSize = 0;
-						ALSource->DataStillToPlay += DataSize;
-						ALBufferListTemp = ALBufferListTemp->next;
-					}
+					ALSource->DataStillToPlay = ALSource->TotalBufferDataSize;
 
 					// Check if the buffer is stereo
                     Channels = (((((ALbuffer*)ALTHUNK_LOOKUPENTRY(BufferID))->format==AL_FORMAT_MONO8)||(((ALbuffer*)ALTHUNK_LOOKUPENTRY(BufferID))->format==AL_FORMAT_MONO16))?1:2);
@@ -2236,9 +2188,15 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 						IDirectSoundBuffer_GetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, &PlayCursor, &WriteCursor);
 						
 						if (PlayCursor > WriteCursor)
+						{
 							DataToCopy = PlayCursor - WriteCursor;
+							ALSource->ulDelta = ((88200 - PlayCursor) + WriteCursor);
+						}
 						else
+						{
 							DataToCopy = ((88200 - WriteCursor) + PlayCursor);
+							ALSource->ulDelta = WriteCursor - PlayCursor;
+						}
 
 						if (SUCCEEDED(IDirectSoundBuffer_Lock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,WriteCursor,DataToCopy,&lpPart1,&Part1Size,&lpPart2,&Part2Size,0)))
 						{
@@ -2259,6 +2217,8 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 					}
 					else
 					{
+						ALSource->ulDelta = 0;
+
 						if (SUCCEEDED(IDirectSoundBuffer_Lock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,0,0,&lpPart1,&Part1Size,0,0,DSBLOCK_ENTIREBUFFER)))
 						{
 							FillBuffer(ALSource, lpPart1, Part1Size);
@@ -2269,7 +2229,6 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 				}
 
 				ALSource->CurrentState = AL_PLAYING;
-
 				break;
 
 			case AL_PAUSED:
@@ -2452,6 +2411,10 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 				{
 					// Need to find position to write new data
 					ALSource->OldWriteCursor = PlayCursor + (ALSource->TotalBufferDataSize - ALSource->BytesPlayed);
+
+					// Position correction based on difference between Write and Play Cursors
+					ALSource->OldWriteCursor += ALSource->ulDelta;
+
 					if (ALSource->OldWriteCursor >= 88200)
 						ALSource->OldWriteCursor -= 88200;
 
@@ -2606,6 +2569,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 		{
 			outerGain = ALSource->param[AL_CONE_OUTER_GAIN-AL_CONE_INNER_ANGLE].data.f;
 			volume = LinearGainToDB(outerGain);
+
 			IDirectSound3DBuffer_SetConeOutsideVolume((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2, volume,DS3D_IMMEDIATE);
 			ALSource->update1 &= ~CONEOUTSIDEVOLUME;
 			if (ALSource->update1 == 0)
@@ -2645,6 +2609,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 		{
 			innerAngle = (ALuint)ALSource->param[AL_CONE_INNER_ANGLE-AL_CONE_INNER_ANGLE].data.f;
 			outerAngle = (ALuint)ALSource->param[AL_CONE_OUTER_ANGLE-AL_CONE_INNER_ANGLE].data.f;
+
 			IDirectSound3DBuffer_SetConeAngles((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,innerAngle,outerAngle,DS3D_IMMEDIATE);
 			ALSource->update1 &= ~CONEANGLES;
 			if (ALSource->update1 == 0)
@@ -2660,9 +2625,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 		if ((ALSource->uservalue1) && (ALSource->state == AL_PLAYING))
 		{
 			// Find out whether Looping has been enabled or disabled
-			Loop = ALSource->param[AL_LOOPING-AL_CONE_INNER_ANGLE].data.i;
-
-			if (Loop == AL_TRUE)
+			if (ALSource->param[AL_LOOPING-AL_CONE_INNER_ANGLE].data.i == AL_TRUE)
 			{
 				// Looping enabled !
 
@@ -2716,19 +2679,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 				ALSource->OldPlayCursor = PlayCursor;
 
 				// Calculate how much data is left to play for the current iteration of the looping data
-
-				TotalDataSize = 0;
-				ALBufferListTemp = ALSource->queue;
-
-				while (ALBufferListTemp != NULL)
-				{
-					if (ALBufferListTemp->buffer)
-	                    DataSize = ((ALbuffer*)ALTHUNK_LOOKUPENTRY(ALBufferListTemp->buffer))->size;
-					else
-						DataSize = 0;
-					TotalDataSize += DataSize;
-					ALBufferListTemp = ALBufferListTemp->next;
-				}
+				TotalDataSize = ALSource->TotalBufferDataSize;
 
 				ALSource->DataStillToPlay = TotalDataSize - (ALSource->BytesPlayed % TotalDataSize);
 
@@ -2775,13 +2726,22 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 					// after it)
 					ALSource->OldWriteCursor = PlayCursor + ALSource->DataStillToPlay;
 
+					// Position correction based on difference between Write and Play Cursors
+					ALSource->OldWriteCursor += ALSource->ulDelta;
+
 					if (ALSource->OldWriteCursor >= 88200)
 						ALSource->OldWriteCursor -= 88200;
 
 					ALSource->FinishedQueue = AL_TRUE;
 				}
 			}
+
+			// Force a timer call-back to fill DSBuffer with new data
+			g_pForceSourceUpdate = ALSource;
+			DirectSound3DProc(0,0,(DWORD_PTR)ALContext->Device,0,0);
+			g_pForceSourceUpdate = NULL;
 		}
+
 		ALSource->update1 &= ~LOOPED;
 		if (ALSource->update1 == 0)
 			return;
@@ -2792,7 +2752,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 
 
 /*
-	UpdateListner
+	UpdateListener
 
 	Used by "DirectSound3D" device to handle 3D Listener updates
 */
@@ -2881,7 +2841,7 @@ void UpdateListener(ALCcontext *ALContext)
 		// Doppler Velocity is used to set the speed of sound in units per second
 		// DS3D uses Distance Factor to relate units to real world coordinates (metres)
 		// Therefore need to convert Doppler Velocity into DS3D Distance Factor
-		flDistanceFactor = 1.0f/*SPEEDOFSOUNDMETRESPERSEC*/ / ALContext->DopplerVelocity;
+		flDistanceFactor = 1.0f / ALContext->DopplerVelocity;
 		IDirectSound3DListener_SetDistanceFactor(ALContext->Device->lpDS3DListener, flDistanceFactor, DS3D_IMMEDIATE);
 		ALContext->Listener.update1 &= ~LDOPPLERVELOCITY;
 		if (ALContext->Listener.update1 == 0)

@@ -87,12 +87,12 @@ ALboolean CheckEAXSupport(const ALubyte *szEAXName)
 		{
 			ALuint alsource = 0;
 			alGenSources(1, ((ALuint *)(&alsource)));
-			ALSource = (ALsource*)ALTHUNK_LOOKUPENTRY(alsource);
-
 			if (alGetError() == AL_NO_ERROR)
+			{
+				ALSource = (ALsource*)ALTHUNK_LOOKUPENTRY(alsource);
+				lpPropertySet = ALSource->uservalue3;
 				bSourceGenerated = AL_TRUE;
-
-			lpPropertySet = ALSource->uservalue3;
+			}
 		}
 
 		// If Property Set Interface hasn't been obtained, EAX support is not available
@@ -213,9 +213,11 @@ ALAPI ALenum ALAPIENTRY EAXGet(const GUID *propertySetID,ALuint property,ALuint 
 			{
                 ALuint alsource = 0;
                 alGenSources(1, ((ALuint *)(&alsource)));
-                ALSource = (ALsource*)ALTHUNK_LOOKUPENTRY(alsource);
                 if (alGetError() == AL_NO_ERROR)
+				{
+					ALSource = (ALsource*)ALTHUNK_LOOKUPENTRY(alsource);
                     bGenSource = AL_TRUE;
+				}
 			}
 		}
 
@@ -312,9 +314,11 @@ ALAPI ALenum ALAPIENTRY EAXSet(const GUID *propertySetID,ALuint property,ALuint 
 			{
                 ALuint alsource = 0;
                 alGenSources(1, ((ALuint *)(&alsource)));
-                ALSource = (ALsource*)ALTHUNK_LOOKUPENTRY(alsource);
 				if (alGetError() == AL_NO_ERROR)
+				{
+					ALSource = (ALsource*)ALTHUNK_LOOKUPENTRY(alsource);
 					bGenSource = AL_TRUE;
+				}
 			}
 		}
 

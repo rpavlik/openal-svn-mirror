@@ -993,12 +993,11 @@ ALAPI ALvoid ALAPIENTRY alSourcePlay(ALuint source)
 
 			if (bPlay)
 			{
-				Source->state=AL_PLAYING;
-				Source->inuse=AL_TRUE;
-				Source->play=AL_TRUE;
-
 				if (Source->state!=AL_PAUSED)
 				{
+					Source->state=AL_PLAYING;
+					Source->inuse=AL_TRUE;
+					Source->play=AL_TRUE;
 					Source->position=0;
 					Source->position_fraction=0;
 					Source->BuffersProcessed = 0;
@@ -1013,6 +1012,12 @@ ALAPI ALvoid ALAPIENTRY alSourcePlay(ALuint source)
 						ALBufferList->bufferstate = PENDING;
 						ALBufferList = ALBufferList->next;
 					}
+				}
+				else
+				{
+					Source->state=AL_PLAYING;
+					Source->inuse=AL_TRUE;
+					Source->play=AL_TRUE;
 				}
 
 				Source->update1 |= STATE;
@@ -1099,12 +1104,11 @@ ALAPI ALvoid ALAPIENTRY alSourcePlayv(ALsizei n, const ALuint *sources)
 
 					if (bPlay)
 					{
-						Source->state=AL_PLAYING;
-						Source->inuse=AL_TRUE;
-						Source->play=AL_TRUE;
-
 						if (Source->state!=AL_PAUSED)
 						{
+							Source->state=AL_PLAYING;
+							Source->inuse=AL_TRUE;
+							Source->play=AL_TRUE;
 							Source->position=0;
 							Source->position_fraction=0;
 							Source->BuffersProcessed = 0;
@@ -1120,7 +1124,12 @@ ALAPI ALvoid ALAPIENTRY alSourcePlayv(ALsizei n, const ALuint *sources)
 								ALBufferList = ALBufferList->next;
 							}
 						}
-
+						else
+						{
+							Source->state=AL_PLAYING;
+							Source->inuse=AL_TRUE;
+							Source->play=AL_TRUE;
+						}
 						Source->update1 |= STATE;
 		                UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 					}
