@@ -1,4 +1,14 @@
-2005-03-25  Sven Panne  <sven.panne@aedion.de>
+2005-03-31  Sven Panne  <sven.panne@aedion.de>
+
+	* linux/src/arch/darwin/CVS_Update.txt,
+	linux/src/arch/darwin/Tests_Results.rtf: Added.
+
+	* "linux/src/arch/darwin/CVS Update.txt",
+	"linux/src/arch/darwin/Tests Results.rtf": Removed. Filenames with
+	whitespace are more trouble with shell scripting than they are
+	worth.
+
+2005-03-25  Sven Panne  <sven.panne@aedion.de>	
 
 	* linux/test/teststrings.c: Fixed context/device handling to make
 	valgrind's memory leak checker happy plus a few cosmetic changes.
