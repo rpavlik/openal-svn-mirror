@@ -45,6 +45,7 @@
 #define OPENAL
 
 //#define TEST_VORBIS // enable for ogg vorbis testing
+//#define TEST_EAX // enable for EAX testing
 
 #ifdef _WIN32
 #include <windows.h>	// For timeGetTime()
@@ -83,7 +84,6 @@
 
 #define AL_INVALID_ENUM AL_ILLEGAL_ENUM
 #define AL_INVALID_OPERATION AL_ILLEGAL_COMMAND
-#define NO_EAX
 
 void alGetSource3f(ALint sid, ALenum param,
 		   ALfloat *f1, ALfloat *f2, ALfloat *f3)
@@ -126,10 +126,9 @@ void alGetSource3f(ALint sid, ALenum param,
 #include <math.h>
 #include <string.h>
 #include <al.h>
-#include <alc.h>
+p#include <alc.h>
 #include <alut.h>
 #include <unistd.h>
-#define NO_EAX
 #define SWAPBYTES
 #endif
 
@@ -166,12 +165,13 @@ typedef struct ALenum_struct
 
 
 // Global variables
-#ifndef NO_EAX
+ALuint	g_Buffers[NUM_BUFFERS];		// Array of Buffers
+
+#ifdef TEST_EAX
 EAXSet	eaxSet;						// EAXSet function, retrieved if EAX Extension is supported
 EAXGet	eaxGet;						// EAXGet function, retrieved if EAX Extension is supported
-#endif
 ALboolean g_bEAX;					// Boolean variable to indicate presence of EAX Extension 
-ALuint	g_Buffers[NUM_BUFFERS];		// Array of Buffers
+#endif
 
 #ifdef TEST_VORBIS
 // vorbis extension
@@ -308,7 +308,6 @@ void SwapBytes(unsigned short *pshort);
 // Test Function prototypes
 ALvoid I_PositionTest(ALvoid);
 ALvoid I_LoopingTest(ALvoid);
-ALvoid I_EAXTest(ALvoid);
 ALvoid I_QueueTest(ALvoid);
 ALvoid I_BufferTest(ALvoid);
 ALvoid I_FreqTest(ALvoid);
@@ -343,6 +342,10 @@ ALvoid SA_QueuingUnderrunPerformance(ALvoid);
 
 #ifdef TEST_VORBIS
 ALvoid I_VorbisTest(ALvoid);
+#endif
+
+#ifdef TEST_EAX
+ALvoid I_EAXTest(ALvoid);
 #endif
 
 /*
@@ -404,7 +407,6 @@ ALvoid DisplayALError( const char *text, ALint errorcode)
 */
 int main(int argc, char* argv[])
 {
-	ALubyte szEAX[] = "EAX";
 	ALubyte szFnName[128];
 	ALbyte	ch;
 	ALint	error;
@@ -418,10 +420,14 @@ int main(int argc, char* argv[])
         ALvoid *Context;
 #endif
 	ALCdevice *Device;
-
 	ALfloat listenerPos[]={0.0,0.0,0.0};
 	ALfloat listenerVel[]={0.0,0.0,0.0};
 	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};	// Listener facing into the screen
+
+#ifdef TEST_EAX
+	ALubyte szEAX[] = "EAX";
+#endif	
+
 
 	printf("OpenAL Test Application\n");
 	printf("=======================\n\n");
@@ -828,10 +834,10 @@ int main(int argc, char* argv[])
      }
 #endif
 
+#ifdef TEST_EAX
 	// Check for EAX extension
 	g_bEAX = alIsExtensionPresent(szEAX);
 
-#ifndef NO_EAX
         if (g_bEAX)
 		printf("EAX Extensions available\n");
 
@@ -859,16 +865,18 @@ int main(int argc, char* argv[])
 		printf("\nInteractive Tests:\n\n");
 		printf("1) Position Test\n");
 		printf("2) Looping Test\n");
-		printf("3) EAX 2.0 Test\n");
-		printf("4) Queue Test\n");
-		printf("5) Buffer Test\n");
-		printf("6) Frequency Test\n");
-		printf("7) Stereo Test\n");
-		printf("8) Gain Test\n");
-		printf("9) Streaming Test\n");
-		printf("0) Multiple Sources Test\n");
+		printf("3) Queue Test\n");
+		printf("4) Buffer Test\n");
+		printf("5) Frequency Test\n");
+		printf("6) Stereo Test\n");
+		printf("7) Gain Test\n");
+		printf("8) Streaming Test\n");
+		printf("9) Multiple Sources Test\n");
+#ifdef TEST_EAX
+		printf("C) EAX Test\n");
+#endif
 #ifdef TEST_VORBIS
-		printf("C) Ogg Vorbis Test\n");
+		printf("D) Ogg Vorbis Test\n");
 #endif
 		printf("\nQ) to quit\n\n\n");
 
@@ -889,32 +897,34 @@ int main(int argc, char* argv[])
 				I_LoopingTest();
 				break;
 			case '3':
+				I_QueueTest();
+				break;
+			case '4':
+				I_BufferTest();
+				break;
+			case '5':
+				I_FreqTest();
+				break;
+			case '6':
+				I_StereoTest();
+				break;
+			case '7':
+				I_GainTest();
+				break;
+			case '8':
+				I_StreamingTest();
+				break;
+			case '9':
+				I_MultipleSourcesTest();
+				break;
+#ifdef TEST_EAX
+			case 'C':
 				if (g_bEAX)
 					I_EAXTest();
 				break;
-			case '4':
-				I_QueueTest();
-				break;
-			case '5':
-				I_BufferTest();
-				break;
-			case '6':
-				I_FreqTest();
-				break;
-			case '7':
-				I_StereoTest();
-				break;
-			case '8':
-				I_GainTest();
-				break;
-			case '9':
-				I_StreamingTest();
-				break;
-			case '0':
-				I_MultipleSourcesTest();
-				break;
+#endif
 #ifdef TEST_VORBIS
-		        case 'C':
+		        case 'D':
 		                I_VorbisTest();
 		                break;
 #endif
@@ -2751,7 +2761,7 @@ ALvoid I_LoopingTest(ALvoid)
 	return;
 }
 
-
+#ifdef TEST_EAX
 // EAX Test
 /** used by gendocs.py
 $SECTION Interactive Tests
@@ -2761,7 +2771,6 @@ of the DEFERRED flag in EAX.
 */
 ALvoid I_EAXTest(ALvoid)
 {
-#ifndef NO_EAX
         ALint	error;
 	ALuint	source[2];
 	ALbyte	ch;
@@ -2950,10 +2959,9 @@ ALvoid I_EAXTest(ALvoid)
 	alDeleteSources(2, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 		DisplayALError((ALbyte *) "alDeleteSources 2 : ", error);
-
-#endif // ifdef NO_EAX
 	return;
 }
+#endif
 
 
 // Queue Test
