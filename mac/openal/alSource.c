@@ -481,6 +481,10 @@ ALAPI ALvoid ALAPIENTRY alSourceStop (ALuint source)
 	
 	gSource[source].state = AL_STOPPED;
 	gSource[source].readOffset = 0;
+        if (gSource[source].pCompHdr != NULL) {
+            DisposePtr(gSource[source].pCompHdr);
+            gSource[source].pCompHdr = NULL;
+        }
         gSource[source].uncompressedReadOffset = 0;
 	
 	pQE = gSource[source].ptrQueue; // reset all processed flags
@@ -497,6 +501,10 @@ ALAPI ALvoid ALAPIENTRY alSourceRewind (ALuint source)
     alSourceStop(source);
     gSource[source].state = AL_INITIAL;
     gSource[source].readOffset = 0;
+    if (gSource[source].pCompHdr != NULL) {
+        DisposePtr(gSource[source].pCompHdr);
+        gSource[source].pCompHdr = NULL;
+    }
     gSource[source].uncompressedReadOffset = 0;
 }
 

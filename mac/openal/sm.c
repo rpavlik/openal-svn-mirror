@@ -65,27 +65,19 @@ void smPlaySegment(unsigned int source)
 			smSetSourceVolume(source, (kFullVolume * Volume), (kFullVolume * Volume));
 		}
 		// create sound header
+                if (gSource[source].readOffset > gBuffer[iBufferNum].size) { 
+                    gSource[source].readOffset = 0;
+                    if (gSource[source].pCompHdr != NULL) {
+                        DisposePtr(gSource[source].pCompHdr);
+                        gSource[source].pCompHdr = NULL;
+                    } 
+                }
                 if (gBuffer[iBufferNum].format == AL_FORMAT_VORBIS_EXT) { // compressed format handling
-                // ***** changes -- with new "pull" setup, will want to decompress one AL_DEFAULT_INTERNAL_BUFFERS_SIZE amount of OV
-                // data on every pass and put it into the uncompressed data part of the buffer, then tell SM to play it; won't need
-                // pointer to read/write location in uncompressed data or uncompressedSize member of buffer
-                    if (gBuffer[iBufferNum].uncompressedData == NULL) {
-#ifdef VORBIS_EXTENSION
-                        ov_fillBuffer(&gBuffer[iBufferNum]);
-#endif
-                    }
-                    if (gSource[source].uncompressedReadOffset > gBuffer[iBufferNum].uncompressedSize) { gSource[source].uncompressedReadOffset = 0; }
-                    gSource[source].ptrSndHeader->samplePtr = (char *) gBuffer[iBufferNum].uncompressedData + gSource[source].uncompressedReadOffset;
-                    if ((gSource[source].uncompressedReadOffset + gBufferSize) <= gBuffer[iBufferNum].uncompressedSize)
-                    {
-                            gSource[source].ptrSndHeader->numFrames = gBufferSize;
-                    } else
-                    {
-                            gSource[source].ptrSndHeader->numFrames = (gBuffer[iBufferNum].uncompressedSize - gSource[source].uncompressedReadOffset);
-                    }
+                    ov_fillBuffer(&gSource[source], &gBuffer[iBufferNum]);
+                    gSource[source].ptrSndHeader->samplePtr = (char *) gBuffer[iBufferNum].uncompressedData;
+                    gSource[source].ptrSndHeader->numFrames = gBuffer[iBufferNum].uncompressedSize;
                 } else // uncompressed buffer format
                 {
-                    if (gSource[source].readOffset > gBuffer[iBufferNum].size) { gSource[source].readOffset = 0; }
                     gSource[source].ptrSndHeader->samplePtr = (char *) gBuffer[iBufferNum].data + gSource[source].readOffset;
                     if ((gSource[source].readOffset + gBufferSize) <= gBuffer[iBufferNum].size)
                     {
@@ -95,8 +87,10 @@ void smPlaySegment(unsigned int source)
                             gSource[source].ptrSndHeader->numFrames = (gBuffer[iBufferNum].size - gSource[source].readOffset);
                     }
                 }
-                if (gBuffer[iBufferNum].bits == 16) { gSource[source].ptrSndHeader->numFrames = gSource[source].ptrSndHeader->numFrames / 2; }
-                gSource[source].ptrSndHeader->numFrames =gSource[source].ptrSndHeader->numFrames / gBuffer[iBufferNum].channels;
+                if (gBuffer[iBufferNum].bits == 16) { // adjust number of frames for 16-bit width
+                    gSource[source].ptrSndHeader->numFrames = gSource[source].ptrSndHeader->numFrames / 2; 
+                }
+                gSource[source].ptrSndHeader->numFrames =gSource[source].ptrSndHeader->numFrames / gBuffer[iBufferNum].channels; // adjust number of frames for number of channels
                 gSource[source].ptrSndHeader->sampleSize = gBuffer[iBufferNum].bits;
                 gSource[source].ptrSndHeader->numChannels = gBuffer[iBufferNum].channels;
                 switch (gBuffer[iBufferNum].frequency)
@@ -171,31 +165,35 @@ pascal void smService (SndChannelPtr chan, SndCommand* acmd)
 	ALuint source;
 	QueueEntry *pQE;
 	ALboolean bNewQE;
-	
+        
 	source = (ALuint) acmd->param2;
 	
 	bNewQE = AL_FALSE;
 	
 	// evaluate whether or not the buffer has been over-run
-	gSource[source].readOffset += gBufferSize;
+        if (gBuffer[gSource[source].srcBufferNum].format != AL_FORMAT_VORBIS_EXT) {
+            gSource[source].readOffset += gBufferSize;
+        }
 	if (gSource[source].readOffset >= gBuffer[gSource[source].srcBufferNum].size)
 	{
 	    // check if there is a new queue to go to -- if not, then reset queue processed flags, decrement loop counter, and restart
-		pQE = gSource[source].ptrQueue;
-		if (pQE != NULL)
-		{
-			while (pQE->processed == AL_TRUE)
-			{
-				pQE = pQE->pNext;
-				if (pQE == NULL) break;
-			}
-		}
+            pQE = gSource[source].ptrQueue;
+            if (pQE != NULL) {
+                while (pQE->processed == AL_TRUE) {
+                    pQE = pQE->pNext;
+                    if (pQE == NULL) break;
+                }
+            }
 	    
 	    if (pQE != NULL) // process next queued buffer
 	    {
 	    	pQE->processed = AL_TRUE;
 	    	gSource[source].srcBufferNum = pQE->bufferNum;
 	    	gSource[source].readOffset = 0;
+                if (gSource[source].pCompHdr != NULL) {
+                    DisposePtr(gSource[source].pCompHdr);
+                    gSource[source].pCompHdr = NULL;
+                }
 	    	bNewQE = AL_TRUE;
 	    } else // completed all buffers, so reset buffer processed flags and decrement loop counter
 	    {
@@ -215,20 +213,37 @@ pascal void smService (SndChannelPtr chan, SndCommand* acmd)
 	    	{
 	    		gSource[source].srcBufferNum = pQE->bufferNum;
 	    		gSource[source].readOffset = 0;
+                        if (gSource[source].pCompHdr != NULL) {
+                            DisposePtr(gSource[source].pCompHdr);
+                            gSource[source].pCompHdr = NULL;
+                        }
 	    		pQE->processed = AL_TRUE;
 	    	}
+                
+                // if looping is on and have uncompressed all compressed data, then reset source but keep it in a playing state
+                if ((gSource[source].looping == AL_TRUE) && (gBuffer[gSource[source].srcBufferNum].uncompressedSize == 0)) {
+                    gSource[source].readOffset = 0;
+                    if (gSource[source].pCompHdr != NULL) {
+                        DisposePtr(gSource[source].pCompHdr);
+                        gSource[source].pCompHdr = NULL;
+                    } 
+                }
 	    	
-			if (gSource[source].looping != AL_TRUE) 
-			{ 
-				gSource[source].state = AL_STOPPED; 
-			}
-		}
+                // if looping is off and have uncompressed all compressed data, then set the source's state to STOPPED
+                if ((gSource[source].looping != AL_TRUE) && (gBuffer[gSource[source].srcBufferNum].uncompressedSize == 0)) {
+                    gSource[source].state = AL_STOPPED; 
+                }
+            }
 	}
 	
 	// if now stopped, reset read pointer
 	if (gSource[source].state == AL_STOPPED)
 	{
 		gSource[source].readOffset = 0;
+                if (gSource[source].pCompHdr != NULL) {
+                    DisposePtr(gSource[source].pCompHdr);
+                    gSource[source].pCompHdr = NULL;
+                }
 	}
 	
 	// evaluate if more data needs to be played -- if so then call smPlaySegment
@@ -237,7 +252,7 @@ pascal void smService (SndChannelPtr chan, SndCommand* acmd)
 	    (((gSource[source].readOffset == 0) && (gSource[source].looping == AL_TRUE)) || (gSource[source].readOffset != 0) || (bNewQE == AL_TRUE))
 	   )
 	{
-		smPlaySegment(source);
+            smPlaySegment(source);
 	}
 }
 
@@ -279,6 +294,10 @@ void smSourceInit(unsigned int source)
     {
 		Err = SndNewChannel(&gSource[source].channelPtr, sampledSynth, initMono, gpSMRtn); // create sound channel
 		gSource[source].readOffset = 0;
+                if (gSource[source].pCompHdr != NULL) {
+                    DisposePtr(gSource[source].pCompHdr);
+                    gSource[source].pCompHdr = NULL;
+                }
 		if (gSource[source].ptrSndHeader == NULL)
 		{
 			gSource[source].ptrSndHeader = malloc(sizeof(ExtSoundHeader));

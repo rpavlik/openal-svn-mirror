@@ -66,6 +66,7 @@ typedef struct ALsource_struct
     ALfloat       	Velocity[3];
     QueueEntry    	*ptrQueue;
     ExtSoundHeader 	*ptrSndHeader;
+    void		*pCompHdr; // pointer to compressed data header info
 } ALsource;
 
 typedef struct ALlistener_struct

@@ -26,13 +26,33 @@
 
 size_t ov_read_func (void *ptr, size_t size, size_t nmemb, void *datasource)
 {
-   int reqAmt = (int)size*(int)nmemb;
-   static int offset = 0;
-   int amt = (offset + reqAmt > 19502) ? 19502 - offset : reqAmt;
+    int buffer, source;
+    int reqAmt = (int)size*(int)nmemb;
+   
+   // figure out which buffer this data is coming from and which source the buffer is attached to,
+   // then set source's read position correctly and hand back the appropriate data
+    for (buffer = 0; buffer < AL_MAXBUFFERS; buffer++) {
+        if (gBuffer[buffer].data == datasource) {
+            break; 
+        }
+    }
+    
+    if (buffer != AL_MAXBUFFERS) {
+        for (source = 0; source < AL_MAXSOURCES	; source++) {
+            if (gSource[source].srcBufferNum == buffer) {
+                break;
+            }
+        }
+        if (source != AL_MAXSOURCES) {
+            // have buffer and source, so let's continue...
+            int amt = (gSource[source].readOffset + reqAmt > gBuffer[buffer].size) ? gBuffer[buffer].size - gSource[source].readOffset : reqAmt;
 
-   memcpy(ptr, datasource + offset, amt);
-   offset += amt;
-   return amt;
+            memcpy(ptr, datasource + gSource[source].readOffset, amt);
+            gSource[source].readOffset += amt;
+            return amt;
+        }
+    }
+    return 0;
 }
 
 int ov_seek_func (void *datasource, ogg_int64_t offset, int whence)
@@ -50,23 +70,41 @@ long ov_tell_func (void *datasource)
    return 0;
 }
 
-void ov_fillBuffer(ALbuffer *pBuffer) 
+void ov_fillBuffer(ALsource *pSource, ALbuffer *pBuffer) 
 {
-    int i;
-    char *pC;
+    vorbis_info *vi;
+    FILE *fh;
     
     // decompress the raw Ogg Vorbis data into pBuffer->uncompressedData
     //   also fill in uncompressedSize, channels, bits, and frequency fields
     
-    pBuffer->channels = 1;
-    pBuffer->bits = 16;
-    pBuffer->frequency = 22050;
-    pBuffer->uncompressedData = (void *)NewPtrClear(20000);
-    pBuffer->uncompressedSize = 20000;
-    
-    // ***** dumping in a sine wave for the moment....
-    for (i = 0; i < 10000; i++) {
-        pC = pBuffer->uncompressedData + i;
-        *pC = sin(i/100) * 32767; 
+    // create some space for uncompressed data if not already available
+    if (pBuffer->uncompressedData == NULL) {
+        pBuffer->uncompressedData = (void *)NewPtrClear(gBufferSize);
+        pBuffer->uncompressedSize = gBufferSize;
     }
+    
+    // create Ogg Vorbis File struct if not already created
+    if (pSource->pCompHdr == NULL) {
+        pSource->pCompHdr = (void *)NewPtrClear(sizeof(OggVorbis_File));
+        // setup callbacks
+        ov_callbacks callbacks;
+        callbacks.read_func = ov_read_func;
+        callbacks.seek_func = ov_seek_func;
+        callbacks.close_func = ov_close_func;
+        callbacks.tell_func = ov_tell_func;
+        if (ov_open_callbacks(pBuffer->data, pSource->pCompHdr, NULL, 0, callbacks) < 0) {
+            DisposePtr(pSource->pCompHdr);
+            pSource->pCompHdr = NULL;
+        }
+    }
+    
+    // set channels/bits/frequency
+    vi=ov_info(pSource->pCompHdr,-1);
+    pBuffer->channels = vi->channels;
+    pBuffer->bits = 16;
+    pBuffer->frequency = vi->rate;
+  
+    // decompress some data
+    pBuffer->uncompressedSize=ov_read(pSource->pCompHdr,(void *)pBuffer->uncompressedData,gBufferSize,1,2,1,NULL);
 }
