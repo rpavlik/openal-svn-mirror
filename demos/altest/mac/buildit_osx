@@ -1,3 +1,0 @@
-#!/bin/csh
-
-c++ -Wall -Wno-unused -fPIC -DPIC -g -O2 -DMAC_OS_X -I/Library/Frameworks/OpenAL.framework/Headers -o altest -L. -framework OpenAL ../common/altest.cpp
