@@ -27,6 +27,11 @@
 #include "alBuffer.h"
 #include "alError.h"
 
+#ifdef MAC_OS_X
+#include <string.h>
+#define FLT_MIN 0.00001
+#endif
+
 extern ALenum gDistanceModel;
 
 ALAPI ALint ALAPIENTRY aluF2L(ALfloat Value)

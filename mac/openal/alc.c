@@ -18,10 +18,14 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
 
+#ifdef MAC_OS_X
+#include <stdlib.h>
+#else
 #ifdef TARGET_CLASSIC 
 #include <Sound.h>
 #else
 #include <Carbon/Carbon.h>
+#endif
 #endif
 
 #include "al.h"

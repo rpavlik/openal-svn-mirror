@@ -17,33 +17,48 @@
  *  Boston, MA  02111-1307, USA.
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
+ 
+#if defined(__APPLE__) & defined(__MACH__) // check for OS X
+#define MAC_OS_X
+#endif
 
 #ifndef TARGET_CLASSIC
 #define OPAQUE_UPP_TYPES 1
 #endif
 
+#ifdef MAC_OS_X
+#include <stdlib.h>
+#else
 #ifdef TARGET_CLASSIC
 #include <Sound.h>
 #else
 #include <Carbon/Carbon.h>
 #endif
+#endif
 
 #include "globaltypes.h"
 #include "alMain.h"
+
+#ifdef MAC_OS_X
+#include "sm_ca.h"
+#else
 #include "sm.h"
+#endif
 
 ALbuffer gBuffer[AL_MAXBUFFERS + 1];  // global buffers (0 is null buffer)
 ALsource gSource[AL_MAXSOURCES + 1];  // global sources (0 not used)
 ALlistener gListener; // global listenters
-SndCallBackUPP gpSMRtn;  // global pointer to Sound Manager callback routine
 ALuint gBufferSize;
-
-extern pascal void smService (SndChannelPtr chan, SndCommand* acmd); // external sound manager service routine (sm.c)
 extern ALfloat gDopplerFactor;
 extern ALfloat gDopplerVelocity;
 extern ALfloat gDistanceScale;
 extern ALfloat gPropagationSpeed;
 extern ALenum gDistanceModel;
+
+#ifndef MAC_OS_X
+SndCallBackUPP gpSMRtn;  // global pointer to Sound Manager callback routine
+extern pascal void smService (SndChannelPtr chan, SndCommand* acmd); // external sound manager service routine (sm.c)
+#endif
 
 #pragma export on 
 
@@ -53,15 +68,19 @@ ALAPI ALvoid ALAPIENTRY alInit(ALint *argc, ALubyte **argv)
 	int i;
 	
 	// set internal buffer size
+#ifndef MAC_OS_X
 	SoundComponentData	outputFormat;
 	OSErr error = GetSoundOutputInfo( NULL, siHardwareFormat, &outputFormat );
 	if (error != 0) // error -- use default
 	{
+#endif
 		gBufferSize = AL_DEFAULT_INTERNAL_BUFFERS_SIZE;
+#ifndef MAC_OS_X
 	} else // use 2 x hardware sample count
 	{
 		gBufferSize = outputFormat.sampleCount * 2;
 	}
+#endif
 	
 	// set global scale variables
 	gDopplerFactor = 1.0f;
@@ -83,7 +102,7 @@ ALAPI ALvoid ALAPIENTRY alInit(ALint *argc, ALubyte **argv)
 	// clear source/channel information
 	for (i= 0; i < AL_MAXSOURCES; i++)
 	{
-		gSource[i].channelPtr = NULL;
+		
 		gSource[i].srcBufferNum = AL_MAXBUFFERS + 1; // value > AL_MAXBUFFERS used as signal that no buffer is attached to this source
 		gSource[i].readOffset = 0;
                 gSource[i].uncompressedReadOffset = 0;
@@ -93,11 +112,11 @@ ALAPI ALvoid ALAPIENTRY alInit(ALint *argc, ALubyte **argv)
 		gSource[i].looping = AL_FALSE;
 		gSource[i].pitch = 1.0f;
 		gSource[i].gain = 1.0f;
-    	gSource[i].maxDistance = 100000000; // ***** should be MAX_FLOAT
-    	gSource[i].minGain = 0.0f;
-    	gSource[i].maxGain = 1.0f;
-    	gSource[i].rolloffFactor = 1.0f;
-    	gSource[i].referenceDistance = 1.0f;
+                gSource[i].maxDistance = 100000000; // ***** should be MAX_FLOAT
+                gSource[i].minGain = 0.0f;
+                gSource[i].maxGain = 1.0f;
+                gSource[i].rolloffFactor = 1.0f;
+                gSource[i].referenceDistance = 1.0f;
 		gSource[i].Position[0] = 0;
 		gSource[i].Position[1] = 0;
 		gSource[i].Position[2] = 0;
@@ -105,9 +124,15 @@ ALAPI ALvoid ALAPIENTRY alInit(ALint *argc, ALubyte **argv)
 		gSource[i].Velocity[1] = 0;
 		gSource[i].Velocity[2] = 0;	
 		gSource[i].ptrQueue = NULL;
-		gSource[i].ptrSndHeader = NULL;
                 gSource[i].uncompressedData = NULL;
                 gSource[i].uncompressedSize = 0;
+#ifdef MAC_OS_X
+                gSource[i].uncompressedBufferOffset = 0;
+                gSource[i].uncompressedSize = 0;
+#else
+                gSource[i].ptrSndHeader = NULL;
+                gSource[i].channelPtr = NULL;
+#endif
 	}
 	
 	// clear listener info
@@ -125,11 +150,13 @@ ALAPI ALvoid ALAPIENTRY alInit(ALint *argc, ALubyte **argv)
 	gListener.Up[2] = 1 ;
 	gListener.Gain = 1.0f;
 	gListener.Environment = 0;
-	
+
+#ifndef MAC_OS_X	
 #ifndef TARGET_CLASSIC
 	gpSMRtn = NewSndCallBackUPP(smService); // pointer to the Sound Manager callback routine
 #else
 	gpSMRtn = NewSndCallBackProc(smService); // pointer to the Sound Manager callback routine
+#endif
 #endif
 }
 
@@ -142,7 +169,13 @@ ALAPI ALvoid ALAPIENTRY alExit(ALvoid)
 	{
 		if (gBuffer[i].data != NULL)
 		{
-			DisposePtr((char *) gBuffer[i].data);
+                        if (gBuffer[i].data != NULL) {
+#ifdef MAC_OS_X
+                            free(gBuffer[i].data);
+#else	
+                            DisposePtr((char *) gBuffer[i].data);
+#endif
+                        }
 			gBuffer[i].data = NULL;
 			gBuffer[i].size = 0;
 		}
@@ -150,17 +183,25 @@ ALAPI ALvoid ALAPIENTRY alExit(ALvoid)
 	
 	// dispose of source/channel information
 	for (i= 0; i <= AL_MAXSOURCES; i++)
-	{	
-                DisposePtr((char *) gSource[i].uncompressedData);
+	{
+                if (gSource[i].uncompressedData != NULL) {
+#ifdef MAC_OS_X
+                    free(gSource[i].uncompressedData);
+#else
+                    DisposePtr((char *) gSource[i].uncompressedData);
+#endif
+                }
                 gSource[i].uncompressedData = NULL;
                 gSource[i].uncompressedSize = 0;
 		smSourceKill(i);
 	}
 
+#ifndef MAC_OS_X
 #ifndef TARGET_CLASSIC
 	DisposeSndCallBackUPP(gpSMRtn); // dispose of pointer to Sound Manager callback routine
 #else
 	DisposeRoutineDescriptor(gpSMRtn); // dispose of pointer to Sound Manager callback routine
+#endif
 #endif
 }
 

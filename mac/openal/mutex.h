@@ -18,29 +18,22 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
 
-#if defined(__APPLE__) & defined(__MACH__) // check for OS X
-#define MAC_OS_X
-#else
-#ifdef TARGET_CLASSIC
-#include <Sound.h>
-#else
-#include <Carbon/Carbon.h>
-#endif
-#endif
 
-#include "globaltypes.h"
+#include <pthread.h>
+#include <assert.h>
 
-extern ALbuffer gBuffer[AL_MAXBUFFERS]; // holds data on each buffer
-extern ALsource gSource[AL_MAXSOURCES]; // holds data on each source
-extern ALfloat gDopplerFactor;
-extern ALfloat gDopplerVelocity;
-extern ALfloat gDistanceScale;
-extern ALfloat gPropagationSpeed;
-extern ALlistener gListener;
-extern ALuint gBufferSize;
+typedef pthread_mutex_t *MutexID;
 
-#ifdef MAC_OS_X
-extern void *pVorbisLib;
-#else
-extern SndCallBackUPP gpSMRtn;
-#endif
+extern MutexID mix_mutex;
+extern char used;
+pthread_mutex_t *_newMutex(void);
+
+pthread_mutex_t *mlCreateMutex(void);
+
+void mlDestroyMutex(pthread_mutex_t *mutex); 
+
+void LockBufs( void );
+
+void UnlockBufs( void );
+
+int mlTryLockMutex(void);

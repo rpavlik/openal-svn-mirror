@@ -17,30 +17,15 @@
  *  Boston, MA  02111-1307, USA.
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
+ 
+#ifndef _SM_H_
+#define _SM_H_
 
-#if defined(__APPLE__) & defined(__MACH__) // check for OS X
-#define MAC_OS_X
-#else
-#ifdef TARGET_CLASSIC
-#include <Sound.h>
-#else
-#include <Carbon/Carbon.h>
-#endif
-#endif
+// declare Sound Manager routines
+void no_smPlaySegment(unsigned int source);
+void no_smInit(void);
+void no_smTerminate(void);
+void smSourceInit(unsigned int source);
+void smSourceKill(unsigned int source);
 
-#include "globaltypes.h"
-
-extern ALbuffer gBuffer[AL_MAXBUFFERS]; // holds data on each buffer
-extern ALsource gSource[AL_MAXSOURCES]; // holds data on each source
-extern ALfloat gDopplerFactor;
-extern ALfloat gDopplerVelocity;
-extern ALfloat gDistanceScale;
-extern ALfloat gPropagationSpeed;
-extern ALlistener gListener;
-extern ALuint gBufferSize;
-
-#ifdef MAC_OS_X
-extern void *pVorbisLib;
-#else
-extern SndCallBackUPP gpSMRtn;
 #endif

@@ -45,7 +45,6 @@ typedef struct QueueEntry_struct
 
 typedef struct ALsource_struct
 {
-    SndChannelPtr 	channelPtr;
     ALint         	srcBufferNum;
     ALuint 		readOffset; // playback position (read position)
     ALuint        	writeOffset; // write position
@@ -65,8 +64,14 @@ typedef struct ALsource_struct
     ALfloat       	Position[3];
     ALfloat       	Velocity[3];
     QueueEntry    	*ptrQueue;
-    ExtSoundHeader 	*ptrSndHeader;
     void		*pCompHdr; // pointer to compressed data header info
+#ifdef MAC_OS_X
+    ALuint 		uncompressedBufferOffset;
+    char *		samplePtr;
+#else
+    ExtSoundHeader 	*ptrSndHeader;
+    SndChannelPtr 	channelPtr;
+#endif
 } ALsource;
 
 typedef struct ALlistener_struct

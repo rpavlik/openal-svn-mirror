@@ -18,10 +18,16 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
 
+#ifndef MAC_OS_X
 #ifdef TARGET_CLASSIC
 #include <Sound.h>
 #else
 #include <Carbon/Carbon.h>
+#endif
+#else
+#include <stdlib.h>
+#include <string.h>
+#include "mutex.h"
 #endif
 
 #include "sm.h"
@@ -61,7 +67,11 @@ ALAPI ALvoid ALAPIENTRY alGenSources(ALsizei n, ALuint *sources)
 					gSource[i].srcBufferNum = 0;  // allocate the source
 					gSource[i].state = AL_INITIAL;
                                         if (gSource[i].uncompressedData != NULL) {
+#ifdef MAC_OS_X
+                                            free(gSource[i].uncompressedData);
+#else
                                             DisposePtr((char *)gSource[i].uncompressedData);
+#endif
                                             gSource[i].uncompressedData = NULL;
                                         }
                                         gSource[i].uncompressedSize = 0;
@@ -97,11 +107,17 @@ ALAPI ALvoid ALAPIENTRY alDeleteSources (ALsizei n, ALuint *sources)
 	{
 		for (i= 0; i < n; i++)
 		{
-			if (alIsSource(sources[i]) == true)
+			if (alIsSource(sources[i]) == AL_TRUE)
 			{
                                 smSourceKill(sources[i]);
-                                DisposePtr((char *)gSource[sources[i]].uncompressedData);
-                                gSource[sources[i]].uncompressedData = NULL;
+                                if (gSource[sources[i]].uncompressedData != NULL) {
+#ifdef MAC_OS_X
+                                    free(gSource[sources[i]].uncompressedData);
+#else
+                                    DisposePtr((char *)gSource[sources[i]].uncompressedData);
+#endif
+                                    gSource[sources[i]].uncompressedData = NULL;
+                                }
                                 gSource[sources[i]].uncompressedSize = 0;
 				gSource[sources[i]].srcBufferNum = AL_MAXBUFFERS + 1; // value > AL_MAXBUFFERS used as signal source is not being used
 				gSource[sources[i]].readOffset = 0;
@@ -114,9 +130,15 @@ ALAPI ALvoid ALAPIENTRY alDeleteSources (ALsizei n, ALuint *sources)
 				{
 					tempQPtr = gSource[sources[i]].ptrQueue;
 					gSource[sources[i]].ptrQueue = tempQPtr->pNext;
-					DisposePtr((char *)tempQPtr);
+                                        if (tempQPtr != NULL) {
+#ifdef MAC_OS_X
+                                            free(tempQPtr);
+#else
+                                            DisposePtr((char *)tempQPtr);
+#endif
+                                            tempQPtr = NULL;
+                                        }
 				}
-				gSource[i].channelPtr = NULL;
 				gSource[i].pitch = 1.0f;
 				gSource[i].gain = 1.0f;
                                 gSource[i].maxDistance = 100000000; // ***** should be MAX_FLOAT
@@ -129,9 +151,14 @@ ALAPI ALvoid ALAPIENTRY alDeleteSources (ALsizei n, ALuint *sources)
 				gSource[i].Position[2] = 0;
 				gSource[i].Velocity[0] = 0;
 				gSource[i].Velocity[1] = 0;
-				gSource[i].Velocity[2] = 0;	
+				gSource[i].Velocity[2] = 0;
+#ifdef MAC_OS_X
+                                gSource[i].uncompressedBufferOffset = 0;
+                                gSource[i].samplePtr = NULL;
+#else
 				gSource[i].ptrSndHeader = NULL;
-			
+                                gSource[i].channelPtr = NULL;
+#endif
 				sources[i] = 0;
 			}
 		}
@@ -470,8 +497,15 @@ ALAPI ALvoid ALAPIENTRY alSourcePlay(ALuint source)
         alSourceStop(source);    
     }	
     
+#ifdef MAC_OS_X
+    gSource[source].readOffset = 0;
+    gSource[source].uncompressedReadOffset = 0;
+    gSource[source].uncompressedBufferOffset = 0;
+    no_smPlaySegment(source);
+#else
     gSource[source].state = AL_PLAYING;
     smPlaySegment(source);
+#endif
 }
 
 ALAPI ALvoid ALAPIENTRY alSourcePause (ALuint source)
@@ -483,15 +517,22 @@ ALAPI ALvoid ALAPIENTRY alSourceStop (ALuint source)
 {
 	QueueEntry *pQE;
 	
+#ifndef MAC_OS_X
 	smSourceFlushAndQuiet(source);
+#endif
 	
 	gSource[source].state = AL_STOPPED;
 	gSource[source].readOffset = 0;
         if (gSource[source].pCompHdr != NULL) {
+#ifdef MAC_OS_X
+            free(gSource[source].pCompHdr);
+#else
             DisposePtr(gSource[source].pCompHdr);
+#endif
             gSource[source].pCompHdr = NULL;
         }
         gSource[source].uncompressedReadOffset = 0;
+        gSource[source].uncompressedBufferOffset = 0;
 	
 	pQE = gSource[source].ptrQueue; // reset all processed flags
 	while (pQE != NULL)
@@ -508,10 +549,15 @@ ALAPI ALvoid ALAPIENTRY alSourceRewind (ALuint source)
     gSource[source].state = AL_INITIAL;
     gSource[source].readOffset = 0;
     if (gSource[source].pCompHdr != NULL) {
+#ifdef MAC_OS_X
+        free(gSource[source].pCompHdr);
+#else
         DisposePtr(gSource[source].pCompHdr);
+#endif
         gSource[source].pCompHdr = NULL;
     }
     gSource[source].uncompressedReadOffset = 0;
+    gSource[source].uncompressedBufferOffset = 0;
 }
 
 ALAPI ALvoid ALAPIENTRY alSourcePlayv(ALsizei n, ALuint *ID)
@@ -567,7 +613,12 @@ ALAPI ALvoid ALAPIENTRY alQueuei (ALuint source, ALenum param, ALint value)
 		switch(param) 
 		{
 			case AL_BUFFER:
+#ifdef MAC_OS_X
+                                ptrQE = (void *)malloc(sizeof(QueueEntry));
+                                memset(ptrQE, 0, sizeof(QueueEntry));
+#else
 				ptrQE = (void *)NewPtrClear(sizeof(QueueEntry));
+#endif
 				ptrQE->bufferNum = value;
 				ptrQE->processed = AL_FALSE;
 				ptrQE->pitch = gSource[source].pitch;
@@ -634,6 +685,9 @@ ALAPI ALvoid ALAPIENTRY alSourceQueueBuffers (ALuint source, ALsizei n, ALuint *
     
 	if (alIsSource(source))
 	{
+#ifdef MAC_OS_X
+                LockBufs();
+#endif
 		for (i = 0; i < n; i++)
 		{
 			if ((alIsBuffer(buffers[i])) || (buffers[i] == NULL))
@@ -641,6 +695,9 @@ ALAPI ALvoid ALAPIENTRY alSourceQueueBuffers (ALuint source, ALsizei n, ALuint *
 				alQueuei(source, AL_BUFFER, buffers[i]);
 			}
 		}
+#ifdef MAC_OS_X
+                UnlockBufs();
+#endif
 	}
 }
 
@@ -657,6 +714,9 @@ ALAPI ALvoid ALAPIENTRY alSourceUnqueueBuffers (ALuint source, ALsizei n, ALuint
 		count = 0;
 		
 		// test to see if all queue entries can be deleted
+#ifdef MAC_OS_X
+                LockBufs();
+#endif
 		tempQEPtr = gSource[source].ptrQueue;
 		for (i = 0; i < n; i++)
 		{		
@@ -679,7 +739,13 @@ ALAPI ALvoid ALAPIENTRY alSourceUnqueueBuffers (ALuint source, ALsizei n, ALuint
 				tempQEPtr = gSource[source].ptrQueue;
 				buffers[i] = tempQEPtr->bufferNum;
 				gSource[source].ptrQueue = tempQEPtr->pNext;
-				DisposePtr((char *)tempQEPtr);
+                                if (tempQEPtr != NULL) {
+#ifdef MAC_OS_X
+                                    free(tempQEPtr);
+#else
+                                    DisposePtr((char *)tempQEPtr);
+#endif
+                                }
 			}
 			if (srcState != AL_PLAYING)
 			{
@@ -690,6 +756,9 @@ ALAPI ALvoid ALAPIENTRY alSourceUnqueueBuffers (ALuint source, ALsizei n, ALuint
 		{
 			alSetError(AL_INVALID_VALUE);
 		}
+#ifdef MAC_OS_X
+                UnlockBufs();
+#endif
 	} else
 	{
 		alSetError(AL_INVALID_NAME);

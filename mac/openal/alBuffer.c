@@ -21,7 +21,12 @@
 #include "globals.h"
 #include "alError.h"
 #include "alBuffer.h"
- 
+
+#ifdef MAC_OS_X
+#include <stdlib.h>
+#include <string.h>
+#endif
+
 #pragma export on 
  
 // AL_BUFFER functions
@@ -46,7 +51,12 @@ ALAPI ALvoid ALAPIENTRY alGenBuffers(ALsizei n, ALuint *buffers)
 		{
 			if (gBuffer[i].data == NULL) // found un-used internal buffer to use
 			{
+#ifdef MAC_OS_X
+                                gBuffer[i].data = (void *) malloc(1024);  // allocate the buffer
+                                memset(gBuffer[i].data, 0, 1024);
+#else
 				gBuffer[i].data = (void *) NewPtrClear(1024);  // allocate the buffer
+#endif
 				gBuffer[i].size = 1024;
 				gBuffer[i].bits = 8;
 				gBuffer[i].channels = 1;
@@ -65,7 +75,7 @@ ALAPI ALvoid ALAPIENTRY alDeleteBuffers(ALsizei n, ALuint *buffers)
 {
 	int i=0,j=0;
 	int iCount=0;
-	ALboolean bAttached = false;
+	ALboolean bAttached = AL_FALSE;
 	
 	// check if it's even possible to delete the number of buffers requested
 	for (i = 1; i <= AL_MAXBUFFERS; i++)
@@ -85,24 +95,31 @@ ALAPI ALvoid ALAPIENTRY alDeleteBuffers(ALsizei n, ALuint *buffers)
 			{
 				if (gSource[j].srcBufferNum == buffers[i])
 				{
-					bAttached = true;
+					bAttached = AL_TRUE;
 					break;
 				}
 			}
-			if (bAttached == true) 
+			if (bAttached == AL_TRUE) 
 			{
 				break;
 			}
 		}
 	
 		// passed all tests, so do the deletion...
-		if (bAttached == false)
+		if (bAttached == AL_FALSE)
 		{
 			for (i = 0; i < n; i++)
 			{
-				if ((alIsBuffer(buffers[i]) == true) && (buffers[i] != 0))
+				if ((alIsBuffer(buffers[i]) == AL_TRUE) && (buffers[i] != 0))
 				{
-					DisposePtr((char *)gBuffer[buffers[i]].data); // get rid of memory used by buffer
+                                        if (gBuffer[buffers[i]].data != 0) {
+#ifdef MAC_OS_X
+                                            free(gBuffer[buffers[i]].data);
+#else
+                                            DisposePtr((char *)gBuffer[buffers[i]].data); // get rid of memory used by buffer
+#endif
+                                            gBuffer[buffers[i]].data = NULL;
+                                        }
 	 				gBuffer[buffers[i]].data = NULL;
 	 				gBuffer[buffers[i]].size = 0;
 	 				gBuffer[buffers[i]].bits = 8;
@@ -114,7 +131,7 @@ ALAPI ALvoid ALAPIENTRY alDeleteBuffers(ALsizei n, ALuint *buffers)
 	}
 	
 	// set error code if appropriate
-	if ((iCount < n) || (bAttached == true))
+	if ((iCount < n) || (bAttached == AL_TRUE))
 	{
 		alSetError(AL_INVALID_VALUE);
 	}
@@ -130,14 +147,30 @@ ALAPI ALboolean ALAPIENTRY alIsBuffer(ALuint buffer)
 
 ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,ALvoid *data,ALsizei size,ALsizei freq)
 {
-	if (alIsBuffer(buffer) == true)
+	if (alIsBuffer(buffer) == AL_TRUE)
 	{
-		DisposePtr((char *) gBuffer[buffer].data);
-	
+#ifdef MAC_OS_X
+                if (gBuffer[buffer].data != NULL) {
+                    free(gBuffer[buffer].data);
+                    gBuffer[buffer].data = NULL;
+                }
+                
+                if (gBuffer[buffer].data == NULL) {
+                    gBuffer[buffer].data = (void *)malloc(size);
+                    memset(gBuffer[buffer].data, 0, size);
+                }
+#else
+		DisposePtr((char *) gBuffer[buffer].data);	
 		gBuffer[buffer].data = (void *) NewPtrClear(size); // size is bytes for this example
+#endif
+                
 		if (gBuffer[buffer].data != NULL)
 		{
+#ifdef MAC_OS_X
+                        memcpy(gBuffer[buffer].data, data, size);
+#else
 			BlockMove((char *) data, gBuffer[buffer].data, size);
+#endif
 			gBuffer[buffer].size = size;
 			gBuffer[buffer].frequency = freq;
                         gBuffer[buffer].format = format;

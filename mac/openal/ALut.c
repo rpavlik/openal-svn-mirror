@@ -17,11 +17,19 @@
  *  Boston, MA  02111-1307, USA.
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
- 
+
+#include "globals.h"
+
+#ifdef MAC_OS_X
+#include <stdlib.h>
+#include <stdio.h>
+#include "sm_ca.h"
+#else
 #ifdef TARGET_CLASSIC
 #include <Windows.h>
 #else
 #include <Carbon/Carbon.h>
+#endif
 #endif
 #include <string.h>
 
@@ -96,6 +104,10 @@ ALUTAPI ALvoid ALUTAPIENTRY alutInit(ALint *argc,ALbyte **argv)
 	ALCdevice *Device;
 	
  	Device=alcOpenDevice(NULL);  //Open device
+    
+#ifdef MAC_OS_X
+        no_smInit();
+#endif
  	
  	if (Device != NULL)
  	{
@@ -122,6 +134,10 @@ ALUTAPI ALvoid ALUTAPIENTRY alutExit(ALvoid)
 	alcDestroyContext(Context);
 	//Close device
 	alcCloseDevice(Device);
+        
+#ifdef MAC_OS_X
+        no_smTerminate();
+#endif
 	
 	// call alExit -- legacy call
 	alExit();
@@ -168,6 +184,117 @@ void convert_c2pstr(char *string)
 	string[0] = length;
 }
  
+#ifdef MAC_OS_X
+ALUTAPI ALvoid ALUTAPIENTRY alutLoadWAVFile(ALbyte *file,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq)
+{
+	WAVChunkHdr_Struct ChunkHdr;
+	WAVFmtExHdr_Struct FmtExHdr;
+	WAVFileHdr_Struct FileHdr;
+	WAVSmplHdr_Struct SmplHdr;
+	WAVFmtHdr_Struct FmtHdr;
+	FILE *sfFile;
+	long numBytes;
+	int i;
+	
+	*format=AL_FORMAT_MONO16;
+	*data=NULL;
+	*size=0;
+	*freq=22050;
+	
+	if (file)
+	{
+		sfFile = (FILE *)fopen(file,"r");
+		if(sfFile==NULL) exit(1);
+		    
+		numBytes = sizeof(WAVFileHdr_Struct);
+		fread(&FileHdr,1,numBytes,sfFile);
+		SwapWords(&FileHdr.Size);
+		FileHdr.Size=((FileHdr.Size+1)&~1)-4;
+		while ((FileHdr.Size!=0))
+		{
+			numBytes = sizeof(WAVChunkHdr_Struct);
+			fread(&ChunkHdr,1,numBytes,sfFile);
+			if (numBytes != sizeof(WAVChunkHdr_Struct)) break;
+			SwapWords(&ChunkHdr.Size);
+			
+			if ((ChunkHdr.Id[0] == 'f') && (ChunkHdr.Id[1] == 'm') && (ChunkHdr.Id[2] == 't') && (ChunkHdr.Id[3] == ' '))
+			{
+				numBytes = sizeof(WAVFmtHdr_Struct);
+				fread(&FmtHdr,1,numBytes,sfFile);
+				SwapBytes(&FmtHdr.Format);
+				if (FmtHdr.Format==0x0001)
+				{
+					SwapBytes(&FmtHdr.Channels);
+					SwapBytes(&FmtHdr.BitsPerSample);
+					SwapWords(&FmtHdr.SamplesPerSec);
+					SwapBytes(&FmtHdr.BlockAlign);
+					
+					*format=(FmtHdr.Channels==1?
+							(FmtHdr.BitsPerSample==8?AL_FORMAT_MONO8:AL_FORMAT_MONO16):
+							(FmtHdr.BitsPerSample==8?AL_FORMAT_STEREO8:AL_FORMAT_STEREO16));
+					*freq=FmtHdr.SamplesPerSec;
+					fseek(sfFile,ChunkHdr.Size-sizeof(WAVFmtHdr_Struct),SEEK_CUR);
+				} 
+				else
+				{
+					numBytes = sizeof(WAVFmtExHdr_Struct);
+					fread(&FmtExHdr,1,numBytes,sfFile);
+					fseek(sfFile, ChunkHdr.Size-sizeof(WAVFmtHdr_Struct)-sizeof(WAVFmtExHdr_Struct),SEEK_CUR);
+				}
+			}
+			else if ((ChunkHdr.Id[0] == 'd') && (ChunkHdr.Id[1] == 'a') && (ChunkHdr.Id[2] == 't') && (ChunkHdr.Id[3] == 'a'))
+			{
+				if (FmtHdr.Format==0x0001)
+				{
+					*size=ChunkHdr.Size;
+					if(*data == NULL){
+						*data=malloc(ChunkHdr.Size);
+						memset(*data,0,ChunkHdr.Size);
+					}
+					else{
+						realloc(*data,ChunkHdr.Size);
+						memset(*data,0,ChunkHdr.Size+31);
+					}
+					
+					if (*data) 
+					{
+						numBytes = ChunkHdr.Size;
+						fread(*data,1,numBytes,sfFile);
+						if (FmtHdr.BitsPerSample == 16) 
+						{
+							for (i = 0; i < (numBytes / 2); i++)
+							{
+								SwapBytes(&(*(unsigned short **)data)[i]);
+							}
+						}
+					}
+				}
+				else if (FmtHdr.Format==0x0011)
+				{
+					//IMA ADPCM
+				}
+				else if (FmtHdr.Format==0x0055)
+				{
+					//MP3 WAVE
+				}
+			}
+			else if ((ChunkHdr.Id[0] == 's') && (ChunkHdr.Id[1] == 'm') && (ChunkHdr.Id[2] == 'p') && (ChunkHdr.Id[3] == 'l'))
+			{
+				numBytes = sizeof(WAVSmplHdr_Struct);
+				fread(&SmplHdr,1,numBytes,sfFile);
+				fseek(sfFile,ChunkHdr.Size-sizeof(WAVSmplHdr_Struct),SEEK_CUR);
+			}
+			else 
+			{
+				fseek(sfFile,ChunkHdr.Size,SEEK_CUR);
+			}
+			fseek(sfFile,ChunkHdr.Size&1,SEEK_CUR);
+			FileHdr.Size-=(((ChunkHdr.Size+1)&~1)+8);
+			}
+			fclose(sfFile);
+		}
+}
+#else
 ALUTAPI ALvoid ALUTAPIENTRY alutLoadWAVFile(ALbyte *file,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq)
 {
 	WAVChunkHdr_Struct ChunkHdr;
@@ -291,6 +418,7 @@ ALUTAPI ALvoid ALUTAPIENTRY alutLoadWAVFile(ALbyte *file,ALenum *format,ALvoid *
         }
 	}
 }
+#endif
 
 ALUTAPI ALvoid ALUTAPIENTRY alutLoadWAVMemory(ALbyte *memory,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq)
 {
@@ -348,7 +476,18 @@ ALUTAPI ALvoid ALUTAPIENTRY alutLoadWAVMemory(ALbyte *memory,ALenum *format,ALvo
 					if (FmtHdr.Format==0x0001)
 					{
 						*size=ChunkHdr.Size;
+#ifdef MAC_OS_X
+                                                if(*data == NULL){
+							*data=malloc(ChunkHdr.Size + 31);
+							memset(*data,0,ChunkHdr.Size+31);
+						}
+						else{
+							realloc(*data,ChunkHdr.Size + 31);
+							memset(*data,0,ChunkHdr.Size+31);
+						}
+#else
 						*data=NewPtrClear(ChunkHdr.Size + 31);
+#endif
 						if (*data) 
 						{
 							memcpy(*data,Stream,ChunkHdr.Size);
@@ -387,8 +526,14 @@ ALUTAPI ALvoid ALUTAPIENTRY alutLoadWAVMemory(ALbyte *memory,ALenum *format,ALvo
 
 ALUTAPI ALvoid ALUTAPIENTRY alutUnloadWAV(ALenum format,ALvoid *data,ALsizei size,ALsizei freq)
 {
-	if (data)
-		DisposePtr(data);
+	if (data != NULL) {
+#ifdef MAC_OS_X
+            free(data);
+#else
+            DisposePtr(data);
+#endif
+            data = NULL;
+        }
 }
 
 

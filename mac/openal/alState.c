@@ -22,6 +22,10 @@
 #include "alError.h"
 #include "alState.h"
 
+#ifdef MAC_OS_X
+#include <stdlib.h>
+#endif
+
 // AL_STATE info
 const char *alVendor="Any";
 const char *alVersion="OpenAL 1.0.5";
