@@ -26,33 +26,15 @@
 
 size_t ov_read_func (void *ptr, size_t size, size_t nmemb, void *datasource)
 {
-    int buffer, source;
     int reqAmt = (int)size*(int)nmemb;
-   
-   // figure out which buffer this data is coming from and which source the buffer is attached to,
-   // then set source's read position correctly and hand back the appropriate data
-    for (buffer = 0; buffer < AL_MAXBUFFERS; buffer++) {
-        if (gBuffer[buffer].data == datasource) {
-            break; 
-        }
-    }
     
-    if (buffer != AL_MAXBUFFERS) {
-        for (source = 0; source < AL_MAXSOURCES	; source++) {
-            if (gSource[source].srcBufferNum == buffer) {
-                break;
-            }
-        }
-        if (source != AL_MAXSOURCES) {
-            // have buffer and source, so let's continue...
-            int amt = (gSource[source].readOffset + reqAmt > gBuffer[buffer].size) ? gBuffer[buffer].size - gSource[source].readOffset : reqAmt;
-
-            memcpy(ptr, datasource + gSource[source].readOffset, amt);
-            gSource[source].readOffset += amt;
-            return amt;
-        }
-    }
-    return 0;
+    // note -- datasource points to the source which needs the data, which in turn points to the buffer which will supply the data
+    
+    int amt = (((ALsource *)datasource)->readOffset + reqAmt > gBuffer[((ALsource *)datasource)->srcBufferNum].size) ? gBuffer[((ALsource *)datasource)->srcBufferNum].size - ((ALsource *)datasource)->readOffset : reqAmt;
+    memcpy(ptr, (void *)gBuffer[((ALsource *)datasource)->srcBufferNum].data + ((ALsource *)datasource)->readOffset, amt);
+    ((ALsource *)datasource)->readOffset += amt;
+            
+    return amt;
 }
 
 int ov_seek_func (void *datasource, ogg_int64_t offset, int whence)
@@ -70,7 +52,7 @@ long ov_tell_func (void *datasource)
    return 0;
 }
 
-void ov_fillBuffer(ALsource *pSource, ALbuffer *pBuffer) 
+void ov_fillBuffer(ALuint source, ALuint buffer) 
 {
     vorbis_info *vi;
     FILE *fh;
@@ -79,32 +61,32 @@ void ov_fillBuffer(ALsource *pSource, ALbuffer *pBuffer)
     //   also fill in uncompressedSize, channels, bits, and frequency fields
     
     // create some space for uncompressed data if not already available
-    if (pBuffer->uncompressedData == NULL) {
-        pBuffer->uncompressedData = (void *)NewPtrClear(gBufferSize);
-        pBuffer->uncompressedSize = gBufferSize;
+    if (gBuffer[buffer].uncompressedData == NULL) {
+        gBuffer[buffer].uncompressedData = (void *)NewPtrClear(gBufferSize);
+        gBuffer[buffer].uncompressedSize = gBufferSize;
     }
     
     // create Ogg Vorbis File struct if not already created
-    if (pSource->pCompHdr == NULL) {
-        pSource->pCompHdr = (void *)NewPtrClear(sizeof(OggVorbis_File));
+    if (gSource[source].pCompHdr == NULL) {
+        gSource[source].pCompHdr = (void *)NewPtrClear(sizeof(OggVorbis_File));
         // setup callbacks
         ov_callbacks callbacks;
         callbacks.read_func = ov_read_func;
         callbacks.seek_func = ov_seek_func;
         callbacks.close_func = ov_close_func;
         callbacks.tell_func = ov_tell_func;
-        if (ov_open_callbacks(pBuffer->data, pSource->pCompHdr, NULL, 0, callbacks) < 0) {
-            DisposePtr(pSource->pCompHdr);
-            pSource->pCompHdr = NULL;
+        if (ov_open_callbacks(&gSource[source], gSource[source].pCompHdr, NULL, 0, callbacks) < 0) {
+            DisposePtr(gSource[source].pCompHdr);
+            gSource[source].pCompHdr = NULL;
         }
     }
     
     // set channels/bits/frequency
-    vi=ov_info(pSource->pCompHdr,-1);
-    pBuffer->channels = vi->channels;
-    pBuffer->bits = 16;
-    pBuffer->frequency = vi->rate;
+    vi=ov_info(gSource[source].pCompHdr,-1);
+    gBuffer[buffer].channels = vi->channels;
+    gBuffer[buffer].bits = 16;
+    gBuffer[buffer].frequency = vi->rate;
   
     // decompress some data
-    pBuffer->uncompressedSize=ov_read(pSource->pCompHdr,(void *)pBuffer->uncompressedData,gBufferSize,1,2,1,NULL);
+    gBuffer[buffer].uncompressedSize=ov_read(gSource[source].pCompHdr,(void *)gBuffer[buffer].uncompressedData,gBufferSize,1,2,1,NULL);
 }

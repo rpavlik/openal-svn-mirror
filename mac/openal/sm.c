@@ -73,7 +73,7 @@ void smPlaySegment(unsigned int source)
                     } 
                 }
                 if (gBuffer[iBufferNum].format == AL_FORMAT_VORBIS_EXT) { // compressed format handling
-                    ov_fillBuffer(&gSource[source], &gBuffer[iBufferNum]);
+                    ov_fillBuffer(source, iBufferNum);
                     gSource[source].ptrSndHeader->samplePtr = (char *) gBuffer[iBufferNum].uncompressedData;
                     gSource[source].ptrSndHeader->numFrames = gBuffer[iBufferNum].uncompressedSize;
                 } else // uncompressed buffer format

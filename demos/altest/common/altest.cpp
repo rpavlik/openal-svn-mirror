@@ -4205,31 +4205,27 @@ This test exercises Ogg Vorbis playback functionality.
 ALvoid I_VorbisTest()
 {
       ALint error;
-      ALuint source[1];
-      ALuint buffers[2];
+      ALuint source[3];
       ALuint Buffer;
       ALint BuffersInQueue, BuffersProcessed;
       ALbyte ch;
       ALboolean bLoop = false;
-      ALfloat source0Pos[]={ 2.0, 0.0,-2.0};	// Front and right of the listener
-      ALfloat source0Vel[]={ 0.0, 0.0, 0.0};
 
       alGetError(); // reset error state
 
       if (alIsExtensionPresent((ALubyte *)"AL_EXT_vorbis") == AL_TRUE) {
-	alGenSources(1,source);
+	alGenSources(2,source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
 		DisplayALError((ALbyte *) "alGenSources 1 : ", error);
 		return;
 	}
 
-	buffers[0] = g_Buffers[7];
-	buffers[1] = g_Buffers[7];
-
 	printf("Vorbis Test\n");
 	printf("Press '1' to play an Ogg Vorbis buffer on source 0\n");
-	printf("Press '2' to toggle looping on / off\n");
+	printf("Press '2' to toggle looping on / off for source 0\n");
+        printf("Press '3' to play an Ogg Vorbis buffer on source 1\n");
+        printf("Press '4' to stream an Ogg Vorbis buffer on source 2\n");
 	printf("Press 'q' to quit\n");
 	printf("Looping is off\n");
 
@@ -4248,7 +4244,7 @@ ALvoid I_VorbisTest()
 				// Attach new buffer
 				alSourcei(source[0],AL_BUFFER, g_Buffers[7]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError((ALbyte *) "alSourcei 0 AL_BUFFER buffer 6 (stereo) : \n", error);
+					DisplayALError((ALbyte *) "alSourcei 0 AL_BUFFER buffer 7 : \n", error);
 
 				// Set volume
 				alSourcef(source[0],AL_GAIN,0.5f);
@@ -4281,18 +4277,63 @@ ALvoid I_VorbisTest()
 				if ((error = alGetError()) != AL_NO_ERROR)
 					DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING : \n", error);
 				break;
-				printf("Current Buffer is %d, %d Buffers in queue, %d Processed\n", Buffer, BuffersInQueue, BuffersProcessed);
+		        case '3':
+				// Stop source
+				alSourceStop(source[1]);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError((ALbyte *) "alSourceStop source 1 : ", error);
+
+				// Attach new buffer
+				alSourcei(source[1],AL_BUFFER, g_Buffers[7]);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError((ALbyte *) "alSourcei 1 AL_BUFFER buffer 7 : \n", error);
+
+				// Set volume
+				alSourcef(source[1],AL_GAIN,0.5f);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError((ALbyte *) "alSourcef 1 AL_GAIN : \n", error);
+
+				// Play source
+				alSourcePlay(source[1]);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError((ALbyte *) "alSourcePlay source 1 : ", error);
+		   				
+				break;
+		        case '4':
+				// Stop source
+				alSourceStop(source[2]);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError((ALbyte *) "alSourceStop source 2 : ", error);
+
+				// Attach new buffer
+				alSourcei(source[2],AL_BUFFER, g_Buffers[7]);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError((ALbyte *) "alSourcei 2 AL_BUFFER buffer 7 : \n", error);
+
+				// Set volume
+				alSourcef(source[2],AL_GAIN,0.5f);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError((ALbyte *) "alSourcef 2 AL_GAIN : \n", error);
+
+				// Play source
+				alSourcePlay(source[2]);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError((ALbyte *) "alSourcePlay source 2 : ", error);
+		   				
+				break;
 		}
 	} while (ch != 'Q');
 
 	// Release resources
 	alSourceStop(source[0]);
+	alSourceStop(source[1]);
+	alSourceStop(source[3]);
 	if ((error = alGetError()) != AL_NO_ERROR)
 		DisplayALError((ALbyte *) "alSourceStop : ", error);
 
-	alDeleteSources(1, source);
+	alDeleteSources(3, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
-  	  DisplayALError((ALbyte *) "alDeleteSources 2 : ", error);    
+  	  DisplayALError((ALbyte *) "alDeleteSources 3 : ", error);    
       } else { // Ogg Vorbis extension not present
 	printf("\nOgg Vorbis extension not available.\n");
       }
