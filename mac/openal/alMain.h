@@ -27,5 +27,4 @@ ALAPI ALvoid ALAPIENTRY alInit(ALint *argc, ALubyte **argv);
 ALAPI ALvoid ALAPIENTRY alExit(ALvoid);
 
 #pragma export off
-
 #endif
