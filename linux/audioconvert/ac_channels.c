@@ -99,7 +99,7 @@ void acConvertMono(acAudioCVT *cvt, ALushort format) {
 		}
 		break;
 
-		case AUDIO_U16: {
+		case AUDIO_U16LSB: {
 			ALubyte *src, *dst;
 
 			src = cvt->buf;
@@ -142,7 +142,7 @@ void acConvertMono(acAudioCVT *cvt, ALushort format) {
 		}
 		break;
 
-		case AUDIO_S16: {
+		case AUDIO_S16LSB: {
 			ALubyte *src, *dst;
 
 			src = cvt->buf;
