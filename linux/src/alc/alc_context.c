@@ -1447,7 +1447,7 @@ const ALubyte *alcGetString( ALCdevice *dev, ALenum token )
 		  if(!dev)
 		  {
 			  _alcSetError(ALC_INVALID_DEVICE);
-			  return "";
+			  return (const ALubyte *) "";
 		  }
 
 		  return dev->specifier;

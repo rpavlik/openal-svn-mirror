@@ -112,7 +112,7 @@ ALCdevice *alcOpenDevice( const ALubyte *deviceSpecifier ) {
 	/* copy specifier */
 	if(deviceSpecifier)
 	{
-		i = strlen(deviceSpecifier);
+		i = strlen((const char *) deviceSpecifier);
 		retval->specifier = malloc(i+1);
 		if(retval->specifier == NULL)
 		{
