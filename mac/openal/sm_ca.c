@@ -436,6 +436,58 @@ void mix_with_same_sample_rates_w_pitch(Float32 *outDataPtr,SInt16 *inDataPtr16,
 	}
 }
 
+void parse_through_buffer_w_out_playing(ALfloat Pitch,unsigned int numFrames,ALuint *readOffset,ALsizei size)
+{
+	register unsigned int amount_to_write,amount_to_offset;
+	
+	amount_to_write = ((numFrames)<<1);
+	if((int)amount_to_write<0){
+		numFrames=0;
+		amount_to_write=0;
+	}
+	if(amount_to_write>nativePreferedBuffSize_X_2) amount_to_write=nativePreferedBuffSize_X_2;
+	amount_to_offset = (amount_to_write>>1);
+	
+	if(Pitch!=1.0){
+		switch(alWriteFormat){
+			case AL_FORMAT_STEREO16:
+				*readOffset += ((int)(0.5+Pitch*(ALfloat)(amount_to_offset))<<2); //update source ptr
+				break;
+			case AL_FORMAT_MONO16:
+				*readOffset += ((int)(0.5+Pitch*(ALfloat)(amount_to_offset))<<1); //update source ptr
+				break;
+			case AL_FORMAT_STEREO8:
+				*readOffset += ((int)(0.5+Pitch*(ALfloat)(amount_to_offset))<<1); //update source ptr
+				break;
+			case AL_FORMAT_MONO8:
+				*readOffset += (int)(0.5+Pitch*(ALfloat)(amount_to_offset)); //update source ptr
+				break;
+			default:
+				exit(1);
+				break;
+		}
+	}
+	else{
+		switch(alWriteFormat){
+			case AL_FORMAT_STEREO16:
+				*readOffset += (amount_to_offset<<2); //update source ptr
+				break;
+			case AL_FORMAT_MONO16:
+				*readOffset += (amount_to_offset<<1); //update source ptr
+				break;
+			case AL_FORMAT_STEREO8:
+				*readOffset += (amount_to_offset<<1); //update source ptr
+				break;
+			case AL_FORMAT_MONO8:
+				*readOffset += amount_to_offset; //update source ptr
+				break;
+			default:
+				exit(1);
+				break;
+		}
+	}
+}
+
 void SRC_and_mix(Float32 *outDataPtr,Float32 *inbuf,int R,int numChannels)
 {
 	register unsigned int count,i,idx2,idx,idx3,amount_to_write,numFrames;
@@ -655,7 +707,7 @@ OSStatus deviceFillingProc(AudioDeviceID  inDevice, const AudioTimeStamp*  inNow
 				vol_gainR = drysend[1];
 				if(vol_gainR>1.0f) vol_gainR=1.0f;
 				
-				if((vol_gainL>volume_threshold)||(vol_gainR>volume_threshold)){ //can actually hear it, so deal with it
+				//if((vol_gainL>volume_threshold)||(vol_gainR>volume_threshold)){ //can actually hear it, so deal with it
 #ifdef VORBIS_EXTENSION
 					if((gBuffer[iBufferNum].frequency==0)&&(gBuffer[iBufferNum].format == AL_FORMAT_VORBIS_EXT)){ //if in queue, get the next valid buffer
 						no_smPlaySegment(source);
@@ -707,43 +759,46 @@ OSStatus deviceFillingProc(AudioDeviceID  inDevice, const AudioTimeStamp*  inNow
 						readOffset = &gSource[source].uncompressedReadOffset;
 					}
 #endif					
-					
-					inDataPtr16 = (SInt16*)(gSource[source].samplePtr); //if 16 bit data
-					inDataPtr8 = (UInt8*)(gSource[source].samplePtr); //if 8 bit
-					
-					memset( mixbuf, 0, (nativePreferedBuffSize_X_2)*sizeof(Float32)+2*sizeof(Float32)); //clear input buffer
-					memset( volbuf, 0, (nativePreferedBuffSize_X_2)*sizeof(Float32)+2*sizeof(Float32)); //clear volume buffer
-					
-					if(ratio==1){ //multiply by volume and add straight to output
-						if(Pitch==1.0) mix_with_same_sample_rates(outDataPtr,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,TRUE);
-						else mix_with_same_sample_rates_w_pitch(outDataPtr,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,TRUE);
-					}
-					else if(ratio==2){ //otherwise mix with buffers of same sampling rate
-						if(Pitch==1.0) mix_with_same_sample_rates(mixbuf2,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
-						else mix_with_same_sample_rates_w_pitch(mixbuf2,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
-						mix_2=TRUE;
-					}
-					else if(ratio==3){
-						if(Pitch==1.0) mix_with_same_sample_rates(mixbuf3,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
-						else mix_with_same_sample_rates_w_pitch(mixbuf3,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
-						mix_3=TRUE;
-					}
-					else if(ratio==4){
-						if(Pitch==1.0) mix_with_same_sample_rates(mixbuf4,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
-						else mix_with_same_sample_rates_w_pitch(mixbuf4,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
-						mix_4=TRUE;
-					}
-					else if(ratio==5){
-						if(Pitch==1.0) mix_with_same_sample_rates(mixbuf5,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
-						else mix_with_same_sample_rates_w_pitch(mixbuf5,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
-						mix_5=TRUE;
-					}
-					else if(ratio==6){
-						if(Pitch==1.0) mix_with_same_sample_rates(mixbuf6,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
-						else mix_with_same_sample_rates_w_pitch(mixbuf6,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
-						mix_6=TRUE;
-					}
-				}//if loud enough
+					if((vol_gainL>volume_threshold)||(vol_gainR>volume_threshold)){ //can actually hear it, so deal with it
+                        inDataPtr16 = (SInt16*)(gSource[source].samplePtr); //if 16 bit data
+                        inDataPtr8 = (UInt8*)(gSource[source].samplePtr); //if 8 bit
+                        
+                        memset( mixbuf, 0, (nativePreferedBuffSize_X_2)*sizeof(Float32)+2*sizeof(Float32)); //clear input buffer
+                        memset( volbuf, 0, (nativePreferedBuffSize_X_2)*sizeof(Float32)+2*sizeof(Float32)); //clear volume buffer
+                        
+                        if(ratio==1){ //multiply by volume and add straight to output
+                            if(Pitch==1.0) mix_with_same_sample_rates(outDataPtr,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,TRUE);
+                            else mix_with_same_sample_rates_w_pitch(outDataPtr,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,TRUE);
+                        }
+                        else if(ratio==2){ //otherwise mix with buffers of same sampling rate
+                            if(Pitch==1.0) mix_with_same_sample_rates(mixbuf2,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
+                            else mix_with_same_sample_rates_w_pitch(mixbuf2,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
+                            mix_2=TRUE;
+                        }
+                        else if(ratio==3){
+                            if(Pitch==1.0) mix_with_same_sample_rates(mixbuf3,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
+                            else mix_with_same_sample_rates_w_pitch(mixbuf3,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
+                            mix_3=TRUE;
+                        }
+                        else if(ratio==4){
+                            if(Pitch==1.0) mix_with_same_sample_rates(mixbuf4,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
+                            else mix_with_same_sample_rates_w_pitch(mixbuf4,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
+                            mix_4=TRUE;
+                        }
+                        else if(ratio==5){
+                            if(Pitch==1.0) mix_with_same_sample_rates(mixbuf5,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
+                            else mix_with_same_sample_rates_w_pitch(mixbuf5,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
+                            mix_5=TRUE;
+                        }
+                        else if(ratio==6){
+                            if(Pitch==1.0) mix_with_same_sample_rates(mixbuf6,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
+                            else mix_with_same_sample_rates_w_pitch(mixbuf6,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
+                            mix_6=TRUE;
+                        }
+                    }
+                    else
+                        parse_through_buffer_w_out_playing(Pitch,numFrames,readOffset,size);
+				//}//if loud enough
 				
 				IOProc_Service(source,&iBufferNum,&ratio,readOffset,&one_over_ratio,&gbufsize);
 
@@ -753,52 +808,57 @@ OSStatus deviceFillingProc(AudioDeviceID  inDevice, const AudioTimeStamp*  inNow
 #ifdef VORBIS_EXTENSION
 						if(gBuffer[iBufferNum].format != AL_FORMAT_VORBIS_EXT){
 #endif
-							if((vol_gainL>volume_threshold)||(vol_gainR>volume_threshold)){ //can actually hear it, so deal with it
+							//if((vol_gainL>volume_threshold)||(vol_gainR>volume_threshold)){ //can actually hear it, so deal with it
 								output_offset = numChannels*numFrames; //already written this much so dont overwrite it!
 								numFrames=nativePreferedBuffSize/ratio-numFrames;
 								iBufferNum = gSource[source].srcBufferNum;
 								gSource[source].samplePtr = (char *) gBuffer[iBufferNum].data; //get starting sample
 								readOffset = &gSource[source].readOffset;
 								size=gBuffer[iBufferNum].size;
-								inDataPtr16 = (SInt16*)(gSource[source].samplePtr); //if 16 bit data
-								inDataPtr8 = (UInt8*)(gSource[source].samplePtr); //if 8 bit
-								memset( mixbuf, 0, (nativePreferedBuffSize_X_2)*sizeof(Float32)+2*sizeof(Float32)); //clear input buffer
-								memset( volbuf, 0, (nativePreferedBuffSize_X_2)*sizeof(Float32)+2*sizeof(Float32)); //clear volume buffer
 								
-								if(ratio==1){ //multiply by volume and add straight to output
-									if(Pitch==1.0) mix_with_same_sample_rates(outDataPtr+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,TRUE);
-									else mix_with_same_sample_rates_w_pitch(outDataPtr+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,TRUE);
-								}
-								else if(ratio==2){ //otherwise mix with buffers of same sampling rate
-									if(Pitch==1.0) mix_with_same_sample_rates(mixbuf2+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
-									else mix_with_same_sample_rates_w_pitch(mixbuf2+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
-									mix_2=TRUE;
-								}
-								else if(ratio==3){
-									if(Pitch==1.0) mix_with_same_sample_rates(mixbuf3+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
-									else mix_with_same_sample_rates_w_pitch(mixbuf3+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
-									mix_3=TRUE;
-								}
-								else if(ratio==4){
-									if(Pitch==1.0) mix_with_same_sample_rates(mixbuf4+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
-									else mix_with_same_sample_rates_w_pitch(mixbuf4+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
-									mix_4=TRUE;
-								}
-								else if(ratio==5){
-									if(Pitch==1.0) mix_with_same_sample_rates(mixbuf5+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
-									else mix_with_same_sample_rates_w_pitch(mixbuf5+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
-									mix_5=TRUE;
-								}
-								else if(ratio==6){
-									if(Pitch==1.0) mix_with_same_sample_rates(mixbuf6+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
-									else mix_with_same_sample_rates_w_pitch(mixbuf6+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
-									mix_6=TRUE;
-								}
-							}
+                                if((vol_gainL>volume_threshold)||(vol_gainR>volume_threshold)){ //can actually hear it, so deal with it
+                                    inDataPtr16 = (SInt16*)(gSource[source].samplePtr); //if 16 bit data
+                                    inDataPtr8 = (UInt8*)(gSource[source].samplePtr); //if 8 bit
+                                    memset( mixbuf, 0, (nativePreferedBuffSize_X_2)*sizeof(Float32)+2*sizeof(Float32)); //clear input buffer
+                                    memset( volbuf, 0, (nativePreferedBuffSize_X_2)*sizeof(Float32)+2*sizeof(Float32)); //clear volume buffer
+                                    
+                                    if(ratio==1){ //multiply by volume and add straight to output
+                                        if(Pitch==1.0) mix_with_same_sample_rates(outDataPtr+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,TRUE);
+                                        else mix_with_same_sample_rates_w_pitch(outDataPtr+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,TRUE);
+                                    }
+                                    else if(ratio==2){ //otherwise mix with buffers of same sampling rate
+                                        if(Pitch==1.0) mix_with_same_sample_rates(mixbuf2+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
+                                        else mix_with_same_sample_rates_w_pitch(mixbuf2+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
+                                        mix_2=TRUE;
+                                    }
+                                    else if(ratio==3){
+                                        if(Pitch==1.0) mix_with_same_sample_rates(mixbuf3+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
+                                        else mix_with_same_sample_rates_w_pitch(mixbuf3+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
+                                        mix_3=TRUE;
+                                    }
+                                    else if(ratio==4){
+                                        if(Pitch==1.0) mix_with_same_sample_rates(mixbuf4+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
+                                        else mix_with_same_sample_rates_w_pitch(mixbuf4+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
+                                        mix_4=TRUE;
+                                    }
+                                    else if(ratio==5){
+                                        if(Pitch==1.0) mix_with_same_sample_rates(mixbuf5+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
+                                        else mix_with_same_sample_rates_w_pitch(mixbuf5+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
+                                        mix_5=TRUE;
+                                    }
+                                    else if(ratio==6){
+                                        if(Pitch==1.0) mix_with_same_sample_rates(mixbuf6+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
+                                        else mix_with_same_sample_rates_w_pitch(mixbuf6+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
+                                        mix_6=TRUE;
+                                    }
+                                }
+                                else
+                                    parse_through_buffer_w_out_playing(Pitch,numFrames,readOffset,size);
+						//	}
 #ifdef VORBIS_EXTENSION
 						}
 						else{
-							if((vol_gainL>volume_threshold)||(vol_gainR>volume_threshold)){ //can actually hear it, so deal with it
+							//if((vol_gainL>volume_threshold)||(vol_gainR>volume_threshold)){ //can actually hear it, so deal with it
 								output_offset = numChannels*numFrames; //already written this much so dont overwrite it!
 								numFrames=nativePreferedBuffSize/ratio-numFrames;
 								iBufferNum = gSource[source].srcBufferNum;
@@ -827,42 +887,48 @@ OSStatus deviceFillingProc(AudioDeviceID  inDevice, const AudioTimeStamp*  inNow
 								}
 								size=gSource[source].uncompressedSize;
 								readOffset = &gSource[source].uncompressedReadOffset;
-								inDataPtr16 = (SInt16*)(gSource[source].samplePtr); //if 16 bit data
-								inDataPtr8 = (UInt8*)(gSource[source].samplePtr); //if 8 bit
-								memset( mixbuf, 0, (nativePreferedBuffSize_X_2)*sizeof(Float32)+2*sizeof(Float32)); //clear input buffer
-								memset( volbuf, 0, (nativePreferedBuffSize_X_2)*sizeof(Float32)+2*sizeof(Float32)); //clear volume buffer
-
-								if(ratio==1){ //multiply by volume and add straight to output
-									if(Pitch==1.0) mix_with_same_sample_rates(outDataPtr+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,TRUE);
-									else mix_with_same_sample_rates_w_pitch(outDataPtr+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,TRUE);
-								}
-								else if(ratio==2){ //otherwise mix with buffers of same sampling rate
-									if(Pitch==1.0) mix_with_same_sample_rates(mixbuf2+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
-									else mix_with_same_sample_rates_w_pitch(mixbuf2+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
-									mix_2=TRUE;
-								}
-								else if(ratio==3){
-									if(Pitch==1.0) mix_with_same_sample_rates(mixbuf3+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
-									else mix_with_same_sample_rates_w_pitch(mixbuf3+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
-									mix_3=TRUE;
-								}
-								else if(ratio==4){
-									if(Pitch==1.0) mix_with_same_sample_rates(mixbuf4+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
-									else mix_with_same_sample_rates_w_pitch(mixbuf4+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
-									mix_4=TRUE;
-								}
-								else if(ratio==5){
-									if(Pitch==1.0) mix_with_same_sample_rates(mixbuf5+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
-									else mix_with_same_sample_rates_w_pitch(mixbuf5+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
-									mix_5=TRUE;
-								}
-								else if(ratio==6){
-									if(Pitch==1.0) mix_with_same_sample_rates(mixbuf6+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
-									else mix_with_same_sample_rates_w_pitch(mixbuf6+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
-									mix_6=TRUE;
-								}
+								
+                                if((vol_gainL>volume_threshold)||(vol_gainR>volume_threshold)){ //can actually hear it, so deal with it
+                                
+                                    inDataPtr16 = (SInt16*)(gSource[source].samplePtr); //if 16 bit data
+                                    inDataPtr8 = (UInt8*)(gSource[source].samplePtr); //if 8 bit
+                                    memset( mixbuf, 0, (nativePreferedBuffSize_X_2)*sizeof(Float32)+2*sizeof(Float32)); //clear input buffer
+                                    memset( volbuf, 0, (nativePreferedBuffSize_X_2)*sizeof(Float32)+2*sizeof(Float32)); //clear volume buffer
+    
+                                    if(ratio==1){ //multiply by volume and add straight to output
+                                        if(Pitch==1.0) mix_with_same_sample_rates(outDataPtr+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,TRUE);
+                                        else mix_with_same_sample_rates_w_pitch(outDataPtr+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,TRUE);
+                                    }
+                                    else if(ratio==2){ //otherwise mix with buffers of same sampling rate
+                                        if(Pitch==1.0) mix_with_same_sample_rates(mixbuf2+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
+                                        else mix_with_same_sample_rates_w_pitch(mixbuf2+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
+                                        mix_2=TRUE;
+                                    }
+                                    else if(ratio==3){
+                                        if(Pitch==1.0) mix_with_same_sample_rates(mixbuf3+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
+                                        else mix_with_same_sample_rates_w_pitch(mixbuf3+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
+                                        mix_3=TRUE;
+                                    }
+                                    else if(ratio==4){
+                                        if(Pitch==1.0) mix_with_same_sample_rates(mixbuf4+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
+                                        else mix_with_same_sample_rates_w_pitch(mixbuf4+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
+                                        mix_4=TRUE;
+                                    }
+                                    else if(ratio==5){
+                                        if(Pitch==1.0) mix_with_same_sample_rates(mixbuf5+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
+                                        else mix_with_same_sample_rates_w_pitch(mixbuf5+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
+                                        mix_5=TRUE;
+                                    }
+                                    else if(ratio==6){
+                                        if(Pitch==1.0) mix_with_same_sample_rates(mixbuf6+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,numFrames,numChannels,readOffset,size,FALSE);
+                                        else mix_with_same_sample_rates_w_pitch(mixbuf6+output_offset,inDataPtr16,inDataPtr8,vol_gainL,vol_gainR,Pitch,numFrames,numChannels,readOffset,size,FALSE);
+                                        mix_6=TRUE;
+                                    }
+                                }
+                                else
+                                    parse_through_buffer_w_out_playing(Pitch,numFrames,readOffset,size);
 							}
-						}
+						//}
 #endif
 					}
 					IOProc_Service(source,&iBufferNum,&ratio,readOffset,&one_over_ratio,&gbufsize);

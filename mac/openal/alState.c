@@ -28,9 +28,13 @@
 
 // AL_STATE info
 const char *alVendor="Any";
-const char *alVersion="OpenAL 1.0.5";
+const char *alVersion="OpenAL 1.0.8";
 const char *alRenderer="Software";
+#ifdef VORBIS_EXTENSION
+const char *alExtensions="AL_EXT_vorbis";
+#else
 const char *alExtensions="";
+#endif
 const char *alNoError="No Error";
 const char *alErrInvalidName="Invalid Name";
 const char *alErrInvalidEnum="Invalid Enum";
