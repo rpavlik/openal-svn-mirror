@@ -688,11 +688,11 @@ ALenum alGetEnumValue( const ALubyte *ename ) {
 	if(ustrcmp("AL_SOURCE_RELATIVE", ename) == 0) {
 		return AL_SOURCE_RELATIVE;
 	}
-
+#ifdef LINUX_AL
 	if(ustrcmp("AL_STREAMING", ename) == 0) {
 		return AL_STREAMING;
 	}
-
+#endif
 	if(ustrcmp("AL_CONE_INNER_ANGLE", ename) == 0) {
 		return AL_CONE_INNER_ANGLE;
 	}
@@ -732,11 +732,11 @@ ALenum alGetEnumValue( const ALubyte *ename ) {
 	if(ustrcmp("AL_GAIN_LINEAR_LOKI", ename) == 0) {
 		return AL_GAIN_LINEAR_LOKI;
 	}
-
+#ifdef LINUX_AL
 	if(ustrcmp("AL_BYTE_LOKI", ename) == 0) {
 		return AL_BYTE_LOKI;
 	}
-
+#endif
 	if(ustrcmp("AL_MIN_GAIN", ename) == 0) {
 		return AL_MIN_GAIN;
 	}
@@ -864,7 +864,7 @@ ALenum alGetEnumValue( const ALubyte *ename ) {
 	if(ustrcmp("AL_DOPPLER_VELOCITY", ename) == 0) {
 		return AL_DOPPLER_VELOCITY;
 	}
-
+#ifdef LINUX_AL
 	if(ustrcmp("AL_ENV_ROOM_IASIG", ename) == 0) {
 		return AL_ENV_ROOM_IASIG;
 	}
@@ -912,7 +912,7 @@ ALenum alGetEnumValue( const ALubyte *ename ) {
 	if(ustrcmp("AL_ENV_HIGH_FREQUENCY_REFERENCE_IASIG", ename) == 0) {
 		return AL_ENV_HIGH_FREQUENCY_REFERENCE_IASIG;
 	}
-
+#endif
 	if(ustrcmp("ALC_INVALID", ename) == 0) {
 		return ALC_INVALID;
 	}

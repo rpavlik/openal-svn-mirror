@@ -1,5 +1,9 @@
 2005-03-31  Sven Panne  <sven.panne@aedion.de>
 
+	* linx/src/al_ext.c, linx/src/al_ext_iasig.c,
+	linx/src/al_source.c: Added a few "#ifdef LINUX_AL" to synch the
+	code with the headers.
+
 	* linux/configure.ac: Initial MinGW support.
 
 	* linux/configure.ac: Add a compatibility hack for older autoconf

@@ -115,6 +115,7 @@ void alEnvironmentiIASIG( ALuint id, ALenum param, ALint value ) {
 	}
 
 	switch(param) {
+#ifdef LINUX_AL
 		case AL_ENV_ROOM_IASIG:
 		  env->room        = value;
 		  break;
@@ -124,6 +125,7 @@ void alEnvironmentiIASIG( ALuint id, ALenum param, ALint value ) {
 		case AL_ENV_REFLECTIONS_IASIG:
 		  env->reflections = value;
 		  break;
+#endif
 		default:
 		  _alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
 			"alEnvironmentIASIG: invalid param 0x%x", param);
