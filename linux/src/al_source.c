@@ -289,9 +289,9 @@ void _alSource2D( AL_source *src ) {
  * AL_INITIAL or AL_STOPPED, AL_ILLEGAL_COMMAND.
  *
  */
-void alSourcei( ALuint sid, ALenum param, ALint i1 ) {
+void alSourcei( ALuint sid, ALenum param, ALint i1 )
+{
 	AL_source *src;
-	AL_sourcestate *srcstate;
 	ALboolean inrange = AL_TRUE;
 	ALfloat temp;
 
@@ -395,9 +395,6 @@ void alSourcei( ALuint sid, ALenum param, ALint i1 ) {
 		SOURCEUNLOCK();
 		return;
 	}
-
-	srcstate = _alSourceQueueGetCurrentState(src);
-	assert( srcstate );
 
 	switch(param)
 	{
