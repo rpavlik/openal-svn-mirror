@@ -637,7 +637,7 @@ if test x$enable_sdl = xyes; then
 			LIBS="$LIBS $SDL_LIBS"
 
 			OLDCPPFLAGS="$CPPFLAGS"
-			CPPFLAGS="/lib/cpp -I/usr/local/include/SDL -I/usr/local/include"
+			CPPFLAGS="-I/usr/local/include/SDL -I/usr/local/include"
 
 			OS_OBJS="$OS_OBJS \$(SDL_OBJS)"
 		else
@@ -713,7 +713,7 @@ if test x$enable_smpeg = xyes; then
 				LIBS="$LIBS $SDL_LIBS"
 
 				OLDCPPFLAGS="$CPPFLAGS"
-				CPPFLAGS="/lib/cpp -I/usr/local/include/SDL -I/usr/local/include"
+				CPPFLAGS="-I/usr/local/include/SDL -I/usr/local/include"
 
 				OS_OBJS="$OS_OBJS \$(SDL_OBJS)"
 			fi
