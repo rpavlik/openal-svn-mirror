@@ -297,35 +297,26 @@ typedef ALdouble ALclampd;
 #define AL_PROCESSED                              0x2012
 
 
-/** Errors: No Error. */
+/**
+ * Error Conditions, see table 2.2 in the OpenAL 1.1 spec
+ */
+
+/* "No Error" token. */
 #define AL_NO_ERROR                               AL_FALSE
 
-/** 
- * Invalid Name paramater passed to AL call.
- */
+/* Invalid name parameter. */
 #define AL_INVALID_NAME                           0xA001
 
-/** 
- * Invalid parameter passed to AL call.
- */
-#define AL_ILLEGAL_ENUM                           0xA002
+/* Invalid parameter. */
 #define AL_INVALID_ENUM                           0xA002
 
-/** 
- * Invalid enum parameter value.
- */
+/* Invalid enum parameter value. */
 #define AL_INVALID_VALUE                          0xA003
 
-/** 
- * Illegal call.
- */
-#define AL_ILLEGAL_COMMAND                        0xA004
+/* Illegal call. */
 #define AL_INVALID_OPERATION                      0xA004
-
   
-/**
- * No mojo.
- */
+/* Unable to allocate memory */
 #define AL_OUT_OF_MEMORY                          0xA005
 
 
@@ -468,5 +459,9 @@ typedef ALdouble ALclampd;
 #define AL_ENV_HIGH_FREQUENCY_REFERENCE_IASIG     0x300B
 
 #endif
+
+/* Deprecated tokens, for backwards compatibility only */
+#define AL_ILLEGAL_ENUM                           AL_INVALID_ENUM
+#define AL_ILLEGAL_COMMAND                        AL_INVALID_OPERATION
 
 #endif
