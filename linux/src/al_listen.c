@@ -28,7 +28,7 @@
  * alListeneri( ALenum param, ALint value )
  *
  * Sets the listener attribute associated with param to int value.  If param
- * is not a valid listener attribute, set AL_ILLEGAL_ENUM.  If value is not a
+ * is not a valid listener attribute, set AL_INVALID_ENUM.  If value is not a
  * valid value for the attribute, set AL_INVALID_VALUE.
  */
 void alListeneri( ALenum param, ALint value )
@@ -44,7 +44,7 @@ void alListeneri( ALenum param, ALint value )
  * alListenerf( ALenum param, ALfloat value )
  *
  * Sets the listener attribute associated with param to float value.  If param
- * is not a valid listener attribute, set AL_ILLEGAL_ENUM.  If value is not a
+ * is not a valid listener attribute, set AL_INVALID_ENUM.  If value is not a
  * valid value for the attribute, set AL_INVALID_VALUE.
  */
 void alListenerf( ALenum param, ALfloat value ) {
@@ -100,7 +100,7 @@ void alListenerf( ALenum param, ALfloat value ) {
 				  "alListenerf: invalid param 0x%x.",
 				  param );
 
-			_alDCSetError( AL_ILLEGAL_ENUM );
+			_alDCSetError( AL_INVALID_ENUM );
 
 			break;
 	}
@@ -115,7 +115,7 @@ void alListenerf( ALenum param, ALfloat value ) {
  *
  * Sets the listener attribute associated with param to float vector composed
  * of { f1, f2, f3 }.  If param is not a valid listener attribute, set
- * AL_ILLEGAL_ENUM. If any member of f1, f2, f3 is not a valid value for the
+ * AL_INVALID_ENUM. If any member of f1, f2, f3 is not a valid value for the
  * attribute, set AL_INVALID_VALUE.
  */
 void alListener3f( ALenum pname, ALfloat f1, ALfloat f2, ALfloat f3 ) {
@@ -134,7 +134,7 @@ void alListener3f( ALenum pname, ALfloat f1, ALfloat f2, ALfloat f3 ) {
  * alListenerfv( ALenum pname, ALfloat *pv )
  *
  * Sets the listener attribute associated with param to float vector pv. If
- * param is not a valid listener attribute, set AL_ILLEGAL_ENUM. If any member
+ * param is not a valid listener attribute, set AL_INVALID_ENUM. If any member
  * of pv is not a valid value for the attribute, set AL_INVALID_VALUE.
  */
 void alListenerfv( ALenum pname, const ALfloat *pv ) {
@@ -189,7 +189,7 @@ void alListenerfv( ALenum pname, const ALfloat *pv ) {
 				  "alListenerfv: param 0x%x in not valid.",
 				  pname);
 
-			_alDCSetError( AL_ILLEGAL_ENUM );
+			_alDCSetError( AL_INVALID_ENUM );
 
 			break;
 	}
@@ -203,7 +203,7 @@ void alListenerfv( ALenum pname, const ALfloat *pv ) {
  * alGetListeneri( ALenum pname, ALint *value )
  *
  * Populates value with the value of the listener attribute pname.  If pname
- * is not a valid listener attribute, AL_ILLEGAL_ENUM is set.  If value is
+ * is not a valid listener attribute, AL_INVALID_ENUM is set.  If value is
  * NULL, this is a legal NOP.
  */
 void alGetListeneri( ALenum pname, ALint *value )
@@ -219,7 +219,7 @@ void alGetListeneri( ALenum pname, ALint *value )
  * alGetListeneriv( ALenum pname, ALint *value )
  *
  * Populates value with the value of the listener attribute pname.  If pname
- * is not a valid listener attribute, AL_ILLEGAL_ENUM is set.  If value is
+ * is not a valid listener attribute, AL_INVALID_ENUM is set.  If value is
  * NULL, this is a legal NOP.
  */
 void alGetListeneriv( ALenum pname, ALint *value ) {
@@ -249,7 +249,7 @@ void alGetListeneriv( ALenum pname, ALint *value ) {
 		 *
 		 * In any case, set and error, unlock, and pray.
 		 */
-		_alDCSetError( AL_ILLEGAL_COMMAND );
+		_alDCSetError( AL_INVALID_OPERATION );
 		_alcDCUnlockContext();
 
 		return;
@@ -260,7 +260,7 @@ void alGetListeneriv( ALenum pname, ALint *value ) {
 		_alDebug(ALD_CONTEXT, __FILE__, __LINE__,
 			"alGetListeneriv: param 0x%x not valid", pname);
 
-		_alDCSetError( AL_ILLEGAL_ENUM );
+		_alDCSetError( AL_INVALID_ENUM );
 		_alcDCUnlockContext();
 
 		return;
@@ -277,7 +277,7 @@ void alGetListeneriv( ALenum pname, ALint *value ) {
  * alGetListenerfv( ALenum pname, ALfloat *values )
  *
  * Populates values with the values of the listener attribute pname.  If pname
- * is not a valid listener attribute, AL_ILLEGAL_ENUM is set.  If values is
+ * is not a valid listener attribute, AL_INVALID_ENUM is set.  If values is
  * NULL, this is a legal NOP.
  */
 void alGetListenerf( ALenum param, ALfloat *value )
@@ -295,7 +295,7 @@ void alGetListenerf( ALenum param, ALfloat *value )
  * alGetListenerfv( ALenum pname, ALfloat *values )
  *
  * Populates values with the values of the listener attribute pname.  If pname
- * is not a valid listener attribute, AL_ILLEGAL_ENUM is set.  If values is
+ * is not a valid listener attribute, AL_INVALID_ENUM is set.  If values is
  * NULL, this is a legal NOP.
  */
 void alGetListenerfv( ALenum param, ALfloat *values ) {
@@ -318,7 +318,7 @@ void alGetListenerfv( ALenum param, ALfloat *values ) {
 			break;
 		default:
 			_alcDCLockContext();
-			_alDCSetError( AL_ILLEGAL_ENUM );
+			_alDCSetError( AL_INVALID_ENUM );
 			_alcDCUnlockContext();
 
 			return;
@@ -349,7 +349,7 @@ void alGetListenerfv( ALenum param, ALfloat *values ) {
 		 * In any case, set and error, unlock, and pray.
 		 */
 
-		_alDCSetError( AL_ILLEGAL_COMMAND );
+		_alDCSetError( AL_INVALID_OPERATION );
 		_alcDCUnlockContext();
 
 		return;
@@ -405,7 +405,7 @@ void alGetListenerfv( ALenum param, ALfloat *values ) {
 				"alGetListenerfv: param 0x%x not valid",
 				param );
 
-		  _alDCSetError( AL_ILLEGAL_ENUM );
+		  _alDCSetError( AL_INVALID_ENUM );
 
 		  break;
 	}
@@ -419,7 +419,7 @@ void alGetListenerfv( ALenum param, ALfloat *values ) {
  * alGetListener4f( ALenum pname, ALfloat *f1, ALfloat *f2, ALfloat *f3 )
  *
  * Populates values with the values of the listener attribute pname.  If pname
- * is not a valid listener attribute, AL_ILLEGAL_ENUM is set.  If values is
+ * is not a valid listener attribute, AL_INVALID_ENUM is set.  If values is
  * NULL, this is a legal NOP.
  */
 void alGetListener3f( ALenum param,
@@ -474,7 +474,7 @@ void *_alGetListenerParam( ALuint cid, ALenum param ) {
 			"_alGetListenerParam: called with invalid context %d",
 			cid);
 
-		_alDCSetError( AL_ILLEGAL_COMMAND );
+		_alDCSetError( AL_INVALID_OPERATION );
 
 		return NULL;
 	}
@@ -498,7 +498,7 @@ void *_alGetListenerParam( ALuint cid, ALenum param ) {
 				  "_alGetListenerParam(%d, ...) passed bad param 0x%x",
 				  param);
 
-			_alSetError( cid, AL_ILLEGAL_ENUM );
+			_alSetError( cid, AL_INVALID_ENUM );
 
 			break;
 	}

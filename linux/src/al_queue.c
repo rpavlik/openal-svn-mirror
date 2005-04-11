@@ -168,7 +168,7 @@ void alQueuei( ALuint sid, ALenum param, ALint i1 ) {
 			"alQueuei: invalid or stubbed source param 0x%x",
 			param);
 
-		  _alDCSetError(AL_ILLEGAL_ENUM);
+		  _alDCSetError(AL_INVALID_ENUM);
 		  break;
 	}
 

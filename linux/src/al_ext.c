@@ -669,10 +669,6 @@ static void _alExtPushFiniFunc( void (*func)(void) ) {
  * with the name ename.
  */
 ALenum alGetEnumValue( const ALubyte *ename ) {
-	if(ustrcmp("AL_INVALID", ename) == 0) {
-		return AL_INVALID;
-	}
-
 	if(ustrcmp("AL_FALSE", ename) == 0) {
 		return AL_FALSE;
 	}
@@ -825,16 +821,16 @@ ALenum alGetEnumValue( const ALubyte *ename ) {
 		return AL_INVALID_NAME;
 	}
 
-	if(ustrcmp("AL_ILLEGAL_ENUM", ename) == 0) {
-		return AL_ILLEGAL_ENUM;
+	if(ustrcmp("AL_INVALID_ENUM", ename) == 0) {
+		return AL_INVALID_ENUM;
 	}
 
 	if(ustrcmp("AL_INVALID_VALUE", ename) == 0) {
 		return AL_INVALID_VALUE;
 	}
 
-	if(ustrcmp("AL_ILLEGAL_COMMAND", ename) == 0) {
-		return AL_ILLEGAL_COMMAND;
+	if(ustrcmp("AL_INVALID_OPERATION", ename) == 0) {
+		return AL_INVALID_OPERATION;
 	}
 
 	if(ustrcmp("AL_OUT_OF_MEMORY", ename) == 0) {
@@ -989,5 +985,18 @@ ALenum alGetEnumValue( const ALubyte *ename ) {
 		return ALC_TRUE;
 	}
 
+#if !AL_PURE_API
+	if(ustrcmp("AL_INVALID", ename) == 0) {
+		return AL_INVALID;
+	}
+
+	if(ustrcmp("AL_ILLEGAL_ENUM", ename) == 0) {
+		return AL_ILLEGAL_ENUM;
+	}
+
+	if(ustrcmp("AL_ILLEGAL_COMMAND", ename) == 0) {
+		return AL_ILLEGAL_COMMAND;
+	}
+#endif
 	return 0;
 }

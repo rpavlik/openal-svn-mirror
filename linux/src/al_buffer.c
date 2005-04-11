@@ -384,7 +384,7 @@ void alGetBufferiv( ALuint buffer, ALenum param, ALint *value ) {
 			"alGetBufferi bad param 0x%x", param);
 
 		  _alcDCLockContext();
-		  _alDCSetError( AL_ILLEGAL_ENUM );
+		  _alDCSetError( AL_INVALID_ENUM );
 		  _alcDCUnlockContext();
 
 		  break;
@@ -473,7 +473,7 @@ void alGetBufferfv( ALuint buffer, ALenum param, ALfloat *value ) {
 			"alGetBufferf: bad parameter 0x%x", param);
 
 		  _alcDCLockContext();
-		  _alDCSetError( AL_ILLEGAL_ENUM );
+		  _alDCSetError( AL_INVALID_ENUM );
 		  _alcDCUnlockContext();
 
 		  break;
@@ -587,7 +587,7 @@ void alBufferData( ALuint  bid,
 		case AL_FORMAT_VORBIS_EXT:
 			if(alutLoadVorbis_LOKI(bid, data, size) == AL_FALSE) {
 				_alcDCLockContext();
-				_alDCSetError(AL_ILLEGAL_COMMAND);
+				_alDCSetError(AL_INVALID_OPERATION);
 				_alcDCUnlockContext();
 			}
 			return;
@@ -632,7 +632,7 @@ void alBufferData( ALuint  bid,
 	if(buf->flags & ALB_STREAMING) {
 		/* Streaming buffers cannot use alBufferData */
 		_alcDCLockContext();
-		_alDCSetError(AL_ILLEGAL_COMMAND);
+		_alDCSetError(AL_INVALID_OPERATION);
 		_alcDCUnlockContext();
 
 		_alUnlockBuffer();

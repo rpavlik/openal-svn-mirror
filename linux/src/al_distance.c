@@ -24,7 +24,7 @@
  *
  * Sets the distance model for the current context.  If distanceModel is not
  * one of AL_NONE, AL_INVERSE_DISTANCE, or AL_INVERSE_DISTANCE_CLAMPED,
- * AL_ILLEGAL_ENUM is set.
+ * AL_INVALID_ENUM is set.
  */
 void alDistanceModel( ALenum distanceModel ) {
 	_alcDCLockContext();
@@ -143,7 +143,7 @@ void _alDistanceModel( ALenum distanceModel ) {
 			cc->distance_func = _alDistanceInverseClamped;
 			break;
 		default:
-			_alDCSetError( AL_ILLEGAL_ENUM );
+			_alDCSetError( AL_INVALID_ENUM );
 
 			break;
 		}

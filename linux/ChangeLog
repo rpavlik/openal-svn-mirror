@@ -1,5 +1,23 @@
-2005-03-31  Sven Panne  <sven.panne@aedion.de>
+2005-04-11  Sven Panne  <sven.panne@aedion.de>
 
+	* demos/altest/common/altest.cpp, include/AL/altypes.h,
+	linux/doc/openal.texi, linux/src/al_able.c, linux/src/al_buffer.c,
+	linux/src/al_distance.c, linux/src/al_error.c, linux/src/al_ext.c,
+	linux/src/al_ext_iasig.c, linux/src/al_filter.c,
+	linux/src/al_listen.c, linux/src/al_mixer.c, linux/src/al_queue.c,
+	linux/src/al_source.c, linux/src/al_state.c,
+	linux/src/extensions/al_ext_loki.c: Use the official error tokens
+	internally. Deprecated AL_INVALID. Added a preprocessor token
+	AL_PURE_API which can be #defined to 1 to exclude non-1.1 stuff
+	(more to come).
+
+	* include/AL/altypes.h: Re-arranged AL error tokens a bit,
+	synchronizing the documentation with the OpenAL 1.1
+	spec. Explicitly stated that AL_ILLEGAL_ENUM and
+	AL_ILLEGAL_COMMAND are deprecated tokens from ancient times.
+
+2005-03-31  Sven Panne  <sven.panne@aedion.de>
+	
  	* linux/configure.ac: Define _OPENAL32LIB for Cygwin/MinGW builds.
 
 	* linx/src/al_ext.c, linx/src/al_ext_iasig.c,

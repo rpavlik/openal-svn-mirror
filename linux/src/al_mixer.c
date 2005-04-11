@@ -550,7 +550,7 @@ static void _alDestroyMixSource( void *ms )
 
 		_alUnlockSource( cid, sid );
 
-		_alDCSetError( AL_ILLEGAL_COMMAND );
+		_alDCSetError( AL_INVALID_OPERATION );
 
 		return;
 	}
@@ -823,7 +823,7 @@ static ALboolean _alAllocMixSource( ALuint sid )
 		_alDebug(ALD_MIXER, __FILE__, __LINE__,
 			"_alAllocMixSource: source id %d has BUFFER unset",sid);
 
-		_alSetError(context_id, AL_ILLEGAL_COMMAND);
+		_alSetError(context_id, AL_INVALID_OPERATION);
 
 		return AL_FALSE;
 	}

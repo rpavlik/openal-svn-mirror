@@ -303,7 +303,7 @@ void alBufferi_LOKI(ALuint buffer, ALenum param, ALint value) {
 		  _alDebug(ALD_BUFFER, __FILE__, __LINE__,
 			"alBufferi bad param 0x%x", param);
 
-		  _alDCSetError(AL_ILLEGAL_ENUM);
+		  _alDCSetError(AL_INVALID_ENUM);
 		  break;
 	}
 
@@ -397,7 +397,7 @@ void alBufferWriteData_LOKI( ALuint  bid,
 
 	if(buf->flags & ALB_STREAMING) {
 		/* Streaming buffers cannot use alBufferData */
-		_alDCSetError(AL_ILLEGAL_COMMAND);
+		_alDCSetError(AL_INVALID_OPERATION);
 
 		free(cdata);
 
@@ -575,7 +575,7 @@ ALsizei alBufferAppendWriteData_LOKI( ALuint   buffer,
 			"buffer id %d not created with alGenStreamingBuffer",
 			buffer);
 
-		_alDCSetError( AL_ILLEGAL_COMMAND );
+		_alDCSetError( AL_INVALID_OPERATION );
 
 		return 0;
 	}
@@ -900,7 +900,7 @@ ALsizei alBufferAppendData_LOKI( ALuint   buffer,
 			"buffer id %d not created with alGenStreamingBuffer",
 			buffer);
 
-		_alDCSetError(AL_ILLEGAL_COMMAND);
+		_alDCSetError(AL_INVALID_OPERATION);
 
 		return 0;
 	}

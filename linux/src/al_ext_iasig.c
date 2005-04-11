@@ -130,7 +130,7 @@ void alEnvironmentiIASIG( ALuint id, ALenum param, ALint value ) {
 		  _alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
 			"alEnvironmentIASIG: invalid param 0x%x", param);
 
-		  _alDCSetError(AL_ILLEGAL_ENUM);
+		  _alDCSetError(AL_INVALID_ENUM);
 		  break;
 	}
 

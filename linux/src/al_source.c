@@ -282,11 +282,11 @@ void _alSource2D( AL_source *src ) {
  * Sets an attribute for a source.
  *
  * If sid does not name a valid source, AL_INVALID_NAME.
- * If param does not specify a source attribute, AL_ILLEGAL_ENUM.
+ * If param does not specify a source attribute, AL_INVALID_ENUM.
  * If i1 is out of range for the attribute, AL_INVALID_VALUE.
  *
  * If param is AL_BUFFER, and the source in question is not in the state
- * AL_INITIAL or AL_STOPPED, AL_ILLEGAL_COMMAND.
+ * AL_INITIAL or AL_STOPPED, AL_INVALID_OPERATION.
  *
  */
 void alSourcei( ALuint sid, ALenum param, ALint i1 )
@@ -336,7 +336,7 @@ void alSourcei( ALuint sid, ALenum param, ALint i1 )
 		case AL_DIRECTION:
 		default:
 			_alcDCLockContext();
-			_alDCSetError( AL_ILLEGAL_ENUM );
+			_alDCSetError( AL_INVALID_ENUM );
 			_alcDCUnlockContext();
 
 			return;
@@ -414,7 +414,7 @@ void alSourcei( ALuint sid, ALenum param, ALint i1 )
 						 __FILE__, __LINE__,
 						"alSourcei(%d): source is playing, AL_BUFFER invalid",
 						sid );
-					_alDCSetError( AL_ILLEGAL_COMMAND );
+					_alDCSetError( AL_INVALID_OPERATION );
 					break;
 				default:
 					_alSourceQueueHead( src, i1 );
@@ -451,7 +451,7 @@ void alSourcei( ALuint sid, ALenum param, ALint i1 )
 				"alSourcei: invalid or stubbed source param 0x%x",
 				param );
 
-			_alDCSetError( AL_ILLEGAL_ENUM );
+			_alDCSetError( AL_INVALID_ENUM );
 			break;
 	}
 
@@ -466,7 +466,7 @@ void alSourcei( ALuint sid, ALenum param, ALint i1 )
  * Sets an attribute for a source.
  *
  * If sid does not name a valid source, AL_INVALID_NAME.
- * If param does not specify a source attribute, AL_ILLEGAL_ENUM.
+ * If param does not specify a source attribute, AL_INVALID_ENUM.
  * If f1 is out of range for the attribute, AL_INVALID_VALUE.
  *
  */
@@ -509,7 +509,7 @@ void alSourcef( ALuint sid, ALenum param, ALfloat f1 ) {
 		case AL_DIRECTION:
 		default:
 			_alcDCLockContext();
-			_alDCSetError( AL_ILLEGAL_ENUM );
+			_alDCSetError( AL_INVALID_ENUM );
 			_alcDCUnlockContext();
 
 			return;
@@ -525,7 +525,7 @@ void alSourcef( ALuint sid, ALenum param, ALfloat f1 ) {
  * Sets an 3 float parameter for a source.
  *
  * If sid does not name a valid source, AL_INVALID_NAME.
- * If param does not specify a source attribute, AL_ILLEGAL_ENUM.
+ * If param does not specify a source attribute, AL_INVALID_ENUM.
  * If f1, f2, or f3 is out of range for the attribute, AL_INVALID_VALUE.
  *
  */
@@ -548,7 +548,7 @@ void alSource3f( ALuint sid, ALenum param,
  * Sets an float vector parameter for a source.
  *
  * If sid does not name a valid source, AL_INVALID_NAME.
- * If param does not specify a source attribute, AL_ILLEGAL_ENUM.
+ * If param does not specify a source attribute, AL_INVALID_ENUM.
  * If any member of fv is out of range for the attribute, AL_INVALID_VALUE.
  *
  */
@@ -588,7 +588,7 @@ void alSourcefv( ALuint sid, ALenum param, const ALfloat *fv1 )
 			break;
 		default:
 			_alcDCLockContext();
-			_alDCSetError( AL_ILLEGAL_ENUM );
+			_alDCSetError( AL_INVALID_ENUM );
 			_alcDCUnlockContext();
 			return;
 			break;
@@ -771,7 +771,7 @@ void alSourcefv( ALuint sid, ALenum param, const ALfloat *fv1 )
 		  _alDebug(ALD_SOURCE, __FILE__, __LINE__,
 			  "alSourcefv(%d): param 0x%x not valid", sid, param );
 
-		  _alDCSetError( AL_ILLEGAL_ENUM );
+		  _alDCSetError( AL_INVALID_ENUM );
 		  break;
 	}
 
@@ -786,7 +786,7 @@ void alSourcefv( ALuint sid, ALenum param, const ALfloat *fv1 )
  * Retrieve the value of a source (scalar) attribute
  *
  * If sid does not name a valid source, AL_INVALID_NAME.
- * If param does not specify a source attribute, AL_ILLEGAL_ENUM.
+ * If param does not specify a source attribute, AL_INVALID_ENUM.
  *
  */
 void alGetSourcei( ALuint sid, ALenum param, ALint *retref )
@@ -806,7 +806,7 @@ void alGetSourcei( ALuint sid, ALenum param, ALint *retref )
  * Retrieve the value of a source attribute.
  *
  * If sid does not name a valid source, AL_INVALID_NAME.
- * If param does not specify a source attribute, AL_ILLEGAL_ENUM.
+ * If param does not specify a source attribute, AL_INVALID_ENUM.
  *
  */
 void alGetSourceiv( ALuint sid, ALenum param, ALint *retref )
@@ -1021,7 +1021,7 @@ void alGetSourceiv( ALuint sid, ALenum param, ALint *retref )
 		        "alGetSourcei: invalid or unsupported param 0x%x",
 			param);
 
-		  _alDCSetError( AL_ILLEGAL_ENUM );
+		  _alDCSetError( AL_INVALID_ENUM );
 
 		  break;
 	}
@@ -1038,7 +1038,7 @@ void alGetSourceiv( ALuint sid, ALenum param, ALint *retref )
  * Retrieve the value of a (potentially) 3-tuple valued source attribute.
  *
  * If sid does not name a valid source, AL_INVALID_NAME.
- * If param does not specify a source attribute, AL_ILLEGAL_ENUM.
+ * If param does not specify a source attribute, AL_INVALID_ENUM.
  */
 void alGetSource3f( ALuint sid, ALenum param,
 		    ALfloat *value1, ALfloat *value2, ALfloat *value3)
@@ -1082,7 +1082,7 @@ void alGetSource3f( ALuint sid, ALenum param,
  * Retrieve the value of a source attribute.
  *
  * If sid does not name a valid source, AL_INVALID_NAME.
- * If param does not specify a source attribute, AL_ILLEGAL_ENUM.
+ * If param does not specify a source attribute, AL_INVALID_ENUM.
  */
 void alGetSourcef( ALuint sid, ALenum param, ALfloat *value )
 {
@@ -1110,7 +1110,7 @@ void alGetSourcef( ALuint sid, ALenum param, ALfloat *value )
  * Retrieve the value of a source attribute.
  *
  * If sid does not name a valid source, AL_INVALID_NAME.
- * If param does not specify a source attribute, AL_ILLEGAL_ENUM.
+ * If param does not specify a source attribute, AL_INVALID_ENUM.
  */
 void alGetSourcefv( ALuint sid, ALenum param, ALfloat *values ) {
 	AL_source *src;
@@ -1238,7 +1238,7 @@ void alGetSourcefv( ALuint sid, ALenum param, ALfloat *values ) {
 			       "alGetSourcefv: param 0x%x either invalid or unset",
 			       param);
 
-			_alDCSetError( AL_ILLEGAL_ENUM );
+			_alDCSetError( AL_INVALID_ENUM );
 
 			break;
 	}
@@ -2258,7 +2258,7 @@ void alDeleteSources( ALsizei n, const ALuint *sources ) {
 			      "alDeleteSources: tried to delete playing/paused source %d",
 			      sources[i]);
 
-			_alDCSetError(AL_ILLEGAL_COMMAND);
+			_alDCSetError(AL_INVALID_OPERATION);
 			_alcDCUnlockContext();
 			return;
 		}
@@ -2284,7 +2284,7 @@ void alDeleteSources( ALsizei n, const ALuint *sources ) {
 			      "alDeleteSources: tried to del playing source %d",
 			      sources[i]);
 
-			_alDCSetError(AL_ILLEGAL_COMMAND);
+			_alDCSetError(AL_INVALID_OPERATION);
 			continue;
 		}
 

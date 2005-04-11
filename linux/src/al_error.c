@@ -30,9 +30,9 @@ ALboolean _alShouldBombOnError_LOKI = AL_FALSE;
  *
  * 0 -> AL_NO_ERROR
  * 1 -> AL_INVALID_NAME
- * 2 -> AL_ILLEGAL_ENUM
+ * 2 -> AL_INVALID_ENUM
  * 3 -> AL_INVALID_VALUE
- * 4 -> AL_ILLEGAL_COMMAND
+ * 4 -> AL_INVALID_OPERATION
  * 5 -> AL_OUT_OF_MEMORY
  */
 static const char *_alErrorStr[] = {
@@ -107,13 +107,13 @@ static int ErrorNo2index( ALenum error_number ) {
 		case AL_INVALID_NAME:
 			return 1;
 			break;
-		case AL_ILLEGAL_ENUM:
+		case AL_INVALID_ENUM:
 			return 2;
 			break;
 		case AL_INVALID_VALUE:
 			return 3;
 			break;
-		case AL_ILLEGAL_COMMAND:
+		case AL_INVALID_OPERATION:
 			return 4;
 			break;
 		case AL_OUT_OF_MEMORY:
@@ -143,13 +143,13 @@ static ALenum index2ErrorNo( int index ) {
 			return AL_INVALID_NAME;
 			break;
 		case 2:
-			return AL_ILLEGAL_ENUM;
+			return AL_INVALID_ENUM;
 			break;
 		case 3:
 			return AL_INVALID_VALUE;
 			break;
 		case 4:
-			return AL_ILLEGAL_COMMAND;
+			return AL_INVALID_OPERATION;
 			break;
 		case 5:
 			return AL_OUT_OF_MEMORY;
@@ -205,9 +205,9 @@ ALboolean _alIsError( ALenum param ) {
 	switch( param ) {
 		case AL_NO_ERROR:
 		case AL_INVALID_NAME:
-		case AL_ILLEGAL_ENUM:
+		case AL_INVALID_ENUM:
 		case AL_INVALID_VALUE:
-		case AL_ILLEGAL_COMMAND:
+		case AL_INVALID_OPERATION:
 		case AL_OUT_OF_MEMORY:
 			return AL_TRUE;
 		default:

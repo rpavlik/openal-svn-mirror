@@ -59,7 +59,7 @@ void alDisable( ALenum param ) {
  * returns AL_TRUE if the attribute specified by param is enabled, AL_FALSE
  * otherwise.
  *
- * if param is not a valid enable/disable token, AL_ILLEGAL_ENUM is set.
+ * if param is not a valid enable/disable token, AL_INVALID_ENUM is set.
  */
 ALboolean alIsEnabled(ALenum param) {
 	ALboolean retval;
@@ -90,7 +90,7 @@ ALboolean _alIsEnabled( ALenum param ) {
 
 	switch( param ) {
 		default:
-			_alDCSetError( AL_ILLEGAL_ENUM );
+			_alDCSetError( AL_INVALID_ENUM );
 			break;
 	}
 
@@ -102,7 +102,7 @@ ALboolean _alIsEnabled( ALenum param ) {
  *
  * Enables the attribute specified by param.
  *
- * If param is not a valid attribute, AL_ILLEGAL_ENUM is set.
+ * If param is not a valid attribute, AL_INVALID_ENUM is set.
  *
  * assumes locked context
  */
@@ -116,7 +116,7 @@ void _alEnable( ALenum param ) {
 
 	switch( param ) {
 		default:
-			_alDCSetError( AL_ILLEGAL_ENUM );
+			_alDCSetError( AL_INVALID_ENUM );
 			break;
 	}
 
@@ -128,7 +128,7 @@ void _alEnable( ALenum param ) {
  *
  * Disables the attribute specified by param.
  *
- * If param is not a valid attribute, AL_ILLEGAL_ENUM is set.
+ * If param is not a valid attribute, AL_INVALID_ENUM is set.
  *
  * assumes locked context
  */
@@ -142,7 +142,7 @@ void _alDisable( ALenum param ) {
 
 	switch( param ) {
 		default:
-			_alDCSetError( AL_ILLEGAL_ENUM );
+			_alDCSetError( AL_INVALID_ENUM );
 			break;
 	}
 

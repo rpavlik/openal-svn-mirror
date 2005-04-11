@@ -140,7 +140,7 @@ void _alGetFloatv( ALenum param, ALfloat *fv ) {
 			*fv = cc->doppler_velocity;
 			break;
 		default:
-			_alDCSetError( AL_ILLEGAL_ENUM );
+			_alDCSetError( AL_INVALID_ENUM );
 			break;
 	}
 
@@ -156,7 +156,7 @@ void _alGetBooleanv(UNUSED(ALenum param), UNUSED(ALboolean *bv)) {
 	_alStub("alGetBooleanv");
 
 	/* FIXME: don't set error if no current context */
-	_alDCSetError( AL_ILLEGAL_ENUM );
+	_alDCSetError( AL_INVALID_ENUM );
 
 	return;
 }
@@ -182,7 +182,7 @@ void _alGetIntegerv(UNUSED(ALenum param), UNUSED(ALint *iv)) {
 			*iv = cc->distance_model;
 			break;
 		default:
-			_alDCSetError( AL_ILLEGAL_ENUM );
+			_alDCSetError( AL_INVALID_ENUM );
 			break;
 	}
 
@@ -214,7 +214,7 @@ void _alGetDoublev(ALenum param, ALdouble *dv) {
 			*dv = cc->doppler_velocity;
 			break;
 		default:
-			_alDCSetError( AL_ILLEGAL_ENUM );
+			_alDCSetError( AL_INVALID_ENUM );
 			break;
 	}
 
@@ -278,7 +278,7 @@ const ALubyte *alGetString( ALenum param ) {
 	}
 	else
 	{
-		_alDCSetError( AL_ILLEGAL_ENUM );
+		_alDCSetError( AL_INVALID_ENUM );
 	}
 
 	return NULL;

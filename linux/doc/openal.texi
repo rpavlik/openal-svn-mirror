@@ -302,7 +302,7 @@ is set and @code{alGenSources} returns, taking no further action.  If
 any member of sources[0..n-1] is not a currently valid source name,
 @code{AL_INVALID_NAME} is set and no deletion occurs.  If any member of
 sources[0..n-1] names a source that has a state other than
-@code{AL_INITIAL} or @code{AL_STOPPED}, @code{AL_ILLEGAL_COMMAND} is set
+@code{AL_INITIAL} or @code{AL_STOPPED}, @code{AL_INVALID_OPERATION} is set
 and no deletion occurs.
 
 @item ALboolean alIsSource( ALuint sid )
@@ -316,7 +316,7 @@ Set an parameter using an integer argument for a source object.
 
 If pname specifies an attribute not of type @code{ALint}, a conversion
 is first performed.  If pname does not specify a valid source attribute,
-@code{AL_ILLEGAL_ENUM} is set and no operation is commited.  If value
+@code{AL_INVALID_ENUM} is set and no operation is commited.  If value
 does not specify a valid value for the attribute,
 @code{AL_INVALID_VALUE} is set an no operation is commited.
 
@@ -326,7 +326,7 @@ Set an parameter using a float argument for a source object.
 
 If pname specifies an attribute not of type @code{ALfloat}, a conversion
 is first performed.  If pname does not specify a valid source attribute,
-@code{AL_ILLEGAL_ENUM} is set and no operation is commited.  If
+@code{AL_INVALID_ENUM} is set and no operation is commited.  If
 value does not specify a valid value for the attribute,
 @code{AL_INVALID_VALUE} is set an no operation is commited.
 
@@ -337,7 +337,7 @@ Get a parameter using a float vector from a source object.  If values is
 
 If pname specifies an attribute not of type @code{ALfloat}, a conversion
 is first performed.  If pname does not specify a valid source attribute,
-@code{AL_ILLEGAL_ENUM} is set and no further operation is commited.  If
+@code{AL_INVALID_ENUM} is set and no further operation is commited.  If
 value does not specify a valid value for the attribute,
 @code{AL_INVALID_VALUE} is set an no operation is commited.
 
@@ -348,7 +348,7 @@ Get a parameter using an integer vector from a source object.  If values is
 
 If pname specifies an attribute not of type @code{ALfloat}, a conversion
 is first performed.  If pname does not specify a valid source attribute,
-@code{AL_ILLEGAL_ENUM} is set and no further operation is commited.
+@code{AL_INVALID_ENUM} is set and no further operation is commited.
 
 @item void alGetSourcefv( ALuint sid, ALenum pname, ALfloat* values )
 @findex alGetSourcefv
@@ -357,7 +357,7 @@ Get a parameter using a float vector from a source object.  If values is
 
 If pname specifies an attribute not of type @code{ALfloat}, a
 conversion is first performed.  If pname does not specify a valid source
-attribute, @code{AL_ILLEGAL_ENUM} is set and no further operation is commited.
+attribute, @code{AL_INVALID_ENUM} is set and no further operation is commited.
 
 @item void alSourcePlay( ALuint sid )
 @findex alSourcePlay
@@ -556,7 +556,7 @@ State retrieval.
 @item const ALubyte *alGetString( ALenum param )
 @findex alGetString
 Returns a const ALubyte *, NUL terminated string representation of
-param.  If param is not a valid enum, @code{AL_ILLEGAL_ENUM} is set.
+param.  If param is not a valid enum, @code{AL_INVALID_ENUM} is set.
 
 @end table
 
@@ -759,9 +759,9 @@ being introduced in the regular library.
 @c AL errors
 @tindex AL_NO_ERROR
 @tindex AL_INVALID_NAME
-@tindex AL_ILLEGAL_ENUM
+@tindex AL_INVALID_ENUM
 @tindex AL_INVALID_VALUE
-@tindex AL_ILLEGAL_COMMAND
+@tindex AL_INVALID_OPERATION
 @tindex AL_OUT_OF_MEMORY
 @c ALC errors
 @tindex ALC_NO_ERROR

@@ -70,9 +70,6 @@ typedef ALdouble ALclampd;
 
 /* Enumerant values begin at column 50. No tabs. */
 
-/* bad value */
-#define AL_INVALID                                -1
-
 #define AL_NONE                                   0
 
 /* Boolean False. */
@@ -461,7 +458,10 @@ typedef ALdouble ALclampd;
 #endif
 
 /* Deprecated tokens, for backwards compatibility only */
+#if !AL_PURE_API
+#define AL_INVALID                                (-1)
 #define AL_ILLEGAL_ENUM                           AL_INVALID_ENUM
 #define AL_ILLEGAL_COMMAND                        AL_INVALID_OPERATION
+#endif
 
 #endif
