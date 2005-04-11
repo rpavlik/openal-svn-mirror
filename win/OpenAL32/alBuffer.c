@@ -42,6 +42,25 @@
 static ALbuffer *	g_pBuffers = NULL;			// Linked List of Buffers
 static ALuint		g_uiBufferCount = 0;		// Buffer Count
 
+static const long g_IMAStep_size[89]={			// IMA ADPCM Stepsize table
+	   7,    8,    9,   10,   11,   12,   13,   14,   16,   17,   19,   21,   23,   25,   28,   31,
+	  34,   37,   41,   45,   50,   55,   60,   66,   73,   80,   88,   97,  107,  118,  130,  143,
+	 157,  173,  190,  209,  230,  253,  279,  307,  337,  371,  408,  449,  494,  544,  598,  658,
+	 724,  796,  876,  963, 1060, 1166, 1282, 1411, 1552, 1707, 1878, 2066, 2272, 2499, 2749, 3024,
+	3327, 3660, 4026, 4428, 4871, 5358, 5894, 6484, 7132, 7845, 8630, 9493,10442,11487,12635,13899,
+   15289,16818,18500,20350,22358,24633,27086,29794,32767
+};
+
+static const long g_IMACodeword_4[16]={			// IMA4 ADPCM Codeword decode table
+	1, 3, 5, 7, 9, 11, 13, 15,
+   -1,-3,-5,-7,-9,-11,-13,-15,
+};
+
+static const long g_IMAIndex_adjust_4[16]={		// IMA4 ADPCM Step index adjust decode table
+   -1,-1,-1,-1, 2, 4, 6, 8,
+   -1,-1,-1,-1, 2, 4, 6, 8
+};
+
 /*
 *	alGenBuffers(ALsizei n, ALuint *puiBuffers)
 *
@@ -261,10 +280,15 @@ ALAPI ALboolean ALAPIENTRY alIsBuffer(ALuint uiBuffer)
 */
 ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,const ALvoid *data,ALsizei size,ALsizei freq)
 {
+	ALuint *IMAData,IMACode;
 	ALCcontext *Context;
+	ALint Sample,Index;
+	ALint LeftSample,LeftIndex;
+	ALint RightSample,RightIndex;
+	ALuint LeftIMACode,RightIMACode;
 	ALbuffer *ALBuf;
-	ALsizei i;
-	
+	ALsizei i,j,k;
+
 	Context = alcGetCurrentContext();
 	SuspendContext(Context);
 
@@ -276,57 +300,238 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,const ALvoid *d
 			switch(format)
 			{
 				case AL_FORMAT_MONO8:
-					ALBuf->data=realloc(ALBuf->data,2+(size/sizeof(ALubyte))*(1*sizeof(ALshort)));
-					if (ALBuf->data)
+					if ((size%1) == 0)
 					{
-						ALBuf->format=AL_FORMAT_MONO16;
-						for (i=0;i<size/sizeof(ALubyte);i++)
-							ALBuf->data[i]=(ALshort)((((ALubyte *)data)[i]-128)<<8);
-						ALBuf->size=size/sizeof(ALubyte)*sizeof(ALshort);
-						ALBuf->frequency=freq;
+						// 8bit Samples are converted to 16 bit here
+						// Allocate 8 extra samples (16 bytes)
+						ALBuf->data=realloc(ALBuf->data,16+(size/sizeof(ALubyte))*(1*sizeof(ALshort)));
+						if (ALBuf->data)
+						{
+							ALBuf->format=AL_FORMAT_MONO16;
+							for (i=0;i<size/sizeof(ALubyte);i++)
+								ALBuf->data[i]=(ALshort)((((ALubyte *)data)[i]-128)<<8);
+							memset(&(ALBuf->data[size/sizeof(ALubyte)]), 0, 16);
+							ALBuf->size=size/sizeof(ALubyte)*1*sizeof(ALshort);
+							ALBuf->frequency=freq;
+						}
+						else
+							alSetError(AL_OUT_OF_MEMORY);
 					}
 					else
-						alSetError(AL_OUT_OF_MEMORY);
+						alSetError(AL_INVALID_VALUE);
 					break;
 
 				case AL_FORMAT_MONO16:
-					ALBuf->data=realloc(ALBuf->data,2+(size/sizeof(ALshort))*(1*sizeof(ALshort)));
-					if (ALBuf->data)
+					if ((size%2) == 0)
 					{
-						ALBuf->format=AL_FORMAT_MONO16;
-						memcpy(ALBuf->data,data,size/sizeof(ALshort)*sizeof(ALshort));
-						ALBuf->size=size/sizeof(ALshort)*sizeof(ALshort);
-						ALBuf->frequency=freq;
+						// Allocate 8 extra samples (16 bytes)
+						ALBuf->data=realloc(ALBuf->data,16+(size/sizeof(ALshort))*(1*sizeof(ALshort)));
+						if (ALBuf->data)
+						{
+							ALBuf->format=AL_FORMAT_MONO16;
+							memcpy(ALBuf->data,data,size/sizeof(ALshort)*1*sizeof(ALshort));
+							memset(&(ALBuf->data[size/sizeof(ALshort)]), 0, 16);
+							ALBuf->size=size/sizeof(ALshort)*1*sizeof(ALshort);
+							ALBuf->frequency=freq;
+						}
+						else
+							alSetError(AL_OUT_OF_MEMORY);
 					}
 					else
-						alSetError(AL_OUT_OF_MEMORY);
+						alSetError(AL_INVALID_VALUE);
 					break;
 
 				case AL_FORMAT_STEREO8:
-					ALBuf->data=realloc(ALBuf->data,4+(size/sizeof(ALubyte))*(1*sizeof(ALshort)));
-					if (ALBuf->data)
+					if ((size%2) == 0)
 					{
-						ALBuf->format=AL_FORMAT_STEREO16;
-						for (i=0;i<size/sizeof(ALubyte);i++)
-							ALBuf->data[i]=(ALshort)((((ALubyte *)data)[i]-128)<<8);
-						ALBuf->size=size/sizeof(ALubyte)*sizeof(ALshort);
-						ALBuf->frequency=freq;
+						// 8bit Samples are converted to 16 bit here
+						// Allocate 8 extra samples (32 bytes)
+						ALBuf->data=realloc(ALBuf->data,32+(size/sizeof(ALubyte))*(1*sizeof(ALshort)));
+						if (ALBuf->data)
+						{
+							ALBuf->format=AL_FORMAT_STEREO16;
+							for (i=0;i<size/sizeof(ALubyte);i++)
+								ALBuf->data[i]=(ALshort)((((ALubyte *)data)[i]-128)<<8);
+							memset(&(ALBuf->data[size/sizeof(ALubyte)]), 0, 32);
+							ALBuf->size=size/sizeof(ALubyte)*1*sizeof(ALshort);
+							ALBuf->frequency=freq;
+						}
+						else
+							alSetError(AL_OUT_OF_MEMORY);
 					}
 					else
-						alSetError(AL_OUT_OF_MEMORY);
+						alSetError(AL_INVALID_VALUE);
 					break;
 
 				case AL_FORMAT_STEREO16:
-					ALBuf->data=realloc(ALBuf->data,4+(size/sizeof(ALshort))*(1*sizeof(ALshort)));
-					if (ALBuf->data)
+					if ((size%4) == 0)
 					{
-						ALBuf->format=AL_FORMAT_STEREO16;
-						memcpy(ALBuf->data,data,size/sizeof(ALshort)*sizeof(ALshort));
-						ALBuf->size=size/sizeof(ALshort)*sizeof(ALshort);
-						ALBuf->frequency=freq;
+						// Allocate 8 extra samples (32 bytes)
+						ALBuf->data=realloc(ALBuf->data,32+(size/sizeof(ALshort))*(1*sizeof(ALshort)));
+						if (ALBuf->data)
+						{
+							ALBuf->format=AL_FORMAT_STEREO16;
+							memcpy(ALBuf->data,data,size/sizeof(ALshort)*1*sizeof(ALshort));
+							memset(&(ALBuf->data[size/sizeof(ALshort)]), 0, 32);
+							ALBuf->size=size/sizeof(ALshort)*1*sizeof(ALshort);
+							ALBuf->frequency=freq;
+						}
+						else
+							alSetError(AL_OUT_OF_MEMORY);
 					}
 					else
-						alSetError(AL_OUT_OF_MEMORY);
+						alSetError(AL_INVALID_VALUE);
+					break;
+
+				case AL_FORMAT_MONO_IMA4:
+					// Here is where things vary:
+					// nVidia and Apple use 64+1 samples per block => block_size=36 bytes
+					// Most PC sound software uses 2040+1 samples per block -> block_size=1024 bytes
+					if ((size%36) == 0)
+					{
+						// Allocate 8 extra samples (16 bytes)
+						ALBuf->data=realloc(ALBuf->data,16+(size/36)*(65*sizeof(ALshort)));
+						if (ALBuf->data)
+						{
+							ALBuf->format=AL_FORMAT_MONO16;
+							IMAData=(ALuint *)data;
+							for (i=0;i<size/36;i++)
+							{
+								Sample=((ALshort *)IMAData)[0]; 
+								Index=((ALshort *)IMAData)[1];
+
+								Index=Index<0?0:Index;
+								Index=Index>88?88:Index;
+
+								ALBuf->data[i*65]=(short)Sample;
+
+								IMAData++;
+
+								for (j=1;j<65;j+=8)
+								{
+									IMACode=*IMAData;
+									for (k=0;k<8;k+=2)
+									{
+										Sample+=((g_IMAStep_size[Index]*g_IMACodeword_4[IMACode&15])/8);
+										Index+=g_IMAIndex_adjust_4[IMACode&15];
+										if (Sample<-32768) Sample=-32768;
+										else if (Sample>32767) Sample=32767;
+										if (Index<0) Index=0;
+										else if (Index>88) Index=88;
+										ALBuf->data[i*65+j+k]=(short)Sample;
+										IMACode>>=4;
+
+										Sample+=((g_IMAStep_size[Index]*g_IMACodeword_4[IMACode&15])/8);
+										Index+=g_IMAIndex_adjust_4[IMACode&15];
+										if (Sample<-32768) Sample=-32768;
+										else if (Sample>32767) Sample=32767;
+										if (Index<0) Index=0;
+										else if (Index>88) Index=88;
+										ALBuf->data[i*65+j+k+1]=(short)Sample;
+										IMACode>>=4;
+									}
+									IMAData++;
+								}
+							}
+							memset(&(ALBuf->data[(size/36*65)]), 0, 16);
+							ALBuf->size=size/36*65*sizeof(ALshort);
+							ALBuf->frequency=freq;
+						}
+						else
+							alSetError(AL_OUT_OF_MEMORY);
+					} 
+					else
+						 alSetError(AL_INVALID_VALUE);
+					break;
+
+				case AL_FORMAT_STEREO_IMA4:
+					// Here is where things vary:
+					// nVidia and Apple use 64+1 samples per channel per block => block_size=72 bytes
+					// Most PC sound software uses 2040+1 samples per channel per block -> block_size=2048 bytes
+					if ((size%72) == 0)
+					{
+						// Allocate 8 extra samples (32 bytes)
+						ALBuf->data=realloc(ALBuf->data,32+(size/72)*(2*65*sizeof(ALshort)));
+						if (ALBuf->data)
+						{
+							ALBuf->format=AL_FORMAT_STEREO16;
+							IMAData=(ALuint *)data;
+							for (i=0;i<size/72;i++)
+							{
+								LeftSample=((ALshort *)IMAData)[0]; 
+								LeftIndex=((ALshort *)IMAData)[1];
+
+								LeftIndex=LeftIndex<0?0:LeftIndex;
+								LeftIndex=LeftIndex>88?88:LeftIndex;
+
+								ALBuf->data[i*2*65]=(short)LeftSample;
+
+								IMAData++;
+
+								RightSample=((ALshort *)IMAData)[0]; 
+								RightIndex=((ALshort *)IMAData)[1];
+
+								RightIndex=RightIndex<0?0:RightIndex;
+								RightIndex=RightIndex>88?88:RightIndex;
+
+								ALBuf->data[i*2*65+1]=(short)RightSample;
+
+								IMAData++;
+
+								for (j=2;j<130;j+=16)
+								{
+									LeftIMACode=IMAData[0];
+									RightIMACode=IMAData[1];
+									for (k=0;k<16;k+=4)
+									{
+										LeftSample+=((g_IMAStep_size[LeftIndex]*g_IMACodeword_4[LeftIMACode&15])/8);
+										LeftIndex+=g_IMAIndex_adjust_4[LeftIMACode&15];
+										if (LeftSample<-32768) LeftSample=-32768;
+										else if (LeftSample>32767) LeftSample=32767;
+										if (LeftIndex<0) LeftIndex=0;
+										else if (LeftIndex>88) LeftIndex=88;
+										ALBuf->data[i*2*65+j+k]=(short)LeftSample;
+										LeftIMACode>>=4;
+
+										RightSample+=((g_IMAStep_size[RightIndex]*g_IMACodeword_4[RightIMACode&15])/8);
+										RightIndex+=g_IMAIndex_adjust_4[RightIMACode&15];
+										if (RightSample<-32768) RightSample=-32768;
+										else if (RightSample>32767) RightSample=32767;
+										if (RightIndex<0) RightIndex=0;
+										else if (RightIndex>88) RightIndex=88;
+										ALBuf->data[i*2*65+j+k+1]=(short)RightSample;
+										RightIMACode>>=4;
+
+										LeftSample+=((g_IMAStep_size[LeftIndex]*g_IMACodeword_4[LeftIMACode&15])/8);
+										LeftIndex+=g_IMAIndex_adjust_4[LeftIMACode&15];
+										if (LeftSample<-32768) LeftSample=-32768;
+										else if (LeftSample>32767) LeftSample=32767;
+										if (LeftIndex<0) LeftIndex=0;
+										else if (LeftIndex>88) LeftIndex=88;
+										ALBuf->data[i*2*65+j+k+2]=(short)LeftSample;
+										LeftIMACode>>=4;
+									
+										RightSample+=((g_IMAStep_size[RightIndex]*g_IMACodeword_4[RightIMACode&15])/8);
+										RightIndex+=g_IMAIndex_adjust_4[RightIMACode&15];
+										if (RightSample<-32768) RightSample=-32768;
+										else if (RightSample>32767) RightSample=32767;
+										if (RightIndex<0) RightIndex=0;
+										else if (RightIndex>88) RightIndex=88;
+										ALBuf->data[i*2*65+j+k+3]=(short)RightSample;
+										RightIMACode>>=4;
+									}
+									IMAData+=2;
+								}
+							}
+							memset(&(ALBuf->data[(size/72*2*65)]), 0, 32);
+							ALBuf->size=size/72*2*65*sizeof(ALshort);
+							ALBuf->frequency=freq;
+						}
+						else
+							alSetError(AL_OUT_OF_MEMORY);
+					}
+					else
+						alSetError(AL_INVALID_VALUE);
 					break;
 
 				default:

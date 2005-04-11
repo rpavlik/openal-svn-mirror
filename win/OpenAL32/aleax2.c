@@ -1,6 +1,7 @@
 #include "aleax2.h"
 #include "Include/alEaxPresets.h"
 
+extern ALboolean bEAX2Initialized;
 ALboolean LongInRange(long lValue, long lMin, long lMax);
 ALboolean ULongInRange(unsigned long ulValue, unsigned long ulMin, unsigned long ulMax);
 ALboolean FloatInRange(float flValue, float flMin, float flMax);
@@ -15,6 +16,11 @@ ALenum eax2BufferGet(ALuint property, ALuint source, ALvoid *value, ALuint size,
 
 	if (ALSource->uservalue3)
 	{
+		if (!bEAX2Initialized)
+		{
+			bEAX2Initialized = AL_TRUE;
+		}
+
 		if (ALSource->uservalue3)
 		{
 			if (FAILED(IKsPropertySet_Get((LPKSPROPERTYSET)ALSource->uservalue3, &DSPROPSETID_EAX20_BufferProperties, property, NULL, 0,
@@ -36,6 +42,11 @@ ALenum eax2ListenerGet(ALuint property, ALsource *pALSource, ALvoid *value, ALui
 	ALuint		ulBytes;
 	ALenum		ALErrorCode = AL_NO_ERROR;
 
+	if (!bEAX2Initialized)
+	{
+		bEAX2Initialized = AL_TRUE;
+	}
+
     if (pALSource->uservalue3)
 	{
 		if (FAILED(IKsPropertySet_Get((LPKSPROPERTYSET)pALSource->uservalue3, &DSPROPSETID_EAX20_ListenerProperties, property, NULL, 0, value, size, &ulBytes)))
@@ -53,6 +64,11 @@ ALenum eax2BufferSet(ALuint property, ALuint source, ALvoid *pValue, ALuint size
 	ALenum		ALErrorCode = AL_NO_ERROR;
 	
 	ALSource = (ALsource*)ALTHUNK_LOOKUPENTRY(source);
+
+	if (!bEAX2Initialized)
+	{
+		bEAX2Initialized = AL_TRUE;
+	}
 
 	switch(property & ~DSPROPERTY_EAXBUFFER_DEFERRED)
 	{
@@ -281,6 +297,11 @@ ALenum eax2ListenerSet(ALuint property, ALsource *pALSource, ALvoid *pValue, ALu
 	ALuint		ulBytesReturned;
 
 	ALCContext = alcGetCurrentContext();
+
+	if (!bEAX2Initialized)
+	{
+		bEAX2Initialized = AL_TRUE;
+	}
 
 	switch(property & ~DSPROPERTY_EAXLISTENER_DEFERRED)
 	{

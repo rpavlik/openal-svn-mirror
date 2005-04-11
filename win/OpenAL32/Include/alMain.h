@@ -57,13 +57,8 @@ typedef struct ALCdevice_struct
 
 	// DirectSound3D Device
 	LPDIRECTSOUND3DLISTENER lpDS3DListener;
-	ALboolean				bEAX30;
-	ALboolean				bEAX40;
 	ALuint					ulDS3DTimerInterval;
 	ALuint					ulDS3DTimerID;
-
-	// EAXUnified
-	void					*lpEAXListener;
 } ALCdevice;
 
 typedef struct ALCcontext_struct
@@ -90,7 +85,7 @@ typedef struct ALCcontext_struct
 
 	ALCdevice * Device;
 
-	ALboolean	bUseAverageRollOff;
+	ALboolean	bUseManualAttenuation;
 
 	struct ALCcontext_struct *previous;
 	struct ALCcontext_struct *next;
@@ -98,12 +93,20 @@ typedef struct ALCcontext_struct
 
 #endif
 
-ALCvoid UpdateContext(ALCcontext *context,ALuint type,ALuint name);
-ALint LinearGainToDB(float flGain);
+#define AL_FORMAT_MONO_IMA4                      0x1300
+#define AL_FORMAT_STEREO_IMA4                    0x1301
 
-void InitializeRollOffCalculations(ALCcontext *pContext);
-void SetRollOffFactor(ALsource *pSource);
+ALCvoid UpdateContext(ALCcontext *context,ALuint type,ALuint name);
+ALint LinearGainToMB(float flGain);
+
 //ALvoid SetGlobalRolloffFactor(ALsource *ALSource);
+
+#define LEVELFLAG_RECALCULATE_ATTENUATION	0x01
+#define LEVELFLAG_FORCE_EAX_CALL			0x02
+#define LEVELFLAG_USE_DEFERRED				0x80000000
+
+void InitializeManualAttenuation(ALCcontext *pContext);
+void SetSourceLevel(ALsource *pSource, ALuint ulFlags);
 
 #ifdef __cplusplus
 extern "C"

@@ -32,6 +32,8 @@ extern "C" {
 #define SGENERATESOURCE			16384
 #define SQUEUE					32768
 #define SUNQUEUE				65536
+#define MINGAIN					131072
+#define MAXGAIN					262144
 
 #define ALSOURCE		1
 #define ALLISTENER		2
@@ -54,20 +56,27 @@ typedef struct ALbufferlistitem
 
 typedef struct ALsource_struct
 {
-	struct
-	{
-		union
-		{
-			ALfloat fv3[3];
-			ALfloat fv6[6];
-			ALint   i;
-			ALfloat f;
-		} data;
-	} param[AL_NUM_SOURCE_PARAMS];
+	ALfloat		flPitch;
+	ALfloat		flGain;
+	ALfloat		flOuterGain;
+	ALfloat		flMinGain;
+	ALfloat		flMaxGain;
+	ALfloat		flInnerAngle;
+	ALfloat		flOuterAngle;
+	ALfloat		flRefDistance;
+	ALfloat		flMaxDistance;
+	ALfloat		flRollOffFactor;
+	ALfloat		vPosition[3];
+	ALfloat		vVelocity[3];
+	ALfloat		vOrientation[3];
+	ALboolean	bHeadRelative;
+	ALboolean	bLooping;
+
+	ALuint		ulBufferID;
+
 	ALboolean	inuse;
 	ALboolean	valid;
 	ALboolean	play;
-	ALboolean	relative;
 	ALenum		state;
 	ALuint		position;
 	ALuint		position_fraction;
@@ -93,8 +102,6 @@ typedef struct ALsource_struct
 	ALuint		SourceType;				// Stores type of Source (SOURCE3D or SOURCE2D)
 	ALuint		BufferPosition;			// Read position in audio data of current buffer
 	ALboolean	FinishedQueue;			// Indicates if all the buffer data has been copied to the source
-	ALint		DataStillToPlay;		// Amount of audio data still to be played
-	ALint		BytesPlayed;			// Running total of number of bytes played on this source
 	ALuint		OldPlayCursor;			// Previous position of Play Cursor
 	ALuint		OldWriteCursor;			// Previous position of the Write Cursor
 	ALuint		SilenceAdded;			// Number of bytes of silence added to buffer
@@ -108,8 +115,15 @@ typedef struct ALsource_struct
 
 	ALuint		CurrentState;
 	ALboolean	DSBufferPlaying;
-	ALuint		ulDelta;				// Difference between Play and Write Cursor in DS3D Buffer at Source play time
 
+	ALint		lBytesPlayed;
+
+	ALfloat		flDistance;				// Distance of Source from Listener
+	ALint		lAttenuationVolume;		// Attenuation from Distance (mB)
+	ALint		lVolume;				// Source volume (mB) (converted from Gain)
+	ALint		lMaxVolume;				// Source Max volume (mB) (converted from Max Gain)
+	ALint		lMinVolume;				// Source Min volume (mB) (converted from Min Gain)
+	ALint		lFinalVolume;			// Last Volume actually set
 	EAXBUFFERPROPERTIES EAX20BP;
 
 	struct ALsource_struct *previous;

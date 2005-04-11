@@ -195,14 +195,14 @@ ALUAPI ALvoid ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint numO
 			flProjectedListenerVelocity = aluDotproduct(ListenerVelocity,SourceToListener);
 
 			if (flProjectedVelocity >= DopplerVelocity)
-				flProjectedVelocity = (DopplerVelocity - FLT_MIN);
+				flProjectedVelocity = (DopplerVelocity - 1.0f);
 			else if (flProjectedVelocity <= -DopplerVelocity)
-				flProjectedVelocity = -(DopplerVelocity - FLT_MIN);
+				flProjectedVelocity = -(DopplerVelocity - 1.0f);
 
 			if (flProjectedListenerVelocity >= DopplerVelocity)
-				flProjectedListenerVelocity = (DopplerVelocity - FLT_MIN);
+				flProjectedListenerVelocity = (DopplerVelocity - 1.0f);
 			else if (flProjectedListenerVelocity <= -DopplerVelocity)
-				flProjectedListenerVelocity = -(DopplerVelocity - FLT_MIN);
+				flProjectedListenerVelocity = -(DopplerVelocity - 1.0f);
 
 			if (DopplerFactor != 0.0f)
 				pitch[0] = Pitch * DopplerFactor * (DopplerVelocity - flProjectedListenerVelocity)/(DopplerVelocity - flProjectedVelocity);
@@ -270,23 +270,26 @@ ALUAPI ALvoid ALUAPIENTRY aluMixData(ALvoid *context,ALvoid *buffer,ALsizei size
 	static float WetBuffer[BUFFERSIZE][OUTPUTCHANNELS];
 	ALuint BlockAlign,BytesPerSample,BufferSize;
 	ALuint DataSize,DataPosInt,DataPosFrac;
+	ALuint Channels,Bits,Frequency,ulExtraSamples;
 	ALint Looping,increment,State;
-	ALuint Channels,Bits,Frequency;
 	ALuint Buffer,fraction;
 	ALCcontext *ALContext;
 	ALsizei SamplesToDo;
-	ALshort value,*Data;
 	ALsource *ALSource;
 	ALbuffer *ALBuffer;
+	ALfloat value;
+	ALshort *Data;
 	ALsizei i,j,k;
 	ALenum Error;
 	ALbufferlistitem *BufferListItem;
 	ALuint loop;
+	__int64 DataSize64,DataPos64;
 
 	if (context)
 	{
 		ALContext=((ALCcontext *)context);
 		SuspendContext(ALContext);
+
 		if ((buffer)&&(size))
 		{
 			//Figure output format variables
@@ -325,8 +328,7 @@ ALUAPI ALvoid ALUAPIENTRY aluMixData(ALvoid *context,ALvoid *buffer,ALsizei size
 				{
                     aluCalculateSourceParameters((ALuint)ALSource->source,OUTPUTCHANNELS,DrySend,WetSend,&Pitch);
 					//Get buffer info
-					Buffer = ALSource->param[AL_BUFFER-AL_CONE_INNER_ANGLE].data.i;
-					if (Buffer)
+					if (Buffer = ALSource->ulBufferID)
 					{
                         ALBuffer = (ALbuffer*)ALTHUNK_LOOKUPENTRY(Buffer);
 
@@ -341,31 +343,91 @@ ALUAPI ALvoid ALUAPIENTRY aluMixData(ALvoid *context,ALvoid *buffer,ALsizei size
 						//Get source info
 						DataPosInt=ALSource->position;
 						DataPosFrac=ALSource->position_fraction;
+						//Compute 18.14 fixed point step
+						increment=aluF2L(Pitch*(1L<<FRACTIONBITS));
+						if (increment > (MAX_PITCH<<FRACTIONBITS)) increment=(MAX_PITCH<<FRACTIONBITS);
 						//Figure out how many samples we can mix.
-						BufferSize=(ALuint)((((ALfloat)DataSize)-(((ALfloat)DataPosInt)+(((ALfloat)DataPosFrac)/(1L<<FRACTIONBITS))))/Pitch);
+						//Pitch must be <= 4 (the number below !)
+						DataSize64=DataSize+MAX_PITCH;
+						DataSize64<<=FRACTIONBITS;
+						DataPos64=DataPosInt;
+						DataPos64<<=FRACTIONBITS;
+						DataPos64+=DataPosFrac;
+						BufferSize=(ALuint)((DataSize64-DataPos64)/increment);
+						//Set the last 'extra' sample in a buffer to the first sample of the next buffer (if there is one)
+//						if (BufferSize<(SamplesToDo-j))
+						{
+							BufferListItem = ALSource->queue;
+							for (loop = 0; loop < ALSource->BuffersAddedToDSBuffer; loop++)
+								if (BufferListItem)
+									BufferListItem = BufferListItem->next;
+							if (BufferListItem) 
+							{
+								if (BufferListItem->next)
+								{
+									if (Channels==2)
+									{
+										if (((ALbuffer*)ALTHUNK_LOOKUPENTRY(BufferListItem->next->buffer))->data)
+										{
+											ulExtraSamples = min(((ALbuffer*)ALTHUNK_LOOKUPENTRY(BufferListItem->next->buffer))->size, 32);
+											memcpy(&Data[DataSize*2], ((ALbuffer*)ALTHUNK_LOOKUPENTRY(BufferListItem->next->buffer))->data, ulExtraSamples);
+										}
+									}
+									else
+									{
+										if (((ALbuffer*)ALTHUNK_LOOKUPENTRY(BufferListItem->next->buffer))->data)
+										{
+											ulExtraSamples = min(((ALbuffer*)ALTHUNK_LOOKUPENTRY(BufferListItem->next->buffer))->size, 16);
+											memcpy(&Data[DataSize], ((ALbuffer*)ALTHUNK_LOOKUPENTRY(BufferListItem->next->buffer))->data, ulExtraSamples);
+										}
+									}
+								}
+								else if (ALSource->bLooping)
+								{
+									if (ALSource->queue->buffer)
+									{										
+										if (Channels==2)
+										{
+											if (((ALbuffer*)ALTHUNK_LOOKUPENTRY(ALSource->queue->buffer))->data)
+											{
+												ulExtraSamples = min(((ALbuffer*)ALTHUNK_LOOKUPENTRY(ALSource->queue->buffer))->size, 32);
+												memcpy(&Data[DataSize*2], ((ALbuffer*)ALTHUNK_LOOKUPENTRY(ALSource->queue->buffer))->data, ulExtraSamples);
+											}
+										}
+										else
+										{
+											if (((ALbuffer*)ALTHUNK_LOOKUPENTRY(ALSource->queue->buffer))->data)
+											{
+												ulExtraSamples = min(((ALbuffer*)ALTHUNK_LOOKUPENTRY(ALSource->queue->buffer))->size, 16);
+												memcpy(&Data[DataSize], ((ALbuffer*)ALTHUNK_LOOKUPENTRY(ALSource->queue->buffer))->data, ulExtraSamples);
+											}
+										}
+									}
+								}
+							}
+						}
 						BufferSize=(BufferSize<(SamplesToDo-j)?BufferSize:(SamplesToDo-j));
 						//Actual sample mixing loop
 						Data+=DataPosInt*Channels;
-						increment=aluF2L(Pitch*(1L<<FRACTIONBITS));
 						while (BufferSize--)
 						{
 							k=DataPosFrac>>FRACTIONBITS; fraction=DataPosFrac&FRACTIONMASK;
 							switch (Channels)
 							{
 								case 0x01:
-                                    value=(ALshort)(((Data[k]*((1L<<FRACTIONBITS)-fraction))+(Data[k+1]*(fraction)))>>FRACTIONBITS);
-									DryBuffer[j][0]+=((ALfloat)value)*DrySend[0];
-									DryBuffer[j][1]+=((ALfloat)value)*DrySend[1];
-									WetBuffer[j][0]+=((ALfloat)value)*WetSend[0];
-									WetBuffer[j][1]+=((ALfloat)value)*WetSend[1];
+									value=(ALfloat)((ALshort)(((Data[k]*((1L<<FRACTIONBITS)-fraction))+(Data[k+1]*(fraction)))>>FRACTIONBITS));
+									DryBuffer[j][0]+=value*DrySend[0];
+									DryBuffer[j][1]+=value*DrySend[1];
+									WetBuffer[j][0]+=value*WetSend[0];
+									WetBuffer[j][1]+=value*WetSend[1];
 									break;
 								case 0x02:
-                                    value=(ALshort)(((Data[k*2  ]*((1L<<FRACTIONBITS)-fraction))+(Data[k*2+2]*(fraction)))>>FRACTIONBITS);
-									DryBuffer[j][0]+=((ALfloat)value)*DrySend[0];
-									WetBuffer[j][0]+=((ALfloat)value)*WetSend[0];
+									value=(ALfloat)((ALshort)(((Data[k*2  ]*((1L<<FRACTIONBITS)-fraction))+(Data[k*2+2]*(fraction)))>>FRACTIONBITS));
+									DryBuffer[j][0]+=value*DrySend[0];
+									WetBuffer[j][0]+=value*WetSend[0];
                                     value=(ALshort)(((Data[k*2+1]*((1L<<FRACTIONBITS)-fraction))+(Data[k*2+3]*(fraction)))>>FRACTIONBITS);
-									DryBuffer[j][1]+=((ALfloat)value)*DrySend[1];
-									WetBuffer[j][1]+=((ALfloat)value)*WetSend[1];
+									DryBuffer[j][1]+=value*DrySend[1];
+									WetBuffer[j][1]+=value*WetSend[1];
 									break;
 								default:
 									break;
@@ -380,15 +442,12 @@ ALUAPI ALvoid ALUAPIENTRY aluMixData(ALvoid *context,ALvoid *buffer,ALsizei size
 						ALSource->position_fraction=DataPosFrac;
 					}
 					//Handle looping sources
-					DataPosFrac+=increment; //one more step
-					DataPosInt+=(DataPosFrac>>FRACTIONBITS);
-					DataPosFrac=(DataPosFrac&FRACTIONMASK);
 					if ((!Buffer)||(DataPosInt>=DataSize))
 					{
 						//queueing
 						if (ALSource->queue)
 						{
-							Looping = ALSource->param[AL_LOOPING-AL_CONE_INNER_ANGLE].data.i;
+							Looping = ALSource->bLooping;
 							if (ALSource->BuffersAddedToDSBuffer < (ALSource->BuffersInQueue-1))
 							{
 								BufferListItem = ALSource->queue;
@@ -404,30 +463,21 @@ ALUAPI ALvoid ALUAPIENTRY aluMixData(ALvoid *context,ALvoid *buffer,ALsizei size
 								if (!Looping)
 									ALSource->BuffersProcessed++;
 								if (BufferListItem)
-									ALSource->param[AL_BUFFER-AL_CONE_INNER_ANGLE].data.i=BufferListItem->buffer;
-								ALSource->position=0;
-								ALSource->position_fraction=0;
+									ALSource->ulBufferID=BufferListItem->buffer;
+								ALSource->position=DataPosInt-DataSize;
+								ALSource->position_fraction=DataPosFrac;
 								ALSource->BuffersAddedToDSBuffer++;
 							}
 							else
 							{
                                 alSourceStop((ALuint)ALSource->source);
-								Looping = ALSource->param[AL_LOOPING-AL_CONE_INNER_ANGLE].data.i;
 								if (Looping)
 								{
                                     alSourceRewind((ALuint)ALSource->source);
                                     alSourcePlay((ALuint)ALSource->source);
+									ALSource->position=DataPosInt-DataSize;
+									ALSource->position_fraction=DataPosFrac;
 								}
-							}
-						}
-						else
-						{
-                            alSourceStop((ALuint)ALSource->source);
-							Looping = ALSource->param[AL_LOOPING-AL_CONE_INNER_ANGLE].data.i;
-							if (Looping)
-							{
-                                alSourceRewind((ALuint)ALSource->source);
-                                alSourcePlay((ALuint)ALSource->source);
 							}
 						}
 					}
@@ -458,6 +508,7 @@ ALUAPI ALvoid ALUAPIENTRY aluMixData(ALvoid *context,ALvoid *buffer,ALsizei size
 					break;
 			}
 		}
+
 		Error=alGetError();
 		ProcessContext(ALContext);
 	}

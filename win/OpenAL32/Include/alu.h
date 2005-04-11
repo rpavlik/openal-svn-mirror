@@ -7,6 +7,7 @@
 #define BUFFERSIZE 48000
 #define FRACTIONBITS 14
 #define FRACTIONMASK ((1L<<FRACTIONBITS)-1)
+#define MAX_PITCH 4
 #define OUTPUTCHANNELS 2
 
 #include "AL/altypes.h"

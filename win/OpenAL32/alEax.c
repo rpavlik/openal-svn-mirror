@@ -39,6 +39,7 @@ ALboolean LongInRange(long lValue, long lMin, long lMax);
 ALboolean ULongInRange(unsigned long ulValue, unsigned long ulMin, unsigned long ulMax);
 ALboolean FloatInRange(float flValue, float flMin, float flMax);
 
+ALboolean bEAX2Initialized = AL_FALSE;
 /*
 	Test for support of appropriate EAX Version
 */

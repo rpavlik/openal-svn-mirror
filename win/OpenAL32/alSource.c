@@ -26,7 +26,11 @@
 #include "Include/alError.h"
 #include "Include/alSource.h"
 ALvoid InitSourceParams(ALsource *pSource);
+ALboolean CheckSourceType(ALCcontext *pContext, ALsource *pSource);
 
+#define CLAMP(x, min, max) if (x < min)	x = min; else if (x > max) x = max;
+
+extern ALboolean bEAX2Initialized;
 ALAPI ALvoid ALAPIENTRY alGenSources(ALsizei n,ALuint *sources)
 {
 	ALCcontext *Context;
@@ -225,9 +229,6 @@ ALAPI ALvoid ALAPIENTRY alDeleteSources(ALsizei n, const ALuint *sources)
                             }
 						}
 
-						// Update RollOff (only actually relevant if emulating RollOff using Global RollOff Factor)
-						if (Context->Device->lpDS3DListener)
-							SetRollOffFactor(0);
 					}
 				}
 				else
@@ -311,9 +312,9 @@ ALAPI ALvoid ALAPIENTRY alSourcef(ALuint source,ALenum pname,ALfloat value)
 				case AL_PITCH:
 					if ((value>=0.0f)&&(value<=2.0f))
 					{
-						if (value != Source->param[pname-AL_CONE_INNER_ANGLE].data.f)
+						if (value != Source->flPitch)
 						{
-							Source->param[pname-AL_CONE_INNER_ANGLE].data.f=value;
+							Source->flPitch = value;
 							Source->update1 |= FREQUENCY;
                             UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 						}
@@ -325,12 +326,27 @@ ALAPI ALvoid ALAPIENTRY alSourcef(ALuint source,ALenum pname,ALfloat value)
 					break;
 
 				case AL_CONE_INNER_ANGLE:
+					if ((value>=0)&&(value<=360))
+					{
+						if (value != Source->flInnerAngle)
+						{
+							Source->flInnerAngle = value;
+							Source->update1 |= CONEANGLES;
+                            UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+						}
+					}
+					else
+					{
+						alSetError(AL_INVALID_VALUE);
+					}
+					break;
+
 				case AL_CONE_OUTER_ANGLE:
 					if ((value>=0)&&(value<=360))
 					{
-						if (value != Source->param[pname-AL_CONE_INNER_ANGLE].data.f)
+						if (value != Source->flOuterAngle)
 						{
-							Source->param[pname-AL_CONE_INNER_ANGLE].data.f=value;
+							Source->flOuterAngle = value;
 							Source->update1 |= CONEANGLES;
                             UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 						}
@@ -344,9 +360,9 @@ ALAPI ALvoid ALAPIENTRY alSourcef(ALuint source,ALenum pname,ALfloat value)
 				case AL_GAIN:
 					if (value >= 0.0f)
 					{
-						if (value != Source->param[AL_GAIN-AL_CONE_INNER_ANGLE].data.f)
+						if (value != Source->flGain)
 						{
-							Source->param[AL_GAIN-AL_CONE_INNER_ANGLE].data.f = value;
+							Source->flGain = value;
 							Source->update1 |= VOLUME;
                             UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 						}
@@ -358,21 +374,44 @@ ALAPI ALvoid ALAPIENTRY alSourcef(ALuint source,ALenum pname,ALfloat value)
 					break;
 
 				case AL_MAX_DISTANCE:
+					if (value>=0.0f)
+					{
+						if (value != Source->flMaxDistance)
+						{
+							Source->flMaxDistance = value;
+							Source->update1 |= MAXDIST;
+                            UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+						}
+					}
+					else
+					{
+						alSetError(AL_INVALID_VALUE);
+					}
+					break;
+
 				case AL_ROLLOFF_FACTOR:
+					if (value>=0.0f)
+					{
+						if (value != Source->flRollOffFactor)
+						{
+							Source->flRollOffFactor = value;
+							Source->update1 |= ROLLOFFFACTOR;
+                            UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+						}
+					}
+					else
+					{
+						alSetError(AL_INVALID_VALUE);
+					}
+					break;
+
 				case AL_REFERENCE_DISTANCE:
 					if (value>=0.0f)
 					{
-						if (value != Source->param[pname-AL_CONE_INNER_ANGLE].data.f)
+						if (value != Source->flRefDistance)
 						{
-							Source->param[pname-AL_CONE_INNER_ANGLE].data.f = value;
-
-							if (pname == AL_MAX_DISTANCE)
-								Source->update1 |= MAXDIST;
-							else if (pname == AL_REFERENCE_DISTANCE)
-								Source->update1 |= MINDIST;
-							else if (pname == AL_ROLLOFF_FACTOR)
-								Source->update1 |= ROLLOFFFACTOR;
-
+							Source->flRefDistance = value;
+							Source->update1 |= MINDIST;
                             UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 						}
 					}
@@ -383,21 +422,45 @@ ALAPI ALvoid ALAPIENTRY alSourcef(ALuint source,ALenum pname,ALfloat value)
 					break;
 
 				case AL_MIN_GAIN:
+					if ((value>=0.0f)&&(value<=1.0f))
+					{
+						if (value != Source->flMinGain)
+						{
+							Source->flMinGain = value;
+							Source->update1 |= MINGAIN;
+                            UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+						}
+					}
+					else
+					{
+						alSetError(AL_INVALID_VALUE);
+					}
+					break;
+
 				case AL_MAX_GAIN:
+					if ((value>=0.0f)&&(value<=1.0f))
+					{
+						if (value != Source->flMaxGain)
+						{
+							Source->flMaxGain = value;
+							Source->update1 |= MAXGAIN;
+                            UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+						}
+					}
+					else
+					{
+						alSetError(AL_INVALID_VALUE);
+					}
+					break;
+
 				case AL_CONE_OUTER_GAIN:
 					if ((value>=0.0f)&&(value<=1.0f))
 					{
-						if (value != Source->param[pname-AL_CONE_INNER_ANGLE].data.f)
+						if (value != Source->flOuterGain)
 						{
-							Source->param[pname-AL_CONE_INNER_ANGLE].data.f=value;
-
-							// MIN_GAIN and MAX_GAIN unsupported at this time
-
-							if (pname == AL_CONE_OUTER_GAIN)
-							{
-								Source->update1 |= CONEOUTSIDEVOLUME;
-                                UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
-							}
+							Source->flOuterGain = value;
+							Source->update1 |= CONEOUTSIDEVOLUME;
+                            UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 						}
 					}
 					else
@@ -447,23 +510,40 @@ ALAPI ALvoid ALAPIENTRY alSourcefv(ALuint source,ALenum pname, const ALfloat *va
 				switch(pname)
 				{
 					case AL_POSITION:
-					case AL_VELOCITY:
-					case AL_DIRECTION:
-						if ((values[0] != Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[0])||
-							(values[1] != Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[1])||
-							(values[2] != Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[2]))
+						if ((values[0] != Source->vPosition[0])||
+							(values[1] != Source->vPosition[1])||
+							(values[2] != Source->vPosition[2]))
 						{
-							Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[0] = values[0];
-							Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[1] = values[1];
-							Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[2] = values[2];
+							Source->vPosition[0] = values[0];
+							Source->vPosition[1] = values[1];
+							Source->vPosition[2] = values[2];
+							Source->update1 |= POSITION;
+                            UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+						}
+						break;
 
-							if (pname == AL_POSITION)
-								Source->update1 |= POSITION;
-							else if (pname == AL_VELOCITY)
-								Source->update1 |= VELOCITY;
-							else if (pname == AL_DIRECTION)
-								Source->update1 |= ORIENTATION;
+					case AL_VELOCITY:
+						if ((values[0] != Source->vVelocity[0])||
+							(values[1] != Source->vVelocity[1])||
+							(values[2] != Source->vVelocity[2]))
+						{
+							Source->vVelocity[0] = values[0];
+							Source->vVelocity[1] = values[1];
+							Source->vVelocity[2] = values[2];
+							Source->update1 |= VELOCITY;
+                            UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+						}
+						break;
 
+					case AL_DIRECTION:
+						if ((values[0] != Source->vOrientation[0])||
+							(values[1] != Source->vOrientation[1])||
+							(values[2] != Source->vOrientation[2]))
+						{
+							Source->vOrientation[0] = values[0];
+							Source->vOrientation[1] = values[1];
+							Source->vOrientation[2] = values[2];
+							Source->update1 |= ORIENTATION;
                             UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 						}
 						break;
@@ -513,26 +593,44 @@ ALAPI ALvoid ALAPIENTRY alSource3f(ALuint source,ALenum pname,ALfloat v1,ALfloat
 			switch(pname)
 			{
 				case AL_POSITION:
-				case AL_VELOCITY:
-				case AL_DIRECTION:
-					if ((v1 != Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[0])||
-						(v2 != Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[1])||
-						(v3 != Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[2]))
+					if ((v1 != Source->vPosition[0])||
+						(v2 != Source->vPosition[1])||
+						(v3 != Source->vPosition[2]))
 					{
-						Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[0] = v1;
-						Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[1] = v2;
-						Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[2] = v3;
-
-						if (pname == AL_POSITION)
-							Source->update1 |= POSITION;
-						else if (pname == AL_VELOCITY)
-							Source->update1 |= VELOCITY;
-						else if (pname == AL_DIRECTION)
-							Source->update1 |= ORIENTATION;
-
+						Source->vPosition[0] = v1;
+						Source->vPosition[1] = v2;
+						Source->vPosition[2] = v3;
+						Source->update1 |= POSITION;
                         UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 					}
 					break;
+
+				case AL_VELOCITY:
+					if ((v1 != Source->vVelocity[0])||
+						(v2 != Source->vVelocity[1])||
+						(v3 != Source->vVelocity[2]))
+					{
+						Source->vVelocity[0] = v1;
+						Source->vVelocity[1] = v2;
+						Source->vVelocity[2] = v3;
+						Source->update1 |= VELOCITY;
+                        UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+					}
+					break;
+
+				case AL_DIRECTION:
+					if ((v1 != Source->vOrientation[0])||
+						(v2 != Source->vOrientation[1])||
+						(v3 != Source->vOrientation[2]))
+					{
+						Source->vOrientation[0] = v1;
+						Source->vOrientation[1] = v2;
+						Source->vOrientation[2] = v3;
+						Source->update1 |= ORIENTATION;
+                        UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+					}
+					break;
+
 				default:
 					alSetError(AL_INVALID_ENUM);
 					break;
@@ -578,9 +676,9 @@ ALAPI ALvoid ALAPIENTRY alSourcei(ALuint source,ALenum pname,ALint value)
 				case AL_SOURCE_RELATIVE:
 					if ((value==AL_FALSE)||(value==AL_TRUE))
 					{
-						if (value != Source->relative)
+						if (value != Source->bHeadRelative)
 						{
-                            Source->relative=(ALboolean)value;
+                            Source->bHeadRelative=(ALboolean)value;
 							Source->update1 |= MODE;
                             UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 						}
@@ -592,12 +690,27 @@ ALAPI ALvoid ALAPIENTRY alSourcei(ALuint source,ALenum pname,ALint value)
 					break;
 
 				case AL_CONE_INNER_ANGLE:
+					if ((value>=0)&&(value<=360))
+					{
+						if (((float)value) != Source->flInnerAngle)
+						{
+							Source->flInnerAngle = (float)value;
+							Source->update1 |= CONEANGLES;
+                            UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+						}
+					}
+					else
+					{
+						alSetError(AL_INVALID_VALUE);
+					}
+					break;
+
 				case AL_CONE_OUTER_ANGLE:
 					if ((value>=0)&&(value<=360))
 					{
-						if (((float)value) != Source->param[pname-AL_CONE_INNER_ANGLE].data.f)
+						if (((float)value) != Source->flOuterAngle)
 						{
-							Source->param[pname-AL_CONE_INNER_ANGLE].data.f = (float)value;
+							Source->flOuterAngle = (float)value;
 							Source->update1 |= CONEANGLES;
                             UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 						}
@@ -611,9 +724,9 @@ ALAPI ALvoid ALAPIENTRY alSourcei(ALuint source,ALenum pname,ALint value)
 				case AL_LOOPING:
 					if ((value==AL_FALSE)||(value==AL_TRUE))
 					{
-						if (value != Source->param[pname-AL_CONE_INNER_ANGLE].data.i)
+						if (value != Source->bLooping)
 						{
-							Source->param[pname-AL_CONE_INNER_ANGLE].data.i = value;
+							Source->bLooping = value;
 							Source->update1 |= LOOPED;
                             UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 						}
@@ -683,7 +796,11 @@ ALAPI ALvoid ALAPIENTRY alSourcei(ALuint source,ALenum pname,ALint value)
 							Source->BuffersProcessed = 0;
 
 							// Update AL_BUFFER parameter
-							Source->param[pname-AL_CONE_INNER_ANGLE].data.i=value;
+							Source->ulBufferID = value;
+
+							// Check if we need to switch from mono->stereo or vice versa
+							if (Context->Device->lpDS3DListener)
+								CheckSourceType(Context, Source);
 						}
 						else
 						{
@@ -742,17 +859,45 @@ ALAPI ALvoid ALAPIENTRY alGetSourcef(ALuint source,ALenum pname,ALfloat *value)
 				switch(pname)
 				{
 					case AL_PITCH:
-					case AL_GAIN:
-					case AL_MIN_GAIN:
-					case AL_MAX_GAIN:
-					case AL_MAX_DISTANCE:
-					case AL_ROLLOFF_FACTOR:
-					case AL_CONE_OUTER_GAIN:
-					case AL_CONE_INNER_ANGLE:
-					case AL_CONE_OUTER_ANGLE:
-					case AL_REFERENCE_DISTANCE:
-						*value=Source->param[pname-AL_CONE_INNER_ANGLE].data.f;
+						*value =Source->flPitch;
 						break;
+
+					case AL_GAIN:
+						*value = Source->flGain;
+						break;
+
+					case AL_MIN_GAIN:
+						*value = Source->flMinGain;
+						break;
+
+					case AL_MAX_GAIN:
+						*value = Source->flMaxGain;
+						break;
+
+					case AL_MAX_DISTANCE:
+						*value = Source->flMaxDistance;
+						break;
+
+					case AL_ROLLOFF_FACTOR:
+						*value = Source->flRollOffFactor;
+						break;
+
+					case AL_CONE_OUTER_GAIN:
+						*value = Source->flOuterGain;
+						break;
+
+					case AL_CONE_INNER_ANGLE:
+						*value = Source->flInnerAngle;
+						break;
+
+					case AL_CONE_OUTER_ANGLE:
+						*value = Source->flOuterAngle;
+						break;
+
+					case AL_REFERENCE_DISTANCE:
+						*value = Source->flRefDistance;
+						break;
+
 					default:
 						alSetError(AL_INVALID_ENUM);
 						break;
@@ -800,11 +945,21 @@ ALAPI ALvoid ALAPIENTRY alGetSource3f(ALuint source, ALenum pname, ALfloat* v1, 
 				switch(pname)
 				{
 				case AL_POSITION:
+					*v1 = Source->vPosition[0];
+					*v2 = Source->vPosition[1];
+					*v3 = Source->vPosition[2];
+					break;
+
 				case AL_VELOCITY:
+					*v1 = Source->vVelocity[0];
+					*v2 = Source->vVelocity[1];
+					*v3 = Source->vVelocity[2];
+					break;
+
 				case AL_DIRECTION:
-					*v1 = Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[0];
-					*v2 = Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[1];
-					*v3 = Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[2];
+					*v1 = Source->vOrientation[0];
+					*v2 = Source->vOrientation[1];
+					*v3 = Source->vOrientation[2];
 					break;
 
 				default:
@@ -854,11 +1009,21 @@ ALAPI ALvoid ALAPIENTRY alGetSourcefv(ALuint source,ALenum pname,ALfloat *values
 				switch(pname)
 				{
 				case AL_POSITION:
+					values[0] = Source->vPosition[0];
+					values[1] = Source->vPosition[1];
+					values[2] = Source->vPosition[2];
+					break;
+
 				case AL_VELOCITY:
+					values[0] = Source->vVelocity[0];
+					values[1] = Source->vVelocity[1];
+					values[2] = Source->vVelocity[2];
+					break;
+
 				case AL_DIRECTION:
-					values[0] = Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[0];
-					values[1] = Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[1];
-					values[2] = Source->param[pname-AL_CONE_INNER_ANGLE].data.fv3[2];
+					values[0] = Source->vOrientation[0];
+					values[1] = Source->vOrientation[1];
+					values[2] = Source->vOrientation[2];
 					break;
 
 				default:
@@ -907,32 +1072,35 @@ ALAPI ALvoid ALAPIENTRY alGetSourcei(ALuint source,ALenum pname,ALint *value)
 				switch(pname)
 				{
 					case AL_SOURCE_RELATIVE:
-						*value = Source->relative;
+						*value = Source->bHeadRelative;
 						break;
 
 					case AL_CONE_INNER_ANGLE:
+						*value = (ALint)Source->flInnerAngle;
+						break;
+
 					case AL_CONE_OUTER_ANGLE:
-						*value = (ALint)Source->param[pname-AL_CONE_INNER_ANGLE].data.f;
+						*value = (ALint)Source->flOuterAngle;
 						break;
 
 					case AL_LOOPING:
-						*value = Source->param[pname-AL_CONE_INNER_ANGLE].data.i;
+						*value = Source->bLooping;
 						break;
 
 					case AL_BUFFER:
-						*value = Source->param[pname-AL_CONE_INNER_ANGLE].data.i;
+						*value = Source->ulBufferID;
 						break;
 
 					case AL_SOURCE_STATE:
-						*value=Source->state;
+						*value = Source->state;
 						break;
 
 					case AL_BUFFERS_QUEUED:
-						*value=Source->BuffersInQueue;
+						*value = Source->BuffersInQueue;
 						break;
 
 					case AL_BUFFERS_PROCESSED:
-						*value=Source->BuffersProcessed;
+						*value = Source->BuffersProcessed;
 						break;
 
 					default:
@@ -1003,7 +1171,7 @@ ALAPI ALvoid ALAPIENTRY alSourcePlay(ALuint source)
 					Source->BuffersProcessed = 0;
 					Source->BuffersAddedToDSBuffer = 0;
 
-					Source->param[AL_BUFFER-AL_CONE_INNER_ANGLE].data.i = Source->queue->buffer;
+					Source->ulBufferID = Source->queue->buffer;
 
 					// Make sure all the Buffers in the queue are marked as PENDING
 					ALBufferList = Source->queue;
@@ -1114,7 +1282,7 @@ ALAPI ALvoid ALAPIENTRY alSourcePlayv(ALsizei n, const ALuint *sources)
 							Source->BuffersProcessed = 0;
 							Source->BuffersAddedToDSBuffer = 0;
 
-							Source->param[AL_BUFFER-AL_CONE_INNER_ANGLE].data.i = Source->queue->buffer;
+							Source->ulBufferID = Source->queue->buffer;
 
 							// Make sure all the Buffers in the queue are marked as PENDING
 							ALBufferList = Source->queue;
@@ -1396,11 +1564,11 @@ ALAPI ALvoid ALAPIENTRY alSourceRewind(ALuint source)
 				ALBufferListItem= Source->queue;
 				while (ALBufferListItem != NULL)
 				{
-					ALBufferListItem->bufferstate = PENDING; // PROCESSED;
+					ALBufferListItem->bufferstate = PENDING;
 					ALBufferListItem = ALBufferListItem->next;
 				}
 				if (Source->queue)
-					Source->param[AL_BUFFER-AL_CONE_INNER_ANGLE].data.i = Source->queue->buffer;
+					Source->ulBufferID = Source->queue->buffer;
 			}
 			Source->update1 |= STATE;
             UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
@@ -1463,11 +1631,11 @@ ALAPI ALvoid ALAPIENTRY alSourceRewindv(ALsizei n, const ALuint *sources)
 						ALBufferListItem= Source->queue;
 						while (ALBufferListItem != NULL)
 						{
-							ALBufferListItem->bufferstate = PENDING; // PROCESSED;
+							ALBufferListItem->bufferstate = PENDING;
 							ALBufferListItem = ALBufferListItem->next;
 						}
 						if (Source->queue)
-							Source->param[AL_BUFFER-AL_CONE_INNER_ANGLE].data.i = Source->queue->buffer;
+							Source->ulBufferID = Source->queue->buffer;
 					}
 					Source->update1 |= STATE;
                     UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
@@ -1504,6 +1672,9 @@ ALAPI ALvoid ALAPIENTRY alSourceQueueBuffers( ALuint source, ALsizei n, const AL
 	ALuint uiFrequency;
 	ALint iFormat;
 	ALboolean bBuffersValid = AL_TRUE;
+
+	if (n == 0)
+		return;
 
 	Context=alcGetCurrentContext();
 	if (Context)
@@ -1614,7 +1785,7 @@ ALAPI ALvoid ALAPIENTRY alSourceQueueBuffers( ALuint source, ALsizei n, const AL
 				{
 					ALSource->queue = ALBufferListStart;
 					// Update Current Buffer
-					ALSource->param[AL_BUFFER-AL_CONE_INNER_ANGLE].data.i = ALBufferListStart->buffer;
+					ALSource->ulBufferID = ALBufferListStart->buffer;
 				}
 				else
 				{
@@ -1636,6 +1807,10 @@ ALAPI ALvoid ALAPIENTRY alSourceQueueBuffers( ALuint source, ALsizei n, const AL
 				ALSource->NumBuffersAddedToQueue = n;
 				ALSource->update1 |= SQUEUE;
 				UpdateContext(Context, ALSOURCE, source);
+
+				// Check if we need to switch from mono to stereo or vice versa
+				if ((Context->Device->lpDS3DListener) && ((ALSource->state == AL_STOPPED) || (ALSource->state == AL_INITIAL)))
+					CheckSourceType(Context, ALSource);
 			}
 		}
 		else
@@ -1668,6 +1843,9 @@ ALAPI ALvoid ALAPIENTRY alSourceUnqueueBuffers( ALuint source, ALsizei n, ALuint
 	ALuint BufferSize;
 	ALuint BufferID;
 	ALboolean bBuffersProcessed;
+
+	if (n == 0)
+		return;
 
 	DataSize = 0;
 	BufferSize = 0;
@@ -1730,13 +1908,22 @@ ALAPI ALvoid ALAPIENTRY alSourceUnqueueBuffers( ALuint source, ALsizei n, ALuint
 					else
 						BufferID = 0;
 
-					ALSource->param[AL_BUFFER-AL_CONE_INNER_ANGLE].data.i = BufferID;
+					ALSource->ulBufferID = BufferID;
 				}
 
 				ALSource->NumBuffersRemovedFromQueue = n;
 				ALSource->SizeOfBufferDataRemovedFromQueue = DataSize;
-				ALSource->BuffersAddedToDSBuffer -= ALSource->NumBuffersRemovedFromQueue;
 
+				if (ALSource->NumBuffersRemovedFromQueue > ALSource->BuffersAddedToDSBuffer)
+				{
+					ALSource->BuffersAddedToDSBuffer = 0;
+					ALSource->BufferPosition = 0;
+				}
+				else
+				{
+					ALSource->BuffersAddedToDSBuffer -= ALSource->NumBuffersRemovedFromQueue;
+				}
+				
 				ALSource->update1 |= SUNQUEUE;
 				UpdateContext(Context, ALSOURCE, source);
 			}
@@ -1768,44 +1955,37 @@ ALvoid InitSourceParams(ALsource *pSource)
 {
 	pSource->valid=AL_TRUE;
 
-	pSource->param[AL_CONE_INNER_ANGLE-AL_CONE_INNER_ANGLE].data.f=360.0;
-
-	pSource->param[AL_CONE_OUTER_ANGLE-AL_CONE_INNER_ANGLE].data.f=360.0;
-
-	pSource->param[AL_PITCH-AL_CONE_INNER_ANGLE].data.f= 1.0;
-
-	pSource->param[AL_POSITION-AL_CONE_INNER_ANGLE].data.fv3[0]=0.0;
-	pSource->param[AL_POSITION-AL_CONE_INNER_ANGLE].data.fv3[1]=0.0;
-	pSource->param[AL_POSITION-AL_CONE_INNER_ANGLE].data.fv3[2]=0.0;
-
-	pSource->param[AL_DIRECTION-AL_CONE_INNER_ANGLE].data.fv3[0]=0.0;
-	pSource->param[AL_DIRECTION-AL_CONE_INNER_ANGLE].data.fv3[1]=0.0;
-	pSource->param[AL_DIRECTION-AL_CONE_INNER_ANGLE].data.fv3[2]=0.0;
-
-	pSource->param[AL_VELOCITY-AL_CONE_INNER_ANGLE].data.fv3[0]=0.0;
-	pSource->param[AL_VELOCITY-AL_CONE_INNER_ANGLE].data.fv3[1]=0.0;
-	pSource->param[AL_VELOCITY-AL_CONE_INNER_ANGLE].data.fv3[2]=0.0;
-
-	pSource->param[AL_REFERENCE_DISTANCE-AL_CONE_INNER_ANGLE].data.f= 1.0;
-
-	pSource->param[AL_MAX_DISTANCE-AL_CONE_INNER_ANGLE].data.f= FLT_MAX;
-
-	pSource->param[AL_ROLLOFF_FACTOR-AL_CONE_INNER_ANGLE].data.f= 1.0;
-
-	pSource->param[AL_LOOPING-AL_CONE_INNER_ANGLE].data.i= AL_FALSE;
-
-	pSource->param[AL_GAIN-AL_CONE_INNER_ANGLE].data.f= 1.0f;
-
-	pSource->param[AL_MIN_GAIN-AL_CONE_INNER_ANGLE].data.f= 0.0f;
-
-	pSource->param[AL_MAX_GAIN-AL_CONE_INNER_ANGLE].data.f= 1.0f;
-
-	pSource->param[AL_CONE_OUTER_GAIN-AL_CONE_INNER_ANGLE].data.f= 0.0f;
+	pSource->flInnerAngle = 360.0f;
+	pSource->flOuterAngle = 360.0f;
+	pSource->flPitch = 1.0f;
+	pSource->vPosition[0] = 0.0f;
+	pSource->vPosition[1] = 0.0f;
+	pSource->vPosition[2] = 0.0f;
+	pSource->vOrientation[0] = 0.0f;
+	pSource->vOrientation[1] = 0.0f;
+	pSource->vOrientation[2] = 0.0f;
+	pSource->vVelocity[0] = 0.0f;
+	pSource->vVelocity[1] = 0.0f;
+	pSource->vVelocity[2] = 0.0f;
+	pSource->flRefDistance = 1.0f;
+	pSource->flMaxDistance = FLT_MAX;
+	pSource->flRollOffFactor = 1.0f;
+	pSource->bLooping = AL_FALSE;
+	pSource->flGain = 1.0f;
+	pSource->flMinGain = 0.0f;
+	pSource->flMaxGain = 1.0f;
+	pSource->flOuterGain = 0.0f;
 
 	pSource->state = AL_INITIAL;
 
-	pSource->param[AL_BUFFER-AL_CONE_INNER_ANGLE].data.i= 0;
+	pSource->ulBufferID= 0;
 
+	pSource->flDistance = 0.0f;
+	pSource->lAttenuationVolume = 0;
+	pSource->lVolume = 0;
+	pSource->lMaxVolume = 0;
+	pSource->lMinVolume = -10000;
+	pSource->lFinalVolume = 0;
 	pSource->EAX20BP.lDirect = EAXBUFFER_DEFAULTDIRECT;
 	pSource->EAX20BP.lDirectHF = EAXBUFFER_DEFAULTDIRECTHF;
 	pSource->EAX20BP.lRoom = EAXBUFFER_DEFAULTROOM;
@@ -1817,9 +1997,207 @@ ALvoid InitSourceParams(ALsource *pSource)
 	pSource->EAX20BP.flOcclusionRoomRatio = EAXBUFFER_DEFAULTOCCLUSIONROOMRATIO;
 	pSource->EAX20BP.lOutsideVolumeHF = EAXBUFFER_DEFAULTOUTSIDEVOLUMEHF;
 	pSource->EAX20BP.flRoomRolloffFactor = EAXBUFFER_DEFAULTROOMROLLOFFFACTOR;
-	pSource->EAX20BP.flAirAbsorptionFactor = EAXBUFFER_DEFAULTAIRABSORPTIONFACTOR;
+	pSource->EAX20BP.flAirAbsorptionFactor = 0.0f;
 	pSource->EAX20BP.dwFlags = EAXBUFFER_DEFAULTFLAGS;
 
 	pSource->update1 |= SGENERATESOURCE | CONEANGLES | FREQUENCY | POSITION | VELOCITY | ORIENTATION |
 		MINDIST | MAXDIST | LOOPED | VOLUME | CONEOUTSIDEVOLUME | STATE | ROLLOFFFACTOR;
+}
+
+
+ALboolean CheckSourceType(ALCcontext *pContext, ALsource *pSource)
+{
+	DSBUFFERDESC DSBDescription;
+	DS3DBUFFER DS3DBuffer;
+	WAVEFORMATEX OutputType;
+	ALbufferlistitem *ALBufferListItem;
+	ALuint	BufferID = 0;
+	ALuint	Channels;
+	ALint	volume;
+
+	// Find first non-NULL Buffer ID in the queue
+	ALBufferListItem = pSource->queue;
+	while (ALBufferListItem)
+	{
+		if (ALBufferListItem->buffer)
+		{
+			BufferID = ALBufferListItem->buffer;
+			break;
+		}
+		ALBufferListItem = ALBufferListItem->next;
+	}
+
+	if (BufferID == 0)
+		return AL_TRUE;
+
+	// Check if the buffer is stereo
+    Channels = (((((ALbuffer*)ALTHUNK_LOOKUPENTRY(BufferID))->format==AL_FORMAT_MONO8)||(((ALbuffer*)ALTHUNK_LOOKUPENTRY(BufferID))->format==AL_FORMAT_MONO16))?1:2);
+	
+	if ((Channels == 2) && (pSource->SourceType == SOURCE3D))
+	{
+		// Playing a stereo buffer
+
+		// Need to destroy the DS Streaming Mono 3D Buffer and create a Stereo 2D buffer
+		if (pSource->uservalue3)
+		{
+			IKsPropertySet_Release((LPKSPROPERTYSET)pSource->uservalue3);
+			pSource->uservalue3 = NULL;
+		}
+		if (pSource->uservalue2)
+		{
+			IDirectSound3DBuffer_Release((LPDIRECTSOUND3DBUFFER)pSource->uservalue2);
+			pSource->uservalue2 = NULL;
+		}
+		if (pSource->uservalue1)
+		{
+			IDirectSoundBuffer_Stop((LPDIRECTSOUNDBUFFER)pSource->uservalue1);
+			IDirectSoundBuffer_Release((LPDIRECTSOUNDBUFFER)pSource->uservalue1);
+			pSource->uservalue1=NULL;
+		}
+		
+		pSource->DSBufferPlaying = AL_FALSE;
+		pSource->SourceType = SOURCE2D;
+
+		// Set Caps
+		memset(&DSBDescription,0,sizeof(DSBUFFERDESC));
+		DSBDescription.dwSize=sizeof(DSBUFFERDESC);
+		DSBDescription.dwFlags=DSBCAPS_CTRLVOLUME|DSBCAPS_CTRLFREQUENCY|DSBCAPS_GLOBALFOCUS|
+			DSBCAPS_GETCURRENTPOSITION2|DSBCAPS_LOCSOFTWARE;
+		DSBDescription.dwBufferBytes=88200;
+		DSBDescription.lpwfxFormat=&OutputType;
+		memset(&OutputType,0,sizeof(WAVEFORMATEX));
+		OutputType.wFormatTag=WAVE_FORMAT_PCM;
+		OutputType.nChannels=2;
+		OutputType.wBitsPerSample=16;
+		OutputType.nBlockAlign=4;
+		OutputType.nSamplesPerSec=44100;
+		OutputType.nAvgBytesPerSec=176400;
+		OutputType.cbSize=0;
+		if (IDirectSound_CreateSoundBuffer(pContext->Device->lpDS,&DSBDescription,(LPDIRECTSOUNDBUFFER *)&pSource->uservalue1,NULL)==DS_OK)
+		{
+			IDirectSoundBuffer_SetCurrentPosition((LPDIRECTSOUNDBUFFER)pSource->uservalue1,0);
+		}
+
+		// Check the buffer was created successfully
+		if (pSource->uservalue1 == NULL)
+			return AL_FALSE;
+
+		// Update variables
+		pSource->OldPlayCursor = 0;
+		pSource->OldWriteCursor = 0;
+		pSource->DSFrequency = 44100;
+		pSource->lAttenuationVolume = 0;
+		pSource->lFinalVolume = 0;
+
+		if (pContext->bUseManualAttenuation)
+		{
+			SetSourceLevel(pSource, 0);
+		}
+		else
+		{
+			volume = pSource->lVolume + pContext->Listener.lVolume;
+			CLAMP(volume, -10000, 0)
+			IDirectSoundBuffer_SetVolume((LPDIRECTSOUNDBUFFER)pSource->uservalue1, volume);
+		}
+	}
+	else if ((Channels == 1) && (pSource->SourceType == SOURCE2D))
+	{
+		// Playing a (3D) Mono buffer
+
+		// Need to destroy the stereo streaming buffer and create a 3D mono one instead
+		if (pSource->uservalue1)
+		{
+			IDirectSoundBuffer_Stop((LPDIRECTSOUNDBUFFER)pSource->uservalue1);
+			IDirectSoundBuffer_Release((LPDIRECTSOUNDBUFFER)pSource->uservalue1);
+			pSource->uservalue1=NULL;
+		}
+
+		pSource->DSBufferPlaying = AL_FALSE;
+		pSource->SourceType = SOURCE3D;
+
+		// Set Caps
+		memset(&DSBDescription,0,sizeof(DSBUFFERDESC));
+		DSBDescription.dwSize=sizeof(DSBUFFERDESC);
+		DSBDescription.dwFlags=DSBCAPS_CTRLVOLUME|DSBCAPS_CTRLFREQUENCY|DSBCAPS_CTRL3D|DSBCAPS_GLOBALFOCUS|
+			DSBCAPS_GETCURRENTPOSITION2|DSBCAPS_LOCHARDWARE;
+		DSBDescription.dwBufferBytes=88200;
+		DSBDescription.lpwfxFormat=&OutputType;
+		memset(&OutputType,0,sizeof(WAVEFORMATEX));
+		OutputType.wFormatTag=WAVE_FORMAT_PCM;
+		OutputType.nChannels=1;
+		OutputType.wBitsPerSample=16;
+		OutputType.nBlockAlign=2;
+		OutputType.nSamplesPerSec=44100;
+		OutputType.nAvgBytesPerSec=88200;
+		OutputType.cbSize=0;
+
+		if (IDirectSound_CreateSoundBuffer(pContext->Device->lpDS,&DSBDescription,(LPDIRECTSOUNDBUFFER *)&pSource->uservalue1,NULL)==DS_OK)
+		{
+			IDirectSoundBuffer_SetCurrentPosition((LPDIRECTSOUNDBUFFER)pSource->uservalue1,0);
+
+			// Get 3D Interface
+			if (IDirectSoundBuffer_QueryInterface((LPDIRECTSOUNDBUFFER)pSource->uservalue1,&IID_IDirectSound3DBuffer,(LPUNKNOWN *)&pSource->uservalue2)==DS_OK)
+			{
+				// Get Property Set Interface
+				IDirectSound3DBuffer_QueryInterface((LPDIRECTSOUND3DBUFFER)pSource->uservalue2,&IID_IKsPropertySet,(LPUNKNOWN *)&pSource->uservalue3);
+			}
+		}
+
+		// Check the buffer was created successfully
+		if ((pSource->uservalue1 == NULL) || (pSource->uservalue2 == NULL))
+			return AL_FALSE;
+
+		// Set 3D Properties
+		memset(&DS3DBuffer, 0, sizeof(DS3DBuffer));
+		DS3DBuffer.dwSize = sizeof(DS3DBUFFER);
+		DS3DBuffer.vPosition.x = pSource->vPosition[0];
+		DS3DBuffer.vPosition.y = pSource->vPosition[1];
+		DS3DBuffer.vPosition.z = -pSource->vPosition[2];
+		DS3DBuffer.vVelocity.x = pSource->vVelocity[0];
+		DS3DBuffer.vVelocity.y = pSource->vVelocity[1];
+		DS3DBuffer.vVelocity.z = -pSource->vVelocity[2];
+		DS3DBuffer.dwInsideConeAngle = (ALuint)pSource->flInnerAngle;
+		DS3DBuffer.dwOutsideConeAngle = (ALuint)pSource->flOuterAngle;
+		DS3DBuffer.dwMode = pSource->bHeadRelative ? DS3DMODE_HEADRELATIVE : DS3DMODE_NORMAL;
+		DS3DBuffer.flMinDistance = pSource->flRefDistance;
+		DS3DBuffer.flMaxDistance = pSource->flMaxDistance;
+		DS3DBuffer.lConeOutsideVolume = LinearGainToMB(pSource->flOuterGain);
+		DS3DBuffer.vConeOrientation.x = pSource->vOrientation[0];
+		DS3DBuffer.vConeOrientation.y = pSource->vOrientation[1];
+		DS3DBuffer.vConeOrientation.z = -pSource->vOrientation[2];
+		// Make sure Cone Orientation is not 0,0,0 (which is Open AL's default !)
+		if ((DS3DBuffer.vConeOrientation.x == 0.0f) && (DS3DBuffer.vConeOrientation.y == 0.0f) && (DS3DBuffer.vConeOrientation.z == 0.0f))
+			DS3DBuffer.vConeOrientation.z = 1.0f;
+		IDirectSound3DBuffer_SetAllParameters((LPDIRECTSOUND3DBUFFER)pSource->uservalue2, &DS3DBuffer, DS3D_IMMEDIATE);
+
+		// Set EAX Properties (if they have been applied)
+		if (pSource->uservalue3)
+		{
+			if (bEAX2Initialized)
+			{
+				IKsPropertySet_Set((LPKSPROPERTYSET)pSource->uservalue3, &DSPROPSETID_EAX20_BufferProperties, DSPROPERTY_EAXBUFFER_ALLPARAMETERS, NULL, 0, &pSource->EAX20BP, sizeof(EAXBUFFERPROPERTIES));
+			}
+		}
+
+		// Update variables
+		pSource->OldPlayCursor = 0;
+		pSource->OldWriteCursor = 0;
+		pSource->DSFrequency = 44100;
+
+		pSource->lFinalVolume = 0;
+
+		// If manual attenuation, force an update
+		if (pContext->bUseManualAttenuation)
+		{
+			SetSourceLevel(pSource, LEVELFLAG_RECALCULATE_ATTENUATION);
+		}
+		else
+		{
+			volume = pSource->lVolume + pContext->Listener.lVolume;
+			CLAMP(volume, -10000, 0)
+			IDirectSoundBuffer_SetVolume((LPDIRECTSOUNDBUFFER)pSource->uservalue1, volume);
+		}
+	}
+
+	return AL_TRUE;
 }

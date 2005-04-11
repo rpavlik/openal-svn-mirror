@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <memory.h>
 #include "OpenAL32/Include/alMain.h"
+#include "AL/al.h"
 #include "AL/alc.h"
 #include "AL/alut.h"
 
@@ -161,14 +162,24 @@ ALUTAPI ALvoid ALUTAPIENTRY alutLoadWAVFile(ALbyte *file,ALenum *format,ALvoid *
 				if (!memcmp(ChunkHdr.Id,"fmt ",4))
 				{
 					fread(&FmtHdr,1,sizeof(WAVFmtHdr_Struct),Stream);
-					if (FmtHdr.Format==0x0001)
+					if ((FmtHdr.Format==0x0001)||(FmtHdr.Format==0xFFFE))
 					{
-						*format=(FmtHdr.Channels==1?
-								(FmtHdr.BitsPerSample==8?AL_FORMAT_MONO8:AL_FORMAT_MONO16):
-								(FmtHdr.BitsPerSample==8?AL_FORMAT_STEREO8:AL_FORMAT_STEREO16));
+						if (FmtHdr.Channels==1)
+							*format=(FmtHdr.BitsPerSample==4?alGetEnumValue((ALubyte *)"AL_FORMAT_MONO_IMA4"):(FmtHdr.BitsPerSample==8?AL_FORMAT_MONO8:AL_FORMAT_MONO16));
+						else if (FmtHdr.Channels==2)
+							*format=(FmtHdr.BitsPerSample==4?alGetEnumValue((ALubyte *)"AL_FORMAT_STEREO_IMA4"):(FmtHdr.BitsPerSample==8?AL_FORMAT_STEREO8:AL_FORMAT_STEREO16));
 						*freq=FmtHdr.SamplesPerSec;
 						fseek(Stream,ChunkHdr.Size-sizeof(WAVFmtHdr_Struct),SEEK_CUR);
 					} 
+					else if (FmtHdr.Format==0x0011)
+					{
+						if (FmtHdr.Channels==1)
+							*format=alGetEnumValue((ALubyte *)"AL_FORMAT_MONO_IMA4");
+						else if (FmtHdr.Channels==2)
+							*format=alGetEnumValue((ALubyte *)"AL_FORMAT_STEREO_IMA4");
+						*freq=FmtHdr.SamplesPerSec;
+						fseek(Stream,ChunkHdr.Size-sizeof(WAVFmtHdr_Struct),SEEK_CUR);
+					}
 					else
 					{
 						fread(&FmtExHdr,1,sizeof(WAVFmtExHdr_Struct),Stream);
@@ -177,21 +188,10 @@ ALUTAPI ALvoid ALUTAPIENTRY alutLoadWAVFile(ALbyte *file,ALenum *format,ALvoid *
 				}
 				else if (!memcmp(ChunkHdr.Id,"data",4))
 				{
-					if (FmtHdr.Format==0x0001)
-					{
-						*size=ChunkHdr.Size;
-						*data=malloc(ChunkHdr.Size+31);
-						if (*data) fread(*data,FmtHdr.BlockAlign,ChunkHdr.Size/FmtHdr.BlockAlign,Stream);
-						memset(((char *)*data)+ChunkHdr.Size,0,31);
-					}
-					else if (FmtHdr.Format==0x0011)
-					{
-						//IMA ADPCM
-					}
-					else if (FmtHdr.Format==0x0055)
-					{
-						//MP3 WAVE
-					}
+					*size=ChunkHdr.Size;
+					*data=malloc(ChunkHdr.Size+31);
+					if (*data) fread(*data,FmtHdr.BlockAlign,ChunkHdr.Size/FmtHdr.BlockAlign,Stream);
+					memset(((char *)*data)+ChunkHdr.Size,0,31);
 				}
 				else if (!memcmp(ChunkHdr.Id,"smpl",4))
 				{

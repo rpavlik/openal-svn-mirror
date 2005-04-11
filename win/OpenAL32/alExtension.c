@@ -20,6 +20,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "Include/alMain.h"
 #include "Include/alExtension.h"
 #include "Include/alEax.h"
 
@@ -78,6 +79,8 @@ static ALenums	   enumeration[]={
 	{ "AL_FORMAT_MONO16",				AL_FORMAT_MONO16					},
 	{ "AL_FORMAT_STEREO8",				AL_FORMAT_STEREO8					},
 	{ "AL_FORMAT_STEREO16",				AL_FORMAT_STEREO16					},
+	{ "AL_FORMAT_MONO_IMA4",			AL_FORMAT_MONO_IMA4					},
+	{ "AL_FORMAT_STEREO_IMA4",			AL_FORMAT_STEREO_IMA4				},
 
 	// Buffer attributes
 	{ "AL_FREQUENCY",					AL_FREQUENCY						},

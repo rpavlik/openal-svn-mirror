@@ -54,6 +54,11 @@ char szDebug[256];
 #define DWORD_PTR DWORD
 #endif
 
+#define sqr(a) ((a) * (a))
+#define CLAMP(x, min, max) if (x < min)	x = min; else if (x > max) x = max;
+
+#define LEVEL_TOLERANCE 100
+
 ///////////////////////////////////////////////////////
 
 
@@ -81,8 +86,9 @@ ALuint GetMaxNumStereoBuffers(LPDIRECTSOUND lpDS);
 ALuint GetMaxNum3DMonoBuffers(LPDIRECTSOUND lpDS);
 
 // RollOff functions
-void SetAverageGlobalRollOff(ALCcontext *pContext);
-void SetDistanceModel(ALCcontext *ALContext);
+void InitializeManualAttenuation(ALCcontext *pContext);
+void SetDistanceModel(ALCcontext *pContext);
+void SetNonEAXSourceLevels(ALCcontext *pContext, ALsource *pSource, ALuint ulFlags);
 
 ///////////////////////////////////////////////////////
 
@@ -140,13 +146,11 @@ ALCuint		g_ulContextCount = 0;
 // Context Error
 static ALCenum g_eLastContextError = ALC_NO_ERROR;
 
-// Forced Source update
-ALsource *g_pForceSourceUpdate = NULL;
+// EAX Related (need to be reset in alcOpenDevice)
 
-// EAX Related
-extern ALboolean bEAX4Initialized;
-extern ALboolean bEAX3Initialized;
+typedef enum { NONE, EAX1, EAX2, EAX25, EAX3, EAX4 } EAXVERSION;
 
+extern ALboolean bEAX2Initialized;
 ///////////////////////////////////////////////////////
 
 
@@ -266,7 +270,7 @@ ALvoid InitContext(ALCcontext *pContext)
 		pContext->DopplerFactor = 1.0f;
 		pContext->DopplerVelocity = 1.0f;
 
-		pContext->bUseAverageRollOff = AL_FALSE;
+		pContext->bUseManualAttenuation = AL_FALSE;
 		
 		// Initialize update to set all the Listener parameters
 		pContext->Listener.update1 = LPOSITION | LVELOCITY | LORIENTATION | LDOPPLERFACTOR | LDOPPLERVELOCITY | LDISTANCEMODEL;
@@ -875,8 +879,8 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(const ALCubyte *deviceName)
 		device->hWaveThread = NULL;
 		device->ulWaveThreadID = 0;
 		device->lWaveBuffersCommitted = 0;
-		//Set EAX Unified parameters
-		device->lpEAXListener = NULL;
+		//Reset EAX Variables
+		bEAX2Initialized = AL_FALSE;
 		//Platform specific
 		memset(&OutputType,0,sizeof(WAVEFORMATEX));
 		OutputType.wFormatTag=WAVE_FORMAT_PCM;
@@ -1214,7 +1218,6 @@ ALCAPI ALCvoid ALCAPIENTRY alcCloseDevice(ALCdevice *pDevice)
 			}
 		}
 		//Release device structure
-//		DeleteCriticalSection(&g_mutex);
 		LeaveCriticalSection(&g_mutex);
 		memset(pDevice,0,sizeof(ALCdevice));
 		free(pDevice);
@@ -1416,7 +1419,7 @@ void CALLBACK DirectSound3DProc(UINT uID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR
 	ALuint PlayCursor, WriteCursor, DataToLock;
     ALuint DataSize;
 	ALuint Part1Size, Part2Size;
-	ALuint DataPlayed, DataCount;
+	ALuint DataCount;
 	ALuint BytesPlayed, BufferSize;
 	ALuint NewTime;
 	ALint  BytesPlayedSinceLastTimer;
@@ -1455,12 +1458,6 @@ void CALLBACK DirectSound3DProc(UINT uID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR
 	// Process each playing source
 	for (loop=0;loop < ulSourceCount;loop++)
 	{
-		if ((g_pForceSourceUpdate) && (g_pForceSourceUpdate != ALSource))
-		{
-			ALSource = ALSource->next;
-			continue;
-		}
-
 		if (ALSource->DSBufferPlaying)
 		{
 			// Get position in DS Buffer
@@ -1488,7 +1485,7 @@ void CALLBACK DirectSound3DProc(UINT uID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR
 					BytesPlayedSinceLastTimer = (PlayCursor - ALSource->OldPlayCursor);
 			}
 
-			ALSource->BytesPlayed += BytesPlayedSinceLastTimer;
+			ALSource->lBytesPlayed += BytesPlayedSinceLastTimer;
 			ALSource->OldTime = NewTime;
 
 			// Lock buffer from Old Write cursor to current Play cursor
@@ -1535,55 +1532,47 @@ void CALLBACK DirectSound3DProc(UINT uID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR
 
 			// Update current buffer variable
 
-			// Find position in queue
-			BytesPlayed = ALSource->BytesPlayed;
-
-			if (BytesPlayed >= ALSource->TotalBufferDataSize)
+			if (ALSource->lBytesPlayed > 0)
 			{
-				if (ALSource->param[AL_LOOPING-AL_CONE_INNER_ANGLE].data.i == AL_TRUE)
+				// Find position in queue
+				BytesPlayed = ALSource->lBytesPlayed;
+
+				if (BytesPlayed >= ALSource->TotalBufferDataSize)
 				{
-					BytesPlayed = (BytesPlayed % ALSource->TotalBufferDataSize);
+					if (ALSource->bLooping == AL_TRUE)
+					{
+						BytesPlayed = (BytesPlayed % ALSource->TotalBufferDataSize);
+					}
+					else
+					{
+						// Not looping ... must have played too much data !
+						BytesPlayed = ALSource->TotalBufferDataSize;
+					}
 				}
-				else
+
+				ALBufferListItem = ALSource->queue;
+				DataSize = 0;
+				while (ALBufferListItem != NULL)
 				{
-					// Not looping ... must have played too much data !
-					BytesPlayed = ALSource->TotalBufferDataSize;
+					if (ALBufferListItem->buffer)
+						BufferSize = ((ALbuffer*)(ALTHUNK_LOOKUPENTRY(ALBufferListItem->buffer)))->size;
+					else
+						BufferSize = 0;
+					DataSize += BufferSize;
+					if (DataSize >= BytesPlayed)
+						break;
+					else
+						ALBufferListItem = ALBufferListItem->next;
 				}
+
+				// Record current BufferID
+				ALSource->ulBufferID = ALBufferListItem->buffer;
 			}
 
-			ALBufferListItem = ALSource->queue;
-			DataSize = 0;
-			while (ALBufferListItem != NULL)
-			{
-				if (ALBufferListItem->buffer)
-                    BufferSize = ((ALbuffer*)(ALTHUNK_LOOKUPENTRY(ALBufferListItem->buffer)))->size;
-				else
-					BufferSize = 0;
-				DataSize += BufferSize;
-				if (DataSize >= BytesPlayed)
-					break;
-				else
-					ALBufferListItem = ALBufferListItem->next;
-			}
-
-			// Record current BufferID
-			ALSource->param[AL_BUFFER-AL_CONE_INNER_ANGLE].data.i = ALBufferListItem->buffer;
-
-			// If we are not looping, decrement DataStillToPlay by the amount played since the last
-			// Timer event, and check if any buffers in the queue have finished playing
+			// If we are not looping, check if any buffers in the queue have finished playing
 			// Also check if the Source has now finished playing
-			if (ALSource->param[AL_LOOPING-AL_CONE_INNER_ANGLE].data.i == AL_FALSE)
+			if (ALSource->bLooping == AL_FALSE)
 			{
-				ALSource->DataStillToPlay -= BytesPlayedSinceLastTimer;
-
-				if (ALSource->DataStillToPlay < 0)
-					ALSource->DataStillToPlay = 0;
-
-				// Check if any buffers in the queue have finished playing - if they have adjust
-				// their state to PROCESSED
-
-				DataPlayed = ALSource->TotalBufferDataSize - ALSource->DataStillToPlay;
-
 				DataCount = 0;
 				ALSource->BuffersProcessed = 0;
 				ALBufferListItem = ALSource->queue;
@@ -1595,7 +1584,7 @@ void CALLBACK DirectSound3DProc(UINT uID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR
 						DataSize = 0;
 
 					DataCount += DataSize;
-					if (DataCount <= DataPlayed)
+					if ((ALint)DataCount <= ALSource->lBytesPlayed)
 					{
 						// Buffer has been played
 						ALBufferListItem->bufferstate = PROCESSED;
@@ -1607,23 +1596,17 @@ void CALLBACK DirectSound3DProc(UINT uID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR
 				}
 
 				// Check if finished - if so stop source !
-				if (ALSource->DataStillToPlay == 0)
+				if (ALSource->lBytesPlayed >= (ALint)ALSource->TotalBufferDataSize)
 				{
 					ALSource->state = AL_STOPPED;
 					ALSource->CurrentState = AL_STOPPED;
 
-					// Reset variables
-					ALSource->BufferPosition = 0;
-					ALSource->BytesPlayed = 0;
-					ALSource->FinishedQueue = AL_FALSE;
-					ALSource->SilenceAdded = 0;
-
-					// Make sure current buffer points to last queue buffer
+					// Make sure current buffer points to last queued buffer
 					ALBufferListItem = ALSource->queue;
 					while (ALBufferListItem)
 					{
 						if (ALBufferListItem->next == NULL)
-							ALSource->param[AL_BUFFER-AL_CONE_INNER_ANGLE].data.i = ALBufferListItem->buffer;
+							ALSource->ulBufferID = ALBufferListItem->buffer;
 		
 						ALBufferListItem = ALBufferListItem->next;
 					}
@@ -1668,7 +1651,7 @@ ALvoid FillBuffer(ALsource *ALSource, ALubyte *pDestData, ALuint ulDestSize)
 	ALuint i;
 	ALvoid *Data;
 
-	if (pDestData)
+	if ((pDestData) && (ulDestSize > 0) && (ulDestSize <= 88200))
 	{
 		if (ALSource->FinishedQueue)
 		{
@@ -1712,14 +1695,22 @@ ALvoid FillBuffer(ALsource *ALSource, ALubyte *pDestData, ALuint ulDestSize)
 				}
 
 				if (DataSize == 0)
+				{
 					DataLeft = 0;
+				}
 				else
+				{
+					if (ALSource->BufferPosition > DataSize)
+						ALSource->BufferPosition = 0;
+
 					DataLeft = DataSize - ALSource->BufferPosition;
+				}
 
 				if (DataLeft > (ulDestSize - BytesWritten))
 				{
 					// Copy (ulDestSize - BytesWritten) bytes to Direct Sound buffer
 					memcpy(pDestData + BytesWritten, (ALubyte*)Data + ALSource->BufferPosition, ulDestSize - BytesWritten);
+
 					ALSource->FinishedQueue = AL_FALSE;	// More data to follow ...
 					ALSource->BufferPosition += (ulDestSize - BytesWritten);		// Record position in buffer data
 					BytesWritten += (ulDestSize - BytesWritten);
@@ -1743,7 +1734,7 @@ ALvoid FillBuffer(ALsource *ALSource, ALubyte *pDestData, ALuint ulDestSize)
 					if (ALBufferListItem == NULL)
 					{
 						// No more buffers - check for looping flag
-						if (ALSource->param[AL_LOOPING-AL_CONE_INNER_ANGLE].data.i == AL_TRUE)
+						if (ALSource->bLooping == AL_TRUE)
 						{
 							// Looping
 							ALBufferListItem = ALSource->queue;
@@ -1764,6 +1755,7 @@ ALvoid FillBuffer(ALsource *ALSource, ALubyte *pDestData, ALuint ulDestSize)
 			{
 				// Fill the rest of the buffer with silence
 				memset(pDestData + BytesWritten, 0, ulDestSize - BytesWritten);
+
 				ALSource->SilenceAdded += (ulDestSize - BytesWritten);
 			}
 
@@ -1801,16 +1793,13 @@ ALCvoid UpdateContext(ALCcontext *context, ALuint type, ALuint name)
 				UpdateSource(ALContext, ALSource);
 
 			// If we need to actually start playing the sound, do it now
-			if (ALSource->play)
+			if ((ALSource->play) && (ALSource->uservalue1))
 			{
-				if (ALSource->uservalue1)
-				{
-					// Start playing the DS Streaming buffer (always looping)
-					ALSource->OldTime = timeGetTime();
-					IDirectSoundBuffer_Play((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,0,0,DSBPLAY_LOOPING);
-					ALSource->play=AL_FALSE;
-					ALSource->DSBufferPlaying = AL_TRUE;
-				}
+				// Start playing the DS Streaming buffer (always looping)
+				ALSource->OldTime = timeGetTime();
+				IDirectSoundBuffer_Play((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,0,0,DSBPLAY_LOOPING);
+				ALSource->play = AL_FALSE;
+				ALSource->DSBufferPlaying = AL_TRUE;
 			}
 		}
 
@@ -1837,13 +1826,12 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 {
 	WAVEFORMATEX OutputType;
 	DSBUFFERDESC DSBDescription;
-	DS3DBUFFER DS3DBuffer;
 	ALfloat Dir[3], Pos[3], Vel[3];
 	ALuint	DataPlayed, DataCount, TotalDataSize;
 	ALint	BufferSize, DataCommitted;
 	ALint	Relative;
-    ALuint Freq, State, Channels, outerAngle, innerAngle;
-	ALfloat Pitch, outerGain, maxDist, minDist, Gain;
+    ALuint Freq, State, outerAngle, innerAngle;
+	ALfloat Pitch, outerGain, maxDist, minDist;
 	ALvoid *lpPart1, *lpPart2;
 	ALuint	Part1Size, Part2Size, DataSize;
 	ALuint DataToCopy, PlayCursor, WriteCursor;
@@ -1851,6 +1839,8 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 	ALbufferlistitem *ALBufferListItem;
 	ALbufferlistitem *ALBufferListTemp;
 	ALint	volume;
+	ALuint BytesPlayedSinceLastTime, CursorGap, DataToLock;
+	ALboolean bServiceNow;
 
 	// Check if the Source is being Destroyed
 	if (ALSource->update1 == SDELETE)
@@ -1897,21 +1887,28 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 		OutputType.nAvgBytesPerSec=88200;
 		OutputType.cbSize=0;
 		ALSource->DSFrequency=44100;
+
 		if (IDirectSound_CreateSoundBuffer(ALContext->Device->lpDS,&DSBDescription,(LPDIRECTSOUNDBUFFER *)&ALSource->uservalue1,NULL)==DS_OK)
 		{
 			IDirectSoundBuffer_SetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,0);
-
-			// Set Volume
-			Gain = ALSource->param[AL_GAIN-AL_CONE_INNER_ANGLE].data.f;
-			Gain = (Gain * ALContext->Listener.Gain);
-			volume = LinearGainToDB(Gain);
-			IDirectSoundBuffer_SetVolume((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, volume);
 
 			// Get 3D Interface
 			if (IDirectSoundBuffer_QueryInterface((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,&IID_IDirectSound3DBuffer,(LPUNKNOWN *)&ALSource->uservalue2)==DS_OK)
 			{
 				// Get Property Set Interface
 				IDirectSound3DBuffer_QueryInterface((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,&IID_IKsPropertySet,(LPUNKNOWN *)&ALSource->uservalue3);
+
+				// Set Volume
+				if (ALContext->bUseManualAttenuation)
+				{
+					SetSourceLevel(ALSource, 0);
+				}
+				else
+				{
+					volume = ALSource->lVolume + ALContext->Listener.lVolume;
+					CLAMP(volume, -10000, 0)
+					IDirectSoundBuffer_SetVolume((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, volume);
+				}
 			}
 			else
 			{
@@ -1920,9 +1917,6 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 				ALSource->uservalue1 = NULL;
 			}
 		}
-
-		// Update RollOff
-		SetRollOffFactor(ALSource);
 
 		ALSource->update1 &= ~SGENERATESOURCE;
 		if (ALSource->update1 == 0)
@@ -1955,6 +1949,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 						IDirectSoundBuffer_Play((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,0,0,DSBPLAY_LOOPING);
 						ALSource->DSBufferPlaying = AL_TRUE;
 						ALSource->CurrentState = AL_PLAYING;
+						ALSource->play = AL_FALSE;
 						break;
 					}
 
@@ -1962,10 +1957,10 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 					ALSource->BuffersProcessed = 0;
 					ALSource->BuffersAddedToDSBuffer = 0;
 					ALSource->BufferPosition = 0;
-					ALSource->BytesPlayed = 0;
-					ALSource->DataStillToPlay = 0;
+					ALSource->lBytesPlayed = 0;
 					ALSource->FinishedQueue = AL_FALSE;
 					ALSource->Silence = 0;
+					ALSource->SilenceAdded = 0;
 
 					ALBufferListItem = ALSource->queue;
 
@@ -1998,176 +1993,11 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 
 					// Update current buffer variable
 					BufferID = ALBufferListItem->buffer;
-                    ALSource->param[AL_BUFFER-AL_CONE_INNER_ANGLE].data.i = BufferID;
-
-					ALSource->DataStillToPlay = ALSource->TotalBufferDataSize;
-
-					// Check if the buffer is stereo
-                    Channels = (((((ALbuffer*)ALTHUNK_LOOKUPENTRY(BufferID))->format==AL_FORMAT_MONO8)||(((ALbuffer*)ALTHUNK_LOOKUPENTRY(BufferID))->format==AL_FORMAT_MONO16))?1:2);
-					
-					if ((Channels == 2) && (ALSource->SourceType == SOURCE3D))
-					{
-						// Playing a stereo buffer
-
-						// Need to destroy the DS Streaming Mono 3D Buffer and create a Stereo 2D buffer
-						if (ALSource->uservalue3)
-						{
-							IKsPropertySet_Release((LPKSPROPERTYSET)ALSource->uservalue3);
-							ALSource->uservalue3 = NULL;
-						}
-						if (ALSource->uservalue2)
-						{
-							IDirectSound3DBuffer_Release((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2);
-							ALSource->uservalue2 = NULL;
-						}
-						IDirectSoundBuffer_Stop((LPDIRECTSOUNDBUFFER)ALSource->uservalue1);
-						IDirectSoundBuffer_Release((LPDIRECTSOUNDBUFFER)ALSource->uservalue1);
-						
-						ALSource->uservalue1=NULL;
-						ALSource->DSBufferPlaying = AL_FALSE;
-						
-						ALSource->SourceType = SOURCE2D;
-
-						// Set Caps
-						memset(&DSBDescription,0,sizeof(DSBUFFERDESC));
-						DSBDescription.dwSize=sizeof(DSBUFFERDESC);
-						DSBDescription.dwFlags=DSBCAPS_CTRLVOLUME|DSBCAPS_CTRLFREQUENCY|DSBCAPS_GLOBALFOCUS|
-							DSBCAPS_GETCURRENTPOSITION2|DSBCAPS_LOCSOFTWARE;
-						DSBDescription.dwBufferBytes=88200;
-						DSBDescription.lpwfxFormat=&OutputType;
-						memset(&OutputType,0,sizeof(WAVEFORMATEX));
-						OutputType.wFormatTag=WAVE_FORMAT_PCM;
-						OutputType.nChannels=2;
-						OutputType.wBitsPerSample=16;
-						OutputType.nBlockAlign=4;
-						OutputType.nSamplesPerSec=44100;
-						OutputType.nAvgBytesPerSec=176400;
-						OutputType.cbSize=0;
-						if (IDirectSound_CreateSoundBuffer(ALContext->Device->lpDS,&DSBDescription,(LPDIRECTSOUNDBUFFER *)&ALSource->uservalue1,NULL)==DS_OK)
-						{
-							IDirectSoundBuffer_SetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,0);
-						}
-
-						// Check the buffer was created successfully
-						if (ALSource->uservalue1 == NULL)
-						{
-							ALSource->play = AL_FALSE;
-							ALSource->state = AL_STOPPED;
-							ALSource->CurrentState = AL_STOPPED;
-							break;
-						}
-
-						// Update variables
-						ALSource->OldPlayCursor = 0;
-						ALSource->OldWriteCursor = 0;
-						ALSource->DSFrequency = 44100;
-
-						// Set correct volume for new DS Buffer
-						if (ALSource->uservalue1)
-						{
-							Gain = ALSource->param[AL_GAIN-AL_CONE_INNER_ANGLE].data.f;
-							Gain = (Gain * ALContext->Listener.Gain);
-							volume = LinearGainToDB(Gain);
-							IDirectSoundBuffer_SetVolume((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, volume);
-						}
-					}
-					else if ((Channels == 1) && (ALSource->SourceType == SOURCE2D))
-					{
-						// Playing a (3D) Mono buffer
-
-						// Need to destroy the stereo streaming buffer and create a 3D mono one instead
-						if (ALSource->uservalue1)
-						{
-							IDirectSoundBuffer_Stop((LPDIRECTSOUNDBUFFER)ALSource->uservalue1);
-							IDirectSoundBuffer_Release((LPDIRECTSOUNDBUFFER)ALSource->uservalue1);
-							ALSource->uservalue1=NULL;
-							ALSource->DSBufferPlaying = AL_FALSE;
-						}
-
-						ALSource->SourceType = SOURCE3D;
-
-						// Set Caps
-						memset(&DSBDescription,0,sizeof(DSBUFFERDESC));
-						DSBDescription.dwSize=sizeof(DSBUFFERDESC);
-						DSBDescription.dwFlags=DSBCAPS_CTRLVOLUME|DSBCAPS_CTRLFREQUENCY|DSBCAPS_CTRL3D|DSBCAPS_GLOBALFOCUS|
-							DSBCAPS_GETCURRENTPOSITION2|DSBCAPS_LOCHARDWARE;
-						DSBDescription.dwBufferBytes=88200;
-						DSBDescription.lpwfxFormat=&OutputType;
-						memset(&OutputType,0,sizeof(WAVEFORMATEX));
-						OutputType.wFormatTag=WAVE_FORMAT_PCM;
-						OutputType.nChannels=1;
-						OutputType.wBitsPerSample=16;
-						OutputType.nBlockAlign=2;
-						OutputType.nSamplesPerSec=44100;
-						OutputType.nAvgBytesPerSec=88200;
-						OutputType.cbSize=0;
-
-						if (IDirectSound_CreateSoundBuffer(ALContext->Device->lpDS,&DSBDescription,(LPDIRECTSOUNDBUFFER *)&ALSource->uservalue1,NULL)==DS_OK)
-						{
-							IDirectSoundBuffer_SetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,0);
-
-							// Get 3D Interface
-							if (IDirectSoundBuffer_QueryInterface((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,&IID_IDirectSound3DBuffer,(LPUNKNOWN *)&ALSource->uservalue2)==DS_OK)
-							{
-								// Get Property Set Interface
-								IDirectSound3DBuffer_QueryInterface((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,&IID_IKsPropertySet,(LPUNKNOWN *)&ALSource->uservalue3);
-							}
-						}
-
-						// Check the buffer was created successfully
-						if (ALSource->uservalue1 == NULL)
-						{
-							ALSource->play = AL_FALSE;
-							ALSource->state = AL_STOPPED;
-							ALSource->CurrentState = AL_STOPPED;
-							break;
-						}
-
-						// Set 3D Properties
-						if (ALSource->uservalue2)
-						{
-							memset(&DS3DBuffer, 0, sizeof(DS3DBuffer));
-							DS3DBuffer.dwSize = sizeof(DS3DBUFFER);
-							DS3DBuffer.vPosition.x = ALSource->param[AL_POSITION-AL_CONE_INNER_ANGLE].data.fv3[0];
-							DS3DBuffer.vPosition.y = ALSource->param[AL_POSITION-AL_CONE_INNER_ANGLE].data.fv3[1];
-							DS3DBuffer.vPosition.z = -ALSource->param[AL_POSITION-AL_CONE_INNER_ANGLE].data.fv3[2];
-							DS3DBuffer.vVelocity.x = ALSource->param[AL_VELOCITY-AL_CONE_INNER_ANGLE].data.fv3[0];
-							DS3DBuffer.vVelocity.y = ALSource->param[AL_VELOCITY-AL_CONE_INNER_ANGLE].data.fv3[1];
-							DS3DBuffer.vVelocity.z = -ALSource->param[AL_VELOCITY-AL_CONE_INNER_ANGLE].data.fv3[2];
-							DS3DBuffer.dwInsideConeAngle = (ALuint)ALSource->param[AL_CONE_INNER_ANGLE-AL_CONE_INNER_ANGLE].data.f;
-							DS3DBuffer.dwOutsideConeAngle = (ALuint)ALSource->param[AL_CONE_OUTER_ANGLE-AL_CONE_INNER_ANGLE].data.f;
-							DS3DBuffer.dwMode = ALSource->relative ? DS3DMODE_HEADRELATIVE : DS3DMODE_NORMAL;
-							DS3DBuffer.flMinDistance = ALSource->param[AL_REFERENCE_DISTANCE-AL_CONE_INNER_ANGLE].data.f;
-							DS3DBuffer.flMaxDistance = ALSource->param[AL_MAX_DISTANCE-AL_CONE_INNER_ANGLE].data.f;
-							DS3DBuffer.lConeOutsideVolume = LinearGainToDB(ALSource->param[AL_CONE_OUTER_GAIN-AL_CONE_INNER_ANGLE].data.f);
-							DS3DBuffer.vConeOrientation.x = ALSource->param[AL_DIRECTION-AL_CONE_INNER_ANGLE].data.fv3[0];
-							DS3DBuffer.vConeOrientation.y = ALSource->param[AL_DIRECTION-AL_CONE_INNER_ANGLE].data.fv3[1];
-							DS3DBuffer.vConeOrientation.z = -ALSource->param[AL_DIRECTION-AL_CONE_INNER_ANGLE].data.fv3[2];
-							// Make sure Cone Orientation is not 0,0,0 (which is Open AL's default !)
-							if ((DS3DBuffer.vConeOrientation.x == 0.0f) && (DS3DBuffer.vConeOrientation.y == 0.0f) && (DS3DBuffer.vConeOrientation.z == 0.0f))
-								DS3DBuffer.vConeOrientation.z = 1.0f;
-
-							IDirectSound3DBuffer_SetAllParameters((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2, &DS3DBuffer, DS3D_IMMEDIATE);
-						}
-
-						// Update variables
-						ALSource->OldPlayCursor = 0;
-						ALSource->OldWriteCursor = 0;
-						ALSource->DSFrequency = 44100;
-
-						// Set correct volume for new DS Buffer
-						if (ALSource->uservalue1)
-						{
-							Gain = ALSource->param[AL_GAIN-AL_CONE_INNER_ANGLE].data.f;
-							Gain = (Gain * ALContext->Listener.Gain);
-							volume = LinearGainToDB(Gain);
-							IDirectSoundBuffer_SetVolume((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, volume);
-						}
-					}
+                    ALSource->ulBufferID = BufferID;
 
 					// Set Direct Sound buffer to frequency of current Open AL buffer multiplied by desired Pitch
                     Freq = ((ALbuffer*)ALTHUNK_LOOKUPENTRY(BufferID))->frequency;
-					Pitch = ALSource->param[AL_PITCH-AL_CONE_INNER_ANGLE].data.f;
+					Pitch = ALSource->flPitch;
 
 					if (ALSource->DSFrequency != (unsigned long)(Freq*Pitch))
 					{
@@ -2190,12 +2020,12 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 						if (PlayCursor > WriteCursor)
 						{
 							DataToCopy = PlayCursor - WriteCursor;
-							ALSource->ulDelta = ((88200 - PlayCursor) + WriteCursor);
+							ALSource->lBytesPlayed -= ((88200 - PlayCursor) + WriteCursor);
 						}
 						else
 						{
 							DataToCopy = ((88200 - WriteCursor) + PlayCursor);
-							ALSource->ulDelta = WriteCursor - PlayCursor;
+							ALSource->lBytesPlayed -= WriteCursor - PlayCursor;
 						}
 
 						if (SUCCEEDED(IDirectSoundBuffer_Lock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,WriteCursor,DataToCopy,&lpPart1,&Part1Size,&lpPart2,&Part2Size,0)))
@@ -2214,11 +2044,11 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 
 							IDirectSoundBuffer_Unlock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, lpPart1, Part1Size, lpPart2, Part2Size);
 						}
+
+						ALSource->play = AL_FALSE;
 					}
 					else
 					{
-						ALSource->ulDelta = 0;
-
 						if (SUCCEEDED(IDirectSoundBuffer_Lock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,0,0,&lpPart1,&Part1Size,0,0,DSBLOCK_ENTIREBUFFER)))
 						{
 							FillBuffer(ALSource, lpPart1, Part1Size);
@@ -2248,15 +2078,9 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 				{
 					if (ALSource->CurrentState != AL_STOPPED)
 					{
-						// Re-set variables
-						ALSource->BufferPosition = 0;
-						ALSource->DataStillToPlay = 0;
-						ALSource->FinishedQueue = AL_FALSE;
-						ALSource->SilenceAdded = 0;
-
 						ALSource->CurrentState = AL_STOPPED;
 
-						// Lock as much of buffer as possible, and fill with silence
+						// Lock as much of buffer as possible, and fill with silence 
 						IDirectSoundBuffer_GetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, &PlayCursor, &WriteCursor);
 						
 						if (PlayCursor > WriteCursor)
@@ -2304,7 +2128,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 		// End of STATE update
 		ALSource->update1 &= ~STATE;
 		if (ALSource->update1 == 0)
-				return;
+			return;
 	}
 
 
@@ -2313,14 +2137,37 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 	{
 		if (ALSource->uservalue2)
 		{
-			Pos[0] = ALSource->param[AL_POSITION-AL_CONE_INNER_ANGLE].data.fv3[0];
-			Pos[1] = ALSource->param[AL_POSITION-AL_CONE_INNER_ANGLE].data.fv3[1];
-			Pos[2] = -ALSource->param[AL_POSITION-AL_CONE_INNER_ANGLE].data.fv3[2];
+			Pos[0] = ALSource->vPosition[0];
+			Pos[1] = ALSource->vPosition[1];
+			Pos[2] = -ALSource->vPosition[2];
 			IDirectSound3DBuffer_SetPosition((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,Pos[0],Pos[1],Pos[2],DS3D_IMMEDIATE);
-			ALSource->update1 &= ~POSITION;
-			if (ALSource->update1 == 0)
-				return;
+
+			// Manual attenation
+			if (ALContext->bUseManualAttenuation)
+			{
+				// Calculate distance between Source and Listener
+				if (ALSource->bHeadRelative)
+				{
+					ALSource->flDistance =
+						(float)sqrt(sqr(ALSource->vPosition[0]) +
+									sqr(ALSource->vPosition[1]) +
+									sqr(ALSource->vPosition[2]));
+				}
+				else
+				{
+					ALSource->flDistance =
+						(float)sqrt(sqr(ALContext->Listener.Position[0] - ALSource->vPosition[0]) +
+									sqr(ALContext->Listener.Position[1] - ALSource->vPosition[1]) +
+									sqr(ALContext->Listener.Position[2] - ALSource->vPosition[2]));
+				}
+				
+				SetSourceLevel(ALSource, LEVELFLAG_RECALCULATE_ATTENUATION);
+			}
 		}
+
+		ALSource->update1 &= ~POSITION;
+		if (ALSource->update1 == 0)
+			return;
 	}
 
 
@@ -2329,10 +2176,11 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 	{
 		if (ALSource->uservalue2)
 		{
-			Vel[0] = ALSource->param[AL_VELOCITY-AL_CONE_INNER_ANGLE].data.fv3[0];
-			Vel[1] = ALSource->param[AL_VELOCITY-AL_CONE_INNER_ANGLE].data.fv3[1];
-			Vel[2] = -ALSource->param[AL_VELOCITY-AL_CONE_INNER_ANGLE].data.fv3[2];
+			Vel[0] = ALSource->vVelocity[0];
+			Vel[1] = ALSource->vVelocity[1];
+			Vel[2] = -ALSource->vVelocity[2];
 			IDirectSound3DBuffer_SetVelocity((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,Vel[0],Vel[1],Vel[2],DS3D_IMMEDIATE);
+
 			ALSource->update1 &= ~VELOCITY;
 			if (ALSource->update1 == 0)
 				return;
@@ -2345,10 +2193,11 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 	{
 		if (ALSource->uservalue2)
 		{
-			Dir[0] = ALSource->param[AL_DIRECTION-AL_CONE_INNER_ANGLE].data.fv3[0];
-			Dir[1] = ALSource->param[AL_DIRECTION-AL_CONE_INNER_ANGLE].data.fv3[1];
-			Dir[2] = -ALSource->param[AL_DIRECTION-AL_CONE_INNER_ANGLE].data.fv3[2];
+			Dir[0] = ALSource->vOrientation[0];
+			Dir[1] = ALSource->vOrientation[1];
+			Dir[2] = -ALSource->vOrientation[2];
 			IDirectSound3DBuffer_SetConeOrientation((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,Dir[0],Dir[1],Dir[2],DS3D_IMMEDIATE);
+
 			ALSource->update1 &= ~ORIENTATION;
 			if (ALSource->update1 == 0)
 				return;
@@ -2359,6 +2208,8 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 	// Check if any Buffers have been added to this Source's queue
 	if (ALSource->update1 & SQUEUE)
 	{
+		bServiceNow = AL_FALSE;
+
 		if ((ALSource->uservalue1) && (ALSource->state == AL_PLAYING))
 		{
 			// Some buffer(s) have been added to the queue
@@ -2367,12 +2218,52 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 			// data from the buffers in the queue
 			if (ALSource->SilenceAdded > 0)
 			{
-				if (ALSource->SilenceAdded > ALSource->OldWriteCursor)
+
+				// Need to determine if it is safe / possible to write the new queued data on to the end of the
+				// last valid data.   This is only possible, if the Play Cursor has not gone past the end of the
+				// valid data minus the gap between the Play and Write cursors.
+				// If the data can't be added at the end, it should be written to the current Write Cursor and
+				// BytesPlayed adjusted accordingly.
+
+				IDirectSoundBuffer_GetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, &PlayCursor, &WriteCursor);
+
+				if (WriteCursor > PlayCursor)
+					CursorGap = WriteCursor - PlayCursor;
+				else
+					CursorGap = (88200 - PlayCursor) + WriteCursor;
+
+				if (PlayCursor >= ALSource->OldPlayCursor)
+					BytesPlayedSinceLastTime = PlayCursor - ALSource->OldPlayCursor;
+				else
+					BytesPlayedSinceLastTime = (88200 - ALSource->OldPlayCursor) + PlayCursor;
+
+				ALSource->lBytesPlayed += BytesPlayedSinceLastTime;
+
+				if (ALSource->lBytesPlayed >= (ALint)(ALSource->TotalBufferDataSize - CursorGap))
 				{
-					ALSource->OldWriteCursor = (88200 - ALSource->SilenceAdded + ALSource->OldWriteCursor);
+					ALSource->OldWriteCursor = WriteCursor;
+
+					// If we have played more than the TotalBufferDataSize then set lBytesPlayed
+					// to the total size minus the gap between the Play and Write cursors (because new data will
+					// be written to Write Cursor)
+
+					// Otherwise, we need a minor correction to BytesPlayed equal to the gap between the WriteCursor
+					// and the end of the valid data (otherwise this will be included in BytesPlayed)
+
+					if (ALSource->lBytesPlayed > (ALint)ALSource->TotalBufferDataSize)
+						ALSource->lBytesPlayed = ALSource->TotalBufferDataSize - CursorGap;
+					else
+						ALSource->lBytesPlayed -= (CursorGap - (ALSource->TotalBufferDataSize - ALSource->lBytesPlayed));
 				}
 				else
-					ALSource->OldWriteCursor -= ALSource->SilenceAdded;
+				{
+					if (ALSource->SilenceAdded > ALSource->OldWriteCursor)
+					{
+						ALSource->OldWriteCursor = (88200 - ALSource->SilenceAdded + ALSource->OldWriteCursor);
+					}
+					else
+						ALSource->OldWriteCursor -= ALSource->SilenceAdded;
+				}
 
 				// Read position from next buffer should be set to 0
 				ALSource->BufferPosition = 0;
@@ -2382,41 +2273,68 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 
 				// Make sure that the we haven't finished processing the queue !
 				ALSource->FinishedQueue = AL_FALSE;
+
+				// Need to copy new data to the (new) Write cursor immediately
+				bServiceNow = AL_TRUE;
 			}
-			else if (ALSource->param[AL_LOOPING-AL_CONE_INNER_ANGLE].data.i == AL_TRUE)
+			else if (ALSource->bLooping == AL_TRUE)
 			{
+				// Need to copy new data to the (new) Write cursor immediately
+				bServiceNow = AL_TRUE;
+
 				// Get position in DS Buffer
 				IDirectSoundBuffer_GetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, &PlayCursor, &WriteCursor);
 
 				// Calculate amount of data played
 				if (ALSource->OldPlayCursor > PlayCursor)
-					ALSource->BytesPlayed += ((88200 - ALSource->OldPlayCursor) + PlayCursor);
+					ALSource->lBytesPlayed += ((88200 - ALSource->OldPlayCursor) + PlayCursor);
 				else
-					ALSource->BytesPlayed += (PlayCursor - ALSource->OldPlayCursor);
-
-				ALSource->OldPlayCursor = PlayCursor;
+					ALSource->lBytesPlayed += (PlayCursor - ALSource->OldPlayCursor);
 
 				// BytesPlayed and BuffersAddedToDSBuffer are always MOD'ed against the total data size, and
 				// number of buffers in queue respectively.  These calculates will go wrong if the queue has completed
 				// a loop, so we need to re-set them here (using the old values of TotalBufferData and BuffersInQueue)
 				// so they effectively are set to values as if the queue hasn't looped (yet)
-				ALSource->BytesPlayed = (ALSource->BytesPlayed % ALSource->TotalBufferDataSize);
+				if (ALSource->lBytesPlayed > 0)
+					ALSource->lBytesPlayed = (ALSource->lBytesPlayed % ALSource->TotalBufferDataSize);
+
 				ALSource->BuffersAddedToDSBuffer = (ALSource->BuffersAddedToDSBuffer % (ALSource->BuffersInQueue - ALSource->NumBuffersAddedToQueue));
 				
 				// If the current queue is smaller than 88200, it will be necessary to overwrite some
 				// data that has been copied into the DS Buffer.   Re-set OldWriteCursor to end of current
 				// queue loop, and update BufferPosition and BuffersAddedToDSBuffer, so in the TimerCallback
 				// the new queued buffers will be added at the correct location
-				if ((ALSource->TotalBufferDataSize - ALSource->BytesPlayed) < 88200)
+				if ((ALSource->TotalBufferDataSize - ALSource->lBytesPlayed) < 88200)
 				{
 					// Need to find position to write new data
-					ALSource->OldWriteCursor = PlayCursor + (ALSource->TotalBufferDataSize - ALSource->BytesPlayed);
-
-					// Position correction based on difference between Write and Play Cursors
-					ALSource->OldWriteCursor += ALSource->ulDelta;
+					ALSource->OldWriteCursor = PlayCursor + (ALSource->TotalBufferDataSize - ALSource->lBytesPlayed);
 
 					if (ALSource->OldWriteCursor >= 88200)
 						ALSource->OldWriteCursor -= 88200;
+
+					// Make sure that ALSource->OldWriteCursor is NOT between the current PlayCursor and WriteCursor
+					if (WriteCursor > PlayCursor)
+					{
+						while ((ALSource->OldWriteCursor >= PlayCursor) && (ALSource->OldWriteCursor <= WriteCursor))
+						{
+							ALSource->OldWriteCursor += ALSource->TotalBufferDataSize;
+							if (ALSource->OldWriteCursor >= 88200)
+								ALSource->OldWriteCursor -= 88200;
+
+							ALSource->lBytesPlayed -= ALSource->TotalBufferDataSize;
+						}
+					}
+					else
+					{
+						while ((ALSource->OldWriteCursor >= PlayCursor) && (ALSource->OldWriteCursor <= WriteCursor))
+						{
+							ALSource->OldWriteCursor += ALSource->TotalBufferDataSize;
+							if (ALSource->OldWriteCursor >= 88200)
+								ALSource->OldWriteCursor -= 88200;
+
+							ALSource->lBytesPlayed -= ALSource->TotalBufferDataSize;
+						}
+					}
 
 					// Read position from next buffer should be set to 0
 					ALSource->BufferPosition = 0;
@@ -2427,21 +2345,29 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 					ALSource->FinishedQueue = AL_FALSE;
 				}
 			}
-
-			// Update DataStillToPlay (will be equal to totaldatasize because the Queue is looped)
-			ALSource->DataStillToPlay += ALSource->SizeOfBufferDataAddedToQueue;
 		}
 
 		ALSource->TotalBufferDataSize += ALSource->SizeOfBufferDataAddedToQueue;
 		ALSource->SizeOfBufferDataAddedToQueue = 0;
 		ALSource->NumBuffersAddedToQueue = 0;
 
-		if ((ALSource->uservalue1) && (ALSource->state == AL_PLAYING))
+		if (bServiceNow)
 		{
-			// Force a timer call-back to fill DSBuffer with new queue'd data
-			g_pForceSourceUpdate = ALSource;
-			DirectSound3DProc(0,0,(DWORD_PTR)ALContext->Device,0,0);
-			g_pForceSourceUpdate = NULL;
+			// Lock buffer from Old Write cursor to current Play cursor
+			if (ALSource->OldWriteCursor > PlayCursor)
+				DataToLock = (88200 - ALSource->OldWriteCursor) + PlayCursor;
+			else
+				DataToLock = PlayCursor - ALSource->OldWriteCursor;
+
+			if (SUCCEEDED(IDirectSoundBuffer_Lock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, ALSource->OldWriteCursor, DataToLock, &lpPart1, &Part1Size, &lpPart2, &Part2Size, 0)))
+			{
+				FillBuffer(ALSource, (ALubyte *)lpPart1, Part1Size);
+				FillBuffer(ALSource, (ALubyte *)lpPart2, Part2Size);
+
+				ALSource->OldPlayCursor = PlayCursor;
+
+				IDirectSoundBuffer_Unlock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, lpPart1, Part1Size, lpPart2, Part2Size);
+			}
 		}
 
 		ALSource->update1 &= ~SQUEUE;
@@ -2465,7 +2391,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 		// will be incorrect)
 		if ((ALSource->uservalue1) && (ALSource->state == AL_PLAYING))
 		{
-			ALSource->BytesPlayed -= ALSource->SizeOfBufferDataRemovedFromQueue;
+			ALSource->lBytesPlayed -= ALSource->SizeOfBufferDataRemovedFromQueue;
 		}
 		ALSource->TotalBufferDataSize -= ALSource->SizeOfBufferDataRemovedFromQueue;
 		ALSource->NumBuffersRemovedFromQueue = 0;
@@ -2479,7 +2405,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 			else
 				BufferID = 0;
 
-            ALSource->param[AL_BUFFER-AL_CONE_INNER_ANGLE].data.i = BufferID;
+            ALSource->ulBufferID = BufferID;
 		}
 
 		ALSource->update1 &= ~SUNQUEUE;
@@ -2492,16 +2418,24 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 	{
 		if (ALSource->uservalue1)
 		{
-			Gain = ALSource->param[AL_GAIN-AL_CONE_INNER_ANGLE].data.f;
-			Gain = (Gain * ALContext->Listener.Gain);
-			volume = LinearGainToDB(Gain);
+			ALSource->lVolume = LinearGainToMB(ALSource->flGain);
 
-			IDirectSoundBuffer_SetVolume((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, volume);
+			if (ALContext->bUseManualAttenuation)
+			{
+				SetSourceLevel(ALSource, 0);
+			}
+			else
+			{
+				volume = ALSource->lVolume + ALContext->Listener.lVolume;
+				CLAMP(volume, -10000, 0)
+				IDirectSoundBuffer_SetVolume((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, volume);
 
-			ALSource->update1 &= ~VOLUME;
-			if (ALSource->update1 == 0)
-				return;
+			}
 		}
+
+		ALSource->update1 &= ~VOLUME;
+		if (ALSource->update1 == 0)
+			return;
 	}
 
 
@@ -2510,13 +2444,13 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 	{
 		if (ALSource->uservalue1)
 		{
-            BufferID = ALSource->param[AL_BUFFER-AL_CONE_INNER_ANGLE].data.i;
+            BufferID = ALSource->ulBufferID;
 			if (BufferID == 0)
 				Freq = 44100;
 			else
                 Freq = ((ALbuffer*)ALTHUNK_LOOKUPENTRY(BufferID))->frequency;
 
-			Pitch = ALSource->param[AL_PITCH-AL_CONE_INNER_ANGLE].data.f;
+			Pitch = ALSource->flPitch;
 			
 			ALSource->DSFrequency = (unsigned long)(Freq*Pitch);
 			IDirectSoundBuffer_SetFrequency((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,ALSource->DSFrequency);
@@ -2539,12 +2473,17 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 	{
 		if (ALSource->uservalue2)
 		{
-			minDist = ALSource->param[AL_REFERENCE_DISTANCE-AL_CONE_INNER_ANGLE].data.f;
+			minDist = ALSource->flRefDistance;
 			IDirectSound3DBuffer_SetMinDistance((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,minDist,DS3D_IMMEDIATE);
-			ALSource->update1 &= ~MINDIST;
-			if (ALSource->update1 == 0)
-				return;
+
+			// Manual attenuation
+			if (ALContext->bUseManualAttenuation)
+				SetSourceLevel(ALSource, LEVELFLAG_RECALCULATE_ATTENUATION);
 		}
+
+		ALSource->update1 &= ~MINDIST;
+		if (ALSource->update1 == 0)
+			return;
 	}
 
 
@@ -2553,12 +2492,17 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 	{
 		if (ALSource->uservalue2)
 		{
-			maxDist = ALSource->param[AL_MAX_DISTANCE-AL_CONE_INNER_ANGLE].data.f;
+			maxDist = ALSource->flMaxDistance;
 			IDirectSound3DBuffer_SetMaxDistance((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,maxDist,DS3D_IMMEDIATE);
-			ALSource->update1 &= ~MAXDIST;
-			if (ALSource->update1 == 0)
-				return;
+
+			// Manual attenuation
+			if (ALContext->bUseManualAttenuation)
+				SetSourceLevel(ALSource, LEVELFLAG_RECALCULATE_ATTENUATION);
 		}
+
+		ALSource->update1 &= ~MAXDIST;
+		if (ALSource->update1 == 0)
+			return;
 	}
 
 
@@ -2567,10 +2511,11 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 	{
 		if (ALSource->uservalue2)
 		{
-			outerGain = ALSource->param[AL_CONE_OUTER_GAIN-AL_CONE_INNER_ANGLE].data.f;
-			volume = LinearGainToDB(outerGain);
+			outerGain = ALSource->flOuterGain;
+			volume = LinearGainToMB(outerGain);
 
 			IDirectSound3DBuffer_SetConeOutsideVolume((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2, volume,DS3D_IMMEDIATE);
+
 			ALSource->update1 &= ~CONEOUTSIDEVOLUME;
 			if (ALSource->update1 == 0)
 				return;
@@ -2581,24 +2526,80 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 	// Check if we need to update the Roll-Off Factor of the Source
 	if (ALSource->update1 & ROLLOFFFACTOR)
 	{
-		SetRollOffFactor(ALSource);
+		if (ALSource->uservalue2)
+		{
+			// Manual attenuation
+			SetSourceLevel(ALSource, LEVELFLAG_RECALCULATE_ATTENUATION);
+		}
 
 		ALSource->update1 &= ~ROLLOFFFACTOR;
 		if (ALSource->update1 == 0)
 			return;
 	}
+
+
+	// Check if we need to update Min Gain
+	if (ALSource->update1 & MINGAIN)
+	{
+		ALSource->lMinVolume = LinearGainToMB(ALSource->flMinGain);
+
+		// Manual attenuation
+		SetSourceLevel(ALSource, 0);
+
+		ALSource->update1 &= ~MINGAIN;
+		if (ALSource->update1 == 0)
+			return;
+	}
+
+
+	// Check if we need to update Max Gain
+	if (ALSource->update1 & MAXGAIN)
+	{
+		ALSource->lMaxVolume = LinearGainToMB(ALSource->flMaxGain);
+
+		// Manual attenuation
+		SetSourceLevel(ALSource, 0);
+
+		ALSource->update1 &= ~MAXGAIN;
+		if (ALSource->update1 == 0)
+			return;
+	}
 	
+
 	// Check if we need to update the 3D Processing Mode (Head Relative)
 	if (ALSource->update1 & MODE)
 	{
 		if (ALSource->uservalue2)
 		{
-			Relative = ALSource->relative ? DS3DMODE_HEADRELATIVE : DS3DMODE_NORMAL;
+			Relative = ALSource->bHeadRelative ? DS3DMODE_HEADRELATIVE : DS3DMODE_NORMAL;
 			IDirectSound3DBuffer_SetMode((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,Relative,DS3D_IMMEDIATE);
-			ALSource->update1 &= ~MODE;
-			if (ALSource->update1 == 0)
-				return;
+
+			// Manual attenation
+			if (ALContext->bUseManualAttenuation)
+			{
+				// Calculate distance between Source and Listener
+				if (ALSource->bHeadRelative)
+				{
+					ALSource->flDistance =
+						(float)sqrt(sqr(ALSource->vPosition[0]) +
+									sqr(ALSource->vPosition[1]) +
+									sqr(ALSource->vPosition[2]));
+				}
+				else
+				{
+					ALSource->flDistance =
+						(float)sqrt(sqr(ALContext->Listener.Position[0] - ALSource->vPosition[0]) +
+									sqr(ALContext->Listener.Position[1] - ALSource->vPosition[1]) +
+									sqr(ALContext->Listener.Position[2] - ALSource->vPosition[2]));
+				}
+				
+				SetSourceLevel(ALSource, LEVELFLAG_RECALCULATE_ATTENUATION);
+			}
 		}
+
+		ALSource->update1 &= ~MODE;
+		if (ALSource->update1 == 0)
+			return;
 	}
 
 
@@ -2607,10 +2608,11 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 	{
 		if (ALSource->uservalue2)
 		{
-			innerAngle = (ALuint)ALSource->param[AL_CONE_INNER_ANGLE-AL_CONE_INNER_ANGLE].data.f;
-			outerAngle = (ALuint)ALSource->param[AL_CONE_OUTER_ANGLE-AL_CONE_INNER_ANGLE].data.f;
+			innerAngle = (ALuint)ALSource->flInnerAngle;
+			outerAngle = (ALuint)ALSource->flOuterAngle;
 
 			IDirectSound3DBuffer_SetConeAngles((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,innerAngle,outerAngle,DS3D_IMMEDIATE);
+
 			ALSource->update1 &= ~CONEANGLES;
 			if (ALSource->update1 == 0)
 				return;
@@ -2621,11 +2623,13 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 	// Check if Looping has been enabled / disabled
 	if (ALSource->update1 & LOOPED)
 	{
+		bServiceNow = AL_FALSE;
+
 		// Only has an effect if the Source is playing
 		if ((ALSource->uservalue1) && (ALSource->state == AL_PLAYING))
 		{
 			// Find out whether Looping has been enabled or disabled
-			if (ALSource->param[AL_LOOPING-AL_CONE_INNER_ANGLE].data.i == AL_TRUE)
+			if (ALSource->bLooping == AL_TRUE)
 			{
 				// Looping enabled !
 
@@ -2633,18 +2637,10 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 				// to PENDING, and the number of buffers processed set to 0
 				ALSource->BuffersProcessed = 0;
 
-				// While calculating the total size of the data (by summing the datasize of each
-				// buffer in the queue), set all Buffer states to PENDING
+				// Set all Buffer states to PENDING
 				ALBufferListTemp = ALSource->queue;
-				ALSource->DataStillToPlay = 0;
-
 				while (ALBufferListTemp != NULL)
 				{
-					if (ALBufferListTemp->buffer)
-	                    DataSize = ((ALbuffer*)ALTHUNK_LOOKUPENTRY(ALBufferListTemp->buffer))->size;
-					else
-						DataSize = 0;
-					ALSource->DataStillToPlay += DataSize;
 					ALBufferListTemp->bufferstate = PENDING;
 					ALBufferListTemp = ALBufferListTemp->next;
 				}
@@ -2659,6 +2655,18 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 					ALSource->OldWriteCursor -= ALSource->SilenceAdded;
 
 					ALSource->BufferPosition = 0;
+
+					ALSource->SilenceAdded = 0;
+
+					IDirectSoundBuffer_GetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, &PlayCursor, &WriteCursor);
+
+					// Calculate amount of data played
+					if (ALSource->OldPlayCursor > PlayCursor)
+						ALSource->lBytesPlayed += ((88200 - ALSource->OldPlayCursor) + PlayCursor);
+					else
+						ALSource->lBytesPlayed += (PlayCursor - ALSource->OldPlayCursor);
+					
+					bServiceNow = AL_TRUE;
 				}
 
 				ALSource->FinishedQueue = AL_FALSE;
@@ -2672,31 +2680,31 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 				
 				// Calculate amount of data played
 				if (ALSource->OldPlayCursor > PlayCursor)
-					ALSource->BytesPlayed += ((88200 - ALSource->OldPlayCursor) + PlayCursor);
+					ALSource->lBytesPlayed += ((88200 - ALSource->OldPlayCursor) + PlayCursor);
 				else
-					ALSource->BytesPlayed += (PlayCursor - ALSource->OldPlayCursor);
-				
-				ALSource->OldPlayCursor = PlayCursor;
+					ALSource->lBytesPlayed += (PlayCursor - ALSource->OldPlayCursor);
 
 				// Calculate how much data is left to play for the current iteration of the looping data
 				TotalDataSize = ALSource->TotalBufferDataSize;
 
-				ALSource->DataStillToPlay = TotalDataSize - (ALSource->BytesPlayed % TotalDataSize);
+				if (ALSource->lBytesPlayed > (ALint)TotalDataSize)
+					ALSource->lBytesPlayed = (ALSource->lBytesPlayed % TotalDataSize);
+
+				ALSource->BuffersAddedToDSBuffer = (ALSource->BuffersAddedToDSBuffer % ALSource->BuffersInQueue);
 
 				if (WriteCursor > PlayCursor)
 					DataCommitted = WriteCursor - PlayCursor;
 				else
 					DataCommitted = (88200 - PlayCursor) + WriteCursor;
 
-				if (DataCommitted > ALSource->DataStillToPlay)
+				if (DataCommitted > (ALint)(ALSource->TotalBufferDataSize - ALSource->lBytesPlayed))
 				{
 					// Data for the next iteration of the loop has already been committed
-					// Therefore increment DataStillToPlay by the total loop size
-					ALSource->DataStillToPlay += TotalDataSize;
+					ALSource->lBytesPlayed -= TotalDataSize;
 				}
 				else
 				{
-					DataPlayed = TotalDataSize - ALSource->DataStillToPlay;
+					DataPlayed = ALSource->lBytesPlayed;
 					DataCount = 0;
 					ALSource->BuffersProcessed = 0;
 
@@ -2720,26 +2728,38 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 					}
 				}
 
-				if (ALSource->DataStillToPlay < 88200)
+				if ((ALSource->TotalBufferDataSize - ALSource->lBytesPlayed) < 88200)
 				{
-					// Need to move Write Cursor to end of valid data (so silence can be added
-					// after it)
-					ALSource->OldWriteCursor = PlayCursor + ALSource->DataStillToPlay;
-
-					// Position correction based on difference between Write and Play Cursors
-					ALSource->OldWriteCursor += ALSource->ulDelta;
+					// Need to move Write Cursor to end of valid data (so silence can be added after it)
+					ALSource->OldWriteCursor = PlayCursor + (ALSource->TotalBufferDataSize - ALSource->lBytesPlayed);
 
 					if (ALSource->OldWriteCursor >= 88200)
 						ALSource->OldWriteCursor -= 88200;
 
 					ALSource->FinishedQueue = AL_TRUE;
 				}
+
+				bServiceNow = AL_TRUE;
 			}
 
-			// Force a timer call-back to fill DSBuffer with new data
-			g_pForceSourceUpdate = ALSource;
-			DirectSound3DProc(0,0,(DWORD_PTR)ALContext->Device,0,0);
-			g_pForceSourceUpdate = NULL;
+			if (bServiceNow)
+			{
+				// Lock buffer from Old Write cursor to current Play cursor
+				if (ALSource->OldWriteCursor > PlayCursor)
+					DataToLock = (88200 - ALSource->OldWriteCursor) + PlayCursor;
+				else
+					DataToLock = PlayCursor - ALSource->OldWriteCursor;
+
+				if (SUCCEEDED(IDirectSoundBuffer_Lock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, ALSource->OldWriteCursor, DataToLock, &lpPart1, &Part1Size, &lpPart2, &Part2Size, 0)))
+				{
+					FillBuffer(ALSource, (ALubyte *)lpPart1, Part1Size);
+					FillBuffer(ALSource, (ALubyte *)lpPart2, Part2Size);
+
+					ALSource->OldPlayCursor = PlayCursor;
+
+					IDirectSoundBuffer_Unlock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, lpPart1, Part1Size, lpPart2, Part2Size);
+				}
+			}
 		}
 
 		ALSource->update1 &= ~LOOPED;
@@ -2760,31 +2780,38 @@ void UpdateListener(ALCcontext *ALContext)
 {
 	ALfloat		Pos[3],Vel[3], Ori[6];
 	ALfloat		flDistanceFactor;
-	ALsource	*ALSource;
-	ALfloat		Gain;
-	ALuint		i;
 	ALint		volume;
+	ALsource	*pSourceList;
 
 	if (ALContext->Listener.update1 & LVOLUME)
 	{
-		// Setting the volume of the Primary buffer has the effect of setting the volume
-		// of the Wave / Direct Sound Mixer Line, so we can't do that
+		ALContext->Listener.lVolume = LinearGainToMB(ALContext->Listener.Gain);
 
-		// Instead we adjust the Gain of every Source
-
-		ALSource = ALContext->Source;
-
-		for (i = 0; i < ALContext->SourceCount; i++)
+		if (ALContext->bUseManualAttenuation)
 		{
-			if (ALSource->uservalue1)
+			pSourceList = ALContext->Source;
+			while (pSourceList)
 			{
-				// Get current gain for source
-				Gain = ALSource->param[AL_GAIN-AL_CONE_INNER_ANGLE].data.f;
-				Gain = (Gain * ALContext->Listener.Gain);
-				volume = LinearGainToDB(Gain);
-				IDirectSoundBuffer_SetVolume((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, volume);
+				if (pSourceList->uservalue1)
+					SetSourceLevel(pSourceList, 0);
+
+				pSourceList = pSourceList->next;
 			}
-			ALSource = ALSource->next;
+		}
+		else
+		{
+			pSourceList = ALContext->Source;
+			while (pSourceList)
+			{
+				if (pSourceList->uservalue1)
+				{
+					volume = pSourceList->lVolume + ALContext->Listener.lVolume;
+					CLAMP(volume, -10000, 0)
+					IDirectSoundBuffer_SetVolume((LPDIRECTSOUNDBUFFER)pSourceList->uservalue1, volume);
+			}
+
+				pSourceList = pSourceList->next;
+			}
 		}
 
 		ALContext->Listener.update1 &= ~LVOLUME;
@@ -2798,6 +2825,27 @@ void UpdateListener(ALCcontext *ALContext)
 		Pos[1] = ALContext->Listener.Position[1];
 		Pos[2] = -ALContext->Listener.Position[2];
 		IDirectSound3DListener_SetPosition(ALContext->Device->lpDS3DListener, Pos[0], Pos[1], Pos[2],DS3D_IMMEDIATE);
+
+		// Manual attenuation
+		if (ALContext->bUseManualAttenuation)
+		{
+			pSourceList = ALContext->Source;
+			while (pSourceList)
+			{
+				// Calculate distance between Source and Listener (only affects 3D non-Head Relative sounds)
+				if ((pSourceList->uservalue2) && (pSourceList->bHeadRelative == AL_FALSE))
+				{
+					pSourceList->flDistance =
+						(float)sqrt(sqr(ALContext->Listener.Position[0] - pSourceList->vPosition[0]) +
+									sqr(ALContext->Listener.Position[1] - pSourceList->vPosition[1]) +
+									sqr(ALContext->Listener.Position[2] - pSourceList->vPosition[2]));
+				}
+
+				SetSourceLevel(pSourceList, LEVELFLAG_RECALCULATE_ATTENUATION);
+				pSourceList = pSourceList->next;
+			}
+		}
+
 		ALContext->Listener.update1 &= ~LPOSITION;
 		if (ALContext->Listener.update1 == 0)
 			return;
@@ -2897,115 +2945,170 @@ void EAXFix(ALCcontext *context)
 	}
 }
 
-
-void InitializeRollOffCalculations(ALCcontext *pContext)
+void InitializeManualAttenuation(ALCcontext *pContext)
 {
-	// Emulate Roll-Off by setting the DS3D Global RollOff to the average of all the Source's RollOff Factors
-	pContext->bUseAverageRollOff = AL_TRUE;
-
-	// Set Global RollOff to average Source RollOff
-	SetAverageGlobalRollOff(pContext);
-}
-
-
-void SetAverageGlobalRollOff(ALCcontext *pContext)
-{
-	ALsource	*pSource;
-	ALfloat		flRollOffFactor = 0.0f;
+	ALsource	*pSourceList;
+	ALfloat		flRollOffFactor;
 	ALuint		i;
 
-	if (pContext->SourceCount == 0)
+#ifdef _DEBUG
+	OutputDebugString("Initializing Manual Attenuation !\n");
+#endif
+
+	pContext->bUseManualAttenuation = AL_TRUE;
+
+	// Set Global RollOff Factor to 0
+	flRollOffFactor = 0.0f;
+	IDirectSound3DListener_SetRolloffFactor (pContext->Device->lpDS3DListener, flRollOffFactor, DS3D_IMMEDIATE);
+	
+	// Calculate level for every Source
+	pSourceList = pContext->Source;
+	for (i = 0; i < pContext->SourceCount; i++)
 	{
-		flRollOffFactor = 1.0f;
+		// Calculate distance between Source and Listener
+		if (pSourceList->SourceType == SOURCE2D)
+		{
+			pSourceList->flDistance =0;
+		}
+		else if (pSourceList->bHeadRelative)
+		{
+			pSourceList->flDistance =
+				(float)sqrt(sqr(pSourceList->vPosition[0]) +
+							sqr(pSourceList->vPosition[1]) +
+							sqr(pSourceList->vPosition[2]));
+		}
+		else
+		{
+			pSourceList->flDistance =
+				(float)sqrt(sqr(pContext->Listener.Position[0] - pSourceList->vPosition[0]) +
+							sqr(pContext->Listener.Position[1] - pSourceList->vPosition[1]) +
+							sqr(pContext->Listener.Position[2] - pSourceList->vPosition[2]));
+		}
+
+		SetSourceLevel(pSourceList, LEVELFLAG_RECALCULATE_ATTENUATION | LEVELFLAG_FORCE_EAX_CALL);
+		pSourceList = pSourceList->next;
+	}
+}
+
+void SetDistanceModel(ALCcontext *pContext)
+{
+	ALsource	*pSourceList;
+	ALfloat		flRollOffFactor;
+	ALuint		i;
+
+	if (pContext->bUseManualAttenuation)
+	{
+		pSourceList = pContext->Source;
+		for (i = 0; i < pContext->SourceCount; i++)
+		{
+			SetSourceLevel(pSourceList, LEVELFLAG_RECALCULATE_ATTENUATION);
+			pSourceList = pSourceList->next;
+		}
 	}
 	else
 	{
-		// Calculate average per-Source roll-off factor
-		pSource = pContext->Source;
-		for (i = 0; i < pContext->SourceCount; i++)
+		if (pContext->DistanceModel == AL_NONE)
 		{
-			flRollOffFactor += pSource->param[AL_ROLLOFF_FACTOR-AL_CONE_INNER_ANGLE].data.f;
-			pSource = pSource->next;
+			// Set Global RollOff Factor to 0
+			flRollOffFactor = 0.0f;
+			IDirectSound3DListener_SetRolloffFactor (pContext->Device->lpDS3DListener, flRollOffFactor, DS3D_IMMEDIATE);
 		}
-		flRollOffFactor = flRollOffFactor / pContext->SourceCount;
+		else if (pContext->DistanceModel == AL_INVERSE_DISTANCE_CLAMPED)
+		{
+			// Set Global RollOff Factor to 1.0
+			flRollOffFactor = 1.0f;
+			IDirectSound3DListener_SetRolloffFactor (pContext->Device->lpDS3DListener, flRollOffFactor, DS3D_IMMEDIATE);
+		}
+		else
+		{
+			// Has to be emulated manually
+			InitializeManualAttenuation(pContext);
+		}
 	}
-
-#ifdef _DEBUG
-	sprintf(szDebug, "Setting Global RollOff Factor to %.3f\n", flRollOffFactor);
-	OutputDebugString(szDebug);
-#endif
-
-	IDirectSound3DListener_SetRolloffFactor (pContext->Device->lpDS3DListener, flRollOffFactor, DS3D_IMMEDIATE);
 }
 
-void SetRollOffFactor(ALsource *pSource)
+void SetSourceLevel(ALsource *pSource, ALuint ulFlags)
 {
 	ALCcontext	*pContext;
 
 	pContext = alcGetCurrentContext();
 	if (pContext)
 	{
-		SuspendContext(pContext);
-
-		if (pContext->DistanceModel != AL_NONE)
+		if (pContext->bUseManualAttenuation)
 		{
-			if (pContext->bUseAverageRollOff)
-			{
-				// Set Global RollOff to average of all Source's RollOff Factors
-				SetAverageGlobalRollOff(pContext);
-			}
-			else if ((pSource) && (pSource->param[AL_ROLLOFF_FACTOR-AL_CONE_INNER_ANGLE].data.f != 1.0f))
-			{
-				InitializeRollOffCalculations(pContext);
-			}
+			if (pSource->uservalue1)
+				SetNonEAXSourceLevels(pContext, pSource, ulFlags);
 		}
-
-		ProcessContext(pContext);
+		else if ((pSource) && ((pSource->flRollOffFactor != 1.0f) ||
+			(pSource->flMinGain != 0.0f) ||
+			(pSource->flMaxGain != 1.0f)))
+		{
+			InitializeManualAttenuation(pContext);
+		}
 	}
 }
 
-
-void SetDistanceModel(ALCcontext *pContext)
+void SetNonEAXSourceLevels(ALCcontext *pContext, ALsource *pSource, ALuint ulFlags)
 {
-	ALfloat		flRollOffFactor;
+	long lVolume;
+	float flDistance;
 
-	if (pContext->DistanceModel != AL_NONE)
+	if (ulFlags & LEVELFLAG_RECALCULATE_ATTENUATION)
 	{
-		if (pContext->bUseAverageRollOff)
+		if ((pContext->DistanceModel == AL_NONE) || (pSource->SourceType == SOURCE2D))
 		{
-			InitializeRollOffCalculations(pContext);
+			pSource->lAttenuationVolume = 0;
 		}
 		else
 		{
-			// Set Global RollOff Factor to 1.0f
-#ifdef _DEBUG
-			OutputDebugString("Setting Global RollOff Factor to 1.0f\n");
-#endif
-			IDirectSound3DListener_SetRolloffFactor (pContext->Device->lpDS3DListener, 1.0f, DS3D_IMMEDIATE);
+			if (pContext->DistanceModel == AL_INVERSE_DISTANCE_CLAMPED)
+			{
+				flDistance = max(pSource->flDistance, pSource->flRefDistance);
+				flDistance = min(flDistance, pSource->flMaxDistance);
+			}
+			else
+			{
+				flDistance = pSource->flDistance;
+			}
+
+			pSource->lAttenuationVolume = (long)(-2000 * log10(1 + (((flDistance - pSource->flRefDistance) / pSource->flRefDistance) * pSource->flRollOffFactor)));
 		}
 	}
-	else
+
+	// Add Source's Volume
+	lVolume = pSource->lVolume + pSource->lAttenuationVolume;
+
+	// Clamp to Min/Max Volume
+	lVolume = min(lVolume, pSource->lMaxVolume);
+	lVolume = max(lVolume, pSource->lMinVolume);
+
+	// Add Listener Volume
+	lVolume += pContext->Listener.lVolume;
+
+	// Clamp in range
+	CLAMP(lVolume, -10000, 0)
+
+	// Set if actually different by more than LEVEL_TOLERANCE
+	if ((ulFlags & LEVELFLAG_FORCE_EAX_CALL) || (abs(lVolume - pSource->lFinalVolume) > LEVEL_TOLERANCE))
 	{
-		// Set Global RollOff Factor to 0
-		flRollOffFactor = 0.0f;
 #ifdef _DEBUG
-		OutputDebugString("Setting Global RollOff Factor to 0.0\n");
+		sprintf(szDebug, "Manual Attenuation Source volume is %d\n", lVolume);
+		OutputDebugString(szDebug);
 #endif
-		IDirectSound3DListener_SetRolloffFactor (pContext->Device->lpDS3DListener, flRollOffFactor, DS3D_IMMEDIATE);
+		pSource->lFinalVolume = lVolume;
+		IDirectSoundBuffer_SetVolume((LPDIRECTSOUNDBUFFER)pSource->uservalue1, lVolume);
 	}
 }
 
 
 /*
-	LinearGainToDB
+	LinearGainToMB
 
-	Helper function to convert a floating point amplitude (range 0.0 to 1.0) to Decibels
+	Helper function to convert a floating point amplitude (range 0.0 to 1.0) to Millibels
 */
-ALint LinearGainToDB(float flGain)
+ALint LinearGainToMB(float flGain)
 {
-	if (flGain >= 1.0f)
-		return 0;
-	else if (flGain > 0)
+	if (flGain > 0)
 		return (long)(2000.0*log10(flGain));
 	else
 		return -10000;
@@ -3130,3 +3233,4 @@ ALuint GetMaxNum3DMonoBuffers(LPDIRECTSOUND lpDS)
 
 	return numBuffers;
 }
+

@@ -28,6 +28,7 @@ typedef struct ALlistener_struct
 	ALfloat					Up[3];
 	ALfloat					Gain;
 	ALuint					update1;	// Store changes that need to be made in UpdateContext
+	ALint					lVolume;	// Listener Volume (mb) (converted from Listener Gain)
 	EAXLISTENERPROPERTIES	EAX20LP;
 } ALlistener;
 
