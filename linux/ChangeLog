@@ -1,5 +1,7 @@
 2005-04-16  Sven Panne  <sven.panne@aedion.de>
 
+	* include/AL/alc.h: Removed useless #ifdef.
+
 	* include/AL/alc.h, linux/doc/openal.texi,
 	linux/src/alc/alc_context.c: The Linux implementation of
 	alcMakeContextCurrent follows the spec now and returns an

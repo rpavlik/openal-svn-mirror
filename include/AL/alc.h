@@ -94,11 +94,7 @@ ALCAPI ALCdevice* ALCAPIENTRY alcGetContextsDevice(ALCcontext *context);
  */
 
 ALCAPI const ALCubyte * ALCAPIENTRY alcGetString( ALCdevice *deviceHandle, ALCenum token );
-#ifdef LINUX_AL
-ALCAPI void ALCAPIENTRY alcGetIntegerv(ALCdevice *deviceHandle, ALCenum  token , ALCsizei  size , ALCint *dest );
-#else
-ALCAPI void ALCAPIENTRY alcGetIntegerv(ALCdevice *device,ALCenum param,ALCsizei size,ALCint *data);
-#endif
+ALCAPI void ALCAPIENTRY alcGetIntegerv(ALCdevice *deviceHandle, ALCenum token, ALCsizei size, ALCint *dest);
 
 #else /* AL_NO_PROTOTYPES */
       ALCAPI ALCcontext *    ALCAPIENTRY (*alcCreateContext)( ALCdevice *dev, const ALCint* attrlist );
@@ -123,12 +119,7 @@ ALCAPI void ALCAPIENTRY alcGetIntegerv(ALCdevice *device,ALCenum param,ALCsizei 
       ALCAPI ALCenum         ALCAPIENTRY (*alcGetEnumValue)(ALCdevice *device, const ALCubyte *enumName);
       ALCAPI ALCdevice*      ALCAPIENTRY (*alcGetContextsDevice)(ALCcontext *context);
       ALCAPI const ALCubyte* ALCAPIENTRY (*alcGetString)( ALCdevice *deviceHandle, ALCenum token );
-#ifdef LINUX_AL
       ALCAPI void            ALCAPIENTRY (*alcGetIntegerv*)( ALCdevice *deviceHandle, ALCenum  token , ALCsizei  size , ALCint *dest );
-#else
-      ALCAPI void            ALCAPIENTRY (*alcGetIntegerv*)( ALCdevice *deviceHandle, ALCenum  token , ALCsizei  size , ALCint *dest );
-#endif
-
 #endif /* AL_NO_PROTOTYPES */
 
 #ifdef TARGET_OS_MAC
