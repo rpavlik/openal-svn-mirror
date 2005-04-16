@@ -159,7 +159,7 @@ At least one device must be created for the generation of contexts.
 @cindex Contexts
 
 A @code{Context} abstracts the audio device from the rest of the library
-(and the application).  You generally only need one.  Calling most al
+(and the application).  You generally only need one.  Calling most AL
 functions before creating a context via @code{alcCreateContext} will result
 in either an error or a segfault.
 
@@ -641,7 +641,7 @@ all contexts created must specify the context creation flag
 
 @end table
 
-@item void *alcCreateContext( ALCdevice *device, ALint* attrlist )
+@item ALCcontext *alcCreateContext( ALCdevice *device, ALint* attrlist )
 @findex alcCreateContext
 
 Create a context, returning a unique identifier for the context,
@@ -658,7 +658,7 @@ terminated by @code{ALC_INVALID} in alc enum / integer pairs.
 			   ALC_INVALID @};
 	ALCdevice *dev = alcOpenDevice( NULL );
 
-	void *context = alcCreateContext( dev, attrlist );
+	ALCcontext *context = alcCreateContext( dev, attrlist );
 @end lisp
 
 Valid context creation flags include:
@@ -701,7 +701,7 @@ Number of buffers to preallocate.
 calls (in general) either alter or query.  Several contexts can be mixed
 simultaneously.
 
-@item void *alcProcessContext( ALvoid *alcHandle )
+@item void alcProcessContext( ALCcontext *alcHandle )
 @findex alcProcessContext
 For synchronous operation (where the context specified by alcHandle
 was created using the @code{ALC_SYNC} context creation flag), this
@@ -712,18 +712,18 @@ In asynchronous operation, this almost always is a NOP.  The single
 exception that @code{alcProcessContext} will unpause a paused
 asynchronous context.
 
-@item void *alcPauseContext( ALvoid *alcHandle )
-@findex alcPauseContext
+@item void *alcSuspendContext( ALCcontext *alcHandle )
+@findex alcSuspendContext
 
-For currently unpaused asynchronous contexts, this call pauses the
+For currently unsuspended asynchronous contexts, this call suspends the
 context and prevents any of its sources from being processed.  Sources
 associated with this context do not have their position updated, and
 no mixing occurs.
 
-For paused asynchronous context, or synchronous contexts, this is a
+For suspended asynchronous context, or synchronous contexts, this is a
 legal NOP.
 
-@item ALCenum alcDestroyContext( ALvoid *alcHandle )
+@item void alcDestroyContext( ALCcontext *alcHandle )
 @findex alcDestroyContext
 
 Destroy the context associated with @code{alcHandle}, freeing all
@@ -1305,7 +1305,7 @@ static ALuint moving_source = 0;
 static time_t start;
 static void *data = (void *) 0xDEADBEEF;
 
-static void *context_id;
+static ALCcontext *context_id;
 
 static void init( void ) @{
         FILE *fh;
