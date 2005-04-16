@@ -161,10 +161,10 @@ unsigned int jlib_debug = 0;
  * alcMakeContextCurrent( ALCcontext *handle )
  *
  * Makes the context refered to by handle the current context.  If handle does
- * not refer to a context, ALC_INVALID_CONTEXT is set and returned.
- * Otherwise, the operation suceeds and ALC_NO_ERROR is returned.
+ * not refer to a context, ALC_INVALID_CONTEXT is set and ALC_FALSE returned.
+ * Otherwise, the operation suceeds and ALC_TRUE is returned.
  */
-ALCenum alcMakeContextCurrent( ALCcontext *handle )
+ALCboolean alcMakeContextCurrent( ALCcontext *handle )
 {
 	AL_context *cc;
 	int cid;
@@ -191,10 +191,8 @@ ALCenum alcMakeContextCurrent( ALCcontext *handle )
 
 					/* FIXME: wrong error */
 					_alcSetError( ALC_INVALID_CONTEXT );
-
 					_alcUnlockAllContexts();
-
-					return ALC_INVALID_CONTEXT;
+					return ALC_FALSE;
 				}
 
 				/*
@@ -211,7 +209,7 @@ ALCenum alcMakeContextCurrent( ALCcontext *handle )
 			ispaused = AL_TRUE;
 		}
 
-		return ALC_NO_ERROR;
+		return ALC_TRUE;
 	}
 
 	cid = VOIDP_TO_ALUINT( handle );
@@ -231,8 +229,7 @@ ALCenum alcMakeContextCurrent( ALCcontext *handle )
 		/* FIXME: wrong error */
 		_alcSetError( ALC_INVALID_CONTEXT );
 		_alcUnlockAllContexts( );
-
-		return ALC_INVALID_CONTEXT;
+		return ALC_FALSE;
 	}
 
 	if( should_init_mixer == AL_TRUE ) {
@@ -271,7 +268,7 @@ ALCenum alcMakeContextCurrent( ALCcontext *handle )
 		_alcUnlockAllContexts();
 	}
 
-	return ALC_NO_ERROR;
+	return ALC_TRUE;
 }
 
 /*

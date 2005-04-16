@@ -48,12 +48,7 @@ ALCAPI ALCcontext * ALCAPIENTRY alcCreateContext( ALCdevice *dev,
  *  several active contexts. But al* calls
  *  only affect the current context.
  */
-#ifdef LINUX_AL
-/* spec has return value as ALCboolean */
-ALCAPI ALCenum ALCAPIENTRY alcMakeContextCurrent( ALCcontext *alcHandle );
-#else
 ALCAPI ALCboolean ALCAPIENTRY alcMakeContextCurrent(ALCcontext *alcHandle);
-#endif
 
 /**
  * Perform processing on a synced context, non-op on a asynchronous
@@ -107,11 +102,7 @@ ALCAPI void ALCAPIENTRY alcGetIntegerv(ALCdevice *device,ALCenum param,ALCsizei 
 
 #else /* AL_NO_PROTOTYPES */
       ALCAPI ALCcontext *    ALCAPIENTRY (*alcCreateContext)( ALCdevice *dev, const ALCint* attrlist );
-#ifdef LINUX_AL
-      ALCAPI ALCenum	     ALCAPIENTRY (*alcMakeContextCurrent)( ALCcontext *alcHandle );
-#else
       ALCAPI ALCboolean      ALCAPIENTRY (*alcMakeContextCurrent)(ALCcontext *context);
-#endif
 #ifdef LINUX_AL
       ALCAPI ALCcontext *    ALCAPIENTRY (*alcProcessContext)( ALCcontext *alcHandle );
 #else

@@ -694,10 +694,10 @@ Number of buffers to preallocate.
 
 @end table
 
-@item ALCenum alcMakeContextCurrent( ALvoid *alcHandle )
+@item ALCboolean alcMakeContextCurrent( ALCcontext *alcHandle )
 @findex alcMakeContextCurrent
 
-@code{alcMakeContextCurrent} sets the current context, which is what al
+@code{alcMakeContextCurrent} sets the current context, which is what AL
 calls (in general) either alter or query.  Several contexts can be mixed
 simultaneously.
 

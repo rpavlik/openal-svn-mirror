@@ -1,5 +1,15 @@
 2005-04-16  Sven Panne  <sven.panne@aedion.de>
 
+	* include/AL/alc.h, linux/doc/openal.texi,
+	linux/src/alc/alc_context.c: The Linux implementation of
+	alcMakeContextCurrent follows the spec now and returns an
+	ALCboolean, where ALC_TRUE (value 1) means "OK". Formerly it
+	returned an ALCenum, where ALC_NO_ERROR (value 0) meant "OK", so
+	this change breaks compatibility, but I can't see a way around
+	it. It is a total miracle why a value is returned at all, because
+	alcMakeContextCurrent sets an ALC error condition in case of a
+	failure, anyway, so the right way would be using alcGetError.
+
 	* linux/pb.tar.gz: Removed. It seems to be an ancient leftover for
 	MacOS X.
 
