@@ -95,7 +95,7 @@ static MutexID *context_mutexen  = NULL;
  *
  * Non locking version of alcDestroyContext.
  */
-static ALCenum _alcDestroyContext( AL_context *cc );
+static void _alcDestroyContext( AL_context *cc );
 
 /*
  * _alcReallocContexts( ALuint newsize )
@@ -276,23 +276,24 @@ ALCboolean alcMakeContextCurrent( ALCcontext *handle )
  *
  * Destroys the context referred to by handle.
  */
-ALCenum alcDestroyContext( ALCcontext *handle )
+void alcDestroyContext( ALCcontext *handle )
 {
 	AL_context *cc;
-	ALCenum retval = ALC_NO_ERROR;
 	int cid;
 
 	if( handle == NULL ) {
-		return ALC_INVALID_CONTEXT;
+		_alcSetError( ALC_INVALID_CONTEXT );
+		return;
 	}
 
 	cid = VOIDP_TO_ALUINT( handle );
 
 	_alcLockContext( cid );
 	cc = _alcGetContext( cid );
-	if(cc == NULL) {
+	if( cc == NULL ) {
+		_alcSetError( ALC_INVALID_CONTEXT );
 		_alcUnlockContext( cid );
-		return ALC_INVALID_CONTEXT;
+		return;
 	}
 
 	/*
@@ -317,11 +318,11 @@ ALCenum alcDestroyContext( ALCcontext *handle )
 		mlDestroyMutex( all_context_mutex );
 		all_context_mutex = NULL;
 
-		return retval;
+		return;
 	}
 
 	/* call internal destroyer */
-	retval = _alcDestroyContext( cc );
+	_alcDestroyContext( cc );
 
 	/*
 	 * Decrement the number of contexts in use.
@@ -329,8 +330,6 @@ ALCenum alcDestroyContext( ALCcontext *handle )
 	al_contexts.items--;
 
 	_alcUnlockContext( cid );
-
-	return retval;
 }
 
 /**
@@ -339,9 +338,9 @@ ALCenum alcDestroyContext( ALCcontext *handle )
  * Performs processing on a synced context, nop on a asynchronous
  * context.
  *
- * If alcHandle is not valid, ALC_INVALID_CONTEXT is returned.
+ * If alcHandle is not valid, ALC_INVALID_CONTEXT is set.
  */
-ALCcontext *alcProcessContext( ALCcontext *alcHandle )
+void alcProcessContext( ALCcontext *alcHandle )
 {
 	AL_context *cc;
 	ALboolean should_sync;
@@ -355,7 +354,7 @@ ALCcontext *alcProcessContext( ALCcontext *alcHandle )
 		      "alcUpdateContext: alcHandle == NULL");
 
 		_alcSetError( ALC_INVALID_CONTEXT );
-		return NULL;
+		return;
 	}
 
 	cid = VOIDP_TO_ALUINT( alcHandle );
@@ -370,10 +369,8 @@ ALCcontext *alcProcessContext( ALCcontext *alcHandle )
 			  cid );
 
 		_alcSetError( ALC_INVALID_CONTEXT );
-
 		_alcUnlockAllContexts();
-
-		return NULL;
+		return;
 	}
 
 	should_sync = cc->should_sync;
@@ -385,8 +382,6 @@ ALCcontext *alcProcessContext( ALCcontext *alcHandle )
 		/* unsuspend async contexts */
 		cc->issuspended = AL_FALSE;
 	}
-
-	return alcHandle;
 }
 
 /**
@@ -524,7 +519,7 @@ ALCcontext *alcCreateContext( struct _AL_device *dev, const ALCint *attrlist )
  *
  * FIXME: should assume that *all contexts* are locked?
  */
-ALCenum _alcDestroyContext( AL_context *cc )
+void _alcDestroyContext( AL_context *cc )
 {
 	free(cc->Flags);
 	cc->Flags = 0;
@@ -532,8 +527,6 @@ ALCenum _alcDestroyContext( AL_context *cc )
 
 	_alDestroyListener( &cc->listener );
 	_alDestroySources( &cc->source_pool );
-
-  	return ALC_NO_ERROR;
 }
 
 

@@ -41,39 +41,29 @@ extern "C" {
 #ifndef AL_NO_PROTOTYPES
 
 ALCAPI ALCcontext * ALCAPIENTRY alcCreateContext( ALCdevice *dev,
-						const ALCint* attrlist );
+                                                const ALCint* attrlist );
 
 /**
  * There is no current context, as we can mix
  *  several active contexts. But al* calls
  *  only affect the current context.
  */
-ALCAPI ALCboolean ALCAPIENTRY alcMakeContextCurrent(ALCcontext *alcHandle);
+ALCAPI ALCboolean ALCAPIENTRY alcMakeContextCurrent(ALCcontext *context);
 
 /**
  * Perform processing on a synced context, non-op on a asynchronous
  * context.
  */
 
-#ifdef LINUX_AL
-/* spec has return value as void */
-ALCAPI ALCcontext * ALCAPIENTRY alcProcessContext( ALCcontext *alcHandle );
-#else
 ALCAPI void ALCAPIENTRY alcProcessContext(ALCcontext* context);
-#endif
 
 /**
  * Suspend processing on an asynchronous context, non-op on a
  * synced context.
  */
-ALCAPI void ALCAPIENTRY alcSuspendContext( ALCcontext *alcHandle );
+ALCAPI void ALCAPIENTRY alcSuspendContext(ALCcontext *context);
 
-#ifdef LINUX_AL
-/* spec has return value as void */
-ALCAPI ALCenum ALCAPIENTRY alcDestroyContext( ALCcontext *alcHandle );
-#else
-ALCAPI void ALCAPIENTRY alcDestroyContext(ALCcontext* context);
-#endif
+ALCAPI void ALCAPIENTRY alcDestroyContext(ALCcontext *context);
 
 ALCAPI ALCenum ALCAPIENTRY alcGetError( ALCdevice *dev );
 
@@ -99,18 +89,10 @@ ALCAPI void ALCAPIENTRY alcGetIntegerv(ALCdevice *deviceHandle, ALCenum token, A
 #else /* AL_NO_PROTOTYPES */
       ALCAPI ALCcontext *    ALCAPIENTRY (*alcCreateContext)( ALCdevice *dev, const ALCint* attrlist );
       ALCAPI ALCboolean      ALCAPIENTRY (*alcMakeContextCurrent)(ALCcontext *context);
-#ifdef LINUX_AL
-      ALCAPI ALCcontext *    ALCAPIENTRY (*alcProcessContext)( ALCcontext *alcHandle );
-#else
       ALCAPI void *          ALCAPIENTRY (*alcProcessContext)( ALCcontext *alcHandle );
-#endif
       ALCAPI void            ALCAPIENTRY (*alcSuspendContext)( ALCcontext *alcHandle );
-#ifdef LINUX_AL
-      ALCAPI ALCenum	     ALCAPIENTRY (*alcDestroyContext)( ALCcontext *alcHandle );
-#else
-      ALCAPI void	         ALCAPIENTRY (*alcDestroyContext)( ALCcontext* context );
-#endif
-      ALCAPI ALCenum	     ALCAPIENTRY (*alcGetError)( ALCdevice *dev );
+      ALCAPI void            ALCAPIENTRY (*alcDestroyContext)( ALCcontext* context );
+      ALCAPI ALCenum         ALCAPIENTRY (*alcGetError)( ALCdevice *dev );
       ALCAPI ALCcontext *    ALCAPIENTRY (*alcGetCurrentContext)( ALCvoid );
       ALCAPI ALCdevice *     ALCAPIENTRY (*alcOpenDevice)( const ALCubyte *tokstr );
       ALCAPI void            ALCAPIENTRY (*alcCloseDevice)( ALCdevice *dev );
