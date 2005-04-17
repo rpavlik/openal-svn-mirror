@@ -1,3 +1,10 @@
+2005-04-17  Sven Panne  <sven.panne@aedion.de>
+
+	* linux/src/alut/alut_main.c: Don't set an ALC error
+	condition. Close the device in alutExit. Don't use a global
+	variable for the context, use the current context instead, just
+	like the other ALUT implementations.
+
 2005-04-16  Sven Panne  <sven.panne@aedion.de>
 
 	* linux/doc/openal.texi: Updated documentation a bit.
