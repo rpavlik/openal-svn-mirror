@@ -25,6 +25,7 @@ void alutExit(void) {
 	ALCcontext *context = alcGetCurrentContext();
 	if( context != NULL ) {
 		ALCdevice *device = alcGetContextsDevice( context );
+		alcMakeContextCurrent( NULL );
 		alcDestroyContext( context );
 		if( device != NULL ) {
 			alcCloseDevice( device );
