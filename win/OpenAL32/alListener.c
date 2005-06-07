@@ -66,7 +66,6 @@ ALAPI ALvoid ALAPIENTRY alListenerf(ALenum pname,ALfloat value)
 	return;
 }
 
-
 ALAPI ALvoid ALAPIENTRY alListener3f(ALenum pname,ALfloat v1,ALfloat v2,ALfloat v3)
 {
 	ALCcontext *Context;

@@ -315,6 +315,8 @@ ALAPI ALvoid ALAPIENTRY alSourcef(ALuint source,ALenum pname,ALfloat value)
 						if (value != Source->flPitch)
 						{
 							Source->flPitch = value;
+							if (Source->flPitch < 0.001f)
+								Source->flPitch = 0.001f;
 							Source->update1 |= FREQUENCY;
                             UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 						}
@@ -601,7 +603,7 @@ ALAPI ALvoid ALAPIENTRY alSource3f(ALuint source,ALenum pname,ALfloat v1,ALfloat
 						Source->vPosition[1] = v2;
 						Source->vPosition[2] = v3;
 						Source->update1 |= POSITION;
-                        UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
+						UpdateContext(Context, ALSOURCE, (ALuint)Source->source);
 					}
 					break;
 
@@ -1081,6 +1083,10 @@ ALAPI ALvoid ALAPIENTRY alGetSourcei(ALuint source,ALenum pname,ALint *value)
 
 					case AL_CONE_OUTER_ANGLE:
 						*value = (ALint)Source->flOuterAngle;
+						break;
+
+					case AL_CONE_OUTER_GAIN:
+						*value = (ALint)Source->flOuterGain;
 						break;
 
 					case AL_LOOPING:
