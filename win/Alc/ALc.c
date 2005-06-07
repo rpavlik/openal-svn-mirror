@@ -1831,7 +1831,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 	ALint	BufferSize, DataCommitted;
 	ALint	Relative;
     ALuint Freq, State, outerAngle, innerAngle;
-	ALfloat Pitch, outerGain, maxDist, minDist;
+	ALfloat maxDist, minDist;
 	ALvoid *lpPart1, *lpPart2;
 	ALuint	Part1Size, Part2Size, DataSize;
 	ALuint DataToCopy, PlayCursor, WriteCursor;
@@ -1861,11 +1861,11 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 			}
 			IDirectSoundBuffer_Release((LPDIRECTSOUNDBUFFER)ALSource->uservalue1);
 			ALSource->uservalue1=NULL;
-
-			ALSource->update1 &= ~SDELETE;
-			if (ALSource->update1 == 0)
-				return;
 		}
+
+		ALSource->update1 &= ~SDELETE;
+		if (ALSource->update1 == 0)
+			return;
 	}
 
 	// Check if we need to generate a new Source
@@ -1950,6 +1950,8 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 						ALSource->DSBufferPlaying = AL_TRUE;
 						ALSource->CurrentState = AL_PLAYING;
 						ALSource->play = AL_FALSE;
+						// Make sure we reset the LastTime
+						ALSource->OldTime = timeGetTime();
 						break;
 					}
 
@@ -1997,19 +1999,18 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 
 					// Set Direct Sound buffer to frequency of current Open AL buffer multiplied by desired Pitch
                     Freq = ((ALbuffer*)ALTHUNK_LOOKUPENTRY(BufferID))->frequency;
-					Pitch = ALSource->flPitch;
-
-					if (ALSource->DSFrequency != (unsigned long)(Freq*Pitch))
+					
+					if (ALSource->DSFrequency != (unsigned long)(Freq*ALSource->flPitch))
 					{
-						IDirectSoundBuffer_SetFrequency((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, (unsigned long)(Freq*Pitch));
-						ALSource->DSFrequency = (unsigned long)(Freq*Pitch);
+						if (SUCCEEDED(IDirectSoundBuffer_SetFrequency((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, (unsigned long)(Freq*ALSource->flPitch))))
+							ALSource->DSFrequency = (unsigned long)(Freq*ALSource->flPitch);
 					}
 
 					// Record duration of the DS circular buffer
 					if (ALSource->SourceType == SOURCE3D)
-						ALSource->BufferDuration = 44100000.f / (float)(Freq*Pitch);
+						ALSource->BufferDuration = 44100000.f / (float)(ALSource->DSFrequency);
 					else
-						ALSource->BufferDuration = 22050000.f / (float)(Freq*Pitch);
+						ALSource->BufferDuration = 22050000.f / (float)(ALSource->DSFrequency);
 
 
 					if (ALSource->DSBufferPlaying)
@@ -2046,6 +2047,8 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 						}
 
 						ALSource->play = AL_FALSE;
+						// Make sure we reset the LastTime
+						ALSource->OldTime = timeGetTime();
 					}
 					else
 					{
@@ -2081,6 +2084,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 						ALSource->CurrentState = AL_STOPPED;
 
 						// Lock as much of buffer as possible, and fill with silence 
+						// So that the DSBuffer does not need to be stopped
 						IDirectSoundBuffer_GetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, &PlayCursor, &WriteCursor);
 						
 						if (PlayCursor > WriteCursor)
@@ -2131,7 +2135,6 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 			return;
 	}
 
-
 	// Check if we need to update the 3D Position of the Source
 	if (ALSource->update1 & POSITION)
 	{
@@ -2181,10 +2184,11 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 			Vel[2] = -ALSource->vVelocity[2];
 			IDirectSound3DBuffer_SetVelocity((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,Vel[0],Vel[1],Vel[2],DS3D_IMMEDIATE);
 
-			ALSource->update1 &= ~VELOCITY;
-			if (ALSource->update1 == 0)
-				return;
 		}
+
+		ALSource->update1 &= ~VELOCITY;
+		if (ALSource->update1 == 0)
+			return;
 	}
 
 
@@ -2198,10 +2202,11 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 			Dir[2] = -ALSource->vOrientation[2];
 			IDirectSound3DBuffer_SetConeOrientation((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,Dir[0],Dir[1],Dir[2],DS3D_IMMEDIATE);
 
-			ALSource->update1 &= ~ORIENTATION;
-			if (ALSource->update1 == 0)
-				return;
 		}
+
+		ALSource->update1 &= ~ORIENTATION;
+		if (ALSource->update1 == 0)
+			return;
 	}
 
 	
@@ -2227,7 +2232,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 
 				IDirectSoundBuffer_GetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, &PlayCursor, &WriteCursor);
 
-				if (WriteCursor > PlayCursor)
+				if (WriteCursor >= PlayCursor)
 					CursorGap = WriteCursor - PlayCursor;
 				else
 					CursorGap = (88200 - PlayCursor) + WriteCursor;
@@ -2372,7 +2377,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 
 		ALSource->update1 &= ~SQUEUE;
 		if (ALSource->update1 == 0)
-				return;
+			return;
 	}
 
 	// Check if any Buffers have been removed from this Source's Queue
@@ -2410,7 +2415,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 
 		ALSource->update1 &= ~SUNQUEUE;
 		if (ALSource->update1 == 0)
-				return;
+			return;
 	}
 
 	// Check if we need to adjust the volume of the Source
@@ -2450,21 +2455,19 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 			else
                 Freq = ((ALbuffer*)ALTHUNK_LOOKUPENTRY(BufferID))->frequency;
 
-			Pitch = ALSource->flPitch;
-			
-			ALSource->DSFrequency = (unsigned long)(Freq*Pitch);
-			IDirectSoundBuffer_SetFrequency((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,ALSource->DSFrequency);
+			if (SUCCEEDED(IDirectSoundBuffer_SetFrequency((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,(unsigned long)(Freq*ALSource->flPitch))))
+				ALSource->DSFrequency = (unsigned long)(Freq*ALSource->flPitch);
 			
 			// Update duration of the DS circular buffer
 			if (ALSource->SourceType == SOURCE3D)
-				ALSource->BufferDuration = 44100000.f / (float)(Freq*Pitch);
+				ALSource->BufferDuration = 44100000.f / (float)(ALSource->DSFrequency);
 			else
-				ALSource->BufferDuration = 22050000.f / (float)(Freq*Pitch);
-
-			ALSource->update1 &= ~FREQUENCY;
-			if (ALSource->update1 == 0)
-				return;
+				ALSource->BufferDuration = 22050000.f / (float)(ALSource->DSFrequency);
 		}
+
+		ALSource->update1 &= ~FREQUENCY;
+		if (ALSource->update1 == 0)
+			return;
 	}
 
 
@@ -2511,15 +2514,15 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 	{
 		if (ALSource->uservalue2)
 		{
-			outerGain = ALSource->flOuterGain;
-			volume = LinearGainToMB(outerGain);
+			volume = LinearGainToMB(ALSource->flOuterGain);
 
 			IDirectSound3DBuffer_SetConeOutsideVolume((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2, volume,DS3D_IMMEDIATE);
 
-			ALSource->update1 &= ~CONEOUTSIDEVOLUME;
-			if (ALSource->update1 == 0)
-				return;
 		}
+
+		ALSource->update1 &= ~CONEOUTSIDEVOLUME;
+		if (ALSource->update1 == 0)
+			return;
 	}
 
 
@@ -2613,10 +2616,11 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 
 			IDirectSound3DBuffer_SetConeAngles((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,innerAngle,outerAngle,DS3D_IMMEDIATE);
 
-			ALSource->update1 &= ~CONEANGLES;
-			if (ALSource->update1 == 0)
-				return;
 		}
+
+		ALSource->update1 &= ~CONEANGLES;
+		if (ALSource->update1 == 0)
+			return;
 	}
 
 
@@ -2968,7 +2972,7 @@ void InitializeManualAttenuation(ALCcontext *pContext)
 		// Calculate distance between Source and Listener
 		if (pSourceList->SourceType == SOURCE2D)
 		{
-			pSourceList->flDistance =0;
+			pSourceList->flDistance = 0;
 		}
 		else if (pSourceList->bHeadRelative)
 		{
@@ -3071,7 +3075,18 @@ void SetNonEAXSourceLevels(ALCcontext *pContext, ALsource *pSource, ALuint ulFla
 				flDistance = pSource->flDistance;
 			}
 
-			pSource->lAttenuationVolume = (long)(-2000 * log10(1 + (((flDistance - pSource->flRefDistance) / pSource->flRefDistance) * pSource->flRollOffFactor)));
+			// Calculate attenuation
+			if ((pSource->flMaxDistance >= pSource->flRefDistance) && (pSource->flRefDistance > 0.0f))
+			{
+				if ((((flDistance - pSource->flRefDistance) / pSource->flRefDistance) * pSource->flRollOffFactor) > -1.0f)
+					pSource->lAttenuationVolume = (ALint)(-2000.0f * log10(1.0f + (((flDistance - pSource->flRefDistance) / pSource->flRefDistance) * pSource->flRollOffFactor)));
+				else
+					pSource->lAttenuationVolume = 10000;
+			}
+			else
+			{
+				pSource->lAttenuationVolume = 0;
+			}
 		}
 	}
 
@@ -3233,4 +3248,3 @@ ALuint GetMaxNum3DMonoBuffers(LPDIRECTSOUND lpDS)
 
 	return numBuffers;
 }
-
