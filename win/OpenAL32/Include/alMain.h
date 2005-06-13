@@ -7,8 +7,6 @@
 #define ALAPI __declspec(dllexport)
 #define ALAPIENTRY __cdecl
 
-#include "AL/altypes.h"
-#include "AL/alctypes.h"
 #include "alu.h"
 #include "windows.h"
 #include "mmsystem.h"
@@ -23,19 +21,39 @@
 
 #define NUMWAVEBUFFERS	4
 
+#define AL_FORMAT_MONO_IMA4                      0x1300
+#define AL_FORMAT_STEREO_IMA4                    0x1301
+
+#define SPEEDOFSOUNDMETRESPERSEC	(343.3f)
+
 typedef struct ALCdevice_struct
 {
- 	ALboolean	InUse;
- 	ALboolean	Valid;
+ 	ALboolean	bInUse;
+	ALboolean	bIsCaptureDevice;
 
 	ALuint		Frequency;
 	ALuint		Channels;
 	ALenum		Format;
 
-	ALubyte		szDeviceName[256];
+	ALCchar		szDeviceName[256];
 
 	// Maximum number of sources that can be created
 	ALuint		MaxNoOfSources;
+
+	// MMSYSTEM Capture Device
+	ALboolean		bWaveInShutdown;
+	HANDLE			hWaveInHdrEvent;
+	HANDLE			hWaveInThreadEvent;
+	HANDLE			hWaveInThread;
+	ALuint			ulWaveInThreadID;
+	ALint			lWaveInBuffersCommitted;
+	HWAVEIN			hWaveInHandle;
+	WAVEHDR			WaveInBuffer[4];
+	WAVEFORMATEX	wfexCaptureFormat;
+	ALCchar			*pCapturedSampleData;
+	ALuint			ulCapturedDataSize;
+	ALuint			ulReadCapturedDataPos;
+	ALuint			ulWriteCapturedDataPos;
 
 	// MMSYSTEM Device
 	ALboolean	bWaveShutdown;
@@ -72,7 +90,6 @@ typedef struct ALCcontext_struct
 
 	ALenum		LastError;
 	ALboolean	InUse;
-	ALboolean	Valid;
 
 	ALuint		Frequency;
 	ALuint		Channels;
@@ -82,6 +99,10 @@ typedef struct ALCcontext_struct
 
 	ALfloat		DopplerFactor;
 	ALfloat		DopplerVelocity;
+	ALfloat		flSpeedOfSound;
+
+	ALint		lNumMonoSources;
+	ALint		lNumStereoSources;
 
 	ALCdevice * Device;
 
@@ -91,15 +112,8 @@ typedef struct ALCcontext_struct
 	struct ALCcontext_struct *next;
 }  ALCcontext;
 
-#endif
-
-#define AL_FORMAT_MONO_IMA4                      0x1300
-#define AL_FORMAT_STEREO_IMA4                    0x1301
-
 ALCvoid UpdateContext(ALCcontext *context,ALuint type,ALuint name);
 ALint LinearGainToMB(float flGain);
-
-//ALvoid SetGlobalRolloffFactor(ALsource *ALSource);
 
 #define LEVELFLAG_RECALCULATE_ATTENUATION	0x01
 #define LEVELFLAG_FORCE_EAX_CALL			0x02
@@ -119,3 +133,6 @@ ALCvoid ProcessContext(ALCcontext *context);
 #ifdef __cplusplus
 }
 #endif
+
+#endif
+

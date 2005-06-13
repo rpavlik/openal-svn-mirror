@@ -18,9 +18,9 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
 
-#include "Include/alMain.h"
+#include "alMain.h"
 #include "AL/alc.h"
-#include "Include/alError.h"
+#include "alError.h"
 
 ALAPI ALenum ALAPIENTRY alGetError(ALvoid)
 {

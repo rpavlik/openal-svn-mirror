@@ -13,19 +13,19 @@ extern "C" {
 
 typedef struct ALextension_struct
 {
-	ALubyte		*extName;
+	ALchar		*extName;
 	ALvoid		*address;
 } ALextension;
 
 typedef struct ALfunction_struct
 {
-	ALubyte		*funcName;
+	ALchar		*funcName;
 	ALvoid		*address;
 } ALfunction;
 
 typedef struct ALenum_struct
 {
-	ALubyte		*enumName;
+	ALchar		*enumName;
 	ALenum		value;
 } ALenums;
 

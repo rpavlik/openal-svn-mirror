@@ -34,17 +34,14 @@ extern "C" {
 #define SUNQUEUE				65536
 #define MINGAIN					131072
 #define MAXGAIN					262144
+#define OFFSET					524288
 
 #define ALSOURCE		1
 #define ALLISTENER		2
 #define ALBUFFER		3
 
-
-#define SOURCE3D	0
-#define SOURCE2D	1
-
-
-#define READYTOREMOVE	1
+#define SOURCE3D		0
+#define SOURCE2D		1
 
 typedef struct ALbufferlistitem
 {
@@ -75,7 +72,6 @@ typedef struct ALsource_struct
 	ALuint		ulBufferID;
 
 	ALboolean	inuse;
-	ALboolean	valid;
 	ALboolean	play;
 	ALenum		state;
 	ALuint		position;
@@ -117,6 +113,11 @@ typedef struct ALsource_struct
 	ALboolean	DSBufferPlaying;
 
 	ALint		lBytesPlayed;
+
+	ALint		lOffset;
+	ALint		lOffsetType;
+
+	ALint		lSourceType;			// Source Type (Static, Streaming, or Undetermined)
 
 	ALfloat		flDistance;				// Distance of Source from Listener
 	ALint		lAttenuationVolume;		// Attenuation from Distance (mB)

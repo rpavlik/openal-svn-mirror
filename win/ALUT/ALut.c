@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
-#include "OpenAL32/Include/alMain.h"
+#include "alMain.h"
 #include "AL/al.h"
 #include "AL/alc.h"
 #include "AL/alut.h"
@@ -103,37 +103,51 @@ typedef struct                                  /* WAV Chunk-header */
 	#pragma pack (pop)
 #endif
 
-ALUTAPI ALvoid ALUTAPIENTRY alutInit(ALint *argc,ALbyte **argv) 
+ALUTAPI ALboolean ALUTAPIENTRY alutInit(ALCchar *szDeviceName, ALCdevice **ppDevice, ALCcontext **ppContext) 
 {
-	ALCcontext *Context;
-	ALCdevice *Device;
-	
-	//Open device
- 	Device=alcOpenDevice(NULL);
-	//Create context(s)
-	Context=alcCreateContext(Device,NULL);
-	//Set active context
-	alcMakeContextCurrent(Context);
-	//Register extensions
+	ALboolean	bReturn = AL_FALSE;
+
+	if ((ppDevice) && (ppContext))
+	{
+		// Open device
+		*ppDevice = alcOpenDevice(szDeviceName);
+		if (*ppDevice)
+		{
+			// Create context
+			*ppContext = alcCreateContext(*ppDevice,NULL);
+			if (*ppContext)
+			{
+				// Set active context
+				alcMakeContextCurrent(*ppContext);
+				bReturn = AL_TRUE;
+			}
+		}
+	}
+
+	return bReturn;
 }
 
 ALUTAPI ALvoid ALUTAPIENTRY alutExit(ALvoid) 
 {
-	ALCcontext *Context;
-	ALCdevice *Device;
+	ALCcontext	*pContext;
+	ALCdevice	*pDevice;
 
-	//Unregister extensions
+	// Get active context
+	pContext = alcGetCurrentContext();
+	if (pContext)
+	{
+		// Get device for active context
+		pDevice = alcGetContextsDevice(pContext);
+		
+		// Disable context
+		alcMakeContextCurrent(NULL);
 
-	//Get active context
-	Context=alcGetCurrentContext();
-	//Get device for active context
-	Device=alcGetContextsDevice(Context);
-	//Disable context
-	alcMakeContextCurrent(NULL);
-	//Release context(s)
-	alcDestroyContext(Context);
-	//Close device
-	alcCloseDevice(Device);
+		// Release context
+		alcDestroyContext(pContext);
+
+		// Close device
+		alcCloseDevice(pDevice);
+	}
 }
 
 ALUTAPI ALvoid ALUTAPIENTRY alutLoadWAVFile(ALbyte *file,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq, ALboolean *loop)
@@ -165,18 +179,24 @@ ALUTAPI ALvoid ALUTAPIENTRY alutLoadWAVFile(ALbyte *file,ALenum *format,ALvoid *
 					if ((FmtHdr.Format==0x0001)||(FmtHdr.Format==0xFFFE))
 					{
 						if (FmtHdr.Channels==1)
-							*format=(FmtHdr.BitsPerSample==4?alGetEnumValue((ALubyte *)"AL_FORMAT_MONO_IMA4"):(FmtHdr.BitsPerSample==8?AL_FORMAT_MONO8:AL_FORMAT_MONO16));
+							*format=(FmtHdr.BitsPerSample==4?alGetEnumValue("AL_FORMAT_MONO_IMA4"):(FmtHdr.BitsPerSample==8?AL_FORMAT_MONO8:AL_FORMAT_MONO16));
 						else if (FmtHdr.Channels==2)
-							*format=(FmtHdr.BitsPerSample==4?alGetEnumValue((ALubyte *)"AL_FORMAT_STEREO_IMA4"):(FmtHdr.BitsPerSample==8?AL_FORMAT_STEREO8:AL_FORMAT_STEREO16));
+							*format=(FmtHdr.BitsPerSample==4?alGetEnumValue("AL_FORMAT_STEREO_IMA4"):(FmtHdr.BitsPerSample==8?AL_FORMAT_STEREO8:AL_FORMAT_STEREO16));
 						*freq=FmtHdr.SamplesPerSec;
 						fseek(Stream,ChunkHdr.Size-sizeof(WAVFmtHdr_Struct),SEEK_CUR);
 					} 
 					else if (FmtHdr.Format==0x0011)
 					{
 						if (FmtHdr.Channels==1)
-							*format=alGetEnumValue((ALubyte *)"AL_FORMAT_MONO_IMA4");
+							*format=alGetEnumValue("AL_FORMAT_MONO_IMA4");
 						else if (FmtHdr.Channels==2)
-							*format=alGetEnumValue((ALubyte *)"AL_FORMAT_STEREO_IMA4");
+							*format=alGetEnumValue("AL_FORMAT_STEREO_IMA4");
+						*freq=FmtHdr.SamplesPerSec;
+						fseek(Stream,ChunkHdr.Size-sizeof(WAVFmtHdr_Struct),SEEK_CUR);
+					}
+					else if (FmtHdr.Format==0x0055)
+					{
+						*format=alGetEnumValue("AL_FORMAT_MP3");
 						*freq=FmtHdr.SamplesPerSec;
 						fseek(Stream,ChunkHdr.Size-sizeof(WAVFmtHdr_Struct),SEEK_CUR);
 					}

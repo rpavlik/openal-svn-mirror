@@ -17,6 +17,7 @@ extern "C" {
 typedef struct ALbuffer_struct 
 {
 	ALenum		format;
+	ALenum		eOriginalFormat;
 	ALshort *	data;
 	ALsizei		size;
 	ALsizei		frequency;

@@ -22,20 +22,17 @@
 
 #include <math.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <memory.h>
-#include "../OpenAL32/Include/alMain.h"
+#include "alMain.h"
 #include "AL/al.h"
 #include "AL/alc.h"
-#include "../OpenAL32/Include/alu.h"
-#include "../OpenAL32/Include/alBuffer.h"
 
 ///////////////////////////////////////////////////////
 // DEBUG INFORMATION
 
-char szDebug[256];
-
 #ifdef _DEBUG
-	#include "stdio.h"
+ char szDebug[256];
 #endif
 
 ///////////////////////////////////////////////////////
@@ -75,6 +72,10 @@ static void CALLBACK DirectSoundProc(UINT uID,UINT uReserved,DWORD_PTR dwUser,DW
 void CALLBACK DirectSound3DProc(UINT uID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2);
 DWORD WINAPI ThreadProc(LPVOID lpParameter);
 
+// Capture functions
+static void CALLBACK WaveInProc(HWAVEIN hDevice,UINT uMsg,DWORD_PTR dwInstance,DWORD_PTR dwParam1,DWORD_PTR dwParam2);
+DWORD WINAPI CaptureThreadProc(LPVOID lpParameter);
+
 ALvoid FillBuffer(ALsource *ALSource, ALubyte *pDestData, ALuint ulDestSize);
 
 // Update Context functions
@@ -98,37 +99,46 @@ void SetNonEAXSourceLevels(ALCcontext *pContext, ALsource *pSource, ALuint ulFla
 
 typedef struct ALCextension_struct
 {
-	ALubyte		*extName;
+	ALCchar		*extName;
 	ALvoid		*address;
 } ALCextension;
 
 typedef struct ALCfunction_struct
 {
-	ALubyte		*funcName;
+	ALCchar		*funcName;
 	ALvoid		*address;
 } ALCfunction;
 
 static ALCextension alcExtensions[] = {
 	{ "ALC_ENUMERATION_EXT",		(ALvoid *) NULL				},
+	{ "ALC_EXT_CAPTURE",			(ALvoid *) NULL				},
 	{ NULL,							(ALvoid *) NULL				} };
 
 static ALCfunction  alcFunctions[] = {
+	{ "alcCaptureOpenDevice",		(ALvoid *) alcCaptureOpenDevice		},
+	{ "alcCaptureCloseDevice",		(ALvoid *) alcCaptureCloseDevice	},
+	{ "alcCaptureStart",			(ALvoid *) alcCaptureStart			},
+	{ "alcCaptureStop",				(ALvoid *) alcCaptureStop			},
+	{ "alcCaptureSamples",			(ALvoid *) alcCaptureSamples		},
 	{ NULL,							(ALvoid *) NULL				} };
 
 // Error strings
-static ALubyte alcNoError[] = "No Error";
-static ALubyte alcErrInvalidDevice[] = "Invalid Device";
-static ALubyte alcErrInvalidContext[] = "Invalid Context";
-static ALubyte alcErrInvalidEnum[] = "Invalid Enum";
-static ALubyte alcErrInvalidValue[] = "Invalid Value";
+static ALCchar alcNoError[] = "No Error";
+static ALCchar alcErrInvalidDevice[] = "Invalid Device";
+static ALCchar alcErrInvalidContext[] = "Invalid Context";
+static ALCchar alcErrInvalidEnum[] = "Invalid Enum";
+static ALCchar alcErrInvalidValue[] = "Invalid Value";
 
 // Context strings
-static ALubyte alcDefaultDeviceSpecifier[] = "DirectSound3D";
-static ALubyte alcDeviceList[] = "DirectSound3D\0DirectSound\0MMSYSTEM\0\0";
-static ALubyte alcExtensionList[] = "Enumeration\0\0";
+static ALCchar alcDefaultDeviceSpecifier[] = "Generic Hardware";
+static ALCchar alcDeviceList[] = "Generic Hardware\0Generic Software\0";
+static ALCchar alcExtensionList[] = "ALC_ENUMERATION_EXT ALC_EXT_CAPTURE";
+
+static ALCchar alcCaptureDefaultDeviceSpecifier[2048] = { 0 }; //  = "MMSYSTEM";
+static ALCchar alcCaptureDeviceList[2048] = { 0 }; //  = "MMSYSTEM\0";
 
 static ALCint alcMajorVersion = 1;
-static ALCint alcMinorVersion = 0;
+static ALCint alcMinorVersion = 1;
 
 ///////////////////////////////////////////////////////
 
@@ -145,6 +155,9 @@ ALCuint		g_ulContextCount = 0;
 
 // Context Error
 static ALCenum g_eLastContextError = ALC_NO_ERROR;
+
+// Capture Device List
+ALCdevice *g_pCaptureDevice = NULL;
 
 // EAX Related (need to be reset in alcOpenDevice)
 
@@ -260,7 +273,6 @@ ALvoid InitContext(ALCcontext *pContext)
 		//Validate pContext
 		pContext->LastError=AL_NO_ERROR;
 		pContext->InUse=AL_FALSE;
-		pContext->Valid=AL_TRUE;
 		//Set output format
 		pContext->Frequency=pContext->Device->Frequency;
 		pContext->Channels=pContext->Device->Channels;
@@ -269,11 +281,18 @@ ALvoid InitContext(ALCcontext *pContext)
 		pContext->DistanceModel=AL_INVERSE_DISTANCE_CLAMPED;
 		pContext->DopplerFactor = 1.0f;
 		pContext->DopplerVelocity = 1.0f;
+		pContext->flSpeedOfSound = SPEEDOFSOUNDMETRESPERSEC;
+
+		if (pContext->Device)
+		{
+			pContext->lNumStereoSources = 1;
+			pContext->lNumMonoSources = pContext->Device->MaxNoOfSources - pContext->lNumStereoSources;
+		}
 
 		pContext->bUseManualAttenuation = AL_FALSE;
 		
 		// Initialize update to set all the Listener parameters
-		pContext->Listener.update1 = LPOSITION | LVELOCITY | LORIENTATION | LDOPPLERFACTOR | LDOPPLERVELOCITY | LDISTANCEMODEL;
+		pContext->Listener.update1 = LPOSITION | LVELOCITY | LORIENTATION | LDOPPLERFACTOR | LDOPPLERVELOCITY | LDISTANCEMODEL | LSPEEDOFSOUND;
 		UpdateContext(pContext, ALLISTENER, 0);
 			
 		//Unlock pContext
@@ -292,9 +311,6 @@ ALCvoid ExitContext(ALCcontext *pContext)
 	unsigned int i;
 	ALsource *ALSource;
 	ALsource *ALTempSource;
-#ifdef _DEBUG
-	char szString[256];
-#endif
 
 	if (IsContext(pContext))
 	{
@@ -304,8 +320,8 @@ ALCvoid ExitContext(ALCcontext *pContext)
 #ifdef _DEBUG
 		if (pContext->SourceCount>0)
 		{
-			sprintf(szString,"OpenAL32 : alcDestroyContext() %d Source(s) NOT deleted\n", pContext->SourceCount);
-			OutputDebugString(szString);
+			sprintf(szDebug,"OpenAL32 : alcDestroyContext() %d Source(s) NOT deleted\n", pContext->SourceCount);
+			OutputDebugString(szDebug);
 		}
 #endif
 
@@ -367,7 +383,6 @@ ALCvoid ExitContext(ALCcontext *pContext)
 		//Invalidate context
 		pContext->LastError=AL_NO_ERROR;
 		pContext->InUse=AL_FALSE;
-		pContext->Valid=AL_TRUE;
 
 		//Unlock context
 		ProcessContext(pContext);
@@ -382,6 +397,362 @@ ALCvoid ExitContext(ALCcontext *pContext)
 ///////////////////////////////////////////////////////
 // ALC Functions calls
 
+
+// This should probably move to another c file but for now ...
+ALCAPI ALCdevice* ALCAPIENTRY alcCaptureOpenDevice(const ALCchar *deviceName, ALCuint frequency, ALCenum format, ALCsizei SampleSize)
+{
+	ALCdevice *pDevice = NULL;
+	WAVEINCAPS WaveInCaps;
+	ALint i;
+	ALint lNumDevs, lBufferSize;
+	ALint lDeviceID = 0;
+
+	if (!g_pCaptureDevice)
+	{
+		pDevice = malloc(sizeof(ALCdevice));
+		if (pDevice)
+		{
+			if (SampleSize > 0)
+			{
+				//Initialise device structure
+				memset(pDevice,0,sizeof(ALCdevice));
+				//Validate device
+				pDevice->bInUse=AL_TRUE;
+				pDevice->bIsCaptureDevice=AL_TRUE;
+
+				memset(&pDevice->wfexCaptureFormat,0,sizeof(WAVEFORMATEX));
+				pDevice->wfexCaptureFormat.wFormatTag = WAVE_FORMAT_PCM;
+				pDevice->wfexCaptureFormat.nChannels = (((format==AL_FORMAT_STEREO8)||(format==AL_FORMAT_STEREO16))?2:1);
+				pDevice->wfexCaptureFormat.wBitsPerSample = (((format==AL_FORMAT_MONO16)||(format==AL_FORMAT_STEREO16))?16:8);
+				pDevice->wfexCaptureFormat.nBlockAlign = pDevice->wfexCaptureFormat.nChannels * pDevice->wfexCaptureFormat.wBitsPerSample/8;
+				pDevice->wfexCaptureFormat.nSamplesPerSec = frequency;
+				pDevice->wfexCaptureFormat.nAvgBytesPerSec = pDevice->wfexCaptureFormat.nSamplesPerSec * pDevice->wfexCaptureFormat.nBlockAlign;
+				pDevice->wfexCaptureFormat.cbSize=0;
+
+				// Find the Device ID matching the deviceName
+				lNumDevs = waveInGetNumDevs();
+				for (i = 0; i < lNumDevs; i++)
+				{
+					if (waveInGetDevCaps(i, &WaveInCaps, sizeof(WAVEINCAPS)) == MMSYSERR_NOERROR)
+					{
+						if (!strcmp(deviceName, WaveInCaps.szPname))
+						{
+							lDeviceID = i;
+							break;
+						}
+					}
+				}
+
+				if (waveInOpen(&pDevice->hWaveInHandle,lDeviceID,&pDevice->wfexCaptureFormat,(DWORD_PTR)&WaveInProc,(DWORD_PTR)pDevice,CALLBACK_FUNCTION)==MMSYSERR_NOERROR)
+				{
+					pDevice->hWaveInHdrEvent = CreateEvent(NULL, AL_TRUE, AL_FALSE, "WaveInAllHeadersReturned");
+					if (pDevice->hWaveInHdrEvent != NULL)
+					{
+						pDevice->hWaveInThreadEvent = CreateEvent(NULL, AL_TRUE, AL_FALSE, "WaveInThreadDestroyed");
+						if (pDevice->hWaveInThreadEvent != NULL)
+						{
+							pDevice->hWaveInThread = CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)CaptureThreadProc,(LPVOID)pDevice,0,&pDevice->ulWaveInThreadID);
+							if (pDevice->hWaveInThread != NULL)
+							{
+								// Allocate circular memory buffer for the captured audio
+								pDevice->ulCapturedDataSize = SampleSize * pDevice->wfexCaptureFormat.nBlockAlign;
+
+								// Make sure circular buffer is at least 100ms in size (and an exact multiple of
+								// the block alignment
+								if (pDevice->ulCapturedDataSize < (pDevice->wfexCaptureFormat.nAvgBytesPerSec / 10))
+								{
+									pDevice->ulCapturedDataSize = pDevice->wfexCaptureFormat.nAvgBytesPerSec / 10;
+									pDevice->ulCapturedDataSize -= (pDevice->ulCapturedDataSize % pDevice->wfexCaptureFormat.nBlockAlign);
+								}
+
+								pDevice->pCapturedSampleData = (ALCchar*)malloc(pDevice->ulCapturedDataSize);
+								pDevice->lWaveInBuffersCommitted=0;
+
+								// Create 4 Buffers of 50ms each
+								lBufferSize = pDevice->wfexCaptureFormat.nAvgBytesPerSec / 20;
+								lBufferSize -= (lBufferSize % pDevice->wfexCaptureFormat.nBlockAlign);
+
+								for (i=0;i<4;i++)
+								{
+									memset(&pDevice->WaveInBuffer[i],0,sizeof(WAVEHDR));
+									pDevice->WaveInBuffer[i].dwBufferLength=lBufferSize;
+									pDevice->WaveInBuffer[i].lpData=malloc(pDevice->WaveInBuffer[i].dwBufferLength);
+									if (pDevice->WaveInBuffer[i].lpData)
+										memset(pDevice->WaveInBuffer[i].lpData, 0, pDevice->WaveInBuffer[i].dwBufferLength);
+									pDevice->WaveInBuffer[i].dwFlags=0;
+									pDevice->WaveInBuffer[i].dwLoops=0;
+									waveInPrepareHeader(pDevice->hWaveInHandle, &pDevice->WaveInBuffer[i], sizeof(WAVEHDR));
+									waveInAddBuffer(pDevice->hWaveInHandle, &pDevice->WaveInBuffer[i], sizeof(WAVEHDR));
+									pDevice->lWaveInBuffersCommitted++;
+								}
+
+								pDevice->ulReadCapturedDataPos = 0;
+								pDevice->ulWriteCapturedDataPos = 0;
+
+								g_pCaptureDevice = pDevice;
+
+								if (waveInGetDevCaps(lDeviceID, &WaveInCaps, sizeof(WAVEINCAPS)) == MMSYSERR_NOERROR)
+									strcpy(g_pCaptureDevice->szDeviceName, WaveInCaps.szPname);
+							}
+						}
+					}
+				}
+
+				if (!g_pCaptureDevice)
+				{
+					if (pDevice->hWaveInThreadEvent)
+					{
+						CloseHandle(pDevice->hWaveInThreadEvent);
+						pDevice->hWaveInThreadEvent = NULL;
+					}
+
+					if (pDevice->hWaveInHdrEvent)
+					{
+						CloseHandle(pDevice->hWaveInHdrEvent);
+						pDevice->hWaveInHdrEvent = NULL;
+					}
+
+					if (pDevice->hWaveInHandle)
+					{
+						waveInClose(pDevice->hWaveInHandle);
+						pDevice->hWaveInHandle = NULL;
+					}
+				}
+			}
+			else
+			{
+				SetALCError(ALC_INVALID_VALUE);
+			}
+		}
+		else
+		{
+			SetALCError(ALC_OUT_OF_MEMORY);
+		}
+	}
+
+	return pDevice;
+}
+
+ALCAPI void ALCAPIENTRY alcCaptureCloseDevice(ALCdevice *pDevice)
+{
+	ALint i;
+
+	if ((pDevice)&&(pDevice->bIsCaptureDevice))
+	{		
+		// Call waveOutReset to shutdown wave device
+		pDevice->bWaveInShutdown = AL_TRUE;
+		waveInReset(pDevice->hWaveInHandle);
+
+		// Wait for signal that all Wave Buffers have returned
+		WaitForSingleObjectEx(pDevice->hWaveInHdrEvent, 5000, FALSE);
+
+		// Wait for signal that Wave Thread has been destroyed
+		WaitForSingleObjectEx(pDevice->hWaveInThreadEvent, 5000, FALSE);
+
+		// Release the wave buffers
+		for (i=0;i<4;i++)
+		{
+			waveInUnprepareHeader(pDevice->hWaveInHandle, &pDevice->WaveInBuffer[i], sizeof(WAVEHDR));
+			free(pDevice->WaveInBuffer[i].lpData);
+		}
+	
+		// Free Audio Buffer data
+		free(pDevice->pCapturedSampleData);
+		pDevice->pCapturedSampleData = NULL;
+
+		// Close the Wave device
+		waveInClose(pDevice->hWaveInHandle);
+		pDevice->hWaveInHandle = 0;
+
+		CloseHandle(pDevice->hWaveInThread);
+		pDevice->hWaveInThread = 0;
+
+		if (pDevice->hWaveInHdrEvent)
+		{
+			CloseHandle(pDevice->hWaveInHdrEvent);
+			pDevice->hWaveInHdrEvent = 0;
+		}
+
+		if (pDevice->hWaveInThreadEvent)
+		{
+			CloseHandle(pDevice->hWaveInThreadEvent);
+			pDevice->hWaveInThreadEvent = 0;
+		}
+
+		g_pCaptureDevice = NULL;
+	}
+	else
+	{
+		SetALCError(ALC_INVALID_DEVICE);
+	}
+}
+
+ALCAPI void ALCAPIENTRY alcCaptureStart(ALCdevice *pDevice)
+{
+	if ((pDevice)&&(pDevice->bIsCaptureDevice))
+		waveInStart(pDevice->hWaveInHandle);
+	else
+		SetALCError(ALC_INVALID_DEVICE);
+}
+
+ALCAPI void ALCAPIENTRY alcCaptureStop(ALCdevice *pDevice)
+{
+	if ((pDevice)&&(pDevice->bIsCaptureDevice))
+		waveInStop(pDevice->hWaveInHandle);
+	else
+		SetALCError(ALC_INVALID_DEVICE);
+}
+
+ALCAPI void ALCAPIENTRY alcCaptureSamples(ALCdevice *pDevice, ALCvoid *pBuffer, ALCsizei ulSamples)
+{
+	ALuint	ulCapturedSamples;
+	ALuint	ulBytes, ulBytesToCopy;
+	ALuint	ulReadOffset;
+
+	if ((pDevice) && (pDevice->bIsCaptureDevice))
+	{
+		// Check that we have the requested numbers of Samples
+		ulCapturedSamples = (pDevice->ulWriteCapturedDataPos - pDevice->ulReadCapturedDataPos) / pDevice->wfexCaptureFormat.nBlockAlign;
+
+		if (ulSamples <= ulCapturedSamples)
+		{
+			ulBytes = ulSamples * pDevice->wfexCaptureFormat.nBlockAlign;
+
+			// Get Read Offset
+			ulReadOffset = (pDevice->ulReadCapturedDataPos % pDevice->ulCapturedDataSize);
+
+			// Check for wrap-around condition
+			if ((ulReadOffset + ulBytes) > pDevice->ulCapturedDataSize)
+			{
+				// Copy data from last Read position to end of data
+				ulBytesToCopy = pDevice->ulCapturedDataSize - ulReadOffset;
+				memcpy(pBuffer, pDevice->pCapturedSampleData + ulReadOffset, ulBytesToCopy);
+
+				// Copy rest of the data from the start of the captured data
+				memcpy(((char *)pBuffer) + ulBytesToCopy, pDevice->pCapturedSampleData, ulBytes - ulBytesToCopy);
+			}
+			else
+			{
+				// Copy data from the read position in the captured data
+				memcpy(pBuffer, pDevice->pCapturedSampleData + ulReadOffset, ulBytes);
+			}
+
+			// Update Read Position
+			pDevice->ulReadCapturedDataPos += ulBytes;
+		}
+		else
+		{
+			SetALCError(ALC_INVALID_VALUE);
+		}
+	}
+	else
+	{
+		SetALCError(ALC_INVALID_DEVICE);
+	}
+}
+
+/*
+	WaveInProc
+
+	Posts a message to 'CaptureThreadProc' everytime a WaveIn Buffer is completed and
+	returns to the application (with more data)
+*/
+static void CALLBACK WaveInProc(HWAVEIN hDevice,UINT uMsg,DWORD_PTR dwInstance,DWORD_PTR dwParam1,DWORD_PTR dwParam2)
+{
+	ALCdevice *pDevice;
+
+	pDevice = (ALCdevice *)dwInstance;
+	if ((uMsg==WIM_DATA) && (pDevice))
+	{
+		// Decrement number of buffers in use
+		pDevice->lWaveInBuffersCommitted--;
+
+		if (pDevice->bWaveInShutdown == AL_FALSE)
+		{
+			// Notify Wave Processor Thread that a Wave Header has returned
+			PostThreadMessage(pDevice->ulWaveInThreadID,uMsg,0,dwParam1);
+		}
+		else
+		{
+			if (pDevice->lWaveInBuffersCommitted == 0)
+			{
+				// Signal Wave Buffers Returned event
+				if (pDevice->hWaveInHdrEvent)
+					SetEvent(pDevice->hWaveInHdrEvent);
+				
+				// Post 'Quit' Message to WaveIn Processor Thread
+				PostThreadMessage(pDevice->ulWaveInThreadID,WM_QUIT,0,0);
+			}
+		}
+	}
+}
+
+/*
+	CaptureThreadProc
+
+	Used by "MMSYSTEM" Device.  Called when a WaveIn buffer had been filled with new
+	audio data.
+*/
+DWORD WINAPI CaptureThreadProc(LPVOID lpParameter)
+{
+	ALCdevice *pDevice;
+	LPWAVEHDR pWaveHdr;
+	MSG msg;
+	ALuint ulOffset, ulMaxSize, ulSection;
+
+	pDevice = (ALCdevice*)lpParameter;
+
+	while (GetMessage(&msg, NULL, 0, 0))
+	{
+		if ((msg.message==WIM_DATA)&&(!pDevice->bWaveInShutdown))
+		{
+			pWaveHdr = ((LPWAVEHDR)msg.lParam);
+
+			// Calculate offset in local buffer to write data to
+			ulOffset = pDevice->ulWriteCapturedDataPos % pDevice->ulCapturedDataSize;
+
+			if ((ulOffset + pWaveHdr->dwBytesRecorded) > pDevice->ulCapturedDataSize)
+			{
+				ulSection = pDevice->ulCapturedDataSize - ulOffset;
+				memcpy(pDevice->pCapturedSampleData + ulOffset, pWaveHdr->lpData, ulSection);
+				memcpy(pDevice->pCapturedSampleData, pWaveHdr->lpData + ulSection, pWaveHdr->dwBytesRecorded - ulSection);
+			}
+			else
+			{
+				memcpy(pDevice->pCapturedSampleData + ulOffset, pWaveHdr->lpData, pWaveHdr->dwBytesRecorded);
+			}
+
+			pDevice->ulWriteCapturedDataPos += pWaveHdr->dwBytesRecorded;
+
+			if (pDevice->ulWriteCapturedDataPos > (pDevice->ulReadCapturedDataPos + pDevice->ulCapturedDataSize))
+			{
+				// Application has not read enough audio data from the capture buffer so data has been
+				// overwritten.  Reset ReadPosition.
+				pDevice->ulReadCapturedDataPos = pDevice->ulWriteCapturedDataPos - pDevice->ulCapturedDataSize;
+			}
+
+			// To prevent an over-flow prevent the offset values from getting too large
+			ulMaxSize = pDevice->ulCapturedDataSize << 4;
+			if ((pDevice->ulReadCapturedDataPos > ulMaxSize) && (pDevice->ulWriteCapturedDataPos > ulMaxSize))
+			{
+				pDevice->ulReadCapturedDataPos -= ulMaxSize;
+				pDevice->ulWriteCapturedDataPos -= ulMaxSize;
+			}
+
+			// Send buffer back to capture more data
+			waveInAddBuffer(pDevice->hWaveInHandle,pWaveHdr,sizeof(WAVEHDR));
+			pDevice->lWaveInBuffersCommitted++;
+		}
+	}
+
+	// Signal Wave Thread completed event
+	if (pDevice->hWaveInThreadEvent)
+		SetEvent(pDevice->hWaveInThreadEvent);
+
+	ExitThread(0);
+
+	return 0;
+}
 
 /*
 	alcGetError
@@ -425,11 +796,14 @@ ALCAPI ALCvoid ALCAPIENTRY alcProcessContext(ALCcontext *pContext)
 
 	Returns information about the Device, and error strings
 */
-ALCAPI const ALCubyte* ALCAPIENTRY alcGetString(ALCdevice *device,ALCenum param)
+ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice *pDevice,ALCenum param)
 {
-	const ALubyte *value = NULL;
+	WAVEINCAPS WaveInCaps;
+	const ALCchar *value = NULL;
+	ALint lNumDevs, lLoop;
+	ALCchar *szDeviceList;
 
-	switch(param)
+	switch (param)
 	{
 	case ALC_NO_ERROR:
 		value=alcNoError;
@@ -456,10 +830,42 @@ ALCAPI const ALCubyte* ALCAPIENTRY alcGetString(ALCdevice *device,ALCenum param)
 		break;
 
 	case ALC_DEVICE_SPECIFIER:
-		if (device)
-			value = device->szDeviceName;
+		if (pDevice)
+			value = pDevice->szDeviceName;
 		else
 			value = alcDeviceList;
+		break;
+
+	case ALC_CAPTURE_DEVICE_SPECIFIER:
+		if (pDevice)
+		{
+			value = pDevice->szDeviceName;
+		}
+		else
+		{
+			szDeviceList = alcCaptureDeviceList;
+
+			lNumDevs = waveInGetNumDevs();
+			for (lLoop = 0; lLoop < lNumDevs; lLoop++)
+			{
+				if (waveInGetDevCaps(lLoop, &WaveInCaps, sizeof(WAVEINCAPS)) == MMSYSERR_NOERROR)
+				{
+					sprintf(szDeviceList, "%s", WaveInCaps.szPname);
+					szDeviceList += strlen(szDeviceList) + 1;
+				}
+			}
+
+			value = alcCaptureDeviceList;
+		}
+		break;
+
+	case ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER:
+		if (waveInGetNumDevs())
+		{
+			if (waveInGetDevCaps(0, &WaveInCaps, sizeof(WAVEINCAPS)) == MMSYSERR_NOERROR)
+				sprintf(alcCaptureDefaultDeviceSpecifier, "%s", WaveInCaps.szPname);
+		}
+		value = alcCaptureDefaultDeviceSpecifier;
 		break;
 
 	case ALC_EXTENSIONS:
@@ -483,85 +889,117 @@ ALCAPI const ALCubyte* ALCAPIENTRY alcGetString(ALCdevice *device,ALCenum param)
 ALCAPI ALCvoid ALCAPIENTRY alcGetIntegerv(ALCdevice *device,ALCenum param,ALsizei size,ALCint *data)
 {
 	ALCcontext *Context;
+	ALint lCapturedBytes;
 
 	Context=alcGetCurrentContext();
 	if (Context)
 	{
 		SuspendContext(Context);
-		
+
 		if (data)
 		{
-			switch (param)
+			if ((device)&&(device->bIsCaptureDevice))
 			{
-			case ALC_MAJOR_VERSION:
-				if (size)
-					*data = alcMajorVersion;
-				else
-					SetALCError(ALC_INVALID_VALUE);
-				break;
-
-			case ALC_MINOR_VERSION:
-				if (size)
-					*data = alcMinorVersion;
-				else
-					SetALCError(ALC_INVALID_VALUE);
-				break;
-
-			case ALC_ATTRIBUTES_SIZE:
-				if (device)
+				// Capture Device
+				switch (param)
 				{
+				case ALC_CAPTURE_SAMPLES:
 					if (size)
-						*data = 7;
-					else
-						SetALCError(ALC_INVALID_VALUE);
-				}
-				else
-				{
-					SetALCError(ALC_INVALID_DEVICE);
-				}
-				break;
-
-			case ALC_ALL_ATTRIBUTES:
-				if (device)
-				{
-					if (size >= 7)
 					{
-						data[0] = ALC_FREQUENCY;
-						if (device->lpDS3DListener)
-							data[1] = 44100;
-						else
-							data[1] = 22050;
-
-						data[2] = ALC_REFRESH;
-						if (device->lpDS3DListener)
-							data[3] = 20;
-						else
-							data[3] = 40;
-
-						data[4] = ALC_SYNC;
-						data[5] = AL_FALSE;
-
-						data[6] = 0;
+						lCapturedBytes = (device->ulWriteCapturedDataPos - device->ulReadCapturedDataPos);
+						*data = lCapturedBytes / device->wfexCaptureFormat.nBlockAlign;
 					}
 					else
 					{
 						SetALCError(ALC_INVALID_VALUE);
 					}
-				}
-				else
-				{
-					SetALCError(ALC_INVALID_DEVICE);
-				}
-				break;
+					break;
 
-			default:
-				SetALCError(ALC_INVALID_ENUM);
-				break;
+				default:
+					SetALCError(ALC_INVALID_ENUM);
+					break;
+				}
+			}
+			else
+			{
+				// Playback Device
+				switch (param)
+				{
+				case ALC_MAJOR_VERSION:
+					if (size)
+						*data = alcMajorVersion;
+					else
+						SetALCError(ALC_INVALID_VALUE);
+					break;
+
+				case ALC_MINOR_VERSION:
+					if (size)
+						*data = alcMinorVersion;
+					else
+						SetALCError(ALC_INVALID_VALUE);
+					break;
+
+				case ALC_ATTRIBUTES_SIZE:
+					if (device)
+					{
+						if (size)
+							*data = 11;
+						else
+							SetALCError(ALC_INVALID_VALUE);
+					}
+					else
+					{
+						SetALCError(ALC_INVALID_DEVICE);
+					}
+					break;
+
+				case ALC_ALL_ATTRIBUTES:
+					if (device)
+					{
+						if (size >= 11)
+						{
+							data[0] = ALC_FREQUENCY;
+							if (device->lpDS3DListener)
+								data[1] = 44100;
+							else
+								data[1] = 22050;
+
+							data[2] = ALC_REFRESH;
+							if (device->lpDS3DListener)
+								data[3] = 20;
+							else
+								data[3] = 40;
+
+							data[4] = ALC_SYNC;
+							data[5] = AL_FALSE;
+
+							data[6] = ALC_MONO_SOURCES;
+							data[7] = Context->lNumMonoSources;
+
+							data[8] = ALC_STEREO_SOURCES;
+							data[9] = Context->lNumStereoSources;
+
+							data[10] = 0;
+						}
+						else
+						{
+							SetALCError(ALC_INVALID_VALUE);
+						}
+					}
+					else
+					{
+						SetALCError(ALC_INVALID_DEVICE);
+					}
+					break;
+
+				default:
+					SetALCError(ALC_INVALID_ENUM);
+					break;
+				}
 			}
 		}
 		else
 		{
-			// data is a NULL pointer
 			SetALCError(ALC_INVALID_VALUE);
 		}
 
@@ -582,13 +1020,25 @@ ALCAPI ALCvoid ALCAPIENTRY alcGetIntegerv(ALCdevice *device,ALCenum param,ALsize
 
 	Determines if there is support for a particular extension
 */
-ALCAPI ALCboolean ALCAPIENTRY alcIsExtensionPresent(ALCdevice *device, const ALCubyte *extName)
+ALCAPI ALCboolean ALCAPIENTRY alcIsExtensionPresent(ALCdevice *device, const ALCchar *extName)
 {
-	ALsizei i=0;
+	ALsizei i = 0;
+	ALCboolean bResult = ALC_FALSE;
 
-	while ((alcExtensions[i].extName)&&(strcmp((char *)alcExtensions[i].extName,(char *)extName)))
-		i++;
-	return (alcExtensions[i].extName!=NULL?AL_TRUE:AL_FALSE);
+	if (extName)
+	{
+		while ((alcExtensions[i].extName)&&(stricmp(alcExtensions[i].extName,extName)))
+			i++;
+
+		if (alcExtensions[i].extName)
+			bResult = ALC_TRUE;
+	}
+	else
+	{
+		SetALCError(ALC_INVALID_VALUE);
+	}
+
+	return bResult;
 }
 
 
@@ -597,13 +1047,23 @@ ALCAPI ALCboolean ALCAPIENTRY alcIsExtensionPresent(ALCdevice *device, const ALC
 
 	Retrieves the function address for a particular extension function
 */
-ALCAPI ALCvoid *  ALCAPIENTRY alcGetProcAddress(ALCdevice *device, const ALCubyte *funcName)
+ALCAPI ALCvoid *  ALCAPIENTRY alcGetProcAddress(ALCdevice *device, const ALCchar *funcName)
 {
-	ALsizei i=0;
+	ALsizei i = 0;
+	ALCvoid *pFunction = NULL;
 
-	while ((alcFunctions[i].funcName)&&(strcmp((char *)alcFunctions[i].funcName,(char *)funcName)))
-		i++;
-	return alcFunctions[i].address;
+	if (funcName)
+	{
+		while ((alcFunctions[i].funcName)&&(strcmp(alcFunctions[i].funcName,funcName)))
+			i++;
+		pFunction = alcFunctions[i].address;
+	}
+	else
+	{
+		SetALCError(ALC_INVALID_VALUE);
+	}
+
+	return pFunction;
 }
 
 
@@ -613,9 +1073,16 @@ ALCAPI ALCvoid *  ALCAPIENTRY alcGetProcAddress(ALCdevice *device, const ALCubyt
 	Get the value for a particular ALC Enumerated Value
 	Calls alGetEnumValue in alExtension.c to process request
 */
-ALCAPI ALCenum ALCAPIENTRY alcGetEnumValue(ALCdevice *device, const ALCubyte *enumName)
+ALCAPI ALCenum ALCAPIENTRY alcGetEnumValue(ALCdevice *device, const ALCchar *enumName)
 {
-	return alGetEnumValue(enumName);
+	ALCenum eResult = AL_NONE;
+
+	if (enumName)
+		eResult = alGetEnumValue(enumName);
+	else
+		SetALCError(ALC_INVALID_VALUE);
+
+	return eResult;
 }
 
 
@@ -624,12 +1091,13 @@ ALCAPI ALCenum ALCAPIENTRY alcGetEnumValue(ALCdevice *device, const ALCubyte *en
 
 	Create and attach a Context to a particular Device.
 */
-ALCAPI ALCcontext*ALCAPIENTRY alcCreateContext(ALCdevice *device, const ALCint *attrList)
+ALCAPI ALCcontext* ALCAPIENTRY alcCreateContext(ALCdevice *device, const ALCint *attrList)
 {
 	ALCcontext *ALContext = NULL;
 	ALboolean	bDeviceHasContext = AL_FALSE;
+	ALuint		ulAttributeIndex, ulRequestedStereoSources;
 
-	if (device)
+	if ((device)&&(!device->bIsCaptureDevice))
 	{
 		// Reset Context Last Error code
 		g_eLastContextError = ALC_NO_ERROR;
@@ -657,7 +1125,6 @@ ALCAPI ALCcontext*ALCAPIENTRY alcCreateContext(ALCdevice *device, const ALCint *
 				{
 					memset(g_pContextList, 0, sizeof(ALCcontext));
 					g_pContextList->Device = device;
-					g_pContextList->Valid = AL_TRUE;
 					InitContext(g_pContextList);
 					g_ulContextCount++;
 				}
@@ -677,11 +1144,47 @@ ALCAPI ALCcontext*ALCAPIENTRY alcCreateContext(ALCdevice *device, const ALCint *
 						memset(ALContext->next,0,sizeof(ALCcontext));
 						ALContext->next->previous=ALContext;
 						ALContext->next->Device=device;
-						ALContext->next->Valid=AL_TRUE;
-						InitContext(ALContext);
+						InitContext(ALContext->next);
 						g_ulContextCount++;
 					}
 					ALContext=ALContext->next;
+				}
+			}
+
+			// Check for Voice Count attributes
+			if (attrList)
+			{
+				ulAttributeIndex = 0;
+				while ((ulAttributeIndex < 10) && (attrList[ulAttributeIndex]))
+				{
+					if (attrList[ulAttributeIndex] == ALC_STEREO_SOURCES)
+					{
+						ulRequestedStereoSources = attrList[ulAttributeIndex + 1];
+
+						if (ALContext->Device->lpDS3DListener)
+						{
+							// As we have already reserved a voice, add it back to the max Source count
+							ALContext->Device->MaxNoOfSources++;
+
+							if ((ulRequestedStereoSources * 2) > ALContext->Device->MaxNoOfSources)
+								ulRequestedStereoSources = ALContext->Device->MaxNoOfSources / 2;
+
+							ALContext->Device->MaxNoOfSources -= ulRequestedStereoSources;
+							ALContext->lNumStereoSources = ulRequestedStereoSources;
+							ALContext->lNumMonoSources = ALContext->Device->MaxNoOfSources - ALContext->lNumStereoSources;
+						}
+						else
+						{
+							if (ulRequestedStereoSources > ALContext->Device->MaxNoOfSources)
+								ulRequestedStereoSources = ALContext->Device->MaxNoOfSources;
+
+							ALContext->lNumStereoSources = ulRequestedStereoSources;
+							ALContext->lNumMonoSources = ALContext->Device->MaxNoOfSources - ALContext->lNumStereoSources;
+						}
+						break;
+					}
+
+					ulAttributeIndex += 2;
 				}
 			}
 		}
@@ -742,7 +1245,7 @@ ALCAPI ALCvoid ALCAPIENTRY alcDestroyContext(ALCcontext *context)
 */
 ALCAPI ALCcontext * ALCAPIENTRY alcGetCurrentContext(ALCvoid)
 {
-	ALCcontext *pContext;
+	ALCcontext *pContext = NULL;
 
 	pContext = g_pContextList;
 	while ((pContext) && (!pContext->InUse))
@@ -826,9 +1329,10 @@ ALCAPI ALCboolean ALCAPIENTRY alcMakeContextCurrent(ALCcontext *context)
 /*
 	alcOpenDevice
 
-	Open the Device specified.  Current options are "DirectSound3D", "DirectSound" and "MMSYSTEM"
+	Open the Device specified.  Current options are "Generic Hardware", "Generic Software", and for legacy
+	"DirectSound3D", "DirectSound" and "MMSYSTEM"
 */
-ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(const ALCubyte *deviceName)
+ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(const ALCchar *deviceName)
 {
 	DSBUFFERDESC DSBDescription;
 	WAVEFORMATEX OutputType;
@@ -847,11 +1351,11 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(const ALCubyte *deviceName)
 	bUseDS = AL_FALSE;
 	bUseDS3D = AL_FALSE;
 
-	if (deviceName != NULL)
+	if (deviceName)
 	{
-		if (strcmp(deviceName,"DirectSound3D")==0)
+		if ((!strcmp(deviceName,"DirectSound3D")) || (!strcmp(deviceName,"Generic Hardware")))
 			bUseDS3D = AL_TRUE;
-		else if (strcmp(deviceName, "DirectSound")==0)
+		else if ((!strcmp(deviceName, "DirectSound")) || (!strcmp(deviceName, "Generic Software")))
 			bUseDS = AL_TRUE;
 	}
 	else
@@ -866,8 +1370,8 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(const ALCubyte *deviceName)
 		//Initialise device structure
 		memset(device,0,sizeof(ALCdevice));
 		//Validate device
-		device->InUse=AL_TRUE;
-		device->Valid=AL_TRUE;
+		device->bInUse=AL_TRUE;
+		device->bIsCaptureDevice=AL_FALSE;
 		//Set output format
 		device->Frequency=22050;
 		device->Channels=2;
@@ -926,9 +1430,12 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(const ALCubyte *deviceName)
 											// to the 'DirectSound' device).
 											if (numSources >= 16)
 											{
-												device->MaxNoOfSources = numSources;
+												device->MaxNoOfSources = numSources - 2; // Reserved one for a Stereo Source, and one for EAXFix
 
-												strcpy(device->szDeviceName, "DirectSound3D");
+												if ((deviceName) && (!strcmp(deviceName,"DirectSound3D")))
+													strcpy(device->szDeviceName, "DirectSound3D");
+												else
+													strcpy(device->szDeviceName, "Generic Hardware");
 
 												// Set-up Timer for serving streaming buffers
 												device->ulDS3DTimerInterval = TIMERINTERVAL;
@@ -1023,7 +1530,11 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(const ALCubyte *deviceName)
                                                 device->ulDSTimerID = timeSetEvent(25,0,DirectSoundProc,(DWORD_PTR)device,TIME_CALLBACK_FUNCTION|TIME_PERIODIC);
 												device->MaxNoOfSources = 256;
 
-												strcpy(device->szDeviceName, "DirectSound");
+												if ((deviceName) && (!strcmp(deviceName,"DirectSound")))
+													strcpy(device->szDeviceName, "DirectSound");
+												else
+													strcpy(device->szDeviceName, "Generic Software");
+
 												bDeviceFound = AL_TRUE;
 											}
 										}
@@ -1082,8 +1593,6 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(const ALCubyte *deviceName)
 									device->buffer[i].lpData=malloc(device->buffer[i].dwBufferLength);
 									if (device->buffer[i].lpData)
 										memset(device->buffer[i].lpData, 0, device->buffer[i].dwBufferLength);
-								//	device->buffer[i].lpData=malloc(((OutputType.nAvgBytesPerSec/16)&0xfffffff0));
-								//	device->buffer[i].dwBufferLength=((OutputType.nAvgBytesPerSec/16)&0xfffffff0);
 									device->buffer[i].dwFlags=0;
 									device->buffer[i].dwLoops=0;
 									waveOutPrepareHeader(device->hWaveHandle,&device->buffer[i],sizeof(WAVEHDR));
@@ -1095,7 +1604,7 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(const ALCubyte *deviceName)
 									else
 										device->lWaveBuffersCommitted++;
 								}
-								strcpy(device->szDeviceName, "MMSYSTEM");
+								strcpy(device->szDeviceName, "Generic Software Compatibility Mode");
 								bDeviceFound = AL_TRUE;
 							}
 						}
@@ -1142,11 +1651,12 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(const ALCubyte *deviceName)
 
 	Close the specified Device
 */
-ALCAPI ALCvoid ALCAPIENTRY alcCloseDevice(ALCdevice *pDevice)
+ALCAPI ALCboolean ALCAPIENTRY alcCloseDevice(ALCdevice *pDevice)
 {
 	ALint i;
+	ALCboolean bReturn = ALC_FALSE;
 
-	if (pDevice)
+	if ((pDevice)&&(!pDevice->bIsCaptureDevice))
 	{
 		// Stop and release the DS3D timer
 		if (pDevice->ulDS3DTimerID != 0)
@@ -1217,15 +1727,20 @@ ALCAPI ALCvoid ALCAPIENTRY alcCloseDevice(ALCdevice *pDevice)
 				pDevice->hWaveThreadEvent = 0;
 			}
 		}
+
 		//Release device structure
 		LeaveCriticalSection(&g_mutex);
 		memset(pDevice,0,sizeof(ALCdevice));
 		free(pDevice);
+		
+		bReturn = ALC_TRUE;
 	}
 	else
 	{
 		SetALCError(ALC_INVALID_DEVICE);
 	}
+
+	return bReturn;
 }
 ///////////////////////////////////////////////////////
 
@@ -1830,17 +2345,18 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 	ALuint	DataPlayed, DataCount, TotalDataSize;
 	ALint	BufferSize, DataCommitted;
 	ALint	Relative;
-    ALuint Freq, State, outerAngle, innerAngle;
+    ALuint	Freq, State, outerAngle, innerAngle;
 	ALfloat maxDist, minDist;
-	ALvoid *lpPart1, *lpPart2;
+	ALvoid	*lpPart1, *lpPart2;
 	ALuint	Part1Size, Part2Size, DataSize;
-	ALuint DataToCopy, PlayCursor, WriteCursor;
-    ALuint BufferID;
+	ALuint	DataToCopy, PlayCursor, WriteCursor;
+    ALuint	BufferID;
 	ALbufferlistitem *ALBufferListItem;
 	ALbufferlistitem *ALBufferListTemp;
 	ALint	volume;
 	ALuint BytesPlayedSinceLastTime, CursorGap, DataToLock;
 	ALboolean bServiceNow;
+	ALfloat	flVelFactor;
 
 	// Check if the Source is being Destroyed
 	if (ALSource->update1 == SDELETE)
@@ -1897,6 +2413,8 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 			{
 				// Get Property Set Interface
 				IDirectSound3DBuffer_QueryInterface((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,&IID_IKsPropertySet,(LPUNKNOWN *)&ALSource->uservalue3);
+
+				ALSource->SourceType = SOURCE3D;
 
 				// Set Volume
 				if (ALContext->bUseManualAttenuation)
@@ -1955,19 +2473,13 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 						break;
 					}
 
-					// Always reset these variables no matter whether Source WAS playing or not
-					ALSource->BuffersProcessed = 0;
-					ALSource->BuffersAddedToDSBuffer = 0;
-					ALSource->BufferPosition = 0;
-					ALSource->lBytesPlayed = 0;
-					ALSource->FinishedQueue = AL_FALSE;
-					ALSource->Silence = 0;
-					ALSource->SilenceAdded = 0;
-
+					// Skip over any Buffers marked as PROCESSED (this can happen if the Source has been given
+					// an Offset position)
 					ALBufferListItem = ALSource->queue;
-
-					// Mark any buffers at the start of the list as processed if they have bufferID == 0, or
-					// if they have length 0 bytes
+					while ((ALBufferListItem) && (ALBufferListItem->bufferstate == PROCESSED))
+						ALBufferListItem = ALBufferListItem->next;
+					
+					// Mark any NULL or zero-length buffers at the current play position as PROCESSED
 					while (ALBufferListItem)
 					{
 						if (ALBufferListItem->buffer)
@@ -2135,6 +2647,43 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 			return;
 	}
 
+
+	if (ALSource->update1 & OFFSET)
+	{
+		ALSource->FinishedQueue = AL_FALSE;
+
+		// Lock as much of buffer as possible, and fill with data from the new Byte Offset
+		IDirectSoundBuffer_GetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, &PlayCursor, &WriteCursor);
+		
+		if (PlayCursor > WriteCursor)
+			DataToCopy = PlayCursor - WriteCursor;
+		else
+			DataToCopy = ((88200 - WriteCursor) + PlayCursor);
+
+		ALSource->lBytesPlayed -= (88200 - DataToCopy);
+
+		if (SUCCEEDED(IDirectSoundBuffer_Lock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,WriteCursor,DataToCopy,&lpPart1,&Part1Size,&lpPart2,&Part2Size,0)))
+		{
+			// This is just for the debug output in the FillBuffer routine
+			ALSource->OldWriteCursor = WriteCursor;
+
+			FillBuffer(ALSource, lpPart1, Part1Size);
+			FillBuffer(ALSource, lpPart2, Part2Size);
+
+			// We will have filled the whole buffer (minus gap between play and write cursors) with data
+			// up to the new Play Cursor.  So set OldWrite and OldPlay to current Play cursor, for the next
+			// timer callback to correctly service this source.
+			ALSource->OldPlayCursor = PlayCursor;
+			ALSource->OldWriteCursor = PlayCursor;
+
+			IDirectSoundBuffer_Unlock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, lpPart1, Part1Size, lpPart2, Part2Size);
+		}
+
+		ALSource->update1 &= ~OFFSET;
+		if (ALSource->update1 == 0)
+			return;
+	}
+
 	// Check if we need to update the 3D Position of the Source
 	if (ALSource->update1 & POSITION)
 	{
@@ -2179,11 +2728,12 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 	{
 		if (ALSource->uservalue2)
 		{
-			Vel[0] = ALSource->vVelocity[0];
-			Vel[1] = ALSource->vVelocity[1];
-			Vel[2] = -ALSource->vVelocity[2];
-			IDirectSound3DBuffer_SetVelocity((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,Vel[0],Vel[1],Vel[2],DS3D_IMMEDIATE);
+			flVelFactor = SPEEDOFSOUNDMETRESPERSEC / ALContext->flSpeedOfSound;
 
+			Vel[0] = ALSource->vVelocity[0] * flVelFactor;
+			Vel[1] = ALSource->vVelocity[1] * flVelFactor;
+			Vel[2] = -ALSource->vVelocity[2] * flVelFactor;
+			IDirectSound3DBuffer_SetVelocity((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,Vel[0],Vel[1],Vel[2],DS3D_IMMEDIATE);
 		}
 
 		ALSource->update1 &= ~VELOCITY;
@@ -2201,7 +2751,6 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 			Dir[1] = ALSource->vOrientation[1];
 			Dir[2] = -ALSource->vOrientation[2];
 			IDirectSound3DBuffer_SetConeOrientation((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,Dir[0],Dir[1],Dir[2],DS3D_IMMEDIATE);
-
 		}
 
 		ALSource->update1 &= ~ORIENTATION;
@@ -2223,7 +2772,6 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 			// data from the buffers in the queue
 			if (ALSource->SilenceAdded > 0)
 			{
-
 				// Need to determine if it is safe / possible to write the new queued data on to the end of the
 				// last valid data.   This is only possible, if the Play Cursor has not gone past the end of the
 				// valid data minus the gap between the Play and Write cursors.
@@ -2434,7 +2982,6 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 				volume = ALSource->lVolume + ALContext->Listener.lVolume;
 				CLAMP(volume, -10000, 0)
 				IDirectSoundBuffer_SetVolume((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, volume);
-
 			}
 		}
 
@@ -2517,7 +3064,6 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 			volume = LinearGainToMB(ALSource->flOuterGain);
 
 			IDirectSound3DBuffer_SetConeOutsideVolume((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2, volume,DS3D_IMMEDIATE);
-
 		}
 
 		ALSource->update1 &= ~CONEOUTSIDEVOLUME;
@@ -2615,7 +3161,6 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 			outerAngle = (ALuint)ALSource->flOuterAngle;
 
 			IDirectSound3DBuffer_SetConeAngles((LPDIRECTSOUND3DBUFFER)ALSource->uservalue2,innerAngle,outerAngle,DS3D_IMMEDIATE);
-
 		}
 
 		ALSource->update1 &= ~CONEANGLES;
@@ -2783,7 +3328,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 void UpdateListener(ALCcontext *ALContext)
 {
 	ALfloat		Pos[3],Vel[3], Ori[6];
-	ALfloat		flDistanceFactor;
+	ALfloat		flDistanceFactor, flVelFactor;
 	ALint		volume;
 	ALsource	*pSourceList;
 
@@ -2812,7 +3357,7 @@ void UpdateListener(ALCcontext *ALContext)
 					volume = pSourceList->lVolume + ALContext->Listener.lVolume;
 					CLAMP(volume, -10000, 0)
 					IDirectSoundBuffer_SetVolume((LPDIRECTSOUNDBUFFER)pSourceList->uservalue1, volume);
-			}
+				}
 
 				pSourceList = pSourceList->next;
 			}
@@ -2857,10 +3402,11 @@ void UpdateListener(ALCcontext *ALContext)
 
 	if (ALContext->Listener.update1 & LVELOCITY)
 	{
-		Vel[0] = ALContext->Listener.Velocity[0];
-		Vel[1] = ALContext->Listener.Velocity[1];
-		Vel[2] = -ALContext->Listener.Velocity[2];
-		IDirectSound3DListener_SetVelocity(ALContext->Device->lpDS3DListener, Vel[0], Vel[1], Vel[2],DS3D_IMMEDIATE);
+		flVelFactor = SPEEDOFSOUNDMETRESPERSEC / ALContext->flSpeedOfSound;
+		Vel[0] = ALContext->Listener.Velocity[0] * flVelFactor;
+		Vel[1] = ALContext->Listener.Velocity[1] * flVelFactor;
+		Vel[2] = -ALContext->Listener.Velocity[2] * flVelFactor;
+		IDirectSound3DListener_SetVelocity(ALContext->Device->lpDS3DListener, Vel[0], Vel[1], Vel[2], DS3D_IMMEDIATE);
 		ALContext->Listener.update1 &= ~LVELOCITY;
 		if (ALContext->Listener.update1 == 0)
 			return;
@@ -2900,6 +3446,36 @@ void UpdateListener(ALCcontext *ALContext)
 			return;
 	}
 
+	if (ALContext->Listener.update1 & LSPEEDOFSOUND)
+	{
+		// Multiply the Listener and all Source velocities by 343.3 / SpeedOfSound
+		flVelFactor = SPEEDOFSOUNDMETRESPERSEC / ALContext->flSpeedOfSound;
+
+		// Listener
+		Vel[0] = ALContext->Listener.Velocity[0] * flVelFactor;
+		Vel[1] = ALContext->Listener.Velocity[1] * flVelFactor;
+		Vel[2] = -ALContext->Listener.Velocity[2] * flVelFactor;
+		IDirectSound3DListener_SetVelocity(ALContext->Device->lpDS3DListener, Vel[0], Vel[1], Vel[2], DS3D_IMMEDIATE);
+
+		// Sources
+		pSourceList = ALContext->Source;
+		while (pSourceList)
+		{
+			if (pSourceList->uservalue2)
+			{
+				Vel[0] = pSourceList->vVelocity[0] * flVelFactor;
+				Vel[1] = pSourceList->vVelocity[1] * flVelFactor;
+				Vel[2] = -pSourceList->vVelocity[2] * flVelFactor;
+				IDirectSound3DBuffer_SetVelocity((LPDIRECTSOUND3DBUFFER)pSourceList->uservalue2, Vel[0], Vel[1], Vel[2], DS3D_IMMEDIATE);
+			}
+			pSourceList = pSourceList->next;
+		}
+
+		ALContext->Listener.update1 &= ~LSPEEDOFSOUND;
+		if (ALContext->Listener.update1 == 0)
+			return;
+	}
+
 	if (ALContext->Listener.update1 & LDISTANCEMODEL)
 	{
 		SetDistanceModel(ALContext);
@@ -2915,7 +3491,7 @@ void UpdateListener(ALCcontext *ALContext)
 /*
 	EAXFix
 
-	Used by "DirectSound3D" device to fix an Audigy Driver bug
+		Used by "DirectSound3D" device to fix an Audigy Driver bug
 */
 void EAXFix(ALCcontext *context)
 {
@@ -2929,7 +3505,7 @@ void EAXFix(ALCcontext *context)
 	alGenSources(1, &alDummySource);
 
 	// Query for EAX 3.0 Support (this function will make an EAX 3.0 Set() call if EAX 3.0 is detected)
-	bEAX30 = alIsExtensionPresent((ALubyte*)"EAX3.0");
+	bEAX30 = alIsExtensionPresent("EAX3.0");
 
 	if (bEAX30)
 	{
@@ -2945,7 +3521,6 @@ void EAXFix(ALCcontext *context)
 	{
 		context->Source = NULL;
 		context->SourceCount = 0;
-		context->Device->MaxNoOfSources--;
 	}
 }
 
@@ -2958,13 +3533,13 @@ void InitializeManualAttenuation(ALCcontext *pContext)
 #ifdef _DEBUG
 	OutputDebugString("Initializing Manual Attenuation !\n");
 #endif
-
+		
 	pContext->bUseManualAttenuation = AL_TRUE;
 
 	// Set Global RollOff Factor to 0
 	flRollOffFactor = 0.0f;
 	IDirectSound3DListener_SetRolloffFactor (pContext->Device->lpDS3DListener, flRollOffFactor, DS3D_IMMEDIATE);
-	
+
 	// Calculate level for every Source
 	pSourceList = pContext->Source;
 	for (i = 0; i < pContext->SourceCount; i++)
@@ -3011,13 +3586,7 @@ void SetDistanceModel(ALCcontext *pContext)
 	}
 	else
 	{
-		if (pContext->DistanceModel == AL_NONE)
-		{
-			// Set Global RollOff Factor to 0
-			flRollOffFactor = 0.0f;
-			IDirectSound3DListener_SetRolloffFactor (pContext->Device->lpDS3DListener, flRollOffFactor, DS3D_IMMEDIATE);
-		}
-		else if (pContext->DistanceModel == AL_INVERSE_DISTANCE_CLAMPED)
+		if (pContext->DistanceModel == AL_INVERSE_DISTANCE_CLAMPED)
 		{
 			// Set Global RollOff Factor to 1.0
 			flRollOffFactor = 1.0f;
@@ -3059,34 +3628,68 @@ void SetNonEAXSourceLevels(ALCcontext *pContext, ALsource *pSource, ALuint ulFla
 
 	if (ulFlags & LEVELFLAG_RECALCULATE_ATTENUATION)
 	{
-		if ((pContext->DistanceModel == AL_NONE) || (pSource->SourceType == SOURCE2D))
+		if (pSource->SourceType == SOURCE3D)
 		{
+			// Get the Source->Listener Distance (and clamp if appropriate)
+			switch (pContext->DistanceModel)
+			{
+			case AL_INVERSE_DISTANCE_CLAMPED:
+			case AL_LINEAR_DISTANCE_CLAMPED:
+			case AL_EXPONENT_DISTANCE_CLAMPED:
+				flDistance = max(pSource->flDistance, pSource->flRefDistance);
+				flDistance = min(flDistance, pSource->flMaxDistance);
+				break;
+
+			case AL_INVERSE_DISTANCE:
+			case AL_LINEAR_DISTANCE:
+			case AL_EXPONENT_DISTANCE:
+				flDistance = pSource->flDistance;
+				break;
+
+			case AL_NONE:
+			default:
+				flDistance = 0.0f;
+				break;
+			}
+
+			// Default is no attenuation
 			pSource->lAttenuationVolume = 0;
+
+			// Calculate attenuation based on Distance and DistanceModel
+			switch (pContext->DistanceModel)
+			{
+			case AL_INVERSE_DISTANCE:
+			case AL_INVERSE_DISTANCE_CLAMPED:
+				if ((pSource->flMaxDistance >= pSource->flRefDistance) && (pSource->flRefDistance > 0.0f))
+				{
+					if ((((flDistance - pSource->flRefDistance) / pSource->flRefDistance) * pSource->flRollOffFactor) > -1.0f)
+						pSource->lAttenuationVolume = (ALint)(-2000 * log10(1.0f + (((flDistance - pSource->flRefDistance) / pSource->flRefDistance) * pSource->flRollOffFactor)));
+					else
+						pSource->lAttenuationVolume = 10000;
+				}
+				break;
+
+			case AL_LINEAR_DISTANCE:
+			case AL_LINEAR_DISTANCE_CLAMPED:
+				if ((pSource->flMaxDistance - pSource->flRefDistance) > 0.0f)
+					pSource->lAttenuationVolume = LinearGainToMB(1.0f - (pSource->flRollOffFactor * (flDistance - pSource->flRefDistance) / (pSource->flMaxDistance - pSource->flRefDistance)));
+				break;
+
+			case AL_EXPONENT_DISTANCE:
+			case AL_EXPONENT_DISTANCE_CLAMPED:
+				if ((flDistance > 0.0f) && (pSource->flRefDistance > 0.0f) && (pSource->flMaxDistance >= pSource->flRefDistance))
+					pSource->lAttenuationVolume = LinearGainToMB((ALfloat)pow(flDistance / pSource->flRefDistance, -pSource->flRollOffFactor));
+				break;
+
+			case AL_NONE:
+			default:
+				pSource->lAttenuationVolume = 0;
+				break;
+			}
 		}
 		else
 		{
-			if (pContext->DistanceModel == AL_INVERSE_DISTANCE_CLAMPED)
-			{
-				flDistance = max(pSource->flDistance, pSource->flRefDistance);
-				flDistance = min(flDistance, pSource->flMaxDistance);
-			}
-			else
-			{
-				flDistance = pSource->flDistance;
-			}
-
-			// Calculate attenuation
-			if ((pSource->flMaxDistance >= pSource->flRefDistance) && (pSource->flRefDistance > 0.0f))
-			{
-				if ((((flDistance - pSource->flRefDistance) / pSource->flRefDistance) * pSource->flRollOffFactor) > -1.0f)
-					pSource->lAttenuationVolume = (ALint)(-2000.0f * log10(1.0f + (((flDistance - pSource->flRefDistance) / pSource->flRefDistance) * pSource->flRollOffFactor)));
-				else
-					pSource->lAttenuationVolume = 10000;
-			}
-			else
-			{
-				pSource->lAttenuationVolume = 0;
-			}
+			pSource->lAttenuationVolume = 0;
 		}
 	}
 
@@ -3106,10 +3709,6 @@ void SetNonEAXSourceLevels(ALCcontext *pContext, ALsource *pSource, ALuint ulFla
 	// Set if actually different by more than LEVEL_TOLERANCE
 	if ((ulFlags & LEVELFLAG_FORCE_EAX_CALL) || (abs(lVolume - pSource->lFinalVolume) > LEVEL_TOLERANCE))
 	{
-#ifdef _DEBUG
-		sprintf(szDebug, "Manual Attenuation Source volume is %d\n", lVolume);
-		OutputDebugString(szDebug);
-#endif
 		pSource->lFinalVolume = lVolume;
 		IDirectSoundBuffer_SetVolume((LPDIRECTSOUNDBUFFER)pSource->uservalue1, lVolume);
 	}

@@ -81,7 +81,7 @@ typedef struct ALCfunction_struct
 ALlist* alContextList = 0;
 ALCcontext* alCurrentContext = 0;
 
-
+ALCdevice* g_CaptureDevice = NULL;
 
 //*****************************************************************************
 //*****************************************************************************
@@ -98,6 +98,8 @@ static ALCRouterEnum alcEnums[] =
 {
     // Types
     {"ALC_INVALID",                     ALC_INVALID},
+	{"ALC_FALSE",                       ALC_FALSE},
+	{"ALC_TRUE",                        ALC_TRUE},
 
     // ALC Properties
     {"ALC_MAJOR_VERSION",               ALC_MAJOR_VERSION},
@@ -110,6 +112,11 @@ static ALCRouterEnum alcEnums[] =
     {"ALC_FREQUENCY",                   ALC_FREQUENCY},
     {"ALC_REFRESH",                     ALC_REFRESH},
     {"ALC_SYNC",                        ALC_SYNC},
+	{"ALC_MONO_SOURCES",                ALC_MONO_SOURCES},
+	{"ALC_STEREO_SOURCES",              ALC_STEREO_SOURCES},
+	{"ALC_CAPTURE_DEVICE_SPECIFIER",    ALC_CAPTURE_DEVICE_SPECIFIER},
+	{"ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER", ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER},
+	{"ALC_CAPTURE_SAMPLES",             ALC_CAPTURE_SAMPLES},
 
     // ALC Error Message
     {"ALC_NO_ERROR",                    ALC_NO_ERROR},
@@ -128,23 +135,27 @@ static ALCRouterEnum alcEnums[] =
 //
 static ALCfunction alcFunctions[] =
 {
-    {"alcCloseDevice",                  (ALvoid*)alcCloseDevice},
     {"alcCreateContext",                (ALvoid*)alcCreateContext},
+	{"alcMakeContextCurrent",           (ALvoid*)alcMakeContextCurrent},
+	{"alcProcessContext",               (ALvoid*)alcProcessContext},
+	{"alcSuspendContext",               (ALvoid*)alcSuspendContext},
     {"alcDestroyContext",               (ALvoid*)alcDestroyContext},
+	{"alcGetCurrentContext",            (ALvoid*)alcGetCurrentContext},
     {"alcGetContextsDevice",            (ALvoid*)alcGetContextsDevice},
-    {"alcGetCurrentContext",            (ALvoid*)alcGetCurrentContext},
-    {"alcGetEnumValue",                 (ALvoid*)alcGetEnumValue},
-    {"alcGetError",                     (ALvoid*)alcGetError},
-    {"alcGetIntegerv",                  (ALvoid*)alcGetIntegerv},
-    {"alcGetProcAddress",               (ALvoid*)alcGetProcAddress},
-    {"alcGetString",                    (ALvoid*)alcGetString},
-    {"alcIsExtensionPresent",           (ALvoid*)alcIsExtensionPresent},
-    {"alcMakeContextCurrent",           (ALvoid*)alcMakeContextCurrent},
     {"alcOpenDevice",                   (ALvoid*)alcOpenDevice},
-    {"alcProcessContext",               (ALvoid*)alcProcessContext},
-    {"alcSuspendContext",               (ALvoid*)alcSuspendContext},
-
-    {0,                                 (ALvoid*)0}
+	{"alcCloseDevice",                  (ALvoid*)alcCloseDevice},
+	{"alcGetError",                     (ALvoid*)alcGetError},
+	{"alcIsExtensionPresent",           (ALvoid*)alcIsExtensionPresent},
+	{"alcGetProcAddress",               (ALvoid*)alcGetProcAddress},
+	{"alcGetEnumValue",                 (ALvoid*)alcGetEnumValue},
+    {"alcGetString",                    (ALvoid*)alcGetString},
+    {"alcGetIntegerv",                  (ALvoid*)alcGetIntegerv},
+	{"alcCaptureOpenDevice",            (ALvoid*)alcCaptureOpenDevice},
+	{"alcCaptureCloseDevice",           (ALvoid*)alcCaptureCloseDevice},
+	{"alcCaptureStart",                 (ALvoid*)alcCaptureStart},
+	{"alcCaptureStop",                  (ALvoid*)alcCaptureStop},
+	{"alcCaptureSamples",               (ALvoid*)alcCaptureSamples},
+	{0,                                 (ALvoid*)0}
 };
 
 //
@@ -159,19 +170,19 @@ static ALCextension alcExtensions[] =
 
 // Error strings
 static ALenum  LastError = AL_NO_ERROR;
-static const ALubyte alcNoError[] = "No Error";
-static const ALubyte alcErrInvalidDevice[] = "Invalid Device";
-static const ALubyte alcErrInvalidContext[] = "Invalid Context";
-static const ALubyte alcErrInvalidEnum[] = "Invalid Enum";
-static const ALubyte alcErrInvalidValue[] = "Invalid Value";
+static const ALCchar alcNoError[] = "No Error";
+static const ALCchar alcErrInvalidDevice[] = "Invalid Device";
+static const ALCchar alcErrInvalidContext[] = "Invalid Context";
+static const ALCchar alcErrInvalidEnum[] = "Invalid Enum";
+static const ALCchar alcErrInvalidValue[] = "Invalid Value";
 
 // Context strings
-static ALubyte alcDefaultDeviceSpecifier[MAX_PATH] = "\0";
-static ALubyte alcDeviceSpecifierList[MAX_PATH] = "\0";
-static ALubyte alcExtensionList[] = "";
+static ALCchar alcDefaultDeviceSpecifier[MAX_PATH] = "\0";
+static ALCchar alcDeviceSpecifierList[MAX_PATH] = "\0";
+static ALCchar alcExtensionList[] = "";
 
 static ALint alcMajorVersion = 1;
-static ALint alcMinorVersion = 0;
+static ALint alcMinorVersion = 1;
 
 
 
@@ -187,9 +198,9 @@ static ALint alcMinorVersion = 0;
 // NewSpecifierCheck
 //*****************************************************************************
 //
-ALboolean NewSpecifierCheck(const ALubyte* specifier)
+ALboolean NewSpecifierCheck(const ALCchar* specifier)
 {
-	const ALubyte* list = alcDeviceSpecifierList;
+	const ALCchar* list = alcDeviceSpecifierList;
 
 	while (*list != 0) {
 		if (strcmp((char *)list, (char *)specifier) == 0) {
@@ -217,9 +228,9 @@ ALvoid BuildDeviceSpecifierList()
     TCHAR fileExt[MAX_PATH + 1];
 	TCHAR systemAL[MAX_PATH + 1];
     BOOL found = FALSE;
-    const ALubyte* specifier = 0;
+    const ALCchar* specifier = 0;
     ALuint specifierSize = 0;
-    const ALubyte* list = alcDeviceSpecifierList;
+    const ALCchar* list = alcDeviceSpecifierList;
     ALuint listSize = 0;
 	ALCdevice *device;
 	void *context;
@@ -307,7 +318,7 @@ ALvoid BuildDeviceSpecifierList()
 								(alcCloseDeviceFxn != 0) &&
 								(alcIsExtensionPresentFxn != 0)) {
 
-								if (alcIsExtensionPresentFxn(NULL, (const ALubyte *)"ALC_ENUMERATION_EXT")) {
+								if (alcIsExtensionPresentFxn(NULL, "ALC_ENUMERATION_EXT")) {
 									// this DLL can enumerate devices -- so add complete list of devices
 									specifier = alcGetStringFxn(0, ALC_DEVICE_SPECIFIER);
 									do {
@@ -441,7 +452,7 @@ ALvoid BuildDeviceSpecifierList()
 								(alcCloseDeviceFxn != 0) &&
 								(alcIsExtensionPresentFxn != 0)) {
 
-								if (alcIsExtensionPresentFxn(NULL, (ALubyte *)"ALC_ENUMERATION_EXT")) {
+								if (alcIsExtensionPresentFxn(NULL, "ALC_ENUMERATION_EXT")) {
 									// this DLL can enumerate devices -- so add complete list of devices
 									specifier = alcGetStringFxn(0, ALC_DEVICE_SPECIFIER);
 									do {
@@ -550,29 +561,39 @@ ALboolean FillOutAlcFunctions(ALCdevice* device)
     ALboolean alcFxns = FALSE;
     ALCAPI_FXN_TABLE* alcApi = &device->AlcApi;
 
+	memset(alcApi, 0, sizeof(ALCAPI_FXN_TABLE));
+
     //
     // Get the OpenAL 1.0 Entry points.
     //
+	alcApi->alcCreateContext      = (ALCAPI_CREATE_CONTEXT)GetProcAddress(device->Dll, "alcCreateContext");
+    alcApi->alcMakeContextCurrent = (ALCAPI_MAKE_CONTEXT_CURRENT)GetProcAddress(device->Dll, "alcMakeContextCurrent");
+    alcApi->alcProcessContext     = (ALCAPI_PROCESS_CONTEXT)GetProcAddress(device->Dll, "alcProcessContext");
+	alcApi->alcSuspendContext     = (ALCAPI_SUSPEND_CONTEXT)GetProcAddress(device->Dll, "alcSuspendContext");
+    alcApi->alcDestroyContext     = (ALCAPI_DESTROY_CONTEXT)GetProcAddress(device->Dll, "alcDestroyContext");
+	alcApi->alcGetCurrentContext  = (ALCAPI_GET_CURRENT_CONTEXT)GetProcAddress(device->Dll, "alcGetCurrentContext");
+    alcApi->alcGetContextsDevice  = (ALCAPI_GET_CONTEXTS_DEVICE)GetProcAddress(device->Dll, "alcGetContextsDevice");
+
+	alcApi->alcOpenDevice         = (ALCAPI_OPEN_DEVICE)GetProcAddress(device->Dll, "alcOpenDevice");
+    alcApi->alcCloseDevice        = (ALCAPI_CLOSE_DEVICE)GetProcAddress(device->Dll, "alcCloseDevice");
+
+	alcApi->alcGetError           = (ALCAPI_GET_ERROR)GetProcAddress(device->Dll, "alcGetError");
+
+	alcApi->alcIsExtensionPresent = (ALCAPI_IS_EXTENSION_PRESENT)GetProcAddress(device->Dll, "alcIsExtensionPresent");
     alcApi->alcGetProcAddress     = (ALCAPI_GET_PROC_ADDRESS)GetProcAddress(device->Dll, "alcGetProcAddress");
+	alcApi->alcGetEnumValue       = (ALCAPI_GET_ENUM_VALUE)GetProcAddress(device->Dll, "alcGetEnumValue");
 
     alcApi->alcGetString          = (ALCAPI_GET_STRING)GetProcAddress(device->Dll, "alcGetString");
     alcApi->alcGetIntegerv        = (ALCAPI_GET_INTEGERV)GetProcAddress(device->Dll, "alcGetIntegerv");
 
-    alcApi->alcOpenDevice         = (ALCAPI_OPEN_DEVICE)GetProcAddress(device->Dll, "alcOpenDevice");
-    alcApi->alcCloseDevice        = (ALCAPI_CLOSE_DEVICE)GetProcAddress(device->Dll, "alcCloseDevice");
-
-    alcApi->alcCreateContext      = (ALCAPI_CREATE_CONTEXT)GetProcAddress(device->Dll, "alcCreateContext");
-    alcApi->alcMakeContextCurrent = (ALCAPI_MAKE_CONTEXT_CURRENT)GetProcAddress(device->Dll, "alcMakeContextCurrent");
-    alcApi->alcProcessContext     = (ALCAPI_PROCESS_CONTEXT)GetProcAddress(device->Dll, "alcProcessContext");
-    alcApi->alcGetCurrentContext  = (ALCAPI_GET_CURRENT_CONTEXT)GetProcAddress(device->Dll, "alcGetCurrentContext");
-    alcApi->alcGetContextsDevice  = (ALCAPI_GET_CONTEXTS_DEVICE)GetProcAddress(device->Dll, "alcGetContextsDevice");
-    alcApi->alcSuspendContext     = (ALCAPI_SUSPEND_CONTEXT)GetProcAddress(device->Dll, "alcSuspendContext");
-    alcApi->alcDestroyContext     = (ALCAPI_DESTROY_CONTEXT)GetProcAddress(device->Dll, "alcDestroyContext");
-
-    alcApi->alcGetError           = (ALCAPI_GET_ERROR)GetProcAddress(device->Dll, "alcGetError");
-
-    alcApi->alcIsExtensionPresent = (ALCAPI_IS_EXTENSION_PRESENT)GetProcAddress(device->Dll, "alcIsExtensionPresent");
-    alcApi->alcGetEnumValue       = (ALCAPI_GET_ENUM_VALUE)GetProcAddress(device->Dll, "alcGetEnumValue");
+	//
+	// Get the OpenAL 1.1 Entry points.
+	//
+    alcApi->alcCaptureOpenDevice = (ALCAPI_CAPTURE_OPEN_DEVICE)GetProcAddress(device->Dll, "alcCaptureOpenDevice");
+    alcApi->alcCaptureCloseDevice = (ALCAPI_CAPTURE_CLOSE_DEVICE)GetProcAddress(device->Dll, "alcCaptureCloseDevice");
+    alcApi->alcCaptureStart = (ALCAPI_CAPTURE_START)GetProcAddress(device->Dll, "alcCaptureStart");
+    alcApi->alcCaptureStop = (ALCAPI_CAPTURE_STOP)GetProcAddress(device->Dll, "alcCaptureStop");
+    alcApi->alcCaptureSamples = (ALCAPI_CAPTURE_SAMPLES)GetProcAddress(device->Dll, "alcCaptureSamples");
 
 	// handle legacy issue with old Creative DLLs which may not have alcGetProcAddress, alcIsExtensionPresent, alcGetEnumValue
 	if (alcApi->alcGetProcAddress == NULL) {
@@ -586,24 +607,21 @@ ALboolean FillOutAlcFunctions(ALCdevice* device)
 	}
 
 
-    alcFxns = (alcApi->alcGetString          &&
-               alcApi->alcGetIntegerv        &&
-               alcApi->alcOpenDevice         &&
-               alcApi->alcCloseDevice        &&
-
-               alcApi->alcCreateContext      &&
+    alcFxns = (alcApi->alcCreateContext      &&
                alcApi->alcMakeContextCurrent &&
                alcApi->alcProcessContext     &&
-               alcApi->alcGetCurrentContext  &&
-               alcApi->alcGetContextsDevice  &&
-               alcApi->alcSuspendContext     &&
+			   alcApi->alcSuspendContext     &&
                alcApi->alcDestroyContext     &&
-
-               alcApi->alcGetError           &&
-
-               alcApi->alcIsExtensionPresent &&
+			   alcApi->alcGetCurrentContext  &&
+               alcApi->alcGetContextsDevice  &&
+			   alcApi->alcOpenDevice         &&
+               alcApi->alcCloseDevice        &&
+			   alcApi->alcGetError           &&
+			   alcApi->alcIsExtensionPresent &&
                alcApi->alcGetProcAddress     &&
-               alcApi->alcGetEnumValue);
+			   alcApi->alcGetEnumValue       &&
+			   alcApi->alcGetString          &&
+               alcApi->alcGetIntegerv);
 
     return alcFxns;
 }
@@ -618,137 +636,153 @@ ALboolean FillOutAlFunctions(ALCcontext* context)
     ALboolean  alFxns = FALSE;
     ALAPI_FXN_TABLE*   alApi = &context->AlApi;
 
-    //
-    // Get the OpenAL 1.0 Entry points.
-    //
-    alApi->alGetProcAddress       = (ALAPI_GET_PROC_ADDRESS)GetProcAddress(context->Device->Dll, "alGetProcAddress");
+	memset(alApi, 0, sizeof(ALAPI_FXN_TABLE));
 
-    // AL:
+    //
+    // Get the OpenAL 1.0 & 1.1 Entry points.
+    //
     alApi->alEnable               = (ALAPI_ENABLE)GetProcAddress(context->Device->Dll, "alEnable");
     alApi->alDisable              = (ALAPI_DISABLE)GetProcAddress(context->Device->Dll, "alDisable");
     alApi->alIsEnabled            = (ALAPI_IS_ENABLED)GetProcAddress(context->Device->Dll, "alIsEnabled");
 
+	alApi->alGetString            = (ALAPI_GET_STRING)GetProcAddress(context->Device->Dll, "alGetString");
+	alApi->alGetBooleanv          = (ALAPI_GET_BOOLEANV)GetProcAddress(context->Device->Dll, "alGetBooleanv");
+    alApi->alGetIntegerv          = (ALAPI_GET_INTEGERV)GetProcAddress(context->Device->Dll, "alGetIntegerv");
+    alApi->alGetFloatv            = (ALAPI_GET_FLOATV)GetProcAddress(context->Device->Dll, "alGetFloatv");
+    alApi->alGetDoublev           = (ALAPI_GET_DOUBLEV)GetProcAddress(context->Device->Dll, "alGetDoublev");
     alApi->alGetBoolean           = (ALAPI_GET_BOOLEAN)GetProcAddress(context->Device->Dll, "alGetBoolean");
     alApi->alGetInteger           = (ALAPI_GET_INTEGER)GetProcAddress(context->Device->Dll, "alGetInteger");
     alApi->alGetFloat             = (ALAPI_GET_FLOAT)GetProcAddress(context->Device->Dll, "alGetFloat");
     alApi->alGetDouble            = (ALAPI_GET_DOUBLE)GetProcAddress(context->Device->Dll, "alGetDouble");
-    alApi->alGetBooleanv          = (ALAPI_GET_BOOLEANV)GetProcAddress(context->Device->Dll, "alGetBooleanv");
-    alApi->alGetIntegerv          = (ALAPI_GET_INTEGERV)GetProcAddress(context->Device->Dll, "alGetIntegerv");
-    alApi->alGetFloatv            = (ALAPI_GET_FLOATV)GetProcAddress(context->Device->Dll, "alGetFloatv");
-    alApi->alGetDoublev           = (ALAPI_GET_DOUBLEV)GetProcAddress(context->Device->Dll, "alGetDoublev");
-    alApi->alGetString            = (ALAPI_GET_STRING)GetProcAddress(context->Device->Dll, "alGetString");
-
-    alApi->alGetError             = (ALAPI_GET_ERROR)GetProcAddress(context->Device->Dll, "alGetError");
-
+	alApi->alGetError             = (ALAPI_GET_ERROR)GetProcAddress(context->Device->Dll, "alGetError");
     alApi->alIsExtensionPresent   = (ALAPI_IS_EXTENSION_PRESENT)GetProcAddress(context->Device->Dll, "alIsExtensionPresent");
+	alApi->alGetProcAddress       = (ALAPI_GET_PROC_ADDRESS)GetProcAddress(context->Device->Dll, "alGetProcAddress");
     alApi->alGetEnumValue         = (ALAPI_GET_ENUM_VALUE)GetProcAddress(context->Device->Dll, "alGetEnumValue");
 
+	alApi->alListenerf            = (ALAPI_LISTENERF)GetProcAddress(context->Device->Dll, "alListenerf");
+	alApi->alListener3f           = (ALAPI_LISTENER3F)GetProcAddress(context->Device->Dll, "alListener3f");
+	alApi->alListenerfv           = (ALAPI_LISTENERFV)GetProcAddress(context->Device->Dll, "alListenerfv");
     alApi->alListeneri            = (ALAPI_LISTENERI)GetProcAddress(context->Device->Dll, "alListeneri");
-    alApi->alListenerf            = (ALAPI_LISTENERF)GetProcAddress(context->Device->Dll, "alListenerf");
-    alApi->alListener3f           = (ALAPI_LISTENER3F)GetProcAddress(context->Device->Dll, "alListener3f");
-    alApi->alListenerfv           = (ALAPI_LISTENERFV)GetProcAddress(context->Device->Dll, "alListenerfv");
-    alApi->alGetListeneri         = (ALAPI_GET_LISTENERI)GetProcAddress(context->Device->Dll, "alGetListeneri");
+	alApi->alListener3i           = (ALAPI_LISTENER3I)GetProcAddress(context->Device->Dll, "alListener3i");
+	alApi->alListeneriv           = (ALAPI_LISTENERIV)GetProcAddress(context->Device->Dll, "alListeneriv");
     alApi->alGetListenerf         = (ALAPI_GET_LISTENERF)GetProcAddress(context->Device->Dll, "alGetListenerf");
-    alApi->alGetListener3f        = (ALAPI_GET_LISTENER3F)GetProcAddress(context->Device->Dll, "alGetListener3f");
-    alApi->alGetListenerfv        = (ALAPI_GET_LISTENERFV)GetProcAddress(context->Device->Dll, "alGetListenerfv");
+	alApi->alGetListener3f        = (ALAPI_GET_LISTENER3F)GetProcAddress(context->Device->Dll, "alGetListener3f");
+	alApi->alGetListenerfv        = (ALAPI_GET_LISTENERFV)GetProcAddress(context->Device->Dll, "alGetListenerfv");
+	alApi->alGetListeneri         = (ALAPI_GET_LISTENERI)GetProcAddress(context->Device->Dll, "alGetListeneri");
+	alApi->alGetListener3i        = (ALAPI_GET_LISTENER3I)GetProcAddress(context->Device->Dll, "alGetListener3i");
+	alApi->alGetListeneriv        = (ALAPI_GET_LISTENERIV)GetProcAddress(context->Device->Dll, "alGetListeneriv");
 
     alApi->alGenSources           = (ALAPI_GEN_SOURCES)GetProcAddress(context->Device->Dll, "alGenSources");
     alApi->alDeleteSources        = (ALAPI_DELETE_SOURCES)GetProcAddress(context->Device->Dll, "alDeleteSources");
     alApi->alIsSource             = (ALAPI_IS_SOURCE)GetProcAddress(context->Device->Dll, "alIsSource");
-    alApi->alSourcei              = (ALAPI_SOURCEI)GetProcAddress(context->Device->Dll, "alSourcei");
-    alApi->alSourcef              = (ALAPI_SOURCEF)GetProcAddress(context->Device->Dll, "alSourcef");
+	alApi->alSourcef              = (ALAPI_SOURCEF)GetProcAddress(context->Device->Dll, "alSourcef");
     alApi->alSource3f             = (ALAPI_SOURCE3F)GetProcAddress(context->Device->Dll, "alSource3f");
     alApi->alSourcefv             = (ALAPI_SOURCEFV)GetProcAddress(context->Device->Dll, "alSourcefv");
-    alApi->alGetSourcei           = (ALAPI_GET_SOURCEI)GetProcAddress(context->Device->Dll, "alGetSourcei");
+    alApi->alSourcei              = (ALAPI_SOURCEI)GetProcAddress(context->Device->Dll, "alSourcei");
+    alApi->alSource3i             = (ALAPI_SOURCE3I)GetProcAddress(context->Device->Dll, "alSource3i");
+    alApi->alSourceiv             = (ALAPI_SOURCEIV)GetProcAddress(context->Device->Dll, "alSourceiv");
     alApi->alGetSourcef           = (ALAPI_GET_SOURCEF)GetProcAddress(context->Device->Dll, "alGetSourcef");
     alApi->alGetSource3f          = (ALAPI_GET_SOURCE3F)GetProcAddress(context->Device->Dll, "alGetSource3f");
     alApi->alGetSourcefv          = (ALAPI_GET_SOURCEFV)GetProcAddress(context->Device->Dll, "alGetSourcefv");
+	alApi->alGetSourcei           = (ALAPI_GET_SOURCEI)GetProcAddress(context->Device->Dll, "alGetSourcei");
+    alApi->alGetSource3i          = (ALAPI_GET_SOURCE3I)GetProcAddress(context->Device->Dll, "alGetSource3i");
+    alApi->alGetSourceiv          = (ALAPI_GET_SOURCEIV)GetProcAddress(context->Device->Dll, "alGetSourceiv");
     alApi->alSourcePlayv          = (ALAPI_SOURCE_PLAYV)GetProcAddress(context->Device->Dll, "alSourcePlayv");
-    alApi->alSourcePausev         = (ALAPI_SOURCE_PAUSEV)GetProcAddress(context->Device->Dll, "alSourcePausev");
     alApi->alSourceStopv          = (ALAPI_SOURCE_STOPV)GetProcAddress(context->Device->Dll, "alSourceStopv");
     alApi->alSourceRewindv        = (ALAPI_SOURCE_REWINDV)GetProcAddress(context->Device->Dll, "alSourceRewindv");
+	alApi->alSourcePausev         = (ALAPI_SOURCE_PAUSEV)GetProcAddress(context->Device->Dll, "alSourcePausev");
     alApi->alSourcePlay           = (ALAPI_SOURCE_PLAY)GetProcAddress(context->Device->Dll, "alSourcePlay");
-    alApi->alSourcePause          = (ALAPI_SOURCE_PAUSE)GetProcAddress(context->Device->Dll, "alSourcePause");
     alApi->alSourceStop           = (ALAPI_SOURCE_STOP)GetProcAddress(context->Device->Dll, "alSourceStop");
     alApi->alSourceRewind         = (ALAPI_SOURCE_STOP)GetProcAddress(context->Device->Dll, "alSourceRewind");
+	alApi->alSourcePause          = (ALAPI_SOURCE_PAUSE)GetProcAddress(context->Device->Dll, "alSourcePause");
+
+	alApi->alSourceQueueBuffers   = (ALAPI_SOURCE_QUEUE_BUFFERS)GetProcAddress(context->Device->Dll, "alSourceQueueBuffers");
+    alApi->alSourceUnqueueBuffers = (ALAPI_SOURCE_UNQUEUE_BUFFERS)GetProcAddress(context->Device->Dll, "alSourceUnqueueBuffers");
 
     alApi->alGenBuffers           = (ALAPI_GEN_BUFFERS)GetProcAddress(context->Device->Dll, "alGenBuffers");
     alApi->alDeleteBuffers        = (ALAPI_DELETE_BUFFERS)GetProcAddress(context->Device->Dll, "alDeleteBuffers");
     alApi->alIsBuffer             = (ALAPI_IS_BUFFER)GetProcAddress(context->Device->Dll, "alIsBuffer");
     alApi->alBufferData           = (ALAPI_BUFFER_DATA)GetProcAddress(context->Device->Dll, "alBufferData");
+	alApi->alBufferf              = (ALAPI_BUFFERF)GetProcAddress(context->Device->Dll, "alBufferf");
+    alApi->alBuffer3f             = (ALAPI_BUFFER3F)GetProcAddress(context->Device->Dll, "alBuffer3f");
+    alApi->alBufferfv             = (ALAPI_BUFFERFV)GetProcAddress(context->Device->Dll, "alBufferfv");
+    alApi->alBufferi              = (ALAPI_BUFFERI)GetProcAddress(context->Device->Dll, "alBufferi");
+    alApi->alBuffer3i             = (ALAPI_BUFFER3I)GetProcAddress(context->Device->Dll, "alBuffer3i");
+    alApi->alBufferiv             = (ALAPI_BUFFERIV)GetProcAddress(context->Device->Dll, "alBufferiv");
+	alApi->alGetBufferf           = (ALAPI_GET_BUFFERF)GetProcAddress(context->Device->Dll, "alGetBufferf");
+    alApi->alGetBuffer3f          = (ALAPI_GET_BUFFER3F)GetProcAddress(context->Device->Dll, "alGetBuffer3f");
+    alApi->alGetBufferfv          = (ALAPI_GET_BUFFERFV)GetProcAddress(context->Device->Dll, "alGetBufferfv");
     alApi->alGetBufferi           = (ALAPI_GET_BUFFERI)GetProcAddress(context->Device->Dll, "alGetBufferi");
-    alApi->alGetBufferf           = (ALAPI_GET_BUFFERF)GetProcAddress(context->Device->Dll, "alGetBufferf");
+    alApi->alGetBuffer3i          = (ALAPI_GET_BUFFER3I)GetProcAddress(context->Device->Dll, "alGetBuffer3i");
+    alApi->alGetBufferiv          = (ALAPI_GET_BUFFERIV)GetProcAddress(context->Device->Dll, "alGetBufferiv");
 
-    alApi->alSourceQueueBuffers   = (ALAPI_SOURCE_QUEUE_BUFFERS)GetProcAddress(context->Device->Dll, "alSourceQueueBuffers");
-    alApi->alSourceUnqueueBuffers = (ALAPI_SOURCE_UNQUEUE_BUFFERS)GetProcAddress(context->Device->Dll, "alSourceUnqueueBuffers");
-
-    alApi->alDistanceModel        = (ALAPI_DISTANCE_MODEL)GetProcAddress(context->Device->Dll, "alDistanceModel");
-    alApi->alDopplerFactor        = (ALAPI_DOPPLER_FACTOR)GetProcAddress(context->Device->Dll, "alDopplerFactor");
+	alApi->alDopplerFactor        = (ALAPI_DOPPLER_FACTOR)GetProcAddress(context->Device->Dll, "alDopplerFactor");
     alApi->alDopplerVelocity      = (ALAPI_DOPPLER_VELOCITY)GetProcAddress(context->Device->Dll, "alDopplerVelocity");
-
-
+	alApi->alSpeedOfSound         = (ALAPI_SPEED_OF_SOUND)GetProcAddress(context->Device->Dll, "alSpeedOfSound");
+    alApi->alDistanceModel        = (ALAPI_DISTANCE_MODEL)GetProcAddress(context->Device->Dll, "alDistanceModel");
+    
     alFxns = (alApi->alEnable               &&
               alApi->alDisable              &&
               alApi->alIsEnabled            &&
 
-              alApi->alGetBoolean           &&
-              alApi->alGetInteger           &&
-              alApi->alGetFloat             &&
-              alApi->alGetDouble            &&
+              alApi->alGetString            &&
               alApi->alGetBooleanv          &&
               alApi->alGetIntegerv          &&
               alApi->alGetFloatv            &&
               alApi->alGetDoublev           &&
-              alApi->alGetString            &&
-
+			  alApi->alGetBoolean           &&
+              alApi->alGetInteger           &&
+              alApi->alGetFloat             &&
+              alApi->alGetDouble            &&
+              
               alApi->alGetError             &&
 
               alApi->alIsExtensionPresent   &&
               alApi->alGetProcAddress       &&
               alApi->alGetEnumValue         &&
 
-              alApi->alListeneri            &&
-              alApi->alListenerf            &&
+			  alApi->alListenerf            &&
               alApi->alListener3f           &&
               alApi->alListenerfv           &&
-              alApi->alGetListeneri         &&
+              alApi->alListeneri            &&
               alApi->alGetListenerf         &&
               alApi->alGetListener3f        &&
               alApi->alGetListenerfv        &&
-
+			  alApi->alGetListeneri         &&
+              
               alApi->alGenSources           &&
               alApi->alDeleteSources        &&
               alApi->alIsSource             &&
-              alApi->alSourcei              &&
               alApi->alSourcef              &&
               alApi->alSource3f             &&
               alApi->alSourcefv             &&
-              alApi->alGetSourcei           &&
+			  alApi->alSourcei              &&
               alApi->alGetSourcef           &&
               alApi->alGetSource3f          &&
               alApi->alGetSourcefv          &&
+              alApi->alGetSourcei           &&
               alApi->alSourcePlayv          &&
-              alApi->alSourcePausev         &&
               alApi->alSourceStopv          &&
               alApi->alSourceRewindv        &&
+			  alApi->alSourcePausev         &&
               alApi->alSourcePlay           &&
-              alApi->alSourcePause          &&
               alApi->alSourceStop           &&
               alApi->alSourceRewind         &&
+			  alApi->alSourcePause          &&
+
+			  alApi->alSourceQueueBuffers   &&
+              alApi->alSourceUnqueueBuffers &&              
 
               alApi->alGenBuffers           &&
               alApi->alDeleteBuffers        &&
               alApi->alIsBuffer             &&
               alApi->alBufferData           &&
-              alApi->alGetBufferi           &&
               alApi->alGetBufferf           &&
+			  alApi->alGetBufferi           &&
 
-              alApi->alSourceQueueBuffers   &&
-              alApi->alSourceUnqueueBuffers &&
-
-              alApi->alDistanceModel        &&
-              alApi->alDopplerFactor        &&
-              alApi->alDopplerVelocity);
+			  alApi->alDopplerFactor        &&
+              alApi->alDopplerVelocity      &&
+              alApi->alDistanceModel);
 
     return alFxns;
 }
@@ -770,7 +804,7 @@ HINSTANCE FindDllWithMatchingSpecifier(TCHAR* dllSearchPattern, char* specifier,
     TCHAR fileExt[MAX_PATH + 1];
 	TCHAR systemAL[MAX_PATH + 1];
     BOOL found = FALSE;
-    const ALubyte* deviceSpecifier = 0;
+    const ALCchar* deviceSpecifier = 0;
 	ALCdevice *device;
 	void *context;
 
@@ -857,7 +891,7 @@ HINSTANCE FindDllWithMatchingSpecifier(TCHAR* dllSearchPattern, char* specifier,
 							alcGetStringFxn = (ALCAPI_GET_STRING)GetProcAddress(dll, "alcGetString");
 							if(alcGetStringFxn)
 							{
-								if (alcIsExtensionPresentFxn(0, (ALubyte *)"ALC_ENUMERATION_EXT")) {
+								if (alcIsExtensionPresentFxn(0, (ALCchar *)"ALC_ENUMERATION_EXT")) {
 									// have an enumeratable DLL here, so check all available devices
 									deviceSpecifier = alcGetStringFxn(0, ALC_DEVICE_SPECIFIER);
 									do {
@@ -969,17 +1003,20 @@ HINSTANCE FindDllWithMatchingSpecifier(TCHAR* dllSearchPattern, char* specifier,
 // alcCloseDevice
 //*****************************************************************************
 //
-ALCAPI ALvoid ALCAPIENTRY alcCloseDevice(ALCdevice* device)
+ALCAPI ALCboolean ALCAPIENTRY alcCloseDevice(ALCdevice* device)
 {
     if(!device)
     {
-        return;
+        return ALC_FALSE;
     }
 
     if(IsBadReadPtr(device, sizeof(ALCdevice)))
     {
-        return;
+        return ALC_FALSE;
     }
+
+	if (device == g_CaptureDevice)
+		return g_CaptureDevice->AlcApi.alcCloseDevice(g_CaptureDevice->CaptureDevice);
 
     //
     // Check if its linked to a context.
@@ -1025,6 +1062,8 @@ ALCAPI ALvoid ALCAPIENTRY alcCloseDevice(ALCdevice* device)
     device->AlcApi.alcCloseDevice(device->DllDevice);
     FreeLibrary(device->Dll);
     free(device);
+
+	return ALC_TRUE;
 }
 
 
@@ -1054,6 +1093,8 @@ ALCAPI ALCcontext* ALCAPIENTRY alcCreateContext(ALCdevice* device, const ALint* 
         return 0;
     }
 
+	if (device == g_CaptureDevice)
+		return g_CaptureDevice->AlcApi.alcCreateContext(g_CaptureDevice->CaptureDevice, attrList);
 
     //
     // Allocate the context.
@@ -1176,7 +1217,7 @@ ALCAPI ALCcontext* ALCAPIENTRY alcGetCurrentContext(ALvoid)
 // alcGetEnumValue
 //*****************************************************************************
 //
-ALCAPI ALenum ALCAPIENTRY alcGetEnumValue(ALCdevice* device, const ALubyte* ename)
+ALCAPI ALenum ALCAPIENTRY alcGetEnumValue(ALCdevice* device, const ALCchar* ename)
 {
     //
     // Always return the router version of the ALC enum if it exists.
@@ -1200,6 +1241,9 @@ ALCAPI ALenum ALCAPIENTRY alcGetEnumValue(ALCdevice* device, const ALubyte* enam
             return 0;
         }
 
+		if (device == g_CaptureDevice)
+			return g_CaptureDevice->AlcApi.alcGetEnumValue(g_CaptureDevice->CaptureDevice, ename);
+
         return device->AlcApi.alcGetEnumValue(device->DllDevice, ename);
     }
 
@@ -1219,6 +1263,8 @@ ALCAPI ALenum ALCAPIENTRY alcGetError(ALCdevice* device)
     // Try to get a valid device.
     if(!device)
     {
+		if (g_CaptureDevice == device)
+			return 
         errorCode = LastError;
         LastError = AL_NO_ERROR;
         return errorCode;
@@ -1233,7 +1279,11 @@ ALCAPI ALenum ALCAPIENTRY alcGetError(ALCdevice* device)
     //
     // Check if its a 3rd party device.
     //
-    errorCode = device->AlcApi.alcGetError(device->DllDevice);
+	if (device == g_CaptureDevice)
+		errorCode = g_CaptureDevice->AlcApi.alcGetError(g_CaptureDevice->CaptureDevice);
+	else
+		errorCode = device->AlcApi.alcGetError(device->DllDevice);
+
     return errorCode;
 }
 
@@ -1244,13 +1294,19 @@ ALCAPI ALenum ALCAPIENTRY alcGetError(ALCdevice* device)
 //
 ALCAPI ALvoid ALCAPIENTRY alcGetIntegerv(ALCdevice* device, ALenum param, ALsizei size, ALint* data)
 {
-    if(device)
+	if(device)
     {
         if(IsBadReadPtr(device, sizeof(ALCdevice)))
         {
             LastError = ALC_INVALID_DEVICE;
             return;
         }
+
+		if (device == g_CaptureDevice)
+		{
+			g_CaptureDevice->AlcApi.alcGetIntegerv(g_CaptureDevice->CaptureDevice, param, size, data);
+			return;
+		}
 
         device->AlcApi.alcGetIntegerv(device->DllDevice, param, size, data);
         return;
@@ -1295,7 +1351,7 @@ ALCAPI ALvoid ALCAPIENTRY alcGetIntegerv(ALCdevice* device, ALenum param, ALsize
 // alcGetProcAddress
 //*****************************************************************************
 //
-ALCAPI ALvoid* ALCAPIENTRY alcGetProcAddress(ALCdevice* device, const ALubyte* fname)
+ALCAPI ALvoid* ALCAPIENTRY alcGetProcAddress(ALCdevice* device, const ALCchar* fname)
 {
     //
     // Always return the router version of the ALC function if it exists.
@@ -1319,6 +1375,9 @@ ALCAPI ALvoid* ALCAPIENTRY alcGetProcAddress(ALCdevice* device, const ALubyte* f
             return 0;
         }
 
+		if (device == g_CaptureDevice)
+			return g_CaptureDevice->AlcApi.alcGetProcAddress(g_CaptureDevice->CaptureDevice, fname);
+
         return device->AlcApi.alcGetProcAddress(device->DllDevice, fname);
     }
 
@@ -1331,7 +1390,7 @@ ALCAPI ALvoid* ALCAPIENTRY alcGetProcAddress(ALCdevice* device, const ALubyte* f
 // alcIsExtensionPresent
 //*****************************************************************************
 //
-ALCAPI ALboolean ALCAPIENTRY alcIsExtensionPresent(ALCdevice* device, const ALubyte* ename)
+ALCAPI ALboolean ALCAPIENTRY alcIsExtensionPresent(ALCdevice* device, const ALCchar* ename)
 {
     //
     // Check if its a router supported extension first as its a good idea to have
@@ -1358,6 +1417,9 @@ ALCAPI ALboolean ALCAPIENTRY alcIsExtensionPresent(ALCdevice* device, const ALub
             LastError = ALC_INVALID_DEVICE;
             return 0;
         }
+
+		if (device == g_CaptureDevice)
+			return g_CaptureDevice->AlcApi.alcIsExtensionPresent(g_CaptureDevice->CaptureDevice, ename);
 
         return device->AlcApi.alcIsExtensionPresent(device->DllDevice, ename);
     }
@@ -1455,11 +1517,11 @@ ALCAPI ALboolean ALCAPIENTRY alcMakeContextCurrent(ALCcontext* context)
 // alcOpenDevice
 //*****************************************************************************
 //
-ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(const ALubyte* deviceName)
+ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(const ALCchar* deviceName)
 {
     HINSTANCE dll = 0;
     ALCdevice* device = 0;
-
+	char newDeviceName[256];
 
     //
     // Initialize the OpenAL device structure
@@ -1475,35 +1537,44 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(const ALubyte* deviceName)
     device->InUse = 0;
 
     //
-    // Make sure we atleast have some device name.
+    // Make sure we at least have some device name.
     //
     if ((!deviceName) || (strcmp((char *)deviceName, "DirectSound3D") == 0))
     {
-        deviceName = alcGetString(0, ALC_DEFAULT_DEVICE_SPECIFIER);
-    }
+        strncpy(newDeviceName, alcGetString(0, ALC_DEFAULT_DEVICE_SPECIFIER), 256);
+    } else {
+		strncpy(newDeviceName, deviceName, 256);
+	}
+
+	//
+	// map legacy names to new generic names
+	//    -- DirectSound3D mapped above to ALC_DEFAULT_DEVICE_SPECIFIER
+	if (strcmp(newDeviceName, "DirectSound") == 0) {
+		strcpy(newDeviceName, "Generic Software");
+	}
+	if (strcmp(newDeviceName, "MMSYSTEM") == 0) {
+		strcpy(newDeviceName, "Generic Software Fallback");
+	}
 
 	//
     // Find the device to open.
     //
-    dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), (char*)deviceName);
+    dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), (char*)newDeviceName);
     if(!dll)
     {
-        dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), (char*)deviceName);
+        dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), (char*)newDeviceName);
         if(!dll)
         {
             //
             // If we still don't have a match for these default names, try the default string.
             //
-            if(!dll &&
-               (strcmp((char*)deviceName, "DirectSound3D") == 0 ||
-                strcmp((char*)deviceName, "DirectSound")   == 0 ||
-                strcmp((char*)deviceName, "MMSYSTEM")      == 0))
+            if(!dll)
             {
-                deviceName = alcGetString(0, ALC_DEFAULT_DEVICE_SPECIFIER);
-                dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), (char*)deviceName);
+                strncpy(newDeviceName, alcGetString(0, ALC_DEFAULT_DEVICE_SPECIFIER), 256);
+                dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), (char*)newDeviceName);
                 if(!dll)
                 {
-                    dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), (char*)deviceName);
+                    dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), (char*)newDeviceName);
                     if(!dll)
                     {
                         goto NoDll;
@@ -1519,7 +1590,7 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(const ALubyte* deviceName)
         goto OpenDeviceFailed;
     }
 
-    device->DllDevice = device->AlcApi.alcOpenDevice(deviceName);
+    device->DllDevice = device->AlcApi.alcOpenDevice(newDeviceName);
     if(!device->DllDevice)
     {
         goto OpenDeviceFailed;
@@ -1611,25 +1682,20 @@ ALCAPI ALCvoid ALCAPIENTRY alcSuspendContext(ALCcontext* context)
 }
 
 
-
-
-
-
-
-
-
-
-
 //*****************************************************************************
 // alcGetString
 //*****************************************************************************
 //
-ALCAPI const ALubyte* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
+ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
 {
-    const ALubyte* value = 0;
+	ALCcontext *context;
+    const ALCchar* value = 0;
 
     if(device)
     {
+		if (device == g_CaptureDevice)
+			return g_CaptureDevice->AlcApi.alcGetString(g_CaptureDevice->CaptureDevice, param);
+
         return device->AlcApi.alcGetString(device->DllDevice, param);
     }
 
@@ -1771,6 +1837,15 @@ ALCAPI const ALubyte* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
         }
         break;
 
+		case ALC_CAPTURE_DEVICE_SPECIFIER:
+		case ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER:
+			context = (ALCcontext *)alCurrentContext;
+			if ((context) && (context->DllContext))
+			{
+				value = context->Device->AlcApi.alcGetString(device, param);
+			}
+			break;
+
         default:
             LastError = ALC_INVALID_ENUM;
             break;
@@ -1780,14 +1855,97 @@ ALCAPI const ALubyte* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
 }
 
 
+//*****************************************************************************
+// alcCaptureOpenDevice
+//*****************************************************************************
+//
+ALCAPI ALCdevice * ALCAPIENTRY alcCaptureOpenDevice(const ALCchar *devicename, ALCuint frequency, ALCenum format, ALCsizei buffersize)
+{
+	ALCdevice * device = 0;
+	ALCcontext * context = 0;
 
+	// TEMPORARY SOLUTION : Capture Device can only come from a Playback Device previously created
+    context = (ALCcontext *)alCurrentContext;
+	if (context)
+	{
+		EnterCriticalSection(&context->Lock);
 
+		//
+		// Initialize the OpenAL device structure
+		//
+		if (!g_CaptureDevice)
+		{
+			g_CaptureDevice = (ALCdevice*)malloc(sizeof(ALCdevice));
+			if (g_CaptureDevice)
+			{
+				memcpy(g_CaptureDevice, context->Device, sizeof(ALCdevice));
+				g_CaptureDevice->LastError = AL_NO_ERROR;
+				g_CaptureDevice->InUse = 0;
+				g_CaptureDevice->CaptureDevice = g_CaptureDevice->AlcApi.alcCaptureOpenDevice(devicename, frequency, format, buffersize);
+			}
+		}
 
+		LeaveCriticalSection(&context->Lock);
+	}
 
+	return g_CaptureDevice;
+}
 
+//*****************************************************************************
+// alcCaptureCloseDevice
+//*****************************************************************************
+//
+ALCAPI ALCvoid ALCAPIENTRY alcCaptureCloseDevice(ALCdevice *device)
+{
+	if (device == g_CaptureDevice)
+	{
+		g_CaptureDevice->AlcApi.alcCaptureCloseDevice(g_CaptureDevice->CaptureDevice);
+		delete g_CaptureDevice;
+		g_CaptureDevice = NULL;
+	}
 
+    return;
+}
 
+//*****************************************************************************
+// alcCaptureStart
+//*****************************************************************************
+//
+ALCAPI ALCvoid ALCAPIENTRY alcCaptureStart(ALCdevice *device)
+{
+	if (device == g_CaptureDevice)
+	{
+		g_CaptureDevice->AlcApi.alcCaptureStart(g_CaptureDevice->CaptureDevice);
+	}
 
+    return;
+}
 
+//*****************************************************************************
+// alcCaptureStop
+//*****************************************************************************
+//
+ALCAPI ALCvoid ALCAPIENTRY alcCaptureStop(ALCdevice *device)
+{
+	if (device == g_CaptureDevice)
+	{
+		g_CaptureDevice->AlcApi.alcCaptureStop(g_CaptureDevice->CaptureDevice);
+	}
 
+    return;
+}
+
+//*****************************************************************************
+// alcCaptureSamples
+//*****************************************************************************
+//
+ALCAPI ALCvoid ALCAPIENTRY alcCaptureSamples(ALCdevice *device, ALCvoid *buffer, ALCsizei samples)
+{
+	if (device == g_CaptureDevice)
+	{
+		g_CaptureDevice->AlcApi.alcCaptureSamples(g_CaptureDevice->CaptureDevice, buffer, samples);
+	}
+
+    return;
+}
 

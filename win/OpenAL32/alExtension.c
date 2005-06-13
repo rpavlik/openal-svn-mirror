@@ -20,14 +20,11 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "Include/alMain.h"
-#include "Include/alExtension.h"
-#include "Include/alEax.h"
-
-static ALextension extension[]=  {	
-	{ "EAX",					  (ALvoid *) NULL				},
-	{ "EAX2.0",					  (ALvoid *) NULL				},
-	{ NULL,						  (ALvoid *) NULL				} };
+#include "alExtension.h"
+#include "alEax.h"
+#include "alError.h"
+#include "alMain.h"
+#include "AL/al.h"
 
 static ALfunction  function[]=   {	
 	{ "EAXGet",						(ALvoid *) EAXGet					},
@@ -132,31 +129,52 @@ static ALenums	   enumeration[]={
 	{ "AL_DOPPLER_FACTOR",				AL_DOPPLER_FACTOR					},
 	{ "AL_DOPPLER_VELOCITY",			AL_DOPPLER_VELOCITY					},
 	{ "AL_DISTANCE_MODEL",				AL_DISTANCE_MODEL					},
+	{ "AL_SPEED_OF_SOUND",				AL_SPEED_OF_SOUND					},
 	
 	// Distance Models
 	{ "AL_INVERSE_DISTANCE",			AL_INVERSE_DISTANCE					},
 	{ "AL_INVERSE_DISTANCE_CLAMPED",	AL_INVERSE_DISTANCE_CLAMPED			},
+	{ "AL_LINEAR_DISTANCE",				AL_LINEAR_DISTANCE					},
+	{ "AL_LINEAR_DISTANCE_CLAMPED",		AL_LINEAR_DISTANCE_CLAMPED			},
+	{ "AL_EXPONENT_DISTANCE",			AL_EXPONENT_DISTANCE				},
+	{ "AL_EXPONENT_DISTANCE_CLAMPED",	AL_EXPONENT_DISTANCE_CLAMPED		},
+
+	// Source Buffer Positon
+	{ "AL_SEC_OFFSET",					AL_SEC_OFFSET						},
+	{ "AL_SAMPLE_OFFSET",				AL_SAMPLE_OFFSET					},
+	{ "AL_BYTE_OFFSET",					AL_BYTE_OFFSET						},
 
 	// Default
 	{ NULL,								(ALenum  ) 0 						} };
 
 
-ALAPI ALboolean ALAPIENTRY alIsExtensionPresent(const ALubyte *extName)
+ALAPI ALboolean ALAPIENTRY alIsExtensionPresent(const ALchar *extName)
 {
 	ALboolean bSupported = AL_FALSE;
 	ALsizei i=0;
 
-	// Check for EAX Support
-	if (!strcmp(extName, "EAX") || !strcmp(extName, "EAX2.0"))
+	if (extName)
 	{
-		bSupported = CheckEAXSupport(extName);
+		if (!stricmp(extName, "EAX") || !stricmp(extName, "EAX2.0"))
+		{
+			bSupported = CheckEAXSupport(extName);
+		}
+		else if (!stricmp(extName, "AL_EXT_OFFSET") || !stricmp(extName, "AL_EXT_LINEAR_DISTANCE") ||
+			     !stricmp(extName, "AL_EXT_EXPONENT_DISTANCE"))
+		{
+			bSupported = AL_TRUE;
+		}
+	}
+	else
+	{
+		alSetError(AL_INVALID_VALUE);
 	}
 
 	return bSupported;
 }
 
 
-ALAPI ALvoid * ALAPIENTRY alGetProcAddress(const ALubyte *funcName)
+ALAPI ALvoid * ALAPIENTRY alGetProcAddress(const ALchar *funcName)
 {
 	ALsizei i=0;
 	ALvoid *pAddress;
@@ -169,12 +187,12 @@ ALAPI ALvoid * ALAPIENTRY alGetProcAddress(const ALubyte *funcName)
 }
 
 
-ALAPI ALenum ALAPIENTRY alGetEnumValue(const ALubyte *enumName)
+ALAPI ALenum ALAPIENTRY alGetEnumValue(const ALchar *enumName)
 {
 	ALsizei i=0;
 	ALenum	val;
 
-	while ((enumeration[i].enumName)&&(strcmp((char *)enumeration[i].enumName,(char *)enumName)))
+	while ((enumeration[i].enumName)&&(strcmp(enumeration[i].enumName,enumName)))
 		i++;
 	val = enumeration[i].value;
 

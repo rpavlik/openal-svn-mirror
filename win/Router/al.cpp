@@ -111,6 +111,24 @@ ALAPI ALboolean ALAPIENTRY alIsBuffer(ALuint bufferName)
     AL_RESULT_FXN(alIsBuffer(bufferName), ALboolean, AL_FALSE);
 }
 
+//*****************************************************************************
+// alBuffer3f
+//*****************************************************************************
+//
+ALAPI ALvoid ALAPIENTRY alBuffer3f(ALuint bufferName, ALenum param, ALfloat v1, ALfloat v2, ALfloat v3)
+{
+    AL_VOID_FXN(alBuffer3f(bufferName, param, v1, v2, v3));
+}
+
+//*****************************************************************************
+// alBuffer3i
+//*****************************************************************************
+//
+ALAPI ALvoid ALAPIENTRY alBuffer3i(ALuint bufferName, ALenum param, ALint v1, ALint v2, ALint v3)
+{
+    AL_VOID_FXN(alBuffer3i(bufferName, param, v1, v2, v3));
+}
+
 
 //*****************************************************************************
 // alBufferData
@@ -123,12 +141,78 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint bufferName, ALenum format, const ALv
 
 
 //*****************************************************************************
+// alBufferf
+//*****************************************************************************
+//
+ALAPI ALvoid ALAPIENTRY alBufferf(ALuint bufferName, ALenum param, ALfloat value)
+{
+    AL_VOID_FXN(alBufferf(bufferName, param, value));
+}
+
+
+//*****************************************************************************
+// alBufferfv
+//*****************************************************************************
+//
+ALAPI ALvoid ALAPIENTRY alBufferfv(ALuint bufferName, ALenum param, const ALfloat* values)
+{
+    AL_VOID_FXN(alBufferfv(bufferName, param, values));
+}
+
+
+//*****************************************************************************
+// alBufferi
+//*****************************************************************************
+//
+ALAPI ALvoid ALAPIENTRY alBufferi(ALuint bufferName, ALenum param, ALint value)
+{
+    AL_VOID_FXN(alBufferi(bufferName, param, value));
+}
+
+
+//*****************************************************************************
+// alBufferiv
+//*****************************************************************************
+//
+ALAPI ALvoid ALAPIENTRY alBufferiv(ALuint bufferName, ALenum param, const ALint* values)
+{
+    AL_VOID_FXN(alBufferiv(bufferName, param, values));
+}
+
+//*****************************************************************************
+// alGetBuffer3f
+//*****************************************************************************
+//
+ALAPI ALvoid ALAPIENTRY alGetBuffer3f(ALuint bufferName, ALenum param, ALfloat *v1, ALfloat *v2, ALfloat *v3)
+{
+    AL_VOID_FXN(alGetBuffer3f(bufferName, param, v1, v2, v3));
+}
+
+//*****************************************************************************
+// alGetBuffer3i
+//*****************************************************************************
+//
+ALAPI ALvoid ALAPIENTRY alGetBuffer3i(ALuint bufferName, ALenum param, ALint *v1, ALint *v2, ALint *v3)
+{
+    AL_VOID_FXN(alGetBuffer3i(bufferName, param, v1, v2, v3));
+}
+
+//*****************************************************************************
 // alGetBufferf
 //*****************************************************************************
 //
 ALAPI ALvoid ALAPIENTRY alGetBufferf(ALuint bufferName, ALenum param, ALfloat* value)
 {
     AL_VOID_FXN(alGetBufferf(bufferName, param, value));
+}
+
+//*****************************************************************************
+// alGetBufferfv
+//*****************************************************************************
+//
+ALAPI ALvoid ALAPIENTRY alGetBufferfv(ALuint bufferName, ALenum param, ALfloat* values)
+{
+    AL_VOID_FXN(alGetBufferfv(bufferName, param, values));
 }
 
 
@@ -139,6 +223,15 @@ ALAPI ALvoid ALAPIENTRY alGetBufferf(ALuint bufferName, ALenum param, ALfloat* v
 ALAPI ALvoid ALAPIENTRY alGetBufferi(ALuint bufferName, ALenum param, ALint* value)
 {
     AL_VOID_FXN(alGetBufferi(bufferName, param, value));
+}
+
+//*****************************************************************************
+// alGetBufferiv
+//*****************************************************************************
+//
+ALAPI ALvoid ALAPIENTRY alGetBufferiv(ALuint bufferName, ALenum param, ALint* values)
+{
+    AL_VOID_FXN(alGetBufferiv(bufferName, param, values));
 }
 
 
@@ -187,6 +280,16 @@ ALAPI ALvoid ALAPIENTRY alDopplerFactor(ALfloat value)
 ALAPI ALvoid ALAPIENTRY alDopplerVelocity(ALfloat value)
 {
     AL_VOID_FXN(alDopplerVelocity(value));
+}
+
+
+//*****************************************************************************
+// alSpeedOfSound
+//*****************************************************************************
+//
+ALAPI ALvoid ALAPIENTRY alSpeedOfSound(ALfloat value)
+{
+    AL_VOID_FXN(alSpeedOfSound(value));
 }
 
 
@@ -283,7 +386,7 @@ ALAPI ALvoid ALAPIENTRY alGetIntegerv(ALenum param, ALint* data)
 // alGetEnumValue
 //*****************************************************************************
 //
-ALAPI ALenum ALAPIENTRY alGetEnumValue(const ALubyte* ename)
+ALAPI ALenum ALAPIENTRY alGetEnumValue(const ALCchar* ename)
 {
     AL_RESULT_FXN(alGetEnumValue(ename), ALenum, AL_INVALID_ENUM);
 }
@@ -303,7 +406,7 @@ ALAPI ALenum ALAPIENTRY alGetError(ALvoid)
 // alGetProcAddress
 //*****************************************************************************
 //
-ALAPI ALvoid* ALAPIENTRY alGetProcAddress(const ALubyte* fname)
+ALAPI ALvoid* ALAPIENTRY alGetProcAddress(const ALCchar* fname)
 {
     AL_RESULT_FXN(alGetProcAddress(fname), ALvoid*, 0);
 }
@@ -313,9 +416,9 @@ ALAPI ALvoid* ALAPIENTRY alGetProcAddress(const ALubyte* fname)
 // alGetString
 //*****************************************************************************
 //
-ALAPI const ALubyte* ALAPIENTRY alGetString(ALenum param)
+ALAPI const ALCchar* ALAPIENTRY alGetString(ALenum param)
 {
-    AL_RESULT_FXN(alGetString(param), const ALubyte*, 0);
+    AL_RESULT_FXN(alGetString(param), const ALCchar*, 0);
 }
 
 
@@ -323,7 +426,7 @@ ALAPI const ALubyte* ALAPIENTRY alGetString(ALenum param)
 // alIsExtensionPresent
 //*****************************************************************************
 //
-ALAPI ALboolean ALAPIENTRY alIsExtensionPresent(const ALubyte* ename)
+ALAPI ALboolean ALAPIENTRY alIsExtensionPresent(const ALCchar* ename)
 {
     AL_RESULT_FXN(alIsExtensionPresent(ename), ALboolean, AL_FALSE);
 }
@@ -369,6 +472,16 @@ ALAPI ALvoid ALAPIENTRY alListener3f(ALenum param, ALfloat v1, ALfloat v2, ALflo
 
 
 //*****************************************************************************
+// alListener3i
+//*****************************************************************************
+//
+ALAPI ALvoid ALAPIENTRY alListener3i(ALenum param, ALint v1, ALint v2, ALint v3)
+{
+    AL_VOID_FXN(alListener3i(param, v1, v2, v3));
+}
+
+
+//*****************************************************************************
 // alListenerfv
 //*****************************************************************************
 //
@@ -389,6 +502,16 @@ ALAPI ALvoid ALAPIENTRY alListeneri(ALenum param, ALint value)
 
 
 //*****************************************************************************
+// alListeneriv
+//*****************************************************************************
+//
+ALAPI ALvoid ALAPIENTRY alListeneriv(ALenum param, const ALint *values)
+{
+    AL_VOID_FXN(alListeneriv(param, values));
+}
+
+
+//*****************************************************************************
 // alGetListenerf
 //*****************************************************************************
 //
@@ -399,12 +522,22 @@ ALAPI ALvoid ALAPIENTRY alGetListenerf(ALenum param, ALfloat* value)
 
 
 //*****************************************************************************
-// alGetListenerf
+// alGetListener3f
 //*****************************************************************************
 //
 ALAPI ALvoid ALAPIENTRY alGetListener3f(ALenum param, ALfloat* v1, ALfloat* v2, ALfloat* v3)
 {
     AL_VOID_FXN(alGetListener3f(param, v1, v2, v3));
+}
+
+
+//*****************************************************************************
+// alGetListener3i
+//*****************************************************************************
+//
+ALAPI ALvoid ALAPIENTRY alGetListener3i(ALenum param, ALint* v1, ALint* v2, ALint* v3)
+{
+    AL_VOID_FXN(alGetListener3i(param, v1, v2, v3));
 }
 
 
@@ -427,6 +560,15 @@ ALAPI ALvoid ALAPIENTRY alGetListeneri(ALenum param, ALint* value)
     AL_VOID_FXN(alGetListeneri(param, value));
 }
 
+
+//*****************************************************************************
+// alGetListeneriv
+//*****************************************************************************
+//
+ALAPI ALvoid ALAPIENTRY alGetListeneriv(ALenum param, ALint* values)
+{
+    AL_VOID_FXN(alGetListeneriv(param, values));
+}
 
 
 //*****************************************************************************
@@ -499,12 +641,31 @@ ALAPI ALvoid ALAPIENTRY alSource3f(ALuint sourceName, ALenum param, ALfloat v1, 
 
 
 //*****************************************************************************
+// alSource3i
+//*****************************************************************************
+//
+ALAPI ALvoid ALAPIENTRY alSource3i(ALuint sourceName, ALenum param, ALint v1, ALint v2, ALint v3)
+{
+    AL_VOID_FXN(alSource3i(sourceName, param, v1, v2, v3));
+}
+
+
+//*****************************************************************************
 // alSourcei
 //*****************************************************************************
 //
 ALAPI ALvoid ALAPIENTRY alSourcei(ALuint sourceName, ALenum param, ALint value)
 {
     AL_VOID_FXN(alSourcei(sourceName, param, value));
+}
+
+//*****************************************************************************
+// alSourceiv
+//*****************************************************************************
+//
+ALAPI ALvoid ALAPIENTRY alSourceiv(ALuint sourceName, ALenum param, const ALint* values)
+{
+    AL_VOID_FXN(alSourceiv(sourceName, param, values));
 }
 
 
@@ -528,6 +689,16 @@ ALAPI ALvoid ALAPIENTRY alGetSource3f(ALuint sourceName, ALenum param, ALfloat* 
 
 
 //*****************************************************************************
+// alGetSource3i
+//*****************************************************************************
+//
+ALAPI ALvoid ALAPIENTRY alGetSource3i(ALuint sourceName, ALenum param, ALint* v1, ALint* v2, ALint* v3)
+{
+    AL_VOID_FXN(alGetSource3i(sourceName, param, v1, v2, v3));
+}
+
+
+//*****************************************************************************
 // alGetSourcefv
 //*****************************************************************************
 //
@@ -544,6 +715,16 @@ ALAPI ALvoid ALAPIENTRY alGetSourcefv(ALuint sourceName, ALenum param, ALfloat* 
 ALAPI ALvoid ALAPIENTRY alGetSourcei(ALuint sourceName, ALenum param, ALint* value)
 {
     AL_VOID_FXN(alGetSourcei(sourceName, param, value));
+}
+
+
+//*****************************************************************************
+// alGetSourceiv
+//*****************************************************************************
+//
+ALAPI ALvoid ALAPIENTRY alGetSourceiv(ALuint sourceName, ALenum param, ALint* values)
+{
+    AL_VOID_FXN(alGetSourceiv(sourceName, param, values));
 }
 
 

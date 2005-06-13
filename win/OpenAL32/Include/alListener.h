@@ -5,6 +5,7 @@
 #define ALAPIENTRY __cdecl
 
 #include "AL/altypes.h"
+
 #include "eax.h"
 
 #ifdef __cplusplus
@@ -19,6 +20,7 @@ extern "C" {
 #define LDOPPLERFACTOR		16
 #define LDOPPLERVELOCITY	32
 #define LDISTANCEMODEL		64
+#define LSPEEDOFSOUND		128
 
 typedef struct ALlistener_struct
 {

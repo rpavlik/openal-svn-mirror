@@ -4,7 +4,7 @@
 
 # TARGTYPE "Win32 (x86) Static Library" 0x0104
 
-CFG="ALut - Win32 Debug"
+CFG=ALut - Win32 Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /I "..\\" /I "..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_OPENAL32LIB" /Zl /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /I "..\..\include" /I "..\OpenAL32\Include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_OPENAL32LIB" /Zl /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -64,7 +64,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "..\\" /I "..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_OPENAL32LIB" /FR /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "..\..\include" /I "..\OpenAL32\Include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_OPENAL32LIB" /FR /FD /GZ /c
 # SUBTRACT CPP /YX
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
@@ -93,9 +93,5 @@ SOURCE=.\ALut.c
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # End Group
-# Begin Source File
-
-SOURCE=..\Al\alut.h
-# End Source File
 # End Target
 # End Project

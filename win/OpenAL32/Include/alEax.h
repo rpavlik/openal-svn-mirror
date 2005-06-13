@@ -35,7 +35,7 @@ typedef enum
 #define EAXBUFFERGUID	(EAX1B | EAX2B | EAX3B | EAX4S)
 #define EAXLISTENERGUID	(EAX1L | EAX2L | EAX3L | EAX4FX0 | EAX4FX1 | EAX4FX2 | EAX4FX3 | EAX4CTX)
 
-ALboolean		CheckEAXSupport(const ALubyte *szEAXName);
+ALboolean		CheckEAXSupport(const ALchar *szEAXName);
 ALAPI ALenum    ALAPIENTRY EAXGet(const struct _GUID *propertySetID,ALuint property,ALuint source,ALvoid *value,ALuint size);
 ALAPI ALenum    ALAPIENTRY EAXSet(const struct _GUID *propertySetID,ALuint property,ALuint source,ALvoid *value,ALuint size);
 

@@ -18,12 +18,12 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
 
-#include "Include/alMain.h"
+#include "alMain.h"
 #include "AL/al.h"
 #include "AL/alc.h"
-#include "Include/alError.h"
-#include "Include/alEax.h"
-#include "Include/alListener.h"
+#include "alError.h"
+#include "alEax.h"
+#include "alListener.h"
 #include "aleax2.h"
 
 // EAX 2.0 GUIDs
@@ -43,7 +43,7 @@ ALboolean bEAX2Initialized = AL_FALSE;
 /*
 	Test for support of appropriate EAX Version
 */
-ALboolean CheckEAXSupport(const ALubyte *szEAXName)
+ALboolean CheckEAXSupport(const ALchar *szEAXName)
 {
 	ALCcontext		*ALContext;
 	ALCdevice		*ALCDevice;
@@ -99,7 +99,7 @@ ALboolean CheckEAXSupport(const ALubyte *szEAXName)
 		// If Property Set Interface hasn't been obtained, EAX support is not available
 		if (lpPropertySet)
 		{
-			if ( (strcmp(szEAXName, "EAX") == 0) || (strcmp(szEAXName, "EAX2.0") == 0) )
+			if ( (stricmp(szEAXName, "EAX") == 0) || (stricmp(szEAXName, "EAX2.0") == 0) )
 			{
 				ListenerGuid = DSPROPSETID_EAX20_ListenerProperties;
 				BufferGuid = DSPROPSETID_EAX20_BufferProperties;

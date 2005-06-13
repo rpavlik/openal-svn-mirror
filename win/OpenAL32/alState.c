@@ -19,23 +19,23 @@
  */
 
 #include <stdlib.h>
-#include "Include/alMain.h"
+#include "alMain.h"
 #include "AL/alc.h"
-#include "Include/alError.h"
-#include "Include/alState.h"
+#include "alError.h"
+#include "alState.h"
 
-static const ALubyte alVendor[] = "Creative Labs Inc.";
-static const ALubyte alVersion[] = "OpenAL 1.0";
-static const ALubyte alRenderer[] = "Software";
-static const ALubyte alExtensions[] = "EAX 2.0";
+static const ALchar alVendor[] = "Creative Labs Inc.";
+static const ALchar alVersion[] = "1.1";
+static const ALchar alRenderer[] = "Software";
+static const ALchar alExtensions[] = "EAX EAX2.0 EAX3.0 EAX4.0 EAX3.0EMULATED EAX4.0EMULATED";
 
 // Error Messages
-static const ALubyte alNoError[] = "No Error";
-static const ALubyte alErrInvalidName[] = "Invalid Name";
-static const ALubyte alErrInvalidEnum[] = "Invalid Enum";
-static const ALubyte alErrInvalidValue[] = "Invalid Value";
-static const ALubyte alErrInvalidOp[] = "Invalid Operation";
-static const ALubyte alErrOutOfMemory[] = "Out of Memory";
+static const ALchar alNoError[] = "No Error";
+static const ALchar alErrInvalidName[] = "Invalid Name";
+static const ALchar alErrInvalidEnum[] = "Invalid Enum";
+static const ALchar alErrInvalidValue[] = "Invalid Value";
+static const ALchar alErrInvalidOp[] = "Invalid Operation";
+static const ALchar alErrOutOfMemory[] = "Out of Memory";
 
 ALAPI ALvoid ALAPIENTRY alEnable(ALenum capability)
 {
@@ -142,6 +142,11 @@ ALAPI ALboolean ALAPIENTRY alGetBoolean(ALenum pname)
 					value = AL_TRUE;
 				break;
 
+			case AL_SPEED_OF_SOUND:
+				if (Context->flSpeedOfSound != 0.0f)
+					value = AL_TRUE;
+				break;
+
 			default:
 				alSetError(AL_INVALID_ENUM);
 				break;
@@ -180,6 +185,10 @@ ALAPI ALdouble ALAPIENTRY alGetDouble(ALenum pname)
 
 			case AL_DISTANCE_MODEL:
 				value = (double)Context->DistanceModel;
+				break;
+
+			case AL_SPEED_OF_SOUND:
+				value = (double)Context->flSpeedOfSound;
 				break;
 
 			default:
@@ -222,6 +231,10 @@ ALAPI ALfloat ALAPIENTRY alGetFloat(ALenum pname)
 				value = (float)Context->DistanceModel;
 				break;
 
+			case AL_SPEED_OF_SOUND:
+				value = Context->flSpeedOfSound;
+				break;
+
 			default:
 				alSetError(AL_INVALID_ENUM);
 				break;
@@ -259,7 +272,11 @@ ALAPI ALint ALAPIENTRY alGetInteger(ALenum pname)
 				break;
 
 			case AL_DISTANCE_MODEL:
-				value= (ALint)Context->DistanceModel;
+				value = (ALint)Context->DistanceModel;
+				break;
+
+			case AL_SPEED_OF_SOUND:
+				value = (ALint)Context->flSpeedOfSound;
 				break;
 
 			default:
@@ -303,6 +320,11 @@ ALAPI ALvoid ALAPIENTRY alGetBooleanv(ALenum pname,ALboolean *data)
 
 				case AL_DISTANCE_MODEL:
 					if (Context->DistanceModel == AL_INVERSE_DISTANCE_CLAMPED)
+						*data = AL_TRUE;
+					break;
+
+				case AL_SPEED_OF_SOUND:
+					if (Context->flSpeedOfSound != 0.0f)
 						*data = AL_TRUE;
 					break;
 
@@ -353,6 +375,10 @@ ALAPI ALvoid ALAPIENTRY alGetDoublev(ALenum pname,ALdouble *data)
 					*data = (double)Context->DistanceModel;
 					break;
 
+				case AL_SPEED_OF_SOUND:
+					*data = (double)Context->flSpeedOfSound;
+					break;
+
 				default:
 					alSetError(AL_INVALID_ENUM);
 					break;
@@ -398,6 +424,10 @@ ALAPI ALvoid ALAPIENTRY alGetFloatv(ALenum pname,ALfloat *data)
 
 				case AL_DISTANCE_MODEL:
 					*data = (float)Context->DistanceModel;
+					break;
+
+				case AL_SPEED_OF_SOUND:
+					*data = Context->flSpeedOfSound;
 					break;
 
 				default:
@@ -447,6 +477,10 @@ ALAPI ALvoid ALAPIENTRY alGetIntegerv(ALenum pname,ALint *data)
 					*data = (ALint)Context->DistanceModel;
 					break;
 
+				case AL_SPEED_OF_SOUND:
+					*data = (ALint)Context->flSpeedOfSound;
+					break;
+
 				default:
 					alSetError(AL_INVALID_ENUM);
 					break;
@@ -469,9 +503,9 @@ ALAPI ALvoid ALAPIENTRY alGetIntegerv(ALenum pname,ALint *data)
 	return;
 }
 
-ALAPI const ALubyte * ALAPIENTRY alGetString(ALenum pname)
+ALAPI const ALchar* ALAPIENTRY alGetString(ALenum pname)
 {
-	const ALubyte *value;
+	const ALchar *value;
 
 	switch(pname)
 	{
@@ -592,6 +626,39 @@ ALAPI ALvoid ALAPIENTRY alDopplerVelocity(ALfloat value)
 	return;
 }
 
+ALAPI ALvoid ALAPIENTRY alSpeedOfSound(ALfloat flSpeedOfSound)
+{
+	ALCcontext *pContext;
+
+	pContext = alcGetCurrentContext();
+	if (pContext)
+	{
+		SuspendContext(pContext);
+
+		if (flSpeedOfSound > 0.0f)
+		{
+			if (pContext->flSpeedOfSound != flSpeedOfSound)
+			{
+				pContext->flSpeedOfSound = flSpeedOfSound;
+				pContext->Listener.update1 = LSPEEDOFSOUND;
+				UpdateContext(pContext, ALLISTENER, 0);
+			}
+		}
+		else
+		{
+			alSetError(AL_INVALID_VALUE);
+		}
+
+		ProcessContext(pContext);
+	}
+	else
+	{
+		alSetError(AL_INVALID_OPERATION);
+	}
+
+	return;
+}
+
 ALAPI ALvoid ALAPIENTRY alDistanceModel(ALenum value)
 {
 	ALCcontext *Context;
@@ -606,6 +673,10 @@ ALAPI ALvoid ALAPIENTRY alDistanceModel(ALenum value)
 			case AL_NONE:
 			case AL_INVERSE_DISTANCE:
 			case AL_INVERSE_DISTANCE_CLAMPED:
+			case AL_LINEAR_DISTANCE:
+			case AL_LINEAR_DISTANCE_CLAMPED:
+			case AL_EXPONENT_DISTANCE:
+			case AL_EXPONENT_DISTANCE_CLAMPED:
 				if (value != Context->DistanceModel)
 				{
 					Context->DistanceModel = value;

@@ -20,11 +20,15 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "Include/alMain.h"
+#include "alMain.h"
 #include "AL/al.h"
 #include "AL/alc.h"
-#include "Include/alError.h"
-#include "Include/alBuffer.h"
+#include "alError.h"
+#include "alBuffer.h"
+
+#ifdef _DEBUG
+ char szDebug[256];
+#endif
 
 /*
 *	AL Buffer Functions
@@ -307,7 +311,8 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,const ALvoid *d
 						ALBuf->data=realloc(ALBuf->data,16+(size/sizeof(ALubyte))*(1*sizeof(ALshort)));
 						if (ALBuf->data)
 						{
-							ALBuf->format=AL_FORMAT_MONO16;
+							ALBuf->format = AL_FORMAT_MONO16;
+							ALBuf->eOriginalFormat = AL_FORMAT_MONO8;
 							for (i=0;i<size/sizeof(ALubyte);i++)
 								ALBuf->data[i]=(ALshort)((((ALubyte *)data)[i]-128)<<8);
 							memset(&(ALBuf->data[size/sizeof(ALubyte)]), 0, 16);
@@ -328,7 +333,8 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,const ALvoid *d
 						ALBuf->data=realloc(ALBuf->data,16+(size/sizeof(ALshort))*(1*sizeof(ALshort)));
 						if (ALBuf->data)
 						{
-							ALBuf->format=AL_FORMAT_MONO16;
+							ALBuf->format = AL_FORMAT_MONO16;
+							ALBuf->eOriginalFormat = AL_FORMAT_MONO16;
 							memcpy(ALBuf->data,data,size/sizeof(ALshort)*1*sizeof(ALshort));
 							memset(&(ALBuf->data[size/sizeof(ALshort)]), 0, 16);
 							ALBuf->size=size/sizeof(ALshort)*1*sizeof(ALshort);
@@ -349,7 +355,8 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,const ALvoid *d
 						ALBuf->data=realloc(ALBuf->data,32+(size/sizeof(ALubyte))*(1*sizeof(ALshort)));
 						if (ALBuf->data)
 						{
-							ALBuf->format=AL_FORMAT_STEREO16;
+							ALBuf->format = AL_FORMAT_STEREO16;
+							ALBuf->eOriginalFormat = AL_FORMAT_STEREO8;
 							for (i=0;i<size/sizeof(ALubyte);i++)
 								ALBuf->data[i]=(ALshort)((((ALubyte *)data)[i]-128)<<8);
 							memset(&(ALBuf->data[size/sizeof(ALubyte)]), 0, 32);
@@ -370,7 +377,8 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,const ALvoid *d
 						ALBuf->data=realloc(ALBuf->data,32+(size/sizeof(ALshort))*(1*sizeof(ALshort)));
 						if (ALBuf->data)
 						{
-							ALBuf->format=AL_FORMAT_STEREO16;
+							ALBuf->format = AL_FORMAT_STEREO16;
+							ALBuf->eOriginalFormat = AL_FORMAT_STEREO16;
 							memcpy(ALBuf->data,data,size/sizeof(ALshort)*1*sizeof(ALshort));
 							memset(&(ALBuf->data[size/sizeof(ALshort)]), 0, 32);
 							ALBuf->size=size/sizeof(ALshort)*1*sizeof(ALshort);
@@ -393,7 +401,8 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,const ALvoid *d
 						ALBuf->data=realloc(ALBuf->data,16+(size/36)*(65*sizeof(ALshort)));
 						if (ALBuf->data)
 						{
-							ALBuf->format=AL_FORMAT_MONO16;
+							ALBuf->format = AL_FORMAT_MONO16;
+							ALBuf->eOriginalFormat = AL_FORMAT_MONO_IMA4;
 							IMAData=(ALuint *)data;
 							for (i=0;i<size/36;i++)
 							{
@@ -454,7 +463,8 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,const ALvoid *d
 						ALBuf->data=realloc(ALBuf->data,32+(size/72)*(2*65*sizeof(ALshort)));
 						if (ALBuf->data)
 						{
-							ALBuf->format=AL_FORMAT_STEREO16;
+							ALBuf->format = AL_FORMAT_STEREO16;
+							ALBuf->eOriginalFormat = AL_FORMAT_STEREO_IMA4;
 							IMAData=(ALuint *)data;
 							for (i=0;i<size/72;i++)
 							{
@@ -535,7 +545,7 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,const ALvoid *d
 					break;
 
 				default:
-					alSetError(AL_INVALID_VALUE);
+					alSetError(AL_INVALID_ENUM);
 					break;
 			}
 		}
@@ -554,100 +564,405 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,const ALvoid *d
 	ProcessContext(Context);
 }
 
-/*
-*	alGetBufferf(ALuint buffer,ALenum pname,ALfloat *value)
-*
-*	Query buffer for floating point attributes (current none defined)
-*/
-ALAPI ALvoid ALAPIENTRY alGetBufferf(ALuint buffer,ALenum pname,ALfloat *value)
+
+ALAPI void ALAPIENTRY alBufferf(ALuint buffer, ALenum eParam, ALfloat flValue)
 {
-	ALCcontext *Context;
-	ALbuffer *ALBuf;
+	ALCcontext	*pContext;
+	ALbuffer	*pBuffer;
 
-	Context = alcGetCurrentContext();
-	SuspendContext(Context);
+	pContext = alcGetCurrentContext();
+	SuspendContext(pContext);
 
-	if (value)
+	if (alIsBuffer(buffer) && (buffer != 0))
 	{
-		if (alIsBuffer(buffer) && (buffer != 0))
+        pBuffer = ((ALbuffer *)ALTHUNK_LOOKUPENTRY(buffer));
+
+		switch(eParam)
 		{
-            ALBuf=((ALbuffer *)ALTHUNK_LOOKUPENTRY(buffer));
-			switch(pname)
-			{
-				default:
-					alSetError(AL_INVALID_ENUM);
-					break;
-			}
-		}
-		else
-		{
-			// Invalid Buffer Name
-			alSetError(AL_INVALID_NAME);
+		default:
+			alSetError(AL_INVALID_ENUM);
+			break;
 		}
 	}
 	else
 	{
-		// value is a NULL pointer
-		alSetError(AL_INVALID_VALUE);
+		alSetError(AL_INVALID_NAME);
 	}
 
-	ProcessContext(Context);
+	ProcessContext(pContext);
 }
 
-/*
-*	alGetBufferi(ALuint buffer,ALenum pname,ALint *value)
-*
-*	Query buffer for integer attributes
-*/
-ALAPI ALvoid ALAPIENTRY alGetBufferi(ALuint buffer,ALenum pname,ALint *value)
+
+ALAPI void ALAPIENTRY alBuffer3f(ALuint buffer, ALenum eParam, ALfloat flValue1, ALfloat flValue2, ALfloat flValue3)
 {
-	ALCcontext *Context;
-	ALbuffer *ALBuf;
+	ALCcontext	*pContext;
+	ALbuffer	*pBuffer;
 
-	Context = alcGetCurrentContext();
-	SuspendContext(Context);
+	pContext = alcGetCurrentContext();
+	SuspendContext(pContext);
 
-	if (value)
+	if (alIsBuffer(buffer) && (buffer != 0))
+	{
+        pBuffer = ((ALbuffer *)ALTHUNK_LOOKUPENTRY(buffer));
+
+		switch(eParam)
+		{
+		default:
+			alSetError(AL_INVALID_ENUM);
+			break;
+		}
+	}
+	else
+	{
+		alSetError(AL_INVALID_NAME);
+	}
+
+	ProcessContext(pContext);
+}
+
+
+ALAPI void ALAPIENTRY alBufferfv(ALuint buffer, ALenum eParam, const ALfloat* flValues)
+{
+	ALCcontext	*pContext;
+	ALbuffer	*pBuffer;
+
+	pContext = alcGetCurrentContext();
+	SuspendContext(pContext);
+
+	if (alIsBuffer(buffer) && (buffer != 0))
+	{
+        pBuffer = ((ALbuffer *)ALTHUNK_LOOKUPENTRY(buffer));
+
+		switch(eParam)
+		{
+		default:
+			alSetError(AL_INVALID_ENUM);
+			break;
+		}
+	}
+	else
+	{
+		alSetError(AL_INVALID_NAME);
+	}
+
+	ProcessContext(pContext);
+}
+
+
+ALAPI void ALAPIENTRY alBufferi(ALuint buffer, ALenum eParam, ALint lValue)
+{
+	ALCcontext	*pContext;
+	ALbuffer	*pBuffer;
+
+	pContext = alcGetCurrentContext();
+	SuspendContext(pContext);
+
+	if (alIsBuffer(buffer) && (buffer != 0))
+	{
+        pBuffer = ((ALbuffer *)ALTHUNK_LOOKUPENTRY(buffer));
+
+		switch(eParam)
+		{
+		default:
+			alSetError(AL_INVALID_ENUM);
+			break;
+		}
+	}
+	else
+	{
+		alSetError(AL_INVALID_NAME);
+	}
+
+	ProcessContext(pContext);
+}
+
+
+ALAPI void ALAPIENTRY alBuffer3i( ALuint buffer, ALenum eParam, ALint lValue1, ALint lValue2, ALint lValue3)
+{
+	ALCcontext	*pContext;
+	ALbuffer	*pBuffer;
+
+	pContext = alcGetCurrentContext();
+	SuspendContext(pContext);
+
+	if (alIsBuffer(buffer) && (buffer != 0))
+	{
+        pBuffer = ((ALbuffer *)ALTHUNK_LOOKUPENTRY(buffer));
+
+		switch(eParam)
+		{
+		default:
+			alSetError(AL_INVALID_ENUM);
+			break;
+		}
+	}
+	else
+	{
+		alSetError(AL_INVALID_NAME);
+	}
+
+	ProcessContext(pContext);
+}
+
+
+ALAPI void ALAPIENTRY alBufferiv(ALuint buffer, ALenum eParam, const ALint* plValues)
+{
+	ALCcontext	*pContext;
+	ALbuffer	*pBuffer;
+
+	pContext = alcGetCurrentContext();
+	SuspendContext(pContext);
+
+	if (alIsBuffer(buffer) && (buffer != 0))
+	{
+        pBuffer = ((ALbuffer *)ALTHUNK_LOOKUPENTRY(buffer));
+
+		switch(eParam)
+		{
+		default:
+			alSetError(AL_INVALID_ENUM);
+			break;
+		}
+	}
+	else
+	{
+		alSetError(AL_INVALID_NAME);
+	}
+
+	ProcessContext(pContext);
+}
+
+
+ALAPI ALvoid ALAPIENTRY alGetBufferf(ALuint buffer, ALenum eParam, ALfloat *pflValue)
+{
+	ALCcontext	*pContext;
+	ALbuffer	*pBuffer;
+
+	pContext = alcGetCurrentContext();
+	SuspendContext(pContext);
+
+	if (pflValue)
 	{
 		if (alIsBuffer(buffer) && (buffer != 0))
 		{
-            ALBuf=((ALbuffer *)ALTHUNK_LOOKUPENTRY(buffer));
-			switch(pname)
+            pBuffer = ((ALbuffer *)ALTHUNK_LOOKUPENTRY(buffer));
+
+			switch(eParam)
 			{
-				case AL_FREQUENCY:
-					*value=ALBuf->frequency;
-					break;
-
-				case AL_BITS:
-					*value=(((ALBuf->format==AL_FORMAT_MONO8)||(ALBuf->format==AL_FORMAT_STEREO8))?8:16);
-					break;
-
-				case AL_CHANNELS:
-					*value=(((ALBuf->format==AL_FORMAT_MONO8)||(ALBuf->format==AL_FORMAT_MONO16))?1:2);
-					break;
-
-				case AL_SIZE:
-					*value=ALBuf->size;
-					break;
-
-				default:
-					alSetError(AL_INVALID_ENUM);
-					break;
+			default:
+				alSetError(AL_INVALID_ENUM);
+				break;
 			}
 		}
 		else
 		{
-			// Invalid Buffer Name
 			alSetError(AL_INVALID_NAME);
 		}
 	}
 	else
 	{
-		// value is a NULL pointer
 		alSetError(AL_INVALID_VALUE);
 	}
 
-	ProcessContext(Context);
+	ProcessContext(pContext);
+}
+
+
+ALAPI void ALAPIENTRY alGetBuffer3f(ALuint buffer, ALenum eParam, ALfloat* pflValue1, ALfloat* pflValue2, ALfloat* pflValue3)
+{
+	ALCcontext	*pContext;
+	ALbuffer	*pBuffer;
+
+	pContext = alcGetCurrentContext();
+	SuspendContext(pContext);
+
+	if ((pflValue1) && (pflValue2) && (pflValue3))
+	{
+		if (alIsBuffer(buffer) && (buffer != 0))
+		{
+            pBuffer = ((ALbuffer *)ALTHUNK_LOOKUPENTRY(buffer));
+
+			switch(eParam)
+			{
+			default:
+				alSetError(AL_INVALID_ENUM);
+				break;
+			}
+		}
+		else
+		{
+			alSetError(AL_INVALID_NAME);
+		}
+	}
+	else
+	{
+		alSetError(AL_INVALID_VALUE);
+	}
+
+	ProcessContext(pContext);
+}
+
+
+ALAPI void ALAPIENTRY alGetBufferfv(ALuint buffer, ALenum eParam, ALfloat* pflValues)
+{
+	ALCcontext	*pContext;
+	ALbuffer	*pBuffer;
+
+	pContext = alcGetCurrentContext();
+	SuspendContext(pContext);
+
+	if (pflValues)
+	{
+		if (alIsBuffer(buffer) && (buffer != 0))
+		{
+            pBuffer = ((ALbuffer *)ALTHUNK_LOOKUPENTRY(buffer));
+
+			switch(eParam)
+			{
+			default:
+				alSetError(AL_INVALID_ENUM);
+				break;
+			}
+		}
+		else
+		{
+			alSetError(AL_INVALID_NAME);
+		}
+	}
+	else
+	{
+		alSetError(AL_INVALID_VALUE);
+	}
+
+	ProcessContext(pContext);
+}
+
+
+ALAPI ALvoid ALAPIENTRY alGetBufferi(ALuint buffer, ALenum eParam, ALint *plValue)
+{
+	ALCcontext	*pContext;
+	ALbuffer	*pBuffer;
+
+	pContext = alcGetCurrentContext();
+	SuspendContext(pContext);
+
+	if (plValue)
+	{
+		if (alIsBuffer(buffer) && (buffer != 0))
+		{
+            pBuffer = ((ALbuffer *)ALTHUNK_LOOKUPENTRY(buffer));
+
+			switch (eParam)
+			{
+			case AL_FREQUENCY:
+				*plValue = pBuffer->frequency;
+				break;
+
+			case AL_BITS:
+				*plValue= (((pBuffer->format==AL_FORMAT_MONO8)||(pBuffer->format==AL_FORMAT_STEREO8))?8:16);
+				break;
+
+			case AL_CHANNELS:
+				*plValue = (((pBuffer->format==AL_FORMAT_MONO8)||(pBuffer->format==AL_FORMAT_MONO16))?1:2);
+				break;
+
+			case AL_SIZE:
+				*plValue = pBuffer->size;
+				break;
+
+			default:
+				alSetError(AL_INVALID_ENUM);
+				break;
+			}
+		}
+		else
+		{
+			alSetError(AL_INVALID_NAME);
+		}
+	}
+	else
+	{
+		alSetError(AL_INVALID_VALUE);
+	}
+
+	ProcessContext(pContext);
+}
+
+
+ALAPI void ALAPIENTRY alGetBuffer3i(ALuint buffer, ALenum eParam, ALint* plValue1, ALint* plValue2, ALint* plValue3)
+{
+	ALCcontext	*pContext;
+	ALbuffer	*pBuffer;
+
+	pContext = alcGetCurrentContext();
+	SuspendContext(pContext);
+
+	if ((plValue1) && (plValue2) && (plValue3))
+	{
+		if (alIsBuffer(buffer) && (buffer != 0))
+		{
+            pBuffer = ((ALbuffer *)ALTHUNK_LOOKUPENTRY(buffer));
+
+			switch(eParam)
+			{
+			default:
+				alSetError(AL_INVALID_ENUM);
+				break;
+			}
+		}
+		else
+		{
+			alSetError(AL_INVALID_NAME);
+		}
+	}
+	else
+	{
+		alSetError(AL_INVALID_VALUE);
+	}
+
+	ProcessContext(pContext);
+}
+
+
+ALAPI void ALAPIENTRY alGetBufferiv(ALuint buffer, ALenum eParam, ALint* plValues)
+{
+	ALCcontext	*pContext;
+	ALbuffer	*pBuffer;
+
+	pContext = alcGetCurrentContext();
+	SuspendContext(pContext);
+
+	if (plValues)
+	{
+		if (alIsBuffer(buffer) && (buffer != 0))
+		{
+            pBuffer = ((ALbuffer *)ALTHUNK_LOOKUPENTRY(buffer));
+
+			switch (eParam)
+			{
+			case AL_FREQUENCY:
+			case AL_BITS:
+			case AL_CHANNELS:
+			case AL_SIZE:
+				alGetBufferi(buffer, eParam, plValues);
+				break;
+
+			default:
+				alSetError(AL_INVALID_ENUM);
+				break;
+			}
+		}
+		else
+		{
+			alSetError(AL_INVALID_NAME);
+		}
+	}
+	else
+	{
+		alSetError(AL_INVALID_VALUE);
+	}
+
+	ProcessContext(pContext);
 }
 
 
@@ -661,16 +976,12 @@ ALvoid ReleaseALBuffers(ALvoid)
 	ALbuffer *ALBuffer;
 	ALbuffer *ALBufferTemp;
 	unsigned int i;
-#ifdef _DEBUG
-	char szString[256];
-#endif
 
 #ifdef _DEBUG
 	if (g_uiBufferCount > 0)
 	{
-		// In Debug Mode only - write out number of AL Buffers not destroyed
-		sprintf(szString, "OpenAL32 : DllMain() %d Buffer(s) NOT deleted\n", g_uiBufferCount);
-		OutputDebugString(szString);
+		sprintf(szDebug, "OpenAL32 : DllMain() %d Buffer(s) NOT deleted\n", g_uiBufferCount);
+		OutputDebugString(szDebug);
 	}
 #endif
 

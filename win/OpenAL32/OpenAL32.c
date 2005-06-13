@@ -19,8 +19,8 @@
  */
 
 #include <windows.h>
-#include "Include/alBuffer.h"
-#include "Include/alThunk.h"
+#include "alBuffer.h"
+#include "alThunk.h"
 
 CRITICAL_SECTION g_mutex;
 

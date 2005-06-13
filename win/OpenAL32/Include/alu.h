@@ -10,7 +10,7 @@
 #define MAX_PITCH 4
 #define OUTPUTCHANNELS 2
 
-#include "AL/altypes.h"
+#include "AL\altypes.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,7 +22,7 @@ ALUAPI ALvoid	ALUAPIENTRY aluCrossproduct(ALfloat *inVector1,ALfloat *inVector2,
 ALUAPI ALfloat	ALUAPIENTRY aluDotproduct(ALfloat *inVector1,ALfloat *inVector2);
 ALUAPI ALvoid	ALUAPIENTRY aluNormalize(ALfloat *inVector);
 ALUAPI ALvoid	ALUAPIENTRY aluMatrixVector(ALfloat *vector,ALfloat matrix[3][3]);
-ALUAPI ALvoid	ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint channels,ALfloat *drysend,ALfloat *wetsend,ALfloat *pitch);
+ALUAPI ALvoid	ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint frequency,ALuint channels,ALfloat *drysend,ALfloat *wetsend,ALfloat *pitch);
 ALUAPI ALvoid	ALUAPIENTRY aluMixData(ALvoid *context,ALvoid *buffer,ALsizei size,ALenum format);
 
 #ifdef __cplusplus

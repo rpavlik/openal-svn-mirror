@@ -1,4 +1,4 @@
-#include "Include/alMain.h"
+#include "alMain.h"
 #include "AL/al.h"
 #include "AL/alc.h"
 
