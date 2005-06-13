@@ -19,6 +19,9 @@ typedef char ALCbyte;
 /** ALC 8bit unsigned byte. */
 typedef unsigned char ALCubyte;
 
+/** OpenAL 8bit char */
+typedef char ALCchar;
+
 /** ALC 16bit signed short integer type. */
 typedef short ALCshort;
 
@@ -70,6 +73,16 @@ typedef void ALCvoid;
 #define ALC_SYNC                                 0x1009
 
 /**
+ * followed by <int> Num of requested Mono (3D) Sources
+ */
+#define ALC_MONO_SOURCES                         0x1010
+
+/**
+ * followed by <int> Num of requested Stereo Sources
+ */
+#define ALC_STEREO_SOURCES                       0x1011
+
+/**
  * errors
  */
 
@@ -117,5 +130,13 @@ typedef void ALCvoid;
 
 #define ALC_ATTRIBUTES_SIZE                      0x1002
 #define ALC_ALL_ATTRIBUTES                       0x1003
+
+/**
+ * Capture extension
+ */
+#define ALC_CAPTURE_DEVICE_SPECIFIER             0x310
+#define ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER     0x311
+#define ALC_CAPTURE_SAMPLES                      0x312
+
 
 #endif /* _ALCTYPES_H */

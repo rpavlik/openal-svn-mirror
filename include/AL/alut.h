@@ -15,7 +15,6 @@
 #endif
 
 #include "altypes.h"
-#include "aluttypes.h"
 
 #ifdef _WIN32
 #define ALUTAPI
@@ -47,15 +46,10 @@
 extern "C" {
 #endif
 
-#ifndef AL_NO_PROTOTYPES
+#ifndef ALUT_NO_PROTOTYPES
 
-ALUTAPI void ALUTAPIENTRY alutInit(int *argc, char *argv[]);
-ALUTAPI void ALUTAPIENTRY alutExit(void);
-
-#ifdef LINUX_AL
-/* this function is Linux-specific and will probably be removed from this header */
-ALUTAPI ALboolean ALUTAPIENTRY alutLoadWAV( const char *fname, ALvoid **wave, ALsizei *format, ALsizei *size, ALsizei *bits, ALsizei *freq );
-#endif
+ALUTAPI ALboolean ALUTAPIENTRY alutInit(ALCchar *szDeviceName, ALCdevice **ppDevice, ALCcontext **ppContext);
+ALUTAPI void ALUTAPIENTRY alutExit(ALvoid);
 
 #ifndef MACINTOSH_AL
 /* Windows and Linux versions have a loop parameter, Macintosh doesn't */
@@ -65,28 +59,23 @@ ALUTAPI void ALUTAPIENTRY alutLoadWAVMemory(ALbyte *memory, ALenum *format, ALvo
 ALUTAPI void ALUTAPIENTRY alutLoadWAVFile(ALbyte *file, ALenum *format, ALvoid **data, ALsizei *size, ALsizei *freq);
 ALUTAPI void ALUTAPIENTRY alutLoadWAVMemory(ALbyte *memory, ALenum *format, ALvoid **data, ALsizei *size, ALsizei *freq);
 #endif
+
 ALUTAPI void ALUTAPIENTRY alutUnloadWAV(ALenum format, ALvoid *data, ALsizei size, ALsizei freq);
 
-#else
-ALUTAPI void      ALUTAPIENTRY (*alutInit)(int *argc, char *argv[]);
-ALUTAPI void 	  ALUTAPIENTRY (*alutExit)(void);
+#else /* ALUT_NO_PROTOTYPES */
 
-#ifdef LINUX_AL
-/* this function is Linux-specific and will probably be removed from this header */
-ALUTAPI ALboolean ALUTAPIENTRY (*alutLoadWAV)( const char *fname, ALvoid **wave, ALsizei *format, ALsizei *size, ALsizei *bits, ALsizei *freq );
-#endif
-
+    ALboolean (ALUTAPIENTRY *alutInit)( ALCchar *szDeviceName, ALCdevice **ppDevice, ALCcontext **ppContext );
+    void 	  (ALUTAPIENTRY *alutExit)( ALvoid );
 #ifndef MACINTOSH_AL
-ALUTAPI void      ALUTAPIENTRY (*alutLoadWAVFile(ALbyte *file,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq,ALboolean *loop);
-ALUTAPI void      ALUTAPIENTRY (*alutLoadWAVMemory)(ALbyte *memory,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq,ALboolean *loop);
+    void      (ALUTAPIENTRY *alutLoadWAVFile)( ALbyte *file,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq,ALboolean *loop );
+    void      (ALUTAPIENTRY *alutLoadWAVMemory)( ALbyte *memory,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq,ALboolean *loop );
 #else
-ALUTAPI void      ALUTAPIENTRY (*alutLoadWAVFile(ALbyte *file,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq);
-ALUTAPI void      ALUTAPIENTRY (*alutLoadWAVMemory)(ALbyte *memory,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq);
+    void      (ALUTAPIENTRY *alutLoadWAVFile( ALbyte *file,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq );
+    void      (ALUTAPIENTRY *alutLoadWAVMemory)( ALbyte *memory,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq );
 #endif
-ALUTAPI void      ALUTAPIENTRY (*alutUnloadWAV)(ALenum format,ALvoid *data,ALsizei size,ALsizei freq);
+    void      (ALUTAPIENTRY *alutUnloadWAV)( ALenum format,ALvoid *data,ALsizei size,ALsizei freq );
 
-
-#endif /* AL_NO_PROTOTYPES */
+#endif /* ALUT_NO_PROTOTYPES */
 
 #ifdef TARGET_OS_MAC
 #if TARGET_OS_MAC

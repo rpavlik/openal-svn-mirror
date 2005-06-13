@@ -18,14 +18,13 @@
 typedef char ALboolean;
 
 /** OpenAL 8bit signed byte. */
-#ifdef LINUX_AL
-typedef signed char ALbyte;
-#else
 typedef char ALbyte;
-#endif
 
 /** OpenAL 8bit unsigned byte. */
 typedef unsigned char ALubyte;
+
+/** OpenAL 8bit char */
+typedef char ALchar;
 
 /** OpenAL 16bit signed short integer type. */
 typedef short ALshort;
@@ -46,12 +45,7 @@ typedef float ALfloat;
 typedef double ALdouble;
 
 /** OpenAL 32bit type. */
-/** OpenAL 8bit signed byte. */
-#ifdef LINUX_AL
-typedef signed int ALsizei;
-#else
 typedef unsigned int ALsizei;
-#endif
 
 /** OpenAL void type (for params, not returns). */
 typedef void ALvoid;
@@ -70,6 +64,9 @@ typedef ALdouble ALclampd;
 
 /* Enumerant values begin at column 50. No tabs. */
 
+/* bad value */
+#define AL_INVALID                                -1
+
 #define AL_NONE                                   0
 
 /* Boolean False. */
@@ -77,15 +74,6 @@ typedef ALdouble ALclampd;
 
 /** Boolean True. */
 #define AL_TRUE                                   1
-
-/**
- * Indicate the type of AL_SOURCE.
- * Sources can be spatialized 
- */
-#define AL_SOURCE_TYPE                            0x200
-
-/** Indicate source has absolute coordinates. */
-#define AL_SOURCE_ABSOLUTE                       0x201
 
 /** Indicate Source has relative coordinates. */
 #define AL_SOURCE_RELATIVE                        0x202
@@ -140,17 +128,6 @@ typedef ALdouble ALclampd;
  */
 #define AL_LOOPING                                0x1007
 
-#ifdef LINUX_AL
-/* no longer used -- will probably be removed */
-/**
- * Indicate whether source is meant to be streaming.
- * Type: ALboolean?
- * Range:   [AL_TRUE, AL_FALSE]
- * Default: FALSE.
- */
-#define AL_STREAMING                              0x1008
-#endif
-
 /**
  * Indicate the buffer to provide sound samples. 
  * Type: ALuint.
@@ -170,16 +147,6 @@ typedef ALdouble ALclampd;
  *  is effectively disabled.
  */
 #define AL_GAIN                                   0x100A
-
-#ifdef LINUX_AL
-/* byte offset into source (in canon format).  -1 if source
- * is not playing.  Don't set this, get this.
- *
- * Type:  ALint
- * Range: -1 - +inf
- */
-#define AL_BYTE_LOKI                              0x100C
-#endif
 
 /*
  * Indicate minimum source attenuation
@@ -228,6 +195,24 @@ typedef ALdouble ALclampd;
  */
 #define AL_BUFFERS_QUEUED                         0x1015
 #define AL_BUFFERS_PROCESSED                      0x1016
+
+/**
+ * Source buffer position information
+ */
+#define AL_SEC_OFFSET                             0x1024
+#define AL_SAMPLE_OFFSET                          0x1025
+#define AL_BYTE_OFFSET                            0x1026
+
+/*
+ * Source type (Static, Streaming or undetermined)
+ * Source is Static if a Buffer has been attached using AL_BUFFER
+ * Source is Streaming if one or more Buffers have been attached using alSourceQueueBuffers
+ * Source is undetermined when it has the NULL buffer attached
+ */
+#define AL_SOURCE_TYPE                            0x1027
+#define AL_STATIC                                 0x1028
+#define AL_STREAMING                              0x1029
+#define AL_UNDETERMINED                           0x1030
 
 /** Sound samples: format specifier. */
 #define AL_FORMAT_MONO8                           0x1100
@@ -294,26 +279,35 @@ typedef ALdouble ALclampd;
 #define AL_PROCESSED                              0x2012
 
 
-/**
- * Error Conditions, see table 2.2 in the OpenAL 1.1 spec
- */
-
-/* "No Error" token. */
+/** Errors: No Error. */
 #define AL_NO_ERROR                               AL_FALSE
 
-/* Invalid name parameter. */
+/** 
+ * Invalid Name paramater passed to AL call.
+ */
 #define AL_INVALID_NAME                           0xA001
 
-/* Invalid parameter. */
+/** 
+ * Invalid parameter passed to AL call.
+ */
+#define AL_ILLEGAL_ENUM                           0xA002
 #define AL_INVALID_ENUM                           0xA002
 
-/* Invalid enum parameter value. */
+/** 
+ * Invalid enum parameter value.
+ */
 #define AL_INVALID_VALUE                          0xA003
 
-/* Illegal call. */
+/** 
+ * Illegal call.
+ */
+#define AL_ILLEGAL_COMMAND                        0xA004
 #define AL_INVALID_OPERATION                      0xA004
+
   
-/* Unable to allocate memory */
+/**
+ * No mojo.
+ */
 #define AL_OUT_OF_MEMORY                          0xA005
 
 
@@ -336,6 +330,11 @@ typedef ALdouble ALclampd;
 #define AL_DOPPLER_VELOCITY                       0xC001
 
 /**
+ * Speed of Sound in units per second
+ */
+#define AL_SPEED_OF_SOUND                         0xC003
+
+/**
  * Distance models
  *
  * used in conjunction with DistanceModel
@@ -345,123 +344,9 @@ typedef ALdouble ALclampd;
 #define AL_DISTANCE_MODEL                         0xD000
 #define AL_INVERSE_DISTANCE                       0xD001
 #define AL_INVERSE_DISTANCE_CLAMPED               0xD002
-
-
-#ifdef LINUX_AL
-
-/* all the IASIG stuff was never used -- will probably be removed */
-
-/**
- * enables
- */
-
-/* #define AL_SOME_ENABLE                            0xE000 */
-
-/** IASIG Level 2 Environment. */
-
-/**  
- * Parameter:  IASIG ROOM  blah
- * Type:       intgeger
- * Range:      [-10000, 0]
- * Default:    -10000 
- */
-#define AL_ENV_ROOM_IASIG                         0x3001
-
-/**
- * Parameter:  IASIG ROOM_HIGH_FREQUENCY
- * Type:       integer
- * Range:      [-10000, 0]
- * Default:    0 
- */
-#define AL_ENV_ROOM_HIGH_FREQUENCY_IASIG          0x3002
-
-/**
- * Parameter:  IASIG ROOM_ROLLOFF_FACTOR
- * Type:       float
- * Range:      [0.0, 10.0]
- * Default:    0.0 
- */
-#define AL_ENV_ROOM_ROLLOFF_FACTOR_IASIG          0x3003
-
-/** 
- * Parameter:  IASIG  DECAY_TIME
- * Type:       float
- * Range:      [0.1, 20.0]
- * Default:    1.0 
- */
-#define AL_ENV_DECAY_TIME_IASIG                   0x3004
-
-/**
- * Parameter:  IASIG DECAY_HIGH_FREQUENCY_RATIO
- * Type:       float
- * Range:      [0.1, 2.0]
- * Default:    0.5
- */
-#define AL_ENV_DECAY_HIGH_FREQUENCY_RATIO_IASIG   0x3005
-
-/**
- * Parameter:  IASIG REFLECTIONS
- * Type:       integer
- * Range:      [-10000, 1000]
- * Default:    -10000
- */
-#define AL_ENV_REFLECTIONS_IASIG                  0x3006
-
-/**
- * Parameter:  IASIG REFLECTIONS_DELAY
- * Type:       float
- * Range:      [0.0, 0.3]
- * Default:    0.02
- */
-#define AL_ENV_REFLECTIONS_DELAY_IASIG            0x3006
-
-/**
- * Parameter:  IASIG REVERB
- * Type:       integer
- * Range:      [-10000,2000]
- * Default:    -10000
- */
-#define AL_ENV_REVERB_IASIG                       0x3007
-
-/**
- * Parameter:  IASIG REVERB_DELAY
- * Type:       float
- * Range:      [0.0, 0.1]
- * Default:    0.04
- */
-#define AL_ENV_REVERB_DELAY_IASIG                 0x3008
-
-/**
- * Parameter:  IASIG DIFFUSION
- * Type:       float
- * Range:      [0.0, 100.0]
- * Default:    100.0
- */
-#define AL_ENV_DIFFUSION_IASIG                    0x3009
-
-/**
- * Parameter:  IASIG DENSITY
- * Type:       float
- * Range:      [0.0, 100.0]
- * Default:    100.0
- */
-#define AL_ENV_DENSITY_IASIG                      0x300A
-  
-  /**
- * Parameter:  IASIG HIGH_FREQUENCY_REFERENCE
- * Type:       float
- * Range:      [20.0, 20000.0]
- * Default:    5000.0
- */
-#define AL_ENV_HIGH_FREQUENCY_REFERENCE_IASIG     0x300B
-
-#endif
-
-/* Deprecated tokens, for backwards compatibility only */
-#if !AL_PURE_API
-#define AL_INVALID                                (-1)
-#define AL_ILLEGAL_ENUM                           AL_INVALID_ENUM
-#define AL_ILLEGAL_COMMAND                        AL_INVALID_OPERATION
-#endif
+#define AL_LINEAR_DISTANCE                        0xD003
+#define AL_LINEAR_DISTANCE_CLAMPED                0xD004
+#define AL_EXPONENT_DISTANCE                      0xD005
+#define AL_EXPONENT_DISTANCE_CLAMPED              0xD006
 
 #endif
