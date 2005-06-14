@@ -41,7 +41,9 @@ AudioEnv::~AudioEnv ()
 // init
 void AudioEnv::Init ()
 {
-   alutInit (NULL, 0); // init OpenAL
+   ALCdevice *device = 0;
+   ALCcontext *context = 0;
+   alutInit ("Generic Hardware", &device, &context); // init OpenAL
 
    // global settings
    alListenerf(AL_GAIN, 1.0);
@@ -50,12 +52,12 @@ void AudioEnv::Init ()
 
 #ifdef USE_EAX
    // determine EAX support level
-	if (alIsExtensionPresent((ALubyte *)"EAX2.0") == AL_TRUE)
+	if (alIsExtensionPresent("EAX2.0") == AL_TRUE)
 	{
 		EAXlevel = 2;
 	} else
 	{
-		if (alIsExtensionPresent((ALubyte *)"EAX") == AL_TRUE)
+		if (alIsExtensionPresent("EAX") == AL_TRUE)
 		{
 			EAXlevel = 1;
 		}
@@ -63,12 +65,11 @@ void AudioEnv::Init ()
 
    // set EAX environment if EAX is available
 	EAXSet pfPropSet;
-	EAXGet pfPropGet;
 	unsigned long ulEAXVal;
 	long lGlobalReverb;
 	if (EAXlevel != 0)
 	{
-		pfPropSet = (EAXSet) alGetProcAddress((ALubyte *)"EAXSet");
+		pfPropSet = (EAXSet) alGetProcAddress("EAXSet");
 		if (pfPropSet != NULL)
 		{
 		    lGlobalReverb = -10000;
@@ -136,7 +137,7 @@ void AudioEnv::UpdateObstruction (int handle)
 	if (EAXlevel == 2)
 	{
 		// have EAX 2.0, so apply the obstruction
-		EAXSet pfPropSet = (EAXSet) alGetProcAddress((ALubyte *)"EAXSet");
+		EAXSet pfPropSet = (EAXSet) alGetProcAddress("EAXSet");
 		float fvalue = 0.25;
 		pfPropSet(&DSPROPSETID_EAX_SourceProperties, DSPROPERTY_EAXBUFFER_OBSTRUCTIONLFRATIO, source[handle-1], &fvalue, sizeof(float));
 		long obstruction = (long) ((1.0f - obstructionLevel) * -10000.0f);
@@ -258,12 +259,11 @@ int AudioEnv::IncrementEnv()
 #ifdef USE_EAX
     // increment EAX environment if EAX is available
 	EAXSet pfPropSet;
-	EAXGet pfPropGet;
 	long lEAXVal;
 	static unsigned long ulEAXEnv = 0;
 	if (EAXlevel != 0)
 	{
-		pfPropSet = (EAXSet) alGetProcAddress((ALubyte *)"EAXSet");
+		pfPropSet = (EAXSet) alGetProcAddress("EAXSet");
 		if (pfPropSet != NULL)
 		{
 		    lEAXVal = -10000;
