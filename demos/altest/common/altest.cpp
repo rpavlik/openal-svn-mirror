@@ -45,7 +45,7 @@
 #define OPENAL
 
 #define TEST_VORBIS 0	// enable for ogg vorbis testing
-#define TEST_EAX	1   // enable for EAX testing
+#define TEST_EAX	0   // enable for EAX testing
 
 #ifdef _WIN32
 #include <windows.h>	// For timeGetTime()
@@ -143,10 +143,10 @@
 
 typedef struct
 {
-	ALubyte		riff[4];		// 'RIFF'
+	ALchar		riff[4];		// 'RIFF'
 	ALsizei		riffSize;
-	ALubyte		wave[4];		// 'WAVE'
-	ALubyte		fmt[4];			// 'fmt '
+	ALchar		wave[4];		// 'WAVE'
+	ALchar		fmt[4];			// 'fmt '
 	ALuint		fmtSize;
 	ALushort	Format;                              
 	ALushort	Channels;
@@ -154,13 +154,13 @@ typedef struct
 	ALuint		BytesPerSec;
 	ALushort	BlockAlign;
 	ALushort	BitsPerSample;
-	ALubyte		data[4];		// 'data'
+	ALchar		data[4];		// 'data'
 	ALuint		dataSize;
 } WAVE_Struct;
 
 typedef struct ALenum_struct
 {
-	ALubyte		*enumName;
+	ALchar		*enumName;
 	ALenum		value;
 } ALenums;
 
@@ -181,103 +181,103 @@ unsigned int g_ovSize;
 
 static ALenums enumeration[]={
 	// Types
-	{ (ALubyte *)"ALC_INVALID",						ALC_INVALID							},
-	{ (ALubyte *)"AL_NONE",							AL_NONE								},
-	{ (ALubyte *)"AL_FALSE",						AL_FALSE							},
-	{ (ALubyte *)"ALC_FALSE",						ALC_FALSE							},
-	{ (ALubyte *)"AL_TRUE",							AL_TRUE								},
-	{ (ALubyte *)"ALC_TRUE",						ALC_TRUE							},
+	{ (ALchar *)"ALC_INVALID",						ALC_INVALID							},
+	{ (ALchar *)"AL_NONE",							AL_NONE								},
+	{ (ALchar *)"AL_FALSE",							AL_FALSE							},
+	{ (ALchar *)"ALC_FALSE",						ALC_FALSE							},
+	{ (ALchar *)"AL_TRUE",							AL_TRUE								},
+	{ (ALchar *)"ALC_TRUE",							ALC_TRUE							},
 	
 	// Source and Listener Properties
-	{ (ALubyte *)"AL_SOURCE_RELATIVE",				AL_SOURCE_RELATIVE					},
-	{ (ALubyte *)"AL_CONE_INNER_ANGLE",				AL_CONE_INNER_ANGLE					},
-	{ (ALubyte *)"AL_CONE_OUTER_ANGLE",				AL_CONE_OUTER_ANGLE					},
-	{ (ALubyte *)"AL_PITCH",						AL_PITCH							},
-	{ (ALubyte *)"AL_POSITION",						AL_POSITION							},
-	{ (ALubyte *)"AL_DIRECTION",					AL_DIRECTION						},
-	{ (ALubyte *)"AL_VELOCITY",						AL_VELOCITY							},
-	{ (ALubyte *)"AL_LOOPING",						AL_LOOPING							},
-	{ (ALubyte *)"AL_BUFFER",						AL_BUFFER							},
-	{ (ALubyte *)"AL_GAIN",							AL_GAIN								},
-	{ (ALubyte *)"AL_MIN_GAIN",						AL_MIN_GAIN							},
-	{ (ALubyte *)"AL_MAX_GAIN",						AL_MAX_GAIN							},
-	{ (ALubyte *)"AL_ORIENTATION",					AL_ORIENTATION						},
-	{ (ALubyte *)"AL_REFERENCE_DISTANCE",			AL_REFERENCE_DISTANCE				},
-	{ (ALubyte *)"AL_ROLLOFF_FACTOR",				AL_ROLLOFF_FACTOR					},
-	{ (ALubyte *)"AL_CONE_OUTER_GAIN",				AL_CONE_OUTER_GAIN					},
-	{ (ALubyte *)"AL_MAX_DISTANCE",					AL_MAX_DISTANCE						},
+	{ (ALchar *)"AL_SOURCE_RELATIVE",				AL_SOURCE_RELATIVE					},
+	{ (ALchar *)"AL_CONE_INNER_ANGLE",				AL_CONE_INNER_ANGLE					},
+	{ (ALchar *)"AL_CONE_OUTER_ANGLE",				AL_CONE_OUTER_ANGLE					},
+	{ (ALchar *)"AL_PITCH",							AL_PITCH							},
+	{ (ALchar *)"AL_POSITION",						AL_POSITION							},
+	{ (ALchar *)"AL_DIRECTION",						AL_DIRECTION						},
+	{ (ALchar *)"AL_VELOCITY",						AL_VELOCITY							},
+	{ (ALchar *)"AL_LOOPING",						AL_LOOPING							},
+	{ (ALchar *)"AL_BUFFER",						AL_BUFFER							},
+	{ (ALchar *)"AL_GAIN",							AL_GAIN								},
+	{ (ALchar *)"AL_MIN_GAIN",						AL_MIN_GAIN							},
+	{ (ALchar *)"AL_MAX_GAIN",						AL_MAX_GAIN							},
+	{ (ALchar *)"AL_ORIENTATION",					AL_ORIENTATION						},
+	{ (ALchar *)"AL_REFERENCE_DISTANCE",			AL_REFERENCE_DISTANCE				},
+	{ (ALchar *)"AL_ROLLOFF_FACTOR",				AL_ROLLOFF_FACTOR					},
+	{ (ALchar *)"AL_CONE_OUTER_GAIN",				AL_CONE_OUTER_GAIN					},
+	{ (ALchar *)"AL_MAX_DISTANCE",					AL_MAX_DISTANCE						},
 
 	// Source State information
-	{ (ALubyte *)"AL_SOURCE_STATE",					AL_SOURCE_STATE						},
-	{ (ALubyte *)"AL_INITIAL",						AL_INITIAL							},
-	{ (ALubyte *)"AL_PLAYING",						AL_PLAYING							},
-	{ (ALubyte *)"AL_PAUSED",						AL_PAUSED							},
-	{ (ALubyte *)"AL_STOPPED",						AL_STOPPED							},
+	{ (ALchar *)"AL_SOURCE_STATE",					AL_SOURCE_STATE						},
+	{ (ALchar *)"AL_INITIAL",						AL_INITIAL							},
+	{ (ALchar *)"AL_PLAYING",						AL_PLAYING							},
+	{ (ALchar *)"AL_PAUSED",						AL_PAUSED							},
+	{ (ALchar *)"AL_STOPPED",						AL_STOPPED							},
 
 	// Queue information
-	{ (ALubyte *)"AL_BUFFERS_QUEUED",				AL_BUFFERS_QUEUED					},
-	{ (ALubyte *)"AL_BUFFERS_PROCESSED",			AL_BUFFERS_PROCESSED				},
+	{ (ALchar *)"AL_BUFFERS_QUEUED",				AL_BUFFERS_QUEUED					},
+	{ (ALchar *)"AL_BUFFERS_PROCESSED",				AL_BUFFERS_PROCESSED				},
 	
 	// Buffer Formats
-	{ (ALubyte *)"AL_FORMAT_MONO8",					AL_FORMAT_MONO8						},
-	{ (ALubyte *)"AL_FORMAT_MONO16",				AL_FORMAT_MONO16					},
-	{ (ALubyte *)"AL_FORMAT_STEREO8",				AL_FORMAT_STEREO8					},
-	{ (ALubyte *)"AL_FORMAT_STEREO16",				AL_FORMAT_STEREO16					},
+	{ (ALchar *)"AL_FORMAT_MONO8",					AL_FORMAT_MONO8						},
+	{ (ALchar *)"AL_FORMAT_MONO16",					AL_FORMAT_MONO16					},
+	{ (ALchar *)"AL_FORMAT_STEREO8",				AL_FORMAT_STEREO8					},
+	{ (ALchar *)"AL_FORMAT_STEREO16",				AL_FORMAT_STEREO16					},
 
 	// Buffer attributes
-	{ (ALubyte *)"AL_FREQUENCY",					AL_FREQUENCY						},
-	{ (ALubyte *)"AL_SIZE",							AL_SIZE								},
+	{ (ALchar *)"AL_FREQUENCY",						AL_FREQUENCY						},
+	{ (ALchar *)"AL_SIZE",							AL_SIZE								},
 
 	// Buffer States (not supported yet)
-	{ (ALubyte *)"AL_UNUSED",						AL_UNUSED							},
-	{ (ALubyte *)"AL_PENDING",						AL_PENDING							},
-	{ (ALubyte *)"AL_PROCESSED",					AL_PROCESSED						},
+	{ (ALchar *)"AL_UNUSED",						AL_UNUSED							},
+	{ (ALchar *)"AL_PENDING",						AL_PENDING							},
+	{ (ALchar *)"AL_PROCESSED",						AL_PROCESSED						},
 
 	// ALC Properties
-	{ (ALubyte *)"ALC_MAJOR_VERSION",				ALC_MAJOR_VERSION					},
-	{ (ALubyte *)"ALC_MINOR_VERSION",				ALC_MINOR_VERSION					},
-	{ (ALubyte *)"ALC_ATTRIBUTES_SIZE",				ALC_ATTRIBUTES_SIZE					},
-	{ (ALubyte *)"ALC_ALL_ATTRIBUTES",				ALC_ALL_ATTRIBUTES					},
-	{ (ALubyte *)"ALC_DEFAULT_DEVICE_SPECIFIER",	ALC_DEFAULT_DEVICE_SPECIFIER		},
-	{ (ALubyte *)"ALC_DEVICE_SPECIFIER",			ALC_DEVICE_SPECIFIER				},
-	{ (ALubyte *)"ALC_EXTENSIONS",					ALC_EXTENSIONS						},
-	{ (ALubyte *)"ALC_FREQUENCY",					ALC_FREQUENCY						},
-	{ (ALubyte *)"ALC_REFRESH",						ALC_REFRESH							},
-	{ (ALubyte *)"ALC_SYNC",						ALC_SYNC							},
+	{ (ALchar *)"ALC_MAJOR_VERSION",				ALC_MAJOR_VERSION					},
+	{ (ALchar *)"ALC_MINOR_VERSION",				ALC_MINOR_VERSION					},
+	{ (ALchar *)"ALC_ATTRIBUTES_SIZE",				ALC_ATTRIBUTES_SIZE					},
+	{ (ALchar *)"ALC_ALL_ATTRIBUTES",				ALC_ALL_ATTRIBUTES					},
+	{ (ALchar *)"ALC_DEFAULT_DEVICE_SPECIFIER",		ALC_DEFAULT_DEVICE_SPECIFIER		},
+	{ (ALchar *)"ALC_DEVICE_SPECIFIER",				ALC_DEVICE_SPECIFIER				},
+	{ (ALchar *)"ALC_EXTENSIONS",					ALC_EXTENSIONS						},
+	{ (ALchar *)"ALC_FREQUENCY",					ALC_FREQUENCY						},
+	{ (ALchar *)"ALC_REFRESH",						ALC_REFRESH							},
+	{ (ALchar *)"ALC_SYNC",							ALC_SYNC							},
 
 	// AL Error Messages
-	{ (ALubyte *)"AL_NO_ERROR",						AL_NO_ERROR							},
-	{ (ALubyte *)"AL_INVALID_NAME",					AL_INVALID_NAME						},
-	{ (ALubyte *)"AL_INVALID_ENUM",					AL_INVALID_ENUM						},
-	{ (ALubyte *)"AL_INVALID_VALUE",				AL_INVALID_VALUE					},
-	{ (ALubyte *)"AL_INVALID_OPERATION",			AL_INVALID_OPERATION				},
-	{ (ALubyte *)"AL_OUT_OF_MEMORY",				AL_OUT_OF_MEMORY					},
+	{ (ALchar *)"AL_NO_ERROR",						AL_NO_ERROR							},
+	{ (ALchar *)"AL_INVALID_NAME",					AL_INVALID_NAME						},
+	{ (ALchar *)"AL_INVALID_ENUM",					AL_INVALID_ENUM						},
+	{ (ALchar *)"AL_INVALID_VALUE",					AL_INVALID_VALUE					},
+	{ (ALchar *)"AL_INVALID_OPERATION",				AL_INVALID_OPERATION				},
+	{ (ALchar *)"AL_OUT_OF_MEMORY",					AL_OUT_OF_MEMORY					},
 	
 	// ALC Error Message
-	{ (ALubyte *)"ALC_NO_ERROR",					ALC_NO_ERROR						},
-	{ (ALubyte *)"ALC_INVALID_DEVICE",				ALC_INVALID_DEVICE					},
-	{ (ALubyte *)"ALC_INVALID_CONTEXT",				ALC_INVALID_CONTEXT					},
-	{ (ALubyte *)"ALC_INVALID_ENUM",				ALC_INVALID_ENUM					},
-	{ (ALubyte *)"ALC_INVALID_VALUE",				ALC_INVALID_VALUE					},
-	{ (ALubyte *)"ALC_OUT_OF_MEMORY",				ALC_OUT_OF_MEMORY					},
+	{ (ALchar *)"ALC_NO_ERROR",						ALC_NO_ERROR						},
+	{ (ALchar *)"ALC_INVALID_DEVICE",				ALC_INVALID_DEVICE					},
+	{ (ALchar *)"ALC_INVALID_CONTEXT",				ALC_INVALID_CONTEXT					},
+	{ (ALchar *)"ALC_INVALID_ENUM",					ALC_INVALID_ENUM					},
+	{ (ALchar *)"ALC_INVALID_VALUE",				ALC_INVALID_VALUE					},
+	{ (ALchar *)"ALC_OUT_OF_MEMORY",				ALC_OUT_OF_MEMORY					},
 
 	// Context strings
-	{ (ALubyte *)"AL_VENDOR",						AL_VENDOR							},
-	{ (ALubyte *)"AL_VERSION",						AL_VERSION							},
-	{ (ALubyte *)"AL_RENDERER",						AL_RENDERER							},
-	{ (ALubyte *)"AL_EXTENSIONS",					AL_EXTENSIONS						},
+	{ (ALchar *)"AL_VENDOR",						AL_VENDOR							},
+	{ (ALchar *)"AL_VERSION",						AL_VERSION							},
+	{ (ALchar *)"AL_RENDERER",						AL_RENDERER							},
+	{ (ALchar *)"AL_EXTENSIONS",					AL_EXTENSIONS						},
 	
 	// Global states
-	{ (ALubyte *)"AL_DOPPLER_FACTOR",				AL_DOPPLER_FACTOR					},
-	{ (ALubyte *)"AL_DOPPLER_VELOCITY",				AL_DOPPLER_VELOCITY					},
-	{ (ALubyte *)"AL_DISTANCE_MODEL",				AL_DISTANCE_MODEL					},
+	{ (ALchar *)"AL_DOPPLER_FACTOR",				AL_DOPPLER_FACTOR					},
+	{ (ALchar *)"AL_DOPPLER_VELOCITY",				AL_DOPPLER_VELOCITY					},
+	{ (ALchar *)"AL_DISTANCE_MODEL",				AL_DISTANCE_MODEL					},
 	
 	// Distance Models
-	{ (ALubyte *)"AL_INVERSE_DISTANCE",				AL_INVERSE_DISTANCE					},
-	{ (ALubyte *)"AL_INVERSE_DISTANCE_CLAMPED",		AL_INVERSE_DISTANCE_CLAMPED			},
+	{ (ALchar *)"AL_INVERSE_DISTANCE",				AL_INVERSE_DISTANCE					},
+	{ (ALchar *)"AL_INVERSE_DISTANCE_CLAMPED",		AL_INVERSE_DISTANCE_CLAMPED			},
 
 	// Default
-	{ (ALubyte *)NULL,								(ALenum  ) 0 						} };
+	{ (ALchar *)NULL,								(ALenum  ) 0 						} };
 
 
 // Function prototypes
@@ -423,8 +423,8 @@ int main(int argc, char* argv[])
 	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};	// Listener facing into the screen
 
 #if TEST_EAX
-	ALubyte szFnName[128];
-	ALubyte szEAX[] = "EAX";
+	ALchar szFnName[128];
+	ALchar szEAX[] = "EAX";
 #endif	
 
 
@@ -440,7 +440,7 @@ int main(int argc, char* argv[])
 	int numDevices, numDefaultDevice, i;
 
 	strcpy(deviceName, "");
-	if (alcIsExtensionPresent(NULL, (ALubyte*)"ALC_ENUMERATION_EXT") == AL_TRUE) { // try out enumeration extension
+	if (alcIsExtensionPresent(NULL, (ALchar*)"ALC_ENUMERATION_EXT") == AL_TRUE) { // try out enumeration extension
 		defaultDevice = (char *)alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
 		if (defaultDevice != NULL) {
 			deviceList = (char *)alcGetString(NULL, ALC_DEVICE_SPECIFIER);
@@ -483,7 +483,7 @@ int main(int argc, char* argv[])
 	if (strlen(deviceName) == 0) {
 		Device = alcOpenDevice(NULL); // this is supposed to select the "preferred device"
 	} else {
-		Device = alcOpenDevice((ALubyte*)deviceName); // have a name from enumeration process above, so use it...
+		Device = alcOpenDevice((ALchar*)deviceName); // have a name from enumeration process above, so use it...
 	}
 	//Create context(s)
 	Context=alcCreateContext(Device,NULL);
@@ -1062,8 +1062,8 @@ char getUpperCh(void)
 
 int CRToContinue()
 {
-	ALubyte ch = 0;
-	ALubyte lastchar = 0;
+	ALchar ch = 0;
+	ALchar lastchar = 0;
 	
 	do 
 	{ 
@@ -1083,7 +1083,7 @@ void CRForNextTest()
 
 int ContinueOrSkip()
 {
-    ALubyte ch;
+    ALchar ch;
     
 	printf("\nPress Return to run this test, or 'S' to skip:\n");	
 
@@ -1562,7 +1562,7 @@ ALvoid SA_StringQueries(ALvoid)
 	{
 		printf("Check that the following values are reasonable:\n");
 
-		const ALubyte *tempString;
+		const ALchar *tempString;
 
 		ALCcontext* pContext;
 		ALCdevice* pDevice;
@@ -2967,6 +2967,7 @@ ALvoid I_EAXTest(ALvoid)
 			case '4':
 				alSourceStop(source[1]);
 				break;
+
 			case '5':
 				Env = EAX_ENVIRONMENT_HANGAR;
 				eaxSet(&DSPROPSETID_EAX20_ListenerProperties, DSPROPERTY_EAXLISTENER_ENVIRONMENT | DSPROPERTY_EAXLISTENER_DEFERRED,
@@ -3941,7 +3942,7 @@ ALvoid I_StreamingTest(ALvoid)
 	ALuint			loop;
 	ALint			state;
 #ifdef _WIN32
-	ALubyte			ch;
+	ALchar			ch;
 #endif
 
 	printf("Streaming Test\n");
@@ -4278,7 +4279,7 @@ ALvoid I_VorbisTest()
 
       alGetError(); // reset error state
 
-      if (alIsExtensionPresent((ALubyte *)"AL_EXT_vorbis") == AL_TRUE) {
+      if (alIsExtensionPresent((ALchar *)"AL_EXT_vorbis") == AL_TRUE) {
 	alGenSources(3,source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
