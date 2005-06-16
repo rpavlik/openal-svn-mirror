@@ -45,7 +45,7 @@
 #define OPENAL
 
 #define TEST_VORBIS 0	// enable for ogg vorbis testing
-#define TEST_EAX	0   // enable for EAX testing
+#define TEST_EAX	1   // enable for EAX testing
 
 #ifdef _WIN32
 #include <windows.h>	// For timeGetTime()
@@ -158,12 +158,34 @@ typedef struct
 	ALuint		dataSize;
 } WAVE_Struct;
 
+#pragma pack (push,1)
+typedef struct
+{
+	char			szRIFF[4];
+	long			lRIFFSize;
+	char			szWave[4];
+	char			szFmt[4];
+	long			lFmtSize;
+	WAVEFORMATEX	wfex;
+	char			szData[4];
+	long			lDataSize;
+} WAVEHEADER;
+#pragma pack (pop)
+
+#define QUEUEBUFFERSIZE		2048
+#define QUEUEBUFFERCOUNT	4
+
 typedef struct ALenum_struct
 {
 	ALchar		*enumName;
 	ALenum		value;
 } ALenums;
 
+#ifndef LINUX
+#ifndef MAC_OS_X
+#pragma pack (pop)   
+#endif
+#endif
 
 // Global variables
 ALuint	g_Buffers[NUM_BUFFERS];		// Array of Buffers
@@ -173,7 +195,6 @@ EAXSet	eaxSet;						// EAXSet function, retrieved if EAX Extension is supported
 EAXGet	eaxGet;						// EAXGet function, retrieved if EAX Extension is supported
 ALboolean g_bEAX;					// Boolean variable to indicate presence of EAX Extension 
 #endif
-
 #if TEST_VORBIS
 #define AL_FORMAT_VORBIS_EXT 0x10003
 unsigned int g_ovSize;
@@ -181,6 +202,7 @@ unsigned int g_ovSize;
 
 static ALenums enumeration[]={
 	// Types
+	{ (ALchar *)"AL_INVALID",                       AL_INVALID                          },
 	{ (ALchar *)"ALC_INVALID",						ALC_INVALID							},
 	{ (ALchar *)"AL_NONE",							AL_NONE								},
 	{ (ALchar *)"AL_FALSE",							AL_FALSE							},
@@ -206,6 +228,13 @@ static ALenums enumeration[]={
 	{ (ALchar *)"AL_ROLLOFF_FACTOR",				AL_ROLLOFF_FACTOR					},
 	{ (ALchar *)"AL_CONE_OUTER_GAIN",				AL_CONE_OUTER_GAIN					},
 	{ (ALchar *)"AL_MAX_DISTANCE",					AL_MAX_DISTANCE						},
+	{ (ALchar *)"AL_SEC_OFFSET",                    AL_SEC_OFFSET                       },
+	{ (ALchar *)"AL_SAMPLE_OFFSET",                 AL_SAMPLE_OFFSET                    },
+	{ (ALchar *)"AL_BYTE_OFFSET",                   AL_BYTE_OFFSET                      },
+	{ (ALchar *)"AL_SOURCE_TYPE",                   AL_SOURCE_TYPE                      },
+	{ (ALchar *)"AL_STATIC",                        AL_STATIC                           },
+	{ (ALchar *)"AL_STREAMING",                     AL_STREAMING                        },
+	{ (ALchar *)"AL_UNDETERMINED",                  AL_UNDETERMINED                     },
 
 	// Source State information
 	{ (ALchar *)"AL_SOURCE_STATE",					AL_SOURCE_STATE						},
@@ -244,6 +273,11 @@ static ALenums enumeration[]={
 	{ (ALchar *)"ALC_FREQUENCY",					ALC_FREQUENCY						},
 	{ (ALchar *)"ALC_REFRESH",						ALC_REFRESH							},
 	{ (ALchar *)"ALC_SYNC",							ALC_SYNC							},
+	{ (ALchar *)"ALC_MONO_SOURCES",                 ALC_MONO_SOURCES                    },
+	{ (ALchar *)"ALC_STEREO_SOURCES",               ALC_STEREO_SOURCES                  },
+	{ (ALchar *)"ALC_CAPTURE_DEVICE_SPECIFIER",     ALC_CAPTURE_DEVICE_SPECIFIER        },
+	{ (ALchar *)"ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER", ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER },
+    { (ALchar *)"ALC_CAPTURE_SAMPLES",              ALC_CAPTURE_SAMPLES                 },
 
 	// AL Error Messages
 	{ (ALchar *)"AL_NO_ERROR",						AL_NO_ERROR							},
@@ -271,10 +305,15 @@ static ALenums enumeration[]={
 	{ (ALchar *)"AL_DOPPLER_FACTOR",				AL_DOPPLER_FACTOR					},
 	{ (ALchar *)"AL_DOPPLER_VELOCITY",				AL_DOPPLER_VELOCITY					},
 	{ (ALchar *)"AL_DISTANCE_MODEL",				AL_DISTANCE_MODEL					},
+	{ (ALchar *)"AL_SPEED_OF_SOUND",                AL_SPEED_OF_SOUND                   },
 	
 	// Distance Models
 	{ (ALchar *)"AL_INVERSE_DISTANCE",				AL_INVERSE_DISTANCE					},
 	{ (ALchar *)"AL_INVERSE_DISTANCE_CLAMPED",		AL_INVERSE_DISTANCE_CLAMPED			},
+	{ (ALchar *)"AL_LINEAR_DISTANCE",				AL_LINEAR_DISTANCE					},
+	{ (ALchar *)"AL_LINEAR_DISTANCE_CLAMPED",		AL_LINEAR_DISTANCE_CLAMPED			},
+	{ (ALchar *)"AL_EXPONENT_DISTANCE",				AL_EXPONENT_DISTANCE			    },
+	{ (ALchar *)"AL_EXPONENT_DISTANCE_CLAMPED",		AL_EXPONENT_DISTANCE_CLAMPED	    },
 
 	// Default
 	{ (ALchar *)NULL,								(ALenum  ) 0 						} };
@@ -314,6 +353,15 @@ ALvoid I_StereoTest(ALvoid);
 ALvoid I_GainTest(ALvoid);
 ALvoid I_StreamingTest(ALvoid);
 ALvoid I_MultipleSourcesTest(ALvoid);
+ALvoid I_SourceRelativeTest(ALvoid);
+ALvoid I_SourceRolloffTest(ALvoid);
+ALvoid I_ADPCMTest(ALvoid);
+ALvoid I_VelocityTest(ALvoid);
+ALvoid I_GetSourceOffsetTest(ALvoid);
+ALvoid I_SetSourceOffsetTest(ALvoid);
+ALvoid I_DistanceModelTest(ALvoid);
+ALvoid I_CaptureTest(ALvoid);
+ALvoid I_CaptureAndPlayTest(ALvoid);
 ALvoid FA_RequestObjectNames(ALvoid);
 ALvoid FA_ReleaseObjectNames(ALvoid);
 ALvoid FA_ValidateObjectNames(ALvoid);
@@ -380,21 +428,52 @@ void delay_ms(unsigned int ms)
 /*
 	Display AL Error message
 */
-ALvoid DisplayALError(ALbyte *szText, ALint errorcode)
+ALvoid DisplayALError(ALchar *szText, ALint errorcode)
 {
 	printf("%s%s\n",szText,alGetString(errorcode));
 	return;
 }
 
-#ifdef LINUX
-ALvoid DisplayALError( const char *text, ALint errorcode)
+/*
+	Loads the wave file into the given Buffer ID
+*/
+ALboolean LoadWave(char *szWaveFile, ALuint BufferID)
 {
-	printf("%s%s\n", text, alGetString(errorcode));
+	ALint	error;
+	ALsizei size,freq;
+	ALenum	format;
+	ALvoid	*data;
+	ALboolean loop;
 
-	return;
+	if (!szWaveFile)
+		return AL_FALSE;
+
+	alutLoadWAVFile(szWaveFile,&format,&data,&size,&freq,&loop);
+	if ((error = alGetError()) != AL_NO_ERROR)
+	{
+		printf("Failed to load %s\n", szWaveFile);
+		DisplayALError("alutLoadWAVFile : ", error);
+		return AL_FALSE;
+	}
+
+	// Copy data into ALBuffer
+	alBufferData(BufferID,format,data,size,freq);
+	if ((error = alGetError()) != AL_NO_ERROR)
+	{
+		DisplayALError("alBufferData : ", error);
+		return AL_FALSE;
+	}
+
+	// Unload wave file
+	alutUnloadWAV(format,data,size,freq);
+	if ((error = alGetError()) != AL_NO_ERROR)
+	{
+		DisplayALError("alutUnloadWAV : ", error);
+		return AL_FALSE;
+	}
+
+	return AL_TRUE;
 }
-#endif
-
 
 /*
 	Main application - Initializes Open AL, Sets up Listener, Generates Buffers, and loads in audio data.
@@ -408,14 +487,10 @@ int main(int argc, char* argv[])
 {
 	ALbyte	ch;
 	ALint	error;
-	ALsizei size,freq;
-	ALenum	format;
-	ALvoid	*data;
-	ALboolean loop;
 #ifndef LINUX
-        ALCcontext *Context;
+    ALCcontext *Context;
 #else
-        ALvoid *Context;
+    ALvoid *Context;
 #endif
 	ALCdevice *Device;
 	ALfloat listenerPos[]={0.0,0.0,0.0};
@@ -490,8 +565,30 @@ int main(int argc, char* argv[])
 	//Set active context
 	alcMakeContextCurrent(Context);
 
-	// Clear Error Code
+	// Clear Error Codes
 	alGetError();
+	alcGetError(Device);
+
+	// Check what version of Open AL we are using
+	ALint major, minor;
+	alcGetIntegerv(Device, ALC_MAJOR_VERSION, 1, &major);
+	alcGetIntegerv(Device, ALC_MINOR_VERSION, 1, &minor);
+	printf("\nOpen AL Version %d.%d\n", major, minor);
+
+	// Check for all the AL 1.1 Extensions (they may be present on AL 1.0 implementations too)
+	ALboolean bOffsetExt = alIsExtensionPresent("al_ext_offset");
+	if (bOffsetExt)
+		printf("AL_EXT_OFFSET support found !\n");
+
+	ALboolean bNewDistModels = AL_TRUE;
+	bNewDistModels &= alIsExtensionPresent("AL_EXT_LINEAR_DISTANCE");
+	bNewDistModels &= alIsExtensionPresent("AL_EXT_EXPONENT_DISTANCE");
+	if (bNewDistModels)
+		printf("AL_EXT_LINEAR_DISTANCE and AL_EXT_EXPONENT_DISTANCE support found !\n");
+	
+	ALboolean bCaptureExt = alcIsExtensionPresent(Device, "alc_EXT_capTure");
+	if (bCaptureExt)
+		printf("ALC_EXT_CAPTURE support found !\n");
 
 	// Set Listener attributes
 
@@ -528,340 +625,15 @@ int main(int argc, char* argv[])
 	}
 
 	// Load in samples to be used by Test functions
-	// Load footsteps.wav
-#ifdef LINUX
-        ALsizei bits;
-        alutLoadWAV("Footsteps.wav", &data, &format, &size, & bits, &freq);
-#endif
-#ifdef _WIN32
-	alutLoadWAVFile("footsteps.wav",&format,&data,&size,&freq,&loop);
-#endif
-#ifdef __MACOS__
-	alutLoadWAVFile((char *) "footsteps.wav",&format,&data,&size,&freq);
-#endif
-#ifdef MAC_OS_X
-	alutLoadWAVFile((char *) "footsteps.wav",&format,&data,&size,&freq);
-#endif
-	if ((error = alGetError()) != AL_NO_ERROR)
+	if ((!LoadWave("footsteps.wav", g_Buffers[0])) ||
+		(!LoadWave("ding.wav", g_Buffers[1])) ||
+		(!LoadWave("wave1.wav", g_Buffers[2])) ||
+		(!LoadWave("wave2.wav", g_Buffers[3])) ||
+		(!LoadWave("wave3.wav", g_Buffers[4])) ||
+		(!LoadWave("wave4.wav", g_Buffers[5])) ||
+		(!LoadWave("stereo.wav", g_Buffers[6])))
 	{
-		DisplayALError((ALbyte *) "alutLoadWAVFile footsteps.wav : ", error);
-		// Delete Buffers
 		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
-		printf("Failing to load a sample file -- check that they are in the working directory!\n");
-		exit(-1);
-	}
-
-	// Copy footsteps.wav data into AL Buffer 0
-	alBufferData(g_Buffers[0],format,data,size,freq);
-	if ((error = alGetError()) != AL_NO_ERROR)
-	{
-		DisplayALError((ALbyte *) "alBufferData buffer 0 : ", error);
-		// Delete buffers
-		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
-		printf("Failing to load a sample file -- check that they are in the working directory!\n");
-		exit(-1);
-	}
-
-	// Unload footsteps.wav
-#ifndef LINUX
-        alutUnloadWAV(format,data,size,freq);
-#else
-        free(data);
-#endif
-	if ((error = alGetError()) != AL_NO_ERROR)
-	{
-		DisplayALError((ALbyte *) "alutUnloadWAV : ", error);
-		// Delete buffers
-		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
-		printf("Failing to load a sample file -- check that they are in the working directory!\n");
-		exit(-1);
-	}
-
-	// Load ding.wav
-#ifdef LINUX
-        alutLoadWAV("ding.wav", &data, &format, &size, & bits, &freq);
-#endif
-#ifdef _WIN32
-	alutLoadWAVFile("ding.wav",&format,&data,&size,&freq,&loop);
-#endif
-#ifdef __MACOS__
-	alutLoadWAVFile((char *) "ding.wav",&format,&data,&size,&freq);
-#endif
-#ifdef MAC_OS_X
-	alutLoadWAVFile((char *) "ding.wav",&format,&data,&size,&freq);
-#endif
-	if ((error = alGetError()) != AL_NO_ERROR)
-	{
-		DisplayALError((ALbyte *) "alutLoadWAVFile ding.wav : ", error);
-		// Delete buffers
-		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
-		printf("Failing to load a sample file -- check that they are in the working directory!\n");
-		exit (-1);
-	}
-
-	// Copy ding.wav audio data into AL Buffer 1
-	alBufferData(g_Buffers[1],format,data,size,freq);
-	if ((error = alGetError()) != AL_NO_ERROR)
-	{
-		DisplayALError((ALbyte *) "alBufferData buffer 1 : ", error);
-		// Delete buffers
-		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
-		printf("Failing to load a sample file -- check that they are in the working directory!\n");
-		exit(-1);
-	}
-	
-	// Unload ding.wav
-#ifndef LINUX
-        alutUnloadWAV(format,data,size,freq);
-#else
-        free(data);
-#endif
-	if ((error = alGetError()) != AL_NO_ERROR)
-	{
-		DisplayALError((ALbyte *) "alutUnloadWAV : ", error);
-		// Delete buffers
-		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
-		printf("Failing to load a sample file -- check that they are in the working directory!\n");
-		exit(-1);
-	}
-
-		// Load wave1.wav
-#ifdef LINUX
-        alutLoadWAV("Wave1.WAV", &data, &format, &size, & bits, &freq);
-#endif
-#ifdef _WIN32
-	alutLoadWAVFile("wave1.wav",&format,&data,&size,&freq,&loop);
-#endif
-#ifdef __MACOS__
-	alutLoadWAVFile((char *) "wave1.wav",&format,&data,&size,&freq);
-#endif
-#ifdef MAC_OS_X
-	alutLoadWAVFile((char *) "wave1.wav",&format,&data,&size,&freq);
-#endif
-	if ((error = alGetError()) != AL_NO_ERROR)
-	{
-		DisplayALError((ALbyte *) "alutLoadWAVFile wave1.wav : ", error);
-		// Delete Buffers
-		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
-		printf("Failing to load a sample file -- check that they are in the working directory!\n");
-		exit(-1);
-	}
-
-	// Copy wave1.wav data into AL Buffer 2
-	alBufferData(g_Buffers[2],format,data,size,freq);
-	if ((error = alGetError()) != AL_NO_ERROR)
-	{
-		DisplayALError((ALbyte *) "alBufferData buffer 2 : ", error);
-		// Delete buffers
-		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
-		printf("Failing to load a sample file -- check that they are in the working directory!\n");
-		exit(-1);
-	}
-
-	// Unload wave1.wav
-#ifndef LINUX
-        alutUnloadWAV(format,data,size,freq);
-#else
-        free(data);
-#endif
-	if ((error = alGetError()) != AL_NO_ERROR)
-	{
-		DisplayALError((ALbyte *) "alutUnloadWAV : ", error);
-		// Delete buffers
-		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
-		printf("Failing to load a sample file -- check that they are in the working directory!\n");
-		exit(-1);
-	}
-
-		// Load wave2.wav
-#ifdef LINUX
-        alutLoadWAV("Wave2.WAV", &data, &format, &size, & bits, &freq);
-#endif
-#ifdef _WIN32
-	alutLoadWAVFile("wave2.wav",&format,&data,&size,&freq,&loop);
-#endif
-#ifdef __MACOS__
-	alutLoadWAVFile((char *) "wave2.wav",&format,&data,&size,&freq);
-#endif
-#ifdef MAC_OS_X
-	alutLoadWAVFile((char *) "wave2.wav",&format,&data,&size,&freq);
-#endif
-	if ((error = alGetError()) != AL_NO_ERROR)
-	{
-		DisplayALError((ALbyte *) "alutLoadWAVFile wave2.wav : ", error);
-		// Delete Buffers
-		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
-		printf("Failing to load a sample file -- check that they are in the working directory!\n");
-		exit(-1);
-	}
-
-	// Copy wave2.wav data into AL Buffer 3
-	alBufferData(g_Buffers[3],format,data,size,freq);
-	if ((error = alGetError()) != AL_NO_ERROR)
-	{
-		DisplayALError((ALbyte *) "alBufferData buffer 3 : ", error);
-		// Delete buffers
-		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
-		printf("Failing to load a sample file -- check that they are in the working directory!\n");
-		exit(-1);
-	}
-
-	// Unload wave2.wav
-#ifndef LINUX
-        alutUnloadWAV(format,data,size,freq);
-#else
-        free(data);
-#endif
-	if ((error = alGetError()) != AL_NO_ERROR)
-	{
-		DisplayALError((ALbyte *) "alutUnloadWAV : ", error);
-		// Delete buffers
-		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
-		printf("Failing to load a sample file -- check that they are in the working directory!\n");
-		exit(-1);
-	}
-
-		// Load wave3.wav
-#ifdef LINUX
-        alutLoadWAV("Wave3.WAV", &data, &format, &size, & bits, &freq);
-#endif
-#ifdef _WIN32
-	alutLoadWAVFile("wave3.wav",&format,&data,&size,&freq,&loop);
-#endif
-#ifdef __MACOS__
-	alutLoadWAVFile((char *) "wave3.wav",&format,&data,&size,&freq);
-#endif
-#ifdef MAC_OS_X
-	alutLoadWAVFile((char *) "wave3.wav",&format,&data,&size,&freq);
-#endif
-	if ((error = alGetError()) != AL_NO_ERROR)
-	{
-		DisplayALError((ALbyte *) "alutLoadWAVFile wave3.wav : ", error);
-		// Delete Buffers
-		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
-		printf("Failing to load a sample file -- check that they are in the working directory!\n");
-		exit(-1);
-	}
-
-	// Copy wave3.wav data into AL Buffer 4
-	alBufferData(g_Buffers[4],format,data,size,freq);
-	if ((error = alGetError()) != AL_NO_ERROR)
-	{
-		DisplayALError((ALbyte *) "alBufferData buffer 4 : ", error);
-		// Delete buffers
-		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
-		printf("Failing to load a sample file -- check that they are in the working directory!\n");
-		exit(-1);
-	}
-
-	// Unload wave3.wav
-#ifndef LINUX
-        alutUnloadWAV(format,data,size,freq);
-#else
-        free(data);
-#endif
-	if ((error = alGetError()) != AL_NO_ERROR)
-	{
-		DisplayALError((ALbyte *) "alutUnloadWAV : ", error);
-		// Delete buffers
-		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
-		printf("Failing to load a sample file -- check that they are in the working directory!\n");
-		exit(-1);
-	}
-
-	// Load wave4.wav
-#ifdef LINUX
-        alutLoadWAV("Wave4.WAV", &data, &format, &size, & bits, &freq);
-#endif
-#ifdef _WIN32
-	alutLoadWAVFile("wave4.wav",&format,&data,&size,&freq,&loop);
-#endif
-#ifdef __MACOS__
-	alutLoadWAVFile((char *) "wave4.wav",&format,&data,&size,&freq);
-#endif
-#ifdef MAC_OS_X
-	alutLoadWAVFile((char *) "wave4.wav",&format,&data,&size,&freq);
-#endif
-	if ((error = alGetError()) != AL_NO_ERROR)
-	{
-		DisplayALError((ALbyte *) "alutLoadWAVFile wave4.wav : ", error);
-		// Delete Buffers
-		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
-		printf("Failing to load a sample file -- check that they are in the working directory!\n");
-		exit(-1);
-	}
-
-	// Copy wave4.wav data into AL Buffer 5
-	alBufferData(g_Buffers[5],format,data,size,freq);
-	if ((error = alGetError()) != AL_NO_ERROR)
-	{
-		DisplayALError((ALbyte *) "alBufferData buffer 5 : ", error);
-		// Delete buffers
-		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
-		printf("Failing to load a sample file -- check that they are in the working directory!\n");
-		exit(-1);
-	}
-
-	// Unload wave4.wav
-#ifndef LINUX
-        alutUnloadWAV(format,data,size,freq);
-#else
-        free(data);
-#endif
-        if ((error = alGetError()) != AL_NO_ERROR)
-	{
-		DisplayALError((ALbyte *) "alutUnloadWAV : ", error);
-		// Delete buffers
-		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
-		printf("Failing to load a sample file -- check that they are in the working directory!\n");
-		exit(-1);
-	}
-
-	// Load stereo.wav
-#ifdef LINUX
-        alutLoadWAV("stereo.wav", &data, &format, &size, & bits, &freq);
-#endif
-#ifdef _WIN32
-	alutLoadWAVFile("stereo.wav",&format,&data,&size,&freq,&loop);
-#endif
-#ifdef __MACOS__
-	alutLoadWAVFile((char *) "stereo.wav",&format,&data,&size,&freq);
-#endif
-#ifdef MAC_OS_X
-	alutLoadWAVFile((char *) "stereo.wav",&format,&data,&size,&freq);
-#endif
-	if ((error = alGetError()) != AL_NO_ERROR)
-	{
-		DisplayALError((ALbyte *) "alutLoadWAVFile stereo.wav : ", error);
-		// Delete Buffers
-		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
-		printf("Failing to load a sample file -- check that they are in the working directory!\n");
-		exit(-1);
-	}
-
-	// Copy stereo.wav data into AL Buffer 6
-	alBufferData(g_Buffers[6],format,data,size,freq);
-	if ((error = alGetError()) != AL_NO_ERROR)
-	{
-		DisplayALError((ALbyte *) "alBufferData buffer 6 : ", error);
-		// Delete buffers
-		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
-		printf("Failing to load a sample file -- check that they are in the working directory!\n");
-		exit(-1);
-	}
-
-	// Unload stereo.wav
-#ifndef LINUX
-        alutUnloadWAV(format,data,size,freq);
-#else
-        free(data);
-#endif
-	if ((error = alGetError()) != AL_NO_ERROR)
-	{
-		DisplayALError((ALbyte *) "alutUnloadWAV : ", error);
-		// Delete buffers
-		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
-		printf("Failing to load a sample file -- check that they are all in the working directory!\n");
 		exit(-1);
 	}
 
@@ -936,11 +708,20 @@ int main(int argc, char* argv[])
 		printf("7) Gain Test\n");
 		printf("8) Streaming Test\n");
 		printf("9) Multiple Sources Test\n");
+		printf("C) Source Relative Test\n");
+		printf("D) Source Rolloff Test\n");
+		printf("E) ADPCM Play Test\n");
+		printf("F) Velocity Test\n");
+		printf("G) Get Source Offset Test\n");
+		printf("H) Set Source Offset Test\n");
+		printf("I) Distance Model Test\n");
+		printf("J) Capture Test\n");
+		printf("K) Capture and Play Test\n");
 #if TEST_EAX
-		printf("C) EAX Test\n");
+		printf("L) EAX Test\n");
 #endif
 #if TEST_VORBIS
-		printf("D) Ogg Vorbis Test\n");
+		printf("M) Ogg Vorbis Test\n");
 #endif
 		printf("\nQ) to quit\n\n\n");
 
@@ -981,16 +762,43 @@ int main(int argc, char* argv[])
 			case '9':
 				I_MultipleSourcesTest();
 				break;
+    		case 'C':
+	    		I_SourceRelativeTest();
+		    	break;
+    		case 'D':
+ 	    		I_SourceRolloffTest();
+		    	break;
+    		case 'E':
+	    		I_ADPCMTest();
+		    	break;
+    		case 'F':
+	    		I_VelocityTest();
+		    	break;
+    		case 'G':
+	    		I_GetSourceOffsetTest();
+		    	break;
+    		case 'H':
+	    		I_SetSourceOffsetTest();
+		    	break;
+    		case 'I':
+	    		I_DistanceModelTest();
+		    	break;
+    		case 'J':
+	    		I_CaptureTest();
+		    	break;
+    		case 'K':
+	    		I_CaptureAndPlayTest();
+		    	break;
 #if TEST_EAX
-			case 'C':
+			case 'L':
 				if (g_bEAX)
 					I_EAXTest();
 				break;
 #endif
 #if TEST_VORBIS
-		        case 'D':
-		                I_VorbisTest();
-		                break;
+		    case 'M':
+		        I_VorbisTest();
+		        break;
 #endif
 			default:
 				break;
@@ -2248,7 +2056,7 @@ ALvoid SA_Doppler(ALvoid)
 		alGenSources(1, testSources);
 		alSourcei(testSources[0], AL_BUFFER, g_Buffers[1]);
 	
-		printf("Trying Left-to-Right sweep with doppler shift (Press Return):\n");
+		printf("Trying Left-to-Right sweep with doppler shift, and the speed of sound at its default setting (Press Return):\n");
 		CRToContinue();
 		alListenerfv(AL_ORIENTATION, listenerOri);
 		alSourcei(testSources[0], AL_LOOPING, true);
@@ -2262,12 +2070,12 @@ ALvoid SA_Doppler(ALvoid)
 			delay_ms(100);
 		}
 		alSourceStop(testSources[0]);
-		printf("Trying Left-to-Right sweep with DopplerFactor set to 4.0 -- should be more extreme (Press Return):\n");
+		printf("Trying Left-to-Right sweep with the speed of sound set to 171.7 (Press Return):\n");
 		CRToContinue();
 		alSource3f(testSources[0], AL_POSITION, -100.0, 0.0, 0.0);
 		alSource3f(testSources[0], AL_VELOCITY, 10.0, 0.0, 0.0);
-		alDopplerFactor(4.0);
-		if (alGetFloat(AL_DOPPLER_FACTOR) != 4.0) { printf(" alGetFloat(AL_DOPPLER_FACTOR) error.\n"); }
+		alSpeedOfSound(171.7f);
+		if (alGetFloat(AL_SPEED_OF_SOUND) != 171.7f) { printf(" alGetFloat(AL_SPEED_OF_SOUND) error.\n"); }
 		alSourcePlay(testSources[0]);
 		for (i = -100; i < 100; i++)
 		{
@@ -2276,19 +2084,33 @@ ALvoid SA_Doppler(ALvoid)
 		}
 		alSourceStop(testSources[0]);
 		alDopplerFactor(1.0);
-		printf("Trying Left-to-Right sweep with DopplerVelocity set to 86 -- should remain extreme (Press Return):\n");
+		printf("Trying Left-to-Right sweep with the speed of sound set to 686.6 (Press Return):\n");
 		CRToContinue();
 		alSource3f(testSources[0], AL_POSITION, -100.0, 0.0, 0.0);
 		alSource3f(testSources[0], AL_VELOCITY, 10.0, 0.0, 0.0);
-		alDopplerVelocity(86);
-		if (alGetFloat(AL_DOPPLER_VELOCITY) != 86) { printf(" alGetFloat(AL_DOPPLER_VELOCITY) error.\n"); }
+		alSpeedOfSound(686.6f);
+		if (alGetFloat(AL_SPEED_OF_SOUND) != 686.6f) { printf(" alGetFloat(AL_SPEED_OF_SOUND) error.\n"); }
 		alSourcePlay(testSources[0]);
 		for (i = -100; i < 100; i++)
 		{
 			alSource3f(testSources[0], AL_POSITION, (float) i, 0.0, 0.0);		
 			delay_ms(100);
 		}
-		alDopplerVelocity(343);
+		alSourceStop(testSources[0]);
+		alDopplerFactor(2.0);
+		printf("Trying Left-to-Right sweep with the speed of sound set to 686.6 and doppler factor set to 2.0 (Press Return):\n");
+		CRToContinue();
+		alSource3f(testSources[0], AL_POSITION, -100.0, 0.0, 0.0);
+		alSource3f(testSources[0], AL_VELOCITY, 10.0, 0.0, 0.0);
+		alSpeedOfSound(686.6f);
+		alSourcePlay(testSources[0]);
+		for (i = -100; i < 100; i++)
+		{
+			alSource3f(testSources[0], AL_POSITION, (float) i, 0.0, 0.0);		
+			delay_ms(100);
+		}
+		alSpeedOfSound(343.3f);
+		alDopplerFactor(1.0f);
 		alSource3f(testSources[0], AL_POSITION, 0.0, 0.0, 0.0);
 		alSourceStop(testSources[0]);
 		CRForNextTest();
@@ -3928,40 +3750,22 @@ ALvoid I_StreamingTest(ALvoid)
 {
 	FILE			*fp;
 	WAVE_Struct		wave;
-
 	ALbyte			data[BSIZE];
-	ALuint			Buffers[NUMBUFFERS];
-	ALuint			BufferID;
-	ALuint			Sources[1];
-	ALint			error;
-	ALuint			DataSize;
-	ALuint			DataToRead;
-	ALint			processed;
-	ALboolean		bFinished = AL_FALSE;
-	ALuint			Format;
-	ALuint			loop;
-	ALint			state;
-#ifdef _WIN32
-	ALchar			ch;
-#endif
+	ALuint			SourceID;
+	ALuint			BufferID[NUMBUFFERS];
+	ALuint			TempBufferID;
+	ALuint			ulBuffersAvailable;
+	ALuint			ulUnqueueCount, ulQueueCount, ulDataSize, ulDataToRead;
+	ALint			error, lProcessed, lPlaying, lLoop;
 
 	printf("Streaming Test\n");
 
-#ifndef __MACOS__
 	fp = fopen("stereo.wav", "rb");
-#else
-	fp = fopen("STEREO.WAV", "rb"); // not sure why this is needed on MacOS -- the file isn't really in upper-case
-#endif
-
 	if (fp == NULL)
 	{
 		printf("Failed to open stereo.wav\n");
 		return;
 	}
-
-	// We are going to be queuing x buffers on our source
-
-	// To start, fill all the buffers with audio data from the wave file
 
 	// Read in WAVE Header
 	if (fread(&wave, 1, sizeof(WAVE_Struct), fp) != sizeof(WAVE_Struct))
@@ -3970,27 +3774,15 @@ ALvoid I_StreamingTest(ALvoid)
 		fclose(fp);
 		return;
 	}
-	
-#ifdef __MACOS__
-    ALTestSwapWords(&wave.dataSize);
-    ALTestSwapBytes(&wave.Channels);
-    ALTestSwapWords(&wave.SamplesPerSec);
-#endif
-#ifdef MAC_OS_X
+
+#ifdef SWAPBYTES
     ALTestSwapWords(&wave.dataSize);
     ALTestSwapBytes(&wave.Channels);
     ALTestSwapWords(&wave.SamplesPerSec);
 #endif
 
-	DataSize = wave.dataSize;
-
-	if (wave.Channels == 1)
-		Format = AL_FORMAT_MONO16;
-	else
-		Format = AL_FORMAT_STEREO16;
-
-	alGetError(); // clear error state
-	alGenBuffers(NUMBUFFERS, Buffers);
+	// Generate a number of buffers to be used to queue data on to Source
+	alGenBuffers(NUMBUFFERS, BufferID);
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
 		DisplayALError("alGenBuffers : ", error);
@@ -3998,182 +3790,101 @@ ALvoid I_StreamingTest(ALvoid)
 		return;
 	}
 
-	alGetError(); // clear error state
-	for (loop = 0; loop < NUMBUFFERS; loop++)
-	{
-		fread(data, 1, BSIZE, fp);
-		DataSize -= BSIZE;
-#ifndef SWAPBYTES
-		alBufferData(Buffers[loop], Format, data, BSIZE, wave.SamplesPerSec);
-#else
-		for (int i = 0; i < BSIZE; i=i+2)
-		{
-			ALTestSwapBytes((unsigned short *)(data+i));
-		}
-		alBufferData(Buffers[loop], (ALenum) Format, data, BSIZE, wave.SamplesPerSec);
-#endif
-		if ((error = alGetError()) != AL_NO_ERROR)
-			DisplayALError("alBufferData : ", error);
-	}
-
-	alGenSources(1, Sources);
+	// Generate a Source
+	alGenSources(1, &SourceID);
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
 		DisplayALError("alGenSources 1 : ", error);
-		alDeleteBuffers(NUMBUFFERS, Buffers);
+		alDeleteBuffers(NUMBUFFERS, BufferID);
 		fclose(fp);
 		return;
 	}
 
-	alSourcef(Sources[0], AL_GAIN, 0.5f);
-	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcef AL_GAIN : ", error);
+	ulUnqueueCount = 0;
+	ulQueueCount = 0;
+	ulBuffersAvailable = NUMBUFFERS;
+	ulDataSize = wave.dataSize;
 
-	// Queue the buffers on the source
-	alSourceQueueBuffers(Sources[0], NUMBUFFERS, Buffers);
-	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourceQueueBuffers : ", error);
-
-	alSourcei(Sources[0], AL_LOOPING, AL_FALSE);
-
-	// Start playing source
-	alSourcePlay(Sources[0]);
-	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcePlay source 0 : ", error);
-
-	printf("Press a key to quit\n");
-
-	ALuint count = 0;
-	ALuint buffersreturned = 0;
-	ALboolean bFinishedPlaying = AL_FALSE;
-	ALuint buffersinqueue = NUMBUFFERS;
-
-#ifdef _WIN32
-	while (!_kbhit() && !bFinishedPlaying)
-#else
-    while (!bFinishedPlaying)
-#endif
+	while (!_kbhit())
 	{
-		// Get status
-#ifndef LINUX
-	        alGetSourcei(Sources[0], AL_BUFFERS_PROCESSED, &processed);
-#else
-	        alGetSourceiv(Sources[0], AL_BUFFERS_PROCESSED, &processed);
-#endif
-
-		// If some buffers have been played, unqueue them and load new audio into them, then add them to the queue
-		if (processed > 0)
+		// Check how many Buffers have been processed
+		alGetSourcei(SourceID, AL_BUFFERS_PROCESSED, &lProcessed);
+		while (lProcessed)
 		{
-			buffersreturned += processed;
-#ifndef __MACOS__ // don't use SIOUX routines during streaming on MacOS -- messes with interrupts
-			printf("Buffers Completed is %d\n", buffersreturned);
-#endif
+			// Unqueue the buffer
+			alSourceUnqueueBuffers(SourceID, 1, &TempBufferID);
 
-			// Pseudo code for Streaming a buffer with Open AL
-			// while (processed)
-			//		Unqueue a buffer
-			//		Load audio data into buffer (returned by UnQueueBuffers)
-			//		if successful
-			//			Queue buffer
-			//			processed--
-			//		else
-			//			buffersinqueue--
-			//			if buffersinqueue == 0
-			//				finished playing !
+			// Update unqueue count
+			if (++ulUnqueueCount == NUMBUFFERS)
+				ulUnqueueCount = 0;
 
-			while (processed)
-			{
-				alSourceUnqueueBuffers(Sources[0], 1, &BufferID);
-				if ((error = alGetError()) != AL_NO_ERROR)
-				{
-					DisplayALError("alSourceUnqueueBuffers 1 : ", error);
-				}
+			// Increment buffers available
+			ulBuffersAvailable++;
 
-				if (!bFinished)
-				{
-					DataToRead = (DataSize > BSIZE) ? BSIZE : DataSize;
+			// Decrement lProcessed count
+			lProcessed--;
+		}
 
-					if (DataToRead == DataSize)
-						bFinished = AL_TRUE;
-					
-					fread(data, 1, DataToRead, fp);
-					DataSize -= DataToRead;
-					
-					if (bFinished == AL_TRUE)
-					{
-						memset(data + DataToRead, 0, BSIZE - DataToRead);
-					}
-
-#ifndef SWAPBYTES
-					alBufferData(BufferID, Format, data, DataToRead, wave.SamplesPerSec);
-#else
-					for (unsigned int i = 0; i < DataToRead; i = i+2)
-					{
-						ALTestSwapBytes((unsigned short *)(data+i));
-					}
-					alBufferData(BufferID, (ALenum) Format, (void *) data, DataToRead, wave.SamplesPerSec);
-#endif
-					if ((error = alGetError()) != AL_NO_ERROR)
-						DisplayALError("alBufferData : ", error);
-
-					// Queue buffer
-					alSourceQueueBuffers(Sources[0], 1, &BufferID);
-					if ((error = alGetError()) != AL_NO_ERROR)
-						DisplayALError("alSourceQueueBuffers 1 : ", error);
-
-					processed--;
-				}
-				else
-				{
-					buffersinqueue--;
-					processed--;
-
-					if (buffersinqueue == 0)
-					{
-						bFinishedPlaying = true;
-						break;
-					}
-				}
-			}
-		} else // processed == 0
+		// If there is more data to read, and available buffers ... read in more data and fill the buffers !
+		if ((ulDataSize) && (ulBuffersAvailable))
 		{
-			// check play status -- if stopped then queue is not being filled fast enough
-			alGetSourcei(Sources[0], AL_SOURCE_STATE, &state);
-			if (state != AL_PLAYING)
+			ulDataToRead = (ulDataSize > BSIZE) ? BSIZE : ulDataSize;
+
+			fread(data, ulDataToRead, 1, fp);
+			ulDataSize -= ulDataToRead;
+
+			// Copy to Buffer
+#ifdef SWAPBYTES
+    		for (int i = 0; i < BSIZE; i=i+2)
+    		{
+    			ALTestSwapBytes((unsigned short *)(data+i));
+    		}
+#endif
+			alBufferData(BufferID[ulQueueCount], AL_FORMAT_STEREO16, data, ulDataToRead, wave.SamplesPerSec);
+
+			// Queue the buffer
+			alSourceQueueBuffers(SourceID, 1, &BufferID[ulQueueCount]);
+
+			if (++ulQueueCount == NUMBUFFERS)
+				ulQueueCount = 0;
+
+			// Decrement buffers available
+			ulBuffersAvailable--;
+		}
+
+		// If all the Buffers are available then we must have finished
+		if (ulBuffersAvailable == NUMBUFFERS)
+			break;
+
+		// If the Source has stopped (been starved of data) it will need to be restarted
+		alGetSourcei(SourceID, AL_SOURCE_STATE, &lPlaying);
+		if (lPlaying != AL_PLAYING)
+		{	
+			// If the Source has stopped prematurely, all the processed buffers must be unqueued
+			// before re-playing (otherwise they will be heard twice).
+			// Any buffers queued after the Source stopped will not be processed, so they won't
+			// be unqueued by this step
+			alGetSourcei(SourceID, AL_BUFFERS_PROCESSED, &lProcessed);
+			while (lProcessed)
 			{
-#ifndef __MACOS__ // don't use SIOUX routines during streaming on MacOS -- messes with interrupts
-				printf("Queuing underrun detected.\n");
-#endif
-#ifndef LINUX
-				alGetSourcei(Sources[0], AL_BUFFERS_PROCESSED, &processed);
-#else
-				alGetSourceiv(Sources[0], AL_BUFFERS_PROCESSED, &processed);
-#endif
-				alSourcePlay(Sources[0]);
+				alSourceUnqueueBuffers(SourceID, 1, &TempBufferID);
+				if (++ulUnqueueCount == NUMBUFFERS)
+					ulUnqueueCount = 0;
+				ulBuffersAvailable++;
+				lProcessed--;
 			}
+
+			alSourcePlay(SourceID);
 		}
 	}
 
-#ifdef _WIN32
-	if (!bFinishedPlaying)
-		ch = getch();
-#endif
+	// Clean-up
+	alSourceStop(SourceID);
 
-	alSourceStopv(1, Sources);
-	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourceStopv 1 : ", error);
+	alDeleteSources(1, &SourceID);
 
-	alDeleteSources(1, Sources);
-	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alDeleteSources 1 : ", error);
-
-	alDeleteBuffers(NUMBUFFERS, Buffers);
-	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alDeleteBuffers : ", error);
-
-	fclose(fp);
-
-	return;
+	for (lLoop = 0; lLoop < NUMBUFFERS; lLoop++)
+		alDeleteBuffers(1, &BufferID[lLoop]);
 }
 
 
@@ -4261,9 +3972,1148 @@ ALvoid I_MultipleSourcesTest()
 	alDeleteSources(numSources, Sources);
 }
 
+// Source Relative Test
+/** used by gendocs.py
+$SECTION Interactive Tests
+$SUBTITLE Source Relative Test
+*/
+ALvoid I_SourceRelativeTest()
+{
+	ALuint	source[1];
+	ALint	error;
+	ALbyte	ch;
+	ALboolean bRelative = AL_FALSE;
+
+	alGenSources(1, source);
+	if ((error = alGetError()) != AL_NO_ERROR)
+	{
+		DisplayALError("alGenSources 1 : ", error);
+		return;
+	}
+
+	alSourcei(source[0],AL_BUFFER, g_Buffers[1]);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alSourcei 0 AL_BUFFER buffer 0 : ", error);
+
+	alSourcei(source[0],AL_LOOPING,AL_TRUE);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alSourcei 0 AL_LOOPING true: ", error);
+
+	alSourcei(source[0], AL_SOURCE_RELATIVE, AL_FALSE);	
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alSourcei 0 AL_SOURCE_RELATIVE AL_FALSE : ", error);
+
+	printf("Source Relative Test\n");
+	printf("Press '1' to play source 0 at 1, 0, 0\n");
+	printf("Press '2' to move listener  to 2, 0, 0\n");
+	printf("Press '3' to toggle SOURCE RELATIVE Mode\n");
+	printf("Press 'q' to quit\n");
+
+	do
+	{
+		ch = getUpperCh();  
+		switch (ch)
+		{
+		case '1':
+			alSource3f(source[0],AL_POSITION,1.0f,0.0f,0.0f);
+			if ((error = alGetError()) != AL_NO_ERROR)
+				DisplayALError("alSourcefv 0 AL_POSITION : ", error);
+			
+			alSourcePlay(source[0]);
+			if ((error = alGetError()) != AL_NO_ERROR)
+				DisplayALError("alSourcePlay source 0 : ", error);
+			break;
+		case '2':
+			alListener3f(AL_POSITION,2.0f,0.0f,0.0f);
+			if ((error = alGetError()) != AL_NO_ERROR)
+				DisplayALError("alListenerfv  AL_POSITION : ", error);
+			break;
+		case '3':
+			if (bRelative)
+			{
+				printf("Source Relative == FALSE\r");
+				alSourcei(source[0], AL_SOURCE_RELATIVE, AL_FALSE);
+				bRelative = AL_FALSE;
+			}
+			else
+			{
+				alSourcei(source[0], AL_SOURCE_RELATIVE, AL_TRUE);
+				printf("Source Relative == TRUE \r");
+				bRelative = AL_TRUE;
+			}
+			if ((error = alGetError()) != AL_NO_ERROR)
+				DisplayALError("alSourcei source 0 AL_SOURCE_RELATIVE : ", error);
+			break;
+		}
+	} while (ch != 'Q');
+
+	// Release resources
+	alSourceStopv(1, source);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alSourceStopv 1 : ", error);
+
+	alDeleteSources(1, source);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alDeleteSources 1 : ", error);
+
+	// Restore Listener Position
+	alListener3f(AL_POSITION,0.0f,0.0f,0.0f);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alListenerfv  AL_POSITION : ", error);
+
+	return;
+}
+
+// Source Rolloff Test
+/** used by gendocs.py
+$SECTION Interactive Tests
+$SUBTITLE Source Rolloff Test
+*/
+ALvoid I_SourceRolloffTest()
+{
+	ALint	error;
+	
+	ALuint	source[2];
+	ALbyte	ch;
+
+	ALfloat source0Pos[]={-4.0, 0.0,  4.0};	// Behind and to the left of the listener
+	ALfloat source1Pos[]={ 4.0, 0.0, -4.0};	// Front and to the right of the listener
+
+	alGenSources(2,source);
+	if ((error = alGetError()) != AL_NO_ERROR)
+	{
+		DisplayALError("alGenSources 2 : ", error);
+		return;
+	}
+
+	alSourcefv(source[0],AL_POSITION,source0Pos);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alSourcefv 0 AL_POSITION : ", error);
+	
+	alSourcei(source[0],AL_BUFFER, g_Buffers[1]);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alSourcei 0 AL_BUFFER buffer 0 : ", error);
+
+	alSourcei(source[0],AL_LOOPING,AL_TRUE);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alSourcei 0 AL_LOOPING true: ", error);
+
+	alSourcefv(source[1],AL_POSITION,source1Pos);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alSourcefv 1 AL_POSITION : ", error);
+
+	alSourcei(source[1],AL_BUFFER, g_Buffers[1]);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alSourcei 1 AL_BUFFER buffer 1 : ", error);
+
+	alSourcei(source[1],AL_LOOPING,AL_TRUE);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alSourcei 1 AL_LOOPING false: ", error);
+
+	printf("Source Roll-off Test\n");
+	printf("Press '1' to play source 0 rear left of listener\n");
+	printf("Press '2' to stop source 0\n");
+	printf("Press '3' to play source 1 front right of listener\n");
+	printf("Press '4' to stop source 1\n");
+	printf("Press '5' to set Source 0 Roff-off Factor to 0.5\n");
+	printf("Press '6' to set Source 0 Roll-off Factor to 1.0\n");
+	printf("Press '7' to set Source 0 Roll-off Factor to 2.0\n");
+	printf("Press '8' to set Source 1 Roff-off Factor to 0.5\n");
+	printf("Press '9' to set Source 1 Roll-off Factor to 1.0\n");
+	printf("Press 'A' to set Source 1 Roll-off Factor to 2.0\n");
+
+	printf("Press 'q' to quit\n");
+
+	do
+	{
+		ch = getUpperCh();  
+		switch (ch)
+		{
+			case '1':
+				alSourcePlay(source[0]);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError("alSourcePlay source 0 : ", error);
+				break;
+			case '2':
+				alSourceStop(source[0]);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError("alSourceStop source 0 : ", error);
+				break;
+			case '3':
+				alSourcePlay(source[1]);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError("alSourcePlay source 1 : ", error);
+				break;
+			case '4':
+				alSourceStop(source[1]);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError("alSourceStop source 1 : ", error);
+				break;
+			case '5':
+				alSourcef(source[0], AL_ROLLOFF_FACTOR, 0.5f);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError("alSourcef ROLLOFF_FACTOR 0.5 : ", error);
+				break;
+			case '6':
+				alSourcef(source[0], AL_ROLLOFF_FACTOR, 1.0f);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError("alSourcef ROLLOFF_FACTOR 1.0 : ", error);
+				break;
+			case '7':
+				alSourcef(source[0], AL_ROLLOFF_FACTOR, 2.0f);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError("alSourcef ROLLOFF_FACTOR 2.0 : ", error);
+				break;
+			case '8':
+				alSourcef(source[1], AL_ROLLOFF_FACTOR, 0.5f);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError("alSourcef ROLLOFF_FACTOR 0.5 : ", error);
+				break;
+			case '9':
+				alSourcef(source[1], AL_ROLLOFF_FACTOR, 1.0f);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError("alSourcef ROLLOFF_FACTOR 1.0 : ", error);
+				break;
+			case 'A':
+				alSourcef(source[1], AL_ROLLOFF_FACTOR, 2.0f);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError("alSourcef ROLLOFF_FACTOR 2.0 : ", error);
+				break;
+		}
+	} while (ch != 'Q');
+
+	// Release resources
+	alSourceStopv(2, source);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alSourceStopv 2 : ", error);
+
+	alDeleteSources(2, source);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alDeleteSources 2 : ", error);
+
+	return;
+}
+
+// ADPCM Test
+/** used by gendocs.py
+$SECTION Interactive Tests
+$SUBTITLE ADPCM Test
+*/
+ALvoid I_ADPCMTest()
+{
+	ALuint uiSourceID, uiBufferID;
+	ALenum eMonoADPCM = 0, eStereoADPCM = 0;
+	ALsizei size,freq;
+	ALenum	format;
+	ALvoid	*data;
+	ALboolean loop;
+	char ch;
+
+	// Check for support for ADPCM
+	eMonoADPCM = alGetEnumValue("AL_FORMAT_MONO_IMA4");
+	eStereoADPCM = alGetEnumValue("AL_FORMAT_STEREO_IMA4");
+
+	if (eMonoADPCM && eStereoADPCM)
+	{
+		// Load footadpcm.wav
+		alutLoadWAVFile("footadpcm.wav",&format,&data,&size,&freq,&loop);
+		if (alGetError() != AL_NO_ERROR)
+		{
+			printf("Failed to load footadpcm.wav\n");
+			return;
+		}
+
+		alGetError();
+
+		// Generate an AL Buffer and an AL Source
+		alGenBuffers(1, &uiBufferID);
+		// Copy data to AL buffer
+		alBufferData(uiBufferID,format,data,size,freq);
+		// Release wave data
+		alutUnloadWAV(format,data,size,freq);
+
+		if (alGetError() != AL_NO_ERROR)
+		{
+			printf("Failed to generate and copy data to buffer\n");
+			return;
+		}
+
+		// Generate a Source
+		alGenSources(1, &uiSourceID);
+		// Attach buffer to Source
+		alSourcei(uiSourceID, AL_BUFFER, uiBufferID);
+		// Enable Looping
+		alSourcei(uiSourceID, AL_LOOPING, AL_TRUE);
+		// Play Source
+		alSourcePlay(uiSourceID);
+
+		printf("Press a key to stop test\n");
+		ch = getUpperCh();
+
+		// Stop the Source
+		alSourceStop(uiSourceID);
+		// Attach NULL Buffer
+		alSourcei(uiSourceID, AL_BUFFER, 0);
+		// Delete Source
+		alDeleteSources(1, &uiSourceID);
+		// Delete Buffer
+		alDeleteBuffers(1, &uiBufferID);
+	}
+	else
+	{
+		printf("No ADPCM support found !\n");
+	}
+}
+
+// Velocity Test
+/** used by gendocs.py
+$SECTION Interactive Tests
+$SUBTITLE Velocity Test
+*/
+ALvoid I_VelocityTest()
+{
+	ALint	error;
+
+	ALuint	source;
+	ALbyte	ch;
+
+	ALfloat sourcePos[] = { 1.0, 0.0, 0.0};
+	ALfloat sourceVel[] = { 0.0, 0.0, 0.0};
+
+	ALfloat listenerPos[]={ 0.0, 0.0, 0.0};
+	ALfloat listenerVel[]={ 0.0, 0.0, 0.0};
+
+	ALCcontext *context = alcGetCurrentContext();
+	ALCdevice *device = alcGetContextsDevice(context);
+	ALint major, minor;
+    alcGetIntegerv(device, ALC_MAJOR_VERSION, 1, &major);
+    alcGetIntegerv(device, ALC_MINOR_VERSION, 1, &minor);
+
+	alGenSources(1,&source);
+
+	alSourcefv(source,AL_POSITION,sourcePos);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alSourcefv 0 AL_POSITION : \n", error);
+
+	alSourcefv(source,AL_VELOCITY,sourceVel);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alSourcefv 0 AL_VELOCITY : \n", error);
+
+	alSourcei(source,AL_BUFFER, g_Buffers[1]);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alSourcei 0 AL_BUFFER buffer 0 : \n", error);
+
+	alSourcei(source,AL_LOOPING,AL_TRUE);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alSourcei 0 AL_LOOPING true: \n", error);
+
+	alListenerfv(AL_POSITION, listenerPos);
+	alListenerfv(AL_VELOCITY, listenerVel);
+
+	alSourcePlay(source);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alSourcePlay source 0 : ", error);
+
+	printf("Velocity Test\n");
+	printf("Press '1' to increase source X velocity by 50 units / second\n");
+	printf("Press '2' to decrease source X velocity by 50 units / second\n");
+	printf("Press '3' to increase listener X velocity by 50 units / second\n");
+	printf("Press '4' to decrease listener X velocity by 50 units / second\n");
+	printf("Press '5' to set Speed Of Sound to 343.3\n");
+	printf("Press '6' to set Speed Of Sound to 686.6\n");
+	printf("Press '7' to set Speed Of Sound to 171.6\n");
+	printf("Press '8' to set Doppler Factor to 1\n");
+	printf("Press '9' to set Doppler Factor to 2\n");
+	printf("Press '0' to set Doppler Factor to 4\n");
+	printf("Press 'q' to quit\n");
+
+	do
+	{
+		printf("Source %.1f Listener %.1f\r", sourceVel[0], listenerVel[0]);
+
+		ch = getUpperCh();  
+		switch (ch)
+		{
+			case '1':
+				sourceVel[0] += 50.0f;
+				break;
+			case '2':
+				sourceVel[0] -= 50.0f;
+				break;
+			case '3':
+				listenerVel[0] += 50.0f;
+				break;
+			case '4':
+				listenerVel[0] -= 50.0f;
+				break;
+		case '5':
+				if ((major > 1) || ((major == 1) && (minor >= 1)))
+					alSpeedOfSound(343.3f);
+				break;
+		case '6':
+				if ((major > 1) || ((major == 1) && (minor >= 1)))
+					alSpeedOfSound(686.6f);
+				break;
+		case '7':
+				if ((major > 1) || ((major == 1) && (minor >= 1)))
+					alSpeedOfSound(171.6f);
+				break;
+			case '8':
+				alDopplerFactor(1.0);
+				break;
+			case '9':
+				alDopplerFactor(2.0);
+				break;
+			case '0':
+				alDopplerFactor(4.0);
+				break;
+			default:
+				break;
+		}
+
+		alSourcefv(source,AL_VELOCITY,sourceVel);
+		alListenerfv(AL_VELOCITY, listenerVel);
+	} while (ch != 'Q');
+
+	// Release resources
+	alSourceStopv(1, &source);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alSourceStopv 2 : ", error);
+
+	alDeleteSources(1, &source);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alDeleteSources 2 : ", error);
+
+	return;
+}
+
+// Get Source Offset Test
+/** used by gendocs.py
+$SECTION Interactive Tests
+$SUBTITLE Get Source Offset Test
+*/
+ALvoid I_GetSourceOffsetTest()
+{
+	ALuint Source;
+	char ch, oldch;
+	ALint lOffset;
+	ALfloat flOffset;
+
+	alGenSources(1, &Source);
+	alSourcei(Source, AL_BUFFER, g_Buffers[6]);
+
+	printf("Get Source Offset Test\n");
+	printf("Press 1 to Play Stereo.wav\n");
+	printf("Press 2 to Use AL_BYTE_OFFSET (int) to track progress\n");
+	printf("Press 3 to Use AL_SAMPLE_OFFSET (int) to track progress\n");
+	printf("Press 4 to Use AL_SEC_OFFSET (int) to track progress\n");
+	printf("Press 5 to Use AL_BYTE_OFFSET (float) to track progress\n");
+	printf("Press 6 to Use AL_SAMPLE_OFFSET (float) to track progress\n");
+	printf("Press 7 to Use AL_SEC_OFFSET (float) to track progress\n");
+	printf("Press Q to quit\n");
+	while (1)
+	{
+		if (_kbhit())
+		{
+			ch = getUpperCh();   
+
+			if (ch == '1')
+			{
+				alSourcePlay(Source);
+				ch = oldch;
+			}
+			else if (ch == 'Q')
+			{
+				break;
+			}
+
+			oldch = ch;
+		}
+		else
+		{
+			switch (ch)
+			{
+			case '2':
+			default:
+				alGetSourcei(Source, AL_BYTE_OFFSET, &lOffset);
+				printf("ByteOffset is %d                   \r", lOffset);
+				break;
+			case '3':
+				alGetSourcei(Source, AL_SAMPLE_OFFSET, &lOffset);
+				printf("SampleOffset is %d                 \r", lOffset);
+				break;
+			case '4':
+				alGetSourcei(Source, AL_SEC_OFFSET, &lOffset);
+				printf("SecondOffset is %d                 \r", lOffset);
+				break;
+			case '5':
+				alGetSourcef(Source, AL_BYTE_OFFSET, &flOffset);
+				printf("ByteOffset is %.3f                 \r", flOffset);
+				break;
+			case '6':
+				alGetSourcef(Source, AL_SAMPLE_OFFSET, &flOffset);
+				printf("SampleOffset is %.3f               \r", flOffset);
+				break;
+			case '7':
+				alGetSourcef(Source, AL_SEC_OFFSET, &flOffset);
+				printf("SecondOffset is %.3f               \r", flOffset);
+				break;
+			}
+		}
+	}
+
+	alSourceStop(Source);
+	alDeleteSources(1, &Source);
+}
+
+// Set Source Offset Test
+/** used by gendocs.py
+$SECTION Interactive Tests
+$SUBTITLE Set Source Offset Test
+*/
+ALvoid I_SetSourceOffsetTest()
+{
+	ALuint Source;
+	char ch;
+	ALint lOffset = 0;
+	ALfloat flOffset = 0.0f;
+	ALint error;
+	ALint iType = 0;
+
+	alGenSources(1, &Source);
+	alSourcei(Source, AL_BUFFER, g_Buffers[0]);
+
+	printf("Set Source Offset Test\n");
+	printf("Press 1 to Stop and Play 1 Footstep\n");
+	printf("Press 2 to Stop and Play 2 Footsteps\n");
+	printf("Press 3 to Stop and Play 3 Footsteps\n");
+	printf("Press 4 to Stop and Play 4 Footsteps\n");
+	printf("Press 5 to Stop and Play with bad offset\n");
+	printf("Press 6 to Set Offset to play 1 Footstep\n");
+	printf("Press 7 to Set Offset to play 2 Footsteps\n");
+	printf("Press 8 to Set Offset to play 3 Footsteps\n");
+	printf("Press 9 to Set Offset to play 4 Footsteps\n");
+	printf("Press 0 to Set Offset to bad offset\n");
+	printf("Press A to Play complete footstep sample\n");
+	printf("Press B to Play (Looping) complete footstep sample\n");
+	printf("Press C to Pause Source\n");
+	printf("Press D to Stop Source\n");
+	printf("Press E to Rewind Source\n");
+	printf("Press F to toggle Bytes, Samples, Seconds\n");
+	printf("Press Q to quit\n");
+
+	while (1)
+	{
+		if (_kbhit())
+		{
+			ch = getUpperCh();   
+
+			switch(ch)
+			{
+			case '1':
+				alSourceStop(Source);
+				if (iType == 0)
+					alSourcei(Source, AL_BYTE_OFFSET, 216000);
+				else if (iType == 1)
+					alSourcei(Source, AL_SAMPLE_OFFSET, 108000);
+				else if (iType == 2)
+					alSourcef(Source, AL_SEC_OFFSET, 2.440f);
+				alSourcePlay(Source);
+				break;
+
+			case '2':
+				alSourceStop(Source);
+				if (iType == 0)
+					alSourcei(Source, AL_BYTE_OFFSET, 144000);
+				else if (iType == 1)
+					alSourcei(Source, AL_SAMPLE_OFFSET, 72000);
+				else if (iType == 2)
+					alSourcef(Source, AL_SEC_OFFSET, 1.640f);
+				alSourcePlay(Source);
+				break;
+
+			case '3':
+				alSourceStop(Source);
+				if (iType == 0)
+					alSourcei(Source, AL_BYTE_OFFSET, 75000);
+				else if (iType == 1)
+					alSourcei(Source, AL_SAMPLE_OFFSET, 37500);
+				else if (iType == 2)
+					alSourcef(Source, AL_SEC_OFFSET, 0.840f);
+				alSourcePlay(Source);
+				break;
+
+			case '4':
+				alSourceStop(Source);
+				if (iType == 0)
+					alSourcei(Source, AL_BYTE_OFFSET, 1000);
+				else if (iType == 1)
+					alSourcei(Source, AL_SAMPLE_OFFSET, 500);
+				else if (iType == 2)
+					alSourcef(Source, AL_SEC_OFFSET, 0.015f);
+				alSourcePlay(Source);
+				break;
+
+			case '5':
+				alSourceStop(Source);
+				if (iType == 0)
+					alSourcei(Source, AL_BYTE_OFFSET, 400000);
+				else if (iType == 1)
+					alSourcei(Source, AL_SAMPLE_OFFSET, 200000);
+				else if (iType == 2)
+					alSourcef(Source, AL_SEC_OFFSET, 5.000f);
+				alSourcePlay(Source);
+				break;
+
+			case '6':
+				if (iType == 0)
+					alSourcei(Source, AL_BYTE_OFFSET, 216000);
+				else if (iType == 1)
+					alSourcei(Source, AL_SAMPLE_OFFSET, 108000);
+				else if (iType == 2)
+					alSourcef(Source, AL_SEC_OFFSET, 2.440f);
+				break;
+
+			case '7':
+				if (iType == 0)
+					alSourcei(Source, AL_BYTE_OFFSET, 144000);
+				else if (iType == 1)
+					alSourcei(Source, AL_SAMPLE_OFFSET, 72000);
+				else if (iType == 2)
+					alSourcef(Source, AL_SEC_OFFSET, 1.640f);
+				break;
+
+			case '8':
+				if (iType == 0)
+					alSourcei(Source, AL_BYTE_OFFSET, 75000);
+				else if (iType == 1)
+					alSourcei(Source, AL_SAMPLE_OFFSET, 37500);
+				else if (iType == 2)
+					alSourcef(Source, AL_SEC_OFFSET, 0.840f);
+				break;
+
+			case '9':
+				if (iType == 0)
+					alSourcei(Source, AL_BYTE_OFFSET, 1000);
+				else if (iType == 1)
+					alSourcei(Source, AL_SAMPLE_OFFSET, 500);
+				else if (iType == 2)
+					alSourcef(Source, AL_SEC_OFFSET, 0.015f);
+				break;
+
+			case '0':
+				if (iType == 0)
+					alSourcei(Source, AL_BYTE_OFFSET, 400000);
+				else if (iType == 1)
+					alSourcei(Source, AL_SAMPLE_OFFSET, 200000);
+				else if (iType == 2)
+					alSourcef(Source, AL_SEC_OFFSET, 5.000f);
+				break;
+
+			case 'A':
+				alSourcei(Source, AL_LOOPING, AL_FALSE);
+				alSourcePlay(Source);
+				break;
+
+			case 'B':
+				alSourcei(Source, AL_LOOPING, AL_TRUE);
+				alSourcePlay(Source);
+				break;
+
+			case 'C':
+				alSourcePause(Source);
+				break;
+
+			case 'D':
+				alSourceStop(Source);
+				break;
+
+			case 'E':
+				alSourceRewind(Source);
+				break;
+
+			case 'F':
+				iType = (++iType % 3);
+				break;
+			}
+
+			if (ch == 'Q')
+				break;
+		}
+		else
+		{
+			switch (iType)
+			{
+			case 0:
+				alGetSourcei(Source, AL_BYTE_OFFSET, &lOffset);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError("alGetSourcei AL_BYTE_OFFSET : ", error);
+				else
+					printf("ByteOffset is %d                  \r", lOffset);
+				break;
+
+			case 1:
+				alGetSourcei(Source, AL_SAMPLE_OFFSET, &lOffset);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError("alGetSourcei AL_SAMPLE_OFFSET : ", error);
+				else
+					printf("SampleOffset is %d                \r", lOffset);
+				break;
+
+			case 2:
+				alGetSourcef(Source, AL_SEC_OFFSET, &flOffset);
+				if ((error = alGetError()) != AL_NO_ERROR)
+					DisplayALError("alGetSourcef AL_SEC_OFFSET : ", error);
+				else
+					printf("Seconds Offset is %.3f            \r", flOffset);
+				break;
+			}
+		}
+	}
+
+	alSourceStop(Source);
+	alDeleteSources(1, &Source);
+}
+
+// Distance Model Test
+/** used by gendocs.py
+$SECTION Interactive Tests
+$SUBTITLE Distance Model Test
+*/
+ALvoid I_DistanceModelTest()
+{
+	ALuint	source[1];
+	ALint	error;
+	ALint	lLoop;
+
+	alGenSources(1,source);
+	if ((error = alGetError()) != AL_NO_ERROR)
+	{
+		DisplayALError("alGenSources 2 : ", error);
+		return;
+	}
+
+	alSourcei(source[0], AL_BUFFER, g_Buffers[0]);
+	alSourcei(source[0], AL_LOOPING, AL_TRUE);
+	alSourcePlay(source[0]);
+
+	printf("Distance Model Test\n");
+
+	for (lLoop = 0; lLoop < 7; lLoop++)
+	{
+		switch (lLoop)
+		{
+		case 0:
+			printf("Distance Model is AL_NONE\n");
+			alDistanceModel(AL_NONE);
+			break;
+		case 1:
+			printf("Distance Model is AL_INVERSE_DISTANCE\n");
+			alDistanceModel(AL_INVERSE_DISTANCE);
+			break;
+		case 2:
+			printf("Distance Model is AL_INVERSE_DISTANCE_CLAMPED\n");
+			alDistanceModel(AL_INVERSE_DISTANCE_CLAMPED);
+			break;
+		case 3:
+			printf("Distance Model is AL_LINEAR_DISTANCE\n");
+			alDistanceModel(AL_LINEAR_DISTANCE);
+			break;
+		case 4:
+			printf("Distance Model is AL_LINEAR_DISTANCE_CLAMPED\n");
+			alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
+			break;
+		case 5:
+			printf("Distance Model is AL_EXPONENT_DISTANCE\n");
+			alDistanceModel(AL_EXPONENT_DISTANCE);
+			break;
+		case 6:
+			printf("Distance Model is AL_EXPONENT_DISTANCE_CLAMPED\n");
+			alDistanceModel(AL_EXPONENT_DISTANCE_CLAMPED);
+			break;
+		}
+
+		printf("Distance is 16\n");
+		alSource3f(source[0], AL_POSITION, 0.0f, 0.0f, -16.0f);
+		printf("Ref Distance is 8\n");
+		alSourcef(source[0], AL_REFERENCE_DISTANCE, 8.0f);
+		printf("Max Distance is 32\n");
+		alSourcef(source[0], AL_MAX_DISTANCE, 32.0f);
+
+		Sleep(2000);
+
+		printf("Distance is 64\n");
+		alSource3f(source[0], AL_POSITION, 0.0f, 0.0f, -64.0f);
+		printf("Ref Distance is 8\n");
+		alSourcef(source[0], AL_REFERENCE_DISTANCE, 8.0f);
+		printf("Max Distance is 32\n");
+		alSourcef(source[0], AL_MAX_DISTANCE, 32.0f);
+
+		Sleep(2000);
+	}
+
+	printf("Restoring INVERSE_DISTANCE_CLAMPED model\n");
+	alDistanceModel(AL_INVERSE_DISTANCE_CLAMPED);
+	Sleep(50);
+
+	alSourceStopv(1, source);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alSourceStopv : ", error);
+
+	alDeleteSources(1, source);
+	if ((error = alGetError()) != AL_NO_ERROR)
+		DisplayALError("alDeleteSources 1 : ", error);
+
+	return;
+}
+
+// Capture Test
+/** used by gendocs.py
+$SECTION Interactive Tests
+$SUBTITLE Capture Test
+*/
+ALvoid I_CaptureTest()
+{
+	ALCdevice *pCaptureDevice;
+	const ALCchar *szDefaultCaptureDevice;
+	ALint lSamplesAvailable;
+	ALchar ch;
+	FILE *pFile;
+	ALchar Buffer[4000];
+	WAVEHEADER waveHeader;
+	ALint lDataSize = 0;
+	ALint lSize;
+
+	// NOTE : This code does NOT setup the Wave Device's Audio Mixer to select a recording input
+	// or recording level.
+
+	// Get list of available Capture Devices
+	const ALchar *pDeviceList = alcGetString(NULL, ALC_CAPTURE_DEVICE_SPECIFIER);
+	if (pDeviceList)
+	{
+		printf("Available Capture Devices are:-\n");
+
+		while (*pDeviceList)
+		{
+			printf("%s\n", pDeviceList);
+			pDeviceList += strlen(pDeviceList) + 1;
+		}
+	}
+
+	szDefaultCaptureDevice = alcGetString(NULL, ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER);
+	printf("\nDefault Capture Device is '%s'\n\n", szDefaultCaptureDevice);
+
+	pCaptureDevice = alcCaptureOpenDevice(szDefaultCaptureDevice, 22050, AL_FORMAT_STEREO16, 22050);
+	if (pCaptureDevice)
+	{
+		printf("Opened '%s' Capture Device\n\n", alcGetString(pCaptureDevice, ALC_CAPTURE_DEVICE_SPECIFIER));
+
+		printf("Press 1 to Start Recording\n");
+		printf("Press 2 to Stop Recording\n");
+		printf("Press Q to quit\n");
+
+		pFile = fopen("recording.wav", "wb");
+
+		sprintf(waveHeader.szRIFF, "RIFF");
+		waveHeader.lRIFFSize = 0;
+		sprintf(waveHeader.szWave, "WAVE");
+		sprintf(waveHeader.szFmt, "fmt ");
+		waveHeader.lFmtSize = sizeof(WAVEFORMATEX);		
+		waveHeader.wfex.nChannels = 2;
+		waveHeader.wfex.wBitsPerSample = 16;
+		waveHeader.wfex.wFormatTag = WAVE_FORMAT_PCM;
+		waveHeader.wfex.nSamplesPerSec = 22050;
+		waveHeader.wfex.nBlockAlign = waveHeader.wfex.nChannels * waveHeader.wfex.wBitsPerSample / 8;
+		waveHeader.wfex.nAvgBytesPerSec = waveHeader.wfex.nSamplesPerSec * waveHeader.wfex.nBlockAlign;
+		waveHeader.wfex.cbSize = 0;
+		sprintf(waveHeader.szData, "data");
+		waveHeader.lDataSize = 0;
+
+		fwrite(&waveHeader, sizeof(WAVEHEADER), 1, pFile);
+
+		while (1)
+		{
+			if (_kbhit())
+			{
+				ch = getUpperCh();   
+
+				switch(ch)
+				{
+				case '1':
+					alcCaptureStart(pCaptureDevice);
+					break;
+
+				case '2':
+					alcCaptureStop(pCaptureDevice);
+					break;
+				}
+
+				if (ch == 'Q')
+				{
+					alcCaptureStop(pCaptureDevice);
+					break;
+				}
+			}
+			else
+			{
+				alcGetIntegerv(pCaptureDevice, ALC_CAPTURE_SAMPLES, 1, &lSamplesAvailable);
+				printf("Samples available is %d\r", lSamplesAvailable);
+
+				// When we have enough data to fill our 4000 byte buffer, grab the samples
+				if (lSamplesAvailable > (4000 / waveHeader.wfex.nBlockAlign))
+				{
+					// Consume Samples
+					alcCaptureSamples(pCaptureDevice, Buffer, 4000 / waveHeader.wfex.nBlockAlign);
+
+					// Write the audio data to a file
+					fwrite(Buffer, 4000, 1, pFile);
+
+					// Record total amount of data recorded
+					lDataSize += 4000;
+				}
+			}
+		}
+
+		// Check if any Samples haven't been captured yet
+		alcGetIntegerv(pCaptureDevice, ALC_CAPTURE_SAMPLES, 1, &lSamplesAvailable);
+		while (lSamplesAvailable)
+		{
+			if (lSamplesAvailable > (4000 / waveHeader.wfex.nBlockAlign))
+			{
+				alcCaptureSamples(pCaptureDevice, Buffer, 4000 / waveHeader.wfex.nBlockAlign);
+				fwrite(Buffer, 4000, 1, pFile);
+				lSamplesAvailable -= (4000 / waveHeader.wfex.nBlockAlign);
+				lDataSize += 4000;
+			}
+			else
+			{
+				alcCaptureSamples(pCaptureDevice, Buffer, lSamplesAvailable);
+				fwrite(Buffer, lSamplesAvailable * waveHeader.wfex.nBlockAlign, 1, pFile);
+				lSamplesAvailable = 0;
+				lDataSize += lSamplesAvailable * waveHeader.wfex.nBlockAlign;
+			}
+		}
+
+		// Fill in Size information in Wave Header
+		fseek(pFile, 4, SEEK_SET);
+		lSize = lDataSize + sizeof(WAVEHEADER) - 8;
+		fwrite(&lSize, 4, 1, pFile);
+		fseek(pFile, 42, SEEK_SET);
+		fwrite(&lDataSize, 4, 1, pFile);
+
+		fclose(pFile);
+
+		alcCaptureCloseDevice(pCaptureDevice);
+	}
+}
+
+// Capture And Play Test
+/** used by gendocs.py
+$SECTION Interactive Tests
+$SUBTITLE Capture And Play Test
+*/
+ALvoid I_CaptureAndPlayTest()
+{
+	ALCdevice		*pCaptureDevice;
+	const			ALCchar *szDefaultCaptureDevice;
+	ALint			lSamplesAvailable;
+	ALchar			ch;
+	ALchar			Buffer[QUEUEBUFFERSIZE];
+	ALuint			SourceID, TempBufferID;
+	ALuint			BufferID[QUEUEBUFFERCOUNT];
+	ALuint			ulBuffersAvailable = QUEUEBUFFERCOUNT;
+	ALuint			ulUnqueueCount, ulQueueCount;
+	ALint			lLoop, lFormat, lFrequency, lBlockAlignment, lProcessed, lPlaying;
+	ALboolean		bPlaying = AL_FALSE;
+	ALboolean		bPlay = AL_FALSE;
+#ifdef TEST_EAX
+	ALint			lEnv, lDirect, lRoom;
+#endif
+
+	// NOTE : This code does NOT setup the Wave Device's Audio Mixer to select a recording input
+	// or recording level.
+
+	// Generate a Source and QUEUEBUFFERCOUNT Buffers for Queuing
+	alGetError();
+	alGenSources(1, &SourceID);
+
+	for (lLoop = 0; lLoop < QUEUEBUFFERCOUNT; lLoop++)
+		alGenBuffers(1, &BufferID[lLoop]);
+
+	if (alGetError() != AL_NO_ERROR)
+	{
+		printf("Failed to generate Source and / or Buffers\n");
+		return;
+	}
+
+	ulUnqueueCount = 0;
+	ulQueueCount = 0;
+
+	// Get list of available Capture Devices
+	const ALchar *pDeviceList = alcGetString(NULL, ALC_CAPTURE_DEVICE_SPECIFIER);
+	if (pDeviceList)
+	{
+		printf("Available Capture Devices are:-\n");
+
+		while (*pDeviceList)
+		{
+			printf("%s\n", pDeviceList);
+			pDeviceList += strlen(pDeviceList) + 1;
+		}
+	}
+
+	szDefaultCaptureDevice = alcGetString(NULL, ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER);
+	printf("\nDefault Capture Device is '%s'\n\n", szDefaultCaptureDevice);
+
+	// The next call can fail if the WaveDevice does not support the requested format, so the application
+	// should be prepared to try different formats in case of failure
+
+	lFormat = AL_FORMAT_MONO16;
+	lFrequency = 22050;
+	lBlockAlignment = 2;
+
+	pCaptureDevice = alcCaptureOpenDevice(szDefaultCaptureDevice, lFrequency, lFormat, lFrequency);
+	if (pCaptureDevice)
+	{
+		printf("Opened '%s' Capture Device\n\n", alcGetString(pCaptureDevice, ALC_CAPTURE_DEVICE_SPECIFIER));
+
+		printf("Press 1 to Start Recording and Playing\n");
+		printf("Press 2 to Stop Recording\n");
+#ifdef TEST_EAX
+		printf("Press 3 to Apply EAX Reverb\n");
+		printf("Press 4 to Remove EAX Reverb\n");
+#endif
+		printf("Press Q to quit\n");
+
+		while (1)
+		{
+			if (_kbhit())
+			{
+				ch = getUpperCh();   
+
+				switch(ch)
+				{
+				case '1':
+					alcCaptureStart(pCaptureDevice);
+					bPlay = AL_TRUE;
+					break;
+
+				case '2':
+					alcCaptureStop(pCaptureDevice);
+					break;
+#ifdef TEST_EAX
+				case '3':
+					// Mute Direct path
+					lDirect = -10000;
+					eaxSet(&DSPROPSETID_EAX20_BufferProperties, DSPROPERTY_EAXBUFFER_DIRECT,
+						NULL, &lDirect, sizeof(ALint));
+
+					// Apply a Reverb Preset
+					lEnv = EAX_ENVIRONMENT_HANGAR;
+					eaxSet(&DSPROPSETID_EAX20_ListenerProperties, DSPROPERTY_EAXLISTENER_ENVIRONMENT,
+						NULL, &lEnv, sizeof(ALint));
+
+					lRoom = 0;
+					eaxSet(&DSPROPSETID_EAX20_ListenerProperties, DSPROPERTY_EAXLISTENER_ROOM,
+						NULL, &lRoom, sizeof(ALint));
+					break;
+
+				case '4':
+					// Un-mute Direct path
+					lDirect = 0;
+					eaxSet(&DSPROPSETID_EAX20_BufferProperties, DSPROPERTY_EAXBUFFER_DIRECT,
+						NULL, &lDirect, sizeof(ALint));
+
+					// Mute Reverb Preset
+					lRoom = -10000;
+					eaxSet(&DSPROPSETID_EAX20_ListenerProperties, DSPROPERTY_EAXLISTENER_ROOM,
+						NULL, &lRoom, sizeof(ALint));
+					break;
+#endif
+				}
+
+				if (ch == 'Q')
+				{
+					alcCaptureStop(pCaptureDevice);
+					break;
+				}
+			}
+			else
+			{
+				alcGetIntegerv(pCaptureDevice, ALC_CAPTURE_SAMPLES, 1, &lSamplesAvailable);
+				printf("Samples available is %d\r", lSamplesAvailable);
+
+				// If the Source is (or should be) playing, get number of buffers processed
+				// and check play status
+				if (bPlaying)
+				{
+					alGetSourcei(SourceID, AL_BUFFERS_PROCESSED, &lProcessed);
+					while (lProcessed)
+					{
+						// Unqueue the buffer
+						alSourceUnqueueBuffers(SourceID, 1, &TempBufferID);
+
+						// Update unqueue count
+						if (++ulUnqueueCount == QUEUEBUFFERCOUNT)
+							ulUnqueueCount = 0;
+
+						// Increment buffers available
+						ulBuffersAvailable++;
+
+						lProcessed--;
+					}
+
+					// If the Source has stopped (been starved of data) it will need to be
+					// restarted
+					alGetSourcei(SourceID, AL_SOURCE_STATE, &lPlaying);
+					if (lPlaying == AL_STOPPED)
+						bPlay = AL_TRUE;
+				}
+
+				// When we have enough data to fill our QUEUEBUFFERSIZE byte buffer, grab the samples
+				if ((lSamplesAvailable > (QUEUEBUFFERSIZE / lBlockAlignment)) && (ulBuffersAvailable))
+				{
+					// Consume Samples
+					alcCaptureSamples(pCaptureDevice, Buffer, QUEUEBUFFERSIZE / lBlockAlignment);
+
+					alBufferData(BufferID[ulQueueCount], lFormat, Buffer, QUEUEBUFFERSIZE, lFrequency);
+
+					// Queue the buffer, and mark buffer as queued
+					alSourceQueueBuffers(SourceID, 1, &BufferID[ulQueueCount]);
+
+					if (++ulQueueCount == QUEUEBUFFERCOUNT)
+						ulQueueCount = 0;
+
+					// Decrement buffers available
+					ulBuffersAvailable--;
+
+					// If we need to start the Source do it now IF AND ONLY IF we have queued at least 2 buffers
+					if ((bPlay) && (ulBuffersAvailable <= (QUEUEBUFFERCOUNT - 2)))
+					{
+						alSourcePlay(SourceID);
+						bPlaying = AL_TRUE;
+						bPlay = AL_FALSE;
+					}
+				}
+			}
+		}
+
+		alcCaptureCloseDevice(pCaptureDevice);
+	}
+	else
+	{
+		printf("WaveDevice is unavailable, or does not supported the request format\n");
+	}
+
+	alSourceStop(SourceID);
+	alDeleteSources(1, &SourceID);
+	for (lLoop = 0; lLoop < QUEUEBUFFERCOUNT; lLoop++)
+		alDeleteBuffers(1, &BufferID[lLoop]);
+}
+
 #if TEST_VORBIS
 // Vorbis Test
-/** used by gendocs.py
+/** used by gendocs.pyp
 $SECTION Interactive Tests
 $SUBTITLE Vorbis Test
 This test exercises Ogg Vorbis playback functionality.
