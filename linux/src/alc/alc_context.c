@@ -1413,7 +1413,7 @@ ALboolean _alcIsContextSuspended( ALuint cid ) {
  * Returns AL_TRUE if the alc extension extName is present, AL_FALSE
  * otherwise.
  */
-ALCboolean alcIsExtensionPresent( UNUSED(ALCdevice *device), const ALCubyte *extName ) {
+ALCboolean alcIsExtensionPresent( UNUSED(ALCdevice *device), const ALCchar *extName ) {
 	return alIsExtensionPresent( extName );
 }
 
@@ -1423,7 +1423,7 @@ ALCboolean alcIsExtensionPresent( UNUSED(ALCdevice *device), const ALCubyte *ext
  * Returns the alc extension function named funcName, or NULL if it doesn't
  * exist.
  */
-ALCvoid *alcGetProcAddress( UNUSED(ALCdevice *device), const ALCubyte *funcName )
+ALCvoid *alcGetProcAddress( UNUSED(ALCdevice *device), const ALCchar *funcName )
 {
 	return alGetProcAddress( funcName );
 }
@@ -1433,7 +1433,7 @@ ALCvoid *alcGetProcAddress( UNUSED(ALCdevice *device), const ALCubyte *funcName 
  *
  * Returns enum value for enumName.
  */
-ALCenum alcGetEnumValue( UNUSED(ALCdevice *device), const ALCubyte *enumName ) {
+ALCenum alcGetEnumValue( UNUSED(ALCdevice *device), const ALCchar *enumName ) {
 	return alGetEnumValue( enumName );
 }
 
@@ -1462,7 +1462,7 @@ ALCdevice *alcGetContextsDevice(ALCcontext *handle)
 	return dc;
 }
 
-const ALCubyte *alcGetString( ALCdevice *dev, ALCenum token )
+const ALCchar *alcGetString( ALCdevice *dev, ALCenum token )
 {
 	switch(token)
 	{

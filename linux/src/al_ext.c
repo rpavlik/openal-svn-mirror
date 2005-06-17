@@ -164,7 +164,7 @@ static egroup_node_t* egroup_list = NULL;
 /*
  * Returns TRUE is gname is a supported extension, FALSE otherwise.
  */
-ALboolean alIsExtensionPresent( const ALubyte* gname ) {
+ALboolean alIsExtensionPresent( const ALchar* gname ) {
 	egroup_node_t* group = egroup_list;
 
 	while( group ) {
@@ -269,7 +269,7 @@ void _alDestroyExtensionGroups( void ) {
  * Obtain the address of a function (usually an extension) with the name
  * fname. All addresses are context-independent.
  */
-void *alGetProcAddress( const ALubyte *fname ) {
+void *alGetProcAddress( const ALchar *fname ) {
 	enode_t *retpair;
 
 	retpair = get_node( etree, fname );
@@ -668,7 +668,7 @@ static void _alExtPushFiniFunc( void (*func)(void) ) {
  * Returns the integer value of an enumeration (usually an extension)
  * with the name ename.
  */
-ALenum alGetEnumValue( const ALubyte *ename ) {
+ALenum alGetEnumValue( const ALchar *ename ) {
 	if(ustrcmp("AL_FALSE", ename) == 0) {
 		return AL_FALSE;
 	}

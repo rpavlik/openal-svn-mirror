@@ -227,7 +227,7 @@ void _alGetDoublev(ALenum param, ALdouble *dv) {
  * Returns readable string representation of param, or NULL if no string
  * representation is available.
  */
-const ALubyte *alGetString( ALenum param ) {
+const ALchar *alGetString( ALenum param ) {
 	AL_context *cc;
 
 	static ALubyte extensions[4096];

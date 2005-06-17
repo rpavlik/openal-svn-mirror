@@ -11,14 +11,23 @@
 #include <AL/alc.h>
 #include <AL/alut.h>
 
-void alutInit(UNUSED(int *argc), UNUSED(char *argv[])) {
-	ALCdevice *device = alcOpenDevice( NULL );
+/*void alutInit(UNUSED(int *argc), UNUSED(char *argv[])) {*/
+ALboolean alutInit(ALCchar *szDeviceName, ALCdevice **ppDevice, ALCcontext **ppContext) {
+	ALCdevice *device = alcOpenDevice( szDeviceName );
+	ALCcontext *context = NULL;
 	if( device != NULL ) {
-		ALCcontext *context = alcCreateContext( device, NULL );
+		context = alcCreateContext( device, NULL );
 		if( context != NULL ) {
 			alcMakeContextCurrent( context );
 		}
 	}
+	if (ppDevice)
+		*ppDevice = device;
+
+	if (ppContext)
+		*ppContext = context;
+
+	return AL_TRUE;
 }
 
 void alutExit(void) {

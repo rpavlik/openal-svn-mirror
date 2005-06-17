@@ -11,6 +11,7 @@
 #include "al_main.h"
 #include "al_debug.h"
 #include "al_error.h"
+#include "al_ext.h"
 
 #include <AL/al.h>
 

@@ -27,6 +27,7 @@
 #include "al_vector.h"
 #include "alc/alc_context.h"
 #include "alc/alc_speaker.h"
+#include "al_ext.h"
 
 #include <math.h>
 #include <limits.h>

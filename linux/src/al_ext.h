@@ -31,6 +31,61 @@
 #define PASTE_(a1, a2)          PASTE__(a1 ## _ ## a2)
 #define PASTE(a1, a2)           PASTE_(a1, a2)
 
+
+/* stuff that was in the standard 1.0 headers, but shouldn't have been... */
+#ifndef AL_BYTE_LOKI
+#define AL_BYTE_LOKI                              0x100C
+#endif
+
+#ifndef AL_ENV_ROOM_IASIG
+#define AL_ENV_ROOM_IASIG                         0x3001
+#endif
+
+#ifndef AL_ENV_ROOM_HIGH_FREQUENCY_IASIG
+#define AL_ENV_ROOM_HIGH_FREQUENCY_IASIG          0x3002
+#endif
+
+#ifndef AL_ENV_ROOM_ROLLOFF_FACTOR_IASIG
+#define AL_ENV_ROOM_ROLLOFF_FACTOR_IASIG          0x3003
+#endif
+
+#ifndef AL_ENV_DECAY_TIME_IASIG                   
+#define AL_ENV_DECAY_TIME_IASIG                   0x3004
+#endif
+
+#ifndef AL_ENV_DECAY_HIGH_FREQUENCY_RATIO_IASIG
+#define AL_ENV_DECAY_HIGH_FREQUENCY_RATIO_IASIG   0x3005
+#endif
+
+#ifndef AL_ENV_REFLECTIONS_IASIG                  
+#define AL_ENV_REFLECTIONS_IASIG                  0x3006
+#endif
+
+#ifndef AL_ENV_REFLECTIONS_DELAY_IASIG
+#define AL_ENV_REFLECTIONS_DELAY_IASIG            0x3006
+#endif
+
+#ifndef AL_ENV_REVERB_IASIG
+#define AL_ENV_REVERB_IASIG                       0x3007
+#endif
+
+#ifndef AL_ENV_REVERB_DELAY_IASIG
+#define AL_ENV_REVERB_DELAY_IASIG                 0x3008
+#endif
+
+#ifndef AL_ENV_DIFFUSION_IASIG
+#define AL_ENV_DIFFUSION_IASIG                    0x3009
+#endif
+
+#ifndef AL_ENV_DENSITY_IASIG
+#define AL_ENV_DENSITY_IASIG                      0x300A
+#endif
+
+#ifndef AL_ENV_HIGH_FREQUENCY_REFERENCE_IASIG
+#define AL_ENV_HIGH_FREQUENCY_REFERENCE_IASIG     0x300B
+#endif
+
+
 /* bookkeeping stuff */
 
 /*

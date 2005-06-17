@@ -34,7 +34,7 @@ static int num_devices = 0;
  * attributes for the device.  Returns the device if successful, NULL
  * otherwise.
  */
-ALCdevice *alcOpenDevice( const ALubyte *deviceSpecifier ) {
+ALCdevice *alcOpenDevice( const ALchar *deviceSpecifier ) {
 	ALCdevice *retval;
 	char dirstr[65];
 	Rcvar foo = NULL;
@@ -201,7 +201,7 @@ ALCdevice *alcOpenDevice( const ALubyte *deviceSpecifier ) {
  *
  * Closes the device referred to by dev.
  */
-void alcCloseDevice( ALCdevice *dev ) {
+ALCboolean alcCloseDevice( ALCdevice *dev ) {
 	release_audiodevice( dev->handle );
 
 	free( dev->specifier );
@@ -209,7 +209,7 @@ void alcCloseDevice( ALCdevice *dev ) {
 
 	num_devices--;
 
-	return;
+	return ALC_TRUE;
 }
 
 /*
