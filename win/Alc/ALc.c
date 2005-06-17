@@ -429,16 +429,19 @@ ALCAPI ALCdevice* ALCAPIENTRY alcCaptureOpenDevice(const ALCchar *deviceName, AL
 				pDevice->wfexCaptureFormat.nAvgBytesPerSec = pDevice->wfexCaptureFormat.nSamplesPerSec * pDevice->wfexCaptureFormat.nBlockAlign;
 				pDevice->wfexCaptureFormat.cbSize=0;
 
-				// Find the Device ID matching the deviceName
-				lNumDevs = waveInGetNumDevs();
-				for (i = 0; i < lNumDevs; i++)
+				// Find the Device ID matching the deviceName if valid
+				if (deviceName)
 				{
-					if (waveInGetDevCaps(i, &WaveInCaps, sizeof(WAVEINCAPS)) == MMSYSERR_NOERROR)
+					lNumDevs = waveInGetNumDevs();
+					for (i = 0; i < lNumDevs; i++)
 					{
-						if (!strcmp(deviceName, WaveInCaps.szPname))
+						if (waveInGetDevCaps(i, &WaveInCaps, sizeof(WAVEINCAPS)) == MMSYSERR_NOERROR)
 						{
-							lDeviceID = i;
-							break;
+							if (!strcmp(deviceName, WaveInCaps.szPname))
+							{
+								lDeviceID = i;
+								break;
+							}
 						}
 					}
 				}
