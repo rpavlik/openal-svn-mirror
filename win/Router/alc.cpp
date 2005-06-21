@@ -1548,7 +1548,10 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(const ALCchar* deviceName)
 
 	//
 	// map legacy names to new generic names
-	//    -- DirectSound3D mapped above to ALC_DEFAULT_DEVICE_SPECIFIER
+	// DirectSound3D mapped above to ALC_DEFAULT_DEVICE_SPECIFIER
+	if ((strcmp(newDeviceName, "") == 0) && (strcmp((char *)deviceName, "DirectSound3D"))) {
+		strcpy(newDeviceName, "Generic Hardware");
+	}
 	if (strcmp(newDeviceName, "DirectSound") == 0) {
 		strcpy(newDeviceName, "Generic Software");
 	}
@@ -1783,6 +1786,32 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
                 //
                 // Try to find a default version.
                 //
+				dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), "Generic Hardware");
+                if(!dll)
+                {
+                    dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), "Generic Hardware");
+                }
+
+				if(dll)
+                {
+                    strcpy((char*)alcDefaultDeviceSpecifier, "Generic Hardware");
+                    FreeLibrary(dll);
+                    break;
+                }
+
+				dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), "Generic Software");
+                if(!dll)
+                {
+                    dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), "Generic Software");
+                }
+
+				if(dll)
+                {
+                    strcpy((char*)alcDefaultDeviceSpecifier, "Generic Software");
+                    FreeLibrary(dll);
+                    break;
+                }
+
                 dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), "DirectSound3D");
                 if(!dll)
                 {
