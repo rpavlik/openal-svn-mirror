@@ -2,6 +2,8 @@ CoreAudio Team
 Apple Computer Inc.
 March 17, 2004
 
+updated: July 1st, 2005 - Apple Computer Inc.
+
 ----------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------
 IMPLEMENTATION DESCRIPTION
@@ -20,7 +22,7 @@ BUILD TIME DEPENDENCIES
 ----------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------
 
-To build this version of OpenAL on the MacOSX platform, you must have the latest CoreAudio SDK installed (version 1.3.1).
+To build this version of OpenAL on the MacOSX platform, you must have the CoreAudio SDK installed (version 1.3.1 or later).
 This SDK contains updated Public Utility classes used throughout the implementation.
 
 ----------------------------------------------------------------------------------------------------------------------
@@ -34,7 +36,7 @@ platform. These pieces provide an optimized 3DMixer, with both feature enhanceme
 
     Recommended:
     ------------
-    OSX: version 10.2.6 or greater AND
+    OSX: version 10.2.8 or greater AND
     QuickTime: version 6.5.1
     ---AudioToolbox.framework (version 1.3.2)
     ---AudioUnit.framework (version 1.3.2)
@@ -45,7 +47,7 @@ for missing features and existing bugs are required.
 
     Minimum:
     ------------
-    OSX: version 10.2 (Jaguar) AND
+    OSX: version 10.2.8 (Jaguar) AND
     QuickTime: version 6.4
     ---AudioToolbox.framework
     ---AudioUnit.framework
@@ -57,12 +59,10 @@ PROJECT FILES
 ----------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------
 
-Two project files have been provided; al_osx.xcode & al_osx.pbproj. I have been primarily using the xcode project during
-development. Both projects contain 3 targets:
+One project file have been provided; al_osx.xcode. The projects contain 2 targets:
     
     1) openal.dylib - builds a Library named openal.dylib
     2) al_osx_basic - builds a Framework named OpenAL.framework
-    3) All - an aggragate target that builds the framework and library targets
 
 Both projects have 2 build styles. One for Deployment and one for Development.
 
@@ -113,12 +113,6 @@ probably may not support all of it's features of the specification.
 
 Notable areas that still need to be addressed;
     
-    - Doppler:  The 3DMixer actually has doppler support built in, but I have left it off for now as I think to make 
-                this feature useful, an application has to have it avilable during development so the behavior 
-                and speed of the OALSources actually produces the desired effect for the listener. I don't believe
-                Ryan has any doppler support in UT2003, do any implmentations make use of this part of the
-                specification?
-
     - Source Cone Support: Again, do any implmentations make use of this part of the
                 specification?
 

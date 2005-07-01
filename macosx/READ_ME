@@ -1,6 +1,7 @@
 
 February 13th, 2004 - Apple Computer Inc.
 updated: March 15th, 2004 - Apple Computer Inc.
+updated: July 1st, 2005 - Apple Computer Inc.
 
 ----------------------------------------------------------------------------------------------------------------------
 READ ME: OPEN AL - OSX IMPLEMENTATION USING THE 3DMIXER AUDIOUNIT
@@ -8,10 +9,10 @@ READ ME: OPEN AL - OSX IMPLEMENTATION USING THE 3DMIXER AUDIOUNIT
 
 This Read Me should accompany the 3DMixer implementation of OpenAL (Open Audio Library). 
 
-CoreAUdio SDK Requirements
+CoreAudio SDK Requirements
 -----------------------
-Building this implementation of OpenAL for Mac OSX requires the latest CoreAudio SDK (version 1.3.1), due to it use 
-of new CoreAudio Public Utility classes.
+Building this implementation of OpenAL for Mac OSX requires the CoreAudio SDK (version 1.3.1 or greater), due to it use 
+of CoreAudio Public Utility classes.
 
 CoreAudio Version requirements
 -----------------------
@@ -20,7 +21,7 @@ of OpenAL for Mac OSX:
 
     Recommended:
     ------------
-    OSX: version 10.2.6 AND
+    OSX: version 10.2.8 or later AND
     QuickTime: version 6.5.1
     AudioToolbox.framework (version 1.3.2)
     AudioUnit.framework (version 1.3.2)
@@ -28,11 +29,11 @@ of OpenAL for Mac OSX:
     
     Minimum:
     ------------
-    OSX: version 10.2 (Jaguar) AND
+    OSX: version 10.2.8 (Jaguar) AND
     QuickTime: version 6.4
-    AudioToolbox.framework (version 1.2xxxxx)
-    AudioUnit.framework (version 1.2xxxxx)
-    CoreAudio.component (version 1.2xxxxxx - this version contains the 1.3 version of the 3DMixer AudioUnit)
+    AudioToolbox.framework (version 1.2x)
+    AudioUnit.framework (version 1.2x)
+    CoreAudio.component (version 1.2x - this version contains the 1.3 version of the 3DMixer AudioUnit)
 
 ----------------------------------------------------------------------------------------------------------------------
 OpenAL Extensions:
