@@ -65,7 +65,6 @@ install: $(INSTALL_DEPS)
 	$(INSTALL) -m 444 ../include/AL/alut.h $(DESTINC)/AL
 	$(INSTALL) -m 444 ../include/AL/altypes.h $(DESTINC)/AL
 	$(INSTALL) -m 444 ../include/AL/alctypes.h $(DESTINC)/AL
-	$(INSTALL) -m 444 ../include/AL/aluttypes.h $(DESTINC)/AL
 	$(INSTALL) -m 444 include/AL/alext.h $(DESTINC)/AL
 	$(INSTALL) -m 444 include/AL/alexttypes.h $(DESTINC)/AL
 

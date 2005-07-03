@@ -1,3 +1,6 @@
+2005-07-03  Sven Panne  <sven.panne@aedion.de>
+	* linux/Makefile.in: aluttypes.h is dead, Jim...
+
 2005-04-17  Sven Panne  <sven.panne@aedion.de>
 
 	* linux/src/alut/alut_main.c: Don't set an ALC error
