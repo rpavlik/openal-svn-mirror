@@ -43,7 +43,7 @@ void AudioEnv::Init ()
 {
    ALCdevice *device = 0;
    ALCcontext *context = 0;
-   alutInit ("Generic Hardware", &device, &context); // init OpenAL
+   alutInit (NULL, &device, &context); // init OpenAL
 
    // global settings
    alListenerf(AL_GAIN, 1.0);
