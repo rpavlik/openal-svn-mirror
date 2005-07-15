@@ -45,7 +45,7 @@ typedef float ALfloat;
 typedef double ALdouble;
 
 /** OpenAL 32bit type. */
-typedef unsigned int ALsizei;
+typedef int ALsizei;
 
 /** OpenAL void type (for params, not returns). */
 typedef void ALvoid;
