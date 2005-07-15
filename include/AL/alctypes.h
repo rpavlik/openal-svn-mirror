@@ -41,7 +41,7 @@ typedef float ALCfloat;
 typedef double ALCdouble;
 
 /** ALC 32bit type. */
-typedef int ALCsizei;
+typedef unsigned int ALCsizei;
 
 /** ALC void type */
 typedef void ALCvoid;

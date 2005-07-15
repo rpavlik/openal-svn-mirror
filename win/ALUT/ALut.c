@@ -103,28 +103,23 @@ typedef struct                                  /* WAV Chunk-header */
 	#pragma pack (pop)
 #endif
 
-ALUTAPI ALboolean ALUTAPIENTRY alutInit(ALCchar *szDeviceName, ALCdevice **ppDevice, ALCcontext **ppContext) 
+ALUTAPI void ALUTAPIENTRY alutInit(int *argc, char *argv[]) 
 {
-	ALboolean	bReturn = AL_FALSE;
+	ALCdevice *pDevice;
+	ALCcontext *pContext;
 
-	if ((ppDevice) && (ppContext))
+	// Open device
+	pDevice = alcOpenDevice(NULL);
+	if (pDevice)
 	{
-		// Open device
-		*ppDevice = alcOpenDevice(szDeviceName);
-		if (*ppDevice)
+		// Create context
+		pContext = alcCreateContext(pDevice,NULL);
+		if (pContext)
 		{
-			// Create context
-			*ppContext = alcCreateContext(*ppDevice,NULL);
-			if (*ppContext)
-			{
-				// Set active context
-				alcMakeContextCurrent(*ppContext);
-				bReturn = AL_TRUE;
-			}
+			// Set active context
+			alcMakeContextCurrent(pContext);
 		}
 	}
-
-	return bReturn;
 }
 
 ALUTAPI ALvoid ALUTAPIENTRY alutExit(ALvoid) 
