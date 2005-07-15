@@ -49,7 +49,7 @@ extern "C" {
 
 #ifndef ALUT_NO_PROTOTYPES
 
-ALUTAPI ALboolean ALUTAPIENTRY alutInit(ALCchar *szDeviceName, ALCdevice **ppDevice, ALCcontext **ppContext);
+ALUTAPI void ALUTAPIENTRY alutInit(int *argc, char *argv[]);
 ALUTAPI void ALUTAPIENTRY alutExit(ALvoid);
 
 #ifndef MACINTOSH_AL
