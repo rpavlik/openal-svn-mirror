@@ -12,22 +12,22 @@
 #include <AL/alut.h>
 
 /*void alutInit(UNUSED(int *argc), UNUSED(char *argv[])) {*/
-ALboolean alutInit(ALCchar *szDeviceName, ALCdevice **ppDevice, ALCcontext **ppContext) {
-	ALCdevice *device = alcOpenDevice( szDeviceName );
-	ALCcontext *context = NULL;
-	if( device != NULL ) {
-		context = alcCreateContext( device, NULL );
-		if( context != NULL ) {
-			alcMakeContextCurrent( context );
+void alutInit(int *argc, char *argv[]) {
+	ALCdevice *device;
+	ALCcontext *context;
+
+	/* Open device */
+	device = alcOpenDevice(NULL);
+	if (device)
+	{
+		/* Create context */
+		context = alcCreateContext(device,NULL);
+		if (context)
+		{
+			/* Set active context */
+			alcMakeContextCurrent(context);
 		}
 	}
-	if (ppDevice)
-		*ppDevice = device;
-
-	if (ppContext)
-		*ppContext = context;
-
-	return AL_TRUE;
 }
 
 void alutExit(void) {
