@@ -283,23 +283,3 @@ const ALchar *alGetString( ALenum param ) {
 
 	return NULL;
 }
-
-/*
- * _alHint( ALenum target, ALenum mode )
- *
- * Provides hint for the implementation.
- */
-void alHint( ALenum target, ALenum mode ) {
-	_alHint( target, mode );
-
-	return;
-}
-
-/*
- * _alHint( ALenum target, ALenum mode )
- *
- * Non-locking version of _alHint.
- */
-void _alHint( UNUSED(ALenum target), UNUSED(ALenum mode) ) {
-	return;
-}

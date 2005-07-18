@@ -532,10 +532,6 @@ Renderer State management.
 Returns @code{AL_TRUE} if capability is enabled, @code{AL_FALSE}
 otherwise.
 
-@item void alHint( ALenum target, ALenum mode )
-@findex alHint
-Application preferences for driver performance choices.
-
 @item void alGetBooleanv( ALenum param, ALboolean* data )
 @findex alGetBooleanv
 State retrieval.

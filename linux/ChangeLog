@@ -1,3 +1,7 @@
+2005-07-18  Sven Panne  <sven.panne@aedion.de>
+	* linux/doc/openal.texi, linux/src/al_state.c,
+	linux/src/al_state.h: Nuked alHint(), it is not in the 1.1 spec.
+
 2005-07-03  Sven Panne  <sven.panne@aedion.de>
 	* linux/Makefile.in: aluttypes.h is dead, Jim...
 

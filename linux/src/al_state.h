@@ -10,13 +10,6 @@
 #include <AL/altypes.h>
 
 /*
- * _alHint( ALenum target, ALenum mode )
- *
- * Non locking version of alHint.
- */
-void _alHint( ALenum target, ALenum mode );
-
-/*
  * _alGetBooleanv( ALenum param, ALboolean *bv )
  *
  * Non locking version of alGetBooleanv.
