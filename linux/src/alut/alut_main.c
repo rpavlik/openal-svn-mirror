@@ -11,21 +11,12 @@
 #include <AL/alc.h>
 #include <AL/alut.h>
 
-/*void alutInit(UNUSED(int *argc), UNUSED(char *argv[])) {*/
-void alutInit(int *argc, char *argv[]) {
-	ALCdevice *device;
-	ALCcontext *context;
-
-	/* Open device */
-	device = alcOpenDevice(NULL);
-	if (device)
-	{
-		/* Create context */
-		context = alcCreateContext(device,NULL);
-		if (context)
-		{
-			/* Set active context */
-			alcMakeContextCurrent(context);
+void alutInit(UNUSED(int *argc), UNUSED(char *argv[])) {
+	ALCdevice *device = alcOpenDevice( NULL );
+	if( device != NULL ) {
+		ALCcontext *context = alcCreateContext( device, NULL );
+		if( context != NULL ) {
+			alcMakeContextCurrent( context );
 		}
 	}
 }
