@@ -309,23 +309,19 @@ ALAPI ALvoid ALAPIENTRY alGetBooleanv(ALenum pname,ALboolean *data)
 			switch (pname)
 			{
 				case AL_DOPPLER_FACTOR:
-					if (Context->DopplerFactor != 0.0f)
-						*data = AL_TRUE;
+					*data = (Context->DopplerFactor != 0.0f) ? AL_TRUE : AL_FALSE;
 					break;
 
 				case AL_DOPPLER_VELOCITY:
-					if (Context->DopplerVelocity != 0.0f)
-						*data = AL_TRUE;
+					*data = (Context->DopplerVelocity != 0.0f) ? AL_TRUE : AL_FALSE;
 					break;
 
 				case AL_DISTANCE_MODEL:
-					if (Context->DistanceModel == AL_INVERSE_DISTANCE_CLAMPED)
-						*data = AL_TRUE;
+					*data = (Context->DistanceModel == AL_INVERSE_DISTANCE_CLAMPED) ? AL_TRUE : AL_FALSE;
 					break;
 
 				case AL_SPEED_OF_SOUND:
-					if (Context->flSpeedOfSound != 0.0f)
-						*data = AL_TRUE;
+					*data = (Context->flSpeedOfSound != 0.0f) ? AL_TRUE : AL_FALSE;
 					break;
 
 				default:
