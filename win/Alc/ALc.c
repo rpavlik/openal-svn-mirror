@@ -3494,12 +3494,12 @@ void UpdateListener(ALCcontext *ALContext)
 /*
 	EAXFix
 
-		Used by "DirectSound3D" device to fix an Audigy Driver bug
+	Used by "DirectSound3D" device to fix an Audigy & Live Driver bug
 */
 void EAXFix(ALCcontext *context)
 {
 	ALuint alDummySource;
-	ALboolean	bEAX30 = AL_FALSE;
+	ALboolean bEAX = AL_FALSE;
 
 	if (context->alPrivateSource)
 		return;
@@ -3507,10 +3507,10 @@ void EAXFix(ALCcontext *context)
 	// Generate a dummy Source
 	alGenSources(1, &alDummySource);
 
-	// Query for EAX 3.0 Support (this function will make an EAX 3.0 Set() call if EAX 3.0 is detected)
-	bEAX30 = alIsExtensionPresent("EAX3.0");
+	// Query for EAX 2.0 support (this function will make an EAX 2.0 Set() call if EAX 2.0 is detected)
+	bEAX = alIsExtensionPresent((ALubyte*)"EAX2.0");
 
-	if (bEAX30)
+	if (bEAX)
 	{
 		// Need to generate Permanent Source
 		alGenSources(1, &(context->alPrivateSource));
