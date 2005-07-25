@@ -65,7 +65,7 @@ ALUTAPI void ALUTAPIENTRY alutUnloadWAV(ALenum format, ALvoid *data, ALsizei siz
 
 #else /* ALUT_NO_PROTOTYPES */
 
-    ALboolean (ALUTAPIENTRY *alutInit)( ALCchar *szDeviceName, ALCdevice **ppDevice, ALCcontext **ppContext );
+    void      (ALUTAPIENTRY *alutInit)( int *argc, char *argv[] );
     void 	  (ALUTAPIENTRY *alutExit)( ALvoid );
 #ifndef MACINTOSH_AL
     void      (ALUTAPIENTRY *alutLoadWAVFile)( ALbyte *file,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq,ALboolean *loop );
