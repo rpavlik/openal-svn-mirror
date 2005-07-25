@@ -28,7 +28,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
-#include "alMain.h"
 #include "AL/al.h"
 #include "AL/alc.h"
 #include "AL/alut.h"
