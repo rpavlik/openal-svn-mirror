@@ -894,36 +894,36 @@ ALCAPI ALCvoid ALCAPIENTRY alcGetIntegerv(ALCdevice *device,ALCenum param,ALsize
 	ALCcontext *Context;
 	ALint lCapturedBytes;
 
-	Context=alcGetCurrentContext();
-	if (Context)
+	if ((device)&&(device->bIsCaptureDevice))
 	{
-		SuspendContext(Context);
-
-		if (data)
+		// Capture device
+		switch (param)
 		{
-			if ((device)&&(device->bIsCaptureDevice))
+		case ALC_CAPTURE_SAMPLES:
+			if ((size) && (data))
 			{
-				// Capture Device
-				switch (param)
-				{
-				case ALC_CAPTURE_SAMPLES:
-					if (size)
-					{
-						lCapturedBytes = (device->ulWriteCapturedDataPos - device->ulReadCapturedDataPos);
-						*data = lCapturedBytes / device->wfexCaptureFormat.nBlockAlign;
-					}
-					else
-					{
-						SetALCError(ALC_INVALID_VALUE);
-					}
-					break;
-
-				default:
-					SetALCError(ALC_INVALID_ENUM);
-					break;
-				}
+				lCapturedBytes = (device->ulWriteCapturedDataPos - device->ulReadCapturedDataPos);
+				*data = lCapturedBytes / device->wfexCaptureFormat.nBlockAlign;
 			}
 			else
+			{
+				SetALCError(ALC_INVALID_VALUE);
+			}
+			break;
+
+		default:
+			SetALCError(ALC_INVALID_ENUM);
+			break;
+		}
+	}
+	else
+	{
+		Context=alcGetCurrentContext();
+		if (Context)
+		{
+			SuspendContext(Context);
+
+			if (data)
 			{
 				// Playback Device
 				switch (param)
@@ -1000,18 +1000,18 @@ ALCAPI ALCvoid ALCAPIENTRY alcGetIntegerv(ALCdevice *device,ALCenum param,ALsize
 					break;
 				}
 			}
+			else
+			{
+				SetALCError(ALC_INVALID_VALUE);
+			}
+
+			ProcessContext(Context);
 		}
 		else
 		{
-			SetALCError(ALC_INVALID_VALUE);
+			// Invalid Context
+			SetALCError(ALC_INVALID_CONTEXT);
 		}
-
-		ProcessContext(Context);
-	}
-	else
-	{
-		// Invalid Context
-		SetALCError(ALC_INVALID_CONTEXT);
 	}
 
 	return;
