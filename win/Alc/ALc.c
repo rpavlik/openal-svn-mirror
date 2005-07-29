@@ -1863,10 +1863,13 @@ static void CALLBACK DirectSoundProc(UINT uID,UINT uReserved,DWORD_PTR dwUser,DW
 	DWORD BytesPlayed;
 	HRESULT DSRes;
 
+	pContext = alcGetCurrentContext();
+	SuspendContext(pContext);
+
 	// Get Device pointer from dwUser data
 	pDevice = (ALCdevice *)dwUser;
 
-	// See if there is a Context using the "DirectSound" Device
+	// See if there is a Context using this Device
 	pContext = g_pContextList;
 	while (pContext)
 	{
@@ -1874,8 +1877,6 @@ static void CALLBACK DirectSoundProc(UINT uID,UINT uReserved,DWORD_PTR dwUser,DW
 			break;
 		pContext = pContext->next;
 	}
-
-	SuspendContext(pContext);
 
 	// Get current play and write cursors
 	IDirectSoundBuffer_GetCurrentPosition(pDevice->DSsbuffer,&PlayCursor,&WriteCursor);
