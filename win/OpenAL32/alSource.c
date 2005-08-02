@@ -174,7 +174,7 @@ ALAPI ALvoid ALAPIENTRY alDeleteSources(ALsizei n, const ALuint *sources)
 
 			if (Device)
 			{
-				if (n <= Context->SourceCount)
+				if ((ALuint)n <= Context->SourceCount)
 				{
 					// Check that all Sources are valid (and can therefore be deleted)
 					for (i = 0; i < n; i++)
@@ -2030,7 +2030,7 @@ ALAPI ALvoid ALAPIENTRY alSourceQueueBuffers( ALuint source, ALsizei n, const AL
 	ALbufferlistitem *ALBufferListStart;
 	ALuint DataSize;
 	ALuint BufferSize;
-	ALuint uiFrequency;
+	ALint iFrequency;
 	ALint iFormat;
 	ALboolean bBuffersValid = AL_TRUE;
 
@@ -2055,7 +2055,7 @@ ALAPI ALvoid ALAPIENTRY alSourceQueueBuffers( ALuint source, ALsizei n, const AL
 			// Check that this is not a STATIC Source
 			if (ALSource->lSourceType != AL_STATIC)
 			{
-				uiFrequency = -1;
+				iFrequency = -1;
 				iFormat = -1;
 
 				// Check existing Queue (if any) for a valid Buffers and get its frequency and format
@@ -2064,7 +2064,7 @@ ALAPI ALvoid ALAPIENTRY alSourceQueueBuffers( ALuint source, ALsizei n, const AL
 				{
 					if (ALBufferList->buffer)
 					{
-						uiFrequency = ((ALbuffer*)(ALTHUNK_LOOKUPENTRY(ALBufferList->buffer)))->frequency;
+						iFrequency = ((ALbuffer*)(ALTHUNK_LOOKUPENTRY(ALBufferList->buffer)))->frequency;
 						iFormat = ((ALbuffer*)(ALTHUNK_LOOKUPENTRY(ALBufferList->buffer)))->format;
 						break;
 					}
@@ -2077,14 +2077,14 @@ ALAPI ALvoid ALAPIENTRY alSourceQueueBuffers( ALuint source, ALsizei n, const AL
 					{
 						if (buffers[i])
 						{
-							if ((uiFrequency == -1) && (iFormat == -1))
+							if ((iFrequency == -1) && (iFormat == -1))
 							{
-								uiFrequency = ((ALbuffer*)(ALTHUNK_LOOKUPENTRY(buffers[i])))->frequency;
+								iFrequency = ((ALbuffer*)(ALTHUNK_LOOKUPENTRY(buffers[i])))->frequency;
 								iFormat = ((ALbuffer*)(ALTHUNK_LOOKUPENTRY(buffers[i])))->format;
 							}
 							else
 							{
-								if ((uiFrequency != ((ALbuffer*)(ALTHUNK_LOOKUPENTRY(buffers[i])))->frequency) ||
+								if ((iFrequency != ((ALbuffer*)(ALTHUNK_LOOKUPENTRY(buffers[i])))->frequency) ||
 									(iFormat != ((ALbuffer*)(ALTHUNK_LOOKUPENTRY(buffers[i])))->format))
 								{
 									alSetError(AL_INVALID_OPERATION);

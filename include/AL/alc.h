@@ -98,7 +98,7 @@ ALCAPI void            ALCAPIENTRY alcGetIntegerv( ALCdevice *device, ALCenum pa
  */
 ALCAPI ALCdevice*      ALCAPIENTRY alcCaptureOpenDevice( const ALCchar *devicename, ALCuint frequency, ALCenum format, ALCsizei buffersize );
 
-ALCAPI void            ALCAPIENTRY alcCaptureCloseDevice( ALCdevice *device );
+ALCAPI ALCboolean      ALCAPIENTRY alcCaptureCloseDevice( ALCdevice *device );
 
 ALCAPI void            ALCAPIENTRY alcCaptureStart( ALCdevice *device );
 
@@ -124,7 +124,7 @@ ALCAPI ALCenum         (ALCAPIENTRY *alcGetEnumValue)( ALCdevice *device, const 
 ALCAPI const ALCchar*  (ALCAPIENTRY *alcGetString)( ALCdevice *device, ALCenum param );
 ALCAPI void            (ALCAPIENTRY *alcGetIntegerv)( ALCdevice *device, ALCenum param, ALCsizei size, ALCint *dest );
 ALCAPI ALCdevice *     (ALCAPIENTRY *alcCaptureOpenDevice)( const ALCchar *devicename, ALCuint frequency, ALCenum format, ALCsizei buffersize );
-ALCAPI void            (ALCAPIENTRY *alcCaptureCloseDevice)( ALCdevice *device );
+ALCAPI ALCboolean      (ALCAPIENTRY *alcCaptureCloseDevice)( ALCdevice *device );
 ALCAPI void            (ALCAPIENTRY *alcCaptureStart)( ALCdevice *device );
 ALCAPI void            (ALCAPIENTRY *alcCaptureStop)( ALCdevice *device );
 ALCAPI void            (ALCAPIENTRY *alcCaptureSamples)( ALCdevice *device, ALCvoid *buffer, ALCsizei samples );
@@ -146,7 +146,7 @@ typedef ALCenum        (ALCAPIENTRY *LPALCGETENUMVALUE)(ALCdevice *device, const
 typedef const ALCchar* (ALCAPIENTRY *LPALCGETSTRING)( ALCdevice *device, ALCenum param );
 typedef void           (ALCAPIENTRY *LPALCGETINTEGERV)( ALCdevice *device, ALCenum param, ALCsizei size, ALCint *dest );
 typedef ALCdevice *    (ALCAPIENTRY *LPALCCAPTUREOPENDEVICE)( const ALCchar *devicename, ALCuint frequency, ALCenum format, ALCsizei buffersize );
-typedef void           (ALCAPIENTRY *LPALCCAPTURECLOSEDEVICE)( ALCdevice *device );
+typedef ALCboolean     (ALCAPIENTRY *LPALCCAPTURECLOSEDEVICE)( ALCdevice *device );
 typedef void           (ALCAPIENTRY *LPALCCAPTURESTART)( ALCdevice *device );
 typedef void           (ALCAPIENTRY *LPALCCAPTURESTOP)( ALCdevice *device );
 typedef void           (ALCAPIENTRY *LPALCCAPTURESAMPLES)( ALCdevice *device, ALCvoid *buffer, ALCsizei samples );

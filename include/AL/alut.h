@@ -14,8 +14,7 @@
   #endif
 #endif
 
-#include "alc.h"
-#include "al.h"
+#include "altypes.h"
 
 #ifdef _WIN32
 #define ALUTAPI

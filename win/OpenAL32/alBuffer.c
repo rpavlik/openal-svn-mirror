@@ -164,7 +164,7 @@ ALAPI ALvoid ALAPIENTRY alDeleteBuffers(ALsizei n, const ALuint *puiBuffers)
 	// Check we are actually Deleting some Buffers
 	if (n > 0)
 	{
-		if (n <= g_uiBufferCount)
+		if ((ALuint)n <= g_uiBufferCount)
 		{
 			// Check that all the buffers are valid and can actually be deleted
 			for (i = 0; i < n; i++)
@@ -313,7 +313,7 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,const ALvoid *d
 						{
 							ALBuf->format = AL_FORMAT_MONO16;
 							ALBuf->eOriginalFormat = AL_FORMAT_MONO8;
-							for (i=0;i<size/sizeof(ALubyte);i++)
+							for (i=0;i<(ALsizei)(size/sizeof(ALubyte));i++)
 								ALBuf->data[i]=(ALshort)((((ALubyte *)data)[i]-128)<<8);
 							memset(&(ALBuf->data[size/sizeof(ALubyte)]), 0, 16);
 							ALBuf->size=size/sizeof(ALubyte)*1*sizeof(ALshort);
@@ -357,7 +357,7 @@ ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer,ALenum format,const ALvoid *d
 						{
 							ALBuf->format = AL_FORMAT_STEREO16;
 							ALBuf->eOriginalFormat = AL_FORMAT_STEREO8;
-							for (i=0;i<size/sizeof(ALubyte);i++)
+							for (i=0;i<(ALsizei)(size/sizeof(ALubyte));i++)
 								ALBuf->data[i]=(ALshort)((((ALubyte *)data)[i]-128)<<8);
 							memset(&(ALBuf->data[size/sizeof(ALubyte)]), 0, 32);
 							ALBuf->size=size/sizeof(ALubyte)*1*sizeof(ALshort);

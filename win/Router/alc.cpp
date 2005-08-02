@@ -1924,16 +1924,18 @@ ALCAPI ALCdevice * ALCAPIENTRY alcCaptureOpenDevice(const ALCchar *devicename, A
 // alcCaptureCloseDevice
 //*****************************************************************************
 //
-ALCAPI ALCvoid ALCAPIENTRY alcCaptureCloseDevice(ALCdevice *device)
+ALCAPI ALCboolean ALCAPIENTRY alcCaptureCloseDevice(ALCdevice *device)
 {
+	ALCboolean bReturn = AL_FALSE;
+
 	if (device == g_CaptureDevice)
 	{
-		g_CaptureDevice->AlcApi.alcCaptureCloseDevice(g_CaptureDevice->CaptureDevice);
+		bReturn = g_CaptureDevice->AlcApi.alcCaptureCloseDevice(g_CaptureDevice->CaptureDevice);
 		delete g_CaptureDevice;
 		g_CaptureDevice = NULL;
 	}
 
-    return;
+    return bReturn;
 }
 
 //*****************************************************************************

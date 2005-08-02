@@ -231,7 +231,7 @@ typedef ALCAPI const ALCchar*  (ALCAPIENTRY *ALCAPI_GET_STRING)(ALCdevice* devic
 typedef ALCAPI ALvoid          (ALCAPIENTRY *ALCAPI_GET_INTEGERV)(ALCdevice* device, ALenum param, ALsizei size, ALint* data);
 
 typedef ALCAPI ALCdevice * (ALCAPIENTRY *ALCAPI_CAPTURE_OPEN_DEVICE)( const ALCchar *devicename, ALCuint frequency, ALCenum format, ALCsizei buffersize );
-typedef ALCAPI void        (ALCAPIENTRY *ALCAPI_CAPTURE_CLOSE_DEVICE)( ALCdevice *device );
+typedef ALCAPI ALCboolean  (ALCAPIENTRY *ALCAPI_CAPTURE_CLOSE_DEVICE)( ALCdevice *device );
 typedef ALCAPI void        (ALCAPIENTRY *ALCAPI_CAPTURE_START)( ALCdevice *device );
 typedef ALCAPI void        (ALCAPIENTRY *ALCAPI_CAPTURE_STOP)( ALCdevice *device );
 typedef ALCAPI void        (ALCAPIENTRY *ALCAPI_CAPTURE_SAMPLES)( ALCdevice *device, ALCvoid *buffer, ALCsizei samples );

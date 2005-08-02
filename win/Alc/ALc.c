@@ -536,9 +536,10 @@ ALCAPI ALCdevice* ALCAPIENTRY alcCaptureOpenDevice(const ALCchar *deviceName, AL
 	return pDevice;
 }
 
-ALCAPI void ALCAPIENTRY alcCaptureCloseDevice(ALCdevice *pDevice)
+ALCAPI ALCboolean ALCAPIENTRY alcCaptureCloseDevice(ALCdevice *pDevice)
 {
 	ALint i;
+	ALCboolean bReturn = ALC_FALSE;
 
 	if ((pDevice)&&(pDevice->bIsCaptureDevice))
 	{		
@@ -583,11 +584,15 @@ ALCAPI void ALCAPIENTRY alcCaptureCloseDevice(ALCdevice *pDevice)
 		}
 
 		g_pCaptureDevice = NULL;
+
+		bReturn = ALC_TRUE;
 	}
 	else
 	{
 		SetALCError(ALC_INVALID_DEVICE);
 	}
+
+	return bReturn;
 }
 
 ALCAPI void ALCAPIENTRY alcCaptureStart(ALCdevice *pDevice)
@@ -606,11 +611,12 @@ ALCAPI void ALCAPIENTRY alcCaptureStop(ALCdevice *pDevice)
 		SetALCError(ALC_INVALID_DEVICE);
 }
 
-ALCAPI void ALCAPIENTRY alcCaptureSamples(ALCdevice *pDevice, ALCvoid *pBuffer, ALCsizei ulSamples)
+ALCAPI void ALCAPIENTRY alcCaptureSamples(ALCdevice *pDevice, ALCvoid *pBuffer, ALCsizei lSamples)
 {
 	ALuint	ulCapturedSamples;
 	ALuint	ulBytes, ulBytesToCopy;
 	ALuint	ulReadOffset;
+	ALuint	ulSamples = (unsigned long)lSamples;
 
 	if ((pDevice) && (pDevice->bIsCaptureDevice))
 	{

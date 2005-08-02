@@ -314,12 +314,12 @@ ALUAPI ALvoid ALUAPIENTRY aluMixData(ALvoid *context,ALvoid *buffer,ALsizei size
 	ALint Looping,increment,State;
 	ALuint Buffer,fraction;
 	ALCcontext *ALContext;
-	ALsizei SamplesToDo;
+	ALuint SamplesToDo;
 	ALsource *ALSource;
 	ALbuffer *ALBuffer;
 	ALfloat value;
 	ALshort *Data;
-	ALsizei i,j,k;
+	ALuint i,j,k;
 	ALenum Error;
 	ALbufferlistitem *BufferListItem;
 	ALuint loop;
