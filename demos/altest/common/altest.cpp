@@ -141,6 +141,19 @@
 #endif
 #endif
 
+#ifndef _WIN32
+typedef struct
+{
+        ALshort         wFormatTag;
+        ALshort         nChannels;
+        ALuint          nSamplesPerSec;
+        ALuint          nAvgBytesPerSec;
+        ALshort         nBlockAlign;
+        ALshort         wBitsPerSample;
+        ALshort         cbSize;
+} WAVEFORMATEX;
+#endif // _WIN32
+
 typedef struct
 {
 	ALchar		riff[4];		// 'RIFF'
@@ -323,11 +336,7 @@ static ALenums enumeration[]={
 
 // Function prototypes
 void delay_ms(unsigned int ms);
-ALvoid DisplayALError(ALbyte *szText, ALint errorcode);
-
-#ifdef LINUX
-ALvoid DisplayALError(const char *text, ALint errorcode);
-#endif
+ALvoid DisplayALError(ALchar *szText, ALint errorcode);
 
 char getUpperCh(void);
 int CRToContinue(void);
@@ -3807,7 +3816,11 @@ ALvoid I_StreamingTest(ALvoid)
 	ulBuffersAvailable = NUMBUFFERS;
 	ulDataSize = wave.dataSize;
 
+#ifdef _WIN32
 	while (!_kbhit())
+#else
+	while (1)
+#endif
 	{
 		// Check how many Buffers have been processed
 		alGetSourcei(SourceID, AL_BUFFERS_PROCESSED, &lProcessed);
@@ -4415,7 +4428,11 @@ ALvoid I_GetSourceOffsetTest()
 	printf("Press Q to quit\n");
 	while (1)
 	{
+#ifdef _WIN32
 		if (_kbhit())
+#else
+		if (1)
+#endif // _WIN32
 		{
 			ch = getUpperCh();   
 
@@ -4506,7 +4523,11 @@ ALvoid I_SetSourceOffsetTest()
 
 	while (1)
 	{
+#ifdef _WIN32
 		if (_kbhit())
+#else
+		if (1)
+#endif // _WIN32
 		{
 			ch = getUpperCh();   
 
@@ -4742,7 +4763,7 @@ ALvoid I_DistanceModelTest()
 		printf("Max Distance is 32\n");
 		alSourcef(source[0], AL_MAX_DISTANCE, 32.0f);
 
-		Sleep(2000);
+		delay_ms(2000);
 
 		printf("Distance is 64\n");
 		alSource3f(source[0], AL_POSITION, 0.0f, 0.0f, -64.0f);
@@ -4751,12 +4772,12 @@ ALvoid I_DistanceModelTest()
 		printf("Max Distance is 32\n");
 		alSourcef(source[0], AL_MAX_DISTANCE, 32.0f);
 
-		Sleep(2000);
+		delay_ms(2000);
 	}
 
 	printf("Restoring INVERSE_DISTANCE_CLAMPED model\n");
 	alDistanceModel(AL_INVERSE_DISTANCE_CLAMPED);
-	Sleep(50);
+	delay_ms(50);
 
 	alSourceStopv(1, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
@@ -4823,7 +4844,7 @@ ALvoid I_CaptureTest()
 		waveHeader.lFmtSize = sizeof(WAVEFORMATEX);		
 		waveHeader.wfex.nChannels = 2;
 		waveHeader.wfex.wBitsPerSample = 16;
-		waveHeader.wfex.wFormatTag = WAVE_FORMAT_PCM;
+		waveHeader.wfex.wFormatTag = 1; // WAVE_FORMAT_PCM
 		waveHeader.wfex.nSamplesPerSec = 22050;
 		waveHeader.wfex.nBlockAlign = waveHeader.wfex.nChannels * waveHeader.wfex.wBitsPerSample / 8;
 		waveHeader.wfex.nAvgBytesPerSec = waveHeader.wfex.nSamplesPerSec * waveHeader.wfex.nBlockAlign;
@@ -4835,7 +4856,11 @@ ALvoid I_CaptureTest()
 
 		while (1)
 		{
+#ifdef _WIN32
 			if (_kbhit())
+#else
+			if (1)
+#endif // _WIN32
 			{
 				ch = getUpperCh();   
 
@@ -4989,7 +5014,11 @@ ALvoid I_CaptureAndPlayTest()
 
 		while (1)
 		{
+#ifdef _WIN32
 			if (_kbhit())
+#else
+		        if (1)
+#endif // _WIN32
 			{
 				ch = getUpperCh();   
 
