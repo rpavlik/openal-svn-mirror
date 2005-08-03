@@ -195,6 +195,7 @@ void AVEnvironment::DrawBuffer (float timediff)
    static float RadarRotation = 0.0f;
    static float CarTranslation = 2.0f;
    static float VanTranslation = 45.0f;
+   std::ostringstream s;
    
    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
@@ -221,9 +222,8 @@ void AVEnvironment::DrawBuffer (float timediff)
 	   GLfloat textcolor[3] = { 1.0f, 0.0f, 0.0f };
 	   glColor3fv(textcolor);
 	   glRasterPos2i(5, 5);
-	   ostrstream s;
 	   s << "FPS " << fps << ends;
-	   textobject.PrintString(s.str());
+	   textobject.PrintString((char *)(s.str().c_str()));
    }
    
     // draw EAX text
@@ -237,7 +237,6 @@ void AVEnvironment::DrawBuffer (float timediff)
 	   GLfloat textcolor[3] = { 1.0f, 0.0f, 0.0f };
 	   glColor3fv(textcolor);
 	   glRasterPos2i(100, 5);
-	   ostrstream s;
 	   switch (valEAX)
 	   {
 	   	 case 0:
@@ -319,7 +318,7 @@ void AVEnvironment::DrawBuffer (float timediff)
 	   	   s << "EAX: PSYCHOTIC" << ends;
 	   	   break;    
 	   }
-	   textobject.PrintString(s.str());
+	   textobject.PrintString((char *)(s.str().c_str()));
    }
 }
 

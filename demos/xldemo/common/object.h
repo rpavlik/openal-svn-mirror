@@ -14,7 +14,7 @@
 #ifdef WINDOWS
 #include <strstrea.h>
 #else
-#include <strstream.h>
+#include <sstream>
 #endif
 #include <string.h>
 #include <assert.h>

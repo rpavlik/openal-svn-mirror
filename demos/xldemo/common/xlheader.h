@@ -44,6 +44,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <AL/al.h>
+#include <AL/alc.h>
 #include <AL/alut.h>
-#include <strstream.h>
+#include <sstream>
 #endif

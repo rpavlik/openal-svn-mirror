@@ -89,7 +89,7 @@ void Object::Init (char* FileName)
    char buf[BUFSIZE];
    
    while (InputFile.getline(buf, BUFSIZE)) {
-      istrstream line(buf, BUFSIZE);
+      std::istringstream line(buf);
       char function[BUFSIZE];
       char throwaway[BUFSIZE];
       char strval[BUFSIZE];

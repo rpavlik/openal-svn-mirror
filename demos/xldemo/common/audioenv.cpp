@@ -43,7 +43,7 @@ void AudioEnv::Init ()
 {
    ALCdevice *device = 0;
    ALCcontext *context = 0;
-   alutInit (NULL, &device, &context); // init OpenAL
+   alutInit (NULL, NULL); // init OpenAL
 
    // global settings
    alListenerf(AL_GAIN, 1.0);
@@ -188,17 +188,12 @@ int AudioEnv::LoadFile (char *filename, bool loop)
    alBufferData (buffer[nextBuffer], format, data, size, freq);
 #endif
 #ifdef LINUX
-   ALsizei size, freq, bits;
+   ALsizei size, freq;
    ALenum format;
    ALvoid *data;
-   ALboolean err;
+   ALboolean looping;
    
-   err = alutLoadWAV(filename, &data, &format, &size, &bits, &freq);
-   if(err == AL_FALSE) {
-	   fprintf(stderr, "Could not load %s\n", filename);
-	   return 0;
-   }
-
+   alutLoadWAVFile(filename, &format, &data, &size, &freq, &looping);
    alBufferData (buffer[nextBuffer], format, data, size, freq);
 #endif   
 
