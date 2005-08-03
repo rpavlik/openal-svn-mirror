@@ -35,15 +35,45 @@ AudioEnv::AudioEnv ()
 // destructor
 AudioEnv::~AudioEnv ()
 {
-	alutExit();
+	ALCcontext	*pContext;
+	ALCdevice	*pDevice;
+
+	// Get active context
+	pContext = alcGetCurrentContext();
+	if (pContext)
+	{
+		// Get device for active context
+		pDevice = alcGetContextsDevice(pContext);
+		
+		// Disable context
+		alcMakeContextCurrent(NULL);
+
+		// Release context
+		alcDestroyContext(pContext);
+
+		// Close device
+		alcCloseDevice(pDevice);
+	}
 }
 
 // init
 void AudioEnv::Init ()
 {
-   ALCdevice *device = 0;
-   ALCcontext *context = 0;
-   alutInit (NULL, NULL); // init OpenAL
+    ALCdevice *pDevice;
+    ALCcontext *pContext;
+
+	// Open device
+	pDevice = alcOpenDevice(NULL);
+	if (pDevice)
+	{
+		// Create context
+		pContext = alcCreateContext(pDevice,NULL);
+		if (pContext)
+		{
+			// Set active context
+			alcMakeContextCurrent(pContext);
+		}
+	}
 
    // global settings
    alListenerf(AL_GAIN, 1.0);

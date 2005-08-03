@@ -11,11 +11,7 @@
 #define OBJECT_CLASS
 
 #include <fstream.h>  // includes iostream.h
-#ifdef WINDOWS
-#include <strstrea.h>
-#else
 #include <sstream>
-#endif
 #include <string.h>
 #include <assert.h>
 

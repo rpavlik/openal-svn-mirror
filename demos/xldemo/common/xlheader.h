@@ -12,7 +12,7 @@
 #include <gl/gl.h>
 #include <gl/glu.h>
 #include <al/alut.h>
-#include <strstrea.h>
+#include <sstream>
 #endif
 
 #ifdef MACOS
@@ -24,8 +24,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <strstream.h>
 #include "alut.h"
+#include <sstream>
 #endif
 
 #ifdef MAC_OS_X

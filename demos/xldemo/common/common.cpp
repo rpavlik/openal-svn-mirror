@@ -8,10 +8,6 @@
 ****************************************************************************/
 #include "common.h"
 
-#ifndef WINDOWS
-using std::ends;
-#endif
-
 // constructor
 AVEnvironment::AVEnvironment ()
 {
@@ -195,7 +191,6 @@ void AVEnvironment::DrawBuffer (float timediff)
    static float RadarRotation = 0.0f;
    static float CarTranslation = 2.0f;
    static float VanTranslation = 45.0f;
-   std::ostringstream s;
    
    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
@@ -222,7 +217,8 @@ void AVEnvironment::DrawBuffer (float timediff)
 	   GLfloat textcolor[3] = { 1.0f, 0.0f, 0.0f };
 	   glColor3fv(textcolor);
 	   glRasterPos2i(5, 5);
-	   s << "FPS " << fps << ends;
+	   std::ostringstream s;
+	   s << "FPS " << fps << std::endl;
 	   textobject.PrintString((char *)(s.str().c_str()));
    }
    
@@ -237,85 +233,86 @@ void AVEnvironment::DrawBuffer (float timediff)
 	   GLfloat textcolor[3] = { 1.0f, 0.0f, 0.0f };
 	   glColor3fv(textcolor);
 	   glRasterPos2i(100, 5);
+	   std::ostringstream s;
 	   switch (valEAX)
 	   {
 	   	 case 0:
-	   	   s << "EAX: GENERIC" << ends;
+			 s << "EAX: GENERIC" << std::endl;
 	   	   break;
 	   	 case 1:
-	   	   s << "EAX: PADDED CELL" << ends;
+	   	   s << "EAX: PADDED CELL" << std::endl;
 	   	   break;
 	   	 case 2:
-	   	   s << "EAX: ROOM" << ends;
+	   	   s << "EAX: ROOM" << std::endl;
 	   	   break;
 	   	 case 3:
-	   	   s << "EAX: BATHROOM" << ends;
+	   	   s << "EAX: BATHROOM" << std::endl;
 	   	   break;
 	   	 case 4:
-	   	   s << "EAX: LIVING ROOM" << ends;
+	   	   s << "EAX: LIVING ROOM" << std::endl;
 	   	   break;
 	   	 case 5:
-	   	   s << "EAX: STONE ROOM" << ends;
+	   	   s << "EAX: STONE ROOM" << std::endl;
 	   	   break;
 	   	 case 6:
-	   	   s << "EAX: AUDITORIUM" << ends;
+	   	   s << "EAX: AUDITORIUM" << std::endl;
 	   	   break;
 	   	 case 7:
-	   	   s << "EAX: CONCERT HALL" << ends;
+	   	   s << "EAX: CONCERT HALL" << std::endl;
 	   	   break;
 	   	 case 8:
-	   	   s << "EAX: CAVE" << ends;
+	   	   s << "EAX: CAVE" << std::endl;
 	   	   break;
 	   	 case 9:
-	   	   s << "EAX: ARENA" << ends;
+	   	   s << "EAX: ARENA" << std::endl;
 	   	   break;
 	   	 case 10:
-	   	   s << "EAX: HANGAR" << ends;
+	   	   s << "EAX: HANGAR" << std::endl;
 	   	   break;
 	   	 case 11:
-	   	   s << "EAX: CARPETED HALLWAY" << ends;
+	   	   s << "EAX: CARPETED HALLWAY" << std::endl;
 	   	   break;
 	   	 case 12:
-	   	   s << "EAX: HALLWAY" << ends;
+	   	   s << "EAX: HALLWAY" << std::endl;
 	   	   break;
 	   	 case 13:
-	   	   s << "EAX: STONE CORRIDOR" << ends;
+	   	   s << "EAX: STONE CORRIDOR" << std::endl;
 	   	   break;
 	   	 case 14:
-	   	   s << "EAX: ALLEY" << ends;
+	   	   s << "EAX: ALLEY" << std::endl;
 	   	   break;
 	   	 case 15:
-	   	   s << "EAX: FOREST" << ends;
+	   	   s << "EAX: FOREST" << std::endl;
 	   	   break;
 	   	 case 16:
-	   	   s << "EAX: CITY" << ends;
+	   	   s << "EAX: CITY" << std::endl;
 	   	   break;
 	   	 case 17:
-	   	   s << "EAX: MOUNTAINS" << ends;
+	   	   s << "EAX: MOUNTAINS" << std::endl;
 	   	   break;
 	   	 case 18:
-	   	   s << "EAX: QUARRY" << ends;
+	   	   s << "EAX: QUARRY" << std::endl;
 	   	   break;
 	   	 case 19:
-	   	   s << "EAX: PLAIN" << ends;
+	   	   s << "EAX: PLAIN" << std::endl;
 	   	   break;
 	   	 case 20:
-	   	   s << "EAX: PARKING LOT" << ends;
+	   	   s << "EAX: PARKING LOT" << std::endl;
 	   	   break;
 	   	 case 21:
-	   	   s << "EAX: SEWER PIPE" << ends;
+	   	   s << "EAX: SEWER PIPE" << std::endl;
 	   	   break;
 	   	 case 22:
-	   	   s << "EAX: UNDERWATER" << ends;
+	   	   s << "EAX: UNDERWATER" << std::endl;
 	   	   break;
 	   	 case 23:
-	   	   s << "EAX: DRUGGED" << ends;
+	   	   s << "EAX: DRUGGED" << std::endl;
 	   	   break;
 	   	 case 24:
-	   	   s << "EAX: DIZZY" << ends;
+	   	   s << "EAX: DIZZY" << std::endl;
 	   	   break;
 	   	 case 25:
-	   	   s << "EAX: PSYCHOTIC" << ends;
+	   	   s << "EAX: PSYCHOTIC" << std::endl;
 	   	   break;    
 	   }
 	   textobject.PrintString((char *)(s.str().c_str()));
