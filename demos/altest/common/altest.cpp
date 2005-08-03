@@ -636,12 +636,12 @@ int main(int argc, char* argv[])
 	}
 
 	// Load in samples to be used by Test functions
-	if ((!LoadWave("footsteps.wav", g_Buffers[0])) ||
+	if ((!LoadWave("Footsteps.wav", g_Buffers[0])) ||
 		(!LoadWave("ding.wav", g_Buffers[1])) ||
-		(!LoadWave("wave1.wav", g_Buffers[2])) ||
-		(!LoadWave("wave2.wav", g_Buffers[3])) ||
-		(!LoadWave("wave3.wav", g_Buffers[4])) ||
-		(!LoadWave("wave4.wav", g_Buffers[5])) ||
+		(!LoadWave("Wave1.WAV", g_Buffers[2])) ||
+		(!LoadWave("Wave2.WAV", g_Buffers[3])) ||
+		(!LoadWave("Wave3.WAV", g_Buffers[4])) ||
+		(!LoadWave("Wave4.WAV", g_Buffers[5])) ||
 		(!LoadWave("stereo.wav", g_Buffers[6])))
 	{
 		alDeleteBuffers(NUM_BUFFERS, g_Buffers);

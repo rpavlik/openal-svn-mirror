@@ -1563,3 +1563,31 @@ void alcGetIntegerv( ALCdevice *deviceHandle, ALCenum  token,
 		  break;
 	}
 }
+
+
+/*
+ Capture functions
+*/
+
+ALCdevice *alcCaptureOpenDevice(const ALCchar *devicename, ALCuint frequency, ALCenum format, ALCsizei buffersize )
+{
+	return NULL;
+}
+
+ALCAPI ALCboolean      ALCAPIENTRY alcCaptureCloseDevice( ALCdevice *device )
+{
+	_alcSetError(ALC_INVALID_DEVICE);
+	return ALC_FALSE;
+}
+
+ALCAPI void            ALCAPIENTRY alcCaptureStart( ALCdevice *device )
+{
+}
+
+ALCAPI void            ALCAPIENTRY alcCaptureStop( ALCdevice *device )
+{
+}
+
+ALCAPI void            ALCAPIENTRY alcCaptureSamples( ALCdevice *device, ALCvoid *buffer, ALCsizei samples )
+{
+}

@@ -36,6 +36,15 @@ void alDopplerFactor( ALfloat value ) {
 }
 
 /*
+ * alSpeedOfSound( ALfloat value )
+ *
+ * Sets the speed of sound used by the doppler filter.
+ */
+void alSpeedOfSound( ALfloat value ) {
+	/* FIXME -- no code here */
+}
+
+/*
  * alDopplerVelocity( ALfloat value )
  *
  * Sets the doppler velocity used by the doppler filter.
