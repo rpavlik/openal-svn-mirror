@@ -1,4 +1,9 @@
 2005-08-05  Sven Panne  <sven.panne@aedion.de>
+	* linux/src/al_queue.c, linux/test/testqueue.c,
+	linux/test/testqueue2.c, linux/test/testqueue3.c: Removed obsolete
+	and undocumented alQueuei API entry. Its functionality is subsumed
+	by alSourcei and alSourceQueueBuffers.
+
 	* linux/src/al_ext_iasig.c: Removed. It was a stub for
 	undocumented functionality only, anyway.
 

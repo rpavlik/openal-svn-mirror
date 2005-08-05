@@ -69,8 +69,8 @@ static void init( const char *fname ) {
 	alSourcefv( multis, AL_ORIENTATION, back );
 	alSourcef(  multis, AL_GAIN_LINEAR_LOKI, 1.0f );
 
-	alQueuei(   multis, AL_BUFFER, boom );
-	alQueuei(   multis, AL_BUFFER, boom );
+	alSourceQueueBuffers( multis, 1, &boom );
+	alSourceQueueBuffers( multis, 1, &boom );
 	alSourcei(   multis, AL_BUFFER, boom );
 
 	return;
