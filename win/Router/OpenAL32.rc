@@ -28,8 +28,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 6,14,0357,6
- PRODUCTVERSION 6,14,0357,6
+ FILEVERSION 6,14,357,9
+ PRODUCTVERSION 6,14,357,9
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -44,13 +44,18 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "CompanyName", "NVIDIA Corporation\0"
+            VALUE "Comments", "\0"
+            VALUE "CompanyName", "Portions (c) Creative Labs Inc. and NVIDIA Corp.\0"
             VALUE "FileDescription", "Standard OpenAL(TM) Implementation\0"
-            VALUE "FileVersion", "6.14.0357.6\0"
+            VALUE "FileVersion", "6.14.0357.9\0"
+            VALUE "InternalName", "\0"
             VALUE "LegalCopyright", "Copyright(C) 2000-2003 NVIDIA Corporation\0"
+            VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "OpenAL32.dll\0"
+            VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "Standard OpenAL(TM) Library\0"
-            VALUE "ProductVersion", "6.14.0357.6\0"
+            VALUE "ProductVersion", "6.14.0357.9\0"
+            VALUE "SpecialBuild", "\0"
         END
     END
     BLOCK "VarFileInfo"
@@ -68,18 +73,18 @@ END
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE DISCARDABLE
+1 TEXTINCLUDE DISCARDABLE 
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE DISCARDABLE
+2 TEXTINCLUDE DISCARDABLE 
 BEGIN
     "#include ""afxres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE DISCARDABLE
+3 TEXTINCLUDE DISCARDABLE 
 BEGIN
     "\r\n"
     "\0"
