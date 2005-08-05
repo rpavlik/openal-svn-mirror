@@ -23,7 +23,6 @@ AL_OBJS=al_buffer.o al_listen.o al_ext.o \
 	al_state.o                       \
 	al_able.o                        \
 	al_error.o                       \
-	al_ext_iasig.o			 \
 	al_config.o                      \
 	al_debug.o                       \
 	al_rctree.o                      \

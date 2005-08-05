@@ -1,3 +1,9 @@
+2005-08-05  Sven Panne  <sven.panne@aedion.de>
+	* linux/src/al_ext_iasig.c: Removed. It was a stub for
+	undocumented functionality only, anyway.
+
+	* src/Makefile.in: al_ext_iasig.c has gone...
+
 2005-07-18  Sven Panne  <sven.panne@aedion.de>
 	* linux/doc/openal.texi, linux/src/al_state.c,
 	linux/src/al_state.h: Nuked alHint(), it is not in the 1.1 spec.
