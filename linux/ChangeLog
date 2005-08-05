@@ -1,4 +1,7 @@
 2005-08-05  Sven Panne  <sven.panne@aedion.de>
+	* linux/src/al_doppler.c, linux/src/alc/alc_context.c: Added a few
+	UNUSED() to avoid currently useless warnings.
+
 	* linux/src/al_queue.c, linux/test/testqueue.c,
 	linux/test/testqueue2.c, linux/test/testqueue3.c: Removed obsolete
 	and undocumented alQueuei API entry. Its functionality is subsumed
