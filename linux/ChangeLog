@@ -1,4 +1,19 @@
 2005-08-05  Sven Panne  <sven.panne@aedion.de>
+	* linux/src/al_buffer.c, linux/src/alut/alut_imaadpcm.c,
+	linux/src/alut/alut_msadpcm.c, linux/src/alut/alut_rawadpcm.c,
+	linux/src/extensions/al_ext_vorbis.c, linux/test/testalut.c,
+	linux/test/testcapture.c, linux/test/testchannel.c,
+	linux/test/testchannel2.c, linux/test/testgain.c,
+	linux/test/testgainlinear.c, linux/test/testmultialut.c,
+	linux/test/testmulticontext.c, linux/test/testmulticontext2.c,
+	linux/test/testmultinothread.c, linux/test/testpitch.c,
+	linux/test/testpitch2.c, linux/test/testpitch3.c,
+	linux/test/testpitch4.c, linux/test/testpitchnothread.c,
+	linux/test/testpitchnothread2.c, linux/test/testqueue.c,
+	linux/test/testqueue2.c, linux/test/testqueue3.c,
+	linux/test/teststartstop.c, linux/test/testtime.c: Cleaned up
+	#includes a bit.
+	
 	* linux/src/al_doppler.c, linux/src/alc/alc_context.c: Added a few
 	UNUSED() to avoid currently useless warnings.
 

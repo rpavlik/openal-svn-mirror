@@ -7,12 +7,13 @@
  *
  * FIXME: this is such a mess.
  */
+#include "al_siteconfig.h"
 
 #include <AL/al.h>
-#include <AL/alc.h>
+
+/* for alutLoadIMA_ADPCMData_LOKI */
 #include <AL/alext.h>
 
-#include "al_siteconfig.h"
 #include "al_main.h"
 #include "al_debug.h"
 #include "al_buffer.h"

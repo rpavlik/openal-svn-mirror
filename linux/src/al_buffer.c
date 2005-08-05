@@ -9,7 +9,8 @@
 #include "al_siteconfig.h"
 
 #include <AL/al.h>
-#include <AL/alut.h>
+
+/* for alutLoadVorbis_LOKI and alBufferAppendData_LOKI */
 #include <AL/alext.h>
 
 #include "al_buffer.h"

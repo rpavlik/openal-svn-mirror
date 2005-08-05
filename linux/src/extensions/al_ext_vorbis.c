@@ -8,6 +8,8 @@
 #include "al_siteconfig.h"
 
 #include "AL/al.h"
+
+/* for alutLoadVorbis_LOKI */
 #include "AL/alext.h"
 
 #include <stdio.h>
