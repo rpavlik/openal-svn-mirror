@@ -17,7 +17,7 @@
 #define WAVEFILE "boom.wav"
 
 static void iterate( void );
-static void init( const char *fname );
+static void init( char *fname );
 static void cleanup(void);
 
 static ALuint rightSid;
@@ -57,16 +57,15 @@ static void iterate( void ) {
 	return;
 }
 
-static void init( const char *fname ) {
+static void init( char *fname ) {
 	ALfloat zeroes[] = { 0.0f, 0.0f,  0.0f };
 	ALfloat front[]  = { 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f };
 	ALfloat position[] = { 40.0f, 0.0f, 0.0f };
 	ALuint boom;
 	ALsizei size;
-	ALsizei bits;
 	ALsizei freq;
 	ALsizei format;
-	ALboolean err;
+	ALboolean loop;
 	int i = 0;
 
 	alListenerfv(AL_POSITION, zeroes );
@@ -75,8 +74,8 @@ static void init( const char *fname ) {
 
 	alGenBuffers( 1, &boom );
 
-	err = alutLoadWAV(fname, &wave, &format, &size, &bits, &freq);
-	if(err == AL_FALSE) {
+	alutLoadWAVFile( (ALbyte*)fname, &format, &wave, &size, &freq, &loop );
+	if(wave == NULL) {
 		fprintf(stderr, "Could not open %s\n", fname);
 		exit(1);
 	}

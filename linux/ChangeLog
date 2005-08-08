@@ -1,3 +1,19 @@
+2005-08-08  Sven Panne  <sven.panne@aedion.de>
+	* linux/src/alut/alut_wav.c, linux/test/testda.c,
+	linux/test/testdoppler.c, linux/test/testgain.c,
+	linux/test/testlistener.c, linux/test/testlistener2.c,
+	linux/test/testlistener3.c, linux/test/testlistener4.c,
+	linux/test/testloop.c, linux/test/testmp32.c,
+	linux/test/testmulti.c, linux/test/testmultichannel.c,
+	linux/test/testmultinothread.c, linux/test/testnothread.c,
+	linux/test/testpause.c, linux/test/testpitch.c,
+	linux/test/testpitchnothread.c, linux/test/testpitchnothread2.c,
+	linux/test/testqueue.c, linux/test/testqueue2.c,
+	linux/test/testqueue3.c, linux/test/testrelative.c,
+	linux/test/testreverb.c, linux/test/testsingle.c,
+	linux/test/testsourcestop.c, linux/test/testtime.c: Removed
+	alutLoadWAV, it was undocumented and only available on Linux.
+
 2005-08-05  Sven Panne  <sven.panne@aedion.de>
 	* linux/src/al_buffer.c, linux/src/alut/alut_imaadpcm.c,
 	linux/src/alut/alut_msadpcm.c, linux/src/alut/alut_rawadpcm.c,

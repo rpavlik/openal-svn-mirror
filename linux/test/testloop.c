@@ -14,7 +14,7 @@
 
 #define WAVEFILE "fire2.wav"
 
-static void init(const char *fname);
+static void init(char *fname);
 static void cleanup(void);
 
 static void *wave = NULL;
@@ -22,17 +22,16 @@ static ALCcontext *context_id = NULL;
 static ALuint moving_source = 0;
 
 
-static void init(const char *fname) {
+static void init(char *fname) {
 	ALfloat weirdpos[] = { 300.0f, 0.0f,  0.0f };
 	ALfloat back[]   = { 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f };
 	ALfloat front[]  = { 0.0f, 0.0f,  1.0f, 0.0f, 1.0f, 0.0f };
 	ALfloat position[] = { 0.0f, 0.0f, 4.0f };
 	ALuint boom;
 	ALsizei size;
-	ALsizei bits;
 	ALsizei freq;
 	ALsizei format;
-	ALboolean err;
+	ALboolean loop;
 	FILE* file = NULL;
 	char* buffer = NULL;
 
@@ -40,8 +39,8 @@ static void init(const char *fname) {
 
 	alGenBuffers( 1, &boom );
 
-	err = alutLoadWAV(fname, &wave, &format, &size, &bits, &freq);
-	if(err == AL_FALSE) {
+	alutLoadWAVFile( (ALbyte*)fname, &format, &wave, &size, &freq, &loop );
+	if(wave == NULL) {
 		fprintf(stderr, "Could not include %s\n", fname);
 		exit(1);
 	}

@@ -24,7 +24,7 @@
 #define TORAD(d) ((d / 180.0) * M_PI)
 
 static void iterate( void );
-static void init( const char *fname );
+static void init( char *fname );
 static void cleanup(void);
 
 static ALuint rightSid;
@@ -53,23 +53,22 @@ static void iterate( void ) {
 	micro_sleep(1500000);
 }
 
-static void init( const char *fname ) {
+static void init( char *fname ) {
 	ALfloat zeroes[] = { 0.0f, 0.0f,  0.0f };
 	ALfloat position[] = { 50.0f, 0.0f, 0.0f };
 	ALuint boom;
 	ALsizei size;
-	ALsizei bits;
 	ALsizei freq;
 	ALsizei format;
-	ALboolean err;
+	ALboolean loop;
 	int i = 0;
 
 	alListenerfv(AL_POSITION, zeroes );
 
 	alGenBuffers( 1, &boom );
 
-	err = alutLoadWAV( fname, &wave, &format, &size, &bits, &freq);
-	if(err == AL_FALSE) {
+	alutLoadWAVFile( (ALbyte*)fname, &format, &wave, &size, &freq, &loop );
+	if(wave == NULL) {
 		fprintf(stderr, "Could not load %s\n", fname);
 		exit(1);
 	}

@@ -35,38 +35,6 @@ static ALboolean ReadWAVMemory(const ALvoid *data, void **pcmdata,
 			       ALushort *rfmt, ALushort *rchan,
 			       ALushort *rfreq, ALuint *rsize);
 
-ALboolean alutLoadWAV( const char *fname,
-                        void **wave,
-			ALsizei *format,
-			ALsizei *size,
-			ALsizei *bits,
-			ALsizei *freq ) {
-	ALushort alFmt  = 0;
-	ALushort acChan = 0;
-	ALushort acFreq = 0;
-	ALuint   acSize = 0;
-
-	if(ReadWAVFile(fname, wave,
-			&alFmt, &acChan, &acFreq, &acSize) == AL_FALSE) {
-		_alDebug(ALD_CONVERT, __FILE__, __LINE__,
-			"ReadWAVFile failed for %s", fname);
-		return AL_FALSE;
-	}
-
-	/* set output params */
-	*format = (ALsizei) alFmt;
-	*freq   = (ALsizei) acFreq;
-	*size   = (ALsizei) acSize;
-	*bits   = (ALsizei) _al_formatbits(alFmt);
-
-	_alDebug(ALD_CONVERT, __FILE__, __LINE__,
-		"alutLoadWAV %s with [alformat/size/bits/freq] = [0x%x/%d/%d]",
-		fname,
-		*format, *size, *freq);
-
-	return AL_TRUE;
-}
-
 static ALboolean ReadWAVFile(const char *fname,
 			     void **pcmdata,
 			     ALushort *rfmt,
@@ -168,22 +136,31 @@ void alutLoadWAVFile(ALbyte *fname,
 		       ALsizei *freq,
 		       ALboolean *loop)
 {
-	ALboolean ret;
-	ALsizei bits_dummy;
+	ALushort alFmt  = 0;
+	ALushort acChan = 0;
+	ALushort acFreq = 0;
+	ALuint   acSize = 0;
 
-	ret = alutLoadWAV( (const char *) fname,
-			   data,
-			   format,
-			   size,
-			   &bits_dummy,
-			   freq );
+	if(ReadWAVFile(fname, data,
+			&alFmt, &acChan, &acFreq, &acSize) == AL_FALSE) {
+		_alDebug(ALD_CONVERT, __FILE__, __LINE__,
+			"ReadWAVFile failed for %s", fname);
+		return;
+	}
 
+	/* set output params */
+	*format = (ALenum)  alFmt;
+	*freq   = (ALsizei) acFreq;
+	*size   = (ALsizei) acSize;
 	if(loop)
 	{
 		*loop = AL_FALSE;
 	}
 
-	return;
+	_alDebug(ALD_CONVERT, __FILE__, __LINE__,
+		"alutLoadWAV %s with [alformat/size/freq] = [0x%x/%d/%d]",
+		fname,
+		*format, *size, *freq);
 }
 
 void alutLoadWAVMemory(ALbyte *memory,

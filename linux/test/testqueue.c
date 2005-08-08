@@ -14,7 +14,7 @@
 #define NUMSOURCES    1
 
 static void start( void );
-static void init( const char *fname );
+static void init( char *fname );
 static void cleanup(void);
 
 static ALuint multis;
@@ -29,19 +29,18 @@ static void start( void )
 	return;
 }
 
-static void init( const char *fname ) {
+static void init( char *fname ) {
 	ALuint boom;
 	ALsizei size;
-	ALsizei bits;
 	ALsizei freq;
 	ALsizei format;
-	ALboolean err;
+	ALboolean loop;
 	int i;
 
 	alGenBuffers( 1, &boom );
 
-	err = alutLoadWAV(fname, &wave, &format, &size, &bits, &freq);
-	if(err == AL_FALSE) {
+	alutLoadWAVFile( (ALbyte*)fname, &format, &wave, &size, &freq, &loop );
+	if(wave == NULL) {
 		fprintf(stderr, "Could not include %s\n", fname);
 		exit(1);
 	}

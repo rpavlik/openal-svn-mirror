@@ -46,17 +46,16 @@ static void initmp3( void ) {
 	return;
 }
 
-static void initwav( const char *fname ) {
+static void initwav( char *fname ) {
 	ALuint  boom;
 	ALsizei size;
-	ALsizei bits;
 	ALsizei freq;
 	ALsizei format;
-	ALboolean err;
-	ALvoid *wave;
+	ALboolean loop;
+	ALvoid *wave = NULL;
 
-	err = alutLoadWAV(fname, &wave, &format, &size, &bits, &freq);
-	if(err == AL_FALSE) {
+	alutLoadWAVFile( (ALbyte*)fname, &format, &wave, &size, &freq, &loop );
+	if(wave == NULL) {
 		fprintf(stderr, "Could not include %s\n", fname);
 		exit(1);
 	}
