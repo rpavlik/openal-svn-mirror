@@ -61,7 +61,6 @@ int main( int argc, char* argv[] ) {
 	void *data;
 	char *fname;
 	int size;
-	int i = 0;
 
 	dev = alcOpenDevice( NULL );
 	if( dev == NULL ) {
@@ -110,7 +109,7 @@ int main( int argc, char* argv[] ) {
 
 	fread(data, size, 1, fh);
 
-	alutLoadVorbisp = (vorbisLoader *) alGetProcAddress((ALubyte *) VORBIS_FUNC);
+	alutLoadVorbisp = (vorbisLoader *) alGetProcAddress((ALchar *) VORBIS_FUNC);
 	if(alutLoadVorbisp == NULL) {
 		free(data);
 

@@ -26,8 +26,6 @@ static ALCcontext *context_id;
 static void *wave = NULL;
 static time_t start;
 
-static void sel_sleep(int usec);
-
 extern int mixer_iterate(void *dummy);
 
 static void iterate( void ) {
@@ -47,7 +45,6 @@ static void iterate( void ) {
 
 static void init( char *fname) {
 	ALfloat zeroes[] = { 0.0f, 0.0f,  0.0f };
-	ALfloat back[]   = { 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f };
 	ALfloat front[]  = { 0.0f, 0.0f,  1.0f, 0.0f, 1.0f, 0.0f };
 	ALuint boom;
 	ALsizei size;

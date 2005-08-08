@@ -36,10 +36,8 @@ static void *cc; /* al context */
 
 static void init(const char *fname) {
 	ALfloat zeroes[] = { 0.0f, 0.0f,  0.0f };
-	ALfloat back[]   = { 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f };
 	ALfloat front[]  = { 0.0f, 0.0f,  1.0f, 0.0f, 1.0f, 0.0f };
 	ALuint boom;
-	ALboolean err;
 	ALshort *data;
 	int i;
 	const int canon_max = ((1<<(16-1))-1);
@@ -88,7 +86,6 @@ static void cleanup(void) {
 
 int main( int argc, char* argv[] ) {
 	ALCdevice *dev;
-	time_t shouldend;
 	int attrlist[] = { ALC_FREQUENCY, DEFFREQ,
 			   ALC_INVALID };
 	char *musicitr = musicstr;

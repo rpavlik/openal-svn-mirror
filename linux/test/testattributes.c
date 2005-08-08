@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 	ALCdevice *dev;
 	int attrlist[] = { ALC_FREQUENCY, 44100, ALC_SYNC, AL_TRUE, 0 };
 
-	dev = alcOpenDevice( (const ALubyte *) "'((sampling-rate 44100))" );
+	dev = alcOpenDevice( (const ALCchar *) "'((sampling-rate 44100))" );
 	if( dev == NULL )
 	{
 		return 1;

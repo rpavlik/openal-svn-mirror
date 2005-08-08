@@ -35,7 +35,6 @@ static void init( char *fname ) {
 	ALsizei freq;
 	ALsizei format;
 	ALboolean loop;
-	int i;
 
 	alGenBuffers( 1, &boom );
 
@@ -73,7 +72,6 @@ void cleanup(void) {
 
 int main( int argc, char* argv[] ) {
 	ALCdevice *dev;
-	int i = 5;
 
 	dev = alcOpenDevice( NULL );
 	if( dev == NULL ) {

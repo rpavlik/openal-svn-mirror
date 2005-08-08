@@ -34,11 +34,6 @@ static void init( void ) {
 	ALfloat back[]     = { 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f };
 	ALfloat front[]    = { 0.0f, 0.0f,  1.0f, 0.0f, 1.0f, 0.0f };
 	ALfloat position[] = { -10.0f, 0.0f, 4.0f };
-	ALsizei size;
-	ALsizei bits;
-	ALsizei freq;
-	ALsizei format;
-	int filelen;
 
 	start = time(NULL);
 
@@ -66,17 +61,11 @@ int main( int argc, char* argv[] ) {
 	ALCdevice *dev;
 	int attrlist[] = { ALC_FREQUENCY, 22050 ,
 			   ALC_INVALID, 0 };
-	time_t shouldend;
-	float sinsamp;
-	ALshort buf[DATABUFSIZE];
-	int blah = 0;
 	void *data = NULL;
 	struct stat sbuf;
 	FILE *fh;
 	int speed;
 	int size;
-	int i = 0;
-	const int microsecs = 50000;
 	char *fname;
 
 	dev = alcOpenDevice( NULL );

@@ -8,7 +8,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define GP(x)          alGetProcAddress((const ALubyte *) x)
+#define GP(x)          alGetProcAddress((const ALchar*) x)
 
 #ifdef _WIN32
 #include <windows.h>

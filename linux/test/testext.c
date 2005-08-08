@@ -6,18 +6,7 @@
 
 #include <stdio.h>
 
-
-static void cleanup(void);
-
-static ALuint moving_source = 0;
-
 static ALCcontext *context_id;
-
-static void cleanup(void) {
-#ifdef JLIB
-	jv_check_mem();
-#endif
-}
 
 #define BADPROC           "lokitest"
 #define GOODPROC          "alLokiTest"
@@ -27,7 +16,6 @@ typedef void blah_type( void * );
 int main( int argc, char* argv[] ) {
 	ALCdevice *dev;
 	blah_type *blah;
-	int i = 0;
 
 	dev = alcOpenDevice( NULL );
 	if( dev == NULL ) {
@@ -45,12 +33,12 @@ int main( int argc, char* argv[] ) {
 
 	fixup_function_pointers();
 
-	blah = (blah_type *) alGetProcAddress((ALubyte *) BADPROC);
+	blah = (blah_type *) alGetProcAddress((ALchar *) BADPROC);
 	if(blah != NULL) {
 		fprintf(stderr, "weird, it seems %s is defined\n", BADPROC);
 	}
 
-	blah = (blah_type *) alGetProcAddress((ALubyte *) GOODPROC);
+	blah = (blah_type *) alGetProcAddress((ALchar *) GOODPROC);
 	if(blah == NULL) {
 		fprintf(stderr, "weird, it seems %s is not defined\n",GOODPROC);
 	} else {

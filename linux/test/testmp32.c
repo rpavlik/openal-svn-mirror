@@ -20,8 +20,6 @@
 #define MP3_FUNC    "alutLoadMP3_LOKI"
 #define NUMSOURCES  1
 
-static void init_mp3(void);
-static void init_wave(const char *fname);
 static void cleanup(void);
 
 static ALuint mp3buf; /* our buffer */
@@ -47,7 +45,6 @@ static void initmp3( void ) {
 }
 
 static void initwav( char *fname ) {
-	ALuint  boom;
 	ALsizei size;
 	ALsizei freq;
 	ALsizei format;
@@ -79,12 +76,7 @@ static void cleanup(void) {
 int main( int argc, char* argv[] ) {
 	ALCdevice *dev;
 	FILE *fh;
-	time_t shouldend;
-	float sinsamp;
-	int blah = 0;
 	struct stat sbuf;
-	int speed;
-	int i = 0;
 	void *data;
 	int size;
 	char *fname;
@@ -135,7 +127,7 @@ int main( int argc, char* argv[] ) {
 
 	fread(data, 1, size, fh);
 
-	alutLoadMP3p = (mp3Loader *) alGetProcAddress((ALubyte *) MP3_FUNC);
+	alutLoadMP3p = (mp3Loader *) alGetProcAddress((ALchar *) MP3_FUNC);
 	if(alutLoadMP3p == NULL) {
 		free(data);
 

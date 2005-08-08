@@ -17,8 +17,6 @@
 
 static void cleanup(void);
 
-static ALuint caps[NUMCAPTURES] = { 0 };
-
 static ALCcontext *context_id;
 
 void cleanup(void) {
@@ -31,9 +29,7 @@ void cleanup(void) {
 
 int main( int argc, char* argv[] ) {
 	ALCdevice *dev;
-	ALuint cpid;
 	ALuint sid = 0;
-	ALuint cbid;
 	ALuint sbid;
 	ALuint retval;
 	ALvoid *buffer = NULL;

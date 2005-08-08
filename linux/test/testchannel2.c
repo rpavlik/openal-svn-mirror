@@ -17,7 +17,6 @@
 #define WAVEFILE "sample.wav"
 #define DATABUFFERSIZE (10 * (512 * 3) * 1024)
 
-static void iterate(void);
 static void init(const char *fname);
 static void cleanup(void);
 
@@ -28,39 +27,12 @@ static void *data = (void *) 0xDEADBEEF;
 
 static ALCcontext *context_id;
 
-static void iterate( void ) {
-	static ALfloat position[] = { 10.0f, 0.0f, 4.0f };
-	static ALfloat movefactor = 4.5;
-	static time_t then = 0;
-	time_t now;
-
-	now = time( NULL );
-
-	/* Switch between left and right stereo sample every two seconds. */
-	if( now - then > 2 ) {
-		then = now;
-
-		movefactor *= -1.0;
-	}
-
-	position[0] += movefactor;
-	alSourcefv( moving_source, AL_POSITION, position );
-
-	micro_sleep(500000);
-
-	return;
-}
-
 static void init(const char *fname) {
 	FILE *fh;
 	ALfloat zeroes[] = { 0.0f, 0.0f,  0.0f };
 	ALfloat back[]   = { 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f };
 	ALfloat front[]  = { 0.0f, 0.0f,  1.0f, 0.0f, 1.0f, 0.0f };
 	ALuint stereo;
-	ALsizei size;
-	ALsizei bits;
-	ALsizei freq;
-	ALsizei format;
 	int filelen;
 
 	data = malloc(DATABUFFERSIZE);
@@ -111,8 +83,6 @@ int main( int argc, char* argv[] ) {
 	ALCdevice *dev;
 	int attrlist[] = { ALC_FREQUENCY, 22050,
 			   ALC_INVALID };
-	time_t shouldend;
-	int i;
 	ALfloat gain;
 
 	dev = alcOpenDevice( NULL );

@@ -28,7 +28,7 @@ int main( int argc, char* argv[] )
 	printf( "AL_RENDERER: %s\n", alGetString( AL_RENDERER ) );
 	printf( "AL_EXTENSIONS: %s\n", alGetString( AL_EXTENSIONS ) );
 
-	if( alIsExtensionPresent( (const ALubyte*) "AL_LOKI_attenuation_scale" ) ) {
+	if( alIsExtensionPresent( (const ALCchar*) "AL_LOKI_attenuation_scale" ) ) {
 		printf( "Found AL_LOKI_attenuation_scale\n" );
 	}
 

@@ -24,9 +24,7 @@ static ALuint buffer_id;
 
 static void init( const char *fname ) {
 	ALfloat zeroes[] = { 0.0f, 0.0f,  0.0f };
-	ALfloat back[]   = { 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f };
 	ALfloat front[]  = { 0.0f, 0.0f,  1.0f, 0.0f, 1.0f, 0.0f };
-	ALboolean err;
 	FILE *fh;
 	ALvoid *data;
 	struct stat buf;
@@ -83,8 +81,6 @@ static void cleanup(void) {
 }
 
 int main( int argc, char* argv[] ) {
-	time_t start;
-	time_t shouldend;
 	int i = 0;
 	int j = 0;
 

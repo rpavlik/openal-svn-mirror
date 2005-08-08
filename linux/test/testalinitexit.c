@@ -17,8 +17,6 @@
 static void iterate(void);
 static void cleanup(void);
 
-static ALuint moving_source = 0;
-
 static ALCcontext *context_id;
 static ALCdevice *dev;
 

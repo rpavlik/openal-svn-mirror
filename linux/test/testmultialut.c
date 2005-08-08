@@ -64,13 +64,7 @@ static void init( void ) {
 	ALfloat front[]  = { 0.0f, 0.0f,  1.0f, 0.0f, 1.0f, 0.0f };
 	ALfloat position[] = { 0.0f, 0.0f, -4.0f };
 	ALuint  boomers[NUMBUFFERS];
-	ALsizei size;
-	ALsizei bits;
-	ALsizei freq;
-	ALsizei format;
 	int filelen;
-
-	int i;
 
 	data = malloc(5 * (512 * 3) * 1024);
 	data2 = malloc(5 * (512 * 3) * 1024);

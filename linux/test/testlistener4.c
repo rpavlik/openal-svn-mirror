@@ -35,9 +35,6 @@ static void *wave = NULL;
 static void iterate( void ) {
 	ALfloat orientation[]  = { 0.0f,  0.0f, -1.0f,
 				   0.0f,  1.0f,  0.0f };
-	ALfloat xaxis[]        = { 1.0f,  0.0f,  0.0f };
-	ALfloat yaxis[]        = { 0.0f,  1.0f,  0.0f };
-	ALfloat zaxis[]        = { 0.0f,  0.0f,  1.0f };
 	ALfloat *at = orientation;
 	ALfloat *up = &orientation[3];
 	static ALint angle = 0;
@@ -68,7 +65,6 @@ static void init(char *fname) {
 	ALsizei freq;
 	ALsizei format;
 	ALboolean loop;
-	int i = 0;
 
 	alListenerfv(AL_POSITION, zeroes );
 

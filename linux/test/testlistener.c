@@ -30,7 +30,6 @@ static void *wave = NULL;
 static void iterate( void ) {
 	static ALfloat lispos[] = { 0.0, 0.0, 0.0 };
 	static float change_factor = 0.85;
-	int i;
 
 	lispos[0] += change_factor;
 
@@ -59,7 +58,6 @@ static void init( char *fname) {
 	ALsizei freq;
 	ALsizei format;
 	ALboolean loop;
-	int i = 0;
 
 	alListenerfv(AL_POSITION, zeroes );
 	alListenerfv(AL_VELOCITY, zeroes );

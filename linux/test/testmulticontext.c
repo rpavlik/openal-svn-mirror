@@ -13,7 +13,6 @@
 #define DATABUFFERSIZE (10 * (512 * 3) * 1024)
 #define NUMCONTEXTS    2
 
-static void iterate(void);
 static void init(const char *fname);
 static void cleanup(void);
 
@@ -23,6 +22,7 @@ static ALCcontext *context_ids[NUMCONTEXTS];
 static ALuint moving_sources[NUMCONTEXTS];
 static ALuint bid;
 
+#if 0
 static void iterate( void ) {
 	static ALfloat position[] = { 10.0f, 0.0f, -4.0f };
 	static ALfloat movefactor = 4.5;
@@ -50,19 +50,14 @@ static void iterate( void ) {
 
 	return;
 }
+#endif
 
 static void init( const char *fname ) {
 	FILE *fh;
 	ALfloat zeroes[] = { 0.0f, 0.0f,  0.0f };
-	ALfloat back[]   = { 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f };
 	ALfloat front[]  = { 0.0f, 0.0f,  1.0f, 0.0f, 1.0f, 0.0f };
 	ALfloat position[] = { 0.0f, 0.0f, -4.0f };
-	ALsizei size;
-	ALsizei bits;
-	ALsizei freq;
-	ALsizei format;
 	int filelen;
-	ALint err;
 	int i;
 
 	data = malloc(DATABUFFERSIZE);
@@ -124,10 +119,8 @@ int main( int argc, char* argv[] ) {
 	ALCdevice *dev;
 	int attrlist[] = { ALC_FREQUENCY, 44100,
 			   ALC_INVALID };
-	time_t shouldend;
 	time_t start;
 	int i;
-	ALboolean done = AL_FALSE;
 
 	dev = alcOpenDevice( NULL );
 	if( dev == NULL ) {

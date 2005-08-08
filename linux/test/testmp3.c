@@ -60,7 +60,6 @@ int main( int argc, char* argv[] ) {
 	struct stat sbuf;
 	void *data;
 	char *fname;
-	int i = 0;
 	int size;
 
 	dev = alcOpenDevice( NULL );
@@ -110,7 +109,7 @@ int main( int argc, char* argv[] ) {
 
 	fread(data, 1, size, fh);
 
-	alutLoadMP3p = (mp3Loader *) alGetProcAddress((ALubyte *) MP3_FUNC);
+	alutLoadMP3p = (mp3Loader *) alGetProcAddress((ALchar *) MP3_FUNC);
 	if(alutLoadMP3p == NULL) {
 		free(data);
 

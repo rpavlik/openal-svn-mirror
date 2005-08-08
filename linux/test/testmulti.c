@@ -40,8 +40,6 @@ static void iterate( void ) {
 
 static void init(char *fname) {
 	ALfloat zeroes[] = { 0.0f, 0.0f,  0.0f };
-	ALfloat back[]   = { 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f };
-	ALfloat front[]  = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f };
 	ALfloat position[] = { 2.0f, 0.0f, 4.0f };
 	ALuint boom;
 	ALsizei size;

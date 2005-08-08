@@ -60,10 +60,7 @@ static void cleanup(void) {
 int main( int argc, char* argv[] ) {
 	ALCdevice *dev;
 	FILE *fh;
-	time_t shouldend;
-	int blah = 0;
 	struct stat sbuf;
-	int speed;
 	void *data;
 	int size;
 	char *fname;
@@ -115,7 +112,7 @@ int main( int argc, char* argv[] ) {
 
 	fread(data, 1, size, fh);
 
-	alutLoadMP3p = (mp3Loader *) alGetProcAddress((ALubyte *) MP3_FUNC);
+	alutLoadMP3p = (mp3Loader *) alGetProcAddress((ALchar *) MP3_FUNC);
 	if(alutLoadMP3p == NULL) {
 		free(data);
 

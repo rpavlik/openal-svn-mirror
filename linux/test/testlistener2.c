@@ -66,7 +66,6 @@ static void init( char *fname ) {
 	ALsizei freq;
 	ALsizei format;
 	ALboolean loop;
-	int i = 0;
 
 	alListenerfv(AL_POSITION, zeroes );
 	alListenerfv(AL_VELOCITY, zeroes );

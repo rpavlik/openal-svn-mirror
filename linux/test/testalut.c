@@ -30,8 +30,6 @@ static void iterate( void ) {
 	static ALfloat movefactor = 4.5;
 	static time_t then = 0;
 	time_t now;
-	ALint byteloki;
-	ALint size;
 
 	now = time( NULL );
 
@@ -53,14 +51,8 @@ static void iterate( void ) {
 static void init( const char *fname ) {
 	FILE *fh;
 	ALfloat zeroes[] = { 0.0f, 0.0f,  0.0f };
-	ALfloat back[]   = { 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f };
 	ALfloat front[]  = { 0.0f, 0.0f,  1.0f, 0.0f, 1.0f, 0.0f };
-	ALsizei size;
-	ALsizei bits;
-	ALsizei freq;
-	ALsizei format;
 	int filelen;
-	ALint err;
 
 	data = malloc(DATABUFFERSIZE);
 

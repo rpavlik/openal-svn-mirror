@@ -12,7 +12,6 @@ int main(void) {
 	ALCdevice *dev;
 	ALCcontext *context_id;
 	ALuint sid;
-	int i;
 
 	dev = alcOpenDevice( NULL );
 	if( dev == NULL ) {

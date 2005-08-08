@@ -23,8 +23,6 @@ static ALCcontext *context_id;
 static void *wave = NULL;
 
 static void iterate( void ) {
-	int i;
-
 	fprintf(stderr, "NOW\n");
 	alSourcePlay( multis);
 	fprintf(stderr, "OVER\n");
@@ -35,14 +33,12 @@ static void iterate( void ) {
 static void init( char *fname ) {
 	ALfloat zeroes[]   = { 0.0f, 0.0f,  0.0f };
 	ALfloat back[]     = { 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f };
-	ALfloat front[]    = { 0.0f, 0.0f,  1.0f, 0.0f, 1.0f, 0.0f };
 	ALfloat position[] = { 2.0f, 0.0f, -4.0f };
 	ALuint boom;
 	ALsizei size;
 	ALsizei freq;
 	ALsizei format;
 	ALboolean loop;
-	int i;
 
 	alListenerfv(AL_POSITION, zeroes );
 	alListenerfv(AL_VELOCITY, zeroes );
@@ -85,7 +81,6 @@ void cleanup(void) {
 
 int main( int argc, char* argv[] ) {
 	ALCdevice *dev;
-	int i = 5;
 
 	dev = alcOpenDevice( NULL );
 	if( dev == NULL ) {

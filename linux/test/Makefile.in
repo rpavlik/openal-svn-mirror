@@ -5,7 +5,6 @@ DEFS=@DEFINES@
 TEST_PROGS=testreverb testda testmulti testalut testtime  \
            testmultialut testalinitexit                 \
 	   testsingle testnothread \
-	   testmath           \
 	   testmultinothread testpitch testdoppler 		 \
 	   testsourcestop 	    testext teststream \
 	   testcallback testorient testrelative testchannel     \
@@ -35,7 +34,7 @@ REPO_CLEAN_FILES :=
 	$(CC) $(INC) $(DEFS) $(CFLAGS) $< -o $@ $(LIBS)
 
 % : %.cc ../config.h testlib.o
-	$(CXX) $(INC) $(DEFS) $(CFLAGS) $< -o $@ $(LIBS)
+	$(CXX) $(INC) $(DEFS) $(filter-out -Wbad-function-cast -Wmissing-declarations -Wimplicit-function-declaration,$(CFLAGS)) $< -o $@ $(LIBS)
 
 all: testlib.o $(LIBOPENAL) $(TEST_PROGS) ../src/libopenal.a
 
