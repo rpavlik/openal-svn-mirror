@@ -1,4 +1,7 @@
 2005-08-08  Sven Panne  <sven.panne@aedion.de>
+	* linux/test/testmath.c: Removed, it was an outdated white-box
+	test which didn't belong here.
+
 	* linux/src/alut/alut_wav.c, linux/test/testda.c,
 	linux/test/testdoppler.c, linux/test/testgain.c,
 	linux/test/testlistener.c, linux/test/testlistener2.c,
