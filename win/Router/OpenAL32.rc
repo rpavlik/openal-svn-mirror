@@ -45,11 +45,11 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "Comments", "\0"
-            VALUE "CompanyName", "Portions (c) Creative Labs Inc. and NVIDIA Corp.\0"
+            VALUE "CompanyName", "Portions (C) Creative Labs Inc. and NVIDIA Corp.\0"
             VALUE "FileDescription", "Standard OpenAL(TM) Implementation\0"
             VALUE "FileVersion", "6.14.0357.9\0"
             VALUE "InternalName", "\0"
-            VALUE "LegalCopyright", "Copyright(C) 2000-2003 NVIDIA Corporation\0"
+            VALUE "LegalCopyright", "Copyright (C) 2000-2005\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "OpenAL32.dll\0"
             VALUE "PrivateBuild", "\0"

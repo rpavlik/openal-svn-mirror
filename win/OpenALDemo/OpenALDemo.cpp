@@ -165,36 +165,40 @@ int main(int argc, char* argv[])
 	strcpy(deviceName, "");
 	if (alcIsExtensionPresent(NULL, "ALC_ENUMERATION_EXT") == AL_TRUE) { // try out enumeration extension
 		defaultDevice = (char *)alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
-		deviceList = (char *)alcGetString(NULL, ALC_DEVICE_SPECIFIER);
-		for (numDevices = 0; numDevices < 12; numDevices++) {devices[numDevices] = NULL;}
-		for (numDevices = 0; numDevices < 12; numDevices++) {
-			devices[numDevices] = deviceList;
-			if (strcmp(devices[numDevices], defaultDevice) == 0) {
-				numDefaultDevice = numDevices;
-			}
-			deviceList += strlen(deviceList);
-			if (deviceList[0] == 0) {
-				if (deviceList[1] == 0) {
-					break;
-				} else {
-					deviceList += 1;
+		if ((defaultDevice != NULL) && (strlen(defaultDevice) > 0)) { // if defaultDevice fails this test, then there isn't a sound device available
+			deviceList = (char *)alcGetString(NULL, ALC_DEVICE_SPECIFIER);
+			for (numDevices = 0; numDevices < 12; numDevices++) {devices[numDevices] = NULL;}
+			for (numDevices = 0; numDevices < 12; numDevices++) {
+				devices[numDevices] = deviceList;
+				if (strcmp(devices[numDevices], defaultDevice) == 0) {
+					numDefaultDevice = numDevices;
+				}
+				deviceList += strlen(deviceList);
+				if (deviceList[0] == 0) {
+					if (deviceList[1] == 0) {
+						break;
+					} else {
+						deviceList += 1;
+					}
 				}
 			}
-		}
-		if (devices[numDevices] != NULL) {
-			numDevices++;
-			printf("\nEnumeration extension found -- select an output device:\n");
-			printf("0. NULL Device (Default)\n");
-			for (i = 0; i < numDevices; i++) {
-				printf("%d. %s\n", i + 1, devices[i]);
-			}
-			printf("\n\n");
-			do {
-				ch = _getch();
-				i = atoi(&ch);
-			} while ((i < 0) || (i > numDevices));
-			if ((i != 0) && (strlen(devices[i-1]) < 256)) {
-				strcpy(deviceName, devices[i-1]);
+			if (devices[numDevices] != NULL) {
+				numDevices++;
+				printf("\nEnumeration extension found -- select an output device:\n");
+				printf("0. NULL Device\n");
+				for (i = 0; i < numDevices; i++) {
+					printf("%d. %s", i + 1, devices[i]);
+					if (i == numDefaultDevice) { printf("  (default device)"); }
+					printf("\n");
+				}
+				printf("\n\n");
+				do {
+					ch = _getch();
+					i = atoi(&ch);
+				} while ((i < 0) || (i > numDevices));
+				if ((i != 0) && (strlen(devices[i-1]) < 256)) {
+					strcpy(deviceName, devices[i-1]);
+				}
 			}
 		}
 	}

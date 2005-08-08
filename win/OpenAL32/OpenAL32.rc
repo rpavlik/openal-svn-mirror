@@ -32,9 +32,9 @@ VS_VERSION_INFO VERSIONINFO
  PRODUCTVERSION 0,0,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
- FILEFLAGS 0x21L
+ FILEFLAGS 0x1L
 #else
- FILEFLAGS 0x20L
+ FILEFLAGS 0x0L
 #endif
  FILEOS 0x40004L
  FILETYPE 0x2L
@@ -44,7 +44,7 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "Comments", "Open AL 1.1 Beta !\0"
+            VALUE "Comments", "Open AL 1.1\0"
             VALUE "CompanyName", "Creative Labs\0"
             VALUE "FileDescription", "OpenAL32\0"
             VALUE "FileVersion", "0.0\0"
@@ -55,7 +55,7 @@ BEGIN
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "Creative Labs OpenAL32\0"
             VALUE "ProductVersion", "0.0\0"
-            VALUE "SpecialBuild", "Programmed by Daniel Peacock\0"
+            VALUE "SpecialBuild", "\0"
         END
     END
     BLOCK "VarFileInfo"
