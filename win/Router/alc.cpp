@@ -321,18 +321,21 @@ ALvoid BuildDeviceSpecifierList()
 								if (alcIsExtensionPresentFxn(NULL, "ALC_ENUMERATION_EXT")) {
 									// this DLL can enumerate devices -- so add complete list of devices
 									specifier = alcGetStringFxn(0, ALC_DEVICE_SPECIFIER);
-									do {
-										specifierSize = strlen((char*)specifier);
+									if (specifier)
+									{
+										do {
+											specifierSize = strlen((char*)specifier);
 
-										if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
-											if(specifierSize + listSize + 1 < MAX_PATH - 1)
-											{
-												strcpy((char*)list, (char*)specifier);
-												list += specifierSize + 1;
+											if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
+												if(specifierSize + listSize + 1 < MAX_PATH - 1)
+												{
+													strcpy((char*)list, (char*)specifier);
+													list += specifierSize + 1;
+												}
 											}
-										}
-										specifier += strlen((char *)specifier) + 1;
-									} while (strlen((char *)specifier) > 0);
+											specifier += strlen((char *)specifier) + 1;
+										} while (strlen((char *)specifier) > 0);
+									}
 								} else {
 									// no enumeration ability, -- so just add default device to the list
 									device = alcOpenDeviceFxn(NULL);
@@ -341,13 +344,16 @@ ALvoid BuildDeviceSpecifierList()
 										alcMakeContextCurrentFxn((ALCcontext *)context);
 										if (context != NULL) {
 											specifier = alcGetStringFxn(device, ALC_DEVICE_SPECIFIER);
-											specifierSize = strlen((char*)specifier);
+											if (specifier)
+											{
+												specifierSize = strlen((char*)specifier);
 
-											if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
-												if(specifierSize + listSize + 1 < MAX_PATH - 1)
-												{
-													strcpy((char*)list, (char*)specifier);
-													list += specifierSize + 1;
+												if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
+													if(specifierSize + listSize + 1 < MAX_PATH - 1)
+													{
+														strcpy((char*)list, (char*)specifier);
+														list += specifierSize + 1;
+													}
 												}
 											}
 											alcMakeContextCurrentFxn((ALCcontext *)NULL);
@@ -371,13 +377,16 @@ ALvoid BuildDeviceSpecifierList()
 										alcMakeContextCurrentFxn((ALCcontext *)context);
 										if (context != NULL) {
 											specifier = alcGetStringFxn(device, ALC_DEVICE_SPECIFIER);
-											specifierSize = strlen((char*)specifier);
+											if (specifier)
+											{
+												specifierSize = strlen((char*)specifier);
 
-											if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
-												if(specifierSize + listSize + 1 < MAX_PATH - 1)
-												{
-													strcpy((char*)list, (char*)specifier);
-													list += specifierSize + 1;
+												if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
+													if(specifierSize + listSize + 1 < MAX_PATH - 1)
+													{
+														strcpy((char*)list, (char*)specifier);
+														list += specifierSize + 1;
+													}
 												}
 											}
 											alcMakeContextCurrentFxn((ALCcontext *)NULL);
@@ -455,18 +464,21 @@ ALvoid BuildDeviceSpecifierList()
 								if (alcIsExtensionPresentFxn(NULL, "ALC_ENUMERATION_EXT")) {
 									// this DLL can enumerate devices -- so add complete list of devices
 									specifier = alcGetStringFxn(0, ALC_DEVICE_SPECIFIER);
-									do {
-										specifierSize = strlen((char*)specifier);
+									if (specifier)
+									{
+										do {
+											specifierSize = strlen((char*)specifier);
 
-										if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
-											if(specifierSize + listSize + 1 < MAX_PATH - 1)
-											{
-												strcpy((char*)list, (char*)specifier);
-												list += specifierSize + 1;
+											if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
+												if(specifierSize + listSize + 1 < MAX_PATH - 1)
+												{
+													strcpy((char*)list, (char*)specifier);
+													list += specifierSize + 1;
+												}
 											}
-										}
-										specifier += strlen((char *)specifier) + 1;
-									} while (strlen((char *)specifier) > 0);
+											specifier += strlen((char *)specifier) + 1;
+										} while (strlen((char *)specifier) > 0);
+									}
 								} else {
 									// no enumeration ability, -- so just add default device to the list
 									device = alcOpenDeviceFxn(NULL);
@@ -475,13 +487,16 @@ ALvoid BuildDeviceSpecifierList()
 										alcMakeContextCurrentFxn((ALCcontext *)context);
 										if (context != NULL) {
 											specifier = alcGetStringFxn(device, ALC_DEVICE_SPECIFIER);
-											specifierSize = strlen((char*)specifier);
+											if (specifier)
+											{
+												specifierSize = strlen((char*)specifier);
 
-											if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
-												if(specifierSize + listSize + 1 < MAX_PATH - 1)
-												{
-													strcpy((char*)list, (char*)specifier);
-													list += specifierSize + 1;
+												if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
+													if(specifierSize + listSize + 1 < MAX_PATH - 1)
+													{
+														strcpy((char*)list, (char*)specifier);
+														list += specifierSize + 1;
+													}
 												}
 											}
 											alcMakeContextCurrentFxn((ALCcontext *)NULL);
@@ -505,13 +520,16 @@ ALvoid BuildDeviceSpecifierList()
 										alcMakeContextCurrentFxn((ALCcontext *)context);
 										if (context != NULL) {
 											specifier = alcGetStringFxn(device, ALC_DEVICE_SPECIFIER);
-											specifierSize = strlen((char*)specifier);
+											if (specifier)
+											{
+												specifierSize = strlen((char*)specifier);
 
-											if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
-												if(specifierSize + listSize + 1 < MAX_PATH - 1)
-												{
-													strcpy((char*)list, (char*)specifier);
-													list += specifierSize + 1;
+												if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
+													if(specifierSize + listSize + 1 < MAX_PATH - 1)
+													{
+														strcpy((char*)list, (char*)specifier);
+														list += specifierSize + 1;
+													}
 												}
 											}
 											alcMakeContextCurrentFxn((ALCcontext *)NULL);
@@ -894,20 +912,22 @@ HINSTANCE FindDllWithMatchingSpecifier(TCHAR* dllSearchPattern, char* specifier,
 								if (alcIsExtensionPresentFxn(0, (ALCchar *)"ALC_ENUMERATION_EXT")) {
 									// have an enumeratable DLL here, so check all available devices
 									deviceSpecifier = alcGetStringFxn(0, ALC_DEVICE_SPECIFIER);
-									do {
-										if (deviceSpecifier != NULL) {
-											if (partialName == false) {
-												found = strcmp((char*)deviceSpecifier, specifier) == 0;
+									if (deviceSpecifier)
+									{
+										do {
+											if (deviceSpecifier != NULL) {
+												if (partialName == false) {
+													found = strcmp((char*)deviceSpecifier, specifier) == 0;
+												} else {
+													found = strstr((char*)deviceSpecifier, specifier) != 0;
+													strcpy(actualName, (char *)deviceSpecifier);
+												}
 											} else {
-												found = strstr((char*)deviceSpecifier, specifier) != 0;
-												strcpy(actualName, (char *)deviceSpecifier);
+												found = false;
 											}
-										} else {
-											found = false;
-										}
-										deviceSpecifier += strlen((char *)deviceSpecifier) + 1;
-									} while (!found && (strlen((char *)deviceSpecifier) > 0));
-
+											deviceSpecifier += strlen((char *)deviceSpecifier) + 1;
+										} while (!found && (strlen((char *)deviceSpecifier) > 0));
+									}
 								} else {
 									// no enumeration ability
 									device = alcOpenDeviceFxn(NULL);
@@ -1549,7 +1569,7 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(const ALCchar* deviceName)
 	//
 	// map legacy names to new generic names
 	// DirectSound3D mapped above to ALC_DEFAULT_DEVICE_SPECIFIER
-	if ((strcmp(newDeviceName, "") == 0) && (strcmp((char *)deviceName, "DirectSound3D"))) {
+	if ((strcmp(newDeviceName, "") == 0) && ((!deviceName) || (strcmp((char *)deviceName, "DirectSound3D")))) {
 		strcpy(newDeviceName, "Generic Hardware");
 	}
 	if (strcmp(newDeviceName, "DirectSound") == 0) {
@@ -1749,6 +1769,12 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
 				UINT uDeviceID;
 				DWORD dwFlags=1;
 				WAVEOUTCAPS info;
+
+				if (waveInGetNumDevs() == 0)
+				{
+					memset(alcDefaultDeviceSpecifier, 0, MAX_PATH * sizeof(ALCchar));
+					return alcDefaultDeviceSpecifier;
+				}
 
 				// two issues here --
 				// 1) whatever device is in the control panel as the preferred device should be accepted
