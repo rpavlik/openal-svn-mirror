@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
 	strcpy(deviceName, "");
 	if (alcIsExtensionPresent(NULL, "ALC_ENUMERATION_EXT") == AL_TRUE) { // try out enumeration extension
 		defaultDevice = (char *)alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
-		if ((defaultDevice != NULL) && (strlen(defaultDevice) > 0)) { // if defaultDevice fails this test, then there isn't a sound device available
+		if ((defaultDevice != NULL) && (strlen(defaultDevice) > 0)) { 
 			deviceList = (char *)alcGetString(NULL, ALC_DEVICE_SPECIFIER);
 			for (numDevices = 0; numDevices < 12; numDevices++) {devices[numDevices] = NULL;}
 			for (numDevices = 0; numDevices < 12; numDevices++) {
