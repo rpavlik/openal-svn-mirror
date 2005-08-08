@@ -1,4 +1,10 @@
 2005-08-08  Sven Panne  <sven.panne@aedion.de>
+	* linux/config-osx.h, linux/configure.ac: Removed unused
+	--enable--fft option.
+
+	* linux/src/al_complex.c, linux/src/al_complex.h: Removed, it was
+	dead code.
+
 	* linux/test/testattributes.c, linux/test/testchannel.c,
 	linux/test/testda.c, linux/test/testdevice.c,
 	linux/test/testext.c, linux/test/testgain.c,

@@ -18,7 +18,6 @@
 /* #undef DEBUG_QUEUE */
 
 /* #undef BOMB */
-/* #undef FFT */
 #define PIC 1
 
 /* #undef DMALLOC */

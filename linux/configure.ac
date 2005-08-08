@@ -503,16 +503,6 @@ if test "x$enable_alsa" = xyes; then
   fi
 fi
 
-# frequency based functions, should they be included?
-AC_ARG_ENABLE([fft],
-[AS_HELP_STRING([--enable-fft],
-                [enable fft mojo @<:@default=no@:>@])])
-
-if test "x$enable_fft" = xyes; then
-  AC_MSG_WARN([Regarding the FFT: I hope you know what you're doing])
-  AC_DEFINE(FFT, 1, [undocumented])
-fi
-
 # enable arts sound?
 AC_ARG_ENABLE([arts],
 [AS_HELP_STRING([--enable-arts],
