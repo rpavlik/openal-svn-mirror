@@ -1,4 +1,24 @@
 2005-08-08  Sven Panne  <sven.panne@aedion.de>
+	* linux/test/testattributes.c, linux/test/testchannel.c,
+	linux/test/testda.c, linux/test/testdevice.c,
+	linux/test/testext.c, linux/test/testgain.c,
+	linux/test/testgainlinear.c, linux/test/testgendelbuffer_error.c,
+	linux/test/testgendelsource_error.c, linux/test/testlistener.c,
+	linux/test/testlistener3.c, linux/test/testlistener4.c,
+	linux/test/testmp3.c, linux/test/testmp32.c,
+	linux/test/testmulti.c, linux/test/testmultialut.c,
+	linux/test/testmultimp3.c, linux/test/testmultinothread.c,
+	linux/test/testnothread.c, linux/test/testorient.c,
+	linux/test/testpause.c, linux/test/testpitch.c,
+	linux/test/testpitch2.c, linux/test/testpitch3.c,
+	linux/test/testpitch4.c, linux/test/testpitchnothread.c,
+	linux/test/testpitchnothread2.c, linux/test/testqueue.c,
+	linux/test/testqueue2.c, linux/test/testqueue3.c,
+	linux/test/testrelative.c, linux/test/testsingle.c,
+	linux/test/testtime.c, linux/test/testvorbis.c: Removed useless
+	fixup_function_pointers calls and testlib.h #includes.
+
+
 	* linux/test/Makefile.in, linux/test/testalinitexit.c,
 	linux/test/testalut.c, linux/test/testattributes.c,
 	linux/test/testcallback.c, linux/test/testcapture.c,

@@ -1,5 +1,3 @@
-#include "testlib.h"
-
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alut.h>
@@ -30,8 +28,6 @@ int main( int argc, char* argv[] ) {
 	}
 
 	alcMakeContextCurrent( context_id );
-
-	fixup_function_pointers();
 
 	blah = (blah_type *) alGetProcAddress((ALchar *) BADPROC);
 	if(blah != NULL) {

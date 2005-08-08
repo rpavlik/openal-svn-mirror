@@ -1,5 +1,3 @@
-#include "testlib.h"
-
 #include "../src/al_main.h"
 #include "../src/alc/alc_speaker.h"
 
@@ -39,8 +37,6 @@ int main(void) {
 	}
 
 	alcMakeContextCurrent( context_id );
-
-	fixup_function_pointers();
 
 	setposition(-10.0, 10, 10);
 	setposition(10.0, 10, 10);

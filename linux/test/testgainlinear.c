@@ -1,6 +1,5 @@
-#include "testlib.h"
-
 #include <AL/al.h>
+#include <AL/alext.h>
 #include <AL/alc.h>
 
 #include <stdio.h>

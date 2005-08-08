@@ -95,8 +95,6 @@ int main( int argc, char* argv[] ) {
 
 	alcMakeContextCurrent( context_id );
 
-	fixup_function_pointers();
-
 	initmp3( );
 
 	if(argc == 1) {

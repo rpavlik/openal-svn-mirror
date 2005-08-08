@@ -80,8 +80,6 @@ int main( int argc, char* argv[] ) {
 
 	alcMakeContextCurrent( context_id );
 
-	fixup_function_pointers();
-
 	init( );
 
 	if(argc == 1) {

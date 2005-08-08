@@ -1,5 +1,3 @@
-#include "testlib.h"
-
 #include <AL/al.h>
 #include <AL/alc.h>
 
@@ -25,8 +23,6 @@ int main(void) {
 	}
 
 	alcMakeContextCurrent( context_id );
-
-	fixup_function_pointers();
 
 	fprintf(stderr, "alGenBuffers(0, &bid): should be a NOP\n");
 	/* Should be a NOP */

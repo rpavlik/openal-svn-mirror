@@ -1,6 +1,5 @@
-#include "testlib.h"
-
 #include <AL/al.h>
+#include <AL/alext.h>
 #include <AL/alc.h>
 #include <AL/alut.h>
 
@@ -110,8 +109,6 @@ int main( int argc, char* argv[] ) {
 	}
 
 	alcMakeContextCurrent( context_id );
-
-	fixup_function_pointers();
 
 	if(argc == 1) {
 		init(WAVEFILE);

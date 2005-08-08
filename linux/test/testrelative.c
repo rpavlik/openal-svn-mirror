@@ -120,8 +120,6 @@ int main( int argc, char* argv[] ) {
 
 	alcMakeContextCurrent( cc );
 
-	fixup_function_pointers();
-
 	if(argc == 1) {
 		init(WAVEFILE);
 	} else {

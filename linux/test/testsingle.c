@@ -93,8 +93,6 @@ int main( int argc, char* argv[] ) {
 	/* Initialize ALUT. */
 	alutInit(&argc, argv);
 
-	fixup_function_pointers();
-
 	if(argc == 1) {
 		init(WAVEFILE);
 	} else {

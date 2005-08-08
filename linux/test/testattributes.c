@@ -1,5 +1,3 @@
-#include "testlib.h"
-
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alut.h>
@@ -110,11 +108,6 @@ int main(int argc, char *argv[])
 		/* must be 0 terminated */
 		assert(Flags[NumFlags-1] == 0);
 	}
-
-
-
-
-	fixup_function_pointers();
 
 	alcDestroyContext(default_context);
 	alcDestroyContext(custom_context);
