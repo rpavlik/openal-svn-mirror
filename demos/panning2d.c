@@ -3,8 +3,11 @@
 
 #include <GL/glut.h>
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+
+#define WAVE "boom.wav"
 
 static void display( void );
 static void keyboard( unsigned char key, int x, int y );
@@ -108,7 +111,7 @@ static void keyboard( unsigned char key, int x, int y )
 
     switch( key ) {
     case 27:
-	exit( 0 );
+	exit( EXIT_SUCCESS );
 	break;
     default:
 	break;
@@ -131,11 +134,11 @@ static void init( void )
     ALfloat back[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f };
     ALuint sources[2];
     ALuint boom;
-    void* wave;
+    void* wave = NULL;
     ALsizei size;
-    ALsizei bits;
     ALsizei freq;
     ALsizei format;
+    ALboolean loop;
 
     glClearColor( 0.0, 0.0, 0.0, 0.0 );
     glShadeModel( GL_SMOOTH );
@@ -148,10 +151,15 @@ static void init( void )
     alGenBuffers( 1, &boom );
     if(alGetError() != AL_NO_ERROR) {
 	fprintf( stderr, "aldemo: couldn't generate samples\n" );
-	exit( 1 );
+	exit( EXIT_FAILURE );
     }
 
-    alutLoadWAV( "boom.wav", &wave, &format, &size, &bits, &freq );
+    alutLoadWAVFile( (ALbyte *)WAVE, &format, &wave, &size, &freq, &loop );
+    if(wave == NULL) {
+      fprintf( stderr, "aldemo: couldn't load %s\n", WAVE );
+	exit( EXIT_FAILURE );
+    }
+
     alBufferData( boom, format, wave, size, freq );
 
     alGetError();
@@ -159,7 +167,7 @@ static void init( void )
 
     if(alGetError() != AL_NO_ERROR) {
 	fprintf( stderr, "aldemo: couldn't generate sources\n" );
-	exit( 1 );
+	exit( EXIT_FAILURE );
     }
 
     left_sid = sources[0];
@@ -197,5 +205,5 @@ int main( int argc, char* argv[] )
 
     glutMainLoop( );
 
-    return 0;
+    return EXIT_SUCCESS;
 }
