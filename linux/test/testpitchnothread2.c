@@ -12,13 +12,12 @@
 
 #include <math.h>
 
-
 #define NUMSOURCES 10
 #define WAVEFILE   "boom.wav"
 
-static void iterate(void);
-static void init(char *fname);
-static void cleanup(void);
+static void iterate( void );
+static void init( char *fname );
+static void cleanup( void );
 
 static ALuint moving_sources[NUMSOURCES];
 
@@ -26,26 +25,28 @@ static ALCcontext *context_id;
 static void *wave = NULL;
 static time_t start;
 
-extern int mixer_iterate(void *dummy);
+extern int mixer_iterate( void *dummy );
 
-static void iterate( void ) {
+static void iterate( void )
+{
 	static float f = 0;
 	float g;
 
 	f += .001;
 
-	g = (sin(f) + 1.0) / 2.0;
+	g = ( sin( f ) + 1.0 ) / 2.0;
 
 /*
 	fprintf(stderr, "AL_PITCH = %f\n", g);
 	alSourcef(moving_source, AL_PITCH, g);
 	*/
-	alcProcessContext(context_id);
+	alcProcessContext( context_id );
 }
 
-static void init( char *fname ) {
-	ALfloat zeroes[] = { 0.0f, 0.0f,  0.0f };
-	ALfloat front[]  = { 0.0f, 0.0f,  1.0f, 0.0f, 1.0f, 0.0f };
+static void init( char *fname )
+{
+	ALfloat zeroes[] = { 0.0f, 0.0f, 0.0f };
+	ALfloat front[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f };
 	ALuint boom;
 	ALsizei size;
 	ALsizei freq;
@@ -53,53 +54,56 @@ static void init( char *fname ) {
 	ALboolean loop;
 	int i;
 
-	start = time(NULL);
+	start = time( NULL );
 
-	alListenerfv(AL_POSITION, zeroes );
-	alListenerfv(AL_VELOCITY, zeroes );
-	alListenerfv(AL_ORIENTATION, front );
+	alListenerfv( AL_POSITION, zeroes );
+	alListenerfv( AL_VELOCITY, zeroes );
+	alListenerfv( AL_ORIENTATION, front );
 
 	alGenBuffers( 1, &boom );
 
-	alutLoadWAVFile( (ALbyte*)fname, &format, &wave, &size, &freq, &loop );
-	if(wave == NULL) {
-		fprintf(stderr, "Could not include %s\n", fname);
-		exit(1);
+	alutLoadWAVFile( ( ALbyte * ) fname, &format, &wave, &size, &freq,
+			 &loop );
+	if( wave == NULL ) {
+		fprintf( stderr, "Could not include %s\n", fname );
+		exit( 1 );
 	}
 
-
 	alBufferData( boom, format, wave, size, freq );
-	free(wave); /* openal makes a local copy of wave data */
+	free( wave );		/* openal makes a local copy of wave data */
 
-	alGenSources( NUMSOURCES, moving_sources);
+	alGenSources( NUMSOURCES, moving_sources );
 
-	for(i = 0; i < NUMSOURCES; i++) {
-		alSourcef(  moving_sources[i], AL_GAIN_LINEAR_LOKI, 0.25 );
-		alSourcei(  moving_sources[i], AL_BUFFER, boom );
-		alSourcei(  moving_sources[i], AL_LOOPING, AL_TRUE);
-		alSourcef(  moving_sources[i], AL_PITCH, 1.00);
+	for ( i = 0; i < NUMSOURCES; i++ ) {
+		alSourcef( moving_sources[i], AL_GAIN_LINEAR_LOKI, 0.25 );
+		alSourcei( moving_sources[i], AL_BUFFER, boom );
+		alSourcei( moving_sources[i], AL_LOOPING, AL_TRUE );
+		alSourcef( moving_sources[i], AL_PITCH, 1.00 );
 	}
 
 	return;
 }
 
-static void cleanup(void) {
-	alcDestroyContext(context_id);
+static void cleanup( void )
+{
+	alcDestroyContext( context_id );
 #ifdef DMALLOC
-	dmalloc_verify(0);
-	dmalloc_log_unfreed();
+	dmalloc_verify( 0 );
+	dmalloc_log_unfreed(  );
 
 #endif
 #ifdef JLIB
-	jv_check_mem();
+	jv_check_mem(  );
 #endif
 }
 
-int main( int argc, char* argv[] ) {
+int main( int argc, char *argv[] )
+{
 	ALCdevice *dev;
 	int attrlist[] = {
 		ALC_SYNC, AL_TRUE,
-		0 };
+		0
+	};
 	time_t shouldend;
 	int i;
 
@@ -109,8 +113,8 @@ int main( int argc, char* argv[] ) {
 	}
 
 	/* Initialize ALUT. */
-	context_id = alcCreateContext( dev, attrlist);
-	if(context_id == NULL) {
+	context_id = alcCreateContext( dev, attrlist );
+	if( context_id == NULL ) {
 		alcCloseDevice( dev );
 
 		return 1;
@@ -118,27 +122,27 @@ int main( int argc, char* argv[] ) {
 
 	alcMakeContextCurrent( context_id );
 
-	if(argc == 1) {
-		init(WAVEFILE);
+	if( argc == 1 ) {
+		init( WAVEFILE );
 	} else {
-		init(argv[1]);
+		init( argv[1] );
 	}
 
-	for(i = 0; i < NUMSOURCES; i++) {
-		alSourcef(moving_sources[i], AL_PITCH, 0.45);
+	for ( i = 0; i < NUMSOURCES; i++ ) {
+		alSourcef( moving_sources[i], AL_PITCH, 0.45 );
 	}
 
 	alSourcePlayv( NUMSOURCES, moving_sources );
 
-	shouldend = time(NULL);
+	shouldend = time( NULL );
 
-	while((shouldend - start) < 300) {
-		shouldend = time(NULL);
+	while( ( shouldend - start ) < 300 ) {
+		shouldend = time( NULL );
 
-	    	iterate();
+		iterate(  );
 	}
 
-	cleanup();
+	cleanup(  );
 
 	alcCloseDevice( dev );
 

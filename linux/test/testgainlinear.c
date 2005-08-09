@@ -4,13 +4,13 @@
 
 #include <stdio.h>
 
-
 #define FLOAT_VAL        0.65
 
-int main(void) {
+int main( void )
+{
 	ALCdevice *dev;
 	ALCcontext *context_id = NULL;
-	ALfloat pregain  = FLOAT_VAL;
+	ALfloat pregain = FLOAT_VAL;
 	ALfloat postgain = 0.0;
 	ALuint sid;
 
@@ -28,41 +28,41 @@ int main(void) {
 
 	alcMakeContextCurrent( context_id );
 
-	alListenerf(AL_GAIN, pregain);
-	alGetListenerfv(AL_GAIN, &postgain);
+	alListenerf( AL_GAIN, pregain );
+	alGetListenerfv( AL_GAIN, &postgain );
 
-	if(postgain != pregain) {
-		fprintf(stderr, "Listener GAIN f***ed up: %f vs %f\n",
-			pregain, postgain);
+	if( postgain != pregain ) {
+		fprintf( stderr, "Listener GAIN f***ed up: %f vs %f\n",
+			 pregain, postgain );
 	}
 
-	alGenSources(1, &sid);
+	alGenSources( 1, &sid );
 
-	alSourcef(sid, AL_GAIN, pregain);
-	alGetSourcefv(sid, AL_GAIN, &postgain);
+	alSourcef( sid, AL_GAIN, pregain );
+	alGetSourcefv( sid, AL_GAIN, &postgain );
 
-	if(postgain != pregain) {
-		fprintf(stderr, "Source GAIN f***ed up: %f vs %f\n",
-			pregain, postgain);
+	if( postgain != pregain ) {
+		fprintf( stderr, "Source GAIN f***ed up: %f vs %f\n",
+			 pregain, postgain );
 	}
 
-	alListenerf(AL_GAIN_LINEAR_LOKI, pregain);
-	alGetListenerfv(AL_GAIN_LINEAR_LOKI, &postgain);
+	alListenerf( AL_GAIN_LINEAR_LOKI, pregain );
+	alGetListenerfv( AL_GAIN_LINEAR_LOKI, &postgain );
 
-	if(postgain != pregain) {
-		fprintf(stderr, "Listener GAIN_LINEAR f***ed up: %f vs %f\n",
-			pregain, postgain);
+	if( postgain != pregain ) {
+		fprintf( stderr, "Listener GAIN_LINEAR f***ed up: %f vs %f\n",
+			 pregain, postgain );
 	}
 
-	alSourcef(sid, AL_GAIN_LINEAR_LOKI, pregain);
-	alGetSourcefv(sid, AL_GAIN_LINEAR_LOKI, &postgain);
+	alSourcef( sid, AL_GAIN_LINEAR_LOKI, pregain );
+	alGetSourcefv( sid, AL_GAIN_LINEAR_LOKI, &postgain );
 
-	if(postgain != pregain) {
-		fprintf(stderr, "Source GAIN f***ed up: %f vs %f\n",
-			pregain, postgain);
+	if( postgain != pregain ) {
+		fprintf( stderr, "Source GAIN f***ed up: %f vs %f\n",
+			 pregain, postgain );
 	}
 
-	fprintf(stderr, "All tests okay\n" );
+	fprintf( stderr, "All tests okay\n" );
 
 	fflush( stderr );
 

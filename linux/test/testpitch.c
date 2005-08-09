@@ -11,20 +11,20 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-
 #define WAVEFILE "sample.wav"
 
-static void iterate(void);
-static void init(char *fname);
-static void cleanup(void);
+static void iterate( void );
+static void init( char *fname );
+static void cleanup( void );
 
 static ALuint moving_source = 0;
 
 static void *wave = NULL;
 static time_t start;
-static void *cc; /* al context */
+static void *cc;		/* al context */
 
-static void iterate( void ) {
+static void iterate( void )
+{
 /*
 	static float pitch = 1.0;
 
@@ -33,69 +33,74 @@ static void iterate( void ) {
 	alSourcef( moving_source, AL_PITCH, pitch );
 */
 
-	micro_sleep(80000);
+	micro_sleep( 80000 );
 }
 
-static void init(char *fname) {
-	ALfloat zeroes[] = { 0.0f, 0.0f,  0.0f };
-	ALfloat front[]  = { 0.0f, 0.0f,  1.0f, 0.0f, 1.0f, 0.0f };
+static void init( char *fname )
+{
+	ALfloat zeroes[] = { 0.0f, 0.0f, 0.0f };
+	ALfloat front[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f };
 	ALuint boom;
 	ALsizei size;
 	ALsizei freq;
 	ALsizei format;
 	ALboolean loop;
 
-	start = time(NULL);
+	start = time( NULL );
 
-	alListenerfv(AL_POSITION, zeroes );
+	alListenerfv( AL_POSITION, zeroes );
 	/* alListenerfv(AL_VELOCITY, zeroes ); */
-	alListenerfv(AL_ORIENTATION, front );
+	alListenerfv( AL_ORIENTATION, front );
 
 	alGenBuffers( 1, &boom );
 
-	alutLoadWAVFile( (ALbyte*)fname, &format, &wave, &size, &freq, &loop );
-	if(wave == NULL) {
-		fprintf(stderr, "Could not open %s\n", fname);
-		exit(1);
+	alutLoadWAVFile( ( ALbyte * ) fname, &format, &wave, &size, &freq,
+			 &loop );
+	if( wave == NULL ) {
+		fprintf( stderr, "Could not open %s\n", fname );
+		exit( 1 );
 	}
 
 	alBufferData( boom, format, wave, size, freq );
-	free(wave); /* openal makes a local copy of wave data */
+	free( wave );		/* openal makes a local copy of wave data */
 
-	alGenSources( 1, &moving_source);
+	alGenSources( 1, &moving_source );
 
-	alSourcef(  moving_source, AL_GAIN_LINEAR_LOKI,   0.40 );
-	alSourcei(  moving_source, AL_BUFFER, boom );
-	alSourcei(  moving_source, AL_LOOPING, AL_TRUE);
+	alSourcef( moving_source, AL_GAIN_LINEAR_LOKI, 0.40 );
+	alSourcei( moving_source, AL_BUFFER, boom );
+	alSourcei( moving_source, AL_LOOPING, AL_TRUE );
 
 	return;
 }
 
-static void cleanup(void) {
-	alcDestroyContext(cc);
+static void cleanup( void )
+{
+	alcDestroyContext( cc );
 #ifdef DMALLOC
-	dmalloc_verify(0);
-	dmalloc_log_unfreed();
+	dmalloc_verify( 0 );
+	dmalloc_log_unfreed(  );
 
 #endif
 #ifdef JLIB
-	jv_check_mem();
+	jv_check_mem(  );
 #endif
 }
 
-int main( int argc, char* argv[] ) {
+int main( int argc, char *argv[] )
+{
 	ALCdevice *dev;
 	time_t shouldend;
 	int attrlist[] = { ALC_FREQUENCY, 22050,
-			   ALC_INVALID };
+		ALC_INVALID
+	};
 
 	dev = alcOpenDevice( NULL );
 	if( dev == NULL ) {
 		return 1;
 	}
 
-	cc = alcCreateContext( dev, attrlist);
-	if(cc == NULL) {
+	cc = alcCreateContext( dev, attrlist );
+	if( cc == NULL ) {
 		alcCloseDevice( dev );
 
 		return 1;
@@ -103,29 +108,28 @@ int main( int argc, char* argv[] ) {
 
 	alcMakeContextCurrent( cc );
 
-	if(argc == 1) {
-		init(WAVEFILE);
+	if( argc == 1 ) {
+		init( WAVEFILE );
 	} else {
-		init(argv[1]);
+		init( argv[1] );
 	}
 
-
-	alSourcef(moving_source, AL_PITCH, 1.15);
+	alSourcef( moving_source, AL_PITCH, 1.15 );
 
 	alSourcePlay( moving_source );
 
-	shouldend = time(NULL);
-	while((shouldend - start) <= 20) {
-	    iterate();
+	shouldend = time( NULL );
+	while( ( shouldend - start ) <= 20 ) {
+		iterate(  );
 
-	    shouldend = time(NULL);
-	    if((shouldend - start) > 20) {
-		    alSourceStop(moving_source);
-	    }
-	    sleep(1);
+		shouldend = time( NULL );
+		if( ( shouldend - start ) > 20 ) {
+			alSourceStop( moving_source );
+		}
+		sleep( 1 );
 	}
 
-	cleanup();
+	cleanup(  );
 
 	alcCloseDevice( dev );
 

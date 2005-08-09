@@ -13,76 +13,79 @@
 
 #include <math.h>
 
-
 #define WAVEFILE "sample.wav"
 #define DATABUFFERSIZE (10 * (512 * 3) * 1024)
 
-static void init(const char *fname);
-static void cleanup(void);
+static void init( const char *fname );
+static void cleanup( void );
 
 static ALuint moving_source = 0;
 
 static time_t start;
-static void *data = (void *) 0xDEADBEEF;
+static void *data = ( void * ) 0xDEADBEEF;
 
 static ALCcontext *context_id;
 
-static void init(const char *fname) {
+static void init( const char *fname )
+{
 	FILE *fh;
-	ALfloat zeroes[] = { 0.0f, 0.0f,  0.0f };
-	ALfloat back[]   = { 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f };
-	ALfloat front[]  = { 0.0f, 0.0f,  1.0f, 0.0f, 1.0f, 0.0f };
+	ALfloat zeroes[] = { 0.0f, 0.0f, 0.0f };
+	ALfloat back[] = { 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f };
+	ALfloat front[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f };
 	ALuint stereo;
 	int filelen;
 
-	data = malloc(DATABUFFERSIZE);
+	data = malloc( DATABUFFERSIZE );
 
-	start = time(NULL);
+	start = time( NULL );
 
-	alListenerfv(AL_POSITION, zeroes );
-	alListenerfv(AL_VELOCITY, zeroes );
-	alListenerfv(AL_ORIENTATION, front );
+	alListenerfv( AL_POSITION, zeroes );
+	alListenerfv( AL_VELOCITY, zeroes );
+	alListenerfv( AL_ORIENTATION, front );
 
-	alGenBuffers( 1, &stereo);
+	alGenBuffers( 1, &stereo );
 
-	fh = fopen(fname, "rb");
-	if(fh == NULL) {
-		fprintf(stderr, "Couldn't open %s\n", fname);
-		exit(1);
+	fh = fopen( fname, "rb" );
+	if( fh == NULL ) {
+		fprintf( stderr, "Couldn't open %s\n", fname );
+		exit( 1 );
 	}
 
-	filelen = fread(data, 1, DATABUFFERSIZE, fh);
-	fclose(fh);
+	filelen = fread( data, 1, DATABUFFERSIZE, fh );
+	fclose( fh );
 
-	alGetError();
+	alGetError(  );
 
 	alBufferData( stereo, AL_FORMAT_WAVE_EXT, data, filelen, 0 );
-	if( alGetError() != AL_NO_ERROR ) {
-		fprintf(stderr, "Could not BufferData\n");
-		exit(1);
+	if( alGetError(  ) != AL_NO_ERROR ) {
+		fprintf( stderr, "Could not BufferData\n" );
+		exit( 1 );
 	}
-	alGenSources( 1, &moving_source);
+	alGenSources( 1, &moving_source );
 
 	alSourcefv( moving_source, AL_VELOCITY, zeroes );
 	alSourcefv( moving_source, AL_ORIENTATION, back );
-	alSourcei(  moving_source, AL_BUFFER, stereo );
-	alSourcei(  moving_source, AL_LOOPING, AL_FALSE);
+	alSourcei( moving_source, AL_BUFFER, stereo );
+	alSourcei( moving_source, AL_LOOPING, AL_FALSE );
 
 	return;
 }
 
-static void cleanup(void) {
-	free(data);
-	alcDestroyContext(context_id);
+static void cleanup( void )
+{
+	free( data );
+	alcDestroyContext( context_id );
 #ifdef JLIB
-	jv_check_mem();
+	jv_check_mem(  );
 #endif
 }
 
-int main( int argc, char* argv[] ) {
+int main( int argc, char *argv[] )
+{
 	ALCdevice *dev;
 	int attrlist[] = { ALC_FREQUENCY, 22050,
-			   ALC_INVALID };
+		ALC_INVALID
+	};
 	ALfloat gain;
 
 	dev = alcOpenDevice( NULL );
@@ -91,8 +94,8 @@ int main( int argc, char* argv[] ) {
 	}
 
 	/* Initialize ALUT. */
-	context_id = alcCreateContext( dev, attrlist);
-	if(context_id == NULL) {
+	context_id = alcCreateContext( dev, attrlist );
+	if( context_id == NULL ) {
 		alcCloseDevice( dev );
 
 		return 1;
@@ -100,24 +103,24 @@ int main( int argc, char* argv[] ) {
 
 	alcMakeContextCurrent( context_id );
 
-	fixup_function_pointers();
+	fixup_function_pointers(  );
 
-	if(argc == 1) {
-		init(WAVEFILE);
+	if( argc == 1 ) {
+		init( WAVEFILE );
 	} else {
-		init(argv[1]);
+		init( argv[1] );
 	}
 
-	gain = talcGetAudioChannel(ALC_CHAN_CD_LOKI);
-	fprintf(stderr, "get ALC_CHAN_CD_LOKI = %f\n", gain);
-	talcSetAudioChannel(ALC_CHAN_CD_LOKI, 0.35);
-	fprintf(stderr, "set ALC_CHAN_CD 0.35, get = %f\n",
-		talcGetAudioChannel(ALC_CHAN_CD_LOKI));
-	talcSetAudioChannel(ALC_CHAN_CD_LOKI, gain);
-	fprintf(stderr, "set ALC_CHAN_CD %f get = %f\n",
-		gain, talcGetAudioChannel(ALC_CHAN_CD_LOKI));
+	gain = talcGetAudioChannel( ALC_CHAN_CD_LOKI );
+	fprintf( stderr, "get ALC_CHAN_CD_LOKI = %f\n", gain );
+	talcSetAudioChannel( ALC_CHAN_CD_LOKI, 0.35 );
+	fprintf( stderr, "set ALC_CHAN_CD 0.35, get = %f\n",
+		 talcGetAudioChannel( ALC_CHAN_CD_LOKI ) );
+	talcSetAudioChannel( ALC_CHAN_CD_LOKI, gain );
+	fprintf( stderr, "set ALC_CHAN_CD %f get = %f\n",
+		 gain, talcGetAudioChannel( ALC_CHAN_CD_LOKI ) );
 
-	cleanup();
+	cleanup(  );
 
 	alcCloseDevice( dev );
 

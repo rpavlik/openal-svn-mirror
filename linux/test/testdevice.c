@@ -9,15 +9,17 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-int main( int argc, char* argv[] ) {
+int main( int argc, char *argv[] )
+{
 	ALCdevice *dev;
-	const ALCchar *initstr = (const ALCchar *) "'( ( devices '( native null ) ) )";
+	const ALCchar *initstr =
+	    ( const ALCchar * ) "'( ( devices '( native null ) ) )";
 
 	dev = alcOpenDevice( initstr );
 
 	sleep( 1 );
 
-	alcCloseDevice(  dev  );
+	alcCloseDevice( dev );
 
 	return 0;
 }

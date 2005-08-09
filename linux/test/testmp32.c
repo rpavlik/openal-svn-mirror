@@ -13,67 +13,70 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-
 #define DATABUFSIZE 4098
 #define MP3_FILE    "boom.mp3"
 #define WAVE_FILE   "sample.wav"
 #define MP3_FUNC    "alutLoadMP3_LOKI"
 #define NUMSOURCES  1
 
-static void cleanup(void);
+static void cleanup( void );
 
-static ALuint mp3buf; /* our buffer */
-static ALuint mp3source = (ALuint ) -1;
+static ALuint mp3buf;		/* our buffer */
+static ALuint mp3source = ( ALuint ) - 1;
 
 static time_t start;
 
 static ALCcontext *context_id;
 
 /* our mp3 extension */
-typedef ALboolean (mp3Loader)(ALuint, ALvoid *, ALint);
+typedef ALboolean( mp3Loader ) ( ALuint, ALvoid *, ALint );
 mp3Loader *alutLoadMP3p = NULL;
 
-static void initmp3( void ) {
-	start = time(NULL);
+static void initmp3( void )
+{
+	start = time( NULL );
 
-	alGenBuffers( 1, &mp3buf);
-	alGenSources( 1, &mp3source);
+	alGenBuffers( 1, &mp3buf );
+	alGenSources( 1, &mp3source );
 
-	alSourcei(  mp3source, AL_BUFFER, mp3buf );
+	alSourcei( mp3source, AL_BUFFER, mp3buf );
 
 	return;
 }
 
-static void initwav( char *fname ) {
+static void initwav( char *fname )
+{
 	ALsizei size;
 	ALsizei freq;
 	ALsizei format;
 	ALboolean loop;
 	ALvoid *wave = NULL;
 
-	alutLoadWAVFile( (ALbyte*)fname, &format, &wave, &size, &freq, &loop );
-	if(wave == NULL) {
-		fprintf(stderr, "Could not include %s\n", fname);
-		exit(1);
+	alutLoadWAVFile( ( ALbyte * ) fname, &format, &wave, &size, &freq,
+			 &loop );
+	if( wave == NULL ) {
+		fprintf( stderr, "Could not include %s\n", fname );
+		exit( 1 );
 	}
 
 	alBufferData( mp3buf, format, wave, size, freq );
 
-	free(wave); /* openal makes a local copy of wave data */
+	free( wave );		/* openal makes a local copy of wave data */
 
 	return;
 }
 
-static void cleanup(void) {
+static void cleanup( void )
+{
 
-	alcDestroyContext(context_id);
+	alcDestroyContext( context_id );
 #ifdef JLIB
-	jv_check_mem();
+	jv_check_mem(  );
 #endif
 }
 
-
-int main( int argc, char* argv[] ) {
+int main( int argc, char *argv[] )
+{
 	ALCdevice *dev;
 	FILE *fh;
 	struct stat sbuf;
@@ -88,78 +91,79 @@ int main( int argc, char* argv[] ) {
 
 	/* Initialize context */
 	context_id = alcCreateContext( dev, NULL );
-	if(context_id == NULL) {
+	if( context_id == NULL ) {
 		alcCloseDevice( dev );
 		return 1;
 	}
 
 	alcMakeContextCurrent( context_id );
 
-	initmp3( );
+	initmp3(  );
 
-	if(argc == 1) {
+	if( argc == 1 ) {
 		fname = MP3_FILE;
 	} else {
 		fname = argv[1];
 	}
 
-	if(stat(fname, &sbuf) == -1) {
-		perror(fname);
+	if( stat( fname, &sbuf ) == -1 ) {
+		perror( fname );
 		return errno;
 	}
 
 	size = sbuf.st_size;
-	data = malloc(size);
-	if(data == NULL) {
-		exit(1);
+	data = malloc( size );
+	if( data == NULL ) {
+		exit( 1 );
 	}
 
-	fh = fopen(fname, "rb");
-	if(fh == NULL) {
-		fprintf(stderr, "Could not open %s\n", fname);
+	fh = fopen( fname, "rb" );
+	if( fh == NULL ) {
+		fprintf( stderr, "Could not open %s\n", fname );
 
-		free(data);
+		free( data );
 
-		exit(1);
+		exit( 1 );
 	}
 
-	fread(data, 1, size, fh);
+	fread( data, 1, size, fh );
 
-	alutLoadMP3p = (mp3Loader *) alGetProcAddress((ALchar *) MP3_FUNC);
-	if(alutLoadMP3p == NULL) {
-		free(data);
+	alutLoadMP3p =
+	    ( mp3Loader * ) alGetProcAddress( ( ALchar * ) MP3_FUNC );
+	if( alutLoadMP3p == NULL ) {
+		free( data );
 
-		fprintf(stderr, "Could not GetProc %s\n",
-			(ALubyte *) MP3_FUNC);
-		exit(-4);
+		fprintf( stderr, "Could not GetProc %s\n",
+			 ( ALubyte * ) MP3_FUNC );
+		exit( -4 );
 	}
 
-	if(alutLoadMP3p(mp3buf, data, size) != AL_TRUE) {
-		fprintf(stderr, "alutLoadMP3p failed\n");
-		exit(-2);
+	if( alutLoadMP3p( mp3buf, data, size ) != AL_TRUE ) {
+		fprintf( stderr, "alutLoadMP3p failed\n" );
+		exit( -2 );
 	}
 
-	free(data);
+	free( data );
 
 	alSourcePlay( mp3source );
 
-	while(SourceIsPlaying(mp3source) == AL_TRUE) {
-		sleep(1);
+	while( SourceIsPlaying( mp3source ) == AL_TRUE ) {
+		sleep( 1 );
 	}
 
-	fprintf(stderr, "Okay, now for the normal wav file\n");
+	fprintf( stderr, "Okay, now for the normal wav file\n" );
 
 	initwav( WAVE_FILE );
 
 	alSourcePlay( mp3source );
 
-	while(SourceIsPlaying(mp3source) == AL_TRUE) {
-		sleep(1);
+	while( SourceIsPlaying( mp3source ) == AL_TRUE ) {
+		sleep( 1 );
 	}
 
-	sleep(1);
+	sleep( 1 );
 
-	cleanup();
+	cleanup(  );
 
 	alcCloseDevice( dev );
 

@@ -11,18 +11,18 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-
 #define WAVEFILE "boom.wav"
 
-static void init(char *fname);
+static void init( char *fname );
 
 static ALuint moving_source = 0;
 
 static void *wave = NULL;
 static time_t start;
 
-static void init( char *fname ) {
-	ALfloat zeroes[] = { 0.0f, 0.0f,  0.0f };
+static void init( char *fname )
+{
+	ALfloat zeroes[] = { 0.0f, 0.0f, 0.0f };
 	ALfloat position[] = { 0.0f, 0.0f, 0.0f };
 	ALuint boom;
 	ALsizei size;
@@ -30,55 +30,56 @@ static void init( char *fname ) {
 	ALsizei format;
 	ALboolean loop;
 
-	start = time(NULL);
+	start = time( NULL );
 
-	alListenerfv(AL_POSITION, zeroes );
+	alListenerfv( AL_POSITION, zeroes );
 	/*
-	alListenerfv(AL_VELOCITY, zeroes );
-	alListenerfv(AL_ORIENTATION, front );
-	*/
+	   alListenerfv(AL_VELOCITY, zeroes );
+	   alListenerfv(AL_ORIENTATION, front );
+	 */
 
 	alGenBuffers( 1, &boom );
 
-	alutLoadWAVFile( (ALbyte*)fname, &format, &wave, &size, &freq, &loop );
-	if(wave == NULL) {
-		fprintf(stderr, "Could not open %s\n", fname);
-		exit(1);
+	alutLoadWAVFile( ( ALbyte * ) fname, &format, &wave, &size, &freq,
+			 &loop );
+	if( wave == NULL ) {
+		fprintf( stderr, "Could not open %s\n", fname );
+		exit( 1 );
 	}
 
-	fprintf(stderr, "(format 0x%x size %d freq %d\n",
-		format, size, freq);
+	fprintf( stderr, "(format 0x%x size %d freq %d\n", format, size, freq );
 
-	switch(format) {
-	    case AL_FORMAT_MONO8:
-	    case AL_FORMAT_MONO16:
-	      fprintf(stderr, "Not using MULTICHANNEL, format = 0x%x\n",
-	      	format);
-	      break;
-	    default:
-	 	fprintf(stderr, "Using MULTICHANNEL\n");
-	      	/* talBufferi(boom, AL_CHANNELS, 2); */
-	      break;
+	switch ( format ) {
+	case AL_FORMAT_MONO8:
+	case AL_FORMAT_MONO16:
+		fprintf( stderr, "Not using MULTICHANNEL, format = 0x%x\n",
+			 format );
+		break;
+	default:
+		fprintf( stderr, "Using MULTICHANNEL\n" );
+		/* talBufferi(boom, AL_CHANNELS, 2); */
+		break;
 	}
 
 	talBufferWriteData( boom, format, wave, size, freq, format );
-	free(wave); /* openal makes a local copy of wave data */
+	free( wave );		/* openal makes a local copy of wave data */
 
-	alGenSources( 1, &moving_source);
+	alGenSources( 1, &moving_source );
 
 	alSourcefv( moving_source, AL_POSITION, position );
-	alSourcef(  moving_source, AL_PITCH, 1.0 );
+	alSourcef( moving_source, AL_PITCH, 1.0 );
 	/*
-	alSourcefv( moving_source, AL_VELOCITY, zeroes );
-	alSourcefv( moving_source, AL_ORIENTATION, back );
-	*/
-	alSourcei(  moving_source, AL_BUFFER, boom );
-	alSourcei(  moving_source, AL_LOOPING, AL_FALSE);
+	   alSourcefv( moving_source, AL_VELOCITY, zeroes );
+	   alSourcefv( moving_source, AL_ORIENTATION, back );
+	 */
+	alSourcei( moving_source, AL_BUFFER, boom );
+	alSourcei( moving_source, AL_LOOPING, AL_FALSE );
 
 	return;
 }
 
-int main( int argc, char* argv[] ) {
+int main( int argc, char *argv[] )
+{
 	ALCdevice *dev;
 	void *ci;
 	int attrlist[] = { ALC_FREQUENCY, 44100, 0 };
@@ -89,30 +90,29 @@ int main( int argc, char* argv[] ) {
 	}
 
 	/* Initialize ALUT. */
-	ci = alcCreateContext( dev, attrlist);
-	if(ci == NULL) {
+	ci = alcCreateContext( dev, attrlist );
+	if( ci == NULL ) {
 		alcCloseDevice( dev );
 
-		exit(1);
+		exit( 1 );
 	}
 
 	alcMakeContextCurrent( ci );
 
-	fixup_function_pointers();
+	fixup_function_pointers(  );
 
-	if(argc == 1) {
-		init(WAVEFILE);
+	if( argc == 1 ) {
+		init( WAVEFILE );
 	} else {
-		init(argv[1]);
+		init( argv[1] );
 	}
 
 	alSourcePlay( moving_source );
-	while(SourceIsPlaying(moving_source)) {
-		micro_sleep(100000);
+	while( SourceIsPlaying( moving_source ) ) {
+		micro_sleep( 100000 );
 	}
 
-	alcDestroyContext(ci);
-
+	alcDestroyContext( ci );
 
 	alcCloseDevice( dev );
 

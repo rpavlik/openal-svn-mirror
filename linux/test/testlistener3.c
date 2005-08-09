@@ -17,7 +17,7 @@
 
 #ifndef M_PI
 #define M_PI 3.14
-#endif /* M_PI */
+#endif				/* M_PI */
 
 #define WAVEFILE "sample.wav"
 
@@ -25,36 +25,39 @@
 
 static void iterate( void );
 static void init( char *fname );
-static void cleanup(void);
+static void cleanup( void );
 
 static ALuint rightSid;
 
 static ALCcontext *context_id;
 static void *wave = NULL;
 
-static void iterate( void ) {
-	ALfloat orientation[]  = { 0.0f, 0.0f, -1.0f,
-				   0.0f, 1.0f, 0.0f };
+static void iterate( void )
+{
+	ALfloat orientation[] = { 0.0f, 0.0f, -1.0f,
+		0.0f, 1.0f, 0.0f
+	};
 	static ALint angle = 0;
 
 	/*
 	 * rotate at vector about up vector by angle degrees.
 	 */
-	_alRotatePointAboutAxis(TORAD(angle), orientation, &orientation[3]);
+	_alRotatePointAboutAxis( TORAD( angle ), orientation, &orientation[3] );
 
-	angle += 15; /* increment fifeteen degrees degree */
+	angle += 15;		/* increment fifeteen degrees degree */
 
-	fprintf(stderr, "orientation: \n\tAT(%f %f %f)\n\tUP(%f %f %f)\n",
-		orientation[0], orientation[1], orientation[2],
-		orientation[3], orientation[4], orientation[5]);
+	fprintf( stderr, "orientation: \n\tAT(%f %f %f)\n\tUP(%f %f %f)\n",
+		 orientation[0], orientation[1], orientation[2],
+		 orientation[3], orientation[4], orientation[5] );
 
-	alListenerfv(AL_ORIENTATION, orientation);
+	alListenerfv( AL_ORIENTATION, orientation );
 
-	micro_sleep(1500000);
+	micro_sleep( 1500000 );
 }
 
-static void init( char *fname ) {
-	ALfloat zeroes[] = { 0.0f, 0.0f,  0.0f };
+static void init( char *fname )
+{
+	ALfloat zeroes[] = { 0.0f, 0.0f, 0.0f };
 	ALfloat position[] = { 50.0f, 0.0f, 0.0f };
 	ALuint boom;
 	ALsizei size;
@@ -62,43 +65,46 @@ static void init( char *fname ) {
 	ALsizei format;
 	ALboolean loop;
 
-	alListenerfv(AL_POSITION, zeroes );
+	alListenerfv( AL_POSITION, zeroes );
 
 	alGenBuffers( 1, &boom );
 
-	alutLoadWAVFile( (ALbyte*)fname, &format, &wave, &size, &freq, &loop );
-	if(wave == NULL) {
-		fprintf(stderr, "Could not load %s\n", fname);
-		exit(1);
+	alutLoadWAVFile( ( ALbyte * ) fname, &format, &wave, &size, &freq,
+			 &loop );
+	if( wave == NULL ) {
+		fprintf( stderr, "Could not load %s\n", fname );
+		exit( 1 );
 	}
 
 	alBufferData( boom, format, wave, size, freq );
-	free(wave); /* openal makes a local copy of wave data */
+	free( wave );		/* openal makes a local copy of wave data */
 
-	alGenSources(1, &rightSid);
+	alGenSources( 1, &rightSid );
 
 	alSourcefv( rightSid, AL_POSITION, position );
 	alSourcei( rightSid, AL_BUFFER, boom );
-	alSourcei( rightSid, AL_LOOPING, AL_TRUE);
+	alSourcei( rightSid, AL_LOOPING, AL_TRUE );
 
 	return;
 }
 
-void cleanup(void) {
-	alcDestroyContext(context_id);
+void cleanup( void )
+{
+	alcDestroyContext( context_id );
 
 #ifdef JLIB
-	jv_check_mem();
+	jv_check_mem(  );
 #endif
 }
 
-int main( int argc, char* argv[] ) {
+int main( int argc, char *argv[] )
+{
 	ALCdevice *dev;
 	time_t start;
 	time_t shouldend;
 
-	start = time(NULL);
-	shouldend = time(NULL);
+	start = time( NULL );
+	shouldend = time( NULL );
 
 	dev = alcOpenDevice( NULL );
 	if( dev == NULL ) {
@@ -106,8 +112,8 @@ int main( int argc, char* argv[] ) {
 	}
 
 	/* Initialize ALUT. */
-	context_id = alcCreateContext( dev, NULL);
-	if(context_id == NULL) {
+	context_id = alcCreateContext( dev, NULL );
+	if( context_id == NULL ) {
 		alcCloseDevice( dev );
 
 		return 1;
@@ -115,21 +121,21 @@ int main( int argc, char* argv[] ) {
 
 	alcMakeContextCurrent( context_id );
 
-	if(argc == 1) {
-		init(WAVEFILE);
+	if( argc == 1 ) {
+		init( WAVEFILE );
 	} else {
-		init(argv[1]);
+		init( argv[1] );
 	}
 
-	alSourcePlay(rightSid);
+	alSourcePlay( rightSid );
 
-	while(shouldend - start < 20) {
-		shouldend = time(NULL);
+	while( shouldend - start < 20 ) {
+		shouldend = time( NULL );
 
-		iterate();
+		iterate(  );
 	}
 
-	cleanup();
+	cleanup(  );
 
 	alcCloseDevice( dev );
 

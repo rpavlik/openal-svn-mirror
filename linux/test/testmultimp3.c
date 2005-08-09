@@ -13,16 +13,15 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-
 #define DATABUFSIZE 4098
 #define MP3_FILE    "mp3.mp3"
 #define MP3_FUNC    "alutLoadMP3_LOKI"
 #define MAX_SOURCES 4
 
-static void init(void);
-static void cleanup(void);
+static void init( void );
+static void cleanup( void );
 
-static ALuint mp3buf[MAX_SOURCES]; /* our buffer */
+static ALuint mp3buf[MAX_SOURCES];	/* our buffer */
 static ALuint mp3source[MAX_SOURCES];
 
 static time_t start;
@@ -30,34 +29,36 @@ static time_t start;
 static ALCcontext *context_id;
 
 /* our mp3 extension */
-typedef ALboolean (mp3Loader)(ALuint, ALvoid *, ALint);
+typedef ALboolean( mp3Loader ) ( ALuint, ALvoid *, ALint );
 mp3Loader *alutLoadMP3p = NULL;
 
-static void init( void ) {
+static void init( void )
+{
 	int i;
 
-	start = time(NULL);
+	start = time( NULL );
 
-	alGenBuffers(MAX_SOURCES, mp3buf);
-	alGenSources(MAX_SOURCES, mp3source);
+	alGenBuffers( MAX_SOURCES, mp3buf );
+	alGenSources( MAX_SOURCES, mp3source );
 
-	for(i = 0; i < MAX_SOURCES; i++) {
-		alSourcei(  mp3source[i], AL_BUFFER, mp3buf[i] );
+	for ( i = 0; i < MAX_SOURCES; i++ ) {
+		alSourcei( mp3source[i], AL_BUFFER, mp3buf[i] );
 	}
 
 	return;
 }
 
-static void cleanup(void) {
+static void cleanup( void )
+{
 
-	alcDestroyContext(context_id);
+	alcDestroyContext( context_id );
 #ifdef JLIB
-	jv_check_mem();
+	jv_check_mem(  );
 #endif
 }
 
-
-int main( int argc, char* argv[] ) {
+int main( int argc, char *argv[] )
+{
 	ALCdevice *dev;
 	FILE *fh;
 	struct stat sbuf;
@@ -73,70 +74,70 @@ int main( int argc, char* argv[] ) {
 
 	/* Initialize ALUT. */
 	context_id = alcCreateContext( dev, NULL );
-	if(context_id == NULL) {
+	if( context_id == NULL ) {
 		alcCloseDevice( dev );
 		return 1;
 	}
 
 	alcMakeContextCurrent( context_id );
 
-	init( );
+	init(  );
 
-	if(argc == 1) {
+	if( argc == 1 ) {
 		fname = MP3_FILE;
 	} else {
 		fname = argv[1];
 	}
 
-	if(stat(fname, &sbuf) == -1) {
-		perror(fname);
+	if( stat( fname, &sbuf ) == -1 ) {
+		perror( fname );
 		return errno;
 	}
 
 	size = sbuf.st_size;
-	data = malloc(size);
-	if(data == NULL) {
-		exit(1);
+	data = malloc( size );
+	if( data == NULL ) {
+		exit( 1 );
 	}
 
-	fh = fopen(fname, "rb");
-	if(fh == NULL) {
-		fprintf(stderr, "Could not open %s\n", fname);
+	fh = fopen( fname, "rb" );
+	if( fh == NULL ) {
+		fprintf( stderr, "Could not open %s\n", fname );
 
-		free(data);
+		free( data );
 
-		exit(1);
+		exit( 1 );
 	}
 
-	fread(data, 1, size, fh);
+	fread( data, 1, size, fh );
 
-	alutLoadMP3p = (mp3Loader *) alGetProcAddress((ALchar *) MP3_FUNC);
-	if(alutLoadMP3p == NULL) {
-		free(data);
+	alutLoadMP3p =
+	    ( mp3Loader * ) alGetProcAddress( ( ALchar * ) MP3_FUNC );
+	if( alutLoadMP3p == NULL ) {
+		free( data );
 
-		fprintf(stderr, "Could not GetProc %s\n",
-			(ALubyte *) MP3_FUNC);
-		exit(-4);
+		fprintf( stderr, "Could not GetProc %s\n",
+			 ( ALubyte * ) MP3_FUNC );
+		exit( -4 );
 	}
 
-
-	for(i = 0; i < MAX_SOURCES; i++) {
-		if(alutLoadMP3p(mp3buf[i], data, size) != AL_TRUE) {
-			fprintf(stderr, "alutLoadMP3p failed\n");
-			exit(-2);
+	for ( i = 0; i < MAX_SOURCES; i++ ) {
+		if( alutLoadMP3p( mp3buf[i], data, size ) != AL_TRUE ) {
+			fprintf( stderr, "alutLoadMP3p failed\n" );
+			exit( -2 );
 		}
 
-		alSourcePlay(mp3source[i]);
-		micro_sleep(80000);
+		alSourcePlay( mp3source[i] );
+		micro_sleep( 80000 );
 	}
 
 	free( data );
 
-	while(SourceIsPlaying(mp3source[0]) == AL_TRUE) {
-		sleep(1);
+	while( SourceIsPlaying( mp3source[0] ) == AL_TRUE ) {
+		sleep( 1 );
 	}
 
-	cleanup();
+	cleanup(  );
 
 	alcCloseDevice( dev );
 

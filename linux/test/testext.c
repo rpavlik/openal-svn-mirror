@@ -11,7 +11,8 @@ static ALCcontext *context_id;
 
 typedef void blah_type( void * );
 
-int main( int argc, char* argv[] ) {
+int main( int argc, char *argv[] )
+{
 	ALCdevice *dev;
 	blah_type *blah;
 
@@ -20,8 +21,8 @@ int main( int argc, char* argv[] ) {
 		return 1;
 	}
 
-	context_id = alcCreateContext( dev, NULL);
-	if(context_id == NULL) {
+	context_id = alcCreateContext( dev, NULL );
+	if( context_id == NULL ) {
 		alcCloseDevice( dev );
 
 		return 1;
@@ -29,21 +30,23 @@ int main( int argc, char* argv[] ) {
 
 	alcMakeContextCurrent( context_id );
 
-	blah = (blah_type *) alGetProcAddress((ALchar *) BADPROC);
-	if(blah != NULL) {
-		fprintf(stderr, "weird, it seems %s is defined\n", BADPROC);
+	blah = ( blah_type * ) alGetProcAddress( ( ALchar * ) BADPROC );
+	if( blah != NULL ) {
+		fprintf( stderr, "weird, it seems %s is defined\n", BADPROC );
 	}
 
-	blah = (blah_type *) alGetProcAddress((ALchar *) GOODPROC);
-	if(blah == NULL) {
-		fprintf(stderr, "weird, it seems %s is not defined\n",GOODPROC);
+	blah = ( blah_type * ) alGetProcAddress( ( ALchar * ) GOODPROC );
+	if( blah == NULL ) {
+		fprintf( stderr, "weird, it seems %s is not defined\n",
+			 GOODPROC );
 	} else {
-		fprintf(stderr, "good, %s is %p\n", GOODPROC, (void *) blah);
+		fprintf( stderr, "good, %s is %p\n", GOODPROC,
+			 ( void * ) blah );
 	}
 
-	blah(NULL);
+	blah( NULL );
 
-	alcDestroyContext(context_id);
+	alcDestroyContext( context_id );
 
 	alcCloseDevice( dev );
 

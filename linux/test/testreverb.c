@@ -1,6 +1,5 @@
 #include "testlib.h"
 
-
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alut.h>
@@ -13,14 +12,15 @@
 #define WAVEFILE "sample.wav"
 
 static void init( char *fname );
-static void cleanup(void);
+static void cleanup( void );
 
 static ALuint reverb_sid = 0;
 
 static ALCcontext *context_id;
 static void *wave = NULL;
 
-static void init( char *fname ) {
+static void init( char *fname )
+{
 	ALfloat zeroes[] = { 0.0f, 0.0f, 0.0f };
 	ALfloat back[] = { 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f };
 	ALfloat front[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f };
@@ -31,43 +31,46 @@ static void init( char *fname ) {
 	ALsizei format;
 	ALboolean loop;
 
-	alListenerfv(AL_POSITION, zeroes );
-	alListenerfv(AL_VELOCITY, zeroes );
-	alListenerfv(AL_ORIENTATION, front );
+	alListenerfv( AL_POSITION, zeroes );
+	alListenerfv( AL_VELOCITY, zeroes );
+	alListenerfv( AL_ORIENTATION, front );
 
-	alGenBuffers( 1, &locutus);
+	alGenBuffers( 1, &locutus );
 
-	alutLoadWAVFile( (ALbyte*)fname, &format, &wave, &size, &freq, &loop );
+	alutLoadWAVFile( ( ALbyte * ) fname, &format, &wave, &size, &freq,
+			 &loop );
 
-	if(wave == NULL) {
-		fprintf(stderr, "Could not include %s\n", fname);
-		exit(1);
+	if( wave == NULL ) {
+		fprintf( stderr, "Could not include %s\n", fname );
+		exit( 1 );
 	}
 
 	alBufferData( locutus, format, wave, size, freq );
-	free(wave); /* openal makes a local copy of wave data */
+	free( wave );		/* openal makes a local copy of wave data */
 
-	alGenSources( 1, &reverb_sid);
+	alGenSources( 1, &reverb_sid );
 
-	alSourcefv(reverb_sid, AL_POSITION, sourcepos );
-	alSourcefv(reverb_sid, AL_VELOCITY, zeroes );
-	alSourcefv(reverb_sid, AL_ORIENTATION, back );
-	alSourcei (reverb_sid, AL_BUFFER, locutus );
+	alSourcefv( reverb_sid, AL_POSITION, sourcepos );
+	alSourcefv( reverb_sid, AL_VELOCITY, zeroes );
+	alSourcefv( reverb_sid, AL_ORIENTATION, back );
+	alSourcei( reverb_sid, AL_BUFFER, locutus );
 
-	talReverbScale(reverb_sid, 0.35);
-	talReverbDelay(reverb_sid, 1);
+	talReverbScale( reverb_sid, 0.35 );
+	talReverbDelay( reverb_sid, 1 );
 
 	return;
 }
 
-void cleanup(void) {
-	alcDestroyContext(context_id);
+void cleanup( void )
+{
+	alcDestroyContext( context_id );
 #ifdef JLIB
-	jv_check_mem();
+	jv_check_mem(  );
 #endif
 }
 
-int main( int argc, char* argv[] ) {
+int main( int argc, char *argv[] )
+{
 	ALCdevice *dev;
 	int i;
 
@@ -76,8 +79,8 @@ int main( int argc, char* argv[] ) {
 		return 1;
 	}
 
-	context_id = alcCreateContext( dev, NULL);
-	if(context_id == NULL) {
+	context_id = alcCreateContext( dev, NULL );
+	if( context_id == NULL ) {
 		alcCloseDevice( dev );
 
 		return 1;
@@ -85,21 +88,21 @@ int main( int argc, char* argv[] ) {
 
 	alcMakeContextCurrent( context_id );
 
-	fixup_function_pointers();
+	fixup_function_pointers(  );
 
-	if(argc == 1) {
-		init(WAVEFILE);
+	if( argc == 1 ) {
+		init( WAVEFILE );
 	} else {
-		init(argv[1]);
+		init( argv[1] );
 	}
 
-	alSourcePlay(reverb_sid);
+	alSourcePlay( reverb_sid );
 
-	for(i = 0; i < 10; i++) {
-		micro_sleep(1000000);
+	for ( i = 0; i < 10; i++ ) {
+		micro_sleep( 1000000 );
 	}
 
-	cleanup();
+	cleanup(  );
 
 	alcCloseDevice( dev );
 

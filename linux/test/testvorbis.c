@@ -13,48 +13,49 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-
 #define DATABUFSIZE 4096
 #define VORBIS_FILE    "boom.ogg"
 #define VORBIS_FUNC    "alutLoadVorbis_LOKI"
 #define NUMSOURCES  1
 
-static void init(void);
-static void cleanup(void);
+static void init( void );
+static void cleanup( void );
 
-static ALuint vorbbuf; /* our buffer */
-static ALuint vorbsource = (ALuint ) -1;
+static ALuint vorbbuf;		/* our buffer */
+static ALuint vorbsource = ( ALuint ) - 1;
 
 static time_t start;
 
 static ALCcontext *context_id;
 
 /* our vorbis extension */
-typedef ALboolean (vorbisLoader)(ALuint, ALvoid *, ALint);
+typedef ALboolean( vorbisLoader ) ( ALuint, ALvoid *, ALint );
 vorbisLoader *alutLoadVorbisp = NULL;
 
-static void init( void ) {
-	start = time(NULL);
+static void init( void )
+{
+	start = time( NULL );
 
-	alGenBuffers( 1, &vorbbuf);
-	alGenSources( 1, &vorbsource);
+	alGenBuffers( 1, &vorbbuf );
+	alGenSources( 1, &vorbsource );
 
-	alSourcei(  vorbsource, AL_BUFFER, vorbbuf );
-	alSourcei(  vorbsource, AL_LOOPING, AL_TRUE );
+	alSourcei( vorbsource, AL_BUFFER, vorbbuf );
+	alSourcei( vorbsource, AL_LOOPING, AL_TRUE );
 
 	return;
 }
 
-static void cleanup(void) {
+static void cleanup( void )
+{
 
-	alcDestroyContext(context_id);
+	alcDestroyContext( context_id );
 #ifdef JLIB
-	jv_check_mem();
+	jv_check_mem(  );
 #endif
 }
 
-
-int main( int argc, char* argv[] ) {
+int main( int argc, char *argv[] )
+{
 	ALCdevice *dev;
 	FILE *fh;
 	struct stat sbuf;
@@ -69,7 +70,7 @@ int main( int argc, char* argv[] ) {
 
 	/* Initialize ALUT. */
 	context_id = alcCreateContext( dev, NULL );
-	if(context_id == NULL) {
+	if( context_id == NULL ) {
 		alcCloseDevice( dev );
 
 		return 1;
@@ -77,59 +78,60 @@ int main( int argc, char* argv[] ) {
 
 	alcMakeContextCurrent( context_id );
 
-	init( );
+	init(  );
 
-	if(argc == 1) {
+	if( argc == 1 ) {
 		fname = VORBIS_FILE;
 	} else {
 		fname = argv[1];
 	}
 
-	if(stat(fname, &sbuf) == -1) {
-		perror(fname);
+	if( stat( fname, &sbuf ) == -1 ) {
+		perror( fname );
 		return errno;
 	}
 
 	size = sbuf.st_size;
-	data = malloc(size);
-	if(data == NULL) {
-		exit(1);
+	data = malloc( size );
+	if( data == NULL ) {
+		exit( 1 );
 	}
 
-	fh = fopen(fname, "rb");
-	if(fh == NULL) {
-		fprintf(stderr, "Could not open %s\n", fname);
+	fh = fopen( fname, "rb" );
+	if( fh == NULL ) {
+		fprintf( stderr, "Could not open %s\n", fname );
 
-		free(data);
+		free( data );
 
-		exit(1);
+		exit( 1 );
 	}
 
-	fread(data, size, 1, fh);
+	fread( data, size, 1, fh );
 
-	alutLoadVorbisp = (vorbisLoader *) alGetProcAddress((ALchar *) VORBIS_FUNC);
-	if(alutLoadVorbisp == NULL) {
-		free(data);
+	alutLoadVorbisp =
+	    ( vorbisLoader * ) alGetProcAddress( ( ALchar * ) VORBIS_FUNC );
+	if( alutLoadVorbisp == NULL ) {
+		free( data );
 
-		fprintf(stderr, "Could not GetProc %s\n",
-			(ALubyte *) VORBIS_FUNC);
-		exit(-4);
+		fprintf( stderr, "Could not GetProc %s\n",
+			 ( ALubyte * ) VORBIS_FUNC );
+		exit( -4 );
 	}
 
-	if(alutLoadVorbisp(vorbbuf, data, size) != AL_TRUE) {
-		fprintf(stderr, "alutLoadVorbis failed\n");
-		exit(-2);
+	if( alutLoadVorbisp( vorbbuf, data, size ) != AL_TRUE ) {
+		fprintf( stderr, "alutLoadVorbis failed\n" );
+		exit( -2 );
 	}
 
-	free(data);
+	free( data );
 
 	alSourcePlay( vorbsource );
 
-	while(SourceIsPlaying(vorbsource) == AL_TRUE) {
-		sleep(1);
+	while( SourceIsPlaying( vorbsource ) == AL_TRUE ) {
+		sleep( 1 );
 	}
 
-	cleanup();
+	cleanup(  );
 
 	alcCloseDevice( dev );
 

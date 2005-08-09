@@ -3,13 +3,14 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 
-int main( int argc, char* argv[] )
+int main( int argc, char *argv[] )
 {
 	ALCcontext *context_id;
 	ALCdevice *dev;
 
 	int attrlist[] = { ALC_FREQUENCY, 44100,
-			   0 };
+		0
+	};
 
 	dev = alcOpenDevice( NULL );
 	if( dev == NULL ) {
@@ -28,7 +29,8 @@ int main( int argc, char* argv[] )
 	printf( "AL_RENDERER: %s\n", alGetString( AL_RENDERER ) );
 	printf( "AL_EXTENSIONS: %s\n", alGetString( AL_EXTENSIONS ) );
 
-	if( alIsExtensionPresent( (const ALCchar*) "AL_LOKI_attenuation_scale" ) ) {
+	if( alIsExtensionPresent
+	    ( ( const ALCchar * ) "AL_LOKI_attenuation_scale" ) ) {
 		printf( "Found AL_LOKI_attenuation_scale\n" );
 	}
 

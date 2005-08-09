@@ -38,6 +38,21 @@ REPO_CLEAN_FILES :=
 
 all: testlib.o $(LIBOPENAL) $(TEST_PROGS) ../src/libopenal.a
 
+# Note that we do *not* indent testlib.h automatically, the 'extern "C"' stuff
+# in it would lead to more indentation than we want.
+indent:
+	@for i in *.c *.cc ; do \
+	    cat $$i | indent > indent.tmp ; \
+	    if diff $$i indent.tmp > /dev/null 2>&1 ; then \
+		: ; \
+	    else \
+		echo Reformatted $$i ; \
+		$(RM) $$i ; \
+		mv indent.tmp $$i ; \
+	    fi ; \
+	done
+	@$(RM) indent.tmp
+
 testlib.o : testlib.c testlib.h ../config.h
 	$(CC) $(INC) $(DEFS) $(CFLAGS) -c testlib.c -o testlib.o
 
@@ -62,4 +77,4 @@ repo-clean:
 	for i in "" $(SUBDIRS) ; do test -z "$$i" || ( cd $$i && $(MAKE) repo-clean ) done
 	$(RM_RF) __rm_food $(CLEAN_FILES) $(DISTCLEAN_FILES) $(MAINTAINER_CLEAN_FILES) $(REPO_CLEAN_FILES)
 
-.PHONY: all clean distclean maintainer-clean repo-clean
+.PHONY: all indent clean distclean maintainer-clean repo-clean
