@@ -58,24 +58,24 @@ void AVEnvironment::Init ()
    tempPos[0] = 4.5f;
    tempPos[1] = 11.25f;
    tempPos[2] = -4.5f;
-   Audio.SetSourcePosition(Audio.PlayFile((char *) "radar.wav", true), tempPos);
+   Audio.SetSourcePosition(Audio.PlayFile((ALbyte *) "radar.wav", true), tempPos);
 
    // load up phaser sound effect and position in first house
-   phaserEffect = Audio.LoadFile("phaser.wav", false);
+   phaserEffect = Audio.LoadFile((ALbyte *)"phaser.wav", true);
    tempPos[0] = 3.0f;
    tempPos[1] = 6.0f;
    tempPos[2] = -3.0f;
    Audio.SetSourcePosition(phaserEffect, tempPos);
 
    // load up car sound effect and begin looping 
-   carEffect = Audio.PlayFile("motor_a8.wav", true);
+   carEffect = Audio.PlayFile((ALbyte *)"motor_a8.wav", true);
    tempPos[0] = 0.0f;
    tempPos[1] = 0.0f;
    tempPos[2] = -300.0f;
    Audio.SetSourcePosition(carEffect, tempPos);
 
    // load up van sound effect and begin looping
-   vanEffect = Audio.PlayFile("motor_b8.wav", true);
+   vanEffect = Audio.PlayFile((ALbyte *)"motor_b8.wav", true);
 
    tempPos[0] = 0.0f;
    tempPos[1] = 0.0f;
@@ -86,7 +86,7 @@ void AVEnvironment::Init ()
    tempPos[0] = 24.0f;
    tempPos[1] = 0.0f;
    tempPos[2] = 18.0f;
-   Audio.SetSourcePosition(Audio.PlayFile("funk.wav", true), tempPos);
+   Audio.SetSourcePosition(Audio.PlayFile((ALbyte *)"funk.wav", true), tempPos);
 
    // init objects
    Sky.Init("Sky.mdl");
@@ -172,17 +172,14 @@ void AVEnvironment::PlaceCamera ()
    Audio.UpdateObstruction(vanEffect);
 
    double distance = (playerPos[0] - 4.5) * (playerPos[0] - 4.5) + (playerPos[2] + 4.5) * (playerPos[2] + 4.5);
-   if ((inRange == false) && (distance < 150.0f))
+   if (!inRange && (distance < 150.0f))
    {
 	   Audio.Play(phaserEffect);
 	   inRange = true;
-   } else
+   } else if (inRange && (distance >= 150.0f))
    {
-	   if (distance > 150.0f) 
-	   {
-	     inRange = false;
-	     Audio.Stop(phaserEffect);
-	   }
+	   Audio.Stop(phaserEffect);
+	   inRange = false;
    }
 }
 

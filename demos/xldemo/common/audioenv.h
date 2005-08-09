@@ -25,8 +25,8 @@ public:
    void Init ();
    void ListenerPosition (ALfloat*, ALfloat*);
    void UpdateObstruction (int);
-   int LoadFile (char *, bool);
-   int PlayFile (char *, bool);
+   int LoadFile (ALbyte *, bool);
+   int PlayFile (ALbyte *, bool);
    void SetSourcePosition (int, float *);
    void SetSourceVelocity (int, float *);
    void Play (int);

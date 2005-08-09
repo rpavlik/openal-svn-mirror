@@ -183,7 +183,7 @@ void AudioEnv::UpdateObstruction (int handle)
 }
 
 // LoadFile -- loads a file into a buffer and source
-int AudioEnv::LoadFile (char *filename, bool loop)
+int AudioEnv::LoadFile (ALbyte *filename, bool loop)
 {
    // create buffer
    alGetError(); /* clear */
@@ -200,36 +200,20 @@ int AudioEnv::LoadFile (char *filename, bool loop)
    }
 
    // load data into buffer
-#ifdef WINDOWS
    ALsizei size, freq;
    ALenum format;
    ALvoid *data;
-   ALboolean looping;
-   
-   alutLoadWAVFile(filename, &format, &data, &size, &freq, &looping);
-   alBufferData (buffer[nextBuffer], format, data, size, freq);
-#endif
 #if defined(MACOS) | defined(MAC_OS_X)
-   ALsizei size, freq;
-   ALenum format;
-   ALvoid *data;
-   
    alutLoadWAVFile(filename, &format, &data, &size, &freq);
-   alBufferData (buffer[nextBuffer], format, data, size, freq);
-#endif
-#ifdef LINUX
-   ALsizei size, freq;
-   ALenum format;
-   ALvoid *data;
+#else
    ALboolean looping;
-   
    alutLoadWAVFile(filename, &format, &data, &size, &freq, &looping);
+#endif
    alBufferData (buffer[nextBuffer], format, data, size, freq);
-#endif   
 
    // set static source properties
    alSourcei(source[nextSource], AL_BUFFER, buffer[nextBuffer]);
-   alSourcei(source[nextSource], AL_LOOPING, 1);
+   alSourcei(source[nextSource], AL_LOOPING, (loop ? AL_TRUE : AL_FALSE));
    alSourcef(source[nextSource], AL_REFERENCE_DISTANCE, 10);
 
    nextBuffer++;
@@ -238,7 +222,7 @@ int AudioEnv::LoadFile (char *filename, bool loop)
 }
 
 // Playfile -- loads a file into a buffer and source, then plays it
-int AudioEnv::PlayFile (char *filename, bool loop)
+int AudioEnv::PlayFile (ALbyte *filename, bool loop)
 {
 	int loadhandle;
 
