@@ -27,44 +27,44 @@ static void display( void )
 
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
     glMatrixMode( GL_MODELVIEW );
-    glLoadIdentity( );
+    glLoadIdentity(  );
 
     gluLookAt( 0.0, 4.0, 16.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0 );
 
     /* Inverse, because we invert below. */
     if( left == AL_FALSE ) {
-	    glColor3f( 1.0, 0.0, 0.0 );
+	glColor3f( 1.0, 0.0, 0.0 );
     } else {
-	    glColor3f( 1.0, 1.0, 1.0 );
+	glColor3f( 1.0, 1.0, 1.0 );
     }
 
     /* Draw radiation cones. */
-    glPushMatrix( );
+    glPushMatrix(  );
     glTranslatef( left_pos[0], left_pos[1], left_pos[2] );
     glRotatef( 180, 0.0, 1.0, 0.0 );
-    glutWireCone( 1.0 , 2.0, 20, 20 );
-    glPopMatrix( );
+    glutWireCone( 1.0, 2.0, 20, 20 );
+    glPopMatrix(  );
 
     if( left == AL_FALSE ) {
-	    glColor3f( 1.0, 1.0, 1.0 );
+	glColor3f( 1.0, 1.0, 1.0 );
     } else {
-	    glColor3f( 1.0, 0.0, 0.0 );
+	glColor3f( 1.0, 0.0, 0.0 );
     }
 
-    glPushMatrix( );
+    glPushMatrix(  );
     glTranslatef( right_pos[0], right_pos[1], right_pos[2] );
     glRotatef( 180, 0.0, 1.0, 0.0 );
-    glutWireCone( 1.0 , 2.0, 20, 20 );
-    glPopMatrix( );
+    glutWireCone( 1.0, 2.0, 20, 20 );
+    glPopMatrix(  );
 
     /* Let's draw some text. */
     glMatrixMode( GL_PROJECTION );
-    glPushMatrix( );
-    glLoadIdentity( );
+    glPushMatrix(  );
+    glLoadIdentity(  );
     glOrtho( 0, 640, 0, 480, -1.0, 1.0 );
 
     glMatrixMode( GL_MODELVIEW );
-    glLoadIdentity( );
+    glLoadIdentity(  );
     glTranslatef( 10.0, 10.0, 0.0 );
     glScalef( 0.2, 0.2, 0.2 );
     glColor3f( 1.0, 0.0, 0.0 );
@@ -84,7 +84,7 @@ static void display( void )
     glutStrokeCharacter( GLUT_STROKE_ROMAN, 'e' );
 
     glMatrixMode( GL_PROJECTION );
-    glPopMatrix( );
+    glPopMatrix(  );
 
     now = time( NULL );
 
@@ -102,14 +102,14 @@ static void display( void )
 
     }
 
-    glutSwapBuffers( );
-    glutPostRedisplay( );
+    glutSwapBuffers(  );
+    glutPostRedisplay(  );
 }
 
 static void keyboard( unsigned char key, int x, int y )
 {
 
-    switch( key ) {
+    switch ( key ) {
     case 27:
 	exit( EXIT_SUCCESS );
 	break;
@@ -123,8 +123,8 @@ static void reshape( int w, int h )
 {
     glViewport( 0, 0, w, h );
     glMatrixMode( GL_PROJECTION );
-    glLoadIdentity( );
-    gluPerspective( 60.0f, (float) w / (float) h, 0.1f, 1024.0f );
+    glLoadIdentity(  );
+    gluPerspective( 60.0f, ( float ) w / ( float ) h, 0.1f, 1024.0f );
 }
 
 static void init( void )
@@ -134,7 +134,7 @@ static void init( void )
     ALfloat back[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f };
     ALuint sources[2];
     ALuint boom;
-    void* wave = NULL;
+    void *wave = NULL;
     ALsizei size;
     ALsizei freq;
     ALsizei format;
@@ -147,25 +147,25 @@ static void init( void )
     alListenerfv( AL_VELOCITY, zeroes );
     alListenerfv( AL_ORIENTATION, front );
 
-    alGetError();
+    alGetError(  );
     alGenBuffers( 1, &boom );
-    if(alGetError() != AL_NO_ERROR) {
+    if( alGetError(  ) != AL_NO_ERROR ) {
 	fprintf( stderr, "aldemo: couldn't generate samples\n" );
 	exit( EXIT_FAILURE );
     }
 
-    alutLoadWAVFile( (ALbyte *)WAVE, &format, &wave, &size, &freq, &loop );
-    if(wave == NULL) {
-      fprintf( stderr, "aldemo: couldn't load %s\n", WAVE );
+    alutLoadWAVFile( ( ALbyte * ) WAVE, &format, &wave, &size, &freq, &loop );
+    if( wave == NULL ) {
+	fprintf( stderr, "aldemo: couldn't load %s\n", WAVE );
 	exit( EXIT_FAILURE );
     }
 
     alBufferData( boom, format, wave, size, freq );
 
-    alGetError();
+    alGetError(  );
     alGenSources( 2, sources );
 
-    if(alGetError() != AL_NO_ERROR) {
+    if( alGetError(  ) != AL_NO_ERROR ) {
 	fprintf( stderr, "aldemo: couldn't generate sources\n" );
 	exit( EXIT_FAILURE );
     }
@@ -184,7 +184,7 @@ static void init( void )
     alSourcei( right_sid, AL_BUFFER, boom );
 }
 
-int main( int argc, char* argv[] )
+int main( int argc, char *argv[] )
 {
     /* Initialize GLUT. */
     glutInit( &argc, argv );
@@ -194,16 +194,16 @@ int main( int argc, char* argv[] )
     glutInitWindowPosition( 0, 0 );
     glutCreateWindow( argv[0] );
 
-    glutReshapeFunc( reshape ); 
+    glutReshapeFunc( reshape );
     glutDisplayFunc( display );
     glutKeyboardFunc( keyboard );
 
     /* Initialize ALUT. */
     alutInit( &argc, argv );
 
-    init( );
+    init(  );
 
-    glutMainLoop( );
+    glutMainLoop(  );
 
     return EXIT_SUCCESS;
 }
