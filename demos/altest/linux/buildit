@@ -1,8 +1,9 @@
 #!/bin/bash
 
-if test ! "$1" = "osx-framework"; then
-	g++ -pedantic -pedantic-errors -ansi -Wall -Wno-unused -fPIC -DPIC -g -O2 -DLINUX -I/usr/local/include -I/user/X11R6/include -o altest -L/usr/local/lib -L/usr/X11R6/lib -L. -lopenal -lXmu -lXext -lXi -lX11 -lpthread -ldl ../common/altest.cpp
-	exit
+CXXFLAGS="-Wall -ansi -pedantic -fPIC -g -O2 -DLINUX -I../../../include -L../../../linux/src -lopenal"
+
+if test "$1" = "osx-framework"; then
+    CXXFLAGS="$CFLAGS -DOSX_FRAMEWORK"
 fi
 
-	g++ -pedantic -pedantic-errors -ansi -Wall -Wno-unused -fPIC -DPIC -g -O2 -DLINUX -DOSX_FRAMEWORK -I/usr/local/include -I/user/X11R6/include -o altest -L/usr/local/lib -L/usr/X11R6/lib -L. -lopenal -lXmu -lXext -lXi -lX11 -lpthread -ldl ../common/altest.cpp
+g++ $CXXFLAGS -o altest ../common/altest.cpp

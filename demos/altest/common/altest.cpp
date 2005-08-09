@@ -453,17 +453,16 @@ ALboolean LoadWave(char *szWaveFile, ALuint BufferID)
 	ALint	error;
 	ALsizei size,freq;
 	ALenum	format;
-	ALvoid	*data;
+	ALvoid	*data = 0;
 	ALboolean loop;
 
 	if (!szWaveFile)
 		return AL_FALSE;
 
 	alutLoadWAVFile(szWaveFile,&format,&data,&size,&freq,&loop);
-	if ((error = alGetError()) != AL_NO_ERROR)
+	if (!data)
 	{
 		printf("Failed to load %s\n", szWaveFile);
-		DisplayALError("alutLoadWAVFile : ", error);
 		return AL_FALSE;
 	}
 
@@ -523,7 +522,7 @@ int main(int argc, char* argv[])
 	char *defaultDevice;
 	char *deviceList;
 	char *devices[12];
-	int numDevices, numDefaultDevice, i;
+	int numDevices, numDefaultDevice = 0, i;
 
 	strcpy(deviceName, "");
 	if (alcIsExtensionPresent(NULL, "ALC_ENUMERATION_EXT") == AL_TRUE) { // try out enumeration extension
@@ -556,7 +555,7 @@ int main(int argc, char* argv[])
 				}
 				printf("\n\n");
 				do {
-					ch = _getch();
+					ch = getUpperCh();
 					i = atoi(&ch);
 				} while ((i < 0) || (i > numDevices));
 				if ((i != 0) && (strlen(devices[i-1]) < 256)) {
@@ -1320,7 +1319,6 @@ ALvoid FA_QueuingUnderrunStates(ALvoid)
 	ALuint bufferName;
 	ALuint error;
 	ALint tempInt;
-	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
 	bool localResultOK;
 
 	printf("\nQueuing Underrun States Test. ");
@@ -1429,7 +1427,6 @@ This test outputs a source at multiple gain values for testing by the user.
 ALvoid SA_SourceGain(ALvoid)
 {
 	ALuint testSources[2];
-	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
 
 	printf("Source Gain Test:");
 	if (ContinueOrSkip())
@@ -1473,7 +1470,6 @@ This test outputs a source at a fixed gain level, and tests various listener gai
 ALvoid SA_ListenerGain(ALvoid)
 {	
 	ALuint testSources[2];
-	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
 
 	printf("Listener Gain Test:");
 	if (ContinueOrSkip())
@@ -1521,7 +1517,6 @@ ALvoid SA_Position(ALvoid)
 {
 	ALuint testSources[2];
 	int i;
-	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
 	ALfloat tempFVect[6];
 
 	printf("Position Test:");
@@ -1833,7 +1828,6 @@ This test checks if minimum and maximum gain settings are working.
 ALvoid SA_MinMaxGain(ALvoid)
 {	
 	ALuint testSources[2];
-	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
 
 	printf("MIN/MAX Gain Test:");
 	if (ContinueOrSkip())
@@ -1893,7 +1887,6 @@ This test exercises a source's reference distance.
 ALvoid SA_ReferenceDistance(ALvoid)
 {
 	ALuint testSources[2];
-	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
 
 	printf("Reference Distance Test:");
 	if (ContinueOrSkip())
@@ -1938,7 +1931,6 @@ This test exercises a source's rolloff factor.
 ALvoid SA_RolloffFactor(ALvoid)
 {
 	ALuint testSources[2];
-	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
 
 	printf("Rolloff Factor Test:");
 	if (ContinueOrSkip())
@@ -1986,7 +1978,6 @@ This test exercises the three distance models.
 ALvoid SA_DistanceModel(ALvoid)
 {	
 	ALuint testSources[2];
-	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
 
 	printf("Distance Model Test:");
 	if (ContinueOrSkip())
@@ -2145,7 +2136,6 @@ ALvoid SA_Frequency(ALvoid)
 	float increments[15] = { -12, -10, -8, -7, -5, -3, -1, 0,
 				 2, 4, 5, 7, 9, 11, 12 };
 	int i;
-	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
 
 	printf("Frequency Test:");
 	if (ContinueOrSkip())
@@ -2184,7 +2174,6 @@ ALvoid SA_Stereo(ALvoid)
 {	
 	ALuint testSources[2];
 	ALuint error;
-	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
 
 	printf("Stereo Test:");
 	if (ContinueOrSkip())
@@ -2247,7 +2236,6 @@ ALvoid SA_QueuingUnderrunPerformance(ALvoid)
 	ALuint bufferName;
 	ALuint error;
 	ALint tempInt;
-	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
 
 	printf("Queuing Underrun Performance Test:");
 	if (ContinueOrSkip())
