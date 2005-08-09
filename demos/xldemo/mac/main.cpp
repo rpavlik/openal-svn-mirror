@@ -130,12 +130,9 @@ int main(int argc, char *argv[])
 {
 	int sz;
 	
-	if (argc > 1)
-		sz = atoi(argv[1]);
-	else
-		sz = 200;
-
         glutInit(&argc,argv);
+	sz = (argc > 1) ? atoi(argv[1]) : 200;
+
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitWindowPosition(200, 100);
 	glutInitWindowSize(sz*1.33*3, sz*3);
