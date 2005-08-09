@@ -41,6 +41,9 @@ etags:
 test:	all
 	cd test && $(MAKE)
 
+permissions:
+	find . -type f \! -perm +222 -exec chmod 644 {} \;
+
 install_minor_libs:
 	$(INSTALL) -d -m 755 $(DESTLIB)
 	$(INSTALL) -m 755 src/libopenal.$(SO_EXT).$(PACKAGE_VERSION) $(DESTLIB)
