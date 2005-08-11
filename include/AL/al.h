@@ -1,5 +1,5 @@
-#ifndef __al_h_
-#define __al_h_
+#ifndef _AL_AL_H
+#define _AL_AL_H
 
 /**
  * OpenAL cross platform audio library
@@ -502,4 +502,4 @@ typedef void           (ALAPIENTRY *LPALDISTANCEMODEL)( ALenum distanceModel );
 }  /* extern "C" */
 #endif
 
-#endif /* __al_h_ */
+#endif /* _AL_AL_H */

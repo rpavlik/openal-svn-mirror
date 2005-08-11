@@ -1,5 +1,5 @@
-#ifndef ALC_CONTEXT_H_
-#define ALC_CONTEXT_H_
+#ifndef _AL_ALC_H
+#define _AL_ALC_H
 
 #include "altypes.h"
 #include "alctypes.h"
@@ -163,4 +163,4 @@ typedef void           (ALCAPIENTRY *LPALCCAPTURESAMPLES)( ALCdevice *device, AL
 }
 #endif
 
-#endif /* ALC_CONTEXT_H_ */
+#endif /* _AL_ALC_H */

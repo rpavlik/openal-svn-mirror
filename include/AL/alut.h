@@ -1,5 +1,5 @@
-#ifndef _ALUT_H_
-#define _ALUT_H_
+#ifndef _AL_ALUT_H
+#define _AL_ALUT_H
 
 /* define platform type */
 #if !defined(MACINTOSH_AL) && !defined(LINUX_AL) && !defined(WINDOWS_AL)

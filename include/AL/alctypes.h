@@ -1,5 +1,5 @@
-#ifndef _ALCTYPES_H_
-#define _ALCTYPES_H_
+#ifndef _AL_ALCTYPES_H
+#define _AL_ALCTYPES_H
 
 #if !defined(_WIN32)
 struct _AL_device;
@@ -139,4 +139,4 @@ typedef void ALCvoid;
 #define ALC_CAPTURE_SAMPLES                      0x312
 
 
-#endif /* _ALCTYPES_H */
+#endif /* _AL_ALCTYPES_H */

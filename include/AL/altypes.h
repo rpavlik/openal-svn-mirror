@@ -1,5 +1,5 @@
-#ifndef _AL_TYPES_H_
-#define _AL_TYPES_H_
+#ifndef _AL_ALTYPES_H
+#define _AL_ALTYPES_H
 
 /* define platform type */
 #if !defined(MACINTOSH_AL) && !defined(LINUX_AL) && !defined(WINDOWS_AL)
