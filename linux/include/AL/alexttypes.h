@@ -1,7 +1,5 @@
-#ifndef _LAL_EXTTYPES_H_
-#define _LAL_EXTTYPES_H_
-
-#define LAL_OPENAL                                1
+#ifndef _AL_ALEXTTYPES_H
+#define _AL_ALEXTTYPES_H
 
 /* format base 0x10000 */
 #define AL_FORMAT_IMA_ADPCM_MONO16_EXT            0x10000
@@ -102,6 +100,9 @@ typedef void (*PFNALCSETAUDIOCHANNELPROC)(ALuint channel, ALfloat volume);
 typedef ALfloat (*PFNALCGETAUDIOCHANNELPROC)(ALuint channel);
 typedef void (*PFNALBOMBONERRORPROC)(void);
 
+typedef void (*PFNALREVERBSCALEPROC)( ALuint sid, ALfloat param );
+typedef void (*PFNALREVERBDELAYPROC)( ALuint sid, ALfloat param );
+
 typedef void (*PFNALBUFFERIPROC)(ALuint bid, ALenum param, ALint value);
 
 typedef void (*PFNALBUFFERDATAWITHCALLBACKPROC)(ALuint bid,
@@ -158,4 +159,4 @@ typedef ALboolean (*ALUTLOADMS_ADPCMDATAPROC)(ALuint bid,
 				void *data, int size,
 				alMSADPCM_state_LOKI *mss);
 
-#endif /* _LAL_EXTTYPES_H_ */
+#endif /* _AL_ALEXTTYPES_H */

@@ -1,5 +1,5 @@
-#ifndef _LAL_EXT_H_
-#define _LAL_EXT_H_
+#ifndef _AL_ALEXT_H
+#define _AL_ALEXT_H
 
 #include "AL/altypes.h"
 #include "alexttypes.h"
@@ -73,4 +73,4 @@ ALAPI ALboolean ALAPIENTRY alutLoadMS_ADPCMData_LOKI(ALuint bid,
 }
 #endif
 
-#endif /* _LAL_EXT_H_ */
+#endif /* _AL_ALEXT_H */

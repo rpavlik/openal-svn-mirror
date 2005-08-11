@@ -1,4 +1,9 @@
 2005-08-11  Sven Panne  <sven.panne@aedion.de>
+	* linux/include/AL/alext.h, linux/include/AL/alexttypes.h: Made
+	#defines for protection against multiple inclusion more
+	consistent. Removed unused LAL_OPENAL #define. Added typedefs for
+	reverb extensions.
+
 	* linux/Makefile.in: Fixed "permission" target (shell scripts
 	should stay executable).
 
