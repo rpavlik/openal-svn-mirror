@@ -49,7 +49,7 @@ extern "C" {
 #ifndef ALUT_NO_PROTOTYPES
 
 ALUTAPI void ALUTAPIENTRY alutInit(int *argc, char *argv[]);
-ALUTAPI void ALUTAPIENTRY alutExit(ALvoid);
+ALUTAPI void ALUTAPIENTRY alutExit(void);
 
 #ifndef MACINTOSH_AL
 /* Windows and Linux versions have a loop parameter, Macintosh doesn't */
@@ -65,7 +65,7 @@ ALUTAPI void ALUTAPIENTRY alutUnloadWAV(ALenum format, ALvoid *data, ALsizei siz
 #else /* ALUT_NO_PROTOTYPES */
 
     void      (ALUTAPIENTRY *alutInit)( int *argc, char *argv[] );
-    void 	  (ALUTAPIENTRY *alutExit)( ALvoid );
+    void 	  (ALUTAPIENTRY *alutExit)( void );
 #ifndef MACINTOSH_AL
     void      (ALUTAPIENTRY *alutLoadWAVFile)( ALbyte *file,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq,ALboolean *loop );
     void      (ALUTAPIENTRY *alutLoadWAVMemory)( ALbyte *memory,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq,ALboolean *loop );

@@ -97,7 +97,7 @@ ALAPI ALdouble ALAPIENTRY alGetDouble( ALenum param );
  * Error support.
  * Obtain the most recent error generated in the AL state machine.
  */
-ALAPI ALenum ALAPIENTRY alGetError( ALvoid );
+ALAPI ALenum ALAPIENTRY alGetError( void );
 
 
 /* 
@@ -351,7 +351,7 @@ ALboolean     (ALAPIENTRY *alGetBoolean)( ALenum param );
 ALint         (ALAPIENTRY *alGetInteger)( ALenum param );
 ALfloat       (ALAPIENTRY *alGetFloat)( ALenum param );
 ALdouble      (ALAPIENTRY *alGetDouble)( ALenum param );
-ALenum        (ALAPIENTRY *alGetError)( ALvoid );
+ALenum        (ALAPIENTRY *alGetError)( void );
 ALboolean     (ALAPIENTRY *alIsExtensionPresent)(const ALchar* extname );
 void*         (ALAPIENTRY *alGetProcAddress)( const ALchar* fname );
 ALenum        (ALAPIENTRY *alGetEnumValue)( const ALchar* ename );
@@ -427,7 +427,7 @@ typedef ALboolean      (ALAPIENTRY *LPALGETBOOLEAN)( ALenum param );
 typedef ALint          (ALAPIENTRY *LPALGETINTEGER)( ALenum param );
 typedef ALfloat        (ALAPIENTRY *LPALGETFLOAT)( ALenum param );
 typedef ALdouble       (ALAPIENTRY *LPALGETDOUBLE)( ALenum param );
-typedef ALenum         (ALAPIENTRY *LPALGETERROR)( ALvoid );
+typedef ALenum         (ALAPIENTRY *LPALGETERROR)( void );
 typedef ALboolean      (ALAPIENTRY *LPALISEXTENSIONPRESENT)(const ALchar* extname );
 typedef void*          (ALAPIENTRY *LPALGETPROCADDRESS)( const ALchar* fname );
 typedef ALenum         (ALAPIENTRY *LPALGETENUMVALUE)( const ALchar* ename );
