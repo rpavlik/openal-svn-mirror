@@ -179,7 +179,7 @@ ALAPI void ALAPIENTRY alGetListeneriv( ALenum param, ALint* values );
  * Outer Angle                       AL_CONE_OUTER_ANGLE     ALint or ALfloat
  * Cone Outer Gain                   AL_CONE_OUTER_GAIN      ALint or ALfloat
  * Pitch                             AL_PITCH                ALfloat
- * Looping                           AL_LOOPING			     ALint (AL_TRUE or AL_FALSE)
+ * Looping                           AL_LOOPING              ALint (AL_TRUE or AL_FALSE)
  * MS Offset                         AL_MSEC_OFFSET          ALint or ALfloat
  * Byte Offset                       AL_BYTE_OFFSET          ALint or ALfloat
  * Sample Offset                     AL_SAMPLE_OFFSET        ALint or ALfloat

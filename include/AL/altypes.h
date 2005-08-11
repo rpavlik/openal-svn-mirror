@@ -175,8 +175,8 @@ typedef ALdouble ALclampd;
 
 /**
  * Specify the channel mask. (Creative)
- * Type:	 ALuint
- * Range:	 [0 - 255]
+ * Type: ALuint
+ * Range: [0 - 255]
  */
 #define AL_CHANNEL_MASK                           0x3000
 
