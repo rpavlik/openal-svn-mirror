@@ -1,4 +1,8 @@
-2005-08-08  Sven Panne  <sven.panne@aedion.de>
+2005-08-11  Sven Panne  <sven.panne@aedion.de>
+	* linux/Makefile.in: Fixed "permission" target (shell scripts
+	should stay executable).
+
+2005-08-10  Sven Panne  <sven.panne@aedion.de>
 	* linux/test/Makefile.in, linux/test/testalinitexit.c,
 	linux/test/testalut.c, linux/test/testattributes.c,
 	linux/test/testbufferuniq.c, linux/test/testcallback.c,

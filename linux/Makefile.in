@@ -42,7 +42,7 @@ test:	all
 	cd test && $(MAKE)
 
 permissions:
-	find . -type f \! -perm +222 -exec chmod 644 {} \;
+	find . -type f \! -perm +222 \! -name "*.sh" -exec chmod 644 {} \;
 
 install_minor_libs:
 	$(INSTALL) -d -m 755 $(DESTLIB)
@@ -92,4 +92,4 @@ configure: configure.ac
 	autoconf
 	@exit 1
 
-.PHONY: all tags etags test install_minor_libs install_major_lib_only install clean distclean maintainer-clean repo-clean
+.PHONY: all tags etags test permissions install_minor_libs install_major_lib_only install clean distclean maintainer-clean repo-clean
