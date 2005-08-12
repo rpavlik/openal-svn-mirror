@@ -186,7 +186,7 @@ int main( int argc, char *argv[] )
 
 		alSourcef( moving_source, AL_PITCH, pitch );
 		alSourcePlay( moving_source );
-		micro_sleep( beats / 4.0 * 1000000 );
+		microSleep( beats / 4.0 * 1000000 );
 	}
 
 	cleanup(  );

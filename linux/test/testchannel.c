@@ -118,7 +118,7 @@ int main( int argc, char *argv[] )
 		fprintf( stderr, "%f\n", gain );
 		alListenerf( AL_GAIN_LINEAR_LOKI, gain );
 
-		micro_sleep( 800000 );
+		microSleep( 800000 );
 	}
 
 	cleanup(  );

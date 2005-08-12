@@ -54,7 +54,7 @@ static void iterate( void )
 
 	alListenerfv( AL_ORIENTATION, orientation );
 
-	micro_sleep( 900000 );
+	microSleep( 900000 );
 
 	return;
 }

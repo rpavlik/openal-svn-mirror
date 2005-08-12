@@ -1,61 +1,39 @@
-#include "testlib.h"
+/*
+ * This test creates and destroys 75 contexts for the default device, one each
+ * 0.8 seconds.
+ */
 
+#include <stdlib.h>
+#include <stdio.h>
 #include <AL/al.h>
 #include <AL/alc.h>
-#include <AL/alut.h>
+#include "testlib.h"
 
-#include <time.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
+#define NUM_CONTEXTS 75
 
-#define NUMCONTEXTS 400
-
-static void iterate( void );
-static void cleanup( void );
-
-static ALCcontext *context_id;
-static ALCdevice *dev;
-
-static void iterate( void )
+static void iterate( ALCdevice *device )
 {
-	context_id = alcCreateContext( dev, NULL );
+	ALCcontext *context = alcCreateContext( device, NULL );
 
-	/*
-	 * if we don't pause, we'll in all likelyhood hose
-	 * the soundcard
-	 */
-	micro_sleep( 800000 );
+	/* If we don't pause, we'll in all likelyhood hose the soundcard. */
+	microSleep( 800000 );
 
-	alcDestroyContext( context_id );
-}
-
-static void cleanup( void )
-{
-#ifdef JLIB
-	jv_check_mem(  );
-#endif
+	alcDestroyContext( context );
 }
 
 int main( int argc, char *argv[] )
 {
-	int i = 0;
-
-	dev = alcOpenDevice( NULL );
-	if( dev == NULL ) {
-		return 1;
+	int i;
+	ALCdevice *device = alcOpenDevice( NULL );
+	if( device == NULL ) {
+		return EXIT_FAILURE;
 	}
 
-	for ( i = 0; i < 200; i++ ) {
-		fprintf( stderr, "iteration %d\n", i );
-		iterate(  );
+	for ( i = 0; i < NUM_CONTEXTS; i++ ) {
+		printf( "iteration %d\n", i );
+		iterate( device );
 	}
 
-	cleanup(  );
-
-	alcCloseDevice( dev );
-
-	return 0;
+	alcCloseDevice( device );
+	return EXIT_SUCCESS;
 }

@@ -33,7 +33,7 @@ static void iterate( void )
 	alSourcef( moving_source, AL_PITCH, pitch );
 */
 
-	micro_sleep( 80000 );
+	microSleep( 80000 );
 }
 
 static void init( char *fname )

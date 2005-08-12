@@ -55,7 +55,7 @@ static void init( const char *fname )
 
 	speed = *( int * ) data;
 
-	if( talutLoadRAW_ADPCMData( buffer_id,
+	if( palutLoadRAW_ADPCMData( buffer_id,
 				    ( char * ) data + 4, size - 4,
 				    speed, AL_FORMAT_MONO16 ) == AL_FALSE ) {
 		fprintf( stderr, "Could not alutLoadADPCMData_LOKI\n" );
@@ -88,7 +88,7 @@ int main( int argc, char *argv[] )
 	/* Initialize ALUT. */
 	alutInit( &argc, argv );
 
-	fixup_function_pointers(  );
+	getExtensionEntries(  );
 
 	if( argc == 1 ) {
 		init( WAVEFILE );
@@ -107,7 +107,7 @@ int main( int argc, char *argv[] )
 		}
 
 		alSourcePlayv( NUMSOURCES, moving_sources );
-		micro_sleep( 100000 );
+		microSleep( 100000 );
 		alSourceStopv( NUMSOURCES, moving_sources );
 
 		for ( j = 0; j < NUMSOURCES; j++ ) {

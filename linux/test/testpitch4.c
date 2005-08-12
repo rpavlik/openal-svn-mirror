@@ -197,7 +197,7 @@ int main( int argc, char *argv[] )
 
 		fprintf( stderr, "beats %d\n", beats );
 
-		micro_sleep( beats / 4.0 * 1000000 );
+		microSleep( beats / 4.0 * 1000000 );
 	}
 
 	alcDestroyContext( cc );

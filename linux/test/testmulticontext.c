@@ -47,7 +47,7 @@ static void iterate( void )
 		alSourcefv( moving_sources[i], AL_POSITION, position );
 	}
 
-	micro_sleep( 500000 );
+	microSleep( 500000 );
 
 	return;
 }
@@ -140,9 +140,9 @@ int main( int argc, char *argv[] )
 		}
 	}
 
-	fixup_function_pointers(  );
+	getExtensionEntries(  );
 
-	talBombOnError(  );
+	palBombOnError(  );
 
 	if( argc == 1 ) {
 		init( "sample.wav" );
@@ -173,7 +173,7 @@ int main( int argc, char *argv[] )
 		done = AL_TRUE;
 		for ( i = 0; i < NUMCONTEXTS; i++ ) {
 			alcMakeContextCurrent( context_ids[i] );
-			done = done && !SourceIsPlaying( moving_sources[i] );
+			done = done && !sourceIsPlaying( moving_sources[i] );
 		}
 	}
 #else

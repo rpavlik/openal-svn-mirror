@@ -91,9 +91,9 @@ int main( int argc, char *argv[] )
 
 	alcMakeContextCurrent( context_id );
 
-	fixup_function_pointers(  );
+	getExtensionEntries(  );
 
-	talBombOnError(  );
+	palBombOnError(  );
 
 	if( argc == 1 ) {
 		init( WAVEFILE );
@@ -110,7 +110,7 @@ int main( int argc, char *argv[] )
 	while( shouldend - start <= 4 ) {
 		shouldend = time( NULL );
 
-		micro_sleep( 1000000 );
+		microSleep( 1000000 );
 	}
 	alSourceStop( moving_source );
 
@@ -122,14 +122,15 @@ int main( int argc, char *argv[] )
 
 	/* part the second */
 	fprintf( stderr, "Play once\n" );
-	micro_sleep( 1000000 );
+	microSleep( 1000000 );
 
 	alSourcei( moving_source, AL_LOOPING, AL_FALSE );
 	alSourcePlay( moving_source );
 
 	do {
-		micro_sleep( 1000000 );
-	} while( SourceIsPlaying( moving_source ) );
+		microSleep( 1000000 );
+	}
+	while( sourceIsPlaying( moving_source ) );
 
 	alcDestroyContext( context_id );
 	alcCloseDevice( dev );

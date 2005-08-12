@@ -40,7 +40,7 @@ static void iterate( void )
 
 	alSourcefv( moving_source, AL_VELOCITY, speed );
 	alSourcefv( moving_source, AL_POSITION, srcposition );
-	micro_sleep( 20000 );
+	microSleep( 20000 );
 
 	return;
 }
@@ -118,9 +118,9 @@ int main( int argc, char *argv[] )
 
 	alcMakeContextCurrent( cc );
 
-	fixup_function_pointers(  );
+	getExtensionEntries(  );
 
-	talBombOnError(  );
+	palBombOnError(  );
 
 	if( argc == 1 ) {
 		init( WAVEFILE );

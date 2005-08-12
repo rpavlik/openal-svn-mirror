@@ -48,7 +48,7 @@ static void iterate( void )
 
 	fprintf( stderr, "GAIN_LINEAR = %f\n", newgain );
 
-	micro_sleep( 500000 );
+	microSleep( 500000 );
 }
 
 static void init( char *fname )

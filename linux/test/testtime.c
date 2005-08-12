@@ -29,7 +29,7 @@ static void iterate( void )
 	alSourcePlay( multis );
 	fprintf( stderr, "OVER\n" );
 
-	micro_sleep( 1000000 );
+	microSleep( 1000000 );
 }
 
 static void init( char *fname )
@@ -114,8 +114,8 @@ int main( int argc, char *argv[] )
 
 	iterate(  );
 
-	while( SourceIsPlaying( multis ) == AL_TRUE ) {
-		micro_sleep( 1000000 );
+	while( sourceIsPlaying( multis ) == AL_TRUE ) {
+		microSleep( 1000000 );
 	}
 
 	cleanup(  );

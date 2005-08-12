@@ -29,7 +29,7 @@ static time_t start;
 static ALCcontext *context_id;
 
 /* our mp3 extension */
-typedef ALboolean( mp3Loader ) ( ALuint, ALvoid *, ALint );
+typedef ALboolean ( mp3Loader ) ( ALuint, ALvoid *, ALint );
 mp3Loader *alutLoadMP3p = NULL;
 
 static void init( void )
@@ -128,12 +128,12 @@ int main( int argc, char *argv[] )
 		}
 
 		alSourcePlay( mp3source[i] );
-		micro_sleep( 80000 );
+		microSleep( 80000 );
 	}
 
 	free( data );
 
-	while( SourceIsPlaying( mp3source[0] ) == AL_TRUE ) {
+	while( sourceIsPlaying( mp3source[0] ) == AL_TRUE ) {
 		sleep( 1 );
 	}
 

@@ -1,3 +1,50 @@
+2005-08-12  Sven Panne  <sven.panne@aedion.de>
+	* linux/test/Makefile.in, linux/test/testalinitexit.c,
+	linux/test/testalut.c, linux/test/testattributes.c,
+	linux/test/testbufferuniq.c, linux/test/testcallback.c,
+	linux/test/testcapture.c, linux/test/testchannel.c,
+	linux/test/testchannel2.c, linux/test/testda.c,
+	linux/test/testdoppler.c, linux/test/testgain.c,
+	linux/test/testleak.c, linux/test/testleak2.c,
+	linux/test/testlib.c, linux/test/testlib.h,
+	linux/test/testlistener.c, linux/test/testlistener2.c,
+	linux/test/testlistener3.c, linux/test/testlistener4.c,
+	linux/test/testloop.c, linux/test/testmp3.c,
+	linux/test/testmp32.c, linux/test/testmulti.c,
+	linux/test/testmultialut.c, linux/test/testmultichannel.c,
+	linux/test/testmulticontext.c, linux/test/testmulticontext2.c,
+	linux/test/testmultimp3.c, linux/test/testmultinothread.c,
+	linux/test/testnothread.c, linux/test/testorient.c,
+	linux/test/testpitch.c, linux/test/testpitch2.c,
+	linux/test/testpitch3.c, linux/test/testpitch4.c,
+	linux/test/testqueue.c, linux/test/testqueue2.c,
+	linux/test/testqueue3.c, linux/test/testrelative.c,
+	linux/test/testreverb.c, linux/test/testsingle.c,
+	linux/test/testsourcestop.c, linux/test/testsourceuniq.c,
+	linux/test/teststartstop.c, linux/test/teststream.c,
+	linux/test/testtime.c, linux/test/testvorbis.c: Cleanup, much more
+	to come...
+	
+	* linux/.indent.pro: Added.
+
+	* linux/test/.indent.pro: Removed.
+
+	* linux/src/Makefile.in, linux/src/al_buffer.c,
+	linux/src/al_ext.c, linux/src/al_mixer.c, linux/src/al_types.h,
+	linux/src/alc/alc_context.c,
+	linux/src/arch/windows/windows_native.c,
+	linux/src/extensions/al_ext_capture.c: Use new mutex lib.
+
+	* linux/src/al_mutexlib.c, linux/src/al_mutexlib.h: Added. This is
+	a much cleaner and simpler merged version of the separate mutex
+	implementations.
+
+	* linux/src/mutex/Makefile.in, linux/src/mutex/morphosmutex.c,
+	linux/src/mutex/morphosmutex.h, linux/src/mutex/mutexlib.h,
+	linux/src/mutex/posixmutex.c, linux/src/mutex/posixmutex.h,
+	linux/src/mutex/windowsmutex.c, linux/src/mutex/windowsmutex.h:
+	Removed.
+
 2005-08-11  Sven Panne  <sven.panne@aedion.de>
 	* linux/include/AL/alext.h, linux/include/AL/alexttypes.h: Made
 	#defines for protection against multiple inclusion more

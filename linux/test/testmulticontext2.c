@@ -42,7 +42,7 @@ static void iterate( void )
 	position[0] += movefactor;
 	alSourcefv( moving_source, AL_POSITION, position );
 
-	micro_sleep( 500000 );
+	microSleep( 500000 );
 
 	return;
 }
@@ -128,9 +128,9 @@ int main( int argc, char *argv[] )
 
 	alcDestroyContext( context_id );
 
-	fixup_function_pointers(  );
+	getExtensionEntries(  );
 
-	talBombOnError(  );
+	palBombOnError(  );
 
 	if( argc == 1 ) {
 		init( "sample.wav" );
@@ -139,7 +139,7 @@ int main( int argc, char *argv[] )
 	}
 
 	alSourcePlay( moving_source );
-	while( SourceIsPlaying( moving_source ) == AL_TRUE ) {
+	while( sourceIsPlaying( moving_source ) == AL_TRUE ) {
 		iterate(  );
 
 		shouldend = time( NULL );

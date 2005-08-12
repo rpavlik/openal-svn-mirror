@@ -1,65 +1,41 @@
-#ifndef TESTLIB_H_
-#define TESTLIB_H_
+#ifndef TEST_TESTLIB_H
+#define TEST_TESTLIB_H
+
+#include <AL/alext.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif				/* __cplusplus */
 
-#include "../src/al_siteconfig.h"
-#include "AL/altypes.h"
-#include "AL/alexttypes.h"
-#include "../config.h"
-
 /* function pointers for LOKI extensions */
-extern ALfloat( *talcGetAudioChannel ) ( ALuint channel );
-extern void ( *talcSetAudioChannel ) ( ALuint channel, ALfloat volume );
+extern PFNALCGETAUDIOCHANNELPROC palcGetAudioChannel;
+extern PFNALCSETAUDIOCHANNELPROC palcSetAudioChannel;
 
-extern void ( *talMute ) ( void );
-extern void ( *talUnMute ) ( void );
+extern PFNALREVERBSCALEPROC palReverbScale;
+extern PFNALREVERBDELAYPROC palReverbDelay;
 
-extern void ( *talReverbScale ) ( ALuint sid, ALfloat param );
-extern void ( *talReverbDelay ) ( ALuint sid, ALfloat param );
-extern void ( *talBombOnError ) ( void );
+extern PFNALBOMBONERRORPROC palBombOnError;
 
-extern void ( *talBufferi ) ( ALuint bid, ALenum param, ALint value );
+extern PFNALBUFFERIPROC palBufferi;
+extern PFNALBUFFERWRITEDATAPROC palBufferWriteData;
+extern PFNALBUFFERAPPENDWRITEDATAPROC palBufferAppendWriteData;
 
-extern void ( *talBufferWriteData ) ( ALuint bid, ALenum format, ALvoid *data,
-				      ALint size, ALint freq, ALenum iFormat );
-
-extern ALuint( *talBufferAppendData ) ( ALuint bid, ALenum format,
-					ALvoid *data, ALint freq,
-					ALint samples );
-extern ALuint( *talBufferAppendWriteData ) ( ALuint bid, ALenum format,
-					     ALvoid *data, ALint freq,
-					     ALint samples,
-					     ALenum internalFormat );
-
-extern ALboolean( *alCaptureInit ) ( ALenum format, ALuint rate,
-				     ALsizei bufferSize );
-extern ALboolean( *alCaptureDestroy ) ( void );
-extern ALboolean( *alCaptureStart ) ( void );
-extern ALboolean( *alCaptureStop ) ( void );
-extern ALsizei( *alCaptureGetData ) ( ALvoid *data, ALsizei n, ALenum format,
-				      ALuint rate );
+extern PFNALCAPTUREINITPROC palCaptureInit;
+extern PFNALCAPTUREDESTROYPROC palCaptureDestroy;
+extern PFNALCAPTURESTARTPROC palCaptureStart;
+extern PFNALCAPTURESTOPPROC palCaptureStop;
+extern PFNALCAPTUREGETDATAPROC palCaptureGetData;
 
 /* new ones */
-extern void ( *talGenStreamingBuffers ) ( ALsizei n, ALuint * bids );
-extern ALboolean( *talutLoadRAW_ADPCMData ) ( ALuint bid,
-					      ALvoid *data, ALuint size,
-					      ALuint freq, ALenum format );
-extern ALboolean( *talutLoadIMA_ADPCMData ) ( ALuint bid, ALvoid *data,
-					      ALuint size, ALuint freq,
-					      ALenum format );
-extern ALboolean( *talutLoadMS_ADPCMData ) ( ALuint bid, ALvoid *data,
-					     ALuint size, ALuint freq,
-					     ALenum format );
+extern PFNALGENSTREAMINGBUFFERSPROC palGenStreamingBuffers;
+extern PFNALUTLOADRAW_ADPCMDATAPROC palutLoadRAW_ADPCMData;
 
-void micro_sleep( unsigned int n );
-void fixup_function_pointers( void );
-ALboolean SourceIsPlaying( ALuint sid );
+void microSleep( unsigned int n );
+void getExtensionEntries( void );
+ALboolean sourceIsPlaying( ALuint sid );
 
 #ifdef __cplusplus
 }
 #endif				/* __cplusplus */
 
-#endif				/* TESTLIB_H_ */
+#endif				/* TEST_TESTLIB_H */

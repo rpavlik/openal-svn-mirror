@@ -22,14 +22,14 @@ static void init( void );
 static void cleanup( void );
 
 static ALuint vorbbuf;		/* our buffer */
-static ALuint vorbsource = ( ALuint ) - 1;
+static ALuint vorbsource = ( ALuint ) -1;
 
 static time_t start;
 
 static ALCcontext *context_id;
 
 /* our vorbis extension */
-typedef ALboolean( vorbisLoader ) ( ALuint, ALvoid *, ALint );
+typedef ALboolean ( vorbisLoader ) ( ALuint, ALvoid *, ALint );
 vorbisLoader *alutLoadVorbisp = NULL;
 
 static void init( void )
@@ -127,7 +127,7 @@ int main( int argc, char *argv[] )
 
 	alSourcePlay( vorbsource );
 
-	while( SourceIsPlaying( vorbsource ) == AL_TRUE ) {
+	while( sourceIsPlaying( vorbsource ) == AL_TRUE ) {
 		sleep( 1 );
 	}
 

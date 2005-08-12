@@ -1,156 +1,113 @@
-#include "testlib.h"
+/*
+ * This test plays a WAVE file for 30 seconds, switching between left and right
+ * every 2 seconds. The LOKI_WAVE_format extension is used.
+ */
 
 #include <AL/al.h>
 #include <AL/alc.h>
-
-#include <time.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
+#include <stdio.h>
+#include <time.h>
+#include "testlib.h"
 
-#define DATABUFFERSIZE (10 * (512 * 3) * 1024)
+#define DATA_BUFFER_SIZE (10 * (512 * 3) * 1024)
 
-static void iterate( void );
-static void init( const char *fname );
-static void cleanup( void );
-
-static ALuint moving_source = 0;
-static ALuint stereo;
-
-static time_t start;
-static void *data = ( void * ) 0xDEADBEEF;
-
-static ALCcontext *context_id;
-
-static void iterate( void )
+static void iterate( ALuint movingSource )
 {
-	static ALfloat position[] = { 10.0, 0.0, 4.0 };
-	static ALfloat movefactor = 4.5;
+	static ALfloat position[] = { 10, 0, 4 };
+	static ALfloat moveFactor = 4.5;
 	static time_t then = 0;
-	time_t now;
-
-	now = time( NULL );
+	time_t now = time( NULL );
 
 	/* Switch between left and right stereo sample every two seconds. */
 	if( now - then > 2 ) {
 		then = now;
-
-		movefactor *= -1.0;
+		moveFactor *= -1;
 	}
 
-	position[0] += movefactor;
-	alSourcefv( moving_source, AL_POSITION, position );
+	position[0] += moveFactor;
+	alSourcefv( movingSource, AL_POSITION, position );
 
-	micro_sleep( 500000 );
-
-	return;
+	microSleep( 500000 );
 }
 
-static void init( const char *fname )
+static ALuint init( const char *fname )
 {
-	FILE *fh;
-	ALfloat zeroes[] = { 0.0f, 0.0f, 0.0f };
-	ALfloat front[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f };
-	int filelen;
+	FILE *fileHandle;
+	ALfloat front[] = { 0, 0, 1, 0, 1, 0 };
+	int fileLength;
+	ALuint buffer;
+	ALuint movingSource;
+	void *data = malloc( DATA_BUFFER_SIZE );
+	if( data == NULL ) {
+		fprintf( stderr, "Couldn't open allocate buffer memory\n" );
+		exit( EXIT_FAILURE );
+	}
 
-	data = malloc( DATABUFFERSIZE );
+	fileHandle = fopen( fname, "rb" );
+	if( fileHandle == NULL ) {
+		fprintf( stderr, "Couldn't open fname\n" );
+		exit( EXIT_FAILURE );
+	}
+	fileLength = fread( data, 1, DATA_BUFFER_SIZE, fileHandle );
+	fclose( fileHandle );
 
-	start = time( NULL );
-
-	alListenerfv( AL_POSITION, zeroes );
-	/* alListenerfv(AL_VELOCITY, zeroes ); */
 	alListenerfv( AL_ORIENTATION, front );
 
-	alGenBuffers( 1, &stereo );
-
-	fh = fopen( fname, "rb" );
-	if( fh == NULL ) {
-		fprintf( stderr, "Couldn't open fname\n" );
-		exit( 1 );
-	}
-
-	filelen = fread( data, 1, DATABUFFERSIZE, fh );
-	fclose( fh );
-
-	alGetError(  );
-
+	alGenBuffers( 1, &buffer );
 	/* sure hope it's a wave file */
-	alBufferData( stereo, AL_FORMAT_WAVE_EXT, data, filelen, 0 );
-	if( alGetError(  ) != AL_NO_ERROR ) {
-		fprintf( stderr, "Could not BufferData\n" );
-		exit( 1 );
-	}
-
+	alBufferData( buffer, AL_FORMAT_WAVE_EXT, data, fileLength, 0 );
 	free( data );
 
-	alGenSources( 1, &moving_source );
-
-	alSourcei( moving_source, AL_BUFFER, stereo );
-	alSourcei( moving_source, AL_LOOPING, AL_TRUE );
-
-	return;
-}
-
-static void cleanup( void )
-{
-#ifdef JLIB
-	jv_check_mem(  );
-#endif
+	alGenSources( 1, &movingSource );
+	alSourcei( movingSource, AL_BUFFER, buffer );
+	alSourcei( movingSource, AL_LOOPING, AL_TRUE );
+	return movingSource;
 }
 
 int main( int argc, char *argv[] )
 {
-	ALCdevice *dev;
-	int attrlist[] = { ALC_FREQUENCY, 22050,
-		ALC_INVALID
+	int attrlist[] = {
+		ALC_FREQUENCY, 22050,
+		0
 	};
-	time_t shouldend;
+	time_t start = time( NULL );
+	time_t shouldEnd;
+	ALCcontext *context;
+	ALuint movingSource;
 
-	dev = alcOpenDevice( NULL );
-	if( dev == NULL ) {
+	ALCdevice *device = alcOpenDevice( NULL );
+	if( device == NULL ) {
 		fprintf( stderr, "Could not open device\n" );
-
-		return 1;
+		return EXIT_FAILURE;
 	}
 
-	/* Initialize ALUT. */
-	context_id = alcCreateContext( dev, attrlist );
-	if( context_id == NULL ) {
+	/* Initialize context. */
+	context = alcCreateContext( device, attrlist );
+	if( context == NULL ) {
 		fprintf( stderr, "Could not open context: %s\n",
-			 alGetString( alcGetError( dev ) ) );
-
-		return 1;
+			 alGetString( alcGetError( device ) ) );
+		return EXIT_FAILURE;
 	}
+	alcMakeContextCurrent( context );
 
-	alcMakeContextCurrent( context_id );
+	getExtensionEntries(  );
+	palBombOnError(  );
 
-	fixup_function_pointers(  );
+	movingSource = init( ( argc == 1 ) ? "sample.wav" : argv[1] );
 
-	talBombOnError(  );
+	alSourcePlay( movingSource );
+	while( sourceIsPlaying( movingSource ) == AL_TRUE ) {
+		iterate( movingSource );
 
-	if( argc == 1 ) {
-		init( "sample.wav" );
-	} else {
-		init( argv[1] );
-	}
-
-	alSourcePlay( moving_source );
-	while( SourceIsPlaying( moving_source ) == AL_TRUE ) {
-		iterate(  );
-
-		shouldend = time( NULL );
-		if( ( shouldend - start ) > 30 ) {
-			alSourceStop( moving_source );
+		shouldEnd = time( NULL );
+		if( ( shouldEnd - start ) > 30 ) {
+			alSourceStop( movingSource );
 		}
 	}
 
-	cleanup(  );
-
-	alcDestroyContext( context_id );
-
-	alcCloseDevice( dev );
-
-	return 0;
+	alcMakeContextCurrent( NULL );
+	alcDestroyContext( context );
+	alcCloseDevice( device );
+	return EXIT_SUCCESS;
 }

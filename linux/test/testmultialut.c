@@ -52,7 +52,7 @@ static void iterate( void )
 	alSourcefv( moving_sources[0], AL_POSITION, position );
 	position[0] *= -1.0;
 
-	micro_sleep( 500000 );
+	microSleep( 500000 );
 
 	return;
 }
@@ -160,8 +160,8 @@ int main( int argc, char *argv[] )
 	sleep( 1 );
 	alSourcePlay( moving_sources[1] );
 
-	while( ( SourceIsPlaying( moving_sources[0] ) == AL_TRUE ) ||
-	       ( SourceIsPlaying( moving_sources[1] ) == AL_TRUE ) ) {
+	while( ( sourceIsPlaying( moving_sources[0] ) == AL_TRUE ) ||
+	       ( sourceIsPlaying( moving_sources[1] ) == AL_TRUE ) ) {
 		iterate(  );
 
 		shouldend = time( NULL );

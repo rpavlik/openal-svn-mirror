@@ -30,10 +30,10 @@ static void iterate( void )
 	int i;
 
 	for ( i = 0; i < NUMSOURCES; i++ ) {
-		if( SourceIsPlaying( multis[i] ) != AL_TRUE ) {
+		if( sourceIsPlaying( multis[i] ) != AL_TRUE ) {
 			alSourcePlay( multis[i] );
 		}
-		micro_sleep( 20000 );
+		microSleep( 20000 );
 	}
 
 }

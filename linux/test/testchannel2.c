@@ -103,7 +103,7 @@ int main( int argc, char *argv[] )
 
 	alcMakeContextCurrent( context_id );
 
-	fixup_function_pointers(  );
+	getExtensionEntries(  );
 
 	if( argc == 1 ) {
 		init( WAVEFILE );
@@ -111,14 +111,14 @@ int main( int argc, char *argv[] )
 		init( argv[1] );
 	}
 
-	gain = talcGetAudioChannel( ALC_CHAN_CD_LOKI );
+	gain = palcGetAudioChannel( ALC_CHAN_CD_LOKI );
 	fprintf( stderr, "get ALC_CHAN_CD_LOKI = %f\n", gain );
-	talcSetAudioChannel( ALC_CHAN_CD_LOKI, 0.35 );
+	palcSetAudioChannel( ALC_CHAN_CD_LOKI, 0.35 );
 	fprintf( stderr, "set ALC_CHAN_CD 0.35, get = %f\n",
-		 talcGetAudioChannel( ALC_CHAN_CD_LOKI ) );
-	talcSetAudioChannel( ALC_CHAN_CD_LOKI, gain );
+		 palcGetAudioChannel( ALC_CHAN_CD_LOKI ) );
+	palcSetAudioChannel( ALC_CHAN_CD_LOKI, gain );
 	fprintf( stderr, "set ALC_CHAN_CD %f get = %f\n",
-		 gain, talcGetAudioChannel( ALC_CHAN_CD_LOKI ) );
+		 gain, palcGetAudioChannel( ALC_CHAN_CD_LOKI ) );
 
 	cleanup(  );
 

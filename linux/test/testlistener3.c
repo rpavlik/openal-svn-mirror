@@ -52,7 +52,7 @@ static void iterate( void )
 
 	alListenerfv( AL_ORIENTATION, orientation );
 
-	micro_sleep( 1500000 );
+	microSleep( 1500000 );
 }
 
 static void init( char *fname )

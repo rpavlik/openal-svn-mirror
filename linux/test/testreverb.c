@@ -55,8 +55,8 @@ static void init( char *fname )
 	alSourcefv( reverb_sid, AL_ORIENTATION, back );
 	alSourcei( reverb_sid, AL_BUFFER, locutus );
 
-	talReverbScale( reverb_sid, 0.35 );
-	talReverbDelay( reverb_sid, 1 );
+	palReverbScale( reverb_sid, 0.35 );
+	palReverbDelay( reverb_sid, 1 );
 
 	return;
 }
@@ -88,7 +88,7 @@ int main( int argc, char *argv[] )
 
 	alcMakeContextCurrent( context_id );
 
-	fixup_function_pointers(  );
+	getExtensionEntries(  );
 
 	if( argc == 1 ) {
 		init( WAVEFILE );
@@ -99,7 +99,7 @@ int main( int argc, char *argv[] )
 	alSourcePlay( reverb_sid );
 
 	for ( i = 0; i < 10; i++ ) {
-		micro_sleep( 1000000 );
+		microSleep( 1000000 );
 	}
 
 	cleanup(  );

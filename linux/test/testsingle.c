@@ -24,11 +24,11 @@ static time_t start;
 
 static void iterate( void )
 {
-	if( SourceIsPlaying( moving_source ) == AL_FALSE ) {
+	if( sourceIsPlaying( moving_source ) == AL_FALSE ) {
 		alSourcePlay( moving_source );
 		fprintf( stderr, "have to sourceplay\n" );
 	} else {
-		micro_sleep( 10000 );
+		microSleep( 10000 );
 	}
 
 	return;

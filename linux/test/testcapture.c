@@ -51,9 +51,9 @@ int main( int argc, char *argv[] )
 
 	alcMakeContextCurrent( context_id );
 
-	fixup_function_pointers(  );
+	getExtensionEntries(  );
 
-	if( !alCaptureInit( AL_FORMAT_MONO16, FREQ, 1024 ) ) {
+	if( !palCaptureInit( AL_FORMAT_MONO16, FREQ, 1024 ) ) {
 		alcCloseDevice( dev );
 
 		printf( "Unable to initialize capture\n" );
@@ -66,14 +66,14 @@ int main( int argc, char *argv[] )
 	fprintf( stderr, "test1\n" );
 
 	fprintf( stderr, "recording..." );
-	alCaptureStart(  );
+	palCaptureStart(  );
 	retval = 0;
 	while( retval < ( SAMPLES * 2 ) ) {
-		retval += alCaptureGetData( &( ( char * ) buffer )[retval],
-					    ( SAMPLES * 2 ) - retval,
-					    AL_FORMAT_MONO16, FREQ );
+		retval += palCaptureGetData( &( ( char * ) buffer )[retval],
+					     ( SAMPLES * 2 ) - retval,
+					     AL_FORMAT_MONO16, FREQ );
 	}
-	alCaptureStop(  );
+	palCaptureStop(  );
 	fprintf( stderr, "\n" );
 
 	fh = fopen( "outpcm.pcm", "wb" );
@@ -89,14 +89,14 @@ int main( int argc, char *argv[] )
 	fprintf( stderr, "test2\n" );
 
 	fprintf( stderr, "recording..." );
-	alCaptureStart(  );
+	palCaptureStart(  );
 	retval = 0;
 	while( retval < ( SAMPLES * 2 ) ) {
-		retval += alCaptureGetData( &( ( char * ) buffer )[retval],
-					    ( SAMPLES * 2 ) - retval,
-					    AL_FORMAT_MONO16, FREQ );
+		retval += palCaptureGetData( &( ( char * ) buffer )[retval],
+					     ( SAMPLES * 2 ) - retval,
+					     AL_FORMAT_MONO16, FREQ );
 	}
-	alCaptureStop(  );
+	palCaptureStop(  );
 	fprintf( stderr, "\n" );
 
 	fprintf( stderr, "playback..." );
@@ -108,7 +108,7 @@ int main( int argc, char *argv[] )
 
 	alSourcePlay( sid );
 
-	while( SourceIsPlaying( sid ) == AL_TRUE ) {
+	while( sourceIsPlaying( sid ) == AL_TRUE ) {
 		sleep( 1 );
 	}
 

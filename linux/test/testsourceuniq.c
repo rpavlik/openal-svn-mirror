@@ -10,7 +10,7 @@
 #define NUMSOURCES 4000
 
 int sid_compare( const void *sid1p, const void *sid2p );
-ALboolean find_duplicate( ALuint * sids, int nsids );
+ALboolean find_duplicate( ALuint *sids, int nsids );
 
 int sid_compare( const void *sid1p, const void *sid2p )
 {
@@ -42,9 +42,9 @@ int main( void )
 
 	alcMakeContextCurrent( context_id );
 
-	fixup_function_pointers(  );
+	getExtensionEntries(  );
 
-	talBombOnError(  );
+	palBombOnError(  );
 
 	/* generate sids */
 	alGenSources( NUMSOURCES, sids_first );
@@ -78,7 +78,7 @@ int main( void )
 	return 0;
 }
 
-ALboolean find_duplicate( ALuint * sids, int nsids )
+ALboolean find_duplicate( ALuint *sids, int nsids )
 {
 	int i;
 	ALuint last = sids[0];

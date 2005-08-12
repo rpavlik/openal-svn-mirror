@@ -41,12 +41,12 @@ static void iterate( void )
 		change_factor *= -1.0;
 	}
 
-	fprintf( stderr, "lispos = (%f %f %f)\n",
-		 lispos[0], lispos[1], lispos[2] );
+	fprintf( stderr, "lispos = (%f %f %f)\n", lispos[0], lispos[1],
+		 lispos[2] );
 
 	alListenerfv( AL_POSITION, lispos );
 
-	micro_sleep( 100000 );
+	microSleep( 100000 );
 }
 
 static void init( char *fname )
@@ -130,7 +130,7 @@ int main( int argc, char *argv[] )
 	}
 
 	alSourcePlay( multis[0] );
-	micro_sleep( 80000 );
+	microSleep( 80000 );
 	alSourcePlay( multis[1] );
 
 	while( shouldend - start < 20 ) {

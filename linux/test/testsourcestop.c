@@ -103,7 +103,7 @@ int main( int argc, char *argv[] )
 
 	alcMakeContextCurrent( context_id );
 
-	fixup_function_pointers(  );
+	getExtensionEntries(  );
 
 	if( argc == 1 ) {
 		init( WAVEFILE );
@@ -111,7 +111,7 @@ int main( int argc, char *argv[] )
 		init( argv[1] );
 	}
 
-	talBombOnError(  );
+	palBombOnError(  );
 
 #if 0
 	alSourceStop( multis[0] );

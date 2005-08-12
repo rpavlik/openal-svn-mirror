@@ -97,11 +97,11 @@ int main( int argc, char *argv[] )
 
 	start(  );
 
-	while( SourceIsPlaying( multis ) == AL_TRUE ) {
-		micro_sleep( 1000000 );
-		micro_sleep( 1000000 );
-		micro_sleep( 1000000 );
-		micro_sleep( 1000000 );
+	while( sourceIsPlaying( multis ) == AL_TRUE ) {
+		microSleep( 1000000 );
+		microSleep( 1000000 );
+		microSleep( 1000000 );
+		microSleep( 1000000 );
 	}
 
 	cleanup(  );

@@ -1,108 +1,72 @@
+/*
+ * This test creates 2 contexts and dumps all its attributes.
+ */
+
 #include <AL/al.h>
 #include <AL/alc.h>
-#include <AL/alut.h>
-
-#include <assert.h>
-#include <time.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
+#include <stdio.h>
+
+static void dumpContext( ALCdevice *device, const char *name )
+{
+	ALCint numFlags;
+	ALCint *flags;
+	int i;
+
+	printf( "*** %s context *** \n", name );
+
+	alcGetIntegerv( device, ALC_ATTRIBUTES_SIZE, 1, &numFlags );
+	printf( "attributes size %d\n", numFlags );
+
+	flags = malloc( numFlags * sizeof( ALCint ) );
+	if( flags == NULL ) {
+		fprintf( stderr, "Couldn't open allocate attribute buffer\n" );
+		exit( EXIT_FAILURE );
+	}
+
+	alcGetIntegerv( device, ALC_ALL_ATTRIBUTES, numFlags, flags );
+
+	for ( i = 0; i < numFlags - 1; i += 2 ) {
+		printf( "key 0x%x : value %d\n", flags[i], flags[i + 1] );
+	}
+
+	if( flags[numFlags - 1] != 0 ) {
+		fprintf( stderr, "attribute list must be 0-terminated\n" );
+		exit( EXIT_FAILURE );
+	}
+}
+
+static void
+testContext( ALCdevice *device, const char *name, const ALCint *attributeList )
+{
+	ALCcontext *context = alcCreateContext( device, attributeList );
+	if( context == NULL ) {
+		fprintf( stderr, "Couldn't create context\n" );
+		exit( EXIT_FAILURE );
+	}
+	alcMakeContextCurrent( context );
+	dumpContext( device, name );
+	alcMakeContextCurrent( NULL );
+	alcDestroyContext( context );
+}
 
 int main( int argc, char *argv[] )
 {
-	ALCcontext *default_context = 0, *custom_context = 0;
-	ALCdevice *dev;
-	int attrlist[] = { ALC_FREQUENCY, 44100, ALC_SYNC, AL_TRUE, 0 };
-
-	dev = alcOpenDevice( ( const ALCchar * ) "'((sampling-rate 44100))" );
-	if( dev == NULL ) {
-		return 1;
+	ALCint attributeList[] = {
+		ALC_FREQUENCY, 44100,
+		ALC_SYNC, AL_TRUE,
+		0
+	};
+	ALCdevice *device = alcOpenDevice( ( const ALCchar * )
+					   "'((sampling-rate 44100))" );
+	if( device == NULL ) {
+		fprintf( stderr, "Couldn't open device\n" );
+		return EXIT_FAILURE;
 	}
 
-	/* Initialize ALUT. */
-	default_context = alcCreateContext( dev, NULL );
-	if( default_context == NULL ) {
-		alcCloseDevice( dev );
+	testContext( device, "default", NULL );
+	printf( "\n" );
+	testContext( device, "custom", attributeList );
 
-		return 1;
-	}
-
-	free( malloc( 4 ) );
-
-	alcMakeContextCurrent( default_context );
-
-	{
-		ALint NumFlags = 0;
-		ALint *Flags = 0;
-		int i;
-
-		printf( "default context\n" );
-
-		alcGetIntegerv( dev, ALC_ATTRIBUTES_SIZE,
-				sizeof NumFlags, &NumFlags );
-
-		printf( "NumFlags %d\n", NumFlags );
-
-		if( NumFlags ) {
-			Flags = malloc( sizeof NumFlags * sizeof *Flags );
-			assert( Flags );
-
-			alcGetIntegerv( dev, ALC_ALL_ATTRIBUTES,
-					sizeof NumFlags * sizeof *Flags,
-					Flags );
-		}
-
-		for ( i = 0; i < NumFlags - 1; i += 2 ) {
-			printf( "key 0x%x : value %d\n",
-				Flags[i], Flags[i + 1] );
-		}
-
-		/* must be 0 terminated */
-		assert( Flags[NumFlags - 1] == 0 );
-	}
-
-	custom_context = alcCreateContext( dev, attrlist );
-	if( custom_context == NULL ) {
-		alcCloseDevice( dev );
-
-		return 1;
-	}
-	alcMakeContextCurrent( custom_context );
-
-	{
-		ALint NumFlags = 0;
-		ALint *Flags = 0;
-		int i;
-
-		printf( "custom context\n" );
-
-		alcGetIntegerv( dev, ALC_ATTRIBUTES_SIZE,
-				sizeof NumFlags, &NumFlags );
-
-		printf( "NumFlags %d\n", NumFlags );
-
-		if( NumFlags ) {
-			Flags = malloc( sizeof NumFlags * sizeof *Flags );
-			assert( Flags );
-
-			alcGetIntegerv( dev, ALC_ALL_ATTRIBUTES,
-					sizeof NumFlags * sizeof *Flags,
-					Flags );
-		}
-
-		for ( i = 0; i < NumFlags - 1; i += 2 ) {
-			printf( "key 0x%x : value %d\n",
-				Flags[i], Flags[i + 1] );
-		}
-
-		/* must be 0 terminated */
-		assert( Flags[NumFlags - 1] == 0 );
-	}
-
-	alcDestroyContext( default_context );
-	alcDestroyContext( custom_context );
-
-	return 0;
+	return EXIT_SUCCESS;
 }

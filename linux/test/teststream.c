@@ -32,7 +32,7 @@ static void init( const char *fname )
 	alListenerfv( AL_POSITION, zeroes );
 	alListenerfv( AL_ORIENTATION, front );
 
-	talGenStreamingBuffers( 1, &stereo );
+	palGenStreamingBuffers( 1, &stereo );
 	alGenSources( 1, &moving_source );
 
 	alSourcei( moving_source, AL_SOURCE_RELATIVE, AL_TRUE );
@@ -80,7 +80,7 @@ int main( int argc, char *argv[] )
 
 	alcMakeContextCurrent( context_id );
 
-	fixup_function_pointers(  );
+	getExtensionEntries(  );
 
 	if( argc == 2 ) {
 		init( argv[1] );
@@ -96,9 +96,9 @@ int main( int argc, char *argv[] )
 		rsamps = 0;
 
 		while( rsamps < nsamps ) {
-			micro_sleep( delay );
+			microSleep( delay );
 
-			waitfor = talBufferAppendWriteData( stereo,
+			waitfor = palBufferAppendWriteData( stereo,
 							    AL_FORMAT_STEREO16,
 							    &buf[rsamps],
 							    nsamps - rsamps,
@@ -113,7 +113,8 @@ int main( int argc, char *argv[] )
 				delay -= 500;
 			}
 		}
-	} while( feof( fh ) == 0 );
+	}
+	while( feof( fh ) == 0 );
 
 	fclose( fh );
 

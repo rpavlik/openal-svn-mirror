@@ -42,7 +42,7 @@ static void iterate( void )
 	position[0] += movefactor;
 	alListenerfv( AL_POSITION, position );
 
-	micro_sleep( 500000 );
+	microSleep( 500000 );
 
 	return;
 }

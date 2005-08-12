@@ -83,8 +83,9 @@ static void setposition( ALfloat x, ALfloat y, ALfloat z )
 	return;
 }
 
-static void setorientation( ALfloat ax, ALfloat ay, ALfloat az,
-			    ALfloat ux, ALfloat uy, ALfloat uz )
+static void
+setorientation( ALfloat ax, ALfloat ay, ALfloat az,
+		ALfloat ux, ALfloat uy, ALfloat uz )
 {
 	ALfloat fv[6];
 

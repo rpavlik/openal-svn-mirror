@@ -61,7 +61,7 @@ static void init( char *fname )
 		break;
 	}
 
-	talBufferWriteData( boom, format, wave, size, freq, format );
+	palBufferWriteData( boom, format, wave, size, freq, format );
 	free( wave );		/* openal makes a local copy of wave data */
 
 	alGenSources( 1, &moving_source );
@@ -99,7 +99,7 @@ int main( int argc, char *argv[] )
 
 	alcMakeContextCurrent( ci );
 
-	fixup_function_pointers(  );
+	getExtensionEntries(  );
 
 	if( argc == 1 ) {
 		init( WAVEFILE );
@@ -108,8 +108,8 @@ int main( int argc, char *argv[] )
 	}
 
 	alSourcePlay( moving_source );
-	while( SourceIsPlaying( moving_source ) ) {
-		micro_sleep( 100000 );
+	while( sourceIsPlaying( moving_source ) ) {
+		microSleep( 100000 );
 	}
 
 	alcDestroyContext( ci );

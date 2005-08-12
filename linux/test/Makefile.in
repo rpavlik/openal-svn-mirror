@@ -1,3 +1,5 @@
+TOP=..
+
 CC=@CC@
 CXX=@CXX@
 CFLAGS=@CFLAGS@ -Wno-unused @RDYNAMIC@
@@ -42,7 +44,7 @@ all: testlib.o $(LIBOPENAL) $(TEST_PROGS) ../src/libopenal.a
 # in it would lead to more indentation than we want.
 indent:
 	@for i in *.c *.cc ; do \
-	    cat $$i | indent > indent.tmp ; \
+	    cat $$i | ( cd $(TOP) ; indent ) > indent.tmp ; \
 	    if diff $$i indent.tmp > /dev/null 2>&1 ; then \
 		: ; \
 	    else \

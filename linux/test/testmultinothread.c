@@ -32,10 +32,10 @@ static void iterate( void )
 	static int microsecs;
 
 	for ( i = 0; i < NUMSOURCES; i++ ) {
-		if( SourceIsPlaying( multis[i] ) != AL_TRUE ) {
+		if( sourceIsPlaying( multis[i] ) != AL_TRUE ) {
 			microsecs = 80000 * ( rand(  ) / ( 1.0 * RAND_MAX ) );
 
-			micro_sleep( microsecs );
+			microSleep( microsecs );
 			alSourcePlay( multis[i] );
 		}
 

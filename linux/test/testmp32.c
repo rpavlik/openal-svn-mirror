@@ -22,14 +22,14 @@
 static void cleanup( void );
 
 static ALuint mp3buf;		/* our buffer */
-static ALuint mp3source = ( ALuint ) - 1;
+static ALuint mp3source = ( ALuint ) -1;
 
 static time_t start;
 
 static ALCcontext *context_id;
 
 /* our mp3 extension */
-typedef ALboolean( mp3Loader ) ( ALuint, ALvoid *, ALint );
+typedef ALboolean ( mp3Loader ) ( ALuint, ALvoid *, ALint );
 mp3Loader *alutLoadMP3p = NULL;
 
 static void initmp3( void )
@@ -147,7 +147,7 @@ int main( int argc, char *argv[] )
 
 	alSourcePlay( mp3source );
 
-	while( SourceIsPlaying( mp3source ) == AL_TRUE ) {
+	while( sourceIsPlaying( mp3source ) == AL_TRUE ) {
 		sleep( 1 );
 	}
 
@@ -157,7 +157,7 @@ int main( int argc, char *argv[] )
 
 	alSourcePlay( mp3source );
 
-	while( SourceIsPlaying( mp3source ) == AL_TRUE ) {
+	while( sourceIsPlaying( mp3source ) == AL_TRUE ) {
 		sleep( 1 );
 	}
 

@@ -84,7 +84,7 @@ int main( int argc, char *argv[] )
 
 	alcMakeContextCurrent( context_id );
 
-	fixup_function_pointers(  );
+	getExtensionEntries(  );
 
 	if( argc == 1 ) {
 		fname = ADPCM_FILE;
@@ -94,7 +94,7 @@ int main( int argc, char *argv[] )
 
 	init(  );
 
-	talBombOnError(  );
+	palBombOnError(  );
 
 	if( stat( fname, &sbuf ) == -1 ) {
 		perror( "stat" );
@@ -120,7 +120,7 @@ int main( int argc, char *argv[] )
 
 	speed = *( int * ) data;
 
-	if( talutLoadRAW_ADPCMData( stereo,
+	if( palutLoadRAW_ADPCMData( stereo,
 				    ( char * ) data + 4, size - 4,
 				    speed, AL_FORMAT_MONO16 ) == AL_FALSE ) {
 		fprintf( stderr, "Could not alutLoadADPCMData_LOKI\n" );
@@ -130,7 +130,7 @@ int main( int argc, char *argv[] )
 
 	alSourcePlay( moving_source[0] );
 
-	while( SourceIsPlaying( moving_source[0] ) == AL_TRUE ) {
+	while( sourceIsPlaying( moving_source[0] ) == AL_TRUE ) {
 		sleep( 1 );
 	}
 

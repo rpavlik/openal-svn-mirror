@@ -116,7 +116,7 @@ int main( int argc, char *argv[] )
 		for ( j = 0; j < i; j++ ) {
 			alSourcePlay( moving_sources[j] );
 			alcProcessContext( context_id );
-			micro_sleep( 40000 );
+			microSleep( 40000 );
 		}
 
 		while( 1 ) {
