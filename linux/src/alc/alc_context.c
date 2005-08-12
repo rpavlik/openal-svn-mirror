@@ -27,7 +27,7 @@
 #include "alc_speaker.h"
 #include "alc_error.h"
 
-#include "mutex/mutexlib.h"
+#include "al_mutexlib.h"
 
 #include <fcntl.h>
 #include <stdlib.h>

@@ -22,7 +22,7 @@
 #include "alc/alc_context.h"
 #include "al_siteconfig.h"
 
-#include "mutex/mutexlib.h"
+#include "mutexlib.h"
 
 #define DEF_BITSPERSAMPLE 16
 #define DEF_SPEED         44100

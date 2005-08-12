@@ -427,7 +427,6 @@ esac
 
 dnl threadify.
 if test x$PTHREAD_AVAILABLE = xyes; then
-    SYS_MUTEX_OBJS="mutex/posixmutex.o"
     SYS_THREAD_OBJS="threads/posixthreads.o"
 
     if test $NO_PTHREAD_FLAG = yes; then
@@ -446,7 +445,6 @@ else
 	dnl no pthread, check others
 
 	if test x$WINTHREAD_AVAILABLE = xyes; then
-    		SYS_MUTEX_OBJS="mutex/windowsmutex.o"
     		SYS_THREAD_OBJS="threads/windowsthreads.o"
 
     		AC_DEFINE(USE_WINDOWSMUTEX, 1, [undocumented])
@@ -454,7 +452,6 @@ else
 	else
 
 		if test x$MOSTHREAD_AVAILABLE = xyes; then
-				SYS_MUTEX_OBJS="mutex/morphosmutex.o"
 				SYS_THREAD_OBJS="threads/morphosthreads.o"
 
 				AC_DEFINE(USE_MORPHOSMUTEX, 1, [undocumented])
@@ -784,7 +781,6 @@ AC_SUBST([MAKEINFO])
 AC_SUBST([OS_OBJS])
 AC_SUBST([ARCH_OBJS])
 AC_SUBST([SYS_THREAD_OBJS])
-AC_SUBST([SYS_MUTEX_OBJS])
 AC_SUBST([SHARED_LIBRARY_EXT])
 AC_SUBST([SIZEOF_VOID_P])
 AC_SUBST([RDYNAMIC])

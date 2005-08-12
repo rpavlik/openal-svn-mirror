@@ -30,7 +30,7 @@
 #include "audioconvert.h"
 
 #include "threads/threadlib.h"
-#include "mutex/mutexlib.h"
+#include "al_mutexlib.h"
 
 #include <signal.h>
 #include <stdio.h>

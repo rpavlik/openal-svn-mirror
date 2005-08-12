@@ -31,7 +31,7 @@
 
 #include "audioconvert.h"
 #include "threads/threadlib.h"
-#include "mutex/mutexlib.h"
+#include "al_mutexlib.h"
 
 #ifndef elementsof
 #define elementsof(a) ((sizeof(a)) / (sizeof *(a)))

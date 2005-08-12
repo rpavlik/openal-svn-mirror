@@ -10,7 +10,7 @@
 
 #include "AL/altypes.h"
 
-#include "mutex/mutexlib.h"
+#include "al_mutexlib.h"
 
 #include <stddef.h>
 #include <sys/types.h>

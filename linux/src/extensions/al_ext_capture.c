@@ -30,7 +30,7 @@
 #include <audioconvert.h>
 
 #include "arch/interface/interface_sound.h"
-#include "mutex/mutexlib.h"
+#include "al_mutexlib.h"
 
 #ifdef OPENAL_EXTENSION
 

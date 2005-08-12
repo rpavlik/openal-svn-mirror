@@ -66,7 +66,7 @@ DARWIN_OBJS=arch/darwin/darwin_native.o
 MORPHOS_OBJS=arch/morphos/morphos_native.o arch/morphos/morphos_dispatcher.o
 WINDOWS_OBJS=arch/windows/windows_native.o
 
-AL_OBJS+=$(INTERFACE_OBJS) @OS_OBJS@ @ARCH_OBJS@ @SYS_THREAD_OBJS@ @SYS_MUTEX_OBJS@
+AL_OBJS+=$(INTERFACE_OBJS) @OS_OBJS@ @ARCH_OBJS@ @SYS_THREAD_OBJS@ al_mutexlib.o
 
 PACKAGE_VERSION_MAJOR=@PACKAGE_VERSION_MAJOR@
 PACKAGE_VERSION=@PACKAGE_VERSION@

@@ -17,7 +17,7 @@
 #include "al_error.h"
 #include "al_debug.h"
 
-#include "mutex/mutexlib.h"
+#include "al_mutexlib.h"
 
 #ifndef NODLOPEN
 #include <dlfcn.h>
