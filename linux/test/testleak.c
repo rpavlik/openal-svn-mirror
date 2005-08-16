@@ -18,8 +18,8 @@
 static void init( const char *fname );
 static void cleanup( void );
 
-static ALuint moving_sources[NUMSOURCES];
-static ALuint buffer_id;
+static ALuint movingSource[NUMSOURCES];
+static ALuint buffer;
 
 static void init( const char *fname )
 {
@@ -35,17 +35,17 @@ static void init( const char *fname )
 	alListenerfv( AL_VELOCITY, zeroes );
 	alListenerfv( AL_ORIENTATION, front );
 
-	alGenBuffers( 1, &buffer_id );
+	alGenBuffers( 1, &buffer );
 
 	if( stat( fname, &buf ) < 0 ) {
 		fprintf( stderr, "Could not stat %s\n", fname );
-		exit( 1 );
+		exit( EXIT_FAILURE );
 	}
 
 	fh = fopen( fname, "rb" );
 	if( fh == NULL ) {
 		fprintf( stderr, "Could not fopen %s\n", fname );
-		exit( 1 );
+		exit( EXIT_FAILURE );
 	}
 
 	size = buf.st_size;
@@ -55,16 +55,14 @@ static void init( const char *fname )
 
 	speed = *( int * ) data;
 
-	if( palutLoadRAW_ADPCMData( buffer_id,
+	if( palutLoadRAW_ADPCMData( buffer,
 				    ( char * ) data + 4, size - 4,
 				    speed, AL_FORMAT_MONO16 ) == AL_FALSE ) {
 		fprintf( stderr, "Could not alutLoadADPCMData_LOKI\n" );
-		exit( -2 );
+		exit( EXIT_FAILURE );
 	}
 
 	free( data );
-
-	return;
 }
 
 static void cleanup( void )
@@ -102,21 +100,21 @@ int main( int argc, char *argv[] )
 		}
 
 		for ( j = 0; j < NUMSOURCES; j++ ) {
-			alGenSources( 1, &moving_sources[j] );
-			alSourcei( moving_sources[j], AL_BUFFER, buffer_id );
+			alGenSources( 1, &movingSource[j] );
+			alSourcei( movingSource[j], AL_BUFFER, buffer );
 		}
 
-		alSourcePlayv( NUMSOURCES, moving_sources );
+		alSourcePlayv( NUMSOURCES, movingSource );
 		microSleep( 100000 );
-		alSourceStopv( NUMSOURCES, moving_sources );
+		alSourceStopv( NUMSOURCES, movingSource );
 
 		for ( j = 0; j < NUMSOURCES; j++ ) {
-			alDeleteSources( 1, &moving_sources[j] );
+			alDeleteSources( 1, &movingSource[j] );
 		}
 
 	}
 
 	cleanup(  );
 
-	return 0;
+	return EXIT_SUCCESS;
 }

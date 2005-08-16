@@ -14,27 +14,24 @@
 #define WAVEFILE "boom.wav"
 
 static void iterate( void );
-static void init( char *fname );
 static void cleanup( void );
 
-static ALuint moving_source = 0;
+static ALuint movingSource = 0;
 
 static void *wave = NULL;
 static time_t start;
 
 static void iterate( void )
 {
-	if( sourceIsPlaying( moving_source ) == AL_FALSE ) {
-		alSourcePlay( moving_source );
+	if( sourceIsPlaying( movingSource ) == AL_FALSE ) {
+		alSourcePlay( movingSource );
 		fprintf( stderr, "have to sourceplay\n" );
 	} else {
 		microSleep( 10000 );
 	}
-
-	return;
 }
 
-static void init( char *fname )
+static void init( const ALbyte *fname )
 {
 	ALfloat zeroes[] = { 0.0f, 0.0f, 0.0f };
 	ALfloat back[] = { 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f };
@@ -54,26 +51,24 @@ static void init( char *fname )
 
 	alGenBuffers( 1, &boom );
 
-	alutLoadWAVFile( ( ALbyte * ) fname, &format, &wave, &size, &freq,
-			 &loop );
+	alutLoadWAVFile( fname, &format, &wave, &size, &freq, &loop );
 	if( wave == NULL ) {
-		fprintf( stderr, "Could not include %s\n", fname );
-		exit( 1 );
+		fprintf( stderr, "Could not include %s\n",
+			 ( const char * ) fname );
+		exit( EXIT_FAILURE );
 	}
 
 	alBufferData( boom, format, wave, size, freq );
 	free( wave );		/* openal makes a local copy of wave data */
 
-	alGenSources( 1, &moving_source );
+	alGenSources( 1, &movingSource );
 
-	alSourcei( moving_source, AL_BUFFER, boom );
-	alSourcei( moving_source, AL_LOOPING, AL_FALSE );
-	alSourcefv( moving_source, AL_POSITION, position );
-	alSourcefv( moving_source, AL_VELOCITY, zeroes );
-	alSourcefv( moving_source, AL_ORIENTATION, back );
-	alSourcef( moving_source, AL_PITCH, 1.0f );
-
-	return;
+	alSourcei( movingSource, AL_BUFFER, boom );
+	alSourcei( movingSource, AL_LOOPING, AL_FALSE );
+	alSourcefv( movingSource, AL_POSITION, position );
+	alSourcefv( movingSource, AL_VELOCITY, zeroes );
+	alSourcefv( movingSource, AL_ORIENTATION, back );
+	alSourcef( movingSource, AL_PITCH, 1.0f );
 }
 
 static void cleanup( void )
@@ -97,13 +92,9 @@ int main( int argc, char *argv[] )
 	/* Initialize ALUT. */
 	alutInit( &argc, argv );
 
-	if( argc == 1 ) {
-		init( WAVEFILE );
-	} else {
-		init( argv[1] );
-	}
+	init( ( const ALbyte * ) ( ( argc == 1 ) ? WAVEFILE : argv[1] ) );
 
-	alSourcePlay( moving_source );
+	alSourcePlay( movingSource );
 	while( 1 ) {
 		shouldend = time( NULL );
 		if( ( shouldend - start ) > 40 ) {
@@ -115,5 +106,5 @@ int main( int argc, char *argv[] )
 
 	cleanup(  );
 
-	return 0;
+	return EXIT_SUCCESS;
 }

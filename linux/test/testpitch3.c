@@ -28,7 +28,7 @@ char *dmusicstr = "E 2 D 2 C 2 D 2 E 2 E 2 E 2 D 2 D 2 D 2 E 2 G 2 G 3";
 static void init( const char *fname );
 static void cleanup( void );
 
-static ALuint moving_source = 0;
+static ALuint movingSource = 0;
 
 static time_t start;
 static void *cc;		/* al context */
@@ -52,7 +52,7 @@ static void init( const char *fname )
 
 	data = malloc( DEFFREQ * sizeof *data );
 	if( data == NULL ) {
-		exit( 1 );
+		exit( EXIT_FAILURE );
 	}
 
 	/* populate data with a middle C */
@@ -63,13 +63,11 @@ static void init( const char *fname )
 	alBufferData( boom, AL_FORMAT_MONO16, data, DEFFREQ, DEFFREQ );
 	free( data );		/* openal makes a local copy of wave data */
 
-	alGenSources( 1, &moving_source );
+	alGenSources( 1, &movingSource );
 
-	alSourcef( moving_source, AL_GAIN_LINEAR_LOKI, 0.20 );
-	alSourcei( moving_source, AL_BUFFER, boom );
-	alSourcei( moving_source, AL_LOOPING, AL_FALSE );
-
-	return;
+	alSourcef( movingSource, AL_GAIN_LINEAR_LOKI, 0.20 );
+	alSourcei( movingSource, AL_BUFFER, boom );
+	alSourcei( movingSource, AL_LOOPING, AL_FALSE );
 }
 
 static void cleanup( void )
@@ -87,8 +85,8 @@ static void cleanup( void )
 
 int main( int argc, char *argv[] )
 {
-	ALCdevice *dev;
-	int attrlist[] = { ALC_FREQUENCY, DEFFREQ,
+	ALCdevice *device;
+	int attributeList[] = { ALC_FREQUENCY, DEFFREQ,
 		ALC_INVALID
 	};
 	char *musicitr = musicstr;
@@ -96,16 +94,16 @@ int main( int argc, char *argv[] )
 	int beats;
 	char note;
 
-	dev = alcOpenDevice( NULL );
-	if( dev == NULL ) {
-		return 1;
+	device = alcOpenDevice( NULL );
+	if( device == NULL ) {
+		return EXIT_FAILURE;
 	}
 
-	cc = alcCreateContext( dev, attrlist );
+	cc = alcCreateContext( device, attributeList );
 	if( cc == NULL ) {
-		alcCloseDevice( dev );
+		alcCloseDevice( device );
 
-		return 1;
+		return EXIT_FAILURE;
 	}
 
 	alcMakeContextCurrent( cc );
@@ -117,7 +115,7 @@ int main( int argc, char *argv[] )
 	}
 
 	while( *musicitr ) {
-		alSourceStop( moving_source );
+		alSourceStop( movingSource );
 
 		while( *musicitr == ' ' ) {
 			musicitr++;
@@ -184,14 +182,14 @@ int main( int argc, char *argv[] )
 
 		fprintf( stderr, "note %c beats %d\n", note, beats );
 
-		alSourcef( moving_source, AL_PITCH, pitch );
-		alSourcePlay( moving_source );
+		alSourcef( movingSource, AL_PITCH, pitch );
+		alSourcePlay( movingSource );
 		microSleep( beats / 4.0 * 1000000 );
 	}
 
 	cleanup(  );
 
-	alcCloseDevice( dev );
+	alcCloseDevice( device );
 
-	return 0;
+	return EXIT_SUCCESS;
 }

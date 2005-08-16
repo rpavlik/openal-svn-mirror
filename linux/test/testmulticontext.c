@@ -18,8 +18,8 @@ static void cleanup( void );
 
 static void *data;
 
-static ALCcontext *context_ids[NUMCONTEXTS];
-static ALuint moving_sources[NUMCONTEXTS];
+static ALCcontext *contexts[NUMCONTEXTS];
+static ALuint movingSource[NUMCONTEXTS];
 static ALuint bid;
 
 #if 0
@@ -43,13 +43,11 @@ static void iterate( void )
 	position[0] += movefactor;
 
 	for ( i = 0; i < NUMCONTEXTS; i++ ) {
-		alcMakeContextCurrent( context_ids[i] );
-		alSourcefv( moving_sources[i], AL_POSITION, position );
+		alcMakeContextCurrent( contexts[i] );
+		alSourcefv( movingSource[i], AL_POSITION, position );
 	}
 
 	microSleep( 500000 );
-
-	return;
 }
 #endif
 
@@ -73,7 +71,7 @@ static void init( const char *fname )
 	fh = fopen( fname, "rb" );
 	if( fh == NULL ) {
 		fprintf( stderr, "Couldn't open fname\n" );
-		exit( 1 );
+		exit( EXIT_FAILURE );
 	}
 
 	filelen = fread( data, 1, DATABUFFERSIZE, fh );
@@ -84,23 +82,21 @@ static void init( const char *fname )
 	alBufferData( bid, AL_FORMAT_WAVE_EXT, data, filelen, 0 );
 	if( alGetError(  ) != AL_NO_ERROR ) {
 		fprintf( stderr, "Could not BufferData\n" );
-		exit( 1 );
+		exit( EXIT_FAILURE );
 	}
 
 	free( data );
 
 	for ( i = 0; i < NUMCONTEXTS; i++ ) {
-		alcMakeContextCurrent( context_ids[i] );
+		alcMakeContextCurrent( contexts[i] );
 
-		alGenSources( 1, &moving_sources[i] );
+		alGenSources( 1, &movingSource[i] );
 
-		alSourcefv( moving_sources[i], AL_POSITION, position );
-		/* alSourcefv( moving_sources[i], AL_VELOCITY, zeroes ); */
-		alSourcei( moving_sources[i], AL_BUFFER, bid );
-		alSourcei( moving_sources[i], AL_LOOPING, AL_TRUE );
+		alSourcefv( movingSource[i], AL_POSITION, position );
+		/* alSourcefv( movingSource[i], AL_VELOCITY, zeroes ); */
+		alSourcei( movingSource[i], AL_BUFFER, bid );
+		alSourcei( movingSource[i], AL_LOOPING, AL_TRUE );
 	}
-
-	return;
 }
 
 static void cleanup( void )
@@ -108,35 +104,33 @@ static void cleanup( void )
 	int i;
 
 	for ( i = 0; i < NUMCONTEXTS; i++ ) {
-		alcDestroyContext( context_ids[i] );
+		alcDestroyContext( contexts[i] );
 	}
 
 #ifdef JLIB
 	jv_check_mem(  );
 #endif
-
-	return;
 }
 
 int main( int argc, char *argv[] )
 {
-	ALCdevice *dev;
-	int attrlist[] = { ALC_FREQUENCY, 44100,
+	ALCdevice *device;
+	int attributeList[] = { ALC_FREQUENCY, 44100,
 		ALC_INVALID
 	};
 	time_t start;
 	int i;
 
-	dev = alcOpenDevice( NULL );
-	if( dev == NULL ) {
-		return 1;
+	device = alcOpenDevice( NULL );
+	if( device == NULL ) {
+		return EXIT_FAILURE;
 	}
 
 	/* Initialize ALUT. */
 	for ( i = 0; i < NUMCONTEXTS; i++ ) {
-		context_ids[i] = alcCreateContext( dev, attrlist );
-		if( context_ids[i] == NULL ) {
-			return 1;
+		contexts[i] = alcCreateContext( device, attributeList );
+		if( contexts[i] == NULL ) {
+			return EXIT_FAILURE;
 		}
 	}
 
@@ -153,8 +147,8 @@ int main( int argc, char *argv[] )
 	start = time( NULL );
 
 	for ( i = 0; i < NUMCONTEXTS; i++ ) {
-		alcMakeContextCurrent( context_ids[i] );
-		alSourcePlay( moving_sources[i] );
+		alcMakeContextCurrent( contexts[i] );
+		alSourcePlay( movingSource[i] );
 		sleep( 1 );
 	}
 
@@ -165,15 +159,15 @@ int main( int argc, char *argv[] )
 		shouldend = time( NULL );
 		if( ( shouldend - start ) > 10 ) {
 			for ( i = 0; i < NUMCONTEXTS; i++ ) {
-				alcMakeContextCurrent( context_ids[i] );
-				alSourceStop( moving_sources[i] );
+				alcMakeContextCurrent( contexts[i] );
+				alSourceStop( movingSource[i] );
 			}
 		}
 
 		done = AL_TRUE;
 		for ( i = 0; i < NUMCONTEXTS; i++ ) {
-			alcMakeContextCurrent( context_ids[i] );
-			done = done && !sourceIsPlaying( moving_sources[i] );
+			alcMakeContextCurrent( contexts[i] );
+			done = done && !sourceIsPlaying( movingSource[i] );
 		}
 	}
 #else
@@ -185,5 +179,5 @@ int main( int argc, char *argv[] )
 
 	cleanup(  );
 
-	return 0;
+	return EXIT_SUCCESS;
 }

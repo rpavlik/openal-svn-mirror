@@ -15,28 +15,28 @@
 #define M_PI	(2 * M_PI_2)
 #endif
 
-static ALCcontext *context_id = NULL;	/* our context */
+static ALCcontext *context = NULL;	/* our context */
 static void setposition( ALfloat x, ALfloat y, ALfloat z );
 static void setorientation( ALfloat ax, ALfloat ay, ALfloat az,
 			    ALfloat ux, ALfloat uy, ALfloat uz );
 
 int main( void )
 {
-	ALCdevice *dev;
+	ALCdevice *device;
 
-	dev = alcOpenDevice( NULL );
-	if( dev == NULL ) {
-		return 1;
+	device = alcOpenDevice( NULL );
+	if( device == NULL ) {
+		return EXIT_FAILURE;
 	}
 
-	context_id = alcCreateContext( dev, NULL );
-	if( context_id == NULL ) {
-		alcCloseDevice( dev );
+	context = alcCreateContext( device, NULL );
+	if( context == NULL ) {
+		alcCloseDevice( device );
 
-		return 1;
+		return EXIT_FAILURE;
 	}
 
-	alcMakeContextCurrent( context_id );
+	alcMakeContextCurrent( context );
 
 	setposition( -10.0, 10, 10 );
 	setposition( 10.0, 10, 10 );
@@ -59,11 +59,11 @@ int main( void )
 	setposition( 0, 0, 0 );
 	setorientation( 0.0, 0, 1, 0, 1, 0 );
 
-	alcDestroyContext( context_id );
+	alcDestroyContext( context );
 
-	alcCloseDevice( dev );
+	alcCloseDevice( device );
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 static void setposition( ALfloat x, ALfloat y, ALfloat z )
@@ -79,8 +79,6 @@ static void setposition( ALfloat x, ALfloat y, ALfloat z )
 	alListenerfv( AL_POSITION, pos );
 
 	fprintf( stderr, "--------------------------------\n" );
-
-	return;
 }
 
 static void

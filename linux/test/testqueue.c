@@ -13,22 +13,19 @@
 #define NUMSOURCES    1
 
 static void start( void );
-static void init( char *fname );
 static void cleanup( void );
 
 static ALuint multis;
 
-static ALCcontext *context_id;
+static ALCcontext *context;
 static void *wave = NULL;
 
 static void start( void )
 {
 	alSourcePlay( multis );
-
-	return;
 }
 
-static void init( char *fname )
+static void init( const ALbyte *fname )
 {
 	ALuint boom;
 	ALsizei size;
@@ -38,11 +35,11 @@ static void init( char *fname )
 
 	alGenBuffers( 1, &boom );
 
-	alutLoadWAVFile( ( ALbyte * ) fname, &format, &wave, &size, &freq,
-			 &loop );
+	alutLoadWAVFile( fname, &format, &wave, &size, &freq, &loop );
 	if( wave == NULL ) {
-		fprintf( stderr, "Could not include %s\n", fname );
-		exit( 1 );
+		fprintf( stderr, "Could not include %s\n",
+			 ( const char * ) fname );
+		exit( EXIT_FAILURE );
 	}
 
 	alBufferData( boom, format, wave, size, freq );
@@ -58,13 +55,11 @@ static void init( char *fname )
 	alSourceQueueBuffers( multis, 1, &boom );
 	alSourceQueueBuffers( multis, 1, &boom );
 	alSourceQueueBuffers( multis, 1, &boom );
-
-	return;
 }
 
 void cleanup( void )
 {
-	alcDestroyContext( context_id );
+	alcDestroyContext( context );
 #ifdef JLIB
 	jv_check_mem(  );
 #endif
@@ -72,28 +67,24 @@ void cleanup( void )
 
 int main( int argc, char *argv[] )
 {
-	ALCdevice *dev;
+	ALCdevice *device;
 
-	dev = alcOpenDevice( NULL );
-	if( dev == NULL ) {
-		return 1;
+	device = alcOpenDevice( NULL );
+	if( device == NULL ) {
+		return EXIT_FAILURE;
 	}
 
 	/* Initialize ALUT. */
-	context_id = alcCreateContext( dev, NULL );
-	if( context_id == NULL ) {
-		alcCloseDevice( dev );
+	context = alcCreateContext( device, NULL );
+	if( context == NULL ) {
+		alcCloseDevice( device );
 
-		return 1;
+		return EXIT_FAILURE;
 	}
 
-	alcMakeContextCurrent( context_id );
+	alcMakeContextCurrent( context );
 
-	if( argc == 1 ) {
-		init( WAVEFILE );
-	} else {
-		init( argv[1] );
-	}
+	init( ( const ALbyte * ) ( ( argc == 1 ) ? WAVEFILE : argv[1] ) );
 
 	start(  );
 
@@ -106,7 +97,7 @@ int main( int argc, char *argv[] )
 
 	cleanup(  );
 
-	alcCloseDevice( dev );
+	alcCloseDevice( device );
 
-	return 0;
+	return EXIT_SUCCESS;
 }

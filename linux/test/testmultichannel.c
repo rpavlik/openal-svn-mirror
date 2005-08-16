@@ -13,14 +13,12 @@
 
 #define WAVEFILE "boom.wav"
 
-static void init( char *fname );
-
-static ALuint moving_source = 0;
+static ALuint movingSource = 0;
 
 static void *wave = NULL;
 static time_t start;
 
-static void init( char *fname )
+static void init( const ALbyte *fname )
 {
 	ALfloat zeroes[] = { 0.0f, 0.0f, 0.0f };
 	ALfloat position[] = { 0.0f, 0.0f, 0.0f };
@@ -40,11 +38,11 @@ static void init( char *fname )
 
 	alGenBuffers( 1, &boom );
 
-	alutLoadWAVFile( ( ALbyte * ) fname, &format, &wave, &size, &freq,
-			 &loop );
+	alutLoadWAVFile( fname, &format, &wave, &size, &freq, &loop );
 	if( wave == NULL ) {
-		fprintf( stderr, "Could not open %s\n", fname );
-		exit( 1 );
+		fprintf( stderr, "Could not open %s\n",
+			 ( const char * ) fname );
+		exit( EXIT_FAILURE );
 	}
 
 	fprintf( stderr, "(format 0x%x size %d freq %d\n", format, size, freq );
@@ -64,57 +62,51 @@ static void init( char *fname )
 	palBufferWriteData( boom, format, wave, size, freq, format );
 	free( wave );		/* openal makes a local copy of wave data */
 
-	alGenSources( 1, &moving_source );
+	alGenSources( 1, &movingSource );
 
-	alSourcefv( moving_source, AL_POSITION, position );
-	alSourcef( moving_source, AL_PITCH, 1.0 );
+	alSourcefv( movingSource, AL_POSITION, position );
+	alSourcef( movingSource, AL_PITCH, 1.0 );
 	/*
-	   alSourcefv( moving_source, AL_VELOCITY, zeroes );
-	   alSourcefv( moving_source, AL_ORIENTATION, back );
+	   alSourcefv( movingSource, AL_VELOCITY, zeroes );
+	   alSourcefv( movingSource, AL_ORIENTATION, back );
 	 */
-	alSourcei( moving_source, AL_BUFFER, boom );
-	alSourcei( moving_source, AL_LOOPING, AL_FALSE );
-
-	return;
+	alSourcei( movingSource, AL_BUFFER, boom );
+	alSourcei( movingSource, AL_LOOPING, AL_FALSE );
 }
 
 int main( int argc, char *argv[] )
 {
-	ALCdevice *dev;
+	ALCdevice *device;
 	void *ci;
-	int attrlist[] = { ALC_FREQUENCY, 44100, 0 };
+	int attributeList[] = { ALC_FREQUENCY, 44100, 0 };
 
-	dev = alcOpenDevice( NULL );
-	if( dev == NULL ) {
-		return 1;
+	device = alcOpenDevice( NULL );
+	if( device == NULL ) {
+		return EXIT_FAILURE;
 	}
 
 	/* Initialize ALUT. */
-	ci = alcCreateContext( dev, attrlist );
+	ci = alcCreateContext( device, attributeList );
 	if( ci == NULL ) {
-		alcCloseDevice( dev );
+		alcCloseDevice( device );
 
-		exit( 1 );
+		exit( EXIT_FAILURE );
 	}
 
 	alcMakeContextCurrent( ci );
 
 	getExtensionEntries(  );
 
-	if( argc == 1 ) {
-		init( WAVEFILE );
-	} else {
-		init( argv[1] );
-	}
+	init( ( const ALbyte * ) ( ( argc == 1 ) ? WAVEFILE : argv[1] ) );
 
-	alSourcePlay( moving_source );
-	while( sourceIsPlaying( moving_source ) ) {
+	alSourcePlay( movingSource );
+	while( sourceIsPlaying( movingSource ) ) {
 		microSleep( 100000 );
 	}
 
 	alcDestroyContext( ci );
 
-	alcCloseDevice( dev );
+	alcCloseDevice( device );
 
-	return 0;
+	return EXIT_SUCCESS;
 }

@@ -129,7 +129,7 @@ static ALboolean ReadWAVMemory(const ALvoid *data,
 }
 
 /* I'm such a nice guy */
-void alutLoadWAVFile(ALbyte *fname,
+void alutLoadWAVFile(  const ALbyte *fname,
 		       ALenum *format,
 		       ALvoid **data,
 		       ALsizei *size,
@@ -163,7 +163,7 @@ void alutLoadWAVFile(ALbyte *fname,
 		*format, *size, *freq);
 }
 
-void alutLoadWAVMemory(ALbyte *memory,
+void alutLoadWAVMemory(const ALbyte *memory,
 		       ALenum *format,
 		       ALvoid **data,
 		       ALsizei *size,

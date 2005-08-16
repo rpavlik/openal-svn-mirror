@@ -13,13 +13,12 @@
 #define NUMSOURCES    1
 
 static void iterate( void );
-static void init( char *fname );
 static void cleanup( void );
 
 static ALuint multis;
 
-static ALCdevice *dev = NULL;
-static ALCcontext *context_id;
+static ALCdevice *device = NULL;
+static ALCcontext *context;
 static void *wave = NULL;
 
 static void iterate( void )
@@ -32,7 +31,7 @@ static void iterate( void )
 	microSleep( 1000000 );
 }
 
-static void init( char *fname )
+static void init( const ALbyte *fname )
 {
 	ALfloat zeroes[] = { 0.0f, 0.0f, 0.0f };
 	ALfloat back[] = { 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f };
@@ -49,11 +48,11 @@ static void init( char *fname )
 
 	alGenBuffers( 1, &boom );
 
-	alutLoadWAVFile( ( ALbyte * ) fname, &format, &wave, &size, &freq,
-			 &loop );
+	alutLoadWAVFile( fname, &format, &wave, &size, &freq, &loop );
 	if( wave == NULL ) {
-		fprintf( stderr, "Could not include %s\n", fname );
-		exit( 1 );
+		fprintf( stderr, "Could not include %s\n",
+			 ( const char * ) fname );
+		exit( EXIT_FAILURE );
 	}
 
 	alBufferData( boom, format, wave, size, freq );
@@ -67,14 +66,12 @@ static void init( char *fname )
 	alSourcei( multis, AL_LOOPING, AL_FALSE );
 	alSourcef( multis, AL_GAIN_LINEAR_LOKI, 1.0 );
 	alSourcei( multis, AL_BUFFER, boom );
-
-	return;
 }
 
 void cleanup( void )
 {
-	alcDestroyContext( context_id );
-	alcCloseDevice( dev );
+	alcDestroyContext( context );
+	alcCloseDevice( device );
 
 #ifdef JLIB
 	jv_check_mem(  );
@@ -83,7 +80,7 @@ void cleanup( void )
 
 int main( int argc, char *argv[] )
 {
-	int attrlist[] = { ALC_FREQUENCY, 22050, 0 };
+	int attributeList[] = { ALC_FREQUENCY, 22050, 0 };
 #if 0
 	const ALchar *devspec =
 	    ( const ALchar * ) "'( ( sampling-rate 22050 ) ( devices '(null)))";
@@ -92,25 +89,21 @@ int main( int argc, char *argv[] )
 #endif
 
 	/* Initialize device and context. */
-	dev = alcOpenDevice( devspec );
-	if( dev == NULL ) {
-		return 1;
+	device = alcOpenDevice( devspec );
+	if( device == NULL ) {
+		return EXIT_FAILURE;
 	}
 
-	context_id = alcCreateContext( dev, attrlist );
-	if( context_id == NULL ) {
-		alcCloseDevice( dev );
+	context = alcCreateContext( device, attributeList );
+	if( context == NULL ) {
+		alcCloseDevice( device );
 
-		return 1;
+		return EXIT_FAILURE;
 	}
 
-	alcMakeContextCurrent( context_id );
+	alcMakeContextCurrent( context );
 
-	if( argc == 1 ) {
-		init( WAVEFILE );
-	} else {
-		init( argv[1] );
-	}
+	init( ( const ALbyte * ) ( ( argc == 1 ) ? WAVEFILE : argv[1] ) );
 
 	iterate(  );
 
@@ -120,5 +113,5 @@ int main( int argc, char *argv[] )
 
 	cleanup(  );
 
-	return 0;
+	return EXIT_SUCCESS;
 }

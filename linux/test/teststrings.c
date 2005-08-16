@@ -5,24 +5,24 @@
 
 int main( int argc, char *argv[] )
 {
-	ALCcontext *context_id;
-	ALCdevice *dev;
+	ALCcontext *context;
+	ALCdevice *device;
 
-	int attrlist[] = { ALC_FREQUENCY, 44100,
+	int attributeList[] = { ALC_FREQUENCY, 44100,
 		0
 	};
 
-	dev = alcOpenDevice( NULL );
-	if( dev == NULL ) {
+	device = alcOpenDevice( NULL );
+	if( device == NULL ) {
 		return EXIT_FAILURE;
 	}
 
-	context_id = alcCreateContext( dev, attrlist );
-	if( context_id == NULL ) {
-		alcCloseDevice( dev );
+	context = alcCreateContext( device, attributeList );
+	if( context == NULL ) {
+		alcCloseDevice( device );
 		return EXIT_FAILURE;
 	}
-	alcMakeContextCurrent( context_id );
+	alcMakeContextCurrent( context );
 
 	printf( "AL_VENDOR: %s\n", alGetString( AL_VENDOR ) );
 	printf( "AL_VERSION: %s\n", alGetString( AL_VERSION ) );
@@ -35,8 +35,8 @@ int main( int argc, char *argv[] )
 	}
 
 	alcMakeContextCurrent( NULL );
-	alcDestroyContext( context_id );
-	alcCloseDevice( dev );
+	alcDestroyContext( context );
+	alcCloseDevice( device );
 
 	return EXIT_SUCCESS;
 }

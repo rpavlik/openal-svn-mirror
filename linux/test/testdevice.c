@@ -11,15 +11,15 @@
 
 int main( int argc, char *argv[] )
 {
-	ALCdevice *dev;
+	ALCdevice *device;
 	const ALCchar *initstr =
 	    ( const ALCchar * ) "'( ( devices '( native null ) ) )";
 
-	dev = alcOpenDevice( initstr );
+	device = alcOpenDevice( initstr );
 
 	sleep( 1 );
 
-	alcCloseDevice( dev );
+	alcCloseDevice( device );
 
-	return 0;
+	return EXIT_SUCCESS;
 }

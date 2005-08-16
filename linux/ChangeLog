@@ -1,4 +1,36 @@
 2005-08-12  Sven Panne  <sven.panne@aedion.de>
+	* include/AL/alut.h, linux/src/alut/alut_wav.c,
+	linux/test/testalut.c, linux/test/testattributes.c,
+	linux/test/testcallback.c, linux/test/testcapture.c,
+	linux/test/testchannel.c, linux/test/testchannel2.c,
+	linux/test/testda.c, linux/test/testdevice.c,
+	linux/test/testdoppler.c, linux/test/testext.c,
+	linux/test/testgain.c, linux/test/testgainlinear.c,
+	linux/test/testgendelbuffer_error.c,
+	linux/test/testgendelsource_error.c, linux/test/testleak.c,
+	linux/test/testleak2.c, linux/test/testlib.c,
+	linux/test/testlistener.c, linux/test/testlistener2.c,
+	linux/test/testlistener3.c, linux/test/testlistener4.c,
+	linux/test/testloop.c, linux/test/testmp3.c,
+	linux/test/testmp32.c, linux/test/testmulti.c,
+	linux/test/testmultialut.c, linux/test/testmultichannel.c,
+	linux/test/testmulticontext.c, linux/test/testmulticontext2.c,
+	linux/test/testmultimp3.c, linux/test/testmultinothread.c,
+	linux/test/testnothread.c, linux/test/testorient.c,
+	linux/test/testpause.c, linux/test/testpitch.c,
+	linux/test/testpitch2.c, linux/test/testpitch3.c,
+	linux/test/testpitch4.c, linux/test/testpitchnothread.c,
+	linux/test/testpitchnothread2.c, linux/test/testqueue.c,
+	linux/test/testqueue2.c, linux/test/testqueue3.c,
+	linux/test/testrelative.c, linux/test/testreverb.c,
+	linux/test/testsingle.c, linux/test/testsourcestop.c,
+	linux/test/testsourceuniq.c, linux/test/teststartstop.c,
+	linux/test/teststream.c, linux/test/teststrings.c,
+	linux/test/testtime.c, linux/test/testvorbis.c: Const-corrected
+	alutLoadWAVFile and alutLoadWAVMemory. Cleaned up examples a bit
+	more while I was there (return values, naming consistency).
+	
+2005-08-12  Sven Panne  <sven.panne@aedion.de>
 	* linux/test/Makefile.in, linux/test/testalinitexit.c,
 	linux/test/testalut.c, linux/test/testattributes.c,
 	linux/test/testbufferuniq.c, linux/test/testcallback.c,

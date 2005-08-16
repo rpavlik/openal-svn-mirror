@@ -53,11 +53,11 @@ ALUTAPI void ALUTAPIENTRY alutExit(void);
 
 #ifndef MACINTOSH_AL
 /* Windows and Linux versions have a loop parameter, Macintosh doesn't */
-ALUTAPI void ALUTAPIENTRY alutLoadWAVFile(ALbyte *file, ALenum *format, ALvoid **data, ALsizei *size, ALsizei *freq, ALboolean *loop);
-ALUTAPI void ALUTAPIENTRY alutLoadWAVMemory(ALbyte *memory, ALenum *format, ALvoid **data, ALsizei *size, ALsizei *freq, ALboolean *loop);
+ALUTAPI void ALUTAPIENTRY alutLoadWAVFile(const ALbyte *file, ALenum *format, ALvoid **data, ALsizei *size, ALsizei *freq, ALboolean *loop);
+ALUTAPI void ALUTAPIENTRY alutLoadWAVMemory(const ALbyte *memory, ALenum *format, ALvoid **data, ALsizei *size, ALsizei *freq, ALboolean *loop);
 #else
-ALUTAPI void ALUTAPIENTRY alutLoadWAVFile(ALbyte *file, ALenum *format, ALvoid **data, ALsizei *size, ALsizei *freq);
-ALUTAPI void ALUTAPIENTRY alutLoadWAVMemory(ALbyte *memory, ALenum *format, ALvoid **data, ALsizei *size, ALsizei *freq);
+ALUTAPI void ALUTAPIENTRY alutLoadWAVFile(const ALbyte *file, ALenum *format, ALvoid **data, ALsizei *size, ALsizei *freq);
+ALUTAPI void ALUTAPIENTRY alutLoadWAVMemory(const ALbyte *memory, ALenum *format, ALvoid **data, ALsizei *size, ALsizei *freq);
 #endif
 
 ALUTAPI void ALUTAPIENTRY alutUnloadWAV(ALenum format, ALvoid *data, ALsizei size, ALsizei freq);
@@ -67,11 +67,11 @@ ALUTAPI void ALUTAPIENTRY alutUnloadWAV(ALenum format, ALvoid *data, ALsizei siz
     void      (ALUTAPIENTRY *alutInit)( int *argc, char *argv[] );
     void      (ALUTAPIENTRY *alutExit)( void );
 #ifndef MACINTOSH_AL
-    void      (ALUTAPIENTRY *alutLoadWAVFile)( ALbyte *file,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq,ALboolean *loop );
-    void      (ALUTAPIENTRY *alutLoadWAVMemory)( ALbyte *memory,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq,ALboolean *loop );
+    void      (ALUTAPIENTRY *alutLoadWAVFile)( const ALbyte *file,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq,ALboolean *loop );
+    void      (ALUTAPIENTRY *alutLoadWAVMemory)( const ALbyte *memory,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq,ALboolean *loop );
 #else
-    void      (ALUTAPIENTRY *alutLoadWAVFile( ALbyte *file,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq );
-    void      (ALUTAPIENTRY *alutLoadWAVMemory)( ALbyte *memory,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq );
+    void      (ALUTAPIENTRY *alutLoadWAVFile( const ALbyte *file,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq );
+    void      (ALUTAPIENTRY *alutLoadWAVMemory)( const ALbyte *memory,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq );
 #endif
     void      (ALUTAPIENTRY *alutUnloadWAV)( ALenum format,ALvoid *data,ALsizei size,ALsizei freq );
 

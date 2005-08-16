@@ -23,7 +23,7 @@ void microSleep( unsigned int n )
 unsigned sleep( unsigned n )
 {
 	TimeDelay( UNIT_MICROHZ, 0, n * 1000 );
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 void microSleep( unsigned int n )

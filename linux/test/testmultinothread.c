@@ -18,12 +18,11 @@
 extern int mixer_iterate( void *dummy );
 
 static void iterate( void );
-static void init( char *fname );
 static void cleanup( void );
 
 static ALuint multis[NUMSOURCES] = { 0 };
 
-static ALCcontext *context_id;
+static ALCcontext *context;
 static void *wave = NULL;
 
 static void iterate( void )
@@ -39,12 +38,12 @@ static void iterate( void )
 			alSourcePlay( multis[i] );
 		}
 
-		alcProcessContext( context_id );
+		alcProcessContext( context );
 	}
 
 }
 
-static void init( char *fname )
+static void init( const ALbyte *fname )
 {
 	ALfloat zeroes[] = { 0.0f, 0.0f, 0.0f };
 	ALfloat back[] = { 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f };
@@ -63,11 +62,11 @@ static void init( char *fname )
 
 	alGenBuffers( 1, &boom );
 
-	alutLoadWAVFile( ( ALbyte * ) fname, &format, &wave, &size, &freq,
-			 &loop );
+	alutLoadWAVFile( fname, &format, &wave, &size, &freq, &loop );
 	if( wave == NULL ) {
-		fprintf( stderr, "Could not open %s\n", fname );
-		exit( 1 );
+		fprintf( stderr, "Could not open %s\n",
+			 ( const char * ) fname );
+		exit( EXIT_FAILURE );
 	}
 
 	alBufferData( boom, format, wave, size, freq );
@@ -94,51 +93,43 @@ static void init( char *fname )
 		alSourcef( multis[i], AL_MAX_GAIN, 0.0f );
 		alSourcef( multis[i], AL_GAIN_LINEAR_LOKI, 0.01f );
 	}
-
-	return;
 }
 
 void cleanup( void )
 {
-	alcDestroyContext( context_id );
+	alcDestroyContext( context );
 
 #ifdef JLIB
 	jv_check_mem(  );
 #endif
-
-	return;
 }
 
 int main( int argc, char *argv[] )
 {
-	ALCdevice *dev;
-	int attrlist[] = { ALC_SYNC, AL_TRUE, 0 };
+	ALCdevice *device;
+	int attributeList[] = { ALC_SYNC, AL_TRUE, 0 };
 	time_t start;
 	time_t shouldend;
 
 	start = time( NULL );
 	shouldend = time( NULL );
 
-	dev = alcOpenDevice( NULL );
-	if( dev == NULL ) {
-		return 1;
+	device = alcOpenDevice( NULL );
+	if( device == NULL ) {
+		return EXIT_FAILURE;
 	}
 
 	/* Initialize ALUT. */
-	context_id = alcCreateContext( dev, attrlist );
-	if( context_id == NULL ) {
-		alcCloseDevice( dev );
+	context = alcCreateContext( device, attributeList );
+	if( context == NULL ) {
+		alcCloseDevice( device );
 
-		return 1;
+		return EXIT_FAILURE;
 	}
 
-	alcMakeContextCurrent( context_id );
+	alcMakeContextCurrent( context );
 
-	if( argc == 1 ) {
-		init( WAVEFILE );
-	} else {
-		init( argv[1] );
-	}
+	init( ( const ALbyte * ) ( ( argc == 1 ) ? WAVEFILE : argv[1] ) );
 
 	while( shouldend - start < 10 ) {
 		shouldend = time( NULL );
@@ -148,7 +139,7 @@ int main( int argc, char *argv[] )
 
 	cleanup(  );
 
-	alcCloseDevice( dev );
+	alcCloseDevice( device );
 
-	return 0;
+	return EXIT_SUCCESS;
 }

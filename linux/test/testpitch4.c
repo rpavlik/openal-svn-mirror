@@ -52,7 +52,7 @@ static void init( const char *fname )
 
 	data = malloc( DEFFREQ * sizeof *data );
 	if( data == NULL ) {
-		exit( 1 );
+		exit( EXIT_FAILURE );
 	}
 
 	/* populate data with a concert A */
@@ -70,8 +70,6 @@ static void init( const char *fname )
 		alSourcei( chords[i], AL_BUFFER, boom );
 		alSourcei( chords[i], AL_LOOPING, AL_FALSE );
 	}
-
-	return;
 }
 
 static void cleanup( void )
@@ -88,8 +86,8 @@ static void cleanup( void )
 
 int main( int argc, char *argv[] )
 {
-	ALCdevice *dev;
-	int attrlist[] = { ALC_FREQUENCY, DEFFREQ,
+	ALCdevice *device;
+	int attributeList[] = { ALC_FREQUENCY, DEFFREQ,
 		ALC_INVALID
 	};
 	char *musicitr = musicstr;
@@ -98,16 +96,16 @@ int main( int argc, char *argv[] )
 	char note;
 	int i;
 
-	dev = alcOpenDevice( NULL );
-	if( dev == NULL ) {
-		return 1;
+	device = alcOpenDevice( NULL );
+	if( device == NULL ) {
+		return EXIT_FAILURE;
 	}
 
-	cc = alcCreateContext( dev, attrlist );
+	cc = alcCreateContext( device, attributeList );
 	if( cc == NULL ) {
-		alcCloseDevice( dev );
+		alcCloseDevice( device );
 
-		return 1;
+		return EXIT_FAILURE;
 	}
 
 	alcMakeContextCurrent( cc );
@@ -202,9 +200,9 @@ int main( int argc, char *argv[] )
 
 	alcDestroyContext( cc );
 
-	alcCloseDevice( dev );
+	alcCloseDevice( device );
 
 	cleanup(  );
 
-	return 0;
+	return EXIT_SUCCESS;
 }

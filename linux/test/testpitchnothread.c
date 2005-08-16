@@ -15,12 +15,11 @@
 #define WAVEFILE "boom.wav"
 
 static void iterate( void );
-static void init( char *fname );
 static void cleanup( void );
 
-static ALuint moving_source = 0;
+static ALuint movingSource = 0;
 
-static ALCcontext *context_id;
+static ALCcontext *context;
 static void *wave = NULL;
 static time_t start;
 
@@ -37,12 +36,12 @@ static void iterate( void )
 
 /*
 	fprintf(stderr, "AL_PITCH = %f\n", g);
-	alSourcef(moving_source, AL_PITCH, g);
+	alSourcef(movingSource, AL_PITCH, g);
 	*/
-	alcProcessContext( context_id );
+	alcProcessContext( context );
 }
 
-static void init( char *fname )
+static void init( const ALbyte *fname )
 {
 	ALfloat zeroes[] = { 0.0f, 0.0f, 0.0f };
 	ALfloat front[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f };
@@ -60,29 +59,27 @@ static void init( char *fname )
 
 	alGenBuffers( 1, &boom );
 
-	alutLoadWAVFile( ( ALbyte * ) fname, &format, &wave, &size, &freq,
-			 &loop );
+	alutLoadWAVFile( fname, &format, &wave, &size, &freq, &loop );
 	if( wave == NULL ) {
-		fprintf( stderr, "Could not include %s\n", fname );
-		exit( 1 );
+		fprintf( stderr, "Could not include %s\n",
+			 ( const char * ) fname );
+		exit( EXIT_FAILURE );
 	}
 
 	alBufferData( boom, format, wave, size, freq );
 	free( wave );		/* openal makes a local copy of wave data */
 
-	alGenSources( 1, &moving_source );
+	alGenSources( 1, &movingSource );
 
-	alSourcef( moving_source, AL_GAIN_LINEAR_LOKI, 0.25 );
-	alSourcei( moving_source, AL_BUFFER, boom );
-	alSourcei( moving_source, AL_LOOPING, AL_TRUE );
-	alSourcef( moving_source, AL_PITCH, 1.00 );
-
-	return;
+	alSourcef( movingSource, AL_GAIN_LINEAR_LOKI, 0.25 );
+	alSourcei( movingSource, AL_BUFFER, boom );
+	alSourcei( movingSource, AL_LOOPING, AL_TRUE );
+	alSourcef( movingSource, AL_PITCH, 1.00 );
 }
 
 static void cleanup( void )
 {
-	alcDestroyContext( context_id );
+	alcDestroyContext( context );
 #ifdef DMALLOC
 	dmalloc_verify( 0 );
 	dmalloc_log_unfreed(  );
@@ -95,33 +92,29 @@ static void cleanup( void )
 
 int main( int argc, char *argv[] )
 {
-	ALCdevice *dev;
-	int attrlist[] = { ALC_SYNC, AL_TRUE, 0 };
+	ALCdevice *device;
+	int attributeList[] = { ALC_SYNC, AL_TRUE, 0 };
 	time_t shouldend;
 
-	dev = alcOpenDevice( NULL );
-	if( dev == NULL ) {
-		return 1;
+	device = alcOpenDevice( NULL );
+	if( device == NULL ) {
+		return EXIT_FAILURE;
 	}
 
 	/* Initialize ALUT. */
-	context_id = alcCreateContext( dev, attrlist );
-	if( context_id == NULL ) {
-		alcCloseDevice( dev );
+	context = alcCreateContext( device, attributeList );
+	if( context == NULL ) {
+		alcCloseDevice( device );
 
-		return 1;
+		return EXIT_FAILURE;
 	}
 
-	alcMakeContextCurrent( context_id );
+	alcMakeContextCurrent( context );
 
-	if( argc == 1 ) {
-		init( WAVEFILE );
-	} else {
-		init( argv[1] );
-	}
+	init( ( const ALbyte * ) ( ( argc == 1 ) ? WAVEFILE : argv[1] ) );
 
-	alSourcef( moving_source, AL_PITCH, 1.19 );
-	alSourcePlay( moving_source );
+	alSourcef( movingSource, AL_PITCH, 1.19 );
+	alSourcePlay( movingSource );
 
 	shouldend = time( NULL );
 
@@ -133,7 +126,7 @@ int main( int argc, char *argv[] )
 
 	cleanup(  );
 
-	alcCloseDevice( dev );
+	alcCloseDevice( device );
 
-	return 0;
+	return EXIT_SUCCESS;
 }

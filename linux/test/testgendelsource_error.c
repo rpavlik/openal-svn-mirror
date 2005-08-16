@@ -7,23 +7,23 @@
 
 int main( void )
 {
-	ALCdevice *dev;
-	ALCcontext *context_id;
+	ALCdevice *device;
+	ALCcontext *context;
 	ALuint sid;
 
-	dev = alcOpenDevice( NULL );
-	if( dev == NULL ) {
-		return 1;
+	device = alcOpenDevice( NULL );
+	if( device == NULL ) {
+		return EXIT_FAILURE;
 	}
 
-	context_id = alcCreateContext( dev, NULL );
-	if( context_id == NULL ) {
-		alcCloseDevice( dev );
+	context = alcCreateContext( device, NULL );
+	if( context == NULL ) {
+		alcCloseDevice( device );
 
-		return 1;
+		return EXIT_FAILURE;
 	}
 
-	alcMakeContextCurrent( context_id );
+	alcMakeContextCurrent( context );
 
 	fprintf( stderr, "alGenSources(0, &sid): should be a NOP\n" );
 	/* Should be a NOP */
@@ -49,9 +49,9 @@ int main( void )
 	fprintf( stderr, "              result : %s\n",
 		 alGetString( alGetError(  ) ) );
 
-	alcDestroyContext( context_id );
+	alcDestroyContext( context );
 
-	alcCloseDevice( dev );
+	alcCloseDevice( device );
 
-	return 0;
+	return EXIT_SUCCESS;
 }

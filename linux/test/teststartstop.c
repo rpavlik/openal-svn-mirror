@@ -17,20 +17,20 @@ static void iterate( void );
 static void init( const char *fname );
 static void cleanup( void );
 
-static ALuint moving_source = 0;
+static ALuint movingSource = 0;
 
 static time_t start;
 static void *data = ( void * ) 0xDEADBEEF;
 
-static ALCcontext *context_id;
+static ALCcontext *context;
 
 static void iterate( void )
 {
-	alSourcePlay( moving_source );
+	alSourcePlay( movingSource );
 #ifdef SYNCHRONIZED
-	alcUpdateContext( context_id );
+	alcUpdateContext( context );
 #endif
-	alSourceStop( moving_source );
+	alSourceStop( movingSource );
 }
 
 static void init( const char *fname )
@@ -55,7 +55,7 @@ static void init( const char *fname )
 	fh = fopen( fname, "rb" );
 	if( fh == NULL ) {
 		fprintf( stderr, "Couldn't open fname\n" );
-		exit( 1 );
+		exit( EXIT_FAILURE );
 	}
 
 	filelen = fread( data, 1, DATABUFFERSIZE, fh );
@@ -65,24 +65,22 @@ static void init( const char *fname )
 	alBufferData( stereo, AL_FORMAT_WAVE_EXT, data, filelen, 0 );
 	if( alGetError(  ) != AL_NO_ERROR ) {
 		fprintf( stderr, "Could not BufferData\n" );
-		exit( 1 );
+		exit( EXIT_FAILURE );
 	}
 
 	free( data );
 
-	alGenSources( 1, &moving_source );
+	alGenSources( 1, &movingSource );
 
-	alSourcefv( moving_source, AL_POSITION, position );
-	/* alSourcefv( moving_source, AL_VELOCITY, zeroes ); */
-	alSourcei( moving_source, AL_BUFFER, stereo );
-	alSourcei( moving_source, AL_LOOPING, AL_TRUE );
-
-	return;
+	alSourcefv( movingSource, AL_POSITION, position );
+	/* alSourcefv( movingSource, AL_VELOCITY, zeroes ); */
+	alSourcei( movingSource, AL_BUFFER, stereo );
+	alSourcei( movingSource, AL_LOOPING, AL_TRUE );
 }
 
 static void cleanup( void )
 {
-	alcDestroyContext( context_id );
+	alcDestroyContext( context );
 #ifdef JLIB
 	jv_check_mem(  );
 #endif
@@ -90,8 +88,8 @@ static void cleanup( void )
 
 int main( int argc, char *argv[] )
 {
-	ALCdevice *dev;
-	int attrlist[] = { ALC_FREQUENCY, 44100,
+	ALCdevice *device;
+	int attributeList[] = { ALC_FREQUENCY, 44100,
 #ifdef SYNCHRONIZED
 		ALC_SYNC, AL_TRUE,
 #endif
@@ -99,19 +97,19 @@ int main( int argc, char *argv[] )
 	};
 	time_t shouldend;
 
-	dev = alcOpenDevice( NULL );
-	if( dev == NULL ) {
-		return 1;
+	device = alcOpenDevice( NULL );
+	if( device == NULL ) {
+		return EXIT_FAILURE;
 	}
 
 	/* Initialize ALUT. */
-	context_id = alcCreateContext( dev, attrlist );
-	if( context_id == NULL ) {
-		alcCloseDevice( dev );
-		return 1;
+	context = alcCreateContext( device, attributeList );
+	if( context == NULL ) {
+		alcCloseDevice( device );
+		return EXIT_FAILURE;
 	}
 
-	alcMakeContextCurrent( context_id );
+	alcMakeContextCurrent( context );
 
 	getExtensionEntries(  );
 
@@ -134,7 +132,7 @@ int main( int argc, char *argv[] )
 
 	cleanup(  );
 
-	alcCloseDevice( dev );
+	alcCloseDevice( device );
 
-	return 0;
+	return EXIT_SUCCESS;
 }

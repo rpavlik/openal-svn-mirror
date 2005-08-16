@@ -9,28 +9,30 @@
 
 static void dumpContext( ALCdevice *device, const char *name )
 {
-	ALCint numFlags;
-	ALCint *flags;
+	ALCint numAttributes;
+	ALCint *attributeList;
 	int i;
 
 	printf( "*** %s context *** \n", name );
 
-	alcGetIntegerv( device, ALC_ATTRIBUTES_SIZE, 1, &numFlags );
-	printf( "attributes size %d\n", numFlags );
+	alcGetIntegerv( device, ALC_ATTRIBUTES_SIZE, 1, &numAttributes );
+	printf( "attributes size %d\n", numAttributes );
 
-	flags = malloc( numFlags * sizeof( ALCint ) );
-	if( flags == NULL ) {
+	attributeList = malloc( numAttributes * sizeof( ALCint ) );
+	if( attributeList == NULL ) {
 		fprintf( stderr, "Couldn't open allocate attribute buffer\n" );
 		exit( EXIT_FAILURE );
 	}
 
-	alcGetIntegerv( device, ALC_ALL_ATTRIBUTES, numFlags, flags );
+	alcGetIntegerv( device, ALC_ALL_ATTRIBUTES, numAttributes,
+			attributeList );
 
-	for ( i = 0; i < numFlags - 1; i += 2 ) {
-		printf( "key 0x%x : value %d\n", flags[i], flags[i + 1] );
+	for ( i = 0; i < numAttributes - 1; i += 2 ) {
+		printf( "key 0x%x : value %d\n", attributeList[i],
+			attributeList[i + 1] );
 	}
 
-	if( flags[numFlags - 1] != 0 ) {
+	if( attributeList[numAttributes - 1] != 0 ) {
 		fprintf( stderr, "attribute list must be 0-terminated\n" );
 		exit( EXIT_FAILURE );
 	}

@@ -17,9 +17,9 @@
 static void init( const char *fname );
 static void cleanup( void );
 
-static ALuint moving_source = 0;
+static ALuint movingSource = 0;
 
-static ALCcontext *context_id;
+static ALCcontext *context;
 ALuint stereo;			/* our buffer */
 static ALshort buf[DATABUFSIZE];
 static FILE *fh;
@@ -33,23 +33,21 @@ static void init( const char *fname )
 	alListenerfv( AL_ORIENTATION, front );
 
 	palGenStreamingBuffers( 1, &stereo );
-	alGenSources( 1, &moving_source );
+	alGenSources( 1, &movingSource );
 
-	alSourcei( moving_source, AL_SOURCE_RELATIVE, AL_TRUE );
-	alSourcei( moving_source, AL_BUFFER, stereo );
+	alSourcei( movingSource, AL_SOURCE_RELATIVE, AL_TRUE );
+	alSourcei( movingSource, AL_BUFFER, stereo );
 
 	fh = fopen( fname, "rb" );
 	if( fh == NULL ) {
 		fprintf( stderr, "Could not open %s\n", RAWPCM );
-		exit( 2 );
+		exit( EXIT_FAILURE );
 	}
-
-	return;
 }
 
 static void cleanup( void )
 {
-	alcDestroyContext( context_id );
+	alcDestroyContext( context );
 #ifdef JLIB
 	jv_check_mem(  );
 #endif
@@ -57,7 +55,7 @@ static void cleanup( void )
 
 int main( int argc, char *argv[] )
 {
-	ALCdevice *dev;
+	ALCdevice *device;
 	time_t start;
 	time_t now;
 	int rsamps = 0;
@@ -65,20 +63,21 @@ int main( int argc, char *argv[] )
 	unsigned int waitfor = 0;
 	int delay = 0;
 
-	dev = alcOpenDevice( ( const ALCchar * ) "'((sampling-rate 44100))" );
-	if( dev == NULL ) {
-		return 1;
+	device =
+	    alcOpenDevice( ( const ALCchar * ) "'((sampling-rate 44100))" );
+	if( device == NULL ) {
+		return EXIT_FAILURE;
 	}
 
 	/* Initialize ALUT. */
-	context_id = alcCreateContext( dev, NULL );
-	if( context_id == NULL ) {
-		alcCloseDevice( dev );
+	context = alcCreateContext( device, NULL );
+	if( context == NULL ) {
+		alcCloseDevice( device );
 
-		return 1;
+		return EXIT_FAILURE;
 	}
 
-	alcMakeContextCurrent( context_id );
+	alcMakeContextCurrent( context );
 
 	getExtensionEntries(  );
 
@@ -88,7 +87,7 @@ int main( int argc, char *argv[] )
 		init( RAWPCM );
 	}
 
-	alSourcePlay( moving_source );
+	alSourcePlay( movingSource );
 
 	do {
 		nsamps = fread( buf, 1, DATABUFSIZE, fh ) / 2;
@@ -130,11 +129,11 @@ int main( int argc, char *argv[] )
 		sleep( 1 );
 	}
 
-	alSourceStop( moving_source );
+	alSourceStop( movingSource );
 
 	cleanup(  );
 
-	alcCloseDevice( dev );
+	alcCloseDevice( device );
 
-	return 0;
+	return EXIT_SUCCESS;
 }

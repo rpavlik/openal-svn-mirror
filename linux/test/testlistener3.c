@@ -24,12 +24,11 @@
 #define TORAD(d) ((d / 180.0) * M_PI)
 
 static void iterate( void );
-static void init( char *fname );
 static void cleanup( void );
 
 static ALuint rightSid;
 
-static ALCcontext *context_id;
+static ALCcontext *context;
 static void *wave = NULL;
 
 static void iterate( void )
@@ -55,7 +54,7 @@ static void iterate( void )
 	microSleep( 1500000 );
 }
 
-static void init( char *fname )
+static void init( const ALbyte *fname )
 {
 	ALfloat zeroes[] = { 0.0f, 0.0f, 0.0f };
 	ALfloat position[] = { 50.0f, 0.0f, 0.0f };
@@ -69,11 +68,11 @@ static void init( char *fname )
 
 	alGenBuffers( 1, &boom );
 
-	alutLoadWAVFile( ( ALbyte * ) fname, &format, &wave, &size, &freq,
-			 &loop );
+	alutLoadWAVFile( fname, &format, &wave, &size, &freq, &loop );
 	if( wave == NULL ) {
-		fprintf( stderr, "Could not load %s\n", fname );
-		exit( 1 );
+		fprintf( stderr, "Could not load %s\n",
+			 ( const char * ) fname );
+		exit( EXIT_FAILURE );
 	}
 
 	alBufferData( boom, format, wave, size, freq );
@@ -84,13 +83,11 @@ static void init( char *fname )
 	alSourcefv( rightSid, AL_POSITION, position );
 	alSourcei( rightSid, AL_BUFFER, boom );
 	alSourcei( rightSid, AL_LOOPING, AL_TRUE );
-
-	return;
 }
 
 void cleanup( void )
 {
-	alcDestroyContext( context_id );
+	alcDestroyContext( context );
 
 #ifdef JLIB
 	jv_check_mem(  );
@@ -99,33 +96,28 @@ void cleanup( void )
 
 int main( int argc, char *argv[] )
 {
-	ALCdevice *dev;
+	ALCdevice *device;
 	time_t start;
 	time_t shouldend;
 
 	start = time( NULL );
 	shouldend = time( NULL );
 
-	dev = alcOpenDevice( NULL );
-	if( dev == NULL ) {
-		return 1;
+	device = alcOpenDevice( NULL );
+	if( device == NULL ) {
+		return EXIT_FAILURE;
 	}
 
 	/* Initialize ALUT. */
-	context_id = alcCreateContext( dev, NULL );
-	if( context_id == NULL ) {
-		alcCloseDevice( dev );
+	context = alcCreateContext( device, NULL );
+	if( context == NULL ) {
+		alcCloseDevice( device );
 
-		return 1;
+		return EXIT_FAILURE;
 	}
 
-	alcMakeContextCurrent( context_id );
-
-	if( argc == 1 ) {
-		init( WAVEFILE );
-	} else {
-		init( argv[1] );
-	}
+	alcMakeContextCurrent( context );
+	init( ( const ALbyte * ) ( ( argc == 1 ) ? WAVEFILE : argv[1] ) );
 
 	alSourcePlay( rightSid );
 
@@ -137,7 +129,7 @@ int main( int argc, char *argv[] )
 
 	cleanup(  );
 
-	alcCloseDevice( dev );
+	alcCloseDevice( device );
 
-	return 0;
+	return EXIT_SUCCESS;
 }

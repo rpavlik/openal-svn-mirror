@@ -22,25 +22,25 @@ int sid_compare( const void *sid1p, const void *sid2p )
 
 int main( void )
 {
-	ALCdevice *dev;
+	ALCdevice *device;
 	ALuint sids_first[NUMSOURCES];
 	ALuint sids_second[NUMSOURCES];
 	ALuint sids_total[2 * NUMSOURCES];
-	ALCcontext *context_id;
+	ALCcontext *context;
 	int i;
 
-	dev = alcOpenDevice( NULL );
-	if( dev == NULL ) {
-		return 1;
+	device = alcOpenDevice( NULL );
+	if( device == NULL ) {
+		return EXIT_FAILURE;
 	}
 
-	context_id = alcCreateContext( dev, NULL );
-	if( context_id == NULL ) {
-		alcCloseDevice( dev );
-		return 1;
+	context = alcCreateContext( device, NULL );
+	if( context == NULL ) {
+		alcCloseDevice( device );
+		return EXIT_FAILURE;
 	}
 
-	alcMakeContextCurrent( context_id );
+	alcMakeContextCurrent( context );
 
 	getExtensionEntries(  );
 
@@ -71,11 +71,11 @@ int main( void )
 		fprintf( stderr, "No Duplicate sids.\n" );
 	}
 
-	alcDestroyContext( context_id );
+	alcDestroyContext( context );
 
-	alcCloseDevice( dev );
+	alcCloseDevice( device );
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 ALboolean find_duplicate( ALuint *sids, int nsids )

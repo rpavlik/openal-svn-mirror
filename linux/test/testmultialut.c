@@ -21,13 +21,13 @@ static void iterate( void );
 static void init( void );
 static void cleanup( void );
 
-static ALuint moving_sources[NUMSOURCES];
+static ALuint movingSource[NUMSOURCES];
 
 static time_t start;
 static void *data = ( void * ) 0xDEADBEEF;
 static void *data2 = ( void * ) 0xDEADBEEF;
 
-static ALCcontext *context_id;
+static ALCcontext *context;
 
 static void iterate( void )
 {
@@ -46,15 +46,13 @@ static void iterate( void )
 	}
 
 	position[0] += movefactor;
-	alSourcefv( moving_sources[1], AL_POSITION, position );
+	alSourcefv( movingSource[1], AL_POSITION, position );
 
 	position[0] *= -1.0;
-	alSourcefv( moving_sources[0], AL_POSITION, position );
+	alSourcefv( movingSource[0], AL_POSITION, position );
 	position[0] *= -1.0;
 
 	microSleep( 500000 );
-
-	return;
 }
 
 static void init( void )
@@ -81,7 +79,7 @@ static void init( void )
 	fh = fopen( WAVEFILE1, "rb" );
 	if( fh == NULL ) {
 		fprintf( stderr, "Couldn't open %s\n", WAVEFILE1 );
-		exit( 1 );
+		exit( EXIT_FAILURE );
 
 	}
 	filelen = fread( data, 1, 1024 * 1024, fh );
@@ -92,34 +90,32 @@ static void init( void )
 	alBufferData( boomers[0], AL_FORMAT_WAVE_EXT, data, filelen, 0 );
 	if( alGetError(  ) != AL_NO_ERROR ) {
 		fprintf( stderr, "Could not BufferData\n" );
-		exit( 1 );
+		exit( EXIT_FAILURE );
 	}
 
 	fh = fopen( WAVEFILE2, "rb" );
 	if( fh == NULL ) {
 		fprintf( stderr, "Couldn't open %s\n", WAVEFILE2 );
-		exit( 1 );
+		exit( EXIT_FAILURE );
 	}
 
 	filelen = fread( data2, 1, 1024 * 1024, fh );
 	fclose( fh );
 
 	alBufferData( boomers[1], AL_FORMAT_WAVE_EXT, data, filelen, 0 );
-	alGenSources( 2, moving_sources );
+	alGenSources( 2, movingSource );
 
-	alSourcefv( moving_sources[0], AL_POSITION, position );
-	alSourcefv( moving_sources[0], AL_VELOCITY, zeroes );
-	alSourcefv( moving_sources[0], AL_ORIENTATION, back );
-	alSourcei( moving_sources[0], AL_BUFFER, boomers[1] );
-	alSourcei( moving_sources[0], AL_LOOPING, AL_TRUE );
+	alSourcefv( movingSource[0], AL_POSITION, position );
+	alSourcefv( movingSource[0], AL_VELOCITY, zeroes );
+	alSourcefv( movingSource[0], AL_ORIENTATION, back );
+	alSourcei( movingSource[0], AL_BUFFER, boomers[1] );
+	alSourcei( movingSource[0], AL_LOOPING, AL_TRUE );
 
-	alSourcefv( moving_sources[1], AL_POSITION, position );
-	alSourcefv( moving_sources[1], AL_VELOCITY, zeroes );
-	alSourcefv( moving_sources[1], AL_ORIENTATION, back );
-	alSourcei( moving_sources[1], AL_BUFFER, boomers[0] );
-	alSourcei( moving_sources[1], AL_LOOPING, AL_TRUE );
-
-	return;
+	alSourcefv( movingSource[1], AL_POSITION, position );
+	alSourcefv( movingSource[1], AL_VELOCITY, zeroes );
+	alSourcefv( movingSource[1], AL_ORIENTATION, back );
+	alSourcei( movingSource[1], AL_BUFFER, boomers[0] );
+	alSourcei( movingSource[1], AL_LOOPING, AL_TRUE );
 }
 
 static void cleanup( void )
@@ -127,54 +123,53 @@ static void cleanup( void )
 	free( data );
 	free( data2 );
 
-	alcDestroyContext( context_id );
+	alcDestroyContext( context );
 #ifdef JLIB
 	jv_check_mem(  );
 #endif
-
-	return;
 }
 
 int main( int argc, char *argv[] )
 {
-	ALCdevice *dev;
+	ALCdevice *device;
 	time_t shouldend;
-	int attrlist[] = { ALC_FREQUENCY, 22050, ALC_SOURCES_LOKI, 3000, 0 };
+	int attributeList[] =
+	    { ALC_FREQUENCY, 22050, ALC_SOURCES_LOKI, 3000, 0 };
 
-	dev = alcOpenDevice( NULL );
-	if( dev == NULL ) {
-		return 1;
+	device = alcOpenDevice( NULL );
+	if( device == NULL ) {
+		return EXIT_FAILURE;
 	}
 
-	context_id = alcCreateContext( dev, attrlist );
-	if( context_id == NULL ) {
-		alcCloseDevice( dev );
-		return 1;
+	context = alcCreateContext( device, attributeList );
+	if( context == NULL ) {
+		alcCloseDevice( device );
+		return EXIT_FAILURE;
 	}
 
-	alcMakeContextCurrent( context_id );
+	alcMakeContextCurrent( context );
 
 	init(  );
 
-	alSourcePlay( moving_sources[0] );
+	alSourcePlay( movingSource[0] );
 	sleep( 1 );
-	alSourcePlay( moving_sources[1] );
+	alSourcePlay( movingSource[1] );
 
-	while( ( sourceIsPlaying( moving_sources[0] ) == AL_TRUE ) ||
-	       ( sourceIsPlaying( moving_sources[1] ) == AL_TRUE ) ) {
+	while( ( sourceIsPlaying( movingSource[0] ) == AL_TRUE ) ||
+	       ( sourceIsPlaying( movingSource[1] ) == AL_TRUE ) ) {
 		iterate(  );
 
 		shouldend = time( NULL );
 
 		if( ( shouldend - start ) > 10 ) {
-			alSourceStop( moving_sources[0] );
-			alSourceStop( moving_sources[1] );
+			alSourceStop( movingSource[0] );
+			alSourceStop( movingSource[1] );
 		}
 	}
 
 	cleanup(  );
 
-	alcCloseDevice( dev );
+	alcCloseDevice( device );
 
-	return 0;
+	return EXIT_SUCCESS;
 }

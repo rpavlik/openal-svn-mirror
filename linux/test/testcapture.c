@@ -16,11 +16,11 @@
 
 static void cleanup( void );
 
-static ALCcontext *context_id;
+static ALCcontext *context;
 
 void cleanup( void )
 {
-	alcDestroyContext( context_id );
+	alcDestroyContext( context );
 
 #ifdef JLIB
 	jv_check_mem(  );
@@ -29,35 +29,35 @@ void cleanup( void )
 
 int main( int argc, char *argv[] )
 {
-	ALCdevice *dev;
+	ALCdevice *device;
 	ALuint sid = 0;
 	ALuint sbid;
 	ALuint retval;
 	ALvoid *buffer = NULL;
 	FILE *fh;
 
-	dev = alcOpenDevice( NULL );
-	if( dev == NULL ) {
-		return 1;
+	device = alcOpenDevice( NULL );
+	if( device == NULL ) {
+		return EXIT_FAILURE;
 	}
 
 	/* Initialize openal. */
-	context_id = alcCreateContext( dev, NULL );
-	if( context_id == NULL ) {
-		alcCloseDevice( dev );
+	context = alcCreateContext( device, NULL );
+	if( context == NULL ) {
+		alcCloseDevice( device );
 
-		return 1;
+		return EXIT_FAILURE;
 	}
 
-	alcMakeContextCurrent( context_id );
+	alcMakeContextCurrent( context );
 
 	getExtensionEntries(  );
 
 	if( !palCaptureInit( AL_FORMAT_MONO16, FREQ, 1024 ) ) {
-		alcCloseDevice( dev );
+		alcCloseDevice( device );
 
 		printf( "Unable to initialize capture\n" );
-		return 1;
+		return EXIT_FAILURE;
 	}
 
 	buffer = malloc( SAMPLES * 2 );
@@ -118,7 +118,7 @@ int main( int argc, char *argv[] )
 
 	cleanup(  );
 
-	alcCloseDevice( dev );
+	alcCloseDevice( device );
 
-	return 0;
+	return EXIT_SUCCESS;
 }

@@ -26,7 +26,7 @@ static ALuint mp3source = ( ALuint ) -1;
 
 static time_t start;
 
-static ALCcontext *context_id;
+static ALCcontext *context;
 
 /* our mp3 extension */
 typedef ALboolean ( mp3Loader ) ( ALuint, ALvoid *, ALint );
@@ -40,11 +40,9 @@ static void initmp3( void )
 	alGenSources( 1, &mp3source );
 
 	alSourcei( mp3source, AL_BUFFER, mp3buf );
-
-	return;
 }
 
-static void initwav( char *fname )
+static void initwav( const ALbyte *fname )
 {
 	ALsizei size;
 	ALsizei freq;
@@ -52,24 +50,22 @@ static void initwav( char *fname )
 	ALboolean loop;
 	ALvoid *wave = NULL;
 
-	alutLoadWAVFile( ( ALbyte * ) fname, &format, &wave, &size, &freq,
-			 &loop );
+	alutLoadWAVFile( fname, &format, &wave, &size, &freq, &loop );
 	if( wave == NULL ) {
-		fprintf( stderr, "Could not include %s\n", fname );
-		exit( 1 );
+		fprintf( stderr, "Could not include %s\n",
+			 ( const char * ) fname );
+		exit( EXIT_FAILURE );
 	}
 
 	alBufferData( mp3buf, format, wave, size, freq );
 
 	free( wave );		/* openal makes a local copy of wave data */
-
-	return;
 }
 
 static void cleanup( void )
 {
 
-	alcDestroyContext( context_id );
+	alcDestroyContext( context );
 #ifdef JLIB
 	jv_check_mem(  );
 #endif
@@ -77,26 +73,26 @@ static void cleanup( void )
 
 int main( int argc, char *argv[] )
 {
-	ALCdevice *dev;
+	ALCdevice *device;
 	FILE *fh;
 	struct stat sbuf;
 	void *data;
 	int size;
 	char *fname;
 
-	dev = alcOpenDevice( NULL );
-	if( dev == NULL ) {
-		return 1;
+	device = alcOpenDevice( NULL );
+	if( device == NULL ) {
+		return EXIT_FAILURE;
 	}
 
 	/* Initialize context */
-	context_id = alcCreateContext( dev, NULL );
-	if( context_id == NULL ) {
-		alcCloseDevice( dev );
-		return 1;
+	context = alcCreateContext( device, NULL );
+	if( context == NULL ) {
+		alcCloseDevice( device );
+		return EXIT_FAILURE;
 	}
 
-	alcMakeContextCurrent( context_id );
+	alcMakeContextCurrent( context );
 
 	initmp3(  );
 
@@ -114,7 +110,7 @@ int main( int argc, char *argv[] )
 	size = sbuf.st_size;
 	data = malloc( size );
 	if( data == NULL ) {
-		exit( 1 );
+		exit( EXIT_FAILURE );
 	}
 
 	fh = fopen( fname, "rb" );
@@ -123,7 +119,7 @@ int main( int argc, char *argv[] )
 
 		free( data );
 
-		exit( 1 );
+		exit( EXIT_FAILURE );
 	}
 
 	fread( data, 1, size, fh );
@@ -135,12 +131,12 @@ int main( int argc, char *argv[] )
 
 		fprintf( stderr, "Could not GetProc %s\n",
 			 ( ALubyte * ) MP3_FUNC );
-		exit( -4 );
+		exit( EXIT_FAILURE );
 	}
 
 	if( alutLoadMP3p( mp3buf, data, size ) != AL_TRUE ) {
 		fprintf( stderr, "alutLoadMP3p failed\n" );
-		exit( -2 );
+		exit( EXIT_FAILURE );
 	}
 
 	free( data );
@@ -153,7 +149,7 @@ int main( int argc, char *argv[] )
 
 	fprintf( stderr, "Okay, now for the normal wav file\n" );
 
-	initwav( WAVE_FILE );
+	initwav( ( const ALbyte * ) WAVE_FILE );
 
 	alSourcePlay( mp3source );
 
@@ -165,7 +161,7 @@ int main( int argc, char *argv[] )
 
 	cleanup(  );
 
-	alcCloseDevice( dev );
+	alcCloseDevice( device );
 
-	return 0;
+	return EXIT_SUCCESS;
 }

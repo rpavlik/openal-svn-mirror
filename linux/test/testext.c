@@ -3,8 +3,9 @@
 #include <AL/alut.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 
-static ALCcontext *context_id;
+static ALCcontext *context;
 
 #define BADPROC           "lokitest"
 #define GOODPROC          "alLokiTest"
@@ -13,22 +14,22 @@ typedef void blah_type( void * );
 
 int main( int argc, char *argv[] )
 {
-	ALCdevice *dev;
+	ALCdevice *device;
 	blah_type *blah;
 
-	dev = alcOpenDevice( NULL );
-	if( dev == NULL ) {
-		return 1;
+	device = alcOpenDevice( NULL );
+	if( device == NULL ) {
+		return EXIT_FAILURE;
 	}
 
-	context_id = alcCreateContext( dev, NULL );
-	if( context_id == NULL ) {
-		alcCloseDevice( dev );
+	context = alcCreateContext( device, NULL );
+	if( context == NULL ) {
+		alcCloseDevice( device );
 
-		return 1;
+		return EXIT_FAILURE;
 	}
 
-	alcMakeContextCurrent( context_id );
+	alcMakeContextCurrent( context );
 
 	blah = ( blah_type * ) alGetProcAddress( ( ALchar * ) BADPROC );
 	if( blah != NULL ) {
@@ -46,9 +47,9 @@ int main( int argc, char *argv[] )
 
 	blah( NULL );
 
-	alcDestroyContext( context_id );
+	alcDestroyContext( context );
 
-	alcCloseDevice( dev );
+	alcCloseDevice( device );
 
-	return 0;
+	return EXIT_SUCCESS;
 }

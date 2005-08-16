@@ -13,14 +13,13 @@
 
 #define WAVEFILE "fire2.wav"
 
-static void init( char *fname );
 static void cleanup( void );
 
 static void *wave = NULL;
-static ALCcontext *context_id = NULL;
-static ALuint moving_source = 0;
+static ALCcontext *context = NULL;
+static ALuint movingSource = 0;
 
-static void init( char *fname )
+static void init( const ALbyte *fname )
 {
 	ALfloat weirdpos[] = { 300.0f, 0.0f, 0.0f };
 	ALfloat position[] = { 0.0f, 0.0f, 4.0f };
@@ -34,26 +33,24 @@ static void init( char *fname )
 
 	alGenBuffers( 1, &boom );
 
-	alutLoadWAVFile( ( ALbyte * ) fname, &format, &wave, &size, &freq,
-			 &loop );
+	alutLoadWAVFile( fname, &format, &wave, &size, &freq, &loop );
 	if( wave == NULL ) {
-		fprintf( stderr, "Could not include %s\n", fname );
-		exit( 1 );
+		fprintf( stderr, "Could not include %s\n",
+			 ( const char * ) fname );
+		exit( EXIT_FAILURE );
 	}
 
 	alBufferData( boom, format, wave, size, freq );
 	free( wave );		/* openal makes a local copy of wave data */
 
-	alGenSources( 1, &moving_source );
+	alGenSources( 1, &movingSource );
 
-	alSourcei( moving_source, AL_BUFFER, boom );
-	alSourcei( moving_source, AL_LOOPING, AL_TRUE );
-	alSourcei( moving_source, AL_STREAMING, AL_TRUE );
-	alSourcei( moving_source, AL_SOURCE_RELATIVE, AL_TRUE );
-	alSourcefv( moving_source, AL_POSITION, position );
-	alSourcef( moving_source, AL_PITCH, 1.00 );
-
-	return;
+	alSourcei( movingSource, AL_BUFFER, boom );
+	alSourcei( movingSource, AL_LOOPING, AL_TRUE );
+	alSourcei( movingSource, AL_STREAMING, AL_TRUE );
+	alSourcei( movingSource, AL_SOURCE_RELATIVE, AL_TRUE );
+	alSourcefv( movingSource, AL_POSITION, position );
+	alSourcef( movingSource, AL_PITCH, 1.00 );
 }
 
 static void cleanup( void )
@@ -70,40 +67,36 @@ static void cleanup( void )
 
 int main( int argc, char *argv[] )
 {
-	ALCdevice *dev;
-	int attrlist[] = { ALC_FREQUENCY, 22050, 0 };
+	ALCdevice *device;
+	int attributeList[] = { ALC_FREQUENCY, 22050, 0 };
 
 	time_t shouldend, start;
 	ALint test = AL_FALSE;
 
-	dev = alcOpenDevice( NULL );
-	if( dev == NULL ) {
-		return 1;
+	device = alcOpenDevice( NULL );
+	if( device == NULL ) {
+		return EXIT_FAILURE;
 	}
 
 	/* Initialize ALUT. */
-	context_id = alcCreateContext( dev, attrlist );
-	if( context_id == NULL ) {
-		alcCloseDevice( dev );
+	context = alcCreateContext( device, attributeList );
+	if( context == NULL ) {
+		alcCloseDevice( device );
 
-		exit( 1 );
+		exit( EXIT_FAILURE );
 	}
 
-	alcMakeContextCurrent( context_id );
+	alcMakeContextCurrent( context );
 
 	getExtensionEntries(  );
 
 	palBombOnError(  );
 
-	if( argc == 1 ) {
-		init( WAVEFILE );
-	} else {
-		init( argv[1] );
-	}
+	init( ( const ALbyte * ) ( ( argc == 1 ) ? WAVEFILE : argv[1] ) );
 
 	fprintf( stderr, "Loop for 4 seconds\n" );
 
-	alSourcePlay( moving_source );
+	alSourcePlay( movingSource );
 
 	shouldend = start = time( NULL );
 
@@ -112,11 +105,11 @@ int main( int argc, char *argv[] )
 
 		microSleep( 1000000 );
 	}
-	alSourceStop( moving_source );
+	alSourceStop( movingSource );
 
 	test = -1;
 
-	alGetSourceiv( moving_source, AL_LOOPING, &test );
+	alGetSourceiv( movingSource, AL_LOOPING, &test );
 	fprintf( stderr, "is looping?  getsi says %s\n",
 		 ( test == AL_TRUE ) ? "AL_TRUE" : "AL_FALSE" );
 
@@ -124,18 +117,18 @@ int main( int argc, char *argv[] )
 	fprintf( stderr, "Play once\n" );
 	microSleep( 1000000 );
 
-	alSourcei( moving_source, AL_LOOPING, AL_FALSE );
-	alSourcePlay( moving_source );
+	alSourcei( movingSource, AL_LOOPING, AL_FALSE );
+	alSourcePlay( movingSource );
 
 	do {
 		microSleep( 1000000 );
 	}
-	while( sourceIsPlaying( moving_source ) );
+	while( sourceIsPlaying( movingSource ) );
 
-	alcDestroyContext( context_id );
-	alcCloseDevice( dev );
+	alcDestroyContext( context );
+	alcCloseDevice( device );
 
 	cleanup(  );
 
-	return 0;
+	return EXIT_SUCCESS;
 }

@@ -21,11 +21,11 @@
 static void init( void );
 static void cleanup( void );
 
-static ALuint moving_source[1];
+static ALuint movingSource[1];
 
 static time_t start;
 
-static ALCcontext *context_id;
+static ALCcontext *context;
 ALuint stereo;			/* our buffer */
 
 static void init( void )
@@ -41,14 +41,12 @@ static void init( void )
 	alListenerfv( AL_ORIENTATION, front );
 
 	alGenBuffers( 1, &stereo );
-	alGenSources( 1, moving_source );
+	alGenSources( 1, movingSource );
 
-	alSourcefv( moving_source[0], AL_POSITION, position );
-	alSourcefv( moving_source[0], AL_ORIENTATION, back );
-	alSourcei( moving_source[0], AL_BUFFER, stereo );
-	alSourcei( moving_source[0], AL_LOOPING, AL_FALSE );
-
-	return;
+	alSourcefv( movingSource[0], AL_POSITION, position );
+	alSourcefv( movingSource[0], AL_ORIENTATION, back );
+	alSourcei( movingSource[0], AL_BUFFER, stereo );
+	alSourcei( movingSource[0], AL_LOOPING, AL_FALSE );
 }
 
 static void cleanup( void )
@@ -60,8 +58,8 @@ static void cleanup( void )
 
 int main( int argc, char *argv[] )
 {
-	ALCdevice *dev;
-	int attrlist[] = { ALC_FREQUENCY, 22050,
+	ALCdevice *device;
+	int attributeList[] = { ALC_FREQUENCY, 22050,
 		ALC_INVALID, 0
 	};
 	void *data = NULL;
@@ -71,18 +69,18 @@ int main( int argc, char *argv[] )
 	int size;
 	char *fname;
 
-	dev = alcOpenDevice( NULL );
-	if( dev == NULL ) {
-		return 1;
+	device = alcOpenDevice( NULL );
+	if( device == NULL ) {
+		return EXIT_FAILURE;
 	}
 
 	/* Initialize ALUT. */
-	context_id = alcCreateContext( dev, attrlist );
-	if( context_id == NULL ) {
-		return 1;
+	context = alcCreateContext( device, attributeList );
+	if( context == NULL ) {
+		return EXIT_FAILURE;
 	}
 
-	alcMakeContextCurrent( context_id );
+	alcMakeContextCurrent( context );
 
 	getExtensionEntries(  );
 
@@ -98,7 +96,7 @@ int main( int argc, char *argv[] )
 
 	if( stat( fname, &sbuf ) == -1 ) {
 		perror( "stat" );
-		return errno;
+		return EXIT_FAILURE;
 	}
 
 	size = sbuf.st_size;
@@ -106,14 +104,14 @@ int main( int argc, char *argv[] )
 	data = malloc( size );
 	if( data == NULL ) {
 		perror( "malloc" );
-		return errno;
+		return EXIT_FAILURE;
 	}
 
 	fh = fopen( fname, "rb" );
 	if( fh == NULL ) {
 		fprintf( stderr, "Could not open %s\n", fname );
 
-		exit( 1 );
+		exit( EXIT_FAILURE );
 	}
 
 	fread( data, 1, size, fh );
@@ -124,20 +122,20 @@ int main( int argc, char *argv[] )
 				    ( char * ) data + 4, size - 4,
 				    speed, AL_FORMAT_MONO16 ) == AL_FALSE ) {
 		fprintf( stderr, "Could not alutLoadADPCMData_LOKI\n" );
-		exit( -2 );
+		exit( EXIT_FAILURE );
 	}
 	free( data );
 
-	alSourcePlay( moving_source[0] );
+	alSourcePlay( movingSource[0] );
 
-	while( sourceIsPlaying( moving_source[0] ) == AL_TRUE ) {
+	while( sourceIsPlaying( movingSource[0] ) == AL_TRUE ) {
 		sleep( 1 );
 	}
 
 	cleanup(  );
 
-	alcDestroyContext( context_id );
-	alcCloseDevice( dev );
+	alcDestroyContext( context );
+	alcCloseDevice( device );
 
-	return 0;
+	return EXIT_SUCCESS;
 }

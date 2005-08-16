@@ -26,7 +26,7 @@ static ALuint vorbsource = ( ALuint ) -1;
 
 static time_t start;
 
-static ALCcontext *context_id;
+static ALCcontext *context;
 
 /* our vorbis extension */
 typedef ALboolean ( vorbisLoader ) ( ALuint, ALvoid *, ALint );
@@ -41,14 +41,12 @@ static void init( void )
 
 	alSourcei( vorbsource, AL_BUFFER, vorbbuf );
 	alSourcei( vorbsource, AL_LOOPING, AL_TRUE );
-
-	return;
 }
 
 static void cleanup( void )
 {
 
-	alcDestroyContext( context_id );
+	alcDestroyContext( context );
 #ifdef JLIB
 	jv_check_mem(  );
 #endif
@@ -56,35 +54,31 @@ static void cleanup( void )
 
 int main( int argc, char *argv[] )
 {
-	ALCdevice *dev;
+	ALCdevice *device;
 	FILE *fh;
 	struct stat sbuf;
 	void *data;
 	char *fname;
 	int size;
 
-	dev = alcOpenDevice( NULL );
-	if( dev == NULL ) {
-		return 1;
+	device = alcOpenDevice( NULL );
+	if( device == NULL ) {
+		return EXIT_FAILURE;
 	}
 
 	/* Initialize ALUT. */
-	context_id = alcCreateContext( dev, NULL );
-	if( context_id == NULL ) {
-		alcCloseDevice( dev );
+	context = alcCreateContext( device, NULL );
+	if( context == NULL ) {
+		alcCloseDevice( device );
 
-		return 1;
+		return EXIT_FAILURE;
 	}
 
-	alcMakeContextCurrent( context_id );
+	alcMakeContextCurrent( context );
 
 	init(  );
 
-	if( argc == 1 ) {
-		fname = VORBIS_FILE;
-	} else {
-		fname = argv[1];
-	}
+	fname = ( argc == 1 ) ? VORBIS_FILE : argv[1];
 
 	if( stat( fname, &sbuf ) == -1 ) {
 		perror( fname );
@@ -94,7 +88,7 @@ int main( int argc, char *argv[] )
 	size = sbuf.st_size;
 	data = malloc( size );
 	if( data == NULL ) {
-		exit( 1 );
+		exit( EXIT_FAILURE );
 	}
 
 	fh = fopen( fname, "rb" );
@@ -103,7 +97,7 @@ int main( int argc, char *argv[] )
 
 		free( data );
 
-		exit( 1 );
+		exit( EXIT_FAILURE );
 	}
 
 	fread( data, size, 1, fh );
@@ -115,12 +109,12 @@ int main( int argc, char *argv[] )
 
 		fprintf( stderr, "Could not GetProc %s\n",
 			 ( ALubyte * ) VORBIS_FUNC );
-		exit( -4 );
+		exit( EXIT_FAILURE );
 	}
 
 	if( alutLoadVorbisp( vorbbuf, data, size ) != AL_TRUE ) {
 		fprintf( stderr, "alutLoadVorbis failed\n" );
-		exit( -2 );
+		exit( EXIT_FAILURE );
 	}
 
 	free( data );
@@ -133,7 +127,7 @@ int main( int argc, char *argv[] )
 
 	cleanup(  );
 
-	alcCloseDevice( dev );
+	alcCloseDevice( device );
 
-	return 0;
+	return EXIT_SUCCESS;
 }

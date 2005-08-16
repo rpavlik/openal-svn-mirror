@@ -67,7 +67,7 @@ static ALuint init( const char *fname )
 
 int main( int argc, char *argv[] )
 {
-	int attrlist[] = {
+	int attributeList[] = {
 		ALC_FREQUENCY, 22050,
 		0
 	};
@@ -83,7 +83,7 @@ int main( int argc, char *argv[] )
 	}
 
 	/* Initialize context. */
-	context = alcCreateContext( device, attrlist );
+	context = alcCreateContext( device, attributeList );
 	if( context == NULL ) {
 		fprintf( stderr, "Could not open context: %s\n",
 			 alGetString( alcGetError( device ) ) );
