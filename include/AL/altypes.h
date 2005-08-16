@@ -14,53 +14,44 @@
   #endif
 #endif
 
-/** OpenAL bool type. */
+/** 8-bit boolean */
 typedef char ALboolean;
 
-/** OpenAL 8bit signed byte. */
-typedef char ALbyte;
-
-/** OpenAL 8bit unsigned byte. */
-typedef unsigned char ALubyte;
-
-/** OpenAL 8bit char */
+/** character */
 typedef char ALchar;
 
-/** OpenAL 16bit signed short integer type. */
+/** signed 8-bit 2's complement integer */
+typedef char ALbyte;
+
+/** unsigned 8-bit integer */
+typedef unsigned char ALubyte;
+
+/** signed 16-bit 2's complement integer */
 typedef short ALshort;
 
-/** OpenAL 16bit unsigned short integer type. */
+/** unsigned 16-bit integer */
 typedef unsigned short ALushort;
 
-/** OpenAL 32bit unsigned integer type. */
-typedef unsigned int ALuint;
-
-/** OpenAL 32bit signed integer type. */
+/** signed 32-bit 2's complement integer */
 typedef int ALint;
 
-/** OpenAL 32bit floating point type. */
-typedef float ALfloat;
+/** unsigned 32-bit integer */
+typedef unsigned int ALuint;
 
-/** OpenAL 64bit double point type. */
-typedef double ALdouble;
-
-/** OpenAL 32bit type. */
+/** non-negative 32-bit binary integer size */
 typedef int ALsizei;
 
-/** OpenAL void type (for params, not returns). */
-typedef void ALvoid;
-
-/** OpenAL enumerations. */
+/** enumerated 32-bit value */
 typedef int ALenum;
 
-/** OpenAL bitfields. */
-typedef unsigned int ALbitfield;
+/** 32-bit IEEE754 floating-point */
+typedef float ALfloat;
 
-/** OpenAL clamped float. */
-typedef ALfloat ALclampf;
+/** 64-bit IEEE754 floating-point */
+typedef double ALdouble;
 
-/** Openal clamped double. */
-typedef ALdouble ALclampd;
+/** void type (for opaque pointers only) */
+typedef void ALvoid;
 
 /* Enumerant values begin at column 50. No tabs. */
 

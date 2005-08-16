@@ -8,42 +8,43 @@ typedef struct _AL_device ALCdevice;
 typedef void ALCcontext;
 #endif /* _WIN32 */
 
-typedef int ALCenum;
-
-/** ALC boolean type. */
+/** 8-bit boolean */
 typedef char ALCboolean;
 
-/** ALC 8bit signed byte. */
-typedef char ALCbyte;
-
-/** ALC 8bit unsigned byte. */
-typedef unsigned char ALCubyte;
-
-/** OpenAL 8bit char */
+/** character */
 typedef char ALCchar;
 
-/** ALC 16bit signed short integer type. */
+/** signed 8-bit 2's complement integer */
+typedef char ALCbyte;
+
+/** unsigned 8-bit integer */
+typedef unsigned char ALCubyte;
+
+/** signed 16-bit 2's complement integer */
 typedef short ALCshort;
 
-/** ALC 16bit unsigned short integer type. */
+/** unsigned 16-bit integer */
 typedef unsigned short ALCushort;
 
-/** ALC 32bit unsigned integer type. */
-typedef unsigned ALCuint;
-
-/** ALC 32bit signed integer type. */
+/** signed 32-bit 2's complement integer */
 typedef int ALCint;
 
-/** ALC 32bit floating point type. */
-typedef float ALCfloat;
+/** unsigned 32-bit integer */
+typedef unsigned int ALCuint;
 
-/** ALC 64bit double point type. */
-typedef double ALCdouble;
-
-/** ALC 32bit type. */
+/** non-negative 32-bit binary integer size */
 typedef int ALCsizei;
 
-/** ALC void type */
+/** enumerated 32-bit value */
+typedef int ALCenum;
+
+/** 32-bit IEEE754 floating-point */
+typedef float ALCfloat;
+
+/** 64-bit IEEE754 floating-point */
+typedef double ALCdouble;
+
+/** void type (for opaque pointers only) */
 typedef void ALCvoid;
 
 /* Enumerant values begin at column 50. No tabs. */
