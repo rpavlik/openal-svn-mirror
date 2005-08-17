@@ -436,7 +436,7 @@ void _alDestroyMixer( void )
 {
 	if( mix_mutex != NULL )
 	{
-		mlDestroyMutex( mix_mutex );
+		_alDestroyMutex( mix_mutex );
 		mix_mutex = NULL;
 	}
 
@@ -467,7 +467,7 @@ void _alDestroyMixer( void )
 					  okay to unlock.
 					*/
 
-		mlDestroyMutex( pause_mutex );
+		_alDestroyMutex( pause_mutex );
 		pause_mutex = NULL;
 	}
 
@@ -618,16 +618,16 @@ ALboolean _alInitMixer( void )
 {
 	bufsiz = _alcDCGetWriteBufsiz();
 
-	mix_mutex = mlCreateMutex();
+	mix_mutex = _alCreateMutex();
 	if(mix_mutex == NULL)
 	{
 		return AL_FALSE;
 	}
 
-	pause_mutex = mlCreateMutex();
+	pause_mutex = _alCreateMutex();
 	if(pause_mutex == NULL)
 	{
-		mlDestroyMutex( mix_mutex );
+		_alDestroyMutex( mix_mutex );
 		mix_mutex = NULL;
 
 		return AL_FALSE;
@@ -636,8 +636,8 @@ ALboolean _alInitMixer( void )
 	/* init Mixer funcs */
 	if( _alMixFuncInit(&MixFunc, MAXMIXSOURCES ) == AL_FALSE)
 	{
-		mlDestroyMutex( mix_mutex );
-		mlDestroyMutex( pause_mutex );
+		_alDestroyMutex( mix_mutex );
+		_alDestroyMutex( pause_mutex );
 		mix_mutex = NULL;
 		pause_mutex = NULL;
 
@@ -647,8 +647,8 @@ ALboolean _alInitMixer( void )
 	/* init MixManager */
 	if(_alMixManagerInit(&MixManager, MAXMIXSOURCES) == AL_FALSE)
 	{
-		mlDestroyMutex(mix_mutex);
-		mlDestroyMutex(pause_mutex);
+		_alDestroyMutex(mix_mutex);
+		_alDestroyMutex(pause_mutex);
 		mix_mutex = NULL;
 		pause_mutex = NULL;
 
@@ -1047,7 +1047,7 @@ void _alAddSourceToMixer( ALuint sid )
 void FL_alLockMixBuf( UNUSED(const char *fn), UNUSED(int ln) ) {
 	_alLockPrintf("_alLockMixbuf", fn, ln);
 
-	mlLockMutex( mix_mutex );
+	_alLockMutex( mix_mutex );
 
 	return;
 }
@@ -1060,7 +1060,7 @@ void FL_alLockMixBuf( UNUSED(const char *fn), UNUSED(int ln) ) {
 void FL_alUnlockMixBuf(UNUSED(const char *fn), UNUSED(int ln)) {
 	_alLockPrintf("_alUnlockMixbuf", fn, ln);
 
-	mlUnlockMutex( mix_mutex );
+	_alUnlockMutex( mix_mutex );
 
 	return;
 }
@@ -1179,7 +1179,7 @@ static void _alAddBufferToStreamingList( ALuint bid ) {
  * AL_FALSE otherwise.
  */
 static ALboolean _alTryLockMixerPause( void ) {
-	if(mlTryLockMutex( pause_mutex ) == 0) {
+	if(_alTryLockMutex( pause_mutex ) == 0) {
 		return AL_TRUE;
 	}
 
@@ -1193,7 +1193,7 @@ static ALboolean _alTryLockMixerPause( void ) {
  * asynchronous mixers
  */
 void _alLockMixerPause( void ) {
-	mlLockMutex( pause_mutex );
+	_alLockMutex( pause_mutex );
 
 	return;
 }
@@ -1205,7 +1205,7 @@ void _alLockMixerPause( void ) {
  * asynchronous mixers
  */
 void _alUnlockMixerPause( void ) {
-	mlUnlockMutex( pause_mutex );
+	_alUnlockMutex( pause_mutex );
 
 	return;
 }

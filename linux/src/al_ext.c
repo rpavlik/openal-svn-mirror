@@ -340,7 +340,7 @@ static void _alDestroyExtension(void *extp) {
  */
 ALboolean _alInitExtensions( void ) {
 	if(ext_mutex == NULL) {
-		ext_mutex = mlCreateMutex();
+		ext_mutex = _alCreateMutex();
 		if(ext_mutex == NULL) {
 			return AL_FALSE;
 		}
@@ -358,7 +358,7 @@ void _alDestroyExtensions( void ) {
 	int i;
 
 	tree_free( etree, _alDestroyExtension );
-	mlDestroyMutex( ext_mutex );
+	_alDestroyMutex( ext_mutex );
 
 	etree     = NULL;
 	ext_mutex = NULL;
@@ -619,10 +619,10 @@ static void FL_alLockExtension(UNUSED(const char *fn), UNUSED(int ln)) {
 		 * need to have locks even before _alMain is called,
 		 * so InitExtension may not be called at this point.
 		 */
-		ext_mutex = mlCreateMutex();
+		ext_mutex = _alCreateMutex();
 	}
 
-	mlLockMutex( ext_mutex );
+	_alLockMutex( ext_mutex );
 
 	return;
 }
@@ -636,7 +636,7 @@ static void FL_alLockExtension(UNUSED(const char *fn), UNUSED(int ln)) {
 static void FL_alUnlockExtension(UNUSED(const char *fn), UNUSED(int ln)) {
 	_alLockPrintf("_alUnlockExtension", fn, ln);
 
-	mlUnlockMutex( ext_mutex );
+	_alUnlockMutex( ext_mutex );
 
 	return;
 }

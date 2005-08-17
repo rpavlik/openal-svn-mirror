@@ -12,11 +12,11 @@
 
 #if defined(USE_EMPTY_LOCKS)
 
-#define mlCreateMutex()
-#define mlDestroyMutex(m)
-#define mlLockMutex(m)
-#define mlTryLockMutex(m)
-#define mlUnlockMutex(m)
+#define _alCreateMutex()
+#define _alDestroyMutex(m)
+#define _alLockMutex(m)
+#define _alTryLockMutex(m)
+#define _alUnlockMutex(m)
 
 #else
 
@@ -42,20 +42,20 @@ typedef struct SignalSemaphore *MutexID;
 #endif
 
 /* Creates a new mutex. Returns NULL on error. */
-MutexID mlCreateMutex( void );
+MutexID _alCreateMutex( void );
 
 /* Destroys the given mutex, which must be unlocked. */
-void mlDestroyMutex( MutexID mutex );
+void _alDestroyMutex( MutexID mutex );
 
 /* Locks the given mutex, blocking if it is already locked. */
-void mlLockMutex( MutexID mutex );
+void _alLockMutex( MutexID mutex );
 
 /* Try to lock the given mutex, returning zero if it succeeded, non-zero
    otherwise. Non-blocking. */
-int mlTryLockMutex( MutexID mutex );
+int _alTryLockMutex( MutexID mutex );
 
 /* Unlocks the given mutex, which must be locked by the same thread. */
-void mlUnlockMutex( MutexID mutex );
+void _alUnlockMutex( MutexID mutex );
 
 #endif				/* USE_EMPTY_LOCKS */
 

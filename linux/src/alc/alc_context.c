@@ -315,7 +315,7 @@ void alcDestroyContext( ALCcontext *handle )
 		/*
 		 * Destroy the all-locking-contexts
 		 */
-		mlDestroyMutex( all_context_mutex );
+		_alDestroyMutex( all_context_mutex );
 		all_context_mutex = NULL;
 
 		return;
@@ -550,7 +550,7 @@ void FL_alcLockContext(ALuint cid, UNUSED(const char *fn), UNUSED(int ln)) {
 
 	_alcLockAllContexts();
 
-	mlLockMutex(context_mutexen[cindex]);
+	_alLockMutex(context_mutexen[cindex]);
 
 	_alcUnlockAllContexts();
 
@@ -575,7 +575,7 @@ void FL_alcUnlockContext(ALuint cid, UNUSED(const char *fn), UNUSED(int ln)) {
 		return;
 	}
 
-	mlUnlockMutex(context_mutexen[cindex]);
+	_alUnlockMutex(context_mutexen[cindex]);
 
 	return;
 }
@@ -838,7 +838,7 @@ void FL_alcLockAllContexts(UNUSED(const char *fn), UNUSED(int ln)) {
 	}
 
 	_alLockPrintf("_alcLockAllContexts", fn, ln);
-	mlLockMutex(all_context_mutex);
+	_alLockMutex(all_context_mutex);
 }
 
 /*
@@ -853,7 +853,7 @@ void FL_alcUnlockAllContexts(UNUSED(const char *fn), UNUSED(int ln)) {
 	}
 
 	_alLockPrintf("_alcUnlockAllContexts", fn, ln);
-	mlUnlockMutex(all_context_mutex);
+	_alUnlockMutex(all_context_mutex);
 }
 
 /*
@@ -889,7 +889,7 @@ void _alcDestroyAll( void ) {
 		cid = _alcIndexToCid( i );
 
 		if(context_mutexen[i] != NULL) {
-			mlDestroyMutex( context_mutexen[i] );
+			_alDestroyMutex( context_mutexen[i] );
 			context_mutexen[i] = NULL;
 		}
 
@@ -1020,7 +1020,7 @@ static void _alcReallocContexts(ALuint newsize) {
 	for(i = al_contexts.items; i < newsize; i++) {
 		al_contexts.inuse[i] = AL_FALSE;
 		al_contexts.map[i] = 0;
-		context_mutexen[i] = mlCreateMutex();
+		context_mutexen[i] = _alCreateMutex();
 	}
 
 	if(al_contexts.items == 0) {
@@ -1029,7 +1029,7 @@ static void _alcReallocContexts(ALuint newsize) {
 		 * "lock all contexts" mutex as well.
 		 */
 
-		all_context_mutex = mlCreateMutex();
+		all_context_mutex = _alCreateMutex();
 		if(all_context_mutex == NULL) {
 			perror("CreateMutex");
 			exit(2);

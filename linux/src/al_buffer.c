@@ -825,7 +825,7 @@ AL_buffer *_alGetBuffer( ALuint bid ) {
  */
 ALboolean _alInitBuffers( void )
 {
-	buf_mutex = mlCreateMutex();
+	buf_mutex = _alCreateMutex();
 
 	return AL_TRUE;
 }
@@ -940,7 +940,7 @@ void _alDestroyBuffers( void ) {
 	bpool_free( &buf_pool, _alDestroyBuffer );
 	bpool_init( &buf_pool );
 
-	mlDestroyMutex( buf_mutex );
+	_alDestroyMutex( buf_mutex );
 
 	buf_mutex = NULL;
 
@@ -960,7 +960,7 @@ ALboolean FL_alLockBuffer(UNUSED(const char *fn), UNUSED(int ln)) {
 		return AL_FALSE;
 	}
 
-	mlLockMutex( buf_mutex );
+	_alLockMutex( buf_mutex );
 
 	return AL_TRUE;
 }
@@ -978,7 +978,7 @@ ALboolean FL_alUnlockBuffer(UNUSED(const char *fn), UNUSED(int ln)) {
 		return AL_FALSE;
 	}
 
-	mlUnlockMutex(buf_mutex);
+	_alUnlockMutex(buf_mutex);
 
 	return AL_TRUE;
 }

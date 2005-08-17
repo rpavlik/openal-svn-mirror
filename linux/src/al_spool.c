@@ -53,7 +53,7 @@ ALboolean spool_resize(spool_t *spool, size_t newsize) {
 	for(i = spool->size; i < newsize; i++) {
 		spool->pool[i].inuse = AL_FALSE;       /* use flag  */
 		spool->map[i] = 0;                     /* unset sid */
-		spool->smutexen[i] = mlCreateMutex();  /* new mutex */
+		spool->smutexen[i] = _alCreateMutex();  /* new mutex */
 	}
 
 	spool->size = newsize;

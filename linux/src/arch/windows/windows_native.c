@@ -58,7 +58,7 @@ static void CALLBACK WinFillAudio(UNUSED(HWAVEOUT hwo),
 
         /* Only service "buffer done playing" messages */
         if( uMsg == WOM_DONE ) {
-		mlUnlockMutex(mutex);
+		_alUnlockMutex(mutex);
 	}
 
 	return;
@@ -86,7 +86,7 @@ void *grab_write_native(void) {
 	int i;
 
 	audiobufs.index = 0;
-	mutex = mlCreateMutex();
+	mutex = _alCreateMutex();
 
 	for(i = 0; i < MAX_AUDIOBUFS; i++) {
 		audiobufs.whdrs[i].lpData  = NULL;
@@ -136,7 +136,7 @@ void native_blitbuffer(void *handle, void *dataptr, int bytes_to_write) {
 
 	hwo = WinAudioHandle.hwo;
 
-	mlLockMutex(mutex);
+	_alLockMutex(mutex);
 
 	whdr   = &audiobufs.whdrs[audiobufs.index];
 
@@ -168,7 +168,7 @@ void release_native(void *handle) {
 	HWAVEOUT hwo;
 	int i;
 
-	mlDestroyMutex(mutex);
+	_alDestroyMutex(mutex);
 	mutex = NULL;
 
 	if(handle == NULL) {

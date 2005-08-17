@@ -10,7 +10,7 @@
 
 #if defined(USE_POSIXMUTEX)
 
-MutexID mlCreateMutex( void )
+MutexID _alCreateMutex( void )
 {
 	MutexID mutex = ( MutexID ) malloc( sizeof( *mutex ) );
 	if( mutex == NULL ) {
@@ -23,7 +23,7 @@ MutexID mlCreateMutex( void )
 	return mutex;
 }
 
-void mlDestroyMutex( MutexID mutex )
+void _alDestroyMutex( MutexID mutex )
 {
 	if( pthread_mutex_destroy( mutex ) != 0 ) {
 		fprintf( stderr, "mutex %p busy\n", ( void * ) mutex );
@@ -32,24 +32,24 @@ void mlDestroyMutex( MutexID mutex )
 	free( mutex );
 }
 
-void mlLockMutex( MutexID mutex )
+void _alLockMutex( MutexID mutex )
 {
 	pthread_mutex_lock( mutex );
 }
 
-int mlTryLockMutex( MutexID mutex )
+int _alTryLockMutex( MutexID mutex )
 {
 	return ( pthread_mutex_trylock( mutex ) == 0 ) ? 0 : -1;
 }
 
-void mlUnlockMutex( MutexID mutex )
+void _alUnlockMutex( MutexID mutex )
 {
 	pthread_mutex_unlock( mutex );
 }
 
 #elif defined(USE_WINDOWSMUTEX)
 
-MutexID mlCreateMutex( void )
+MutexID _alCreateMutex( void )
 {
 	MutexID mutex = ( MutexID ) malloc( sizeof( *mutex ) );
 	if( mutex == NULL ) {
@@ -59,22 +59,22 @@ MutexID mlCreateMutex( void )
 	return mutex;
 }
 
-void mlDestroyMutex( MutexID mutex )
+void _alDestroyMutex( MutexID mutex )
 {
 	DeleteCriticalSection( mutex );
 }
 
-void mlLockMutex( MutexID mutex )
+void _alLockMutex( MutexID mutex )
 {
 	EnterCriticalSection( mutex );
 }
 
-int mlTryLockMutex( MutexID mutex )
+int _alTryLockMutex( MutexID mutex )
 {
 	return ( TryEnterCriticalSection( mutex ) != 0 ) ? 0 : -1;
 }
 
-void mlUnlockMutex( MutexID mutex )
+void _alUnlockMutex( MutexID mutex )
 {
 	LeaveCriticalSection( mutex );
 }
@@ -83,7 +83,7 @@ void mlUnlockMutex( MutexID mutex )
 
 #include <proto/exec.h>
 
-MutexID mlCreateMutex( void )
+MutexID _alCreateMutex( void )
 {
 	MutexID mutex = ( MutexID ) AllocVec( sizeof( *mutex ), MEMF_PUBLIC );
 	if( mutex == NULL ) {
@@ -93,22 +93,22 @@ MutexID mlCreateMutex( void )
 	return mutex;
 }
 
-void mlDestroyMutex( MutexID mutex )
+void _alDestroyMutex( MutexID mutex )
 {
 	FreeVec( mutex );
 }
 
-void mlLockMutex( MutexID mutex )
+void _alLockMutex( MutexID mutex )
 {
 	ObtainSemaphore( mutex );
 }
 
-int mlTryLockMutex( MutexID mutex )
+int _alTryLockMutex( MutexID mutex )
 {
 	return ( AttemptSemaphore( mutex ) != 0 ) ? 0 : -1;
 }
 
-void mlUnlockMutex( MutexID mutex )
+void _alUnlockMutex( MutexID mutex )
 {
 	ReleaseSemaphore( mutex );
 }

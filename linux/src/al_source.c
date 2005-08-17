@@ -2307,7 +2307,7 @@ void _alDestroySources(spool_t *spool) {
 	ALuint i;
 
 	for( i = 0; i < spool->size; i++ ) {
-		mlDestroyMutex( spool->smutexen[i] );
+		_alDestroyMutex( spool->smutexen[i] );
 	}
 
 
@@ -3124,7 +3124,7 @@ ALboolean FL_alLockSource( UNUSED(const char *fn),
 		return AL_FALSE;
 	}
 
-	mlLockMutex( cc->source_pool.smutexen[sindex] );
+	_alLockMutex( cc->source_pool.smutexen[sindex] );
 
 	return AL_TRUE;
 }
@@ -3161,7 +3161,7 @@ ALboolean FL_alUnlockSource( UNUSED(const char *fn),
 		return AL_FALSE;
 	}
 
-	mlUnlockMutex( cc->source_pool.smutexen[sindex] );
+	_alUnlockMutex( cc->source_pool.smutexen[sindex] );
 
 	return AL_TRUE;
 }
