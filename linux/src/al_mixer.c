@@ -744,7 +744,7 @@ void _alSetMixer( ALboolean synchronous )
 #ifndef DARWIN_TARGET
 /*Since the new darwin backend uses a core audio thread, we don't need the mixing thread anymore and use the sync mixer */
 		if(mixthread == NULL) {
-			mixthread = tlCreateThread(mixer_iterate, NULL);
+			mixthread = _alCreateThread(mixer_iterate);
 		}
 #endif /* DARWIN_TARGET */
 	}
@@ -1118,7 +1118,7 @@ int async_mixer_iterate(UNUSED(void *dummy)) {
 
 	time_for_mixer_to_die = AL_FALSE;
 
-	tlExitThread(0);
+	_alExitThread();
 
 	return 0;
 }

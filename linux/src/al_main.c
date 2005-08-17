@@ -170,7 +170,7 @@ void _alExit( void ) {
 	if(mixthread != NULL) {
 		time_for_mixer_to_die = AL_TRUE;
 
-		tlWaitThread( mixthread );
+		_alWaitThread( mixthread );
 
 		while( time_for_mixer_to_die == AL_TRUE ) {
 			_alMicroSleep(100000);
@@ -237,7 +237,7 @@ int _alLockPrintf( const char *msg, const char *fn, int ln ) {
 
 	blanks[maxlen] = '\0';
 
-	snprintf(threadstr, sizeof(threadstr), "%s[%u]", blanks, tlSelfThread());
+	snprintf(threadstr, sizeof(threadstr), "%s[%u]", blanks, _alSelfThread());
 
 	return _alDebug(ALD_LOCK, fn, ln, "%s %s", threadstr, msg);
 }

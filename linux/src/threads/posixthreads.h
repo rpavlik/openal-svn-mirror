@@ -16,38 +16,31 @@
 typedef pthread_t *ThreadID;
 
 /*
- * Posix_CreateThread( int (*fn )(void *), void *data )
+ * _alCreateThread( int (*fn )(void *) )
  *
- * Creates a thread, which starts by running fn and passing data to it.
+ * Creates a thread, which starts by running fn.
  */
-extern pthread_t *Posix_CreateThread( int (*fn )(void *), void *data );
+extern pthread_t *_alCreateThread( int (*fn )(void *) );
 
 /*
- * Posix_WaitThread( pthread_t *waitfor )
+ * _alWaitThread( pthread_t *waitfor )
  *
  * Waits for waitfor to terminate before returning.
  */
-extern int Posix_WaitThread( pthread_t *waitfor );
+extern int _alWaitThread( pthread_t *waitfor );
 
 /*
- * Posix_KillThread( pthread_t *killit )
- *
- * Kills the thread specified by killit.
- */
-extern int Posix_KillThread( pthread_t *killit );
-
-/*
- * Posix_SelfThread( void )
+ * _alSelfThread( void )
  *
  * Returns the identifier for the callee's thread.
  */
-extern unsigned int Posix_SelfThread( void );
+extern unsigned int _alSelfThread( void );
 
 /*
- * Posix_ExitThread( int retval )
+ * _alExitThread( void )
  *
  * Forces the callee to terminate.
  */
-extern void Posix_ExitThread( int retval );
+extern void _alExitThread( void );
 
 #endif /* POSIX_THREADS_H_ */

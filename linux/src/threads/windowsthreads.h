@@ -16,36 +16,29 @@
 typedef HANDLE ThreadID;
 
 /*
- * Windows_CreateThread( int (*fn)(void *), void *data )
+ * _alCreateThread( int (*fn)(void *), void *data )
  */
-extern ThreadID Windows_CreateThread( int (*fn)(void *), void *data );
+extern ThreadID _alCreateThread( int (*fn)(void *), void *data );
 
 /*
- * Windows_WaitThread( ThreadID waitfor )
+ * _alWaitThread( ThreadID waitfor )
  *
  * Wait for waitfor to terminate of natural causes.
  */
-extern int Windows_WaitThread( ThreadID waitfor );
+extern int _alWaitThread( ThreadID waitfor );
 
 /*
- * Windows_KillThread( ThreadID killit )
- *
- * Kill killit and return when it's dead.
- */
-extern int Windows_KillThread( ThreadID killit );
-
-/*
- * Windows_SelfThread( void )
+ * _alSelfThread( void )
  *
  * Returns the identifier for the callee's thread.
  */
-extern unsigned int Windows_SelfThread( void );
+extern unsigned int _alSelfThread( void );
 
 /*
- * Windows_ExitThread( int retval )
+ * _alExitThread( void )
  *
  * Terminate the callee's thread.
  */
-extern void Windows_ExitThread( int retval );
+extern void _alExitThread( void );
 
 #endif /* WINDOWS_THREADS_H_ */

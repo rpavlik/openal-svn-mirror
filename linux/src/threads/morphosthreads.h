@@ -29,38 +29,31 @@ struct ThreadData
 typedef struct ThreadData *ThreadID;
 
 /*
- * MorphOS_CreateThread( int (*fn )(void *), void *data )
+ * _alCreateThread( int (*fn )(void *) )
  *
- * Creates a thread, which starts by running fn and passing data to it.
+ * Creates a thread, which starts by running fn.
  */
-extern struct ThreadData *MorphOS_CreateThread( int (*fn )(void *), void *data );
+extern struct ThreadData *_alCreateThread( int (*fn )(void *) );
 
 /*
- * MorphOS_WaitThread( struct ThreadData *waitfor )
+ * _alWaitThread( struct ThreadData *waitfor )
  *
  * Waits for waitfor to terminate before returning.
  */
-extern int MorphOS_WaitThread( struct ThreadData *waitfor );
+extern int _alWaitThread( struct ThreadData *waitfor );
 
 /*
- * MorphOS_KillThread( struct ThreadData *killit )
- *
- * Kills the thread specified by killit.
- */
-extern int MorphOS_KillThread( struct ThreadData *killit );
-
-/*
- * MorphOS_SelfThread( void )
+ * _alSelfThread( void )
  *
  * Returns the identifier for the callee's thread.
  */
-extern unsigned int MorphOS_SelfThread( void );
+extern unsigned int _alSelfThread( void );
 
 /*
- * MorphOS_ExitThread( int retval )
+ * _alExitThread( void )
  *
  * Forces the callee to terminate.
  */
-extern void MorphOS_ExitThread( int retval );
+extern void _alExitThread( void );
 
 #endif /* MORPHOS_THREADS_H_ */

@@ -15,9 +15,7 @@
 #include "al_types.h"
 #include "morphosthreads.h"
 
-extern ALboolean time_for_mixer_to_die;
-
-struct ThreadData *MorphOS_CreateThread(int (*fn)(void *), void *data)
+struct ThreadData *_alCreateThread(int (*fn)(void *))
 {
 	struct ThreadData* thread;
 
@@ -40,7 +38,7 @@ struct ThreadData *MorphOS_CreateThread(int (*fn)(void *), void *data)
 																  NP_Name,		  (ULONG) "OpenAL Thread",
 																  NP_CodeType,	  CODETYPE_PPC,
 																  NP_StartupMsg, (ULONG) startup_msg,
-																  NP_PPC_Arg1,	  (ULONG) data,
+																  NP_PPC_Arg1,	  0,
 																  TAG_DONE);
 				if (thread->td_Thread)
 					return thread;
@@ -55,7 +53,7 @@ struct ThreadData *MorphOS_CreateThread(int (*fn)(void *), void *data)
 	return NULL;
 }
 
-extern int MorphOS_WaitThread(struct ThreadData* waitfor)
+int _alWaitThread(struct ThreadData* waitfor)
 {
 	struct ThreadStartMsg* tsm;
 	int retval = -1;
@@ -73,38 +71,20 @@ extern int MorphOS_WaitThread(struct ThreadData* waitfor)
 	return retval;
 }
 
-extern int MorphOS_KillThread(struct ThreadData* killit)
-{
-	int retval = -1;
-
-	if (killit)
-	{
-		/* This assumption is quite nasty */
-		time_for_mixer_to_die = AL_TRUE;
-		/* Signal(killit->td_Thread, SIGBREAKF_CTRL_C); */
-		MorphOS_WaitThread(killit);
-		time_for_mixer_to_die = AL_FALSE;
-		retval = 0;
-	}
-
-	return retval;
-}
-
-extern unsigned int MorphOS_SelfThread(void)
+unsigned int _alSelfThread(void)
 {
 	return (unsigned int) FindTask(NULL);
 }
 
 
-extern void MorphOS_ExitThread(int retval)
+void _alExitThread(void)
 {
 	struct ThreadStartMsg *msg;
 
 	if (NewGetTaskAttrs(NULL, &msg, sizeof(msg), TASKINFOTYPE_STARTUPMSG,
 							  TAG_DONE) && msg)
-		msg->tsm_Result = retval;
+		msg->tsm_Result = 0;
 
 	/*RemTask(NULL);*/
-	return;
 }
 

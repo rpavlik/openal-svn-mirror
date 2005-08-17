@@ -15,16 +15,16 @@
 
 typedef int (*ptfunc)(void *);
 
-HANDLE Windows_CreateThread(int (*fn)(void *), UNUSED(void *data)) {
+HANDLE _alCreateThread(int (*fn)(void *)) {
 	HANDLE retval;
 	DWORD dummy;
 
-	retval = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) fn, data, 0, &dummy);
+	retval = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) fn, NULL, 0, &dummy);
 
 	return retval;
 }
 
-extern int Windows_WaitThread(HANDLE waitfor) {
+int _alWaitThread(HANDLE waitfor) {
 	BOOL stillrunning;
 	DWORD ExitCode; // termination status
 	int retval;
@@ -54,31 +54,11 @@ extern int Windows_WaitThread(HANDLE waitfor) {
 	return 0;
 }
 
-extern int Windows_KillThread(HANDLE killit) {
-	int retval;
-
-	if(killit == NULL) {
-		return -1;
-	}
-
-	retval = TerminateThread(killit, 0);
-
-	if(retval == 0) {
-		return -1;
-	}
-
-	return 0;
-}
-
-extern void Windows_ExitThread(int retval) {
-	ExitThread(retval);
-
-	return;
+void _alExitThread(void) {
+	ExitThread(0);
 }
 
 
-extern unsigned int Windows_SelfThread(void) {
+unsigned int _alSelfThread(void) {
 	return 	(unsigned int) GetCurrentThreadId();
 }
-
-

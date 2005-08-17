@@ -29,7 +29,7 @@ static void *RunThread(void *data) {
 }
 
 
-extern pthread_t *Posix_CreateThread(int (*fn)(void *), UNUSED(void *data)) {
+pthread_t *_alCreateThread(int (*fn)(void *)) {
 	pthread_attr_t type;
 	pthread_t *retval;
 
@@ -55,7 +55,7 @@ extern pthread_t *Posix_CreateThread(int (*fn)(void *), UNUSED(void *data)) {
 	return retval;
 }
 
-extern int Posix_WaitThread(pthread_t *waitfor) {
+int _alWaitThread(pthread_t *waitfor) {
 	int retval = -1;
 
 	if(waitfor == NULL) {
@@ -69,31 +69,11 @@ extern int Posix_WaitThread(pthread_t *waitfor) {
 	return retval;
 }
 
-extern int Posix_KillThread(pthread_t *killit) {
-	int retval;
-
-	if(killit == NULL) {
-		return -1;
-	}
-
-	retval = pthread_cancel(*killit);
-
-	free(killit);
-
-	return retval;
-}
-
-extern unsigned int Posix_SelfThread(void) {
+unsigned int _alSelfThread(void) {
 	return (unsigned int) pthread_self();
 }
 
 
-extern void Posix_ExitThread(int retval) {
-#if SIZEOF_VOID_P == 8
-	pthread_exit( ( void *) ( int64_t ) retval );
-#else
-	pthread_exit( ( void *) retval );
-#endif
-
-	return;
+void _alExitThread(void) {
+	pthread_exit( NULL );
 }
