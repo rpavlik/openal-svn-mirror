@@ -6,7 +6,7 @@
  * This file contains macros and prototypes for endian management.
  */
 #include "al_siteconfig.h"
-#include "AL/altypes.h"
+#include <AL/al.h>
 
 #define ac_swap16(D) ((ALushort) (((D)<<8) | ((D)>>8)))
 #define ac_swap32(D) (ALuint) ((((D)<<24) | (((D)<<8)&0x00FF0000) | (((D)>>8)&0x0000FF00) | ((D)>>24)))

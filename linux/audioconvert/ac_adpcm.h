@@ -36,8 +36,8 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #ifndef _AC_ADPCM_H_
 #define _AC_ADPCM_H_
 
-#include "AL/altypes.h"
-#include "AL/alexttypes.h"
+#include <AL/al.h>
+#include <AL/alext.h>
 
 typedef struct adpcm_state_s {
     ALshort	valprev;	/* Previous output value */

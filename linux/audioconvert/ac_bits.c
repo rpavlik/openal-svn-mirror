@@ -6,7 +6,7 @@
  * audioconvert functions related to bit depth.
  */
 #include "audioconvert.h"
-#include "AL/altypes.h"
+#include <AL/al.h>
 #include "al_siteconfig.h"
 
 #include <stdio.h>

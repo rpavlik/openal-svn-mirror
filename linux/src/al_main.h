@@ -11,7 +11,7 @@
 #include "al_siteconfig.h"
 #include "alc/alc_context.h"
 
-#include <AL/altypes.h>
+#include <AL/al.h>
 
 /*
  * If compiling with gcc, then we can use attributes.

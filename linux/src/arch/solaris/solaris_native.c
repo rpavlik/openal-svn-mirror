@@ -19,7 +19,7 @@
  *   <johns@megapixel.com>
  *   <j.stone@acm.org>
  */
-#include <AL/altypes.h>
+#include <AL/al.h>
 
 #include <assert.h>
 #include <stdio.h>

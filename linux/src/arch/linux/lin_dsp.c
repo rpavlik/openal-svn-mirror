@@ -15,7 +15,7 @@
 #include "arch/interface/interface_sound.h"
 #include "arch/linux/lin_dsp.h"
 
-#include <AL/altypes.h>
+#include <AL/al.h>
 
 #include <errno.h>
 #include <fcntl.h>

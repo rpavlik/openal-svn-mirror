@@ -11,7 +11,7 @@
 #ifndef WAVEOUT_H_
 #define WAVEOUT_H_
 
-#include <AL/altypes.h>
+#include <AL/al.h>
 
 void *grab_read_waveout(void);
 void *grab_write_waveout(void);

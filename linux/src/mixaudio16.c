@@ -13,7 +13,7 @@
 #include "al_types.h"
 #include "mixaudio16.h"
 
-#include <AL/altypes.h>
+#include <AL/al.h>
 #include <string.h>
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))

@@ -10,7 +10,7 @@
 #include <stdio.h>
 
 #include <AL/al.h>
-#include <AL/alexttypes.h>
+#include <AL/alext.h>
 
 #include "al_able.h"
 #include "al_types.h"

@@ -9,7 +9,7 @@
 #define ALC_DEVICE_H_
 
 #include "alc_context.h"
-#include "AL/altypes.h"
+#include <AL/al.h>
 
 /*
  * _alcDevicePause( AL_device *dev )

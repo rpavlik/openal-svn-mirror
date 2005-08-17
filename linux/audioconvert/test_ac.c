@@ -8,7 +8,7 @@
 #include "audioconvert.h"
 #include "al_siteconfig.h"
 
-#include "AL/altypes.h"
+#include <AL/al.h>
 
 #include <stdio.h>
 

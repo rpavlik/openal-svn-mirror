@@ -9,7 +9,7 @@
 #ifndef ARTS_H_
 #define ARTS_H_
 
-#include <AL/altypes.h>
+#include <AL/al.h>
 
 void *grab_read_arts(void);
 void *grab_write_arts(void);

@@ -8,7 +8,7 @@
 #ifndef AC_WAVE_H_
 #define AC_WAVE_H_
 
-#include "AL/altypes.h"
+#include <AL/al.h>
 
 #define DATA		0x61746164		/* "data" */
 #define FACT		0x74636166		/* "fact" */

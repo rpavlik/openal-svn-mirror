@@ -9,7 +9,7 @@
 #ifndef AL_RCVAR_H_
 #define AL_RCVAR_H_
 
-#include "AL/altypes.h"
+#include <AL/al.h>
 
 /*
  * opaque pointer to a lisp-like var.  Calling code shouldn't mess with it

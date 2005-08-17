@@ -10,7 +10,7 @@
 #ifndef AL_MSPOOL_H_
 #define AL_MSPOOL_H_
 
-#include <AL/altypes.h>
+#include <AL/al.h>
 #include <stdlib.h>
 
 /*

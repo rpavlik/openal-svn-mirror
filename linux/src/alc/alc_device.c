@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "AL/altypes.h"
+#include <AL/al.h>
 
 #include "al_config.h"
 #include "al_main.h"

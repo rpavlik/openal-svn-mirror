@@ -14,7 +14,7 @@
 #ifndef _AL_MIXER_H_
 #define _AL_MIXER_H_
 
-#include <AL/altypes.h>
+#include <AL/al.h>
 
 /*
  * Number of sources for which optimized mixing functions exist.

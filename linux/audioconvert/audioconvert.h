@@ -8,7 +8,7 @@
 #define AC_H_
 
 #include "al_siteconfig.h"
-#include "AL/altypes.h"
+#include <AL/al.h>
 
 #include "ac_adpcm.h"
 

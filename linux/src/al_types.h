@@ -8,7 +8,7 @@
 #ifndef _LAL_TYPES_H_
 #define _LAL_TYPES_H_
 
-#include "AL/altypes.h"
+#include <AL/al.h>
 
 #include "al_mutexlib.h"
 

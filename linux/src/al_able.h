@@ -8,7 +8,7 @@
 #ifndef AL_ABLE_H_
 #define AL_ABLE_H_
 
-#include <AL/altypes.h>
+#include <AL/al.h>
 
 /*
  * _alIsEnabled( ALenum param )

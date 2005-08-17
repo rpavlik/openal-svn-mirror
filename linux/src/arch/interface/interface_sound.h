@@ -9,7 +9,7 @@
 #ifndef INTERFACE_SOUND_H_
 #define INTERFACE_SOUND_H_
 
-#include <AL/altypes.h>
+#include <AL/al.h>
 
 /*
  * _alSpot( ALuint num )

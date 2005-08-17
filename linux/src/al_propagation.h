@@ -1,7 +1,7 @@
 #ifndef AL_PROPAGATION_H_
 #define AL_PROPAGATION_H_
 
-#include <AL/altypes.h>
+#include <AL/al.h>
 
 void _alPropagationSpeed(ALfloat value);
 

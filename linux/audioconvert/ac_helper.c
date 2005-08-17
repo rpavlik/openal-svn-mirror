@@ -13,7 +13,7 @@
 /* Functions for audio drivers to perform runtime conversion of audio format */
 
 #include "audioconvert.h"
-#include "AL/altypes.h"
+#include <AL/al.h>
 #include "al_siteconfig.h"
 
 #include <assert.h>

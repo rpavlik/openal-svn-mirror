@@ -55,7 +55,7 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include <stdio.h>       /*DBG*/
 #include <stdlib.h>
 
-#include "AL/altypes.h"
+#include <AL/al.h>
 
 #define MS_ADPCM_max ((1<<(16-1))-1)
 #define MS_ADPCM_min -(1<<(16-1))

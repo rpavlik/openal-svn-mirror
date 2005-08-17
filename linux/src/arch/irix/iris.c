@@ -58,7 +58,7 @@
 #undef AL_VERSION
 #undef AL_INVALID_VALUE
 
-#include <AL/altypes.h>
+#include <AL/al.h>
 
 #include "arch/interface/interface_sound.h"
 #include "arch/irix/iris.h"

@@ -8,7 +8,7 @@
 #ifndef _MIX_AUDIO16_H_
 #define _MIX_AUDIO16_H_
 
-#include <AL/altypes.h>
+#include <AL/al.h>
 #include "al_types.h"
 
 /*

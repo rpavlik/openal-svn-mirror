@@ -11,7 +11,7 @@
 #ifndef NULL_H_
 #define NULL_H_
 
-#include <AL/altypes.h>
+#include <AL/al.h>
 
 void *grab_read_null(void);
 void *grab_write_null(void);

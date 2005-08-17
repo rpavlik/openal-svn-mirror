@@ -10,7 +10,7 @@
 #ifndef AL_DOPPLER_H_
 #define AL_DOPPLER_H_
 
-#include <AL/altypes.h>
+#include <AL/al.h>
 
 /*
  * _alDopplerFactor( ALfloat value )

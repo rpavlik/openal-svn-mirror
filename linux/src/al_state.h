@@ -7,7 +7,7 @@
  */
 #ifndef AL_STATE_H_
 
-#include <AL/altypes.h>
+#include <AL/al.h>
 
 /*
  * _alGetBooleanv( ALenum param, ALboolean *bv )

@@ -8,7 +8,7 @@
 #ifndef AL_EXT_VORBIS
 #define AL_EXT_VORBIS
 
-#include "AL/altypes.h"
+#include <AL/al.h>
 
 /*
  * Vorbis_Callback( ALuint sid, ALuint bid,

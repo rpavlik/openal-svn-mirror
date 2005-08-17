@@ -10,7 +10,7 @@
 #ifndef AL_CONFIG_H_
 #define AL_CONFIG_H_
 
-#include "AL/altypes.h"
+#include <AL/al.h>
 
 #include "al_rctree.h"
 #include "al_rcvar.h"

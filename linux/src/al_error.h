@@ -8,7 +8,7 @@
 #ifndef _AL_ERROR_H_
 #define _AL_ERROR_H_
 
-#include <AL/altypes.h>
+#include <AL/al.h>
 #include "alc/alc_context.h"
 
 /*

@@ -9,7 +9,7 @@
 #ifndef _AL_FILTER_H_
 #define _AL_FILTER_H_
 
-#include <AL/altypes.h>
+#include <AL/al.h>
 #include "al_types.h"
 
 /*

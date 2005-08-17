@@ -13,7 +13,7 @@
 #include "arch/interface/interface_sound.h"
 #include "alc/alc_context.h"
 
-#include <AL/altypes.h>
+#include <AL/al.h>
 
 #include <assert.h>
 #include <fcntl.h>

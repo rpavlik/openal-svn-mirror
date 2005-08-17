@@ -8,7 +8,7 @@
 #ifndef AL_EXT_MP3
 #define AL_EXT_MP3
 
-#include "AL/altypes.h"
+#include <AL/al.h>
 
 /*
  * alutLoadMP3_LOKI( ALuint bid, ALvoid *data, ALint size )

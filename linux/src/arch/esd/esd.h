@@ -9,7 +9,7 @@
 #ifndef ESD_H_
 #define ESD_H_
 
-#include <AL/altypes.h>
+#include <AL/al.h>
 
 void *grab_read_esd(void);
 void *grab_write_esd(void);

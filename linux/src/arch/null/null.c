@@ -12,7 +12,7 @@
 #include "arch/null/null.h"
 #include "arch/interface/interface_sound.h"
 
-#include <AL/altypes.h>
+#include <AL/al.h>
 
 #include <fcntl.h>
 #include <stdio.h>

@@ -8,8 +8,8 @@
 #ifndef _ALC_CONTEXT_H_
 #define _ALC_CONTEXT_H_
 
-#include "AL/altypes.h"
-#include "AL/alctypes.h"
+#include <AL/al.h>
+#include <AL/alc.h>
 
 #include "../al_types.h"
 #include "../al_attenuation.h"

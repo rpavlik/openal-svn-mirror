@@ -19,7 +19,7 @@
 #include "al_error.h"
 #include "al_debug.h"
 
-#include <AL/altypes.h>
+#include <AL/al.h>
 
 #include <ctype.h>
 #include <limits.h>

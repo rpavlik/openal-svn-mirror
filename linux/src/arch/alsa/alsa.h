@@ -1,7 +1,7 @@
 #ifndef ALSA_H_
 #define ALSA_H_
 
-#include "AL/altypes.h"
+#include <AL/al.h>
 
 void *grab_read_alsa( void );
 void *grab_write_alsa( void );

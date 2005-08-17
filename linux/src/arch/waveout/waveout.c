@@ -13,7 +13,7 @@
 #include "arch/interface/interface_sound.h"
 #include "../audioconvert/ac_endian.h"
 
-#include <AL/altypes.h>
+#include <AL/al.h>
 
 #include <fcntl.h>
 #include <stdio.h>

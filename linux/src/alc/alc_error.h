@@ -8,8 +8,8 @@
 #ifndef _LAL_ALC_ERROR_H_
 #define _LAL_ALC_ERROR_H_
 
-#include "AL/altypes.h"
-#include "AL/alctypes.h"
+#include <AL/al.h>
+#include <AL/alc.h>
 
 /*
  * alcIsError( ALCenum param )

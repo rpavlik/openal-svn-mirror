@@ -1,4 +1,4 @@
-#include <AL/altypes.h>
+#include <AL/al.h>
 
 #include "al_siteconfig.h"
 

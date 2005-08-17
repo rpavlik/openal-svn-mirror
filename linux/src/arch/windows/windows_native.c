@@ -6,7 +6,7 @@
  * audio on Windows.
  *
  */
-#include <AL/altypes.h>
+#include <AL/al.h>
 
 #include <stdio.h>
 #include <stdlib.h>

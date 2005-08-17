@@ -9,7 +9,7 @@
 #ifndef SDL_H_
 #define SDL_H_
 
-#include <AL/altypes.h>
+#include <AL/al.h>
 
 void *grab_read_sdl(void);
 void *grab_write_sdl(void);

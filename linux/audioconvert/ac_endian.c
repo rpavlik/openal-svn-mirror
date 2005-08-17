@@ -11,7 +11,7 @@
 #include <string.h>
 
 #include "ac_endian.h"
-#include "AL/altypes.h"
+#include <AL/al.h>
 
 ALubyte *cp16le(ALubyte *rawdata, ALushort *reader16) {
 	memcpy(reader16, rawdata, sizeof *reader16);

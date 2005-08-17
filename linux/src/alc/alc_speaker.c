@@ -10,9 +10,9 @@
  * interleaved layout of LRLRLR, or LF RF LB RB.  This might not always be the
  * case.
  */
-#include <AL/alctypes.h>
+#include <AL/alc.h>
 
-#include "AL/altypes.h"
+#include <AL/al.h>
 
 #include "al_siteconfig.h"
 #include "al_main.h"

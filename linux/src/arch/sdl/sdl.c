@@ -7,7 +7,7 @@
  */
 #include "al_siteconfig.h"
 
-#include <AL/altypes.h>
+#include <AL/al.h>
 
 #include <fcntl.h>
 #include <stdio.h>

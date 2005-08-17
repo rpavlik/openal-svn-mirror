@@ -15,7 +15,7 @@
 #define MOSX_DSP_H_
 
 #include <AL/alc.h>
-#include <AL/altypes.h>
+#include <AL/al.h>
 
 
 void *grab_read_native(void);
