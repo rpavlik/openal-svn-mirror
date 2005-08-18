@@ -24,7 +24,7 @@
 #include "al_vector.h"
 #include "alc/alc_context.h"
 
-#include "threads/threadlib.h"
+#include "al_threadlib.h"
 
 #include <math.h>
 #include <fcntl.h>

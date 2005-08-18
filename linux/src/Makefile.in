@@ -10,27 +10,31 @@ LIBS=-L. @LIBS@
 SO_EXT=@SHARED_LIBRARY_EXT@
 RANLIB=@RANLIB@
 
-AL_OBJS=al_buffer.o al_listen.o al_ext.o \
-	al_source.o 			 \
-	al_bpool.o 			 \
-	al_spool.o 			 \
-	al_main.o                        \
-	al_filter.o                      \
-	al_mixer.o                       \
-	al_mixfunc.o                     \
-	al_mixmanager.o                  \
-	al_mspool.o                      \
-	al_state.o                       \
-	al_able.o                        \
-	al_error.o                       \
-	al_config.o                      \
-	al_debug.o                       \
-	al_rctree.o                      \
-	al_rcvar.o                       \
-	al_queue.o                       \
-	al_doppler.o                     \
-	al_distance.o                    \
-	al_vector.o                      \
+AL_OBJS=al_able.o       \
+	al_bpool.o 	\
+	al_buffer.o     \
+	al_config.o     \
+	al_debug.o      \
+	al_distance.o   \
+	al_doppler.o    \
+	al_error.o      \
+	al_ext.o        \
+	al_filter.o     \
+	al_listen.o     \
+	al_main.o       \
+	al_mixer.o      \
+	al_mixfunc.o    \
+	al_mixmanager.o \
+	al_mspool.o     \
+	al_mutexlib.o   \
+	al_queue.o      \
+	al_rctree.o     \
+	al_rcvar.o      \
+	al_source.o 	\
+	al_spool.o 	\
+	al_state.o      \
+	al_threadlib.o  \
+	al_vector.o     \
 	mixaudio16.o
 
 # Major subgroupings
@@ -66,7 +70,7 @@ DARWIN_OBJS=arch/darwin/darwin_native.o
 MORPHOS_OBJS=arch/morphos/morphos_native.o arch/morphos/morphos_dispatcher.o
 WINDOWS_OBJS=arch/windows/windows_native.o
 
-AL_OBJS+=$(INTERFACE_OBJS) @OS_OBJS@ @ARCH_OBJS@ @SYS_THREAD_OBJS@ al_mutexlib.o
+AL_OBJS+=$(INTERFACE_OBJS) @OS_OBJS@ @ARCH_OBJS@
 
 PACKAGE_VERSION_MAJOR=@PACKAGE_VERSION_MAJOR@
 PACKAGE_VERSION=@PACKAGE_VERSION@

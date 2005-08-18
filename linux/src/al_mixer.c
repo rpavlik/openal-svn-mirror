@@ -29,7 +29,7 @@
 
 #include "audioconvert.h"
 
-#include "threads/threadlib.h"
+#include "al_threadlib.h"
 #include "al_mutexlib.h"
 
 #include <signal.h>

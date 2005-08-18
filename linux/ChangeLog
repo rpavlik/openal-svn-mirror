@@ -1,3 +1,22 @@
+2005-08-18  Sven Panne  <sven.panne@aedion.de>
+	* linux/src/al_mutexlib.h: Added missing "extern"s.
+
+	* linux/configure.ac, linux/src/Makefile.in,
+	linux/src/al_buffer.c, linux/src/al_main.c, linux/src/al_mixer.c:
+	Use new thread library.
+
+	* linux/src/al_threadlib.c, linux/src/al_threadlib.h: Added. This
+	is a much cleaner and simpler merged version of the separate
+	thread implementations.
+
+	* linux/src/threads/Makefile.in,
+	linux/src/threads/morphosthreads.c,
+	linux/src/threads/morphosthreads.h,
+	linux/src/threads/posixthreads.c,
+	linux/src/threads/posixthreads.h, linux/src/threads/threadlib.h,
+	linux/src/threads/windowsthreads.c,
+	linux/src/threads/windowsthreads.h: Removed.
+
 2005-08-17  Sven Panne  <sven.panne@aedion.de>
 	* linux/src/al_main.c, linux/src/al_mixer.c,
 	linux/src/threads/morphosthreads.c,

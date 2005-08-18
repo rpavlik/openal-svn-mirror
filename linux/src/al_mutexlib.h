@@ -42,20 +42,20 @@ typedef struct SignalSemaphore *MutexID;
 #endif
 
 /* Creates a new mutex. Returns NULL on error. */
-MutexID _alCreateMutex( void );
+extern MutexID _alCreateMutex( void );
 
 /* Destroys the given mutex, which must be unlocked. */
-void _alDestroyMutex( MutexID mutex );
+extern void _alDestroyMutex( MutexID mutex );
 
 /* Locks the given mutex, blocking if it is already locked. */
-void _alLockMutex( MutexID mutex );
+extern void _alLockMutex( MutexID mutex );
 
 /* Try to lock the given mutex, returning zero if it succeeded, non-zero
    otherwise. Non-blocking. */
-int _alTryLockMutex( MutexID mutex );
+extern int _alTryLockMutex( MutexID mutex );
 
 /* Unlocks the given mutex, which must be locked by the same thread. */
-void _alUnlockMutex( MutexID mutex );
+extern void _alUnlockMutex( MutexID mutex );
 
 #endif				/* USE_EMPTY_LOCKS */
 
