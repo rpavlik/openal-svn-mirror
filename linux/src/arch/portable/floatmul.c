@@ -1,6 +1,7 @@
+#include "al_siteconfig.h"
+
 #include <AL/al.h>
 
-#include "al_siteconfig.h"
 #include "al_main.h"
 
 void _alFloatMul( ALshort *bpt, ALfloat sa, ALuint len) {

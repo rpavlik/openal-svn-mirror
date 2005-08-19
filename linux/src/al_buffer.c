@@ -13,6 +13,11 @@
 /* for alutLoadVorbis_LOKI and alBufferAppendData_LOKI */
 #include <AL/alext.h>
 
+#include <stdio.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "al_buffer.h"
 #include "al_bpool.h"
 #include "al_debug.h"
@@ -23,13 +28,8 @@
 #include "alc/alc_context.h"
 #include "alc/alc_speaker.h"
 
-#include <stdio.h>
-#include <stddef.h>
-#include <stdlib.h>
-
-#include <string.h>
-
 #include "audioconvert.h"
+
 #include "al_threadlib.h"
 #include "al_mutexlib.h"
 

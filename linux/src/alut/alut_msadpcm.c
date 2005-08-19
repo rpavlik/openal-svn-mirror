@@ -8,6 +8,7 @@
  * FIXME: this is such a mess.
  *
  */
+
 #include "al_siteconfig.h"
 
 #include <AL/al.h>

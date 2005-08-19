@@ -7,7 +7,7 @@
  */
 #include "al_siteconfig.h"
 
-#include "AL/al.h"
+#include <AL/al.h>
 
 /* for alutLoadVorbis_LOKI */
 #include "AL/alext.h"
@@ -21,13 +21,8 @@
 
 #include "al_buffer.h"
 #include "al_ext.h"
-#include "alc/alc_context.h"
 
-#ifdef WORDS_BIGENDIAN
-#define BIGENDIAN 1
-#else
-#define BIGENDIAN 0
-#endif
+#include "alc/alc_context.h"
 
 #define MAX_VORBIS 64
 
@@ -231,7 +226,11 @@ ALint Vorbis_Callback(UNUSED(ALuint sid),
 			ret = ov_read(&vorb->of,
 				      datap,
 				      bytesToRead,
-				      BIGENDIAN,
+#ifdef WORDS_BIGENDIAN
+				      1,
+#else
+				      0,
+#endif
 				      bps,
 				      signed_format(format),
 				      &current_section);

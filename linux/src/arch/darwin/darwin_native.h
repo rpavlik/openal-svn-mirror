@@ -14,8 +14,10 @@
 #ifndef MOSX_DSP_H_
 #define MOSX_DSP_H_
 
-#include <AL/alc.h>
+#include "al_siteconfig.h"
+
 #include <AL/al.h>
+#include <AL/alc.h>
 
 
 void *grab_read_native(void);

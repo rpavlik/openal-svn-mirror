@@ -6,15 +6,16 @@
  * Distance tweakage.
  */
 #include "al_siteconfig.h"
+
+#include <AL/al.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "al_distance.h"
 #include "al_error.h"
 #include "al_main.h"
 #include "alc/alc_context.h"
 #include "alc/alc_error.h"
-
-#include <AL/al.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 #define MIN_DISTANCE 0.001
 #define MAX_DISTANCE 40000

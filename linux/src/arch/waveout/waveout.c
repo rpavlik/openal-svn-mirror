@@ -7,14 +7,8 @@
  *
  */
 #include "al_siteconfig.h"
-#include "al_main.h"
-#include "al_debug.h"
-#include "arch/waveout/waveout.h"
-#include "arch/interface/interface_sound.h"
-#include "../audioconvert/ac_endian.h"
 
 #include <AL/al.h>
-
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,6 +17,12 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include "al_main.h"
+#include "al_debug.h"
+#include "arch/waveout/waveout.h"
+#include "arch/interface/interface_sound.h"
+#include "../audioconvert/ac_endian.h"
 
 #define WAVEOUT_NAMELEN 16
 #define HEADERSIZE      28

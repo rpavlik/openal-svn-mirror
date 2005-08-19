@@ -6,16 +6,16 @@
  */
 
 #include "al_siteconfig.h"
+
+#include <devices/ahi.h>
+#include <clib/ddebug_protos.h>
+#include <proto/ahi.h>
+#include <proto/exec.h>
+
 #include "alc/alc_context.h"
 
 #include "arch/morphos/morphos_native.h"
 #include "arch/morphos/morphos_dispatcher.h"
-
-#include <devices/ahi.h>
-
-#include <clib/ddebug_protos.h>
-#include <proto/ahi.h>
-#include <proto/exec.h>
 
 static ULONG OpenAL_SoundFunc(VOID)
 {

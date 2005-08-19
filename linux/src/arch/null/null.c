@@ -7,13 +7,8 @@
  *
  */
 #include "al_siteconfig.h"
-#include "al_main.h"
-#include "al_debug.h"
-#include "arch/null/null.h"
-#include "arch/interface/interface_sound.h"
 
 #include <AL/al.h>
-
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,6 +18,11 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "al_main.h"
+#include "al_debug.h"
+
+#include "arch/null/null.h"
+#include "arch/interface/interface_sound.h"
 
 static void *bogus_handle = (void *) 0x4ABAD1;
 static ALuint sleep_usec(ALuint speed, ALuint chunk);

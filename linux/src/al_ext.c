@@ -10,6 +10,9 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alext.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
 #include "al_main.h"
 #include "al_types.h"
@@ -22,11 +25,6 @@
 #ifndef NODLOPEN
 #include <dlfcn.h>
 #endif
-
-#include <stdlib.h>
-#include <string.h>
-
-#include <stdio.h>
 
 /*
  * Maximum length of an extension function name.

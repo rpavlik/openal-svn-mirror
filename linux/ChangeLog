@@ -1,4 +1,41 @@
 2005-08-19  Sven Panne  <sven.panne@aedion.de>
+	* linux/configure.ac, linux/src/al_bpool.c, linux/src/al_buffer.c,
+	linux/src/al_config.c, linux/src/al_debug.c,
+	linux/src/al_distance.c, linux/src/al_doppler.c,
+	linux/src/al_error.c, linux/src/al_ext.c, linux/src/al_ext.h,
+	linux/src/al_filter.c, linux/src/al_listen.c, linux/src/al_main.c,
+	linux/src/al_main.h, linux/src/al_mixer.c, linux/src/al_mixfunc.c,
+	linux/src/al_propagation.c, linux/src/al_queue.c,
+	linux/src/al_rcvar.c, linux/src/al_source.c, linux/src/al_spool.c,
+	linux/src/al_state.c, linux/src/al_vector.c,
+	linux/src/mixaudio16.c, linux/src/alc/alc_context.c,
+	linux/src/alc/alc_context.h, linux/src/alc/alc_device.c,
+	linux/src/alc/alc_error.c, linux/src/alc/alc_error.h,
+	linux/src/alc/alc_speaker.c, linux/src/alut/alut_imaadpcm.c,
+	linux/src/alut/alut_main.c, linux/src/alut/alut_msadpcm.c,
+	linux/src/alut/alut_wav.c, linux/src/arch/alsa/alsa.c,
+	linux/src/arch/arts/arts.c, linux/src/arch/bsd/bsd_dsp.c,
+	linux/src/arch/bsd/bsd_dsp.h,
+	linux/src/arch/darwin/darwin_native.h, linux/src/arch/esd/esd.c,
+	linux/src/arch/i386/floatmul.c,
+	linux/src/arch/interface/interface_sound.c,
+	linux/src/arch/irix/iris.c, linux/src/arch/irix/iris.h,
+	linux/src/arch/linux/lin_dsp.c, linux/src/arch/linux/lin_dsp.h,
+	linux/src/arch/morphos/morphos_dispatcher.c,
+	linux/src/arch/morphos/morphos_native.h,
+	linux/src/arch/null/null.c, linux/src/arch/portable/floatmul.c,
+	linux/src/arch/sdl/sdl.c, linux/src/arch/solaris/solaris_native.h,
+	linux/src/arch/waveout/waveout.c,
+	linux/src/arch/windows/windows_native.c,
+	linux/src/arch/windows/windows_native.h,
+	linux/src/extensions/al_ext_capture.c,
+	linux/src/extensions/al_ext_loki.c,
+	linux/src/extensions/al_ext_mp3.c,
+	linux/src/extensions/al_ext_vorbis.c: More fixes for Cygwin/MinGW
+	compilation plus some #include cleanups. The "linux" subtree
+	compiles now under Linux, MinGW/MSYS and Cygwin (with and without
+	"-mno-cygwin").
+
 	* linux/src/al_source.c, linux/src/al_threadlib.c,
 	linux/src/alc/alc_context.c,
 	linux/src/arch/windows/windows_native.c: Small fixes for

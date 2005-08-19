@@ -8,7 +8,10 @@
  */
 #include "al_siteconfig.h"
 
-#include "../include/AL/al.h"
+#include <AL/al.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "al_debug.h"
 #include "al_error.h"
@@ -17,12 +20,9 @@
 #include "al_main.h"
 #include "al_error.h"
 #include "al_config.h"
+
 #include "alc/alc_context.h"
 #include "alc/alc_speaker.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 /*
  * alListeneri( ALenum param, ALint value )

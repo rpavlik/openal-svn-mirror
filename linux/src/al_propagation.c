@@ -5,15 +5,16 @@
  *
  * Propagation tweakage
  */
-#include <AL/al.h>
 
 #include "al_siteconfig.h"
+
+#include <AL/al.h>
+#include <stdlib.h>
+
 #include "al_propagation.h"
 #include "al_error.h"
 #include "al_main.h"
 #include "alc/alc_context.h"
-
-#include <stdlib.h>
 
 #define MIN_PROPAGATION_SPEED 0.001
 #define MAX_PROPAGATION_SPEED 40000

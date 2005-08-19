@@ -8,10 +8,9 @@
  */
 #include "al_siteconfig.h"
 
-#include <stdio.h>
-
 #include <AL/al.h>
 #include <AL/alc.h>
+#include <stdio.h>
 
 #include "al_types.h"
 #include "al_error.h"

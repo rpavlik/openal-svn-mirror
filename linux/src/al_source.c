@@ -13,6 +13,12 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alut.h>
+#include <math.h>
+#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <float.h>
 
 #include "al_buffer.h"
 #include "al_config.h"
@@ -28,13 +34,6 @@
 #include "alc/alc_context.h"
 #include "alc/alc_speaker.h"
 #include "al_ext.h"
-
-#include <math.h>
-#include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <float.h>
 
 /*
  * _alInitSource( ALuint sid )

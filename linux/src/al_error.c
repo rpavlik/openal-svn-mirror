@@ -6,17 +6,17 @@
  * openal error reporting.
  *
  */
+
+#include "al_siteconfig.h"
+
 #include <AL/al.h>
+#include <signal.h>
+#include <stdio.h>
 
 #include "al_debug.h"
 #include "al_types.h"
 #include "al_error.h"
 #include "alc/alc_context.h"
-#include "al_siteconfig.h"
-
-#include <signal.h>
-
-#include <stdio.h>
 
 /*
  * _alShouldBombOnError_LOKI controls whether or not _alSetError should

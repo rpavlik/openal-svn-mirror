@@ -762,6 +762,8 @@ fi
 # Da domb!
 AC_DEFINE(BOMB, 1, [undocumented])
 
+AC_DEFINE(LINUX_AL, 1, [undocumented])
+
 AC_SUBST([DO_MINOR_LIBS])
 AC_SUBST([NASM])
 AC_SUBST([RANLIB])

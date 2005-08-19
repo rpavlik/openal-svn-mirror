@@ -8,13 +8,14 @@
  */
 
 #include "al_siteconfig.h"
+
+#include <AL/al.h>
+#include <string.h>
+
 #include "al_debug.h"
 #include "al_main.h"
 #include "al_types.h"
 #include "mixaudio16.h"
-
-#include <AL/al.h>
-#include <string.h>
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))

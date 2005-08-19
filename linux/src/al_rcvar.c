@@ -8,11 +8,10 @@
  */
 #include "al_siteconfig.h"
 
+#include <AL/al.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include <AL/al.h>
 
 #include "al_config.h"
 #include "al_debug.h"

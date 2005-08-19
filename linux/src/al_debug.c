@@ -8,10 +8,11 @@
 #define _GNU_SOURCE
 
 #include "al_siteconfig.h"
-#include "al_debug.h"
 
 #include <stdio.h>
 #include <stdarg.h>
+
+#include "al_debug.h"
 
 /*
  * ald2str( aldEnum type )

@@ -8,7 +8,9 @@
 #ifndef LIN_DSP_H_
 #define LIN_DSP_H_
 
-#include "AL/alc.h"
+#include "al_siteconfig.h"
+
+#include <AL/alc.h>
 
 /*
  * grab_write_native( void )

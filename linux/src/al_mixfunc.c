@@ -11,13 +11,13 @@
  */
 #include "al_siteconfig.h"
 
+#include <stdio.h>
+
 #include "al_main.h"
 #include "al_mixfunc.h"
 #include "al_types.h"
 
 #include "mixaudio16.h"
-
-#include <stdio.h>
 
 /*
  * _alMixFuncInit( ALMixFunc *mf, ALuint size )

@@ -10,9 +10,6 @@
 #include "al_siteconfig.h"
 
 #include <AL/al.h>
-#include "al_config.h"
-#include "al_main.h"
-
 #include <time.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -22,6 +19,9 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include "al_config.h"
+#include "al_main.h"
 
 #include "arch/interface/interface_sound.h"
 #include "arch/interface/platform.h"

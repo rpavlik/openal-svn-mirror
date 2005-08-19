@@ -22,12 +22,6 @@
 #define _GNU_SOURCE
 #endif /* _GNU_SOURCE */
 
-#include "arch/interface/interface_sound.h"
-#include "arch/alsa/alsa.h"
-
-#include "al_config.h"
-#include "al_debug.h"
-#include "al_main.h"
 #include "al_siteconfig.h"
 
 #include <stdio.h>
@@ -35,6 +29,13 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include "arch/interface/interface_sound.h"
+#include "arch/alsa/alsa.h"
+
+#include "al_config.h"
+#include "al_debug.h"
+#include "al_main.h"
 
 #if OPENAL_DLOPEN_ALSA
 #include <dlfcn.h>

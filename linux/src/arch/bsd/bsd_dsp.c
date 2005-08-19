@@ -10,9 +10,6 @@
 #include "al_siteconfig.h"
 
 #include <AL/al.h>
-
-#include "al_siteconfig.h"
-
 #include <assert.h>
 #include <fcntl.h>
 #include <sys/soundcard.h>

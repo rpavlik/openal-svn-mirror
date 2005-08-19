@@ -1,6 +1,6 @@
-#include <AL/al.h>
-
 #include "al_siteconfig.h"
+
+#include <AL/al.h>
 
 #define SCALING_POWER  9
 #define SCALING_FACTOR (1<<SCALING_POWER)

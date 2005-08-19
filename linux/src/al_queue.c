@@ -9,6 +9,11 @@
  */
 
 #include "al_siteconfig.h"
+
+#include <AL/al.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "al_config.h"
 #include "al_buffer.h"
 #include "al_debug.h"
@@ -19,10 +24,6 @@
 #include "al_types.h"
 
 #include "alc/alc_context.h"
-
-#include <AL/al.h>
-#include <stdlib.h>
-#include <string.h>
 
 /*
  * alSourceQueueBuffers( ALuint sid, ALsizei numBuffers, ALuint *bids )

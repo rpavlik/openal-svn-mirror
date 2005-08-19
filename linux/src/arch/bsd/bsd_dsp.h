@@ -8,6 +8,8 @@
 #ifndef BSD_DSP_H_
 #define BSD_DSP_H_
 
+#include "al_siteconfig.h"
+
 #include <AL/alc.h>
 
 	/* is this right? */

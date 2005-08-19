@@ -6,11 +6,12 @@
  * audio on Windows.
  *
  */
-#include <AL/al.h>
 
+#include "al_siteconfig.h"
+
+#include <AL/al.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <windows.h>
 #include <mmsystem.h>
 
@@ -19,8 +20,8 @@
 
 #include "al_main.h"
 #include "al_debug.h"
+
 #include "alc/alc_context.h"
-#include "al_siteconfig.h"
 
 #include "al_mutexlib.h"
 

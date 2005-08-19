@@ -1,12 +1,12 @@
-#include <AL/al.h>
-
 #include "al_siteconfig.h"
+
+#include <AL/al.h>
+#include <math.h>
+#include <stdlib.h>
+
 #include "al_debug.h"
 #include "al_main.h"
 #include "al_vector.h"
-
-#include <math.h>
-#include <stdlib.h>
 
 #ifndef M_PI
 #define M_PI		3.14159265358979323846	/* pi */

@@ -9,9 +9,10 @@
 #define _AL_MAIN_H_
 
 #include "al_siteconfig.h"
-#include "alc/alc_context.h"
 
 #include <AL/al.h>
+
+#include "alc/alc_context.h"
 
 /*
  * If compiling with gcc, then we can use attributes.

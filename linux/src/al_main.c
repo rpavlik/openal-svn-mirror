@@ -12,6 +12,16 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alext.h>
+#include <math.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "al_debug.h"
 #include "al_types.h"
@@ -25,17 +35,6 @@
 #include "alc/alc_context.h"
 
 #include "al_threadlib.h"
-
-#include <math.h>
-#include <fcntl.h>
-#include <signal.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 #include "audioconvert.h"
 

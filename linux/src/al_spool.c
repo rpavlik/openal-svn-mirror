@@ -1,9 +1,11 @@
 #include "al_siteconfig.h"
+
+#include <stdlib.h>
+#include <sys/types.h>
+
 #include "al_debug.h"
 #include "al_source.h"
 #include "al_spool.h"
-#include <stdlib.h>
-#include <sys/types.h>
 
 /*
  *  Resize spool to at least newsize units

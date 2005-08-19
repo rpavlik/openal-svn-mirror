@@ -5,13 +5,12 @@
  *
  */
 #include "al_siteconfig.h"
-#include <AL/alc.h>
 
+#include <AL/al.h>
+#include <AL/alc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include <AL/al.h>
 
 #include "al_config.h"
 #include "al_main.h"

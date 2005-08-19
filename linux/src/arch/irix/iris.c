@@ -58,6 +58,8 @@
 #undef AL_VERSION
 #undef AL_INVALID_VALUE
 
+#include "al_siteconfig.h"
+
 #include <AL/al.h>
 
 #include "arch/interface/interface_sound.h"
@@ -66,8 +68,8 @@
 #include "al_config.h"
 #include "al_main.h"
 #include "al_debug.h"
+
 #include "alc/alc_context.h"
-#include "al_siteconfig.h"
 
 /*
  * Type definitions

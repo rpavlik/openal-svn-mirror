@@ -7,10 +7,17 @@
  *
  * FIXME: error handling?
  */
+
 #include "al_siteconfig.h"
 
 #include <AL/al.h>
 #include <AL/alut.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <string.h>
 
 #include "al_types.h"
 #include "al_main.h"
@@ -19,14 +26,6 @@
 #include "alc/alc_context.h"
 
 #include "audioconvert.h"
-
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <unistd.h>
-
-#include <string.h>
 
 static ALboolean ReadWAVFile(const char *fname, void **pcmdata,
 			ALushort *rfmt, ALushort *rchan,

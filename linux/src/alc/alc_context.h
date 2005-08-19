@@ -8,11 +8,13 @@
 #ifndef _ALC_CONTEXT_H_
 #define _ALC_CONTEXT_H_
 
+#include "al_siteconfig.h"
+
 #include <AL/al.h>
 #include <AL/alc.h>
 
-#include "../al_types.h"
-#include "../al_attenuation.h"
+#include "al_types.h"
+#include "al_attenuation.h"
 
 #include "audioconvert.h"
 

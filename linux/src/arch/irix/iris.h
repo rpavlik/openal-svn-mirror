@@ -8,7 +8,9 @@
 #ifndef IRIX_NATIVE_H_
 #define IRIX_NATIVE_H_
 
-#include "AL/alc.h"
+#include "al_siteconfig.h"
+
+#include <AL/alc.h>
 
 /* native irix audio stuff */
 void *grab_read_native(void);

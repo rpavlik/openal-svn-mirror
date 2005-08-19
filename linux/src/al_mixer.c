@@ -10,6 +10,13 @@
 #include "al_siteconfig.h"
 
 #include <AL/al.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <string.h>
 
 #include "al_debug.h"
 #include "al_error.h"
@@ -31,14 +38,6 @@
 
 #include "al_threadlib.h"
 #include "al_mutexlib.h"
-
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <string.h>
 
 #include "arch/interface/interface_sound.h"
 

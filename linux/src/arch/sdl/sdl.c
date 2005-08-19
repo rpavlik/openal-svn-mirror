@@ -8,7 +8,6 @@
 #include "al_siteconfig.h"
 
 #include <AL/al.h>
-
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,6 +16,8 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <SDL.h>
+#include <SDL_audio.h>
 
 #include "al_main.h"
 #include "al_debug.h"
@@ -24,9 +25,6 @@
 #include "arch/sdl/sdl.h"
 #include "arch/interface/interface_sound.h"
 #include "alc/alc_context.h"
-
-#include <SDL.h>
-#include <SDL_audio.h>
 
 #define DEF_SPEED	_ALC_CANON_SPEED
 #define DEF_SIZE	_ALC_DEF_BUFSIZ

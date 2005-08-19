@@ -6,8 +6,8 @@
  * arts backend.
  */
 #include "al_siteconfig.h"
-#include <AL/al.h>
 
+#include <AL/al.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,6 +17,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <artsc.h>
 
 #if OPENAL_DLOPEN_ARTS
 #include <dlfcn.h>
@@ -27,8 +28,6 @@
 
 #include "arch/arts/arts.h"
 #include "arch/interface/interface_sound.h"
-
-#include <artsc.h>
 
 #define DEF_SPEED	_ALC_CANON_SPEED
 #define DEF_SIZE	_AL_DEF_BUFSIZ

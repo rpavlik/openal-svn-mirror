@@ -10,11 +10,13 @@
  * interleaved layout of LRLRLR, or LF RF LB RB.  This might not always be the
  * case.
  */
-#include <AL/alc.h>
-
-#include <AL/al.h>
 
 #include "al_siteconfig.h"
+
+#include <AL/al.h>
+#include <AL/alc.h>
+#include <stdio.h>
+
 #include "al_main.h"
 #include "al_types.h"
 #include "al_debug.h"
@@ -24,8 +26,6 @@
 #include "alc_context.h"
 #include "alc_error.h"
 #include "alc_speaker.h"
-
-#include <stdio.h>
 
 #ifndef M_SQRT1_2
 # define M_SQRT1_2      0.70710678118654752440  /* 1/sqrt(2) */

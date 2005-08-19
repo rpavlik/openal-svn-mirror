@@ -5,10 +5,17 @@
  *
  * Context management and application level calls.
  */
+
 #include "al_siteconfig.h"
 
 #include <AL/al.h>
 #include <AL/alc.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <string.h>
 
 #include "al_buffer.h"
 #include "al_config.h"
@@ -21,21 +28,12 @@
 #include "al_source.h"
 #include "al_types.h"
 #include "al_filter.h"
+#include "al_mutexlib.h"
 
 #include "alc_context.h"
 #include "alc_device.h"
 #include "alc_speaker.h"
 #include "alc_error.h"
-
-#include "al_mutexlib.h"
-
-#include <fcntl.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-
-#include <string.h>
 
 #include "arch/interface/interface_sound.h"
 

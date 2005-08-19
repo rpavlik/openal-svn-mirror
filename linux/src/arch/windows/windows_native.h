@@ -7,7 +7,9 @@
 #ifndef WINDOWS_NATIVE_H_
 #define WINDOWS_NATIVE_H_
 
-#include "AL/alc.h"
+#include "al_siteconfig.h"
+
+#include <AL/alc.h>
 
 /* native windows audio stuff */
 void *grab_read_native(void);

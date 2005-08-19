@@ -13,22 +13,20 @@
  */
 #include "al_siteconfig.h"
 
-#include "al_main.h"
-#include "al_ext.h"
-#include "al_config.h"
-#include "al_error.h"
-#include "al_debug.h"
-
 #include <AL/al.h>
-
 #include <ctype.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
 #include <string.h>
+
+#include "al_main.h"
+#include "al_ext.h"
+#include "al_config.h"
+#include "al_error.h"
+#include "al_debug.h"
 
 #ifndef __MORPHOS__
 #define _AL_FNAME "openalrc"

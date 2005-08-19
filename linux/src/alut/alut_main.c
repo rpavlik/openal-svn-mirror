@@ -5,11 +5,13 @@
  *
  * Top level functions for alut stuff.
  */
+
 #include "al_siteconfig.h"
-#include "al_main.h"
 
 #include <AL/alc.h>
 #include <AL/alut.h>
+
+#include "al_main.h"
 
 void alutInit(UNUSED(int *argc), UNUSED(char *argv[])) {
 	ALCdevice *device = alcOpenDevice( NULL );

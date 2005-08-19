@@ -7,13 +7,14 @@
  */
 
 #include "al_siteconfig.h"
+
+#include <AL/al.h>
+#include <stdlib.h>
+
 #include "al_doppler.h"
 #include "al_error.h"
 #include "al_main.h"
 #include "alc/alc_context.h"
-
-#include <AL/al.h>
-#include <stdlib.h>
 
 #define MIN_DOPPLER 0.0
 #define MAX_DOPPLER 40000.0

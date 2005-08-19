@@ -8,15 +8,8 @@
  *
  */
 #include "al_siteconfig.h"
-#include "al_config.h"
-#include "al_main.h"
-#include "al_debug.h"
-#include "alc/alc_context.h"
-#include "arch/interface/interface_sound.h"
-#include "arch/linux/lin_dsp.h"
 
 #include <AL/al.h>
-
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/soundcard.h>
@@ -29,6 +22,13 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include "al_config.h"
+#include "al_main.h"
+#include "al_debug.h"
+#include "alc/alc_context.h"
+#include "arch/interface/interface_sound.h"
+#include "arch/linux/lin_dsp.h"
 
 #ifdef WORDS_BIGENDIAN
 #define AFMT_S16 AFMT_S16_BE

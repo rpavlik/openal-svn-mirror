@@ -62,6 +62,11 @@
  */
 #include "al_siteconfig.h"
 
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
+#include <float.h>
+
 #include "al_able.h"
 #include "al_attenuation.h"
 #include "al_buffer.h"
@@ -77,11 +82,6 @@
 
 #include "alc/alc_context.h"
 #include "alc/alc_speaker.h"
-
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
-#include <float.h>
 
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
 #define MAX(a,b) (((a) < (b)) ? (b) : (a))

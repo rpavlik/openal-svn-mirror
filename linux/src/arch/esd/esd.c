@@ -6,15 +6,8 @@
  * esd backend.
  */
 #include "al_siteconfig.h"
-#include "al_main.h"
-#include "al_debug.h"
-
-#include "arch/esd/esd.h"
-#include "arch/interface/interface_sound.h"
-#include "alc/alc_context.h"
 
 #include <AL/al.h>
-
 #include <assert.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -26,6 +19,14 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include "al_main.h"
+#include "al_debug.h"
+
+#include "arch/esd/esd.h"
+#include "arch/interface/interface_sound.h"
+
+#include "alc/alc_context.h"
 
 #if OPENAL_DLOPEN_ESD
 #include <dlfcn.h>

@@ -8,6 +8,8 @@
 #ifndef _LAL_ALC_ERROR_H_
 #define _LAL_ALC_ERROR_H_
 
+#include "al_siteconfig.h"
+
 #include <AL/al.h>
 #include <AL/alc.h>
 

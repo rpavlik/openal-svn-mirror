@@ -8,7 +8,9 @@
 #ifndef MORPHOS_NATIVE_H_
 #define MORPHOS_NATIVE_H_
 
-#include "AL/alc.h"
+#include "al_siteconfig.h"
+
+#include <AL/alc.h>
 
 /*
  * grab_write_native( void )
