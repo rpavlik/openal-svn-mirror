@@ -3,15 +3,13 @@
 
 /* define platform type */
 #if !defined(MACINTOSH_AL) && !defined(LINUX_AL) && !defined(WINDOWS_AL)
-  #ifdef __APPLE__
-    #define MACINTOSH_AL
-    #else
-    #ifdef _WIN32
-      #define WINDOWS_AL
-    #else
-      #define LINUX_AL
-    #endif
-  #endif
+ #if defined(__APPLE__)
+  #define MACINTOSH_AL
+ #elif defined(_WIN32)
+  #define WINDOWS_AL
+ #else
+  #define LINUX_AL
+ #endif
 #endif
 
 /** 8-bit boolean */

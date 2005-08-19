@@ -1,12 +1,16 @@
 #ifndef _AL_ALCTYPES_H
 #define _AL_ALCTYPES_H
 
-#if !defined(_WIN32)
-struct _AL_device;
-typedef struct _AL_device ALCdevice;
-
-typedef void ALCcontext;
-#endif /* _WIN32 */
+/* define platform type */
+#if !defined(MACINTOSH_AL) && !defined(LINUX_AL) && !defined(WINDOWS_AL)
+ #if defined(__APPLE__)
+  #define MACINTOSH_AL
+ #elif defined(_WIN32)
+  #define WINDOWS_AL
+ #else
+  #define LINUX_AL
+ #endif
+#endif
 
 /** 8-bit boolean */
 typedef char ALCboolean;

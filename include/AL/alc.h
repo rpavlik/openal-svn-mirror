@@ -1,44 +1,44 @@
 #ifndef _AL_ALC_H
 #define _AL_ALC_H
 
-#include "altypes.h"
-#include "alctypes.h"
+#include <AL/alctypes.h>
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 extern "C" {
+#endif
+
+#if defined(_WIN32) && !defined(_XBOX)
+ #if defined (_OPENAL32LIB)
+  #define ALCAPI __declspec(dllexport)
+ #else
+  #define ALCAPI __declspec(dllimport)
+ #endif
+#else
+ #define ALCAPI extern
+#endif
+
+#if defined(_WIN32)
+ #define ALCAPIENTRY __cdecl
+#else
+ #define ALCAPIENTRY
+#endif
+
+#if TARGET_OS_MAC
+ #pragma export on
 #endif
 
 #define ALC_VERSION_0_1         1
 
-#ifdef _WIN32
- typedef struct ALCdevice_struct ALCdevice;
- typedef struct ALCcontext_struct ALCcontext;
- #ifndef _XBOX
-  #ifdef _OPENAL32LIB
-   #define ALCAPI __declspec(dllexport)
-  #else
-   #define ALCAPI __declspec(dllimport)
-  #endif
-  #define ALCAPIENTRY __cdecl
- #endif
+#if defined(WINDOWS_AL)
+typedef struct ALCdevice_struct ALCdevice;
+typedef struct ALCcontext_struct ALCcontext;
+#else
+struct _AL_device;
+typedef struct _AL_device ALCdevice;
+typedef void ALCcontext;
 #endif
 
-#ifdef TARGET_OS_MAC
- #if TARGET_OS_MAC
-  #pragma export on
- #endif
-#endif
-
-#ifndef ALCAPI
- #define ALCAPI
-#endif
-
-#ifndef ALCAPIENTRY
- #define ALCAPIENTRY
-#endif
-
-
-#ifndef ALC_NO_PROTOTYPES
+#if !defined(ALC_NO_PROTOTYPES)
 
 /*
  * Context Management
@@ -61,7 +61,7 @@ ALCAPI ALCdevice*      ALCAPIENTRY alcGetContextsDevice( ALCcontext *context );
 /*
  * Device Management
  */
-ALCAPI ALCdevice *     ALCAPIENTRY alcOpenDevice( const ALchar *devicename );
+ALCAPI ALCdevice *     ALCAPIENTRY alcOpenDevice( const ALCchar *devicename );
 
 ALCAPI ALCboolean      ALCAPIENTRY alcCloseDevice( ALCdevice *device );
 
@@ -153,13 +153,11 @@ typedef void           (ALCAPIENTRY *LPALCCAPTURESAMPLES)( ALCdevice *device, AL
 
 #endif /* ALC_NO_PROTOTYPES */
 
-#ifdef TARGET_OS_MAC
 #if TARGET_OS_MAC
-#pragma export off
-#endif /* TARGET_OS_MAC */
-#endif /* TARGET_OS_MAC */
+ #pragma export off
+#endif
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 }
 #endif
 

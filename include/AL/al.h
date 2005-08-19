@@ -20,46 +20,36 @@
  *  Boston, MA  02111-1307, USA.
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
-#include "altypes.h"
 
-#ifdef __cplusplus
+#include <AL/altypes.h>
+
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
-/* WIN32, not Xbox */
-#ifdef _WIN32
-#ifndef _XBOX
-#ifdef _OPENAL32LIB
-#define ALAPI __declspec(dllexport)
+#if defined(_WIN32) && !defined(_XBOX)
+ #if defined (_OPENAL32LIB)
+  #define ALAPI __declspec(dllexport)
+ #else
+  #define ALAPI __declspec(dllimport)
+ #endif
 #else
-#define ALAPI __declspec(dllimport)
-#endif
-#define ALAPIENTRY __cdecl
-#define AL_CALLBACK 
-#endif
+ #define ALAPI extern
 #endif
 
-#ifdef TARGET_OS_MAC
+#if defined(_WIN32)
+ #define ALAPIENTRY __cdecl
+#else
+ #define ALAPIENTRY
+#endif
+
 #if TARGET_OS_MAC
-#pragma export on
-#endif
-#endif
-
-#ifndef ALAPI
-#define ALAPI
-#endif
-
-#ifndef ALAPIENTRY
-#define ALAPIENTRY
-#endif
-
-#ifndef CALLBACK
-#define AL_CALLBACK 
+ #pragma export on
 #endif
 
 #define OPENAL
 
-#ifndef AL_NO_PROTOTYPES
+#if !defined(AL_NO_PROTOTYPES)
 
 /*
  * Renderer State management
@@ -491,14 +481,11 @@ typedef void           (ALAPIENTRY *LPALDISTANCEMODEL)( ALenum distanceModel );
 
 #endif /* AL_NO_PROTOTYPES */
 
-#ifdef TARGET_OS_MAC
 #if TARGET_OS_MAC
-#pragma export off
-#endif /* TARGET_OS_MAC */
-#endif /* TARGET_OS_MAC */
+ #pragma export off
+#endif
 
-
-#ifdef __cplusplus
+#if defined(__cplusplus)
 }  /* extern "C" */
 #endif
 
