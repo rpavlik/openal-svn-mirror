@@ -144,7 +144,7 @@ ALUTAPI ALvoid ALUTAPIENTRY alutExit(ALvoid)
 	}
 }
 
-ALUTAPI ALvoid ALUTAPIENTRY alutLoadWAVFile(ALbyte *file,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq, ALboolean *loop)
+ALUTAPI ALvoid ALUTAPIENTRY alutLoadWAVFile(const ALbyte *file,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq, ALboolean *loop)
 {
 	WAVChunkHdr_Struct ChunkHdr;
 	WAVFmtExHdr_Struct FmtExHdr;
@@ -223,14 +223,14 @@ ALUTAPI ALvoid ALUTAPIENTRY alutLoadWAVFile(ALbyte *file,ALenum *format,ALvoid *
 	}
 }
 
-ALUTAPI ALvoid ALUTAPIENTRY alutLoadWAVMemory(ALbyte *memory,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq,ALboolean *loop)
+ALUTAPI ALvoid ALUTAPIENTRY alutLoadWAVMemory(const ALbyte *memory,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq,ALboolean *loop)
 {
 	WAVChunkHdr_Struct ChunkHdr;
 	WAVFmtExHdr_Struct FmtExHdr;
 	WAVFileHdr_Struct FileHdr;
 	WAVSmplHdr_Struct SmplHdr;
 	WAVFmtHdr_Struct FmtHdr;
-	ALbyte *Stream;
+	const ALbyte *Stream;
 	
 	*format=AL_FORMAT_MONO16;
 	*data=NULL;
