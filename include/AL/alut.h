@@ -3,7 +3,8 @@
 
 #include <AL/al.h>
 
-#if defined(_WIN32) && !defined(_XBOX)
+/* NOTE: FOR SOME OBSCURE REASON WE DON'T BUILD A DLL ON WINDOWS */
+#if defined(_WIN32) && !defined(_XBOX) && 0
  #if defined (_OPENAL32LIB)
   #define ALUTAPI __declspec(dllexport)
  #else
