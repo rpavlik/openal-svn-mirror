@@ -191,23 +191,23 @@ SOURCE=.\Include\alState.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\AL\al.h
+SOURCE=..\..\include\AL\al.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\AL\alc.h
+SOURCE=..\..\include\AL\alc.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\AL\alctypes.h
+SOURCE=..\..\include\AL\alctypes.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\AL\altypes.h
+SOURCE=..\..\include\AL\altypes.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Al\alut.h
+SOURCE=..\..\include\AL\alut.h
 # End Source File
 # End Group
 # End Target

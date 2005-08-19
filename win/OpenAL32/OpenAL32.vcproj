@@ -381,19 +381,19 @@
 			Name="AL Headers"
 			Filter="">
 			<File
-				RelativePath="..\AL\al.h">
+				RelativePath="..\..\include\AL\al.h">
 			</File>
 			<File
-				RelativePath="..\AL\alc.h">
+				RelativePath="..\..\include\AL\alc.h">
 			</File>
 			<File
-				RelativePath="..\AL\alctypes.h">
+				RelativePath="..\..\include\AL\alctypes.h">
 			</File>
 			<File
-				RelativePath="..\AL\altypes.h">
+				RelativePath="..\..\include\AL\altypes.h">
 			</File>
 			<File
-				RelativePath="..\Al\alut.h">
+				RelativePath="..\..\include\AL\alut.h">
 			</File>
 		</Filter>
 	</Files>
