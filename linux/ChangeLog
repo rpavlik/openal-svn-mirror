@@ -1,3 +1,9 @@
+2005-08-19  Sven Panne  <sven.panne@aedion.de>
+	* linux/src/al_source.c, linux/src/al_threadlib.c,
+	linux/src/alc/alc_context.c,
+	linux/src/arch/windows/windows_native.c: Small fixes for
+	Cygwin/MinGW compilation.
+
 2005-08-18  Sven Panne  <sven.panne@aedion.de>
 	* linux/src/al_mutexlib.h: Added missing "extern"s.
 

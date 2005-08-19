@@ -61,6 +61,9 @@ void _alExitThread( void )
 
 #elif defined(USE_WINDOWSMUTEX)
 
+/* for _alMicroSleep */
+#include "al_main.h"
+
 typedef int ( *ptfunc ) ( void * );
 
 ThreadID _alCreateThread( int ( *fn ) ( void * ) )

@@ -455,7 +455,7 @@ void alcSuspendContext( ALCcontext *alcHandle )
  *
  * FIXME: not as well tested as I'd like.
  */
-ALCcontext *alcCreateContext( struct _AL_device *dev, const ALCint *attrlist )
+ALCcontext *alcCreateContext( ALCdevice *dev, const ALCint *attrlist )
 {
 	ALint cid;
 
