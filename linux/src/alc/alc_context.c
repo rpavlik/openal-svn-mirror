@@ -1514,6 +1514,9 @@ AL_context *_alcGetDevicesContext(ALCdevice *deviceHandle)
 	return deviceHandle->cc;
 }
 
+/* evil */
+extern ALint __alcGetAvailableSamples( void );
+
 void alcGetIntegerv( ALCdevice *deviceHandle, ALCenum  token,
 		     ALCsizei  size , ALCint *dest )
 {
@@ -1530,6 +1533,9 @@ void alcGetIntegerv( ALCdevice *deviceHandle, ALCenum  token,
 
 	switch(token)
 	{
+		case ALC_CAPTURE_SAMPLES:
+		  *dest = __alcGetAvailableSamples();
+		  break;
 		  /* JIV FIXME: move major/minor to header
 		     and copy attributes at context creation
 		     time.
@@ -1567,25 +1573,245 @@ void alcGetIntegerv( ALCdevice *deviceHandle, ALCenum  token,
  Capture functions
 */
 
-ALCdevice *alcCaptureOpenDevice( UNUSED(const ALCchar *devicename), UNUSED(ALCuint frequency), UNUSED(ALCenum format), UNUSED(ALCsizei buffersize) )
+/* Hacked in ALC_EXT_capture support.  --ryan. */
+/* This doesn't support multiple devices, device enumeration, or capture */
+/*  devices seperate from an existing context. How painful. */
+
+/* ring buffer functionality... */
+
+typedef struct {
+	ALubyte *buffer;
+	ALsizei size;
+	ALsizei write;
+	ALsizei read;
+	ALsizei used;
+} __ALRingBuffer;
+
+static ALboolean __alRingBufferInit( __ALRingBuffer * ring, ALsizei size );
+static ALvoid __alRingBufferShutdown( __ALRingBuffer * ring );
+static ALsizei __alRingBufferSize( __ALRingBuffer * ring );
+static ALvoid __alRingBufferPut( __ALRingBuffer * ring, ALubyte *data,
+				 ALsizei size );
+static ALsizei __alRingBufferGet( __ALRingBuffer * ring, ALubyte *data,
+				  ALsizei size );
+
+static __ALRingBuffer captureRing;
+
+static ALboolean __alRingBufferInit( __ALRingBuffer * ring, ALsizei size )
 {
-	return NULL;
+	ALubyte *ptr = ( ALubyte * ) realloc( ring->buffer, size );
+	if( ptr == NULL ) {
+		return AL_FALSE;
+	}
+
+	ring->buffer = ptr;
+	ring->size = size;
+	ring->write = 0;
+	ring->read = 0;
+	ring->used = 0;
+	return AL_TRUE;
 }
 
-ALCAPI ALCboolean      ALCAPIENTRY alcCaptureCloseDevice( UNUSED(ALCdevice *device) )
+static ALvoid __alRingBufferShutdown( __ALRingBuffer * ring )
 {
-	_alcSetError(ALC_INVALID_DEVICE);
-	return ALC_FALSE;
+	free( ring->buffer );
+	ring->buffer = NULL;
 }
 
-ALCAPI void            ALCAPIENTRY alcCaptureStart( UNUSED(ALCdevice *device) )
+static ALsizei __alRingBufferSize( __ALRingBuffer * ring )
 {
+	return ring->used;
 }
 
-ALCAPI void            ALCAPIENTRY alcCaptureStop( UNUSED(ALCdevice *device) )
+static ALvoid __alRingBufferPut( __ALRingBuffer * ring, ALubyte *data,
+				 ALsizei _size )
 {
+	register ALsizei size = _size;
+	register ALsizei cpy;
+	register ALsizei avail;
+
+	if( !size ) {		/* just in case... */
+		return;
+	}
+
+	/* Putting more data than ring buffer holds in total? Replace it all. */
+	if( size > ring->size ) {
+		ring->write = 0;
+		ring->read = 0;
+		ring->used = ring->size;
+		memcpy( ring->buffer, data + ( size - ring->size ),
+			ring->size );
+		return;
+	}
+
+	/* Buffer overflow? Push read pointer to oldest sample not overwritten. */
+	avail = ring->size - ring->used;
+	if( size > avail ) {
+		ring->read += size - avail;
+		if( ring->read > ring->size ) {
+			ring->read -= ring->size;
+		}
+	}
+
+	/* Clip to end of buffer and copy first block... */
+	cpy = ring->size - ring->write;
+	if( size < cpy ) {
+		cpy = size;
+	}
+	if( cpy ) {
+		memcpy( ring->buffer + ring->write, data, cpy );
+	}
+
+	/* Wrap around to front of ring buffer and copy remaining data... */
+	avail = size - cpy;
+	if( avail ) {
+		memcpy( ring->buffer, data + cpy, avail );
+	}
+
+	/* Update write pointer... */
+	ring->write += size;
+	if( ring->write > ring->size ) {
+		ring->write -= ring->size;
+	}
+
+	ring->used += size;
+	if( ring->used > ring->size ) {
+		ring->used = ring->size;
+	}
 }
 
-ALCAPI void            ALCAPIENTRY alcCaptureSamples( UNUSED(ALCdevice *device), UNUSED(ALCvoid *buffer), UNUSED(ALCsizei samples) )
+static ALsizei __alRingBufferGet( __ALRingBuffer * ring, ALubyte *data,
+				  ALsizei _size )
 {
+	register ALsizei cpy;
+	register ALsizei size = _size;
+	register ALsizei avail = ring->used;
+
+	/* Clamp amount to read to available data... */
+	if( size > avail ) {
+		size = avail;
+	}
+
+	/* Clip to end of buffer and copy first block... */
+	cpy = ring->size - ring->read;
+	if( cpy > size ) {
+		cpy = size;
+	}
+	if( cpy ) {
+		memcpy( data, ring->buffer + ring->read, cpy );
+	}
+
+	/* Wrap around to front of ring buffer and copy remaining data... */
+	avail = size - cpy;
+	if( avail ) {
+		memcpy( data + cpy, ring->buffer, avail );
+	}
+
+	/* Update read pointer... */
+	ring->read += size;
+	if( ring->read > ring->size ) {
+		ring->read -= ring->size;
+	}
+
+	ring->used -= size;
+
+	return size;	/* may have been clamped if there wasn't enough data... */
+}
+
+static ALenum captureFmt = AL_NONE;
+static ALuint captureFreq = 0;
+static ALint captureFmtSize = 0;
+
+ALCdevice *alcCaptureOpenDevice( const ALCchar *deviceName, ALCuint frequency, ALCenum format, ALCsizei bufferSize )
+{
+	ALCdevice *retval;
+	AL_context *cc;
+	ALuint cid;
+
+	if ( deviceName != NULL )  { /* !!! FIXME */
+		return NULL;
+	}
+
+	switch( format ) { /* try to keep this sane for now... */
+        case AL_FORMAT_MONO8:
+        case AL_FORMAT_MONO16:
+        case AL_FORMAT_STEREO8:
+        case AL_FORMAT_STEREO16:
+		break;  /* format okay. */
+        default:
+		return NULL;
+	}
+
+	captureFmt = format;
+	captureFreq = frequency;
+	captureFmtSize = _al_formatbits( format ) / 8;
+	if( ( format == AL_FORMAT_STEREO8 ) || ( format == AL_FORMAT_STEREO16 ) ) {
+		captureFmtSize *= 2;
+	}
+
+	bufferSize *= captureFmtSize;
+
+	if ( !__alRingBufferInit( &captureRing, bufferSize )) {
+		return NULL;
+	}
+
+	if( !alCaptureInit_EXT( format, frequency, bufferSize) ) {
+		return NULL;
+	}
+
+	cid = _alcCCId;
+	_alcLockContext( cid );
+	cc = _alcGetContext(cid);
+	retval = cc->read_device;
+	retval->cc = cc;
+	_alcUnlockContext( cid );
+
+	return retval;
+}
+
+ALCboolean alcCaptureCloseDevice( ALCdevice *device )
+{
+	if( device == NULL ) {
+		return ALC_FALSE;
+	}
+
+	alCaptureDestroy_EXT();
+	__alRingBufferShutdown( &captureRing );
+	return ALC_TRUE;
+}
+
+void alcCaptureStart( UNUSED(ALCdevice *device) )
+{
+	alCaptureStart_EXT();
+
+}
+
+void alcCaptureStop( UNUSED(ALCdevice *device) )
+{
+	alCaptureStop_EXT();
+}
+
+/* !!! FIXME: Not ideal; reads samples in ALC_CAPTURE_SAMPLES query */
+/* !!! FIXME: should query hardware here and do read in alcCaptureSamples() */
+ALint __alcGetAvailableSamples( void )
+{
+	static ALubyte buf[2048];
+	ALsizei got;
+    
+	while ( (got = alCaptureGetData_EXT(buf, sizeof (buf), captureFmt, captureFreq) ) > 0 ) {
+		__alRingBufferPut( &captureRing, buf, got );
+	}
+
+	/* printf("got %d have %d\n", (int) got, (int) (__alRingBufferSize(&captureRing) / captureFmtSize)); */
+
+	return __alRingBufferSize(&captureRing) / captureFmtSize;
+}
+
+void alcCaptureSamples( UNUSED(ALCdevice *device), ALCvoid *buffer, ALCsizei samples )
+{
+	if( ( __alRingBufferSize(&captureRing) / captureFmtSize ) < samples ) {
+		return;  /* !!! FIXME: This is an error condition! */
+	}
+
+	__alRingBufferGet( &captureRing, buffer, samples * captureFmtSize );
 }

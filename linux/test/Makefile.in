@@ -17,7 +17,7 @@ TEST_PROGS=testreverb testda testmulti testalut testtime  \
 	   testmultichannel testlistener2 testlistener3      \
 	   testlistener4 testmp3 testvorbis testgainlinear \
 	   testmultimp3 testpitch3 testpitch4 testqueue testqueue2       \
-	   testqueue3 testcapture testmp32 testleak testmulticontext      \
+	   testqueue3 testcapture testcapture2 testmp32 testleak testmulticontext      \
 	   testleak2 testmulticontext2 teststartstop testdevice \
 	   teststrings testcpp testattributes
 

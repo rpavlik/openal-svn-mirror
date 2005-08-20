@@ -136,6 +136,7 @@ ALboolean _alInit( void ) {
 
 #ifdef CAPTURE_SUPPORT
 	_alRegisterExtensionGroup( (const ALubyte*) "AL_EXT_capture" );
+	_alRegisterExtensionGroup( (const ALubyte*) "ALC_EXT_capture" );
 #endif /* CAPTURE_SUPPORT */
 
 #endif /* BUILTIN_EXT_LOKI */

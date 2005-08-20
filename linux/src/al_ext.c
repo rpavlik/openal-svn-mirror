@@ -983,6 +983,10 @@ ALenum alGetEnumValue( const ALchar *ename ) {
 		return ALC_TRUE;
 	}
 
+	if(ustrcmp("ALC_CAPTURE_SAMPLES", ename) == 0) {
+		return ALC_CAPTURE_SAMPLES;
+	}
+
 #if !AL_PURE_API
 	if(ustrcmp("AL_INVALID", ename) == 0) {
 		return AL_INVALID;
