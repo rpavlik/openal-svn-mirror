@@ -271,7 +271,6 @@ static ALenums enumeration[]={
 	{ (ALchar *)"AL_BITS",						        AL_BITS								},
 	{ (ALchar *)"AL_CHANNELS",					        AL_CHANNELS							},
 	{ (ALchar *)"AL_SIZE",							    AL_SIZE								},
-	{ (ALchar *)"AL_DATA",						        AL_DATA								},
 
 	// Buffer States (not supported yet)
 	{ (ALchar *)"AL_UNUSED",						    AL_UNUSED							},

@@ -243,7 +243,6 @@ typedef int ALenum;
 #define AL_BITS                                  0x2002
 #define AL_CHANNELS                              0x2003
 #define AL_SIZE                                  0x2004
-#define AL_DATA                                  0x2005
 
 /**
  * Buffer state.
