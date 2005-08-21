@@ -19,7 +19,6 @@
 #define NUMSOURCES  1
 
 static void init( void );
-static void cleanup( void );
 
 static ALuint mp3buf;		/* our buffer */
 static ALuint mp3source = ( ALuint ) -1;
@@ -41,15 +40,6 @@ static void init( void )
 
 	alSourcei( mp3source, AL_BUFFER, mp3buf );
 	alSourcei( mp3source, AL_LOOPING, AL_FALSE );
-}
-
-static void cleanup( void )
-{
-
-	alcDestroyContext( context );
-#ifdef JLIB
-	jv_check_mem(  );
-#endif
 }
 
 int main( int argc, char *argv[] )
@@ -129,8 +119,7 @@ int main( int argc, char *argv[] )
 		sleep( 1 );
 	}
 
-	cleanup(  );
-
+	alcDestroyContext( context );
 	alcCloseDevice( device );
 
 	return EXIT_SUCCESS;

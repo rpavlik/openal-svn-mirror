@@ -14,7 +14,6 @@
 #define NUMCONTEXTS    2
 
 static void init( const char *fname );
-static void cleanup( void );
 
 static void *data;
 
@@ -99,19 +98,6 @@ static void init( const char *fname )
 	}
 }
 
-static void cleanup( void )
-{
-	int i;
-
-	for ( i = 0; i < NUMCONTEXTS; i++ ) {
-		alcDestroyContext( contexts[i] );
-	}
-
-#ifdef JLIB
-	jv_check_mem(  );
-#endif
-}
-
 int main( int argc, char *argv[] )
 {
 	ALCdevice *device;
@@ -177,7 +163,9 @@ int main( int argc, char *argv[] )
 	}
 #endif
 
-	cleanup(  );
+	for ( i = 0; i < NUMCONTEXTS; i++ ) {
+		alcDestroyContext( contexts[i] );
+	}
 
 	return EXIT_SUCCESS;
 }

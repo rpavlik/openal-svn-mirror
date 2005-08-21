@@ -13,16 +13,16 @@
  *        attach SDL and Sam copyright.
  */
 
-#include "audioconvert.h"
-#include "ac_endian.h"
-#include "ac_wave.h"
 #include "al_siteconfig.h"
 
 #include <AL/al.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "audioconvert/audioconvert.h"
+#include "audioconvert/ac_endian.h"
+#include "audioconvert/ac_wave.h"
 
 #ifdef __GNUC__
     #ifndef DARWIN_TARGET /* darwin os uses a cc based on gcc and have __GNUC__ defined */

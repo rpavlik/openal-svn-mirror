@@ -8,9 +8,10 @@
 #define AC_H_
 
 #include "al_siteconfig.h"
+
 #include <AL/al.h>
 
-#include "ac_adpcm.h"
+#include "audioconvert/ac_adpcm.h"
 
 /* new data types */
 typedef struct _acAudioCVT {

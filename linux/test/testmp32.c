@@ -19,8 +19,6 @@
 #define MP3_FUNC    "alutLoadMP3_LOKI"
 #define NUMSOURCES  1
 
-static void cleanup( void );
-
 static ALuint mp3buf;		/* our buffer */
 static ALuint mp3source = ( ALuint ) -1;
 
@@ -60,15 +58,6 @@ static void initwav( const ALbyte *fname )
 	alBufferData( mp3buf, format, wave, size, freq );
 
 	free( wave );		/* openal makes a local copy of wave data */
-}
-
-static void cleanup( void )
-{
-
-	alcDestroyContext( context );
-#ifdef JLIB
-	jv_check_mem(  );
-#endif
 }
 
 int main( int argc, char *argv[] )
@@ -159,8 +148,7 @@ int main( int argc, char *argv[] )
 
 	sleep( 1 );
 
-	cleanup(  );
-
+	alcDestroyContext( context );
 	alcCloseDevice( device );
 
 	return EXIT_SUCCESS;

@@ -5,7 +5,7 @@ CPP=/lib/cpp
 CFLAGS=@CFLAGS@
 DEFINES=@DEFINES@
 LDFLAGS=@LDFLAGS@
-INC=-I../../include -I../include -I../audioconvert -Iarch -I. @INCLUDES@
+INC=-I../../include -I../include -Iarch -I. @INCLUDES@
 LIBS=-L. @LIBS@
 SO_EXT=@SHARED_LIBRARY_EXT@
 RANLIB=@RANLIB@
@@ -40,7 +40,7 @@ AL_OBJS=al_able.o       \
 # Major subgroupings
 ALUT_OBJS=$(addsuffix .o, $(addprefix alut/alut_, main wav rawadpcm imaadpcm msadpcm ))
 ALC_OBJS=$(addsuffix .o, $(addprefix alc/alc_, context speaker error device ))
-AC_OBJS=$(addsuffix .o, $(addprefix ../audioconvert/ac_, misc freq bits channels helper adpcm endian))
+AC_OBJS=$(addsuffix .o, $(addprefix audioconvert/ac_, misc freq bits channels helper adpcm endian))
 
 # extensions that we want compiled in the main so
 EXT_OBJS=$(addsuffix .o, $(addprefix extensions/al_ext_, loki mp3 vorbis capture))

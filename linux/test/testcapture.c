@@ -14,18 +14,7 @@
 #define FREQ          22050
 #define SAMPLES       (5 * FREQ)
 
-static void cleanup( void );
-
 static ALCcontext *context;
-
-void cleanup( void )
-{
-	alcDestroyContext( context );
-
-#ifdef JLIB
-	jv_check_mem(  );
-#endif
-}
 
 int main( int argc, char *argv[] )
 {
@@ -116,8 +105,7 @@ int main( int argc, char *argv[] )
 
 	free( buffer );
 
-	cleanup(  );
-
+	alcDestroyContext( context );
 	alcCloseDevice( device );
 
 	return EXIT_SUCCESS;

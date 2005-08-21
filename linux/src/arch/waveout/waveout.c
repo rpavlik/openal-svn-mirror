@@ -22,7 +22,7 @@
 #include "al_debug.h"
 #include "arch/waveout/waveout.h"
 #include "arch/interface/interface_sound.h"
-#include "../audioconvert/ac_endian.h"
+#include "audioconvert/ac_endian.h"
 
 #define WAVEOUT_NAMELEN 16
 #define HEADERSIZE      28

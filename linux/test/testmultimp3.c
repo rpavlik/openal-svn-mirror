@@ -19,7 +19,6 @@
 #define MAX_SOURCES 4
 
 static void init( void );
-static void cleanup( void );
 
 static ALuint mp3buf[MAX_SOURCES];	/* our buffer */
 static ALuint mp3source[MAX_SOURCES];
@@ -44,15 +43,6 @@ static void init( void )
 	for ( i = 0; i < MAX_SOURCES; i++ ) {
 		alSourcei( mp3source[i], AL_BUFFER, mp3buf[i] );
 	}
-}
-
-static void cleanup( void )
-{
-
-	alcDestroyContext( context );
-#ifdef JLIB
-	jv_check_mem(  );
-#endif
 }
 
 int main( int argc, char *argv[] )
@@ -135,8 +125,7 @@ int main( int argc, char *argv[] )
 		sleep( 1 );
 	}
 
-	cleanup(  );
-
+	alcDestroyContext( context );
 	alcCloseDevice( device );
 
 	return EXIT_SUCCESS;

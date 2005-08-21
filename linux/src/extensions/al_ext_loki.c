@@ -25,7 +25,7 @@
 #include "alc/alc_context.h"
 #include "alc/alc_speaker.h"
 
-#include <audioconvert.h>
+#include "audioconvert/audioconvert.h"
 
 #include "arch/interface/interface_sound.h"
 

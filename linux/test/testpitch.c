@@ -70,19 +70,6 @@ static void init( const ALbyte *fname )
 	alSourcei( movingSource, AL_LOOPING, AL_TRUE );
 }
 
-static void cleanup( void )
-{
-	alcDestroyContext( cc );
-#ifdef DMALLOC
-	dmalloc_verify( 0 );
-	dmalloc_log_unfreed(  );
-
-#endif
-#ifdef JLIB
-	jv_check_mem(  );
-#endif
-}
-
 int main( int argc, char *argv[] )
 {
 	ALCdevice *device;
@@ -122,8 +109,7 @@ int main( int argc, char *argv[] )
 		sleep( 1 );
 	}
 
-	cleanup(  );
-
+	alcDestroyContext( cc );
 	alcCloseDevice( device );
 
 	return EXIT_SUCCESS;

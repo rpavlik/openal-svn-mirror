@@ -13,8 +13,6 @@
 
 #define WAVEFILE "fire2.wav"
 
-static void cleanup( void );
-
 static void *wave = NULL;
 static ALCcontext *context = NULL;
 static ALuint movingSource = 0;
@@ -51,18 +49,6 @@ static void init( const ALbyte *fname )
 	alSourcei( movingSource, AL_SOURCE_RELATIVE, AL_TRUE );
 	alSourcefv( movingSource, AL_POSITION, position );
 	alSourcef( movingSource, AL_PITCH, 1.00 );
-}
-
-static void cleanup( void )
-{
-#ifdef DMALLOC
-	dmalloc_verify( 0 );
-	dmalloc_log_unfreed(  );
-
-#endif
-#ifdef JLIB
-	jv_check_mem(  );
-#endif
 }
 
 int main( int argc, char *argv[] )
@@ -127,8 +113,6 @@ int main( int argc, char *argv[] )
 
 	alcDestroyContext( context );
 	alcCloseDevice( device );
-
-	cleanup(  );
 
 	return EXIT_SUCCESS;
 }

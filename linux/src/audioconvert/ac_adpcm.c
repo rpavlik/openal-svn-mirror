@@ -48,14 +48,14 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
 #include "al_siteconfig.h"
-#include "ac_adpcm.h"
-#include "ac_endian.h"
-#include "ac_wave.h"
-
-#include <stdio.h>       /*DBG*/
-#include <stdlib.h>
 
 #include <AL/al.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "audioconvert/ac_adpcm.h"
+#include "audioconvert/ac_endian.h"
+#include "audioconvert/ac_wave.h"
 
 #define MS_ADPCM_max ((1<<(16-1))-1)
 #define MS_ADPCM_min -(1<<(16-1))

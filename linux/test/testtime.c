@@ -13,7 +13,6 @@
 #define NUMSOURCES    1
 
 static void iterate( void );
-static void cleanup( void );
 
 static ALuint multis;
 
@@ -68,16 +67,6 @@ static void init( const ALbyte *fname )
 	alSourcei( multis, AL_BUFFER, boom );
 }
 
-void cleanup( void )
-{
-	alcDestroyContext( context );
-	alcCloseDevice( device );
-
-#ifdef JLIB
-	jv_check_mem(  );
-#endif
-}
-
 int main( int argc, char *argv[] )
 {
 	int attributeList[] = { ALC_FREQUENCY, 22050, 0 };
@@ -111,7 +100,8 @@ int main( int argc, char *argv[] )
 		microSleep( 1000000 );
 	}
 
-	cleanup(  );
+	alcDestroyContext( context );
+	alcCloseDevice( device );
 
 	return EXIT_SUCCESS;
 }

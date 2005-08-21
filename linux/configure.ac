@@ -222,17 +222,6 @@ esac
 dnl check for sizeof
 AC_CHECK_SIZEOF(void *)
 
-dnl jlib stuff
-AC_ARG_ENABLE([jlib],
-[AS_HELP_STRING([--enable-jlib],
-                [enable JLIB support @<:@default=no@:>@])])
-
-if test "x$enable_jlib" = xyes; then
-  AC_DEFINE(JLIB, 1, [undocumented])
-  # INCLUDES="$INCLUDES -include \"../include/jlib.h\""
-  LIBS="$LIBS ../jlib/libjlib.a"
-fi
-
 # dmalloc stuff
 AC_ARG_ENABLE([dmalloc],
 [AS_HELP_STRING([--enable-dmalloc],
@@ -773,7 +762,6 @@ AC_SUBST([DEFINES])
 AC_SUBST([LDFLAGS])
 AC_SUBST([LIBS])
 AC_SUBST([INCLUDES])
-AC_SUBST([JLIB])
 AC_SUBST([MAKEINFO])
 AC_SUBST([OS_OBJS])
 AC_SUBST([ARCH_OBJS])
@@ -784,9 +772,7 @@ AC_SUBST([requirements])
 
 # Generate output.
 AC_CONFIG_FILES([Makefile
-                 audioconvert/Makefile 
                  doc/Makefile
-                 jlib/Makefile
                  openal-config
                  openal.pc
                  src/Makefile

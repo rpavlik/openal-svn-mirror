@@ -16,7 +16,6 @@
 #define NUMSOURCES 40
 
 static void init( const char *fname );
-static void cleanup( void );
 
 static ALuint movingSource[NUMSOURCES];
 static ALuint buffer;
@@ -65,20 +64,6 @@ static void init( const char *fname )
 	free( data );
 }
 
-static void cleanup( void )
-{
-	alutExit(  );
-
-#ifdef DMALLOC
-	dmalloc_verify( 0 );
-	dmalloc_log_unfreed(  );
-
-#endif
-#ifdef JLIB
-	jv_check_mem(  );
-#endif
-}
-
 int main( int argc, char *argv[] )
 {
 	int i, j;
@@ -114,7 +99,6 @@ int main( int argc, char *argv[] )
 
 	}
 
-	cleanup(  );
-
+	alutExit(  );
 	return EXIT_SUCCESS;
 }

@@ -62,13 +62,13 @@
  */
 #include "al_siteconfig.h"
 
+#include <AL/alext.h>
+
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <float.h>
 
-#include "al_able.h"
-#include "al_attenuation.h"
 #include "al_buffer.h"
 #include "al_debug.h"
 #include "al_error.h"
@@ -89,6 +89,13 @@
 #define MIN_PITCH 0.25f
 
 #define USE_TPITCH_LOOKUP 1 /* icculus change here JIV FIXME */
+
+/*
+ * _AL_CUTTOFF_ATTENUATION is the value below which, sounds are not further
+ * distance attenuated.  The purpose of this culling is to avoid pop-off
+ * artifacts.
+ */
+#define _AL_CUTTOFF_ATTENUATION 0.01
 
 /*
  * TPITCH_MAX sets the number of discrete values for AL_PITCH we can have.

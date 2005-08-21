@@ -10,6 +10,7 @@
 #include "al_siteconfig.h"
 
 #include <AL/al.h>
+#include <AL/alext.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/soundcard.h>

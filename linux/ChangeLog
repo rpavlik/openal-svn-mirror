@@ -1,4 +1,87 @@
+2005-08-21  Sven Panne  <sven.panne@aedion.de>
+
+	* linux/config-osx.h, linux/configure.ac, linux/INSTALL,
+	linux/Makefile.in, linux/src/al_able.c, linux/src/al_buffer.c,
+	linux/src/alc/alc_context.c, linux/src/alc/alc_context.h,
+	linux/src/alc/alc_device.c, linux/src/alc/alc_device.h,
+	linux/src/alc/alc_error.c, linux/src/alc/alc_error.h,
+	linux/src/alc/alc_speaker.c, linux/src/alc/alc_speaker.h,
+	linux/src/al_doppler.c, linux/src/al_filter.c,
+	linux/src/al_filter.h, linux/src/al_listen.c, linux/src/al_main.c,
+	linux/src/al_mixer.c, linux/src/al_siteconfig.h,
+	linux/src/al_source.c, linux/src/alut/alut_imaadpcm.c,
+	linux/src/alut/alut_msadpcm.c, linux/src/alut/alut_rawadpcm.c,
+	linux/src/alut/alut_wav.c, linux/src/arch/alsa/alsa.c,
+	linux/src/arch/linux/lin_dsp.c,
+	linux/src/arch/solaris/solaris_native.c,
+	linux/src/arch/waveout/waveout.c,
+	linux/src/extensions/al_ext_capture.c,
+	linux/src/extensions/al_ext_loki.c, linux/src/Makefile.in,
+	linux/test/testcallback.c, linux/test/testcapture.c,
+	linux/test/testchannel2.c, linux/test/testchannel.c,
+	linux/test/testda.c, linux/test/testdoppler.c,
+	linux/test/testgain.c, linux/test/testleak2.c,
+	linux/test/testleak.c, linux/test/testlistener2.c,
+	linux/test/testlistener3.c, linux/test/testlistener4.c,
+	linux/test/testlistener.c, linux/test/testloop.c,
+	linux/test/testmp32.c, linux/test/testmp3.c,
+	linux/test/testmultialut.c, linux/test/testmulti.c,
+	linux/test/testmulticontext2.c, linux/test/testmulticontext.c,
+	linux/test/testmultimp3.c, linux/test/testmultinothread.c,
+	linux/test/testnothread.c, linux/test/testpause.c,
+	linux/test/testpitch2.c, linux/test/testpitch3.c,
+	linux/test/testpitch4.c, linux/test/testpitch.c,
+	linux/test/testpitchnothread2.c, linux/test/testpitchnothread.c,
+	linux/test/testqueue2.c, linux/test/testqueue3.c,
+	linux/test/testqueue.c, linux/test/testrelative.c,
+	linux/test/testreverb.c, linux/test/testsingle.c,
+	linux/test/testsourcestop.c, linux/test/teststartstop.c,
+	linux/test/teststream.c, linux/test/testtime.c,
+	linux/test/testvorbis.c: This is a rather large commit including
+	various separate things, but committing separately was not
+	possible due to a CVS server failure yesterday. The most notable
+	changes are:
+
+	linux/audioconvert is now a subdirectory below linux/src. What is
+	still missing is a separate subdirectory for AL stuff and perhaps
+	one for utilities.
+
+	Nuked jlib, in times of ElectricFence, dmalloc and valgrind there
+	is really no place for home-grown memory debugging.
+
+	Removed some dead code.
+
+	Cleaned up #includes, probably much more to come. The previous
+	situation was such a mess, where everybody #included almost
+	everything else.
+
+	* linux/src/audioconvert/ac_adpcm.c,
+	linux/src/audioconvert/ac_adpcm.h,
+	linux/src/audioconvert/ac_bits.c,
+	linux/src/audioconvert/ac_channels.c,
+	linux/src/audioconvert/ac_endian.c,
+	linux/src/audioconvert/ac_endian.h,
+	linux/src/audioconvert/ac_freq.c,
+	linux/src/audioconvert/ac_helper.c,
+	linux/src/audioconvert/ac_misc.c,
+	linux/src/audioconvert/ac_wave.h,
+	linux/src/audioconvert/audioconvert.h: Added.
+
+	* linux/audioconvert/ac_adpcm.c, linux/audioconvert/ac_adpcm.h,
+	linux/audioconvert/ac_bits.c, linux/audioconvert/ac_channels.c,
+	linux/audioconvert/ac_endian.c, linux/audioconvert/ac_endian.h,
+	linux/audioconvert/ac_format.c, linux/audioconvert/ac_freq.c,
+	linux/audioconvert/ac_helper.c, linux/audioconvert/ac_misc.c,
+	linux/audioconvert/ac_wave.h, linux/audioconvert/audioconvert.h,
+	linux/audioconvert/.cvsignore, linux/audioconvert/Makefile.in,
+	linux/audioconvert/test_ac.c, linux/include/jlib.h,
+	linux/jlib/.cvsignore, linux/jlib/globals.c, linux/jlib/hash.c,
+	linux/jlib/libjlib.h, linux/jlib/Makefile.in, linux/src/al_able.h,
+	linux/src/al_attenuation.h, linux/src/al_doppler.h,
+	linux/src/al_propagation.c, linux/src/al_propagation.h: Removed.
+
 2005-08-20  Sven Panne  <sven.panne@aedion.de>
+
 	* linux/src/al_ext.c, linux/src/al_main.c,
 	linux/src/alc/alc_context.c, linux/test/Makefile.in: Merged Ryan
 	C. Gordon's basic support for capture.
@@ -6,6 +89,7 @@
 	* linux/test/testcapture2.c: Added.
 
 2005-08-19  Sven Panne  <sven.panne@aedion.de>
+
 	* linux/configure.ac, linux/src/al_bpool.c, linux/src/al_buffer.c,
 	linux/src/al_config.c, linux/src/al_debug.c,
 	linux/src/al_distance.c, linux/src/al_doppler.c,
@@ -49,6 +133,7 @@
 	Cygwin/MinGW compilation.
 
 2005-08-18  Sven Panne  <sven.panne@aedion.de>
+
 	* linux/src/al_mutexlib.h: Added missing "extern"s.
 
 	* linux/configure.ac, linux/src/Makefile.in,
@@ -68,6 +153,7 @@
 	linux/src/threads/windowsthreads.h: Removed.
 
 2005-08-17  Sven Panne  <sven.panne@aedion.de>
+
 	* linux/src/al_main.c, linux/src/al_mixer.c,
 	linux/src/threads/morphosthreads.c,
 	linux/src/threads/morphosthreads.h,
@@ -121,6 +207,7 @@
 	the footypes.h ones and not via "...".
 
 2005-08-12  Sven Panne  <sven.panne@aedion.de>
+
 	* include/AL/alut.h, linux/src/alut/alut_wav.c,
 	linux/test/testalut.c, linux/test/testattributes.c,
 	linux/test/testcallback.c, linux/test/testcapture.c,
@@ -153,6 +240,7 @@
 	more while I was there (return values, naming consistency).
 	
 2005-08-12  Sven Panne  <sven.panne@aedion.de>
+
 	* linux/test/Makefile.in, linux/test/testalinitexit.c,
 	linux/test/testalut.c, linux/test/testattributes.c,
 	linux/test/testbufferuniq.c, linux/test/testcallback.c,
@@ -200,6 +288,7 @@
 	Removed.
 
 2005-08-11  Sven Panne  <sven.panne@aedion.de>
+
 	* linux/include/AL/alext.h, linux/include/AL/alexttypes.h: Made
 	#defines for protection against multiple inclusion more
 	consistent. Removed unused LAL_OPENAL #define. Added typedefs for
@@ -209,6 +298,7 @@
 	should stay executable).
 
 2005-08-10  Sven Panne  <sven.panne@aedion.de>
+
 	* linux/test/Makefile.in, linux/test/testalinitexit.c,
 	linux/test/testalut.c, linux/test/testattributes.c,
 	linux/test/testbufferuniq.c, linux/test/testcallback.c,
@@ -250,6 +340,7 @@
 	permissions.
 
 2005-08-08  Sven Panne  <sven.panne@aedion.de>
+
 	* linux/config-osx.h, linux/configure.ac: Removed unused
 	--enable--fft option.
 
@@ -317,6 +408,7 @@
 	alutLoadWAV, it was undocumented and only available on Linux.
 
 2005-08-05  Sven Panne  <sven.panne@aedion.de>
+
 	* linux/src/al_buffer.c, linux/src/alut/alut_imaadpcm.c,
 	linux/src/alut/alut_msadpcm.c, linux/src/alut/alut_rawadpcm.c,
 	linux/src/extensions/al_ext_vorbis.c, linux/test/testalut.c,
@@ -346,10 +438,12 @@
 	* src/Makefile.in: al_ext_iasig.c has gone...
 
 2005-07-18  Sven Panne  <sven.panne@aedion.de>
+
 	* linux/doc/openal.texi, linux/src/al_state.c,
 	linux/src/al_state.h: Nuked alHint(), it is not in the 1.1 spec.
 
 2005-07-03  Sven Panne  <sven.panne@aedion.de>
+
 	* linux/Makefile.in: aluttypes.h is dead, Jim...
 
 2005-04-17  Sven Panne  <sven.panne@aedion.de>
@@ -401,8 +495,8 @@
 	AL_ILLEGAL_COMMAND are deprecated tokens from ancient times.
 
 2005-03-31  Sven Panne  <sven.panne@aedion.de>
-	
- 	* linux/configure.ac: Define _OPENAL32LIB for Cygwin/MinGW builds.
+
+	* linux/configure.ac: Define _OPENAL32LIB for Cygwin/MinGW builds.
 
 	* linx/src/al_ext.c, linx/src/al_ext_iasig.c,
 	linx/src/al_source.c: Added a few "#ifdef LINUX_AL" to synch the
@@ -2832,216 +2926,183 @@
 	New test for listener orientation stuff.
 
 2000-08-03  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames-lan.com>
-	 src/al_buffer.c
-	Fixed really stupid bug in alBufferData where buffer's format was
-	set to the *passed* format instead of the *converted* format.
-	This wasn't an issues before (I'm guessing) either because no one
-	used alBufferData without alutLoadWAV(which previously converted
-	data into canonical format) or because of the new multichannel
-	support.
 
-	* src/al_filter.c
-	Fixed alt_tpitch so that multichannel buffers get handled in a
-	minimally proper way.  This still needs to be tested for feature
-	completeeness, but with a pitch of 1.0 this should work okay.
+	* linux/src/al_buffer.c: Fixed really stupid bug in alBufferData
+	where buffer's format was set to the *passed* format instead of
+	the *converted* format.  This wasn't an issues before (I'm
+	guessing) either because no one used alBufferData without
+	alutLoadWAV(which previously converted data into canonical format)
+	or because of the new multichannel support.
 
-	* src/alut/alut_wav.c
-	Changed alutLoadWAV so that it no longer automatically converts
-	data to canonical format (to aid use of multichannel buffers).
+	* linux/src/al_filter.c: Fixed alt_tpitch so that multichannel
+	buffers get handled in a minimally proper way.  This still needs
+	to be tested for feature completeeness, but with a pitch of 1.0
+	this should work okay.
 
-	* src/extensions/al_ext_loki.c
-	AL_BITS is not a valid setter any more for alBufferi_LOKI.
+	* linux/src/alut/alut_wav.c: Changed alutLoadWAV so that it no
+	longer automatically converts data to canonical format (to aid use
+	of multichannel buffers).
 
-	* test/.cvsignore
-	Added testmultichannel entry
+	* linux/src/extensions/al_ext_loki.c: AL_BITS is not a valid
+	setter any more for alBufferi_LOKI.
 
-	* test/Makefile.in
-	Added testmultichannel rule
+	* linux/test/.cvsignore: Added testmultichannel entry
 
-	* test/testmultichannel
-	Program to aid in testing multichannel buffers.
+	* linux/test/Makefile.in: Added testmultichannel rule
 
+	* linux/test/testmultichannel: Program to aid in testing
+	multichannel buffers.
 
 2000-08-02  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames-lan.com>
-	* Changelog
-	Marked changes
 
-	* src/al_mixer.c:
-	Cleaned up tremendously ugly StreamingList code a very little.
-	Sources with streaming buffers now work as advertised.
+	* linux/src/al_mixer.c: Cleaned up tremendously ugly StreamingList
+	code a very little.  Sources with streaming buffers now work as
+	advertised.
 
-	* src/al_ext_loki.c
-	Touched up alBufferi a little.
+	* linux/src/al_ext_loki.c Touched up alBufferi a little.
 
-	* test/.cvsignore
-	Added test programs and rawpcm.pcm
+	* linux/test/.cvsignore: Added test programs and rawpcm.pcm
 
-	* audioconvert/ac_helper.c
-	Reordered conversion filters to 8-bit samples get converte properly.
+	* audioconvert/ac_helper.c: Reordered conversion filters to 8-bit
+	samples get converte properly.
 
-	* src/al_filter.c
-	Nothing much.
+	* linux/src/al_filter.c: Nothing much.
 
-	* src/al_source.c
-	Fixed stupid bug in SplitSources where callbacks were getting
-	hosed prematurely.
+	* linux/src/al_source.c: Fixed stupid bug in SplitSources where
+	callbacks were getting hosed prematurely.
 
 	Added SOURCE_STATE to GetSourceParams, to avoid misleading debug
 	message.
 
-	* test/testalut.c
-	Adapted test to test files passed on command line.
-
+	* linux/test/testalut.c: Adapted test to test files passed on
+	command line.
 
 2000-08-01  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames-lan.com>
 
-	* src/al_types.h:
-	change AL_buffer's freq argument to ALint
+	* linux/src/al_types.h: change AL_buffer's freq argument to ALint
 
-	* src/al_buffer.c
-	changed buffer initializer to set buffer freq to canon_speed.
+	* linux/src/al_buffer.c: changed buffer initializer to set buffer
+	freq to canon_speed.
 
- 	* linux/ChangeLog
-	Noted changes
+	* linux/ChangeLog: Noted changes
 
-	* lots of files
-	Changed AL_ACTIVE to AL_PLAYING, per Bernd's request
+	* lots of files: Changed AL_ACTIVE to AL_PLAYING, per Bernd's
+	request
 
-	* src/al_source.c:
-	Reordered includes, added math.h to aid compilation on freebsd.
+	* linux/src/al_source.c: Reordered includes, added math.h to aid
+	compilation on freebsd.
 
-	* test/
-	Wrapped M_PI in ifdef for test progs, removed include <error.h>
-	for testcallback
+	* linux/test/: Wrapped M_PI in ifdef for test progs, removed
+	include <error.h> for testcallback
 
-	* linux/doc/openal.texi
-	Added documentation for alBufferi_LOKI to Loki extension section.
-	Added FAQ question on alAttenuationScale_LOKI.
+	* linux/doc/openal.texi: Added documentation for alBufferi_LOKI to
+	Loki extension section.  Added FAQ question on
+	alAttenuationScale_LOKI.
 
-	* linux/include/AL/alkludgetypes.h
-	Changed enumeration base a little.
+	* linux/include/AL/alkludgetypes.h: Changed enumeration base a
+	little.
 
-	* linux/src/al_buffer.c
-	Added support for multichannel buffers
+	* linux/src/al_buffer.c: Added support for multichannel buffers
 
-	* linux/src/al_buffer.h
-	Small cleanup
+	* linux/src/al_buffer.h: Small cleanup
 
-	* linux/src/al_ext.c
-	Change extension typedef to AL_extension
+	* linux/src/al_ext.c: Change extension typedef to AL_extension
 
-	* linux/src/al_main.c
-	Change extension typedef to AL_extension
+	* linux/src/al_main.c: Change extension typedef to AL_extension
 
-	* linux/src/al_mixer.c
-	Added support for multichannel buffers
+	* linux/src/al_mixer.c: Added support for multichannel buffers
 
-	* linux/src/al_source.c
-	Removed unused orientation paramater, added support for
-	multichannel buffers.
+	* linux/src/al_source.c: Removed unused orientation paramater,
+	added support for multichannel buffers.
 
-	* linux/src/al_types.h
-	Changed extension typedef to AL_extension
+	* linux/src/al_types.h: Changed extension typedef to AL_extension
 	Corrected lame typedef that defined float6vparam to be a 3-element
 	type.
 
-	* linux/src/extensions/al_ext_loki.c
-	Added alBufferi_LOKI, to allow multichannel buffers.
+	* linux/src/extensions/al_ext_loki.c: Added alBufferi_LOKI, to
+	allow multichannel buffers.
 
-	* linux/src/extensions/al_ext_loki.h
-	Added alBufferi_LOKI, to allow multichannel buffers.
+	* linux/src/extensions/al_ext_loki.h: Added alBufferi_LOKI, to
+	allow multichannel buffers.
 
-	* linux/test/Makefile.in
-	Added case for new test program teststream2
+	* linux/test/Makefile.in: Added case for new test program
+	teststream2
 
-	* linux/test/testcallback.c
-	Don't remember
+	* linux/test/testcallback.c: Don't remember.
 
-	* linux/test/testlib.c
-	Added code to fixup_function_pointers to load alBufferi_LOKI
+	* linux/test/testlib.c: Added code to fixup_function_pointers to
+	load alBufferi_LOKI
 
-	* linux/test/testlib.h
-	Added symbol that resolves to alBufferi_LOKI
+	* linux/test/testlib.h: Added symbol that resolves to
+	alBufferi_LOKI
 
-	* linux/test/testpause3.c
-	Don't remember
+	* linux/test/testpause3.c: Don't remember.
 
-	* linux/test/teststream2.c
-	Added test case for multichannel streaming sounds.
+	* linux/test/teststream2.c: Added test case for multichannel
+	streaming sounds.
 
 2000-07-31  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames-lan.com>
 
-	* src/alc/alc_context.c (alcGetCurrentContext):
-	Added alcGetCurrentContext, designed to return the context handle
-	for the current context.
-	(alcGetCurrentContext):
-	small fix
+	* linux/src/alc/alc_context.c (alcGetCurrentContext): Added
+	alcGetCurrentContext, designed to return the context handle for
+	the current context.
+	(alcGetCurrentContext): small fix
 
 2000-07-29  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames-lan.com>
 
-	* src/al_source.c:
-	Fixed stupid bug in alSourcei, in which the value, when passed
-	with the AL_BUFFER param, was incorrectly range checked as if it
-	were a boolean, when the correct range checking should have
-	checked to see that it was a valid buffer id.
+	* linux/src/al_source.c: Fixed stupid bug in alSourcei, in which
+	the value, when passed with the AL_BUFFER param, was incorrectly
+	range checked as if it were a boolean, when the correct range
+	checking should have checked to see that it was a valid buffer id.
 
 2000-07-28  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames-lan.com>
 
-	* doc/openal.texi
-	Added FAQ question on avoiding the select for Vortex cards.
+	* linux/doc/openal.texi: Added FAQ question on avoiding the select
+	for Vortex cards.
 
-	* src/al_config.c:
-	Fixed handling in token_str_to_token to properly recognize
-	booleans #t and #f.
+	* linux/src/al_config.c: Fixed handling in token_str_to_token to
+	properly recognize booleans #t and #f.
 
-	* src/arch/linux/lin_dsp.c:
-	Added code to make the boolean alrc var "native-use-select" work.
-	So if you set native-use-select to #f, the linux native driver
-	won't use select.
+	* linux/src/arch/linux/lin_dsp.c: Added code to make the boolean
+	alrc var "native-use-select" work.  So if you set
+	native-use-select to #f, the linux native driver won't use select.
 
-
-
-	* doc/openal.texi:
-	Added FAQ section, and short description on how to enable ESD.
+	* linux/doc/openal.texi: Added FAQ section, and short description
+	on how to enable ESD.
 
 2000-07-27  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames-lan.com>
 
-	* doc/openal.texi
-	Fleshed out information on non-integral types, the al and alc
-	subsections of the API section, and fixed up some of the nodes to
-	make more sense.
+	* linux/doc/openal.texi: Fleshed out information on non-integral
+	types, the al and alc subsections of the API section, and fixed up
+	some of the nodes to make more sense.
 
-	* src/al_mixer.c
-	Important update to _alDestroyMixer, to ensure that sources
-	associated with callback buffers get their source-destroy callback
-	called when the source is either implicitly or explicitly
-	stopped.
+	* linux/src/al_mixer.c: Important update to _alDestroyMixer, to
+	ensure that sources associated with callback buffers get their
+	source-destroy callback called when the source is either
+	implicitly or explicitly stopped.
 
-	* src/al_main.c src/al_main.h
-	changed slurp to _alSlurp
+	* linux/src/al_main.c, src/al_main.h: changed slurp to _alSlurp
 
-	* include/AL/alkludge.h
-	Removed trailing undefs
+	* include/AL/alkludge.h: Removed trailing undefs
 
 2000-07-24  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames-lan.com>
 
-	* doc/openal.texi:
-	Fleshed out sections on errors a little bit.
+	* linux/doc/openal.texi: Fleshed out sections on errors a little
+	bit.
 
-	* (src/arch/linux/lin_dsp.c)
-	Added an ioctl call to request the fragment size from the sound
-	card in set_native, so that weird bufsiz requests to set_native
-	(ie, requests which are not powers of two) that get implicitly set
-	to some power of two are reported to the calling function
-	correctly.  A mismatch could potentially cause timing problems.
+	* linux/src/arch/linux/lin_dsp.c: Added an ioctl call to request
+	the fragment size from the sound card in set_native, so that weird
+	bufsiz requests to set_native (ie, requests which are not powers
+	of two) that get implicitly set to some power of two are reported
+	to the calling function correctly.  A mismatch could potentially
+	cause timing problems.
 
 2000-07-21  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames-lan.com>
 
-	* (first entry)
-	This, being the first ChangeLog entry, will seek to address
-	what has changed in the OpenAL source code with regard to the
-	recent code commit, which has brought the Loki implementation
-	closer to the proposed 1.0 specification.
+	* (first entry): This, being the first ChangeLog entry, will seek
+	to address what has changed in the OpenAL source code with regard
+	to the recent code commit, which has brought the Loki
+	implementation closer to the proposed 1.0 specification.
 
 	Users of the library will notice that the definitions for
 	GenBuffers and GenSources no longer return the number of items
@@ -3052,7 +3113,7 @@
 	Some functions have been removed from the implementation.  These
 	are:
 
-	GetErrorString       -- duplicated functionality (use GetString)
+	GetErrorString -- duplicated functionality (use GetString)
 
 	Most _LOKI functions have been moved such that they require an
 	explicit GetProcAddress to resolve them.  The prototypes for these

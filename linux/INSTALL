@@ -18,8 +18,7 @@ configure options:
 	--enable-optimization Enables optimization.
 
 etc...  Use --help to determine the rest.  Most people will be fine with
---enable-optimization.  I don't recommend --enable-jlib.  It's only
-useful to me.  Really.
+--enable-optimization.
 
 Debugging options are now in the form:
 

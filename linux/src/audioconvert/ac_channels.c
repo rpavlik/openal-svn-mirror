@@ -6,11 +6,12 @@
  * audioconvert function related to number of audio channels
  */
 
-#include "audioconvert.h"
-#include <AL/al.h>
 #include "al_siteconfig.h"
 
+#include <AL/al.h>
 #include <stdio.h>
+
+#include "audioconvert/audioconvert.h"
 
 /* Duplicate a mono channel to both stereo channels */
 void acConvertStereo(acAudioCVT *cvt, ALushort format) {

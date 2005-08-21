@@ -10,11 +10,11 @@
 
 #include <AL/al.h>
 #include <AL/alc.h>
-#include <stdio.h>
 
 #include "al_debug.h"
-#include "alc/alc_error.h"
 #include "al_main.h"
+
+#include "alc/alc_error.h"
 
 /*
  * alcErrorIndex is a simple index referring to an error.

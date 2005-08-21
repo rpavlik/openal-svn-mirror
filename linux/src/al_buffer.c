@@ -28,7 +28,7 @@
 #include "alc/alc_context.h"
 #include "alc/alc_speaker.h"
 
-#include "audioconvert.h"
+#include "audioconvert/audioconvert.h"
 
 #include "al_threadlib.h"
 #include "al_mutexlib.h"

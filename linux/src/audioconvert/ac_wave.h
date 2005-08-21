@@ -8,6 +8,8 @@
 #ifndef AC_WAVE_H_
 #define AC_WAVE_H_
 
+#include "al_siteconfig.h"
+
 #include <AL/al.h>
 
 #define DATA		0x61746164		/* "data" */

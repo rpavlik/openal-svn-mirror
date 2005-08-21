@@ -7,19 +7,10 @@
  */
 #include "al_siteconfig.h"
 
-#include <stdio.h>
-
 #include <AL/al.h>
-#include <AL/alext.h>
 
-#include "al_able.h"
-#include "al_types.h"
-#include "al_error.h"
 #include "al_main.h"
-
-#include "alc/alc_context.h"
-
-/** Enable/Disable mojo. */
+#include "al_error.h"
 
 /*
  * alEnable( ALenum param )
@@ -27,14 +18,13 @@
  * Enables param if possible for the current context.  If param does not
  * specify a valid enabling token, AL_INVALID_ENUM is set.
  */
-void alEnable( ALenum param ) {
+void alEnable( UNUSED(ALenum param) )
+{
 	_alcDCLockContext();
-
-	_alEnable( param );
-
+	if(_alcDCGetContext() != NULL) {
+		_alDCSetError( AL_INVALID_ENUM );
+	}
 	_alcDCUnlockContext();
-
-	return;
 }
 
 /*
@@ -43,14 +33,13 @@ void alEnable( ALenum param ) {
  * Disables param if possible for the current context.  If param does not
  * specify a valid enabling token, AL_INVALID_ENUM is set.
  */
-void alDisable( ALenum param ) {
+void alDisable( UNUSED(ALenum param) )
+{
 	_alcDCLockContext();
-
-	_alDisable( param );
-
+	if(_alcDCGetContext() != NULL) {
+		_alDCSetError( AL_INVALID_ENUM );
+	}
 	_alcDCUnlockContext();
-
-	return;
 }
 
 /*
@@ -61,90 +50,12 @@ void alDisable( ALenum param ) {
  *
  * if param is not a valid enable/disable token, AL_INVALID_ENUM is set.
  */
-ALboolean alIsEnabled(ALenum param) {
-	ALboolean retval;
-
+ALboolean alIsEnabled(UNUSED(ALenum param))
+{
 	_alcDCLockContext();
-
-	retval = _alIsEnabled( param );
-
+	if(_alcDCGetContext() != NULL) {
+		_alDCSetError( AL_INVALID_ENUM );
+	}
 	_alcDCUnlockContext();
-
-	return retval;
-}
-
-/*
- * _alIsEnabled( ALenum param )
- *
- * Non locking version of alIsEnabled.
- *
- * assumes locked context
- */
-ALboolean _alIsEnabled( ALenum param ) {
-	AL_context *cc;
-
-	cc = _alcDCGetContext();
-	if( cc == NULL ) {
-		return AL_FALSE;
-	}
-
-	switch( param ) {
-		default:
-			_alDCSetError( AL_INVALID_ENUM );
-			break;
-	}
-
 	return AL_FALSE;
-}
-
-/*
- * _alEnable( ALenum param )
- *
- * Enables the attribute specified by param.
- *
- * If param is not a valid attribute, AL_INVALID_ENUM is set.
- *
- * assumes locked context
- */
-void _alEnable( ALenum param ) {
-	AL_context *cc;
-
-	cc = _alcDCGetContext();
-	if(cc == NULL) {
-		return;
-	}
-
-	switch( param ) {
-		default:
-			_alDCSetError( AL_INVALID_ENUM );
-			break;
-	}
-
-	return;
-}
-
-/*
- * _alDisable( ALenum param )
- *
- * Disables the attribute specified by param.
- *
- * If param is not a valid attribute, AL_INVALID_ENUM is set.
- *
- * assumes locked context
- */
-void _alDisable( ALenum param ) {
-	AL_context *cc;
-
-	cc = _alcDCGetContext();
-	if(cc == NULL) {
-		return;
-	}
-
-	switch( param ) {
-		default:
-			_alDCSetError( AL_INVALID_ENUM );
-			break;
-	}
-
-	return;
 }

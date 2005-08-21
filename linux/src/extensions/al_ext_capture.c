@@ -26,7 +26,7 @@
 #include "alc/alc_context.h"
 #include "al_types.h"
 
-#include <audioconvert.h>
+#include "audioconvert/audioconvert.h"
 
 #include "arch/interface/interface_sound.h"
 #include "al_mutexlib.h"

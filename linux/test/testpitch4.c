@@ -26,7 +26,6 @@
 char *musicstr = "CEG 4 CEG 4 CEG 4";
 
 static void init( const char *fname );
-static void cleanup( void );
 
 static ALuint chords[3] = { 0, 0, 0 };
 
@@ -70,18 +69,6 @@ static void init( const char *fname )
 		alSourcei( chords[i], AL_BUFFER, boom );
 		alSourcei( chords[i], AL_LOOPING, AL_FALSE );
 	}
-}
-
-static void cleanup( void )
-{
-#ifdef DMALLOC
-	dmalloc_verify( 0 );
-	dmalloc_log_unfreed(  );
-
-#endif
-#ifdef JLIB
-	jv_check_mem(  );
-#endif
 }
 
 int main( int argc, char *argv[] )
@@ -199,10 +186,7 @@ int main( int argc, char *argv[] )
 	}
 
 	alcDestroyContext( cc );
-
 	alcCloseDevice( device );
-
-	cleanup(  );
 
 	return EXIT_SUCCESS;
 }

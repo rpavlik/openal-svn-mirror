@@ -19,7 +19,6 @@
 #define ADPCM_FILE "adpcm.adp"
 
 static void init( void );
-static void cleanup( void );
 
 static ALuint movingSource[1];
 
@@ -47,13 +46,6 @@ static void init( void )
 	alSourcefv( movingSource[0], AL_ORIENTATION, back );
 	alSourcei( movingSource[0], AL_BUFFER, stereo );
 	alSourcei( movingSource[0], AL_LOOPING, AL_FALSE );
-}
-
-static void cleanup( void )
-{
-#ifdef JLIB
-	jv_check_mem(  );
-#endif
 }
 
 int main( int argc, char *argv[] )
@@ -131,8 +123,6 @@ int main( int argc, char *argv[] )
 	while( sourceIsPlaying( movingSource[0] ) == AL_TRUE ) {
 		sleep( 1 );
 	}
-
-	cleanup(  );
 
 	alcDestroyContext( context );
 	alcCloseDevice( device );

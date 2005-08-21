@@ -13,7 +13,6 @@
 #define NUMSOURCES    1
 
 static void start( void );
-static void cleanup( void );
 
 static ALuint multis;
 
@@ -57,14 +56,6 @@ static void init( const ALbyte *fname )
 	alSourceQueueBuffers( multis, 1, &boom );
 }
 
-void cleanup( void )
-{
-	alcDestroyContext( context );
-#ifdef JLIB
-	jv_check_mem(  );
-#endif
-}
-
 int main( int argc, char *argv[] )
 {
 	ALCdevice *device;
@@ -95,8 +86,7 @@ int main( int argc, char *argv[] )
 		microSleep( 1000000 );
 	}
 
-	cleanup(  );
-
+	alcDestroyContext( context );
 	alcCloseDevice( device );
 
 	return EXIT_SUCCESS;

@@ -8,32 +8,25 @@
 
 #include "al_siteconfig.h"
 
-#include <AL/al.h>
 #include <AL/alc.h>
-#include <fcntl.h>
+#include <AL/alext.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <string.h>
 
-#include "al_buffer.h"
-#include "al_config.h"
-#include "al_debug.h"
-#include "al_distance.h"
-#include "al_listen.h"
-#include "al_main.h"
 #include "al_mixer.h"
-#include "al_spool.h"
+#include "al_main.h"
+#include "al_debug.h"
+#include "al_listen.h"
 #include "al_source.h"
-#include "al_types.h"
+#include "al_spool.h"
+#include "al_buffer.h"
 #include "al_filter.h"
-#include "al_mutexlib.h"
+#include "al_distance.h"
 
-#include "alc_context.h"
-#include "alc_device.h"
-#include "alc_speaker.h"
-#include "alc_error.h"
+#include "alc/alc_error.h"
+#include "alc/alc_device.h"
+#include "alc/alc_speaker.h"
+#include "alc/alc_context.h"
 
 #include "arch/interface/interface_sound.h"
 
@@ -138,10 +131,6 @@ static void _alcDeviceReadSet( ALuint cid );
  * cid.
  */
 static void _alcDeviceWriteSet( ALuint cid );
-
-#ifdef JLIB
-unsigned int jlib_debug = 0;
-#endif
 
 /*
  * VOIDP_TO_ALUINT and ALUINT_TO_VOIDP are macros to ease the conversion of
@@ -468,11 +457,6 @@ ALCcontext *alcCreateContext( ALCdevice *dev, const ALCint *attrlist )
 		 * This is the first context to be created.  Initialize the
 		 * library's data structures.
 		 */
-#ifdef JLIB
-		if(getenv("JLIB_DEBUG")) {
-			jlib_debug = atoi(getenv("JLIB_DEBUG"));
-		}
-#endif
 
 		/* get a context name for the new context */
 		cid = _alcGetNewContextId();

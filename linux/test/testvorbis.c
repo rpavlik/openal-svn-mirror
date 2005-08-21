@@ -19,7 +19,6 @@
 #define NUMSOURCES  1
 
 static void init( void );
-static void cleanup( void );
 
 static ALuint vorbbuf;		/* our buffer */
 static ALuint vorbsource = ( ALuint ) -1;
@@ -41,15 +40,6 @@ static void init( void )
 
 	alSourcei( vorbsource, AL_BUFFER, vorbbuf );
 	alSourcei( vorbsource, AL_LOOPING, AL_TRUE );
-}
-
-static void cleanup( void )
-{
-
-	alcDestroyContext( context );
-#ifdef JLIB
-	jv_check_mem(  );
-#endif
 }
 
 int main( int argc, char *argv[] )
@@ -125,8 +115,7 @@ int main( int argc, char *argv[] )
 		sleep( 1 );
 	}
 
-	cleanup(  );
-
+	alcDestroyContext( context );
 	alcCloseDevice( device );
 
 	return EXIT_SUCCESS;

@@ -8,19 +8,15 @@
 
 #include <AL/al.h>
 #include <AL/alc.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "al_config.h"
 #include "al_main.h"
-#include "al_types.h"
 #include "al_debug.h"
-#include "al_state.h"
 
-#include "alc_context.h"
-#include "alc_error.h"
-#include "alc_device.h"
+#include "alc/alc_device.h"
+#include "alc/alc_error.h"
 
 #include "arch/interface/interface_sound.h"
 

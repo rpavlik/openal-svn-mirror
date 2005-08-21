@@ -8,8 +8,11 @@
 #ifndef ALC_SPEAKER_H_
 #define ALC_SPEAKER_H_
 
-#include "alc_context.h"
+#include "al_siteconfig.h"
+
 #include <AL/al.h>
+
+#include "alc/alc_context.h"
 
 typedef enum {
 	ALS_LEFT,

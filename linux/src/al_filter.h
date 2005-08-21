@@ -9,7 +9,10 @@
 #ifndef _AL_FILTER_H_
 #define _AL_FILTER_H_
 
+#include "al_siteconfig.h"
+
 #include <AL/al.h>
+
 #include "al_types.h"
 
 /*

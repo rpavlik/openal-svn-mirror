@@ -12,8 +12,6 @@
 #define WAVEFILE      "sample.wav"
 #define NUMSOURCES    3000
 
-static void cleanup( void );
-
 static ALuint multis[NUMSOURCES] = { 0 };
 
 static ALCcontext *context;
@@ -66,15 +64,6 @@ static void init( const ALbyte *fname )
 		alSourcefv( multis[i], AL_ORIENTATION, back );
 		alSourcei( multis[i], AL_BUFFER, boom );
 	}
-}
-
-void cleanup( void )
-{
-	alcDestroyContext( context );
-
-#ifdef JLIB
-	jv_check_mem(  );
-#endif
 }
 
 int main( int argc, char *argv[] )
@@ -152,8 +141,7 @@ int main( int argc, char *argv[] )
 	fprintf( stderr, "error: %s\n", alGetString( alGetError(  ) ) );
 	sleep( 2 );
 
-	cleanup(  );
-
+	alcDestroyContext( context );
 	alcCloseDevice( device );
 
 	return EXIT_SUCCESS;

@@ -12,13 +12,14 @@
 
 /* Functions for audio drivers to perform runtime conversion of audio format */
 
-#include "audioconvert.h"
-#include <AL/al.h>
 #include "al_siteconfig.h"
 
+#include <AL/al.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "audioconvert/audioconvert.h"
 
 void acConvertSign(acAudioCVT *cvt, ALushort format);
 void acConvertEndian(acAudioCVT *cvt, ALushort format);

@@ -5,11 +5,12 @@
  *
  * audioconvert functions related to bit depth.
  */
-#include "audioconvert.h"
-#include <AL/al.h>
 #include "al_siteconfig.h"
 
+#include <AL/al.h>
 #include <stdio.h>
+
+#include "audioconvert/audioconvert.h"
 
 /* Convert 8-bit to 16-bit - LSB */
 void acConvert16LSB( acAudioCVT *cvt, ALushort format ) {

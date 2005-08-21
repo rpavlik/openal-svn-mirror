@@ -8,9 +8,10 @@
 #ifndef ALC_DEVICE_H_
 #define ALC_DEVICE_H_
 
-#include "alc_context.h"
+#include "al_siteconfig.h"
 #include <AL/al.h>
 
+#include "al_types.h"
 /*
  * _alcDevicePause( AL_device *dev )
  *

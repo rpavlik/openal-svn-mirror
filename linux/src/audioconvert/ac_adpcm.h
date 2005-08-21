@@ -36,6 +36,8 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #ifndef _AC_ADPCM_H_
 #define _AC_ADPCM_H_
 
+#include "al_siteconfig.h"
+
 #include <AL/al.h>
 #include <AL/alext.h>
 

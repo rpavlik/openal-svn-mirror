@@ -10,7 +10,6 @@
 
 #include "al_siteconfig.h"
 
-#include <AL/al.h>
 #include <AL/alc.h>
 
 /*

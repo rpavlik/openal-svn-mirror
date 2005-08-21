@@ -17,7 +17,6 @@
 #define DATABUFFERSIZE (10 * (512 * 3) * 1024)
 
 static void init( const char *fname );
-static void cleanup( void );
 
 static ALuint movingSource = 0;
 
@@ -69,15 +68,6 @@ static void init( const char *fname )
 	alSourcei( movingSource, AL_LOOPING, AL_FALSE );
 }
 
-static void cleanup( void )
-{
-	free( data );
-	alcDestroyContext( context );
-#ifdef JLIB
-	jv_check_mem(  );
-#endif
-}
-
 int main( int argc, char *argv[] )
 {
 	ALCdevice *device;
@@ -118,8 +108,8 @@ int main( int argc, char *argv[] )
 	fprintf( stderr, "set ALC_CHAN_CD %f get = %f\n",
 		 gain, palcGetAudioChannel( ALC_CHAN_CD_LOKI ) );
 
-	cleanup(  );
-
+	free( data );
+	alcDestroyContext( context );
 	alcCloseDevice( device );
 
 	return EXIT_SUCCESS;

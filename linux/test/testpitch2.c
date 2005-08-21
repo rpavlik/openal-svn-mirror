@@ -26,7 +26,6 @@ char *musicstr = "E 9";
 char *dmusicstr = "E 2 D 2 C 2 D 2 E 2 E 2 E 2 D 2 D 2 D 2 E 2 G 2 G 3";
 
 static void init( const char *fname );
-static void cleanup( void );
 
 static ALuint movingSource = 0;
 
@@ -68,19 +67,6 @@ static void init( const char *fname )
 	alSourcef( movingSource, AL_GAIN_LINEAR_LOKI, 0.20 );
 	alSourcei( movingSource, AL_BUFFER, boom );
 	alSourcei( movingSource, AL_LOOPING, AL_TRUE );
-}
-
-static void cleanup( void )
-{
-	alcDestroyContext( cc );
-#ifdef DMALLOC
-	dmalloc_verify( 0 );
-	dmalloc_log_unfreed(  );
-
-#endif
-#ifdef JLIB
-	jv_check_mem(  );
-#endif
 }
 
 int main( int argc, char *argv[] )
@@ -187,8 +173,7 @@ int main( int argc, char *argv[] )
 		microSleep( beats / 4.0 * 1000000 );
 	}
 
-	cleanup(  );
-
+	alcDestroyContext( cc );
 	alcCloseDevice( device );
 
 	return EXIT_SUCCESS;

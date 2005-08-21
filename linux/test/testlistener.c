@@ -18,7 +18,6 @@
 #define ALMAXDISTANCE 60.0f
 
 static void iterate( void );
-static void cleanup( void );
 
 static ALuint multis[2] = { 0 };
 
@@ -87,15 +86,6 @@ static void init( const ALbyte *fname )
 	alSourcei( multis[1], AL_LOOPING, AL_TRUE );
 }
 
-void cleanup( void )
-{
-	alcDestroyContext( context );
-
-#ifdef JLIB
-	jv_check_mem(  );
-#endif
-}
-
 int main( int argc, char *argv[] )
 {
 	ALCdevice *device;
@@ -132,8 +122,7 @@ int main( int argc, char *argv[] )
 		iterate(  );
 	}
 
-	cleanup(  );
-
+	alcDestroyContext( context );
 	alcCloseDevice( device );
 
 	return EXIT_SUCCESS;

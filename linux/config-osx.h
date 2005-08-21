@@ -22,7 +22,6 @@
 
 /* #undef DMALLOC */
 /* #undef DMALLOC_FUNC_CHECK */
-/* #undef JLIB */
 
 /* #undef PARANOID_LOCKS */
 /* #undef EMPTY_LOCKS */

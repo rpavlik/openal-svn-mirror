@@ -36,7 +36,7 @@
 
 #include "al_threadlib.h"
 
-#include "audioconvert.h"
+#include "audioconvert/audioconvert.h"
 
 /* standard extensions
  *

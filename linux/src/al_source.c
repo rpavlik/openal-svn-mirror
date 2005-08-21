@@ -13,6 +13,7 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alut.h>
+#include <AL/alext.h>
 #include <math.h>
 #include <limits.h>
 #include <stdio.h>

@@ -90,14 +90,6 @@ static void init( const char *fname )
 	alSourcei( movingSource, AL_LOOPING, AL_TRUE );
 }
 
-static void cleanup( void )
-{
-	alcDestroyContext( context );
-#ifdef JLIB
-	jv_check_mem(  );
-#endif
-}
-
 int main( int argc, char *argv[] )
 {
 	ALCdevice *device;
@@ -144,7 +136,7 @@ int main( int argc, char *argv[] )
 		}
 	}
 
-	cleanup(  );
+	alcDestroyContext( context );
 
 	return EXIT_SUCCESS;
 }

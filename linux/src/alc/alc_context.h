@@ -14,9 +14,6 @@
 #include <AL/alc.h>
 
 #include "al_types.h"
-#include "al_attenuation.h"
-
-#include "audioconvert.h"
 
 /*
  * _ALC_DEF_FREQ is the default internal mixing frequency.

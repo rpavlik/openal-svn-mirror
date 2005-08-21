@@ -8,10 +8,10 @@
  */
 #include "al_siteconfig.h"
 
+#include <AL/al.h>
 #include <string.h>
 
-#include "ac_endian.h"
-#include <AL/al.h>
+#include "audioconvert/ac_endian.h"
 
 ALubyte *cp16le(ALubyte *rawdata, ALushort *reader16) {
 	memcpy(reader16, rawdata, sizeof *reader16);

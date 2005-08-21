@@ -15,7 +15,6 @@
 #define DATABUFSIZE 32768
 
 static void init( const char *fname );
-static void cleanup( void );
 
 static ALuint movingSource = 0;
 
@@ -43,14 +42,6 @@ static void init( const char *fname )
 		fprintf( stderr, "Could not open %s\n", RAWPCM );
 		exit( EXIT_FAILURE );
 	}
-}
-
-static void cleanup( void )
-{
-	alcDestroyContext( context );
-#ifdef JLIB
-	jv_check_mem(  );
-#endif
 }
 
 int main( int argc, char *argv[] )
@@ -131,8 +122,7 @@ int main( int argc, char *argv[] )
 
 	alSourceStop( movingSource );
 
-	cleanup(  );
-
+	alcDestroyContext( context );
 	alcCloseDevice( device );
 
 	return EXIT_SUCCESS;

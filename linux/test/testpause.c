@@ -12,7 +12,6 @@
 #define WAVEFILE "sample.wav"
 
 static void iterate( void );
-static void cleanup( void );
 
 static ALuint movingSource = 0;
 
@@ -62,21 +61,6 @@ static void init( const ALbyte *fname )
 	alSourcefv( movingSource, AL_ORIENTATION, back );
 	alSourcei( movingSource, AL_BUFFER, sample );
 	alSourcei( movingSource, AL_LOOPING, AL_FALSE );
-}
-
-static void cleanup( void )
-{
-	alcDestroyContext( context );
-
-#ifdef DMALLOC
-	dmalloc_verify( 0 );
-	dmalloc_log_unfreed(  );
-
-#endif
-
-#ifdef JLIB
-	jv_check_mem(  );
-#endif
 }
 
 int main( int argc, char *argv[] )
@@ -136,8 +120,7 @@ int main( int argc, char *argv[] )
 		iterate(  );
 	}
 
-	cleanup(  );
-
+	alcDestroyContext( context );
 	alcCloseDevice( device );
 
 	return EXIT_SUCCESS;

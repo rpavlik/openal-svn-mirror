@@ -11,18 +11,15 @@
 #include "al_siteconfig.h"
 
 #include <AL/al.h>
-
-/* for alutLoadRAW_ADPCMData_LOKI */
 #include <AL/alext.h>
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "audioconvert.h"
 #include "al_main.h"
-#include "al_debug.h"
 #include "al_buffer.h"
+
+#include "audioconvert/audioconvert.h"
 
 #define MAX_ADPCM     1024
 

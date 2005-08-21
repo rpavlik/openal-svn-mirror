@@ -40,18 +40,11 @@
 #undef new
 #undef free
 #undef strspn
-#elif defined(JLIB) && !defined(NOJLIB)
-#include <stdlib.h>
 #endif
 
 #ifdef DMALLOC
 #include "/usr/local/include/dmalloc.h"
 #endif
-
-#if defined(JLIB) && !defined(NOJLIB)
-#include "../include/jlib.h"
-#endif
-
 
 #ifdef BROKEN_LIBIO
 #include <libio.h>

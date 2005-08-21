@@ -11,8 +11,6 @@
 
 #define WAVEFILE "sample.wav"
 
-static void cleanup( void );
-
 static ALuint reverb_sid = 0;
 
 static ALCcontext *context;
@@ -58,14 +56,6 @@ static void init( const ALbyte *fname )
 	palReverbDelay( reverb_sid, 1 );
 }
 
-void cleanup( void )
-{
-	alcDestroyContext( context );
-#ifdef JLIB
-	jv_check_mem(  );
-#endif
-}
-
 int main( int argc, char *argv[] )
 {
 	ALCdevice *device;
@@ -95,8 +85,7 @@ int main( int argc, char *argv[] )
 		microSleep( 1000000 );
 	}
 
-	cleanup(  );
-
+	alcDestroyContext( context );
 	alcCloseDevice( device );
 
 	return EXIT_SUCCESS;

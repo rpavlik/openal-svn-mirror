@@ -14,7 +14,6 @@
 #define WAVEFILE "boom.wav"
 
 static void iterate( void );
-static void cleanup( void );
 
 static ALuint movingSource = 0;
 
@@ -71,20 +70,6 @@ static void init( const ALbyte *fname )
 	alSourcef( movingSource, AL_PITCH, 1.0f );
 }
 
-static void cleanup( void )
-{
-	alutExit(  );
-
-#ifdef DMALLOC
-	dmalloc_verify( 0 );
-	dmalloc_log_unfreed(  );
-
-#endif
-#ifdef JLIB
-	jv_check_mem(  );
-#endif
-}
-
 int main( int argc, char *argv[] )
 {
 	time_t shouldend;
@@ -104,7 +89,7 @@ int main( int argc, char *argv[] )
 		iterate(  );
 	}
 
-	cleanup(  );
+	alutExit(  );
 
 	return EXIT_SUCCESS;
 }

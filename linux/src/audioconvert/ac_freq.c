@@ -7,11 +7,12 @@
  * rate of a buffer.
  *
  */
-#include "audioconvert.h"
-#include <AL/al.h>
 #include "al_siteconfig.h"
 
+#include <AL/al.h>
 #include <stdio.h>
+
+#include "audioconvert/audioconvert.h"
 
 /* Convert rate up by multiple of 2 */
 void acFreqMUL2(acAudioCVT *cvt, ALushort format) {

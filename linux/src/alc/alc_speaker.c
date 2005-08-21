@@ -15,17 +15,13 @@
 
 #include <AL/al.h>
 #include <AL/alc.h>
-#include <stdio.h>
 
-#include "al_main.h"
-#include "al_types.h"
 #include "al_debug.h"
-#include "al_state.h"
+#include "al_main.h"
 #include "al_vector.h"
 
-#include "alc_context.h"
-#include "alc_error.h"
-#include "alc_speaker.h"
+#include "alc/alc_error.h"
+#include "alc/alc_speaker.h"
 
 #ifndef M_SQRT1_2
 # define M_SQRT1_2      0.70710678118654752440  /* 1/sqrt(2) */
