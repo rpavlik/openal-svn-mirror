@@ -1,3 +1,11 @@
+2005-08-22  Sven Panne  <sven.panne@aedion.de>
+
+	* linux/Makefile.in, linux/include/AL/alext.h: Merged alexttypes.h
+	into alext.h, cleaning up things a little bit and adding a few
+	ALAPIENTRY.
+
+	* linux/include/AL/alexttypes.h: Removed.
+
 2005-08-21  Sven Panne  <sven.panne@aedion.de>
 
 	* linux/config-osx.h, linux/configure.ac, linux/INSTALL,

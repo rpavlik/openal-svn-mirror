@@ -68,7 +68,6 @@ install: $(INSTALL_DEPS)
 	$(INSTALL) -m 444 ../include/AL/altypes.h $(DESTINC)/AL
 	$(INSTALL) -m 444 ../include/AL/alctypes.h $(DESTINC)/AL
 	$(INSTALL) -m 444 include/AL/alext.h $(DESTINC)/AL
-	$(INSTALL) -m 444 include/AL/alexttypes.h $(DESTINC)/AL
 
 clean:
 	for i in "" $(SUBDIRS) ; do test -z "$$i" || ( cd $$i && $(MAKE) clean ) done
