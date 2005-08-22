@@ -129,9 +129,6 @@ static void reshape( int w, int h )
 
 static void init( void )
 {
-    ALfloat zeroes[] = { 0.0f, 0.0f, 0.0f };
-    ALfloat front[] = { 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f };
-    ALfloat back[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f };
     ALuint sources[2];
     ALuint boom;
     void *wave = NULL;
@@ -142,10 +139,6 @@ static void init( void )
 
     glClearColor( 0.0, 0.0, 0.0, 0.0 );
     glShadeModel( GL_SMOOTH );
-
-    alListenerfv( AL_POSITION, zeroes );
-    alListenerfv( AL_VELOCITY, zeroes );
-    alListenerfv( AL_ORIENTATION, front );
 
     alGetError(  );
     alGenBuffers( 1, &boom );
@@ -174,13 +167,9 @@ static void init( void )
     right_sid = sources[1];
 
     alSourcefv( left_sid, AL_POSITION, left_pos );
-    alSourcefv( left_sid, AL_VELOCITY, zeroes );
-    alSourcefv( left_sid, AL_ORIENTATION, back );
     alSourcei( left_sid, AL_BUFFER, boom );
 
     alSourcefv( right_sid, AL_POSITION, right_pos );
-    alSourcefv( right_sid, AL_VELOCITY, zeroes );
-    alSourcefv( right_sid, AL_ORIENTATION, back );
     alSourcei( right_sid, AL_BUFFER, boom );
 }
 
