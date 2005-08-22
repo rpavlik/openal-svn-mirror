@@ -58,7 +58,7 @@ LINK32=link.exe
 # SUBTRACT LINK32 /debug
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
-PostBuild_Cmds=copy release\wrap_oal.dll ..\openaldemo\release\wrap_oal.dll
+PostBuild_Cmds=if not exist ..\OpenALDemo\Release mkdir ..\OpenALDemo\Release	copy Release\wrap_oal.dll ..\OpenALDemo\Release\wrap_oal.dll
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "OpenAL32 - Win32 Debug"
@@ -89,7 +89,7 @@ LINK32=link.exe
 # SUBTRACT LINK32 /pdb:none
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
-PostBuild_Cmds=copy debug\wrap_oal.dll ..\openaldemo\debug\wrap_oal.dll
+PostBuild_Cmds=if not exist ..\OpenALDemo\Debug mkdir ..\OpenALDemo\Debug	copy Debug\wrap_oal.dll ..\OpenALDemo\Debug\wrap_oal.dll
 # End Special Build Tool
 
 !ENDIF 
