@@ -259,8 +259,8 @@ ALvoid BuildDeviceSpecifierList()
 		// Construct our search paths.  We will search the current directory, the app directory, and then
 		// the system directory.
 		//
-		dirSize = GetCurrentDirectory(MAX_PATH, dir[0]);
-		_tcscat(dir[0], _T("\\"));
+		dirSize = GetCurrentDirectory(MAX_PATH, dir[2]);
+		_tcscat(dir[2], _T("\\"));
 
 		GetModuleFileName(0, module, MAX_PATH);
 		_splitpath(module, fileDrive, fileDir, fileName, fileExt);
@@ -268,9 +268,9 @@ ALvoid BuildDeviceSpecifierList()
 		_tcscat(dir[1], fileDir);
 		_tcscat(fileName, fileExt);
 
-		dirSize = GetSystemDirectory(dir[2], MAX_PATH);
-		_tcscat(dir[2], _T("\\"));
-		_tcscpy(systemAL, dir[2]);
+		dirSize = GetSystemDirectory(dir[0], MAX_PATH);
+		_tcscat(dir[0], _T("\\"));
+		_tcscpy(systemAL, dir[0]);
 		_tcscat(systemAL, _T("OpenAL32.dll"));
 
 		//
@@ -568,6 +568,72 @@ ALvoid BuildDeviceSpecifierList()
 
     return;
 }
+
+
+//*****************************************************************************
+// CleanDeviceSpecifierList
+//*****************************************************************************
+//
+ALvoid CleanDeviceSpecifierList()
+{
+    char* list = (char *)alcDeviceSpecifierList;
+	char* origListPtr = list;
+	char* newList = (char *)malloc(MAX_PATH);
+	char* newListPtr = newList;
+	char* copyList = (char *)malloc(MAX_PATH);
+	char* origCopyListPtr = copyList;
+	bool advancePtr;
+
+	// create a null new list
+	memset((void *)newList, 0, MAX_PATH);
+
+	// copy current list
+	memcpy(copyList, list, MAX_PATH);
+
+	// dump new terminator into copy list, so that string searches are easier
+	int len;
+	while (strlen((const char *)copyList) > 0) {
+		len = strlen(copyList);
+		copyList[len] = ';';
+		copyList += len + 1;
+	}
+	copyList = origCopyListPtr;
+
+	// create new list
+	while (strlen((const char *)list) > 0) {
+		strcpy(newListPtr, list);
+		advancePtr = TRUE;
+		if (strstr(newListPtr, "DirectSound3D") != NULL) {
+			if (strstr(copyList, "Generic Hardware") != NULL) {
+				advancePtr = FALSE;
+			}
+		}
+		if (strstr(newListPtr, "DirectSound") != NULL) {
+			if (strstr(copyList, "Generic Software") != NULL) {
+				advancePtr = FALSE;
+			}
+		}
+		if (strstr(newListPtr, "MMSYSTEM") != NULL) {
+			if (strstr(copyList, "Generic Software") != NULL) {
+				advancePtr = FALSE;
+			}
+		}
+		if (advancePtr == TRUE) {
+			newListPtr += strlen((const char *)newListPtr) + 1;
+		}
+		list += strlen((const char *)list) + 1;
+	}
+	newListPtr[0] = '\0';
+	newListPtr[1] = '\0';
+
+	// copy new list over old one
+	memcpy(origListPtr, newList, MAX_PATH);
+
+	free(newList);
+	free(copyList);
+	return;
+}
+
 
 
 //*****************************************************************************
@@ -1888,6 +1954,7 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
         case ALC_DEVICE_SPECIFIER:
         {
             BuildDeviceSpecifierList();
+			CleanDeviceSpecifierList();
             return alcDeviceSpecifierList;
         }
         break;
