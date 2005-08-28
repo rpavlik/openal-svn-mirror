@@ -1,1 +1,6 @@
-Please check the individual implementations for installation information.
+Please check the individual OS-specific directories for OpenAL installation
+information.
+
+The OpenAL Utility Toolkit (ALUT) is in it's own directory that is
+OS-independent.  Install ALUT *after* installing OpenAL.
+
