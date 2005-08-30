@@ -48,6 +48,8 @@ extern "C" {
 #endif
 
 #define OPENAL
+#define AL_VERSION_1_0
+#define AL_VERSION_1_1
 
 #if !defined(AL_NO_PROTOTYPES)
 
