@@ -56,10 +56,6 @@ LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
 # ADD LINK32 dxguid.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386 /out:"Release/wrap_oal.dll"
 # SUBTRACT LINK32 /debug
-# Begin Special Build Tool
-SOURCE="$(InputPath)"
-PostBuild_Cmds=if not exist ..\OpenALDemo\Release mkdir ..\OpenALDemo\Release	copy Release\wrap_oal.dll ..\OpenALDemo\Release\wrap_oal.dll
-# End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "OpenAL32 - Win32 Debug"
 
@@ -87,10 +83,6 @@ LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
 # ADD LINK32 dxguid.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /version:1.0 /dll /debug /machine:I386 /nodefaultlib:"LIBCD" /out:"Debug/wrap_oal.dll" /pdbtype:sept
 # SUBTRACT LINK32 /pdb:none
-# Begin Special Build Tool
-SOURCE="$(InputPath)"
-PostBuild_Cmds=if not exist ..\OpenALDemo\Debug mkdir ..\OpenALDemo\Debug	copy Debug\wrap_oal.dll ..\OpenALDemo\Debug\wrap_oal.dll
-# End Special Build Tool
 
 !ENDIF 
 

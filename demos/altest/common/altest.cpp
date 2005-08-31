@@ -58,7 +58,6 @@
 #include <sys/stat.h>
 #include <al/al.h>
 #include <al/alc.h>
-#include <al/alut.h>
 #endif // _WIN32
 
 #ifdef LINUX
@@ -76,11 +75,9 @@
 #ifdef OSX_FRAMEWORK
 #include <OpenAL/al.h>
 #include <OpenAL/alc.h>
-#include <OpenAL/alut.h>
 #else
 #include <AL/al.h>
 #include <AL/alc.h>
-#include <AL/alut.h>
 #endif
 
 #ifndef AL_INVALID_ENUM
@@ -102,7 +99,6 @@
 #include <string.h>
 #include <al.h>
 #include <alc.h>
-#include <alut.h>
 #include <eax.h>
 #include <Timer.h>
 #define SWAPBYTES
@@ -119,7 +115,6 @@
 #include <string.h>
 #include <openal/al.h>
 #include <openal/alc.h>
-#include <openal/alut.h>
 #include <unistd.h>
 #define SWAPBYTES
 #endif // MAC_OS_X
@@ -444,6 +439,164 @@ ALvoid DisplayALError(ALchar *szText, ALint errorcode)
 	return;
 }
 
+
+// ***** GH -- will want to either modify or kill all this Windows-specific code later 
+
+#if defined _MSC_VER
+	#pragma pack (push,1) 							/* Turn off alignment */
+#elif defined __GNUC__
+	#define PADOFF_VAR __attribute__((packed))
+#endif
+
+#ifndef PADOFF_VAR
+	#define PADOFF_VAR
+#endif
+
+typedef struct                                  /* WAV File-header */
+{
+  ALubyte  Id[4]			PADOFF_VAR;
+  ALsizei  Size				PADOFF_VAR;
+  ALubyte  Type[4]			PADOFF_VAR;
+} WAVFileHdr_Struct;
+
+typedef struct                                  /* WAV Fmt-header */
+{
+  ALushort Format			PADOFF_VAR;
+  ALushort Channels			PADOFF_VAR;
+  ALuint   SamplesPerSec	PADOFF_VAR;
+  ALuint   BytesPerSec		PADOFF_VAR;
+  ALushort BlockAlign		PADOFF_VAR;
+  ALushort BitsPerSample	PADOFF_VAR;
+} WAVFmtHdr_Struct;
+
+typedef struct									/* WAV FmtEx-header */
+{
+  ALushort Size				PADOFF_VAR;
+  ALushort SamplesPerBlock	PADOFF_VAR;
+} WAVFmtExHdr_Struct;
+
+typedef struct                                  /* WAV Smpl-header */
+{
+  ALuint   Manufacturer		PADOFF_VAR;
+  ALuint   Product			PADOFF_VAR;
+  ALuint   SamplePeriod		PADOFF_VAR;
+  ALuint   Note				PADOFF_VAR;
+  ALuint   FineTune			PADOFF_VAR;
+  ALuint   SMPTEFormat		PADOFF_VAR;
+  ALuint   SMPTEOffest		PADOFF_VAR;
+  ALuint   Loops			PADOFF_VAR;
+  ALuint   SamplerData		PADOFF_VAR;
+  struct
+  {
+    ALuint Identifier		PADOFF_VAR;
+    ALuint Type				PADOFF_VAR;
+    ALuint Start			PADOFF_VAR;
+    ALuint End				PADOFF_VAR;
+    ALuint Fraction			PADOFF_VAR;
+    ALuint Count			PADOFF_VAR;
+  }      Loop[1]			PADOFF_VAR;
+} WAVSmplHdr_Struct;
+
+typedef struct                                  /* WAV Chunk-header */
+{
+  ALubyte  Id[4]			PADOFF_VAR;
+  ALuint   Size				PADOFF_VAR;
+} WAVChunkHdr_Struct;
+
+
+#ifdef PADOFF_VAR			    				/* Default alignment */
+	#undef PADOFF_VAR
+#endif
+
+#if defined _MSC_VER
+	#pragma pack (pop)
+#endif
+
+ALvoid getWAVData(const ALbyte *file,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq, ALboolean *loop)
+{
+	WAVChunkHdr_Struct ChunkHdr;
+	WAVFmtExHdr_Struct FmtExHdr;
+	WAVFileHdr_Struct FileHdr;
+	WAVSmplHdr_Struct SmplHdr;
+	WAVFmtHdr_Struct FmtHdr;
+	FILE *Stream;
+	
+	*format=AL_FORMAT_MONO16;
+	*data=NULL;
+	*size=0;
+	*freq=22050;
+	*loop=AL_FALSE;
+	if (file)
+	{
+		Stream=fopen(file,"rb");
+		if (Stream)
+		{
+			fread(&FileHdr,1,sizeof(WAVFileHdr_Struct),Stream);
+			FileHdr.Size=((FileHdr.Size+1)&~1)-4;
+			while ((FileHdr.Size!=0)&&(fread(&ChunkHdr,1,sizeof(WAVChunkHdr_Struct),Stream)))
+			{
+				if (!memcmp(ChunkHdr.Id,"fmt ",4))
+				{
+					fread(&FmtHdr,1,sizeof(WAVFmtHdr_Struct),Stream);
+					if ((FmtHdr.Format==0x0001)||(FmtHdr.Format==0xFFFE))
+					{
+						if (FmtHdr.Channels==1)
+							*format=(FmtHdr.BitsPerSample==4?alGetEnumValue("AL_FORMAT_MONO_IMA4"):(FmtHdr.BitsPerSample==8?AL_FORMAT_MONO8:AL_FORMAT_MONO16));
+						else if (FmtHdr.Channels==2)
+							*format=(FmtHdr.BitsPerSample==4?alGetEnumValue("AL_FORMAT_STEREO_IMA4"):(FmtHdr.BitsPerSample==8?AL_FORMAT_STEREO8:AL_FORMAT_STEREO16));
+						*freq=FmtHdr.SamplesPerSec;
+						fseek(Stream,ChunkHdr.Size-sizeof(WAVFmtHdr_Struct),SEEK_CUR);
+					} 
+					else if (FmtHdr.Format==0x0011)
+					{
+						if (FmtHdr.Channels==1)
+							*format=alGetEnumValue("AL_FORMAT_MONO_IMA4");
+						else if (FmtHdr.Channels==2)
+							*format=alGetEnumValue("AL_FORMAT_STEREO_IMA4");
+						*freq=FmtHdr.SamplesPerSec;
+						fseek(Stream,ChunkHdr.Size-sizeof(WAVFmtHdr_Struct),SEEK_CUR);
+					}
+					else if (FmtHdr.Format==0x0055)
+					{
+						*format=alGetEnumValue("AL_FORMAT_MP3");
+						*freq=FmtHdr.SamplesPerSec;
+						fseek(Stream,ChunkHdr.Size-sizeof(WAVFmtHdr_Struct),SEEK_CUR);
+					}
+					else
+					{
+						fread(&FmtExHdr,1,sizeof(WAVFmtExHdr_Struct),Stream);
+						fseek(Stream,ChunkHdr.Size-sizeof(WAVFmtHdr_Struct)-sizeof(WAVFmtExHdr_Struct),SEEK_CUR);
+					}
+				}
+				else if (!memcmp(ChunkHdr.Id,"data",4))
+				{
+					*size=ChunkHdr.Size;
+					*data=malloc(ChunkHdr.Size+31);
+					if (*data) fread(*data,FmtHdr.BlockAlign,ChunkHdr.Size/FmtHdr.BlockAlign,Stream);
+					memset(((char *)*data)+ChunkHdr.Size,0,31);
+				}
+				else if (!memcmp(ChunkHdr.Id,"smpl",4))
+				{
+					fread(&SmplHdr,1,sizeof(WAVSmplHdr_Struct),Stream);
+					*loop = (SmplHdr.Loops ? AL_TRUE : AL_FALSE);
+					fseek(Stream,ChunkHdr.Size-sizeof(WAVSmplHdr_Struct),SEEK_CUR);
+				}
+				else fseek(Stream,ChunkHdr.Size,SEEK_CUR);
+				fseek(Stream,ChunkHdr.Size&1,SEEK_CUR);
+				FileHdr.Size-=(((ChunkHdr.Size+1)&~1)+8);
+			}
+			fclose(Stream);
+		}
+		
+	}
+}
+
+ALvoid unloadWAVData(ALvoid *data)
+{
+	if (data)
+		free(data);
+}
+
 /*
 	Loads the wave file into the given Buffer ID
 */
@@ -458,7 +611,7 @@ ALboolean LoadWave(char *szWaveFile, ALuint BufferID)
 	if (!szWaveFile)
 		return AL_FALSE;
 
-	alutLoadWAVFile(szWaveFile,&format,&data,&size,&freq,&loop);
+	getWAVData(szWaveFile,&format,&data,&size,&freq, &loop);
 	if (!data)
 	{
 		printf("Failed to load %s\n", szWaveFile);
@@ -473,13 +626,7 @@ ALboolean LoadWave(char *szWaveFile, ALuint BufferID)
 		return AL_FALSE;
 	}
 
-	// Unload wave file
-	alutUnloadWAV(format,data,size,freq);
-	if ((error = alGetError()) != AL_NO_ERROR)
-	{
-		DisplayALError("alutUnloadWAV : ", error);
-		return AL_FALSE;
-	}
+	unloadWAVData(data);
 
 	return AL_TRUE;
 }
@@ -4218,7 +4365,7 @@ ALvoid I_ADPCMTest()
 	if (eMonoADPCM && eStereoADPCM)
 	{
 		// Load footadpcm.wav
-		alutLoadWAVFile("footadpcm.wav",&format,&data,&size,&freq,&loop);
+		getWAVData("footadpcm.wav",&format,&data,&size,&freq,&loop);
 		if (alGetError() != AL_NO_ERROR)
 		{
 			printf("Failed to load footadpcm.wav\n");
@@ -4232,7 +4379,7 @@ ALvoid I_ADPCMTest()
 		// Copy data to AL buffer
 		alBufferData(uiBufferID,format,data,size,freq);
 		// Release wave data
-		alutUnloadWAV(format,data,size,freq);
+		unloadWAVData(data);
 
 		if (alGetError() != AL_NO_ERROR)
 		{
