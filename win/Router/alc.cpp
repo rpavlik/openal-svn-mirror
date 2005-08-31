@@ -33,6 +33,7 @@
 #include <windows.h>
 #include <crtdbg.h>
 #include <objbase.h>
+#include <atlconv.h>
 #include <mmsystem.h>
 
 #include "OpenAL32.h"
@@ -256,8 +257,7 @@ ALvoid BuildDeviceSpecifierList()
 		ALCAPI_CLOSE_DEVICE alcCloseDeviceFxn = 0;
 
 		//
-		// Construct our search paths.  We will search the current directory, the app directory, and then
-		// the system directory.
+		// Construct our search paths (NOTE -- for building the device list, this is being done in reverse order)
 		//
 		dirSize = GetCurrentDirectory(MAX_PATH, dir[2]);
 		_tcscat(dir[2], _T("\\"));
@@ -603,18 +603,18 @@ ALvoid CleanDeviceSpecifierList()
 	while (strlen((const char *)list) > 0) {
 		strcpy(newListPtr, list);
 		advancePtr = TRUE;
-		if (strstr(newListPtr, "DirectSound3D") != NULL) {
-			if (strstr(copyList, "Generic Hardware") != NULL) {
+		if (strstr(newListPtr, T2A("DirectSound3D")) != NULL) {
+			if (strstr(copyList, T2A("Generic Hardware")) != NULL) {
 				advancePtr = FALSE;
 			}
 		}
-		if (strstr(newListPtr, "DirectSound") != NULL) {
-			if (strstr(copyList, "Generic Software") != NULL) {
+		if (strstr(newListPtr, T2A("DirectSound")) != NULL) {
+			if (strstr(copyList, T2A("Generic Software")) != NULL) {
 				advancePtr = FALSE;
 			}
 		}
 		if (strstr(newListPtr, "MMSYSTEM") != NULL) {
-			if (strstr(copyList, "Generic Software") != NULL) {
+			if (strstr(copyList, T2A("Generic Software")) != NULL) {
 				advancePtr = FALSE;
 			}
 		}
@@ -1635,14 +1635,14 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(const ALCchar* deviceName)
 	//
 	// map legacy names to new generic names
 	// DirectSound3D mapped above to ALC_DEFAULT_DEVICE_SPECIFIER
-	if ((strcmp(newDeviceName, "") == 0) && ((!deviceName) || (strcmp((char *)deviceName, "DirectSound3D")))) {
-		strcpy(newDeviceName, "Generic Hardware");
+	if ((strcmp(newDeviceName, T2A("")) == 0) && ((!deviceName) || (strcmp((char *)deviceName, T2A("DirectSound3D"))))) {
+		strcpy(newDeviceName, T2A("Generic Hardware"));
 	}
-	if (strcmp(newDeviceName, "DirectSound") == 0) {
-		strcpy(newDeviceName, "Generic Software");
+	if (strcmp(newDeviceName, T2A("DirectSound")) == 0) {
+		strcpy(newDeviceName, T2A("Generic Software"));
 	}
-	if (strcmp(newDeviceName, "MMSYSTEM") == 0) {
-		strcpy(newDeviceName, "Generic Software Fallback");
+	if (strcmp(newDeviceName, T2A("MMSYSTEM")) == 0) {
+		strcpy(newDeviceName, T2A("Generic Software Fallback"));
 	}
 
 	//
@@ -1854,10 +1854,10 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
                 #if !defined(_WIN64)
                 __asm popa;
                 #endif // !defined(_WIN64)
-				strcpy(mixerDevice, info.szPname);
-				if (strstr(mixerDevice, "Audigy") != NULL) {
+				strcpy(mixerDevice, T2A(info.szPname));
+				if (strstr(mixerDevice, T2A("Audigy")) != NULL) {
 					acceptPartial = true;
-					strcpy(mixerDevice, "Audigy");
+					strcpy(mixerDevice, T2A("Audigy"));
 				}
                 dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), mixerDevice, acceptPartial, actualName);
                 if(!dll)
@@ -1878,49 +1878,49 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
                 //
                 // Try to find a default version.
                 //
-				dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), "Generic Hardware");
+				dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), T2A("Generic Hardware"));
                 if(!dll)
                 {
-                    dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), "Generic Hardware");
+                    dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), T2A("Generic Hardware"));
                 }
 
 				if(dll)
                 {
-                    strcpy((char*)alcDefaultDeviceSpecifier, "Generic Hardware");
+                    strcpy((char*)alcDefaultDeviceSpecifier, T2A("Generic Hardware"));
                     FreeLibrary(dll);
                     break;
                 }
 
-				dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), "Generic Software");
+				dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), T2A("Generic Software"));
                 if(!dll)
                 {
-                    dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), "Generic Software");
+                    dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), T2A("Generic Software"));
                 }
 
 				if(dll)
                 {
-                    strcpy((char*)alcDefaultDeviceSpecifier, "Generic Software");
+                    strcpy((char*)alcDefaultDeviceSpecifier, T2A("Generic Software"));
                     FreeLibrary(dll);
                     break;
                 }
 
-                dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), "DirectSound3D");
+                dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), T2A("DirectSound3D"));
                 if(!dll)
                 {
-                    dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), "DirectSound3D");
+                    dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), T2A("DirectSound3D"));
                 }
 
                 if(dll)
                 {
-                    strcpy((char*)alcDefaultDeviceSpecifier, "DirectSound3D");
+                    strcpy((char*)alcDefaultDeviceSpecifier, T2A("DirectSound3D"));
                     FreeLibrary(dll);
                     break;
                 }
 
-                dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), "DirectSound");
+                dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), T2A("DirectSound"));
                 if(!dll)
                 {
-                    dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), "DirectSound");
+                    dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), T2A("DirectSound"));
                 }
 
                 if(dll)
@@ -1930,10 +1930,10 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
                     break;
                 }
 
-                dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), "MMSYSTEM");
+                dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), T2A("MMSYSTEM"));
                 if(!dll)
                 {
-                    dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), "MMSYSTEM");
+                    dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), T2A("MMSYSTEM"));
                 }
 
                 if(dll)
