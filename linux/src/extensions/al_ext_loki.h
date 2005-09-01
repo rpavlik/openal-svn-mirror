@@ -39,9 +39,6 @@ void alFiniLoki( void );
  * the extension registrar
  */
 #define BUILTIN_EXT_LOKI                                      \
-	AL_EXT_PAIR(alutLoadMS_ADPCMData_LOKI),               \
-	AL_EXT_PAIR(alutLoadIMA_ADPCMData_LOKI),              \
-	AL_EXT_PAIR(alutLoadRAW_ADPCMData_LOKI),              \
 	AL_EXT_PAIR(alBufferAppendData_LOKI),                 \
 	AL_EXT_PAIR(alBufferWriteData_LOKI),                  \
 	AL_EXT_PAIR(alBufferAppendWriteData_LOKI),            \

@@ -134,9 +134,6 @@ ALAPI ALsizei   ALAPIENTRY alCaptureGetData_EXT( ALvoid *data, ALsizei n, ALenum
 /* custom loaders */
 
 ALAPI ALboolean ALAPIENTRY alutLoadVorbis_LOKI( ALuint bid, const ALvoid *data, ALint size );
-ALAPI ALboolean ALAPIENTRY alutLoadRAW_ADPCMData_LOKI( ALuint bid, ALvoid *data, ALuint size, ALuint freq, ALenum format );
-ALAPI ALboolean ALAPIENTRY alutLoadIMA_ADPCMData_LOKI( ALuint bid, ALvoid *data, ALuint size, alIMAADPCM_state_LOKI *ias );
-ALAPI ALboolean ALAPIENTRY alutLoadMS_ADPCMData_LOKI( ALuint bid, void *data, int size, alMSADPCM_state_LOKI *mss );
 
 /* function pointers */
 

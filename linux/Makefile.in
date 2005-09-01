@@ -64,7 +64,6 @@ install: $(INSTALL_DEPS)
 	$(INSTALL) -m 755 src/libopenal.a $(DESTLIB)
 	$(INSTALL) -m 444 ../include/AL/al.h $(DESTINC)/AL
 	$(INSTALL) -m 444 ../include/AL/alc.h $(DESTINC)/AL
-	$(INSTALL) -m 444 ../include/AL/alut.h $(DESTINC)/AL
 	$(INSTALL) -m 444 ../include/AL/altypes.h $(DESTINC)/AL
 	$(INSTALL) -m 444 ../include/AL/alctypes.h $(DESTINC)/AL
 	$(INSTALL) -m 444 include/AL/alext.h $(DESTINC)/AL

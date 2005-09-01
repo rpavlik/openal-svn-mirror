@@ -1,3 +1,18 @@
+2005-09-01  Sven Panne  <sven.panne@aedion.de>
+
+	* linux/Makefile.in, linux/include/AL/alext.h
+	linux/src/Makefile.in, linux/src/al_source.c,
+	linux/src/extensions/al_ext_loki.h, linux/test/Makefile.in:
+	Removed ALUT implementation from linux subtree. Note that
+	currently the linux/test directory doesn't build without fiddling
+	around with compiler/linker flags. But this doesn't really matter,
+	as all tests and examples will reside below the "one and only"
+	alut directory in the future, anyway.
+
+	* linux/src/alut/alut_imaadpcm.c, linux/src/alut/alut_main.c,
+	linux/src/alut/alut_msadpcm.c, linux/src/alut/alut_rawadpcm.c,
+	linux/src/alut/alut_wav.c: Removed.
+
 2005-08-22  Sven Panne  <sven.panne@aedion.de>
 
 	* linux/Makefile.in, linux/include/AL/alext.h: Merged alexttypes.h

@@ -38,7 +38,6 @@ AL_OBJS=al_able.o       \
 	mixaudio16.o
 
 # Major subgroupings
-ALUT_OBJS=$(addsuffix .o, $(addprefix alut/alut_, main wav rawadpcm imaadpcm msadpcm ))
 ALC_OBJS=$(addsuffix .o, $(addprefix alc/alc_, context speaker error device ))
 AC_OBJS=$(addsuffix .o, $(addprefix audioconvert/ac_, misc freq bits channels helper adpcm endian))
 
@@ -77,7 +76,7 @@ PACKAGE_VERSION=@PACKAGE_VERSION@
 
 SUBDIRS :=
 RM_RF := $(RM) -r
-CLEAN_FILES := $(AL_OBJS) $(ALC_OBJS) $(ALUT_OBJS) $(EXT_OBJS) $(EXT_DLL_OBJS) libopenal.a libopenal.$(SO_EXT) libopenal.$(SO_EXT).$(PACKAGE_VERSION_MAJOR) libopenal.$(SO_EXT).$(PACKAGE_VERSION)
+CLEAN_FILES := $(AL_OBJS) $(ALC_OBJS) $(EXT_OBJS) $(EXT_DLL_OBJS) libopenal.a libopenal.$(SO_EXT) libopenal.$(SO_EXT).$(PACKAGE_VERSION_MAJOR) libopenal.$(SO_EXT).$(PACKAGE_VERSION)
 DISTCLEAN_FILES := Makefile
 MAINTAINER_CLEAN_FILES :=
 REPO_CLEAN_FILES :=
@@ -94,19 +93,18 @@ all: libopenal.a libopenal.$(SO_EXT) $(EXT_OBJS) $(EXT_DLL_OBJS) $(TEST_PROGS)
 
 libopenal: libopenal.a libopenal.$(SO_EXT)
 
-libopenal.a: $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(ALUT_OBJS) $(EXT_OBJS) $(EXT_DLL_OBJS)
+libopenal.a: $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(EXT_OBJS) $(EXT_DLL_OBJS)
 	ar cru libopenal.a \
 		$(AL_OBJS)   \
 		$(ALC_OBJS)  \
 		$(AC_OBJS)   \
-		$(ALUT_OBJS) \
 		$(EXT_OBJS)
 	$(RANLIB) libopenal.a
 
 libopenal.so: libopenal.so.$(PACKAGE_VERSION)
 	$(LN_S) -f libopenal.so.$(PACKAGE_VERSION) libopenal.so
 
-libopenal.so.$(PACKAGE_VERSION): $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(ALUT_OBJS) $(EXT_OBJS) $(EXT_DLL_OBJS)
+libopenal.so.$(PACKAGE_VERSION): $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(EXT_OBJS) $(EXT_DLL_OBJS)
 	$(CC) -shared \
 		-Wl,"-soname,libopenal.so.$(PACKAGE_VERSION_MAJOR)" \
 		-o libopenal.so.$(PACKAGE_VERSION) \
@@ -114,21 +112,19 @@ libopenal.so.$(PACKAGE_VERSION): $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(ALUT_OBJS) 
 		$(AL_OBJS)     \
 		$(ALC_OBJS)    \
 		$(AC_OBJS)     \
-		$(ALUT_OBJS)   \
 		$(EXT_OBJS)    \
 		$(LIBS)
 
-libopenal.dll:  $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(ALUT_OBJS) libopenal.def \
+libopenal.dll:  $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) libopenal.def \
 	$(EXT_OBJS) $(EXT_DLL_OBJS)
 	dlltool -k --dllname libopenal.dll --output-lib $@ --def libopenal.def
 
-libopenal.dylib: $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(ALUT_OBJS) $(EXT_OBJS) $(EXT_DLL_OBJS)
+libopenal.dylib: $(AL_OBJS) $(ALC_OBJS) $(AC_OBJS) $(EXT_OBJS) $(EXT_DLL_OBJS)
 	$(CC) -dynamiclib -prebind -undefined suppress -flat_namespace -o libopenal.dylib -install_name libopenal.dylib -current_version $(PACKAGE_VERSION) \
 		$(LDFLAGS)     \
 		$(AL_OBJS)     \
 		$(ALC_OBJS)    \
 		$(AC_OBJS)     \
-		$(ALUT_OBJS)   \
 		$(EXT_OBJS)    \
 		$(LIBS)
 
