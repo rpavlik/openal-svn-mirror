@@ -56,10 +56,6 @@
 				TypeLibraryName=".\Debug/Router.tlb"
 				HeaderFileName=""/>
 			<Tool
-				Name="VCPostBuildEventTool"
-				CommandLine="if not exist ..\OpenALDemo\Debug mkdir ..\OpenALDemo\Debug
-copy Debug\openal32.dll ..\OpenALDemo\Debug\openal32.dll"/>
-			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
@@ -123,10 +119,6 @@ copy Debug\openal32.dll ..\OpenALDemo\Debug\openal32.dll"/>
 				TargetEnvironment="1"
 				TypeLibraryName=".\Release/Router.tlb"
 				HeaderFileName=""/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				CommandLine="if not exist ..\OpenALDemo\Release mkdir ..\OpenALDemo\Release
-copy Release\openal32.dll ..\OpenALDemo\Release\openal32.dll"/>
 			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool

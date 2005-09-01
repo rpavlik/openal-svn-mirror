@@ -197,10 +197,6 @@ SOURCE=..\..\include\AL\alctypes.h
 
 SOURCE=..\..\include\AL\altypes.h
 # End Source File
-# Begin Source File
-
-SOURCE=..\..\include\AL\alut.h
-# End Source File
 # End Group
 # End Target
 # End Project
