@@ -440,7 +440,7 @@ ALvoid DisplayALError(ALchar *szText, ALint errorcode)
 }
 
 
-// ***** GH -- will want to either modify or kill all this Windows-specific code later 
+// ***** GH -- OS X is going to need some byte-swaps and whatnot...
 
 #if defined _MSC_VER
 	#pragma pack (push,1) 							/* Turn off alignment */
