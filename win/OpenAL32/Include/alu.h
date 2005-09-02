@@ -10,7 +10,7 @@
 #define MAX_PITCH 4
 #define OUTPUTCHANNELS 2
 
-#include "AL\altypes.h"
+#include "AL/al.h"
 
 #ifdef __cplusplus
 extern "C" {

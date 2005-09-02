@@ -1,3 +1,7 @@
+2005-09-02  Sven Panne  <sven.panne@aedion.de>
+
+	* linux/Makefile.in: alctypes.h and altypes.h are dead, Jim...
+
 2005-09-01  Sven Panne  <sven.panne@aedion.de>
 
 	* linux/Makefile.in, linux/include/AL/alext.h

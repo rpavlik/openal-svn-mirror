@@ -4,8 +4,8 @@
 #define ALAPI __declspec(dllexport)
 #define ALAPIENTRY __cdecl
 
-#include "AL/altypes.h"
-#include "AL/alctypes.h"
+#include "AL/al.h"
+#include "AL/alc.h"
 
 #ifdef __cplusplus
 extern "C" {

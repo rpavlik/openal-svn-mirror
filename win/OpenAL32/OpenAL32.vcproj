@@ -380,12 +380,6 @@
 			<File
 				RelativePath="..\..\include\AL\alc.h">
 			</File>
-			<File
-				RelativePath="..\..\include\AL\alctypes.h">
-			</File>
-			<File
-				RelativePath="..\..\include\AL\altypes.h">
-			</File>
 		</Filter>
 	</Files>
 	<Globals>

@@ -1,8 +1,8 @@
 #ifndef _AL_THUNK_H_
 #define _AL_THUNK_H_
 
-#include "AL/altypes.h"
-#include "AL/alctypes.h"
+#include "AL/al.h"
+#include "AL/alc.h"
 
 #ifdef __cplusplus
 extern "C" {

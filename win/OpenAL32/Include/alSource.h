@@ -6,7 +6,7 @@
 #define ALAPI __declspec(dllexport)
 #define ALAPIENTRY __cdecl
 
-#include "AL/altypes.h"
+#include "AL/al.h"
 
 #include "eax.h"
 

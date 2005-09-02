@@ -24,11 +24,12 @@
 #ifndef _AL_LIST_H_
 #define _AL_LIST_H_
 
+#include <al/al.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <al/alTypes.h>
 #include <windows.h>
 
 

@@ -189,14 +189,6 @@ SOURCE=..\..\include\AL\al.h
 
 SOURCE=..\..\include\AL\alc.h
 # End Source File
-# Begin Source File
-
-SOURCE=..\..\include\AL\alctypes.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\include\AL\altypes.h
-# End Source File
 # End Group
 # End Target
 # End Project
