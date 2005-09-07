@@ -90,7 +90,8 @@ OALDevice::OALDevice (const char* 	 inDeviceName, UInt32   inSelfToken, UInt32  
         mRenderChannelCount(ALC_RENDER_CHANNEL_COUNT_MULTICHANNEL),
 		mRenderQuality(ALC_SPATIAL_RENDERING_QUALITY_LOW),
 		mSpatialSetting(0),
-        mReverbSetting(0)
+        mReverbSetting(0),
+		mFramesPerSlice(512)
 #if LOG_BUS_CONNECTIONS
 		, mMonoSourcesConnected(0),
 		mStereoSourcesConnected(0)
@@ -241,6 +242,25 @@ void OALDevice::InitializeGraph (const char* 		inDeviceName)
             mDefaultMaxDistance = distanceParams.mMaxDistance;
         }
     }
+
+	// Frame Per Slice
+	// get the device's frame count and set the AUs to match, will be set to 512 if this fails
+	AudioDeviceID	device = 0;
+	UInt32	dataSize = sizeof(device);
+	result = AudioUnitGetProperty(mOutputUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &device, &dataSize);
+	if (result == noErr)
+	{
+		dataSize = sizeof(mFramesPerSlice);
+		result = AudioDeviceGetProperty(device, 0, false, kAudioDevicePropertyBufferFrameSize, &dataSize, &mFramesPerSlice);
+		if (result == noErr)
+		{
+			result = AudioUnitSetProperty(  mOutputUnit, kAudioUnitProperty_MaximumFramesPerSlice, 
+											kAudioUnitScope_Global, 0, &mFramesPerSlice, sizeof(mFramesPerSlice));
+
+			result = AudioUnitSetProperty(  mMixerUnit, kAudioUnitProperty_MaximumFramesPerSlice, 
+											kAudioUnitScope_Global, 0, &mFramesPerSlice, sizeof(mFramesPerSlice));
+		}
+	}
 	 	
 	mCanScheduleEvents = true;
 	Print();

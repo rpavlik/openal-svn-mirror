@@ -127,6 +127,7 @@ class OALDevice
 	bool            IsDistanceScalingRequired() { return mDistanceScalingRequired;}
 	Float32         GetDefaultReferenceDistance() { return mDefaultReferenceDistance;}
 	Float32         GetDefaultMaxDistance() { return mDefaultMaxDistance;}
+	Float32         GetFramesPerSlice() { return mFramesPerSlice;}
 
 	// misc.
     bool            IsPreferredMixerAvailable() { return mPreferred3DMixerExists; }
@@ -178,6 +179,7 @@ class OALDevice
         UInt32			mRenderQuality;                 // Hi or Lo for now
         UInt32			mSpatialSetting;
         UInt32          mReverbSetting;
+		UInt32			mFramesPerSlice;
 #if LOG_BUS_CONNECTIONS
         UInt32			mMonoSourcesConnected;
         UInt32			mStereoSourcesConnected;
