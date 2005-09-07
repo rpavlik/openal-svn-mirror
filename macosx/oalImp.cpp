@@ -968,7 +968,7 @@ ALAPI ALvoid ALAPIENTRY alDeleteBuffers(ALsizei n, ALuint *buffers)
                     }
                     else if (oalBuffer->mAttachedCount > 0)
                     {
-                        DebugMessageN1("alDeleteBuffers: oalBuffer->mAttachedCount = %ld\n", oalBuffer->mAttachedCount);
+                        DebugMessageN2("alDeleteBuffers: oalBuffer:oalBuffer->mAttachedCount = %ld:%ld\n", buffers[i], oalBuffer->mAttachedCount);
                         throw ((OSStatus) AL_INVALID_VALUE);    // the buffer is attached to a source so set an error and bail
                     }
                 }
@@ -1254,45 +1254,45 @@ ALAPI ALvoid ALAPIENTRY alSourcef (ALuint source, ALenum pname, ALfloat value)
         switch (pname) 
         {
             case AL_CONE_INNER_ANGLE:
-                oalSource->SetConeInnerAngle(value, false);
+                oalSource->SetConeInnerAngle(value);
                 break;
             case AL_CONE_OUTER_ANGLE:
-                oalSource->SetConeOuterAngle(value, false);
+                oalSource->SetConeOuterAngle(value);
                 break;
             case AL_CONE_OUTER_GAIN:
                 if (value >= 0.0 && value <= 1.0)
-                    oalSource->SetConeOuterGain(value, false);
+                    oalSource->SetConeOuterGain(value);
                 break;
             case AL_PITCH:
                 if (value < 0.0f)
                     throw ((OSStatus) AL_INVALID_VALUE);
-                oalSource->SetPitch(value, false);
+                oalSource->SetPitch(value);
                 break;
             case AL_GAIN:
-                oalSource->SetGain(value, false);
+                oalSource->SetGain(value);
                 break;
             case AL_MAX_DISTANCE:
-                oalSource->SetMaxDistance(value, false);
+                oalSource->SetMaxDistance(value);
                 break;
             case AL_MIN_GAIN:
                 if ((value < 0.0f) && (value > 1.0f))
                     throw ((OSStatus) AL_INVALID_VALUE);
-                oalSource->SetMinGain(value, false);
+                oalSource->SetMinGain(value);
                 break;
             case AL_MAX_GAIN:
                 if ((value < 0.0f) && (value > 1.0f))
                     throw ((OSStatus) AL_INVALID_VALUE);
-                oalSource->SetMaxGain(value, false);
+                oalSource->SetMaxGain(value);
                 break;
             case AL_ROLLOFF_FACTOR:
                 if (value < 0.0f) 
                     throw ((OSStatus) AL_INVALID_VALUE);
-                oalSource->SetRollOffFactor(value, false);
+                oalSource->SetRollOffFactor(value);
                 break;
             case AL_REFERENCE_DISTANCE:
                 if (value <= 0.0f)
                     throw ((OSStatus) AL_INVALID_VALUE);
-                oalSource->SetReferenceDistance(value, false);
+                oalSource->SetReferenceDistance(value);
                 break;
             default:
                 alSetError(AL_INVALID_OPERATION);
@@ -1335,13 +1335,13 @@ ALAPI ALvoid ALAPIENTRY alSourcefv (ALuint source, ALenum pname, ALfloat *values
             case AL_POSITION:
                 if (isnan(values[0]) || isnan(values[1]) || isnan(values[2]))
                     throw ((OSStatus) AL_INVALID_VALUE);
-                oalSource->SetPosition(values[0], values[1], values[2], false);
+                oalSource->SetPosition(values[0], values[1], values[2]);
                 break;
             case AL_DIRECTION:
-                oalSource->SetDirection(values[0], values[1], values[2], false);
+                oalSource->SetDirection(values[0], values[1], values[2]);
                 break;
             case AL_VELOCITY:
-                oalSource->SetVelocity(values[0], values[1], values[2], false);
+                oalSource->SetVelocity(values[0], values[1], values[2]);
                 break;
             default:
                 alSetError(AL_INVALID_ENUM);
@@ -1384,13 +1384,13 @@ ALAPI ALvoid ALAPIENTRY alSource3f (ALuint source, ALenum pname, ALfloat v1, ALf
             case AL_POSITION:
                 if (isnan(v1) || isnan(v2) || isnan(v3))
                     throw ((OSStatus) AL_INVALID_VALUE);
-                oalSource->SetPosition(v1, v2, v3, false);
+                oalSource->SetPosition(v1, v2, v3);
                 break;
             case AL_VELOCITY:
-                oalSource->SetVelocity(v1, v2, v3, false);
+                oalSource->SetVelocity(v1, v2, v3);
                 break;
             case AL_DIRECTION:
-                oalSource->SetDirection(v1, v2, v3, false);
+                oalSource->SetDirection(v1, v2, v3);
                 break;
             default:
                 alSetError(AL_INVALID_ENUM);
@@ -1431,17 +1431,17 @@ ALAPI ALvoid ALAPIENTRY alSourcei (ALuint source, ALenum pname, ALint value)
         switch (pname) 
         {
             case AL_CONE_INNER_ANGLE:
-                oalSource->SetConeInnerAngle(value, false);
+                oalSource->SetConeInnerAngle(value);
                 break;
             case AL_CONE_OUTER_ANGLE:
-                oalSource->SetConeOuterAngle(value, false);
+                oalSource->SetConeOuterAngle(value);
                 break;
             case AL_CONE_OUTER_GAIN:
                 if (value >= 0 && value <= 1)
-                    oalSource->SetConeOuterGain(value, false);
+                    oalSource->SetConeOuterGain(value);
                 break;
             case AL_LOOPING:
-                oalSource->SetLooping(value, false);
+                oalSource->SetLooping(value);
                 break;
             case AL_BUFFER:
                 if ((oalSource->GetState() == AL_STOPPED) || (oalSource->GetState() == AL_INITIAL))
@@ -1450,8 +1450,11 @@ ALAPI ALvoid ALAPIENTRY alSourcei (ALuint source, ALenum pname, ALint value)
                         throw ((OSStatus) AL_INVALID_OPERATION);   
 
                     if ((alIsBuffer(value)) || (value == 0))
-                        oalSource->SetBuffer(value, gOALBufferMap->Get((UInt32) value));
-                    else
+                    {
+						DebugMessageN2("alSourcei AL_BUFFER called - source:buffer  %ld:%ld", source, value);
+					    oalSource->SetBuffer(value, gOALBufferMap->Get((UInt32) value));
+                    }
+					else
                         throw ((OSStatus) AL_INVALID_OPERATION);
                 } 
                 else
@@ -1460,7 +1463,7 @@ ALAPI ALvoid ALAPIENTRY alSourcei (ALuint source, ALenum pname, ALint value)
                 break;
             case AL_SOURCE_RELATIVE:
                 if ((value == AL_FALSE) || (value == AL_TRUE))
-                    oalSource->SetSourceRelative(value, false);
+                    oalSource->SetSourceRelative(value);
                 else
                     throw ((OSStatus) AL_INVALID_VALUE);
                 break;
@@ -1571,13 +1574,13 @@ ALAPI ALvoid ALAPIENTRY alGetSource3f (ALuint source, ALenum pname, ALfloat *v1,
         switch (pname) 
         {
             case AL_POSITION:
-                oalSource->GetPosition(*v1, *v2, *v3, false);
+                oalSource->GetPosition(*v1, *v2, *v3);
                 break;
             case AL_DIRECTION:
-                oalSource->GetDirection(*v1, *v2, *v3, false);
+                oalSource->GetDirection(*v1, *v2, *v3);
                 break;
             case AL_VELOCITY:
-                oalSource->GetVelocity(*v1, *v2, *v3, false);
+                oalSource->GetVelocity(*v1, *v2, *v3);
                 break;
             default:
                 alSetError(AL_INVALID_ENUM);
@@ -1618,13 +1621,13 @@ ALAPI ALvoid ALAPIENTRY alGetSourcefv (ALuint source, ALenum pname, ALfloat *val
         switch(pname) 
         {
             case AL_POSITION:
-                oalSource->GetPosition(values[0], values[1], values[2], false);
+                oalSource->GetPosition(values[0], values[1], values[2]);
                 break;
             case AL_VELOCITY:
-                oalSource->GetVelocity(values[0], values[1], values[2], false);
+                oalSource->GetVelocity(values[0], values[1], values[2]);
                 break;
             case AL_DIRECTION:
-                oalSource->GetDirection(values[0], values[1], values[2], false);
+                oalSource->GetDirection(values[0], values[1], values[2]);
                 break;
             default:
                 alSetError(AL_INVALID_ENUM);
@@ -1736,8 +1739,8 @@ ALAPI ALvoid ALAPIENTRY alSourcePlay(ALuint source)
                     oalSource->Play();					// start playing the queue
                     break;
                 case AL_PLAYING:
-                    oalSource->Stop();					// stop playing the queue
-                    oalSource->Play();					// start playing the queue
+					// Tell the source to ramp down the next rendered buffer and then start playing data from the Q start				
+					oalSource->RestartQueue();			// just reset the buffer queue to the beginning
                     break;
                 case AL_PAUSED:
                     oalSource->Resume();				// continue playing again from somewhere in the buffer queue
