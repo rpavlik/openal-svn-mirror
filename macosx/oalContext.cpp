@@ -138,7 +138,7 @@ void		OALContext::SetDistanceModel(UInt32	inDistanceModel)
 	DebugMessage("OALContext::SetDistanceModel: MarkAllSourcesForRecalculation called\n");
 #endif
             // the sources may have already been set and now need to be moved back to the reference position
-             mSourceMap->MarkAllSourcesForRecalculation(false);
+             mSourceMap->MarkAllSourcesForRecalculation();
 		}
 	}
 }	
@@ -150,7 +150,7 @@ void		OALContext::SetDopplerFactor(Float32		inDopplerFactor, bool isRenderThread
 	{
 		mDopplerFactor = inDopplerFactor;
 		if (mSourceMap)
-			mSourceMap->SetDopplerForAllSources(false);
+			mSourceMap->SetDopplerForAllSources();
 	}
 }
 
@@ -161,7 +161,7 @@ void		OALContext::SetDopplerVelocity(Float32	inDopplerVelocity, bool isRenderThr
 	{
 		mDopplerVelocity = inDopplerVelocity;
 		if (mSourceMap)
-			mSourceMap->SetDopplerForAllSources(false);
+			mSourceMap->SetDopplerForAllSources();
 	}
 }
 
@@ -204,7 +204,7 @@ void		OALContext::SetListenerPosition(Float32	posX, Float32	posY, Float32	posZ)
 	DebugMessageN4("OALContext::SetListenerPosition called - OALSource = %f:%f:%f/%ld\n", posX, posY, posZ, mSelfToken);
 #endif
 		// moving the listener effects the coordinate translation for ALL the sources
-		mSourceMap->MarkAllSourcesForRecalculation(false);
+		mSourceMap->MarkAllSourcesForRecalculation();
 	}	
 }
 
@@ -221,7 +221,7 @@ void		OALContext::SetListenerVelocity(Float32	posX, Float32	posY, Float32	posZ)
 	DebugMessage("OALContext::SetListenerVelocity: MarkAllSourcesForRecalculation called\n");
 #endif
 		// moving the listener effects the coordinate translation for ALL the sources
-        mSourceMap->MarkAllSourcesForRecalculation(false);
+        mSourceMap->MarkAllSourcesForRecalculation();
 	}
 }
 
@@ -250,6 +250,6 @@ void	OALContext::SetListenerOrientation( Float32	forwardX, 	Float32	forwardY,	Fl
 	DebugMessage("OALContext::SetListenerOrientation: MarkAllSourcesForRecalculation called\n");
 #endif
 		// moving the listener effects the coordinate translation for ALL the sources
-		mSourceMap->MarkAllSourcesForRecalculation(false);
+		mSourceMap->MarkAllSourcesForRecalculation();
 	}
 }
