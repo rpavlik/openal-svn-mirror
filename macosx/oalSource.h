@@ -45,6 +45,18 @@ enum {
 		kProcessed = 2
 };
 
+enum {
+		kResetQueueOff			= 0,
+		kResetQueueRampDown		= 1,
+		kResetQueueJoinLists	= 2
+};
+
+enum {
+		kRampDown		= -1,
+		kNoRamping		= 0,
+		kRampUp			= 1
+};
+
 #define	OALSourceError_CallConverterAgain	'agan'
 #define	kSourceNeedsBus                     -1
 
@@ -253,7 +265,6 @@ class OALSource
 		UInt32						mSelfToken;					// the token returned to the caller upon alGenSources()
 		OALContext                  *mOwningContext;
         OALDevice					*mOwningDevice;             // the OALDevice object for the owning OpenAL device
-        CAMutex                     mStateMutex;                // used for non render thread locks
 		
 		bool						mCalculateDistance;		
 		bool						mResetBusFormat;
@@ -269,7 +280,6 @@ class OALSource
 		CAGuard						mPlayGuard;
 		AURenderCallbackStruct 		mPlayCallback;
 		int							mCurrentPlayBus;			// the mixer bus currently used by this source
-		bool						mShouldFade;
 		
 		ACMap						*mACMap;
 
@@ -302,22 +312,35 @@ class OALSource
 		Float32						mMinDistance;
 		Float32						mMinGain;
 		Float32						mMaxGain;
+		
+		SInt32						mRampState;
+		bool						mStopInPostRender;
+		bool						mPauseInPostRender;
+		UInt32						mResetQInPostRender;		// state for resetting the buffer queue while a source is playing
         		
 	void        JoinBufferLists();
 	void        LoopToBeginning();
-	void        ChangeChannelSettings(bool isRenderThread);
+	void        ChangeChannelSettings();
 	void		InitSource();
 	void		SetState(UInt32		inState);
 	OSStatus 	DoPreRender ();
 	OSStatus 	DoRender (AudioBufferList 	*ioData);
 	OSStatus 	DoSRCRender (AudioBufferList 	*ioData);           // support for pre 2.0 3DMixer
 	OSStatus 	DoPostRender ();
-	void 		CalculateDistanceAndAzimuth(Float32 *outDistance, Float32 *outAzimuth, Float32	*outDopplerShift, bool isRenderThread);
+	void 		CalculateDistanceAndAzimuth(Float32 *outDistance, Float32 *outAzimuth, Float32 *outElevation, Float32	*outDopplerShift);
 	bool        CallingInRenderThread () const { return (int(pthread_self()) == mRenderThreadID); }
-	void        UpdateBusGain (bool isRenderThread);
-	void        UpdateBusFormat (bool isRenderThread);
+	void        UpdateBusGain ();
+	void        UpdateBusFormat ();
 	void        Reset();
-	void        PlayFinished();
+
+	void		UpdateQueue ();
+	void		RampDown (AudioBufferList 			*ioData);
+	void		RampUp (AudioBufferList 			*ioData);
+	void		ClearActiveQueue();
+	void		SkipALNONEBuffers();
+	void		AddNotifyAndRenderProcs();
+	void		ReleaseNotifyAndRenderProcs();
+	void		DisconnectFromBus();
 
 	OSStatus	MuteCurrentPlayBus () const
 	{
@@ -352,22 +375,22 @@ class OALSource
 	~OALSource();
 	
 	// set info methods - these may be called from either the render thread or the API caller
-	void	SetPitch (Float32	inPitch, bool isRenderThread);
-	void	SetGain (Float32	inGain, bool isRenderThread);
-	void	SetMinGain (Float32	inMinGain, bool isRenderThread);
-	void	SetMaxGain (Float32	inMaxGain, bool isRenderThread);
-	void	SetReferenceDistance (Float32	inReferenceDistance, bool isRenderThread);
-	void	SetMaxDistance (Float32	inMaxDistance, bool isRenderThread);
-	void	SetRollOffFactor (Float32	inRollOffFactor, bool isRenderThread);
-	void	SetLooping (UInt32	inLooping, bool isRenderThread);
-	void	SetPosition (Float32 inX, Float32 inY, Float32 inZ, bool isRenderThread);
-	void	SetVelocity (Float32 inX, Float32 inY, Float32 inZ, bool isRenderThread);
-	void	SetDirection (Float32 inX, Float32 inY, Float32 inZ, bool isRenderThread);
-	void	SetSourceRelative (UInt32	inSourceRelative, bool isRenderThread);
-	void	SetChannelParameters (bool isRenderThread);
-	void	SetConeInnerAngle (Float32	inConeInnerAngle, bool isRenderThread);
-	void	SetConeOuterAngle (Float32	inConeOuterAngle, bool isRenderThread);
-	void	SetConeOuterGain (Float32	inConeOuterGain, bool isRenderThread);
+	void	SetPitch (Float32	inPitch);
+	void	SetGain (Float32	inGain);
+	void	SetMinGain (Float32	inMinGain);
+	void	SetMaxGain (Float32	inMaxGain);
+	void	SetReferenceDistance (Float32	inReferenceDistance);
+	void	SetMaxDistance (Float32	inMaxDistance);
+	void	SetRollOffFactor (Float32	inRollOffFactor);
+	void	SetLooping (UInt32	inLooping);
+	void	SetPosition (Float32 inX, Float32 inY, Float32 inZ);
+	void	SetVelocity (Float32 inX, Float32 inY, Float32 inZ);
+	void	SetDirection (Float32 inX, Float32 inY, Float32 inZ);
+	void	SetSourceRelative (UInt32	inSourceRelative);
+	void	SetChannelParameters ();
+	void	SetConeInnerAngle (Float32	inConeInnerAngle);
+	void	SetConeOuterAngle (Float32	inConeOuterAngle);
+	void	SetConeOuterGain (Float32	inConeOuterGain);
 
 	// get info methods
 	Float32	GetPitch ();
@@ -379,9 +402,9 @@ class OALSource
 	Float32	GetMaxDistance ();
 	Float32	GetRollOffFactor ();
 	UInt32	GetLooping ();
-	void	GetPosition (Float32 &inX, Float32 &inY, Float32 &inZ, bool isRenderThread);
-	void	GetVelocity (Float32 &inX, Float32 &inY, Float32 &inZ, bool isRenderThread);
-	void	GetDirection (Float32 &inX, Float32 &inY, Float32 &inZ, bool isRenderThread);
+	void	GetPosition (Float32 &inX, Float32 &inY, Float32 &inZ);
+	void	GetVelocity (Float32 &inX, Float32 &inY, Float32 &inZ);
+	void	GetDirection (Float32 &inX, Float32 &inY, Float32 &inZ);
 	UInt32	GetSourceRelative ();
 	Float32	GetConeInnerAngle ();
 	Float32	GetConeOuterAngle ();
@@ -402,6 +425,7 @@ class OALSource
 	void	Pause();
 	void	Resume();
 	void	Stop();
+	void	RestartQueue();			// to be called from alSourcePlay while the source is in the AL_PLAYING state
 };	
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -438,18 +462,18 @@ public:
 		return (NULL);
     }
 
-    void MarkAllSourcesForRecalculation(bool    isRenderThread) {
+    void MarkAllSourcesForRecalculation() {
         iterator	it = begin();
         while (it != end())
 		{
-			(*it).second->SetChannelParameters(isRenderThread);
+			(*it).second->SetChannelParameters();
 			it++;
 		}
 		return;
     }
 
-    void SetDopplerForAllSources(bool isRenderThread) {
-        MarkAllSourcesForRecalculation(isRenderThread);
+    void SetDopplerForAllSources() {
+        MarkAllSourcesForRecalculation();
 		return;
     }
     
