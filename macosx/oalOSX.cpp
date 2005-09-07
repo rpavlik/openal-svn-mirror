@@ -331,7 +331,6 @@ ALUTAPI ALvoid ALUTAPIENTRY alutLoadWAVMemory(ALbyte *memory,ALenum *format,ALvo
 	WAVFileHdr_Struct FileHdr;
 	WAVSmplHdr_Struct SmplHdr;
 	WAVFmtHdr_Struct FmtHdr;
-	int i;
 	ALbyte *Stream;
 	
 	*format=AL_FORMAT_MONO16;
@@ -395,7 +394,7 @@ ALUTAPI ALvoid ALUTAPIENTRY alutLoadWAVMemory(ALbyte *memory,ALenum *format,ALvo
 							Stream+=ChunkHdr.Size;
 						    if (FmtHdr.BitsPerSample == 16) 
 						    {
-						        for (i = 0; i < (ChunkHdr.Size / 2); i++)
+						        for (UInt32 i = 0; i < (ChunkHdr.Size / 2); i++)
 						        {
 						        	SwapBytes(&(*(unsigned short **)data)[i]);
 						        }
