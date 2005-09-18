@@ -1,5 +1,8 @@
 2005-09-18  Sven Panne  <sven.panne@aedion.de>
 
+	* src/al_mixer.c: Give other threads a chance to acquire the mixer
+	lock.
+
 	* configure.ac: Use AL_BUILD_LIBRARY instead of _OPENAL32LIB.
 
 2005-09-02  Sven Panne  <sven.panne@aedion.de>

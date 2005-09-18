@@ -1113,6 +1113,8 @@ int async_mixer_iterate(UNUSED(void *dummy)) {
 
 			_alUnlockMixerPause();
 		}
+		/* give other threads a chance to acquire the mixer lock */
+		_alMicroSleep(1);
 	} while(time_for_mixer_to_die == AL_FALSE);
 
 	time_for_mixer_to_die = AL_FALSE;
