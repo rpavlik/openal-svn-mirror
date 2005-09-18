@@ -1,7 +1,17 @@
 2005-09-18  Sven Panne  <sven.panne@aedion.de>
 
-	* src/al_mixer.c: Give other threads a chance to acquire the mixer
-	lock.
+	* src/arch/interface/interface_sound.c: Silenced warnings about
+	stubbed pause/resume functionality. It is not clear if there is
+	really something missing, but it was quite annoying.
+
+	* src/al_mixer.c: When the (asynchronous) current context was set
+	to NULL, the mixer thread was still in its busy wait(!) loop.
+	Consequently other threads might wait forever to get the mixer
+	lock and alcMakeContextCurrent might hang. We wait for 1ms now in
+	each mixer iteration to give other threads a chance to acquire the
+	mixer lock. All the multithreading logic seems to be overly
+	complicated, so it is not clear if this is really the correct way
+	to fix this issue, but at least it seems to work on Linux now.
 
 	* configure.ac: Use AL_BUILD_LIBRARY instead of _OPENAL32LIB.
 

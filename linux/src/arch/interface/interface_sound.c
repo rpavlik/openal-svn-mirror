@@ -354,9 +354,7 @@ void pause_audiodevice(void *handle) {
 	        pause_esd(handle);
 	  	break;
 	    default:
-	    	fprintf(stderr,
-		"pause_audiodevice stubbed for 0x%x\n",
-		hardware_type);
+	        /* fprintf(stderr, "pause_audiodevice stubbed for 0x%x\n", hardware_type); */
 		break;
 	}
 
@@ -373,9 +371,7 @@ void resume_audiodevice(void *handle) {
 	        resume_esd(handle);
 	  	break;
 	    default:
-	    	fprintf(stderr,
-		"resume_audiodevice stubbed for 0x%x\n",
-		hardware_type);
+		/* fprintf(stderr, "resume_audiodevice stubbed for 0x%x\n", hardware_type); */
 		break;
 	}
 
