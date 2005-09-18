@@ -23,7 +23,7 @@
 
 #include <stdlib.h>
 #include <memory.h>
-#define _OPENAL32LIB
+#define AL_BUILD_LIBRARY
 #include <al/alc.h>
 #include <stdio.h>
 #include <tchar.h>

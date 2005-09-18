@@ -1,24 +1,25 @@
-#ifndef _AL_ALC_H
-#define _AL_ALC_H
+#ifndef AL_ALC_H
+#define AL_ALC_H
 
 #if defined(__cplusplus)
 extern "C" {
 #endif
 
 #if defined(_WIN32) && !defined(_XBOX)
- #if defined (_OPENAL32LIB)
-  #define ALCAPI __declspec(dllexport)
+ /* _OPENAL32LIB is deprecated */
+ #if defined(AL_BUILD_LIBRARY) || defined (_OPENAL32LIB)
+  #define ALC_API __declspec(dllexport)
  #else
-  #define ALCAPI __declspec(dllimport)
+  #define ALC_API __declspec(dllimport)
  #endif
 #else
- #define ALCAPI extern
+ #define ALC_API extern
 #endif
 
 #if defined(_WIN32)
- #define ALCAPIENTRY __cdecl
+ #define ALC_APIENTRY __cdecl
 #else
- #define ALCAPIENTRY
+ #define ALC_APIENTRY
 #endif
 
 #if TARGET_OS_MAC
@@ -174,34 +175,34 @@ typedef void ALCvoid;
 /*
  * Context Management
  */
-ALCAPI ALCcontext *    ALCAPIENTRY alcCreateContext( ALCdevice *device, const ALCint* attrlist );
+ALC_API ALCcontext *    ALC_APIENTRY alcCreateContext( ALCdevice *device, const ALCint* attrlist );
 
-ALCAPI ALCboolean      ALCAPIENTRY alcMakeContextCurrent( ALCcontext *context );
+ALC_API ALCboolean      ALC_APIENTRY alcMakeContextCurrent( ALCcontext *context );
 
-ALCAPI void            ALCAPIENTRY alcProcessContext( ALCcontext *context );
+ALC_API void            ALC_APIENTRY alcProcessContext( ALCcontext *context );
 
-ALCAPI void            ALCAPIENTRY alcSuspendContext( ALCcontext *context );
+ALC_API void            ALC_APIENTRY alcSuspendContext( ALCcontext *context );
 
-ALCAPI void            ALCAPIENTRY alcDestroyContext( ALCcontext *context );
+ALC_API void            ALC_APIENTRY alcDestroyContext( ALCcontext *context );
 
-ALCAPI ALCcontext *    ALCAPIENTRY alcGetCurrentContext( ALCvoid );
+ALC_API ALCcontext *    ALC_APIENTRY alcGetCurrentContext( ALCvoid );
 
-ALCAPI ALCdevice*      ALCAPIENTRY alcGetContextsDevice( ALCcontext *context );
+ALC_API ALCdevice*      ALC_APIENTRY alcGetContextsDevice( ALCcontext *context );
 
 
 /*
  * Device Management
  */
-ALCAPI ALCdevice *     ALCAPIENTRY alcOpenDevice( const ALCchar *devicename );
+ALC_API ALCdevice *     ALC_APIENTRY alcOpenDevice( const ALCchar *devicename );
 
-ALCAPI ALCboolean      ALCAPIENTRY alcCloseDevice( ALCdevice *device );
+ALC_API ALCboolean      ALC_APIENTRY alcCloseDevice( ALCdevice *device );
 
 
 /*
  * Error support.
  * Obtain the most recent Context error
  */
-ALCAPI ALCenum         ALCAPIENTRY alcGetError( ALCdevice *device );
+ALC_API ALCenum         ALC_APIENTRY alcGetError( ALCdevice *device );
 
 
 /* 
@@ -209,78 +210,78 @@ ALCAPI ALCenum         ALCAPIENTRY alcGetError( ALCdevice *device );
  * Query for the presence of an extension, and obtain any appropriate
  * function pointers and enum values.
  */
-ALCAPI ALCboolean      ALCAPIENTRY alcIsExtensionPresent( ALCdevice *device, const ALCchar *extname );
+ALC_API ALCboolean      ALC_APIENTRY alcIsExtensionPresent( ALCdevice *device, const ALCchar *extname );
 
-ALCAPI void  *         ALCAPIENTRY alcGetProcAddress( ALCdevice *device, const ALCchar *funcname );
+ALC_API void  *         ALC_APIENTRY alcGetProcAddress( ALCdevice *device, const ALCchar *funcname );
 
-ALCAPI ALCenum         ALCAPIENTRY alcGetEnumValue( ALCdevice *device, const ALCchar *enumname );
+ALC_API ALCenum         ALC_APIENTRY alcGetEnumValue( ALCdevice *device, const ALCchar *enumname );
 
 
 /*
  * Query functions
  */
-ALCAPI const ALCchar * ALCAPIENTRY alcGetString( ALCdevice *device, ALCenum param );
+ALC_API const ALCchar * ALC_APIENTRY alcGetString( ALCdevice *device, ALCenum param );
 
-ALCAPI void            ALCAPIENTRY alcGetIntegerv( ALCdevice *device, ALCenum param, ALCsizei size, ALCint *data );
+ALC_API void            ALC_APIENTRY alcGetIntegerv( ALCdevice *device, ALCenum param, ALCsizei size, ALCint *data );
 
 
 /*
  * Capture functions
  */
-ALCAPI ALCdevice*      ALCAPIENTRY alcCaptureOpenDevice( const ALCchar *devicename, ALCuint frequency, ALCenum format, ALCsizei buffersize );
+ALC_API ALCdevice*      ALC_APIENTRY alcCaptureOpenDevice( const ALCchar *devicename, ALCuint frequency, ALCenum format, ALCsizei buffersize );
 
-ALCAPI ALCboolean      ALCAPIENTRY alcCaptureCloseDevice( ALCdevice *device );
+ALC_API ALCboolean      ALC_APIENTRY alcCaptureCloseDevice( ALCdevice *device );
 
-ALCAPI void            ALCAPIENTRY alcCaptureStart( ALCdevice *device );
+ALC_API void            ALC_APIENTRY alcCaptureStart( ALCdevice *device );
 
-ALCAPI void            ALCAPIENTRY alcCaptureStop( ALCdevice *device );
+ALC_API void            ALC_APIENTRY alcCaptureStop( ALCdevice *device );
 
-ALCAPI void            ALCAPIENTRY alcCaptureSamples( ALCdevice *device, ALCvoid *buffer, ALCsizei samples );
+ALC_API void            ALC_APIENTRY alcCaptureSamples( ALCdevice *device, ALCvoid *buffer, ALCsizei samples );
 
 #else /* ALC_NO_PROTOTYPES */
 
-ALCAPI ALCcontext *    (ALCAPIENTRY *alcCreateContext)( ALCdevice *device, const ALCint* attrlist );
-ALCAPI ALCboolean      (ALCAPIENTRY *alcMakeContextCurrent)( ALCcontext *context );
-ALCAPI void            (ALCAPIENTRY *alcProcessContext)( ALCcontext *context );
-ALCAPI void            (ALCAPIENTRY *alcSuspendContext)( ALCcontext *context );
-ALCAPI void            (ALCAPIENTRY *alcDestroyContext)( ALCcontext *context );
-ALCAPI ALCcontext *    (ALCAPIENTRY *alcGetCurrentContext)( ALCvoid );
-ALCAPI ALCdevice *     (ALCAPIENTRY *alcGetContextsDevice)( ALCcontext *context );
-ALCAPI ALCdevice *     (ALCAPIENTRY *alcOpenDevice)( const ALCchar *devicename );
-ALCAPI ALCboolean      (ALCAPIENTRY *alcCloseDevice)( ALCdevice *device );
-ALCAPI ALCenum         (ALCAPIENTRY *alcGetError)( ALCdevice *device );
-ALCAPI ALCboolean      (ALCAPIENTRY *alcIsExtensionPresent)( ALCdevice *device, const ALCchar *extname );
-ALCAPI void *          (ALCAPIENTRY *alcGetProcAddress)( ALCdevice *device, const ALCchar *funcname );
-ALCAPI ALCenum         (ALCAPIENTRY *alcGetEnumValue)( ALCdevice *device, const ALCchar *enumname );
-ALCAPI const ALCchar*  (ALCAPIENTRY *alcGetString)( ALCdevice *device, ALCenum param );
-ALCAPI void            (ALCAPIENTRY *alcGetIntegerv)( ALCdevice *device, ALCenum param, ALCsizei size, ALCint *dest );
-ALCAPI ALCdevice *     (ALCAPIENTRY *alcCaptureOpenDevice)( const ALCchar *devicename, ALCuint frequency, ALCenum format, ALCsizei buffersize );
-ALCAPI ALCboolean      (ALCAPIENTRY *alcCaptureCloseDevice)( ALCdevice *device );
-ALCAPI void            (ALCAPIENTRY *alcCaptureStart)( ALCdevice *device );
-ALCAPI void            (ALCAPIENTRY *alcCaptureStop)( ALCdevice *device );
-ALCAPI void            (ALCAPIENTRY *alcCaptureSamples)( ALCdevice *device, ALCvoid *buffer, ALCsizei samples );
+ALC_API ALCcontext *    (ALC_APIENTRY *alcCreateContext)( ALCdevice *device, const ALCint* attrlist );
+ALC_API ALCboolean      (ALC_APIENTRY *alcMakeContextCurrent)( ALCcontext *context );
+ALC_API void            (ALC_APIENTRY *alcProcessContext)( ALCcontext *context );
+ALC_API void            (ALC_APIENTRY *alcSuspendContext)( ALCcontext *context );
+ALC_API void            (ALC_APIENTRY *alcDestroyContext)( ALCcontext *context );
+ALC_API ALCcontext *    (ALC_APIENTRY *alcGetCurrentContext)( ALCvoid );
+ALC_API ALCdevice *     (ALC_APIENTRY *alcGetContextsDevice)( ALCcontext *context );
+ALC_API ALCdevice *     (ALC_APIENTRY *alcOpenDevice)( const ALCchar *devicename );
+ALC_API ALCboolean      (ALC_APIENTRY *alcCloseDevice)( ALCdevice *device );
+ALC_API ALCenum         (ALC_APIENTRY *alcGetError)( ALCdevice *device );
+ALC_API ALCboolean      (ALC_APIENTRY *alcIsExtensionPresent)( ALCdevice *device, const ALCchar *extname );
+ALC_API void *          (ALC_APIENTRY *alcGetProcAddress)( ALCdevice *device, const ALCchar *funcname );
+ALC_API ALCenum         (ALC_APIENTRY *alcGetEnumValue)( ALCdevice *device, const ALCchar *enumname );
+ALC_API const ALCchar*  (ALC_APIENTRY *alcGetString)( ALCdevice *device, ALCenum param );
+ALC_API void            (ALC_APIENTRY *alcGetIntegerv)( ALCdevice *device, ALCenum param, ALCsizei size, ALCint *dest );
+ALC_API ALCdevice *     (ALC_APIENTRY *alcCaptureOpenDevice)( const ALCchar *devicename, ALCuint frequency, ALCenum format, ALCsizei buffersize );
+ALC_API ALCboolean      (ALC_APIENTRY *alcCaptureCloseDevice)( ALCdevice *device );
+ALC_API void            (ALC_APIENTRY *alcCaptureStart)( ALCdevice *device );
+ALC_API void            (ALC_APIENTRY *alcCaptureStop)( ALCdevice *device );
+ALC_API void            (ALC_APIENTRY *alcCaptureSamples)( ALCdevice *device, ALCvoid *buffer, ALCsizei samples );
 
 /* Type definitions */
-typedef ALCcontext *   (ALCAPIENTRY *LPALCCREATECONTEXT) (ALCdevice *device, const ALCint *attrlist);
-typedef ALCboolean     (ALCAPIENTRY *LPALCMAKECONTEXTCURRENT)( ALCcontext *context );
-typedef void           (ALCAPIENTRY *LPALCPROCESSCONTEXT)( ALCcontext *context );
-typedef void           (ALCAPIENTRY *LPALCSUSPENDCONTEXT)( ALCcontext *context );
-typedef void           (ALCAPIENTRY *LPALCDESTROYCONTEXT)( ALCcontext *context );
-typedef ALCcontext *   (ALCAPIENTRY *LPALCGETCURRENTCONTEXT)( ALCvoid );
-typedef ALCdevice *    (ALCAPIENTRY *LPALCGETCONTEXTSDEVICE)( ALCcontext *context );
-typedef ALCdevice *    (ALCAPIENTRY *LPALCOPENDEVICE)( const ALCchar *devicename );
-typedef ALCboolean     (ALCAPIENTRY *LPALCCLOSEDEVICE)( ALCdevice *device );
-typedef ALCenum        (ALCAPIENTRY *LPALCGETERROR)( ALCdevice *device );
-typedef ALCboolean     (ALCAPIENTRY *LPALCISEXTENSIONPRESENT)( ALCdevice *device, const ALCchar *extname );
-typedef void *         (ALCAPIENTRY *LPALCGETPROCADDRESS)(ALCdevice *device, const ALCchar *funcname );
-typedef ALCenum        (ALCAPIENTRY *LPALCGETENUMVALUE)(ALCdevice *device, const ALCchar *enumname );
-typedef const ALCchar* (ALCAPIENTRY *LPALCGETSTRING)( ALCdevice *device, ALCenum param );
-typedef void           (ALCAPIENTRY *LPALCGETINTEGERV)( ALCdevice *device, ALCenum param, ALCsizei size, ALCint *dest );
-typedef ALCdevice *    (ALCAPIENTRY *LPALCCAPTUREOPENDEVICE)( const ALCchar *devicename, ALCuint frequency, ALCenum format, ALCsizei buffersize );
-typedef ALCboolean     (ALCAPIENTRY *LPALCCAPTURECLOSEDEVICE)( ALCdevice *device );
-typedef void           (ALCAPIENTRY *LPALCCAPTURESTART)( ALCdevice *device );
-typedef void           (ALCAPIENTRY *LPALCCAPTURESTOP)( ALCdevice *device );
-typedef void           (ALCAPIENTRY *LPALCCAPTURESAMPLES)( ALCdevice *device, ALCvoid *buffer, ALCsizei samples );
+typedef ALCcontext *   (ALC_APIENTRY *LPALCCREATECONTEXT) (ALCdevice *device, const ALCint *attrlist);
+typedef ALCboolean     (ALC_APIENTRY *LPALCMAKECONTEXTCURRENT)( ALCcontext *context );
+typedef void           (ALC_APIENTRY *LPALCPROCESSCONTEXT)( ALCcontext *context );
+typedef void           (ALC_APIENTRY *LPALCSUSPENDCONTEXT)( ALCcontext *context );
+typedef void           (ALC_APIENTRY *LPALCDESTROYCONTEXT)( ALCcontext *context );
+typedef ALCcontext *   (ALC_APIENTRY *LPALCGETCURRENTCONTEXT)( ALCvoid );
+typedef ALCdevice *    (ALC_APIENTRY *LPALCGETCONTEXTSDEVICE)( ALCcontext *context );
+typedef ALCdevice *    (ALC_APIENTRY *LPALCOPENDEVICE)( const ALCchar *devicename );
+typedef ALCboolean     (ALC_APIENTRY *LPALCCLOSEDEVICE)( ALCdevice *device );
+typedef ALCenum        (ALC_APIENTRY *LPALCGETERROR)( ALCdevice *device );
+typedef ALCboolean     (ALC_APIENTRY *LPALCISEXTENSIONPRESENT)( ALCdevice *device, const ALCchar *extname );
+typedef void *         (ALC_APIENTRY *LPALCGETPROCADDRESS)(ALCdevice *device, const ALCchar *funcname );
+typedef ALCenum        (ALC_APIENTRY *LPALCGETENUMVALUE)(ALCdevice *device, const ALCchar *enumname );
+typedef const ALCchar* (ALC_APIENTRY *LPALCGETSTRING)( ALCdevice *device, ALCenum param );
+typedef void           (ALC_APIENTRY *LPALCGETINTEGERV)( ALCdevice *device, ALCenum param, ALCsizei size, ALCint *dest );
+typedef ALCdevice *    (ALC_APIENTRY *LPALCCAPTUREOPENDEVICE)( const ALCchar *devicename, ALCuint frequency, ALCenum format, ALCsizei buffersize );
+typedef ALCboolean     (ALC_APIENTRY *LPALCCAPTURECLOSEDEVICE)( ALCdevice *device );
+typedef void           (ALC_APIENTRY *LPALCCAPTURESTART)( ALCdevice *device );
+typedef void           (ALC_APIENTRY *LPALCCAPTURESTOP)( ALCdevice *device );
+typedef void           (ALC_APIENTRY *LPALCCAPTURESAMPLES)( ALCdevice *device, ALCvoid *buffer, ALCsizei samples );
 
 #endif /* ALC_NO_PROTOTYPES */
 
@@ -292,4 +293,4 @@ typedef void           (ALCAPIENTRY *LPALCCAPTURESAMPLES)( ALCdevice *device, AL
 }
 #endif
 
-#endif /* _AL_ALC_H */
+#endif /* AL_ALC_H */

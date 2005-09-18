@@ -28,7 +28,7 @@
 extern "C" {
 #endif
 
-#define _OPENAL32LIB
+#define AL_BUILD_LIBRARY
 
 #include "al\al.h"
 
