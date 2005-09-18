@@ -7,7 +7,7 @@
 	* src/al_mixer.c: When the (asynchronous) current context was set
 	to NULL, the mixer thread was still in its busy wait(!) loop.
 	Consequently other threads might wait forever to get the mixer
-	lock and alcMakeContextCurrent might hang. We wait for 1ms now in
+	lock and alcMakeContextCurrent might hang. We wait for 1us now in
 	each mixer iteration to give other threads a chance to acquire the
 	mixer lock. All the multithreading logic seems to be overly
 	complicated, so it is not clear if this is really the correct way
