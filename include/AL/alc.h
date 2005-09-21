@@ -29,11 +29,7 @@ extern "C" {
 #define ALC_VERSION_0_1         1
 
 typedef struct ALCdevice_struct ALCdevice;
-#if defined(_WIN32)
 typedef struct ALCcontext_struct ALCcontext;
-#else
-typedef void ALCcontext;
-#endif
 
 
 /** 8-bit boolean */

@@ -133,15 +133,17 @@ static void _alcDeviceReadSet( ALuint cid );
 static void _alcDeviceWriteSet( ALuint cid );
 
 /*
- * VOIDP_TO_ALUINT and ALUINT_TO_VOIDP are macros to ease the conversion of
- * void * to ALuint and visa versa.
+ * ALCCONTEXTP_TO_ALUINT and ALUINT_TO_ALCCONTEXTP are macros to ease the
+ * conversion of ALCcontext* to ALuint and visa versa.
+ *
+ * ToDo: I don't understand the need for the int64_t casts below...
  */
 #if SIZEOF_VOID_P == 8
-#define VOIDP_TO_ALUINT(vp) ((ALuint) (int64_t) (vp))
-#define ALUINT_TO_VOIDP(al) ((void *) (int64_t) (al))
+#define ALCCONTEXTP_TO_ALUINT(vp) ((ALuint) (int64_t) (vp))
+#define ALUINT_TO_ALCCONTEXTP(al) ((ALCcontext *) (int64_t) (al))
 #else
-#define VOIDP_TO_ALUINT(vp) ((ALuint) (vp))
-#define ALUINT_TO_VOIDP(al) ((void *) (al))
+#define ALCCONTEXTP_TO_ALUINT(vp) ((ALuint) (vp))
+#define ALUINT_TO_ALCCONTEXTP(al) ((ALCcontext *) (al))
 #endif
 
 /*
@@ -199,7 +201,7 @@ ALCboolean alcMakeContextCurrent( ALCcontext *handle )
 		return ALC_TRUE;
 	}
 
-	cid = VOIDP_TO_ALUINT( handle );
+	cid = ALCCONTEXTP_TO_ALUINT( handle );
 
 	_alcLockAllContexts();
 
@@ -273,7 +275,7 @@ void alcDestroyContext( ALCcontext *handle )
 		return;
 	}
 
-	cid = VOIDP_TO_ALUINT( handle );
+	cid = ALCCONTEXTP_TO_ALUINT( handle );
 
 	_alcLockContext( cid );
 	cc = _alcGetContext( cid );
@@ -344,7 +346,7 @@ void alcProcessContext( ALCcontext *alcHandle )
 		return;
 	}
 
-	cid = VOIDP_TO_ALUINT( alcHandle );
+	cid = ALCCONTEXTP_TO_ALUINT( alcHandle );
 
 	/* determine whether we need to sync or not */
 	_alcLockAllContexts();
@@ -397,7 +399,7 @@ void alcSuspendContext( ALCcontext *alcHandle )
 		return;
 	}
 
-	cid = VOIDP_TO_ALUINT( alcHandle );
+	cid = ALCCONTEXTP_TO_ALUINT( alcHandle );
 
 	/* determine whether we need to sync or not */
 	_alcLockAllContexts();
@@ -469,7 +471,7 @@ ALCcontext *alcCreateContext( ALCdevice *dev, const ALCint *attrlist )
 		_alcSetContext( attrlist, cid, dev );
 		_alcUnlockContext( cid );
 
-		return ALUINT_TO_VOIDP( cid );
+		return ALUINT_TO_ALCCONTEXTP( cid );
 	}
 
 	_alcLockAllContexts();
@@ -491,7 +493,7 @@ ALCcontext *alcCreateContext( ALCdevice *dev, const ALCint *attrlist )
 	_alcSetContext( attrlist, cid, dev );
 	_alcUnlockContext( cid );
 
-	return ALUINT_TO_VOIDP( cid );
+	return ALUINT_TO_ALCCONTEXTP( cid );
 }
 
 /*
@@ -1103,7 +1105,7 @@ ALCcontext *alcGetCurrentContext( void )
 		return NULL;
 	}
 
-	return ALUINT_TO_VOIDP( _alcCCId );
+	return ALUINT_TO_ALCCONTEXTP( _alcCCId );
 }
 
 /*
@@ -1423,7 +1425,7 @@ ALCdevice *alcGetContextsDevice(ALCcontext *handle)
 {
 	AL_device *dc;
 	AL_context *cc;
-	ALuint cid = VOIDP_TO_ALUINT( handle );
+	ALuint cid = ALCCONTEXTP_TO_ALUINT( handle );
 
 	_alcLockAllContexts();
 

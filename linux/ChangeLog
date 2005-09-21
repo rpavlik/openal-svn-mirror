@@ -1,5 +1,8 @@
 2005-09-21  Sven Panne  <sven.panne@aedion.de>
 
+	* src/alc/alc_context.c: Synchronized names of device structs to
+	reduce #ifdefs in OpenAL headers.
+
 	* src/al_types.h, src/alc/alc_context.c: Synchronized names of
 	device structs to reduce #ifdefs in OpenAL headers.
 
