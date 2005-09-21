@@ -263,7 +263,7 @@ typedef struct _time_filter_set {
 
 struct _AL_context;
 
-typedef struct _AL_device {
+typedef struct ALCdevice_struct {
 	struct _AL_context *cc;
 
 	void *handle;	     /*

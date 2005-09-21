@@ -429,7 +429,7 @@ void alcSuspendContext( ALCcontext *alcHandle )
 }
 
 /*
- * alcCreateContext( struct _AL_device *dev, ALCint *attrlist )
+ * alcCreateContext( ALCdevice *dev, ALCint *attrlist )
  *
  * Allocates, initialiaes, and returns an AL_context handle, suitable for
  * passing to other alc functions.  Uses dev as the write device for the

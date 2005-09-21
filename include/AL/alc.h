@@ -28,12 +28,10 @@ extern "C" {
 
 #define ALC_VERSION_0_1         1
 
-#if defined(_WIN32)
 typedef struct ALCdevice_struct ALCdevice;
+#if defined(_WIN32)
 typedef struct ALCcontext_struct ALCcontext;
 #else
-struct _AL_device;
-typedef struct _AL_device ALCdevice;
 typedef void ALCcontext;
 #endif
 
