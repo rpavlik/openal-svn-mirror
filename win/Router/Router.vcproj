@@ -56,6 +56,8 @@
 				TypeLibraryName=".\Debug/Router.tlb"
 				HeaderFileName=""/>
 			<Tool
+				Name="VCPostBuildEventTool"/>
+			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
@@ -119,6 +121,8 @@
 				TargetEnvironment="1"
 				TypeLibraryName=".\Release/Router.tlb"
 				HeaderFileName=""/>
+			<Tool
+				Name="VCPostBuildEventTool"/>
 			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool

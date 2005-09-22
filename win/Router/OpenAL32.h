@@ -32,6 +32,20 @@ extern "C" {
 
 #include "al\al.h"
 
+// define ALAPI and related, if not defined already
+#ifndef ALAPI
+#define ALAPI __declspec(dllexport)
+#endif
+#ifndef ALAPIENTRY
+#define ALAPIENTRY __cdecl
+#endif
+#ifndef ALCAPI
+#define ALCAPI __declspec(dllexport)
+#endif
+#ifndef ALCAPIENTRY
+#define ALCAPIENTRY __cdecl
+#endif
+
 // ALAPI
 typedef ALAPI ALvoid         (ALAPIENTRY *ALAPI_ENABLE)(ALenum capability);
 typedef ALAPI ALvoid         (ALAPIENTRY *ALAPI_DISABLE)(ALenum capability);

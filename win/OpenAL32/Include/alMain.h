@@ -6,6 +6,8 @@
 
 #define ALAPI __declspec(dllexport)
 #define ALAPIENTRY __cdecl
+#define ALCAPI __declspec(dllexport)
+#define ALCAPIENTRY __cdecl
 
 #include "alu.h"
 #include "windows.h"

@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <memory.h>
-#include "alMain.h"
+#include "../OpenAL32/include/alMain.h"
 #include "AL/al.h"
 #include "AL/alc.h"
 

@@ -2278,7 +2278,7 @@ This test alters the frequency of a playing source.
 ALvoid SA_Frequency(ALvoid)
 {	
 	ALuint testSources[2];
-	float root12 = (float)(pow (2, 1/12.0));
+	float root12 = (float)(pow ((float)2, (float)(1/12.0)));
 	float increments[15] = { -12, -10, -8, -7, -5, -3, -1, 0,
 				 2, 4, 5, 7, 9, 11, 12 };
 	int i;

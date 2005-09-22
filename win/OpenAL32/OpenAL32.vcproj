@@ -54,6 +54,8 @@
 				TypeLibraryName=".\Release/OpenAL32.tlb"
 				HeaderFileName=""/>
 			<Tool
+				Name="VCPostBuildEventTool"/>
+			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
@@ -118,6 +120,8 @@
 				TargetEnvironment="1"
 				TypeLibraryName=".\Debug/OpenAL32.tlb"
 				HeaderFileName=""/>
+			<Tool
+				Name="VCPostBuildEventTool"/>
 			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool
