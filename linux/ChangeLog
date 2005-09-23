@@ -1,3 +1,7 @@
+2005-09-23  Sven Panne  <sven.panne@aedion.de>
+
+	* CREDITS: Added myself.
+
 2005-09-21  Sven Panne  <sven.panne@aedion.de>
 
 	* src/alc/alc_context.c: Synchronized names of device structs to
