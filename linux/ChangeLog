@@ -1,5 +1,9 @@
 2005-09-23  Sven Panne  <sven.panne@aedion.de>
 
+	* admin/openal.xpm: Added a scaled-down version of the OpenAL logo
+	from http://www.openal.org/. This will be used as the icon in the
+	.spec file.
+
 	* CREDITS: Added myself.
 
 2005-09-21  Sven Panne  <sven.panne@aedion.de>
