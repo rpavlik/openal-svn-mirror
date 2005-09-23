@@ -1,5 +1,10 @@
 2005-09-23  Sven Panne  <sven.panne@aedion.de>
 
+	* admin/openal.spec: Added an up-to-date .spec file, based on the
+	one used for SuSE 9.3.
+
+	* openal.spec: Removed.
+
 	* admin/openal.xpm: Added a scaled-down version of the OpenAL logo
 	from http://www.openal.org/. This will be used as the icon in the
 	.spec file.
