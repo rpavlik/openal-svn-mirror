@@ -21,21 +21,6 @@
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 
-#ifdef MMX_SUPPORT
-#error MMX support needs more work.  Do not enable it unless you plan to fix it.
-#endif
-
-
-#ifdef MMX_SUPPORT
-extern void mix16_1( ALshort *dst, ALshort *src,  int len );
-extern void mix16_2( ALshort *dst, ALshort **src, int len );
-extern void mix16_3( ALshort *dst, ALshort **src, int len );
-extern void mix16_4( ALshort *dst, ALshort **src, int len );
-extern void mix16_5( ALshort *dst, ALshort **src, int len );
-extern void mix16_6( ALshort *dst, ALshort **src, int len );
-extern void mix16_7( ALshort *dst, ALshort **src, int len );
-#endif
-
 /*
  * MixAudio16( ALshort *dst, ALshort *src, int len )
  *
@@ -43,9 +28,6 @@ extern void mix16_7( ALshort *dst, ALshort **src, int len );
  * and below by min_audioval to prevent overflow.
  */
 void MixAudio16(ALshort *dst, ALshort *src, int len) {
-#ifdef MMX_SUPPORT
-	mix16_1( dst, src, len / 2 );
-#else
 	int sample;
 
 	len /= sizeof(ALshort); /* len is in bytes */
@@ -64,7 +46,6 @@ void MixAudio16(ALshort *dst, ALshort *src, int len) {
 		src++;
 		dst++;
 	}
-#endif
 
 	return;
 }
@@ -158,9 +139,7 @@ void MixAudio16_2(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs0[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -169,7 +148,6 @@ void MixAudio16_2(ALshort *dst, alMixEntry *entries) {
 	srcs0[1] = entries[1].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -190,10 +168,7 @@ void MixAudio16_2(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-
-#endif
+	
 	return;
 }
 
@@ -202,9 +177,7 @@ void MixAudio16_3(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs1;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -214,7 +187,6 @@ void MixAudio16_3(ALshort *dst, alMixEntry *entries) {
 	srcs1    = entries[2].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -237,11 +209,7 @@ void MixAudio16_3(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_1( dst, srcs1, len );
-
-#endif
+	
 	return;
 }
 
@@ -250,9 +218,7 @@ void MixAudio16_4(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs1[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -263,7 +229,6 @@ void MixAudio16_4(ALshort *dst, alMixEntry *entries) {
 	srcs1[1] = entries[3].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -288,11 +253,7 @@ void MixAudio16_4(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-
-#endif
+	
 	return;
 }
 
@@ -302,9 +263,7 @@ void MixAudio16_5(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs2;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -316,7 +275,6 @@ void MixAudio16_5(ALshort *dst, alMixEntry *entries) {
 	srcs2    = entries[4].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -343,12 +301,7 @@ void MixAudio16_5(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_1( dst, srcs2, len );
-
-#endif
+	
 	return;
 }
 
@@ -358,9 +311,7 @@ void MixAudio16_6(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs2[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -373,7 +324,6 @@ void MixAudio16_6(ALshort *dst, alMixEntry *entries) {
 	srcs2[1] = entries[5].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -402,12 +352,7 @@ void MixAudio16_6(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-
-#endif
+	
 	return;
 }
 
@@ -418,9 +363,7 @@ void MixAudio16_7(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs3;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -434,7 +377,6 @@ void MixAudio16_7(ALshort *dst, alMixEntry *entries) {
 	srcs3    = entries[6].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -465,13 +407,7 @@ void MixAudio16_7(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_1( dst, srcs3, len );
-
-#endif
+	
 	return;
 }
 
@@ -482,9 +418,7 @@ void MixAudio16_8(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs3[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -499,7 +433,6 @@ void MixAudio16_8(ALshort *dst, alMixEntry *entries) {
 	srcs3[1] = entries[7].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -532,13 +465,7 @@ void MixAudio16_8(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-
-#endif
+	
 	return;
 }
 
@@ -550,9 +477,7 @@ void MixAudio16_9(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs4;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -568,7 +493,6 @@ void MixAudio16_9(ALshort *dst, alMixEntry *entries) {
 	srcs4    = entries[8].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -603,14 +527,7 @@ void MixAudio16_9(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_1( dst, srcs4, len );
-
-#endif
+	
 	return;
 }
 
@@ -622,9 +539,7 @@ void MixAudio16_10(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs4[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -641,7 +556,6 @@ void MixAudio16_10(ALshort *dst, alMixEntry *entries) {
 	srcs4[1] = entries[9].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -678,14 +592,7 @@ void MixAudio16_10(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-
-#endif
+	
 	return;
 }
 
@@ -698,9 +605,7 @@ void MixAudio16_11(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs5;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -718,7 +623,6 @@ void MixAudio16_11(ALshort *dst, alMixEntry *entries) {
 	srcs5    = entries[10].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -757,15 +661,7 @@ void MixAudio16_11(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_1( dst, srcs5, len );
-
-#endif
+	
 	return;
 }
 
@@ -778,9 +674,7 @@ void MixAudio16_12(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs5[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -799,7 +693,6 @@ void MixAudio16_12(ALshort *dst, alMixEntry *entries) {
 	srcs5[1] = entries[11].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -840,15 +733,7 @@ void MixAudio16_12(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-
-#endif
+	
 	return;
 }
 
@@ -862,9 +747,7 @@ void MixAudio16_13(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs6;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -884,7 +767,6 @@ void MixAudio16_13(ALshort *dst, alMixEntry *entries) {
 	srcs6    = entries[12].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -927,16 +809,7 @@ void MixAudio16_13(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_1( dst, srcs6, len );
-
-#endif
+	
 	return;
 }
 
@@ -950,9 +823,7 @@ void MixAudio16_14(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs6[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -973,7 +844,6 @@ void MixAudio16_14(ALshort *dst, alMixEntry *entries) {
 	srcs6[1] = entries[13].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -1018,16 +888,7 @@ void MixAudio16_14(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-
-#endif
+	
 	return;
 }
 
@@ -1042,9 +903,7 @@ void MixAudio16_15(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs7;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -1066,7 +925,6 @@ void MixAudio16_15(ALshort *dst, alMixEntry *entries) {
 	srcs7    = entries[14].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -1113,17 +971,7 @@ void MixAudio16_15(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_1( dst, srcs7, len );
-
-#endif
+	
 	return;
 }
 
@@ -1138,9 +986,7 @@ void MixAudio16_16(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs7[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -1163,7 +1009,6 @@ void MixAudio16_16(ALshort *dst, alMixEntry *entries) {
 	srcs7[1] = entries[15].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -1212,17 +1057,7 @@ void MixAudio16_16(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-
-#endif
+	
 	return;
 }
 
@@ -1238,9 +1073,7 @@ void MixAudio16_17(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs8;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -1264,7 +1097,6 @@ void MixAudio16_17(ALshort *dst, alMixEntry *entries) {
 	srcs8    = entries[16].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -1315,18 +1147,7 @@ void MixAudio16_17(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_1( dst, srcs8, len );
-
-#endif
+	
 	return;
 }
 
@@ -1342,9 +1163,7 @@ void MixAudio16_18(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs8[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -1369,7 +1188,6 @@ void MixAudio16_18(ALshort *dst, alMixEntry *entries) {
 	srcs8[1] = entries[17].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -1422,18 +1240,7 @@ void MixAudio16_18(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-
-#endif
+	
 	return;
 }
 
@@ -1450,9 +1257,7 @@ void MixAudio16_19(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs9;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -1478,7 +1283,6 @@ void MixAudio16_19(ALshort *dst, alMixEntry *entries) {
 	srcs9    = entries[18].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -1533,19 +1337,7 @@ void MixAudio16_19(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_1( dst, srcs9, len );
-
-#endif
+	
 	return;
 }
 
@@ -1562,9 +1354,7 @@ void MixAudio16_20(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs9[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -1591,7 +1381,6 @@ void MixAudio16_20(ALshort *dst, alMixEntry *entries) {
 	srcs9[1] = entries[19].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -1648,19 +1437,7 @@ void MixAudio16_20(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-
-#endif
+	
 	return;
 }
 
@@ -1678,9 +1455,7 @@ void MixAudio16_21(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs10;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -1708,7 +1483,6 @@ void MixAudio16_21(ALshort *dst, alMixEntry *entries) {
 	srcs10    = entries[20].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -1767,20 +1541,7 @@ void MixAudio16_21(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_1( dst, srcs10, len );
-
-#endif
+	
 	return;
 }
 
@@ -1798,9 +1559,7 @@ void MixAudio16_22(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs10[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -1829,7 +1588,6 @@ void MixAudio16_22(ALshort *dst, alMixEntry *entries) {
 	srcs10[1] = entries[21].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -1890,20 +1648,7 @@ void MixAudio16_22(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-
-#endif
+	
 	return;
 }
 
@@ -1922,9 +1667,7 @@ void MixAudio16_23(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs11;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -1954,7 +1697,6 @@ void MixAudio16_23(ALshort *dst, alMixEntry *entries) {
 	srcs11    = entries[22].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -2017,21 +1759,7 @@ void MixAudio16_23(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_1( dst, srcs11, len );
-
-#endif
+	
 	return;
 }
 
@@ -2050,9 +1778,7 @@ void MixAudio16_24(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs11[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -2083,7 +1809,6 @@ void MixAudio16_24(ALshort *dst, alMixEntry *entries) {
 	srcs11[1] = entries[23].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -2148,21 +1873,7 @@ void MixAudio16_24(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-
-#endif
+	
 	return;
 }
 
@@ -2182,9 +1893,7 @@ void MixAudio16_25(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs12;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -2216,7 +1925,6 @@ void MixAudio16_25(ALshort *dst, alMixEntry *entries) {
 	srcs12    = entries[24].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -2283,22 +1991,7 @@ void MixAudio16_25(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_1( dst, srcs12, len );
-
-#endif
+	
 	return;
 }
 
@@ -2318,9 +2011,7 @@ void MixAudio16_26(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs12[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -2353,7 +2044,6 @@ void MixAudio16_26(ALshort *dst, alMixEntry *entries) {
 	srcs12[1] = entries[25].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -2422,22 +2112,7 @@ void MixAudio16_26(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-
-#endif
+	
 	return;
 }
 
@@ -2458,9 +2133,7 @@ void MixAudio16_27(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs13;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -2494,7 +2167,6 @@ void MixAudio16_27(ALshort *dst, alMixEntry *entries) {
 	srcs13    = entries[26].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -2565,23 +2237,7 @@ void MixAudio16_27(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_1( dst, srcs13, len );
-
-#endif
+	
 	return;
 }
 
@@ -2602,9 +2258,7 @@ void MixAudio16_28(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs13[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -2639,7 +2293,6 @@ void MixAudio16_28(ALshort *dst, alMixEntry *entries) {
 	srcs13[1] = entries[27].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -2712,23 +2365,7 @@ void MixAudio16_28(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-
-#endif
+	
 	return;
 }
 
@@ -2750,9 +2387,7 @@ void MixAudio16_29(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs14;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -2788,7 +2423,6 @@ void MixAudio16_29(ALshort *dst, alMixEntry *entries) {
 	srcs14    = entries[28].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -2863,24 +2497,7 @@ void MixAudio16_29(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_1( dst, srcs14, len );
-
-#endif
+	
 	return;
 }
 
@@ -2902,9 +2519,7 @@ void MixAudio16_30(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs14[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -2941,7 +2556,6 @@ void MixAudio16_30(ALshort *dst, alMixEntry *entries) {
 	srcs14[1] = entries[29].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -3018,24 +2632,7 @@ void MixAudio16_30(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-
-#endif
+	
 	return;
 }
 
@@ -3058,9 +2655,7 @@ void MixAudio16_31(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs15;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -3098,7 +2693,6 @@ void MixAudio16_31(ALshort *dst, alMixEntry *entries) {
 	srcs15    = entries[30].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -3177,25 +2771,7 @@ void MixAudio16_31(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_1( dst, srcs15, len );
-
-#endif
+	
 	return;
 }
 
@@ -3218,9 +2794,7 @@ void MixAudio16_32(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs15[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -3259,7 +2833,6 @@ void MixAudio16_32(ALshort *dst, alMixEntry *entries) {
 	srcs15[1] = entries[31].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -3340,25 +2913,7 @@ void MixAudio16_32(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-
-#endif
+	
 	return;
 }
 
@@ -3382,9 +2937,7 @@ void MixAudio16_33(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs16;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -3424,7 +2977,6 @@ void MixAudio16_33(ALshort *dst, alMixEntry *entries) {
 	srcs16    = entries[32].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -3507,26 +3059,7 @@ void MixAudio16_33(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_1( dst, srcs16, len );
-
-#endif
+	
 	return;
 }
 
@@ -3550,9 +3083,7 @@ void MixAudio16_34(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs16[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -3593,7 +3124,6 @@ void MixAudio16_34(ALshort *dst, alMixEntry *entries) {
 	srcs16[1] = entries[33].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -3678,26 +3208,7 @@ void MixAudio16_34(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-
-#endif
+	
 	return;
 }
 
@@ -3722,9 +3233,7 @@ void MixAudio16_35(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs17;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -3766,7 +3275,6 @@ void MixAudio16_35(ALshort *dst, alMixEntry *entries) {
 	srcs17    = entries[34].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -3853,27 +3361,7 @@ void MixAudio16_35(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_1( dst, srcs17, len );
-
-#endif
+	
 	return;
 }
 
@@ -3898,9 +3386,7 @@ void MixAudio16_36(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs17[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -3943,7 +3429,6 @@ void MixAudio16_36(ALshort *dst, alMixEntry *entries) {
 	srcs17[1] = entries[35].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -4032,27 +3517,7 @@ void MixAudio16_36(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-
-#endif
+	
 	return;
 }
 
@@ -4078,9 +3543,7 @@ void MixAudio16_37(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs18;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -4124,7 +3587,6 @@ void MixAudio16_37(ALshort *dst, alMixEntry *entries) {
 	srcs18    = entries[36].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -4215,28 +3677,7 @@ void MixAudio16_37(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_1( dst, srcs18, len );
-
-#endif
+	
 	return;
 }
 
@@ -4262,9 +3703,7 @@ void MixAudio16_38(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs18[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -4309,7 +3748,6 @@ void MixAudio16_38(ALshort *dst, alMixEntry *entries) {
 	srcs18[1] = entries[37].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -4402,28 +3840,7 @@ void MixAudio16_38(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-
-#endif
+	
 	return;
 }
 
@@ -4450,9 +3867,7 @@ void MixAudio16_39(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs19;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -4498,7 +3913,6 @@ void MixAudio16_39(ALshort *dst, alMixEntry *entries) {
 	srcs19    = entries[38].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -4593,29 +4007,7 @@ void MixAudio16_39(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-	mix16_1( dst, srcs19, len );
-
-#endif
+	
 	return;
 }
 
@@ -4642,9 +4034,7 @@ void MixAudio16_40(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs19[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -4691,7 +4081,6 @@ void MixAudio16_40(ALshort *dst, alMixEntry *entries) {
 	srcs19[1] = entries[39].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -4788,29 +4177,7 @@ void MixAudio16_40(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-	mix16_2( dst, srcs19, len );
-
-#endif
+	
 	return;
 }
 
@@ -4838,9 +4205,7 @@ void MixAudio16_41(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs20;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -4888,7 +4253,6 @@ void MixAudio16_41(ALshort *dst, alMixEntry *entries) {
 	srcs20    = entries[40].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -4987,30 +4351,7 @@ void MixAudio16_41(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-	mix16_2( dst, srcs19, len );
-	mix16_1( dst, srcs20, len );
-
-#endif
+	
 	return;
 }
 
@@ -5038,9 +4379,7 @@ void MixAudio16_42(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs20[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -5089,7 +4428,6 @@ void MixAudio16_42(ALshort *dst, alMixEntry *entries) {
 	srcs20[1] = entries[41].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -5190,30 +4528,7 @@ void MixAudio16_42(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-	mix16_2( dst, srcs19, len );
-	mix16_2( dst, srcs20, len );
-
-#endif
+	
 	return;
 }
 
@@ -5242,9 +4557,7 @@ void MixAudio16_43(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs21;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -5294,7 +4607,6 @@ void MixAudio16_43(ALshort *dst, alMixEntry *entries) {
 	srcs21    = entries[42].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -5397,31 +4709,7 @@ void MixAudio16_43(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-	mix16_2( dst, srcs19, len );
-	mix16_2( dst, srcs20, len );
-	mix16_1( dst, srcs21, len );
-
-#endif
+	
 	return;
 }
 
@@ -5450,9 +4738,7 @@ void MixAudio16_44(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs21[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -5503,7 +4789,6 @@ void MixAudio16_44(ALshort *dst, alMixEntry *entries) {
 	srcs21[1] = entries[43].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -5608,31 +4893,7 @@ void MixAudio16_44(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-	mix16_2( dst, srcs19, len );
-	mix16_2( dst, srcs20, len );
-	mix16_2( dst, srcs21, len );
-
-#endif
+	
 	return;
 }
 
@@ -5662,9 +4923,7 @@ void MixAudio16_45(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs22;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -5716,7 +4975,6 @@ void MixAudio16_45(ALshort *dst, alMixEntry *entries) {
 	srcs22    = entries[44].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -5823,32 +5081,7 @@ void MixAudio16_45(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-	mix16_2( dst, srcs19, len );
-	mix16_2( dst, srcs20, len );
-	mix16_2( dst, srcs21, len );
-	mix16_1( dst, srcs22, len );
-
-#endif
+	
 	return;
 }
 
@@ -5878,9 +5111,7 @@ void MixAudio16_46(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs22[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -5933,7 +5164,6 @@ void MixAudio16_46(ALshort *dst, alMixEntry *entries) {
 	srcs22[1] = entries[45].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -6042,32 +5272,7 @@ void MixAudio16_46(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-	mix16_2( dst, srcs19, len );
-	mix16_2( dst, srcs20, len );
-	mix16_2( dst, srcs21, len );
-	mix16_2( dst, srcs22, len );
-
-#endif
+	
 	return;
 }
 
@@ -6098,9 +5303,7 @@ void MixAudio16_47(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs23;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -6154,7 +5357,6 @@ void MixAudio16_47(ALshort *dst, alMixEntry *entries) {
 	srcs23    = entries[46].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -6265,33 +5467,7 @@ void MixAudio16_47(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-	mix16_2( dst, srcs19, len );
-	mix16_2( dst, srcs20, len );
-	mix16_2( dst, srcs21, len );
-	mix16_2( dst, srcs22, len );
-	mix16_1( dst, srcs23, len );
-
-#endif
+	
 	return;
 }
 
@@ -6322,9 +5498,7 @@ void MixAudio16_48(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs23[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -6379,7 +5553,6 @@ void MixAudio16_48(ALshort *dst, alMixEntry *entries) {
 	srcs23[1] = entries[47].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -6492,33 +5665,7 @@ void MixAudio16_48(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-	mix16_2( dst, srcs19, len );
-	mix16_2( dst, srcs20, len );
-	mix16_2( dst, srcs21, len );
-	mix16_2( dst, srcs22, len );
-	mix16_2( dst, srcs23, len );
-
-#endif
+	
 	return;
 }
 
@@ -6550,9 +5697,7 @@ void MixAudio16_49(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs24;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -6608,7 +5753,6 @@ void MixAudio16_49(ALshort *dst, alMixEntry *entries) {
 	srcs24    = entries[48].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -6723,34 +5867,7 @@ void MixAudio16_49(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-	mix16_2( dst, srcs19, len );
-	mix16_2( dst, srcs20, len );
-	mix16_2( dst, srcs21, len );
-	mix16_2( dst, srcs22, len );
-	mix16_2( dst, srcs23, len );
-	mix16_1( dst, srcs24, len );
-
-#endif
+	
 	return;
 }
 
@@ -6782,9 +5899,7 @@ void MixAudio16_50(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs24[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -6841,7 +5956,6 @@ void MixAudio16_50(ALshort *dst, alMixEntry *entries) {
 	srcs24[1] = entries[49].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -6958,34 +6072,7 @@ void MixAudio16_50(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-	mix16_2( dst, srcs19, len );
-	mix16_2( dst, srcs20, len );
-	mix16_2( dst, srcs21, len );
-	mix16_2( dst, srcs22, len );
-	mix16_2( dst, srcs23, len );
-	mix16_2( dst, srcs24, len );
-
-#endif
+	
 	return;
 }
 
@@ -7018,9 +6105,7 @@ void MixAudio16_51(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs25;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -7078,7 +6163,6 @@ void MixAudio16_51(ALshort *dst, alMixEntry *entries) {
 	srcs25    = entries[50].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -7197,35 +6281,7 @@ void MixAudio16_51(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-	mix16_2( dst, srcs19, len );
-	mix16_2( dst, srcs20, len );
-	mix16_2( dst, srcs21, len );
-	mix16_2( dst, srcs22, len );
-	mix16_2( dst, srcs23, len );
-	mix16_2( dst, srcs24, len );
-	mix16_1( dst, srcs25, len );
-
-#endif
+	
 	return;
 }
 
@@ -7258,9 +6314,7 @@ void MixAudio16_52(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs25[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -7319,7 +6373,6 @@ void MixAudio16_52(ALshort *dst, alMixEntry *entries) {
 	srcs25[1] = entries[51].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -7440,35 +6493,7 @@ void MixAudio16_52(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-	mix16_2( dst, srcs19, len );
-	mix16_2( dst, srcs20, len );
-	mix16_2( dst, srcs21, len );
-	mix16_2( dst, srcs22, len );
-	mix16_2( dst, srcs23, len );
-	mix16_2( dst, srcs24, len );
-	mix16_2( dst, srcs25, len );
-
-#endif
+	
 	return;
 }
 
@@ -7502,9 +6527,7 @@ void MixAudio16_53(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs26;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -7564,7 +6587,6 @@ void MixAudio16_53(ALshort *dst, alMixEntry *entries) {
 	srcs26    = entries[52].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -7687,36 +6709,7 @@ void MixAudio16_53(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-	mix16_2( dst, srcs19, len );
-	mix16_2( dst, srcs20, len );
-	mix16_2( dst, srcs21, len );
-	mix16_2( dst, srcs22, len );
-	mix16_2( dst, srcs23, len );
-	mix16_2( dst, srcs24, len );
-	mix16_2( dst, srcs25, len );
-	mix16_1( dst, srcs26, len );
-
-#endif
+	
 	return;
 }
 
@@ -7750,9 +6743,7 @@ void MixAudio16_54(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs26[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -7813,7 +6804,6 @@ void MixAudio16_54(ALshort *dst, alMixEntry *entries) {
 	srcs26[1] = entries[53].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -7938,36 +6928,7 @@ void MixAudio16_54(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-	mix16_2( dst, srcs19, len );
-	mix16_2( dst, srcs20, len );
-	mix16_2( dst, srcs21, len );
-	mix16_2( dst, srcs22, len );
-	mix16_2( dst, srcs23, len );
-	mix16_2( dst, srcs24, len );
-	mix16_2( dst, srcs25, len );
-	mix16_2( dst, srcs26, len );
-
-#endif
+	
 	return;
 }
 
@@ -8002,9 +6963,7 @@ void MixAudio16_55(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs27;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -8066,7 +7025,6 @@ void MixAudio16_55(ALshort *dst, alMixEntry *entries) {
 	srcs27    = entries[54].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -8193,37 +7151,7 @@ void MixAudio16_55(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-	mix16_2( dst, srcs19, len );
-	mix16_2( dst, srcs20, len );
-	mix16_2( dst, srcs21, len );
-	mix16_2( dst, srcs22, len );
-	mix16_2( dst, srcs23, len );
-	mix16_2( dst, srcs24, len );
-	mix16_2( dst, srcs25, len );
-	mix16_2( dst, srcs26, len );
-	mix16_1( dst, srcs27, len );
-
-#endif
+	
 	return;
 }
 
@@ -8258,9 +7186,7 @@ void MixAudio16_56(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs27[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -8323,7 +7249,6 @@ void MixAudio16_56(ALshort *dst, alMixEntry *entries) {
 	srcs27[1] = entries[55].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -8452,37 +7377,7 @@ void MixAudio16_56(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-	mix16_2( dst, srcs19, len );
-	mix16_2( dst, srcs20, len );
-	mix16_2( dst, srcs21, len );
-	mix16_2( dst, srcs22, len );
-	mix16_2( dst, srcs23, len );
-	mix16_2( dst, srcs24, len );
-	mix16_2( dst, srcs25, len );
-	mix16_2( dst, srcs26, len );
-	mix16_2( dst, srcs27, len );
-
-#endif
+	
 	return;
 }
 
@@ -8518,9 +7413,7 @@ void MixAudio16_57(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs28;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -8584,7 +7477,6 @@ void MixAudio16_57(ALshort *dst, alMixEntry *entries) {
 	srcs28    = entries[56].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -8715,38 +7607,7 @@ void MixAudio16_57(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-	mix16_2( dst, srcs19, len );
-	mix16_2( dst, srcs20, len );
-	mix16_2( dst, srcs21, len );
-	mix16_2( dst, srcs22, len );
-	mix16_2( dst, srcs23, len );
-	mix16_2( dst, srcs24, len );
-	mix16_2( dst, srcs25, len );
-	mix16_2( dst, srcs26, len );
-	mix16_2( dst, srcs27, len );
-	mix16_1( dst, srcs28, len );
-
-#endif
+	
 	return;
 }
 
@@ -8782,9 +7643,7 @@ void MixAudio16_58(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs28[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -8849,7 +7708,6 @@ void MixAudio16_58(ALshort *dst, alMixEntry *entries) {
 	srcs28[1] = entries[57].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -8982,38 +7840,7 @@ void MixAudio16_58(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-	mix16_2( dst, srcs19, len );
-	mix16_2( dst, srcs20, len );
-	mix16_2( dst, srcs21, len );
-	mix16_2( dst, srcs22, len );
-	mix16_2( dst, srcs23, len );
-	mix16_2( dst, srcs24, len );
-	mix16_2( dst, srcs25, len );
-	mix16_2( dst, srcs26, len );
-	mix16_2( dst, srcs27, len );
-	mix16_2( dst, srcs28, len );
-
-#endif
+	
 	return;
 }
 
@@ -9050,9 +7877,7 @@ void MixAudio16_59(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs29;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -9118,7 +7943,6 @@ void MixAudio16_59(ALshort *dst, alMixEntry *entries) {
 	srcs29    = entries[58].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -9253,39 +8077,7 @@ void MixAudio16_59(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-	mix16_2( dst, srcs19, len );
-	mix16_2( dst, srcs20, len );
-	mix16_2( dst, srcs21, len );
-	mix16_2( dst, srcs22, len );
-	mix16_2( dst, srcs23, len );
-	mix16_2( dst, srcs24, len );
-	mix16_2( dst, srcs25, len );
-	mix16_2( dst, srcs26, len );
-	mix16_2( dst, srcs27, len );
-	mix16_2( dst, srcs28, len );
-	mix16_1( dst, srcs29, len );
-
-#endif
+	
 	return;
 }
 
@@ -9322,9 +8114,7 @@ void MixAudio16_60(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs29[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -9391,7 +8181,6 @@ void MixAudio16_60(ALshort *dst, alMixEntry *entries) {
 	srcs29[1] = entries[59].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -9528,39 +8317,7 @@ void MixAudio16_60(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-	mix16_2( dst, srcs19, len );
-	mix16_2( dst, srcs20, len );
-	mix16_2( dst, srcs21, len );
-	mix16_2( dst, srcs22, len );
-	mix16_2( dst, srcs23, len );
-	mix16_2( dst, srcs24, len );
-	mix16_2( dst, srcs25, len );
-	mix16_2( dst, srcs26, len );
-	mix16_2( dst, srcs27, len );
-	mix16_2( dst, srcs28, len );
-	mix16_2( dst, srcs29, len );
-
-#endif
+	
 	return;
 }
 
@@ -9597,10 +8354,7 @@ void MixAudio16_61(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs29[2];
 	ALshort *srcs30;
 
-	int len;
-#ifndef MMX_SUPPORT
-	int sample;
-#endif
+	int len;int sample;
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -9668,7 +8422,6 @@ void MixAudio16_61(ALshort *dst, alMixEntry *entries) {
 	srcs30    = entries[60].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -9807,40 +8560,7 @@ void MixAudio16_61(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-	mix16_2( dst, srcs19, len );
-	mix16_2( dst, srcs20, len );
-	mix16_2( dst, srcs21, len );
-	mix16_2( dst, srcs22, len );
-	mix16_2( dst, srcs23, len );
-	mix16_2( dst, srcs24, len );
-	mix16_2( dst, srcs25, len );
-	mix16_2( dst, srcs26, len );
-	mix16_2( dst, srcs27, len );
-	mix16_2( dst, srcs28, len );
-	mix16_2( dst, srcs29, len );
-	mix16_1( dst, srcs30, len );
-
-#endif
+	
 	return;
 }
 
@@ -9878,9 +8598,7 @@ void MixAudio16_62(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs30[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -9949,7 +8667,6 @@ void MixAudio16_62(ALshort *dst, alMixEntry *entries) {
 	srcs30[1] = entries[61].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -10090,40 +8807,7 @@ void MixAudio16_62(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-	mix16_2( dst, srcs19, len );
-	mix16_2( dst, srcs20, len );
-	mix16_2( dst, srcs21, len );
-	mix16_2( dst, srcs22, len );
-	mix16_2( dst, srcs23, len );
-	mix16_2( dst, srcs24, len );
-	mix16_2( dst, srcs25, len );
-	mix16_2( dst, srcs26, len );
-	mix16_2( dst, srcs27, len );
-	mix16_2( dst, srcs28, len );
-	mix16_2( dst, srcs29, len );
-	mix16_2( dst, srcs30, len );
-
-#endif
+	
 	return;
 }
 
@@ -10162,9 +8846,7 @@ void MixAudio16_63(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs31;
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -10234,7 +8916,6 @@ void MixAudio16_63(ALshort *dst, alMixEntry *entries) {
 	srcs31    = entries[62].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -10377,41 +9058,7 @@ void MixAudio16_63(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-	mix16_2( dst, srcs19, len );
-	mix16_2( dst, srcs20, len );
-	mix16_2( dst, srcs21, len );
-	mix16_2( dst, srcs22, len );
-	mix16_2( dst, srcs23, len );
-	mix16_2( dst, srcs24, len );
-	mix16_2( dst, srcs25, len );
-	mix16_2( dst, srcs26, len );
-	mix16_2( dst, srcs27, len );
-	mix16_2( dst, srcs28, len );
-	mix16_2( dst, srcs29, len );
-	mix16_2( dst, srcs30, len );
-	mix16_1( dst, srcs31, len );
-
-#endif
+	
 	return;
 }
 
@@ -10450,9 +9097,7 @@ void MixAudio16_64(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs31[2];
 
 	int len;
-#ifndef MMX_SUPPORT
 	int sample;
-#endif
 
 	len = entries[0].bytes;
 	len /= sizeof(ALshort);
@@ -10523,7 +9168,6 @@ void MixAudio16_64(ALshort *dst, alMixEntry *entries) {
 	srcs31[1] = entries[63].data;
 
 
-#ifndef MMX_SUPPORT
 	while(len--) {
 		sample = *dst;
 
@@ -10668,40 +9312,6 @@ void MixAudio16_64(ALshort *dst, alMixEntry *entries) {
 
 		dst++;
 	}
-#else
-	mix16_2( dst, srcs0, len );
-	mix16_2( dst, srcs1, len );
-	mix16_2( dst, srcs2, len );
-	mix16_2( dst, srcs3, len );
-	mix16_2( dst, srcs4, len );
-	mix16_2( dst, srcs5, len );
-	mix16_2( dst, srcs6, len );
-	mix16_2( dst, srcs7, len );
-	mix16_2( dst, srcs8, len );
-	mix16_2( dst, srcs9, len );
-	mix16_2( dst, srcs10, len );
-	mix16_2( dst, srcs11, len );
-	mix16_2( dst, srcs12, len );
-	mix16_2( dst, srcs13, len );
-	mix16_2( dst, srcs14, len );
-	mix16_2( dst, srcs15, len );
-	mix16_2( dst, srcs16, len );
-	mix16_2( dst, srcs17, len );
-	mix16_2( dst, srcs18, len );
-	mix16_2( dst, srcs19, len );
-	mix16_2( dst, srcs20, len );
-	mix16_2( dst, srcs21, len );
-	mix16_2( dst, srcs22, len );
-	mix16_2( dst, srcs23, len );
-	mix16_2( dst, srcs24, len );
-	mix16_2( dst, srcs25, len );
-	mix16_2( dst, srcs26, len );
-	mix16_2( dst, srcs27, len );
-	mix16_2( dst, srcs28, len );
-	mix16_2( dst, srcs29, len );
-	mix16_2( dst, srcs30, len );
-	mix16_2( dst, srcs31, len );
-
-#endif
+	
 	return;
 }
