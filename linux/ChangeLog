@@ -5,10 +5,10 @@
 
 	* configure.ac: reactivate fixed i386 floatmul
 
-	* src/mixaudio16.c, src/mixaudio16.c: ;clean-up, remove old MMX
+	* src/mixaudio16.c, src/mixaudio16.c: clean-up, remove old MMX
 	support and mixing of dst into itself
 
-	* src/al_buffer.h src/al_buffer.c: void* should be ALvoid* at
+	* src/al_buffer.h, src/al_buffer.c: void* should be ALvoid* at
 	some places
 
 2005-09-23  Sven Panne  <sven.panne@aedion.de>
