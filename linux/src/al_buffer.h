@@ -216,7 +216,7 @@ ALboolean FL_alLockBuffer( const char *fn, int ln );
 ALboolean FL_alUnlockBuffer( const char *fn, int ln );
 
 /*
- * _alBufferCanonizeData(
+ * ALvoid *_alBufferCanonizeData(
  *                    ALenum format, ALvoid *data, ALuint size, ALuint ffreq,
  *                    ALenum tformat, ALuint tfreq, ALuint *retsize,
  *                    ALenum should_use_passed_data )
@@ -232,7 +232,7 @@ ALboolean FL_alUnlockBuffer( const char *fn, int ln );
  *
  * If no conversion is possible, NULL is returned.
  */
-void *_alBufferCanonizeData( ALenum format, ALvoid *data, ALuint size, ALuint freq,
+ALvoid *_alBufferCanonizeData( ALenum format, ALvoid *data, ALuint size, ALuint freq,
 			     ALenum tformat, ALuint tfreq, ALuint *retsize,
 			     ALenum should_use_passed_data );
 

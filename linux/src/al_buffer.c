@@ -60,7 +60,7 @@ static MutexID buf_mutex;
 static void _alDestroyBuffer( void *buf );
 
 /*
- * void *_alConvert( ALvoid *data,
+ * ALvoid *_alConvert( ALvoid *data,
  *			ALenum f_format, ALuint f_size, ALuint f_freq,
  *			ALenum t_format, ALuint t_freq, ALuint *retsize,
  *			ALenum should_use_passed_data);
@@ -77,7 +77,7 @@ static void _alDestroyBuffer( void *buf );
  *
  * Returns NULL on error.
  */
-static void *_alConvert(void *data,
+static ALvoid *_alConvert(ALvoid *data,
 			ALenum f_format, ALuint f_size, ALuint f_freq,
 			ALenum t_format, ALuint t_freq, ALuint *retsize,
 			ALenum should_use_passed_data);
@@ -864,7 +864,7 @@ AL_buffer *_alGetBufferFromSid( ALuint cid, ALuint sid ) {
 }
 
 /*
- * void *_alBufferCanonizeData( ALenum format,
+ * ALvoid *_alBufferCanonizeData( ALenum format,
  *                              ALvoid *data, ALuint size, ALuint freq,
  *                              ALenum t_format, ALuint t_freq,
  *                              ALuint *retsize,
@@ -880,7 +880,7 @@ AL_buffer *_alGetBufferFromSid( ALuint cid, ALuint sid ) {
  *
  * assumes locked buffers.
  */
-void *_alBufferCanonizeData( ALenum format,
+ALvoid *_alBufferCanonizeData( ALenum format,
 			     ALvoid *data, ALuint size, ALuint freq,
 			     ALenum t_format, ALuint t_freq,
 			     ALuint *retsize,
@@ -1182,7 +1182,7 @@ void _alBidCallDestroyCallbackSource( ALuint sid ) {
 }
 
 /*
- * void *_alConvert( ALvoid *data,
+ * ALvoid *_alConvert( ALvoid *data,
  *			ALenum f_format, ALuint f_size, ALuint f_freq,
  *			ALenum t_format, ALuint t_freq, ALuint *retsize,
  *			ALenum should_use_passed_data);
@@ -1201,7 +1201,7 @@ void _alBidCallDestroyCallbackSource( ALuint sid ) {
  *
  * assumes locked buffers
  */
-static void *_alConvert( ALvoid *data,
+static ALvoid *_alConvert( ALvoid *data,
 			 ALenum f_format, ALuint f_size, ALuint f_freq,
 			 ALenum t_format, ALuint t_freq, ALuint *retsize,
 			 ALenum should_use_passed_data ) {
