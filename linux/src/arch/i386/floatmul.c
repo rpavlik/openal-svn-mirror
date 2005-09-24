@@ -2,8 +2,8 @@
 
 #include <AL/al.h>
 
-#define SCALING_POWER  9
-#define SCALING_FACTOR (1<<SCALING_POWER)
+#define SCALING_POWER  14
+#define SCALING_FACTOR (1 << SCALING_POWER)
 
 void _alFloatMul(ALshort *bpt, ALfloat sa, ALuint len);
 
