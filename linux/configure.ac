@@ -449,10 +449,6 @@ else
 	fi
 fi
 
-
-dnl arch specific ASM files
-ARCH_OBJS="\$(PORTABLE_OBJS)"
-
 dnl check for ALSA headers
 AC_ARG_ENABLE([alsa],
 [AS_HELP_STRING([--enable-alsa],
