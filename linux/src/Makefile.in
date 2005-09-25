@@ -49,7 +49,7 @@ EXT_OBJS=$(addsuffix .o, $(addprefix extensions/al_ext_, loki mp3 vorbis capture
 # loaded with load-extension via alrc)
 EXT_DLL_OBJS=$(addsuffix .o, $(addprefix extensions/al_ext_, ))
 
-i386_OBJS=arch/i386/floatmul.o
+x86_OBJS=arch/i386/floatmul.o
 PORTABLE_OBJS=arch/portable/floatmul.o
 
 # backend specific stuff

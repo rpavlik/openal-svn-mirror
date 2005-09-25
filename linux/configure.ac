@@ -189,9 +189,14 @@ esac
 dnl Special objs for architectures
 case "$target" in
     *i386* | *i486* | *i586* | *i686* )
-    ARCH_OBJS="\$(i386_OBJS)" ;;
+    ARCH_OBJS="\$(x86_OBJS)"
+    ;;
+    *x86_64* )
+    ARCH_OBJS="\$(x86_OBJS)"
+    ;;
     *)
-    ARCH_OBJS="\$(PORTABLE_OBJS)" ;;
+    ARCH_OBJS="\$(PORTABLE_OBJS)"
+    ;;
 esac
 
 dnl Check for headers/libs required for native backends
