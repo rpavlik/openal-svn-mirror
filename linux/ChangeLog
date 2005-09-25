@@ -1,3 +1,8 @@
+2005-09-25  Prakash Punnoor <prakash@punnoor.de>
+
+	* configure.ac, src/Makefile.in: renamed i386_OBJS to x86_OBJS,
+	added it to x86_64; added AC_OBJS to CLEAN_FILES in latter file
+
 2005-09-24  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/arch/i386/floatmul.c: fix up and drop unneeded saturation;
