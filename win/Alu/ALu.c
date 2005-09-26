@@ -146,18 +146,8 @@ ALUAPI ALvoid ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint freq
 				Position[1]-=ListenerPosition[1];
 				Position[2]-=ListenerPosition[2];
 			}
-			//2. Align coordinate system axes
-			aluCrossproduct(&ListenerOrientation[0],&ListenerOrientation[3],U); // Right-vector
-			aluNormalize(U);								// Normalized Right-vector
-			memcpy(V,&ListenerOrientation[3],sizeof(V));	// Up-vector
-			aluNormalize(V);								// Normalized Up-vector
-			memcpy(N,&ListenerOrientation[0],sizeof(N));	// At-vector
-			aluNormalize(N);								// Normalized At-vector
-			Matrix[0][0]=U[0]; Matrix[0][1]=V[0]; Matrix[0][2]=-N[0];
-			Matrix[1][0]=U[1]; Matrix[1][1]=V[1]; Matrix[1][2]=-N[1];
-			Matrix[2][0]=U[2]; Matrix[2][1]=V[2]; Matrix[2][2]=-N[2];
-			aluMatrixVector(Position,Matrix);
-			//3. Calculate distance attenuation
+			
+			//2. Calculate distance attenuation
 			Distance=(ALfloat)sqrt(aluDotproduct(Position,Position));
 
 			// Clamp to MinDist and MaxDist if appropriate
@@ -209,7 +199,7 @@ ALUAPI ALvoid ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint freq
 			DryMix=__max(DryMix,MinVolume);
 			WetMix=__min(WetMix,MaxVolume);
 			WetMix=__max(WetMix,MinVolume);
-			//4. Apply directional soundcones
+			//3. Apply directional soundcones
 			SourceToListener[0]=-Position[0];
 			SourceToListener[1]=-Position[1];
 			SourceToListener[2]=-Position[2];
@@ -223,7 +213,7 @@ ALUAPI ALvoid ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint freq
 			else
 				ConeVolume=1.0f;
 
-			//5. Calculate Velocity
+			//4. Calculate Velocity
 			if (DopplerFactor != 0.0f)
 			{
 				flVLS = aluDotproduct(ListenerVelocity, SourceToListener);
@@ -248,6 +238,18 @@ ALUAPI ALvoid ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint freq
 			{
 				pitch[0] = Pitch;
 			}
+
+			//5. Align coordinate system axes
+			aluCrossproduct(&ListenerOrientation[0],&ListenerOrientation[3],U); // Right-vector
+			aluNormalize(U);								// Normalized Right-vector
+			memcpy(V,&ListenerOrientation[3],sizeof(V));	// Up-vector
+			aluNormalize(V);								// Normalized Up-vector
+			memcpy(N,&ListenerOrientation[0],sizeof(N));	// At-vector
+			aluNormalize(N);								// Normalized At-vector
+			Matrix[0][0]=U[0]; Matrix[0][1]=V[0]; Matrix[0][2]=-N[0];
+			Matrix[1][0]=U[1]; Matrix[1][1]=V[1]; Matrix[1][2]=-N[1];
+			Matrix[2][0]=U[2]; Matrix[2][1]=V[2]; Matrix[2][2]=-N[2];
+			aluMatrixVector(Position,Matrix);
 
             //6. Convert normalized position into font/back panning
 			if (Distance != 0.0f)
