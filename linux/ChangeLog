@@ -1,5 +1,10 @@
 2005-09-26  Elias Naur <elias@oddlabs.com>
 
+	* linux/src/al_source.c: Don't set source new_readindex
+	and new_soundpos on underflow to avoid a race condition.
+	
+2005-09-26  Elias Naur <elias@oddlabs.com>
+
 	* linux/src/al_queue.c: Made alSourceQueueBuffers and
 	alSourceUnqueueBuffers take alLockMixBuf to avoid
 	a race condition with the mixer thread. Their behaviour now

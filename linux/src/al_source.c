@@ -1825,9 +1825,6 @@ static void _alSplitSourceQueue( ALuint cid,
 				       0, len - collected_bytes);
 			}
 
-			src->srcParams.new_readindex= 0;
-			src->srcParams.new_soundpos = 0;
-
 			src->bid_queue.read_index = old_readindex;
 			src->srcParams.soundpos   = old_soundpos;
 
