@@ -1,3 +1,11 @@
+2005-09-26  Elias Naur <elias@oddlabs.com>
+
+	* linux/src/al_queue.c: Made alSourceQueueBuffers and
+	alSourceUnqueueBuffers take alLockMixBuf to avoid
+	a race condition with the mixer thread. Their behaviour now
+	matches alSourceStop and alSourcePlay that can also manipulate
+	playing sources.
+
 2005-09-25  Prakash Punnoor <prakash@punnoor.de>
 
 	* configure.ac, src/Makefile.in: renamed i386_OBJS to x86_OBJS,

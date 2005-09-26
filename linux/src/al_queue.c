@@ -22,6 +22,7 @@
 #include "al_source.h"
 #include "al_queue.h"
 #include "al_types.h"
+#include "al_mixer.h"
 
 #include "alc/alc_context.h"
 
@@ -52,6 +53,7 @@ void alSourceQueueBuffers( ALuint sid, ALsizei numBuffers, const ALuint *bids ) 
 		return;
 	}
 
+	_alLockMixBuf();
 	SOURCELOCK();
 
 	src = _alDCGetSource( sid );
@@ -62,6 +64,7 @@ void alSourceQueueBuffers( ALuint sid, ALsizei numBuffers, const ALuint *bids ) 
 		      "alSourceQueueBuffers: invalid sid %d\n", sid );
 
 		SOURCEUNLOCK();
+		_alUnlockMixBuf();
 
 		return;
 	}
@@ -81,6 +84,7 @@ void alSourceQueueBuffers( ALuint sid, ALsizei numBuffers, const ALuint *bids ) 
 				_alDCSetError( AL_INVALID_NAME );
 
 				SOURCEUNLOCK();
+				_alUnlockMixBuf();
 
 				return;
 			}
@@ -102,6 +106,7 @@ void alSourceQueueBuffers( ALuint sid, ALsizei numBuffers, const ALuint *bids ) 
 
 	_alUnlockBuffer();
 	SOURCEUNLOCK();
+	_alUnlockMixBuf();
 
 	return;
 }
@@ -275,11 +280,13 @@ void _alSourceQueueHead( AL_source *src, ALuint bid ) {
  * Unqueues first occurance of each bid in bids[0..n-1] from source named sid.
  */
 void alSourceUnqueueBuffers( ALuint sid, ALsizei n, ALuint *bids ) {
+	_alLockMixBuf();
 	_alcDCLockContext();
 
 	_alSourceUnqueueBuffers( sid, n, bids );
 
 	_alcDCUnlockContext();
+	_alUnlockMixBuf();
 
 	return;
 }
