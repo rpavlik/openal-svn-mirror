@@ -22,6 +22,7 @@
 #include "al_buffer.h"
 #include "al_filter.h"
 #include "al_distance.h"
+#include "al_cpu_caps.h"
 
 #include "alc/alc_error.h"
 #include "alc/alc_device.h"
@@ -453,7 +454,9 @@ ALCcontext *alcCreateContext( ALCdevice *dev, const ALCint *attrlist )
 
 		return NULL;
 	}
-
+	
+	_alDetectCPUCaps();
+	
 	if( al_contexts.items == 0 ) {
 		/*
 		 * This is the first context to be created.  Initialize the

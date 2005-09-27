@@ -9,6 +9,8 @@ INC=-I../../include -I../include -Iarch -I. @INCLUDES@
 LIBS=-L. @LIBS@
 SO_EXT=@SHARED_LIBRARY_EXT@
 RANLIB=@RANLIB@
+NASM=@NASM@
+NASMFLAGS=@NASM_FORMAT@
 
 AL_OBJS=al_able.o       \
 	al_bpool.o 	\
@@ -49,8 +51,10 @@ EXT_OBJS=$(addsuffix .o, $(addprefix extensions/al_ext_, loki mp3 vorbis capture
 # loaded with load-extension via alrc)
 EXT_DLL_OBJS=$(addsuffix .o, $(addprefix extensions/al_ext_, ))
 
-x86_OBJS=arch/i386/floatmul.o
-PORTABLE_OBJS=arch/portable/floatmul.o
+x86_OBJS=arch/i386/floatmul.o arch/i386/x86_cpu_caps_prk.o
+x86_NASM_OBJS=arch/i386/x86_cpu_caps_detect_prk.o
+
+PORTABLE_OBJS=arch/portable/floatmul.o arch/portable/cpu_caps.o
 
 # backend specific stuff
 INTERFACE_OBJS=arch/interface/interface_sound.o
@@ -85,6 +89,8 @@ REPO_CLEAN_FILES :=
 	$(CPP) $(DEFINES) $< | $(AS) -o $@
 %.o : %.c al_siteconfig.h ../config.h
 	$(CC) $(DEFINES) $(INC) $(CFLAGS) -c $< -o $@
+%.o : %.nasm
+	$(NASM) $(NASMFLAGS) $< -o $@
 
 %.def : %.a libopenal.a
 	dlltool -a $< --output-def $@

@@ -188,15 +188,32 @@ esac
 
 dnl Special objs for architectures
 case "$target" in
-    *i386* | *i486* | *i586* | *i686* )
-    ARCH_OBJS="\$(x86_OBJS)"
-    ;;
-    *x86_64* )
-    ARCH_OBJS="\$(x86_OBJS)"
-    ;;
+    *i386* | *i486* | *i586* | *i686*)
+        ARCH_OBJS="\$(x86_OBJS)"
+
+        AC_PATH_PROG(NASM, nasm, no)
+        if test "${NASM}" != "no"; then
+            AC_DEFINE(HAVE_NASM, 1, have nasm)
+            AC_DEFINE(HAVE_CPU_CAPS_DETECTION, 1, detect cpu capabilities)
+            ARCH_OBJS="$ARCH_OBJS \$(x86_NASM_OBJS)"
+            INCLUDES="$INCLUDES -Iarch/i386"
+
+            case "$target" in
+            *linux*)
+                NASM_FORMAT="-f elf"
+                ;;
+            *cygwin* | *mingw*)
+                NASM_FORMAT="-f win32 -DWIN32"
+                ;;
+            esac
+        fi
+        ;;
+    *x86_64*)
+        ARCH_OBJS="\$(x86_OBJS)"
+        ;;
     *)
-    ARCH_OBJS="\$(PORTABLE_OBJS)"
-    ;;
+        ARCH_OBJS="\$(PORTABLE_OBJS)"
+        ;;
 esac
 
 dnl Check for headers/libs required for native backends
@@ -756,6 +773,7 @@ AC_DEFINE(LINUX_AL, 1, [undocumented])
 
 AC_SUBST([DO_MINOR_LIBS])
 AC_SUBST([NASM])
+AC_SUBST([NASM_FORMAT])
 AC_SUBST([RANLIB])
 AC_SUBST([CC])
 AC_SUBST([CFLAGS])
