@@ -120,9 +120,9 @@ void _alMixManagerMix( ALMixManager *mixman, ALMixFunc *mf, ALvoid *dataptr ) {
 		return;
 	}
 
-	if(mixman->index >= mf->max) {
+	if(mixman->index > mf->max) {
 		/* bite the bullet and do it the long way */
-		MixAudio16_n(dataptr, mixman->pool, mixman->index);
+		mf->func_n(dataptr, mixman->pool, mixman->index);
 	} else {
 		/* do the mixing */
 		mf->funcs[mixman->index](dataptr, mixman->pool);

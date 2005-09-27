@@ -50,7 +50,6 @@ ALboolean _alMixFuncInit( ALMixFunc *mf, ALuint size ) {
 	mf->funcs[7] = MixAudio16_7;
 	mf->funcs[8] = MixAudio16_8;
 	mf->funcs[9] = MixAudio16_9;
-	mf->funcs[10] = MixAudio16_10;
 
 	mf->funcs[10] = MixAudio16_10;
 	mf->funcs[11] = MixAudio16_11;
@@ -62,7 +61,6 @@ ALboolean _alMixFuncInit( ALMixFunc *mf, ALuint size ) {
 	mf->funcs[17] = MixAudio16_17;
 	mf->funcs[18] = MixAudio16_18;
 	mf->funcs[19] = MixAudio16_19;
-	mf->funcs[20] = MixAudio16_20;
 
 	mf->funcs[20] = MixAudio16_20;
 	mf->funcs[21] = MixAudio16_21;
@@ -74,8 +72,8 @@ ALboolean _alMixFuncInit( ALMixFunc *mf, ALuint size ) {
 	mf->funcs[27] = MixAudio16_27;
 	mf->funcs[28] = MixAudio16_28;
 	mf->funcs[29] = MixAudio16_29;
+	
 	mf->funcs[30] = MixAudio16_30;
-
 	mf->funcs[31] = MixAudio16_31;
 	mf->funcs[32] = MixAudio16_32;
 	mf->funcs[33] = MixAudio16_33;
@@ -96,8 +94,8 @@ ALboolean _alMixFuncInit( ALMixFunc *mf, ALuint size ) {
 	mf->funcs[47] = MixAudio16_47;
 	mf->funcs[48] = MixAudio16_48;
 	mf->funcs[49] = MixAudio16_49;
+	
 	mf->funcs[50] = MixAudio16_50;
-
 	mf->funcs[51] = MixAudio16_51;
 	mf->funcs[52] = MixAudio16_52;
 	mf->funcs[53] = MixAudio16_53;
@@ -107,12 +105,14 @@ ALboolean _alMixFuncInit( ALMixFunc *mf, ALuint size ) {
 	mf->funcs[57] = MixAudio16_57;
 	mf->funcs[58] = MixAudio16_58;
 	mf->funcs[59] = MixAudio16_59;
+	
 	mf->funcs[60] = MixAudio16_60;
-
 	mf->funcs[61] = MixAudio16_61;
 	mf->funcs[62] = MixAudio16_62;
 	mf->funcs[63] = MixAudio16_63;
 	mf->funcs[64] = MixAudio16_64;
+	
+	mf->func_n = MixAudio16_n;
 
 	return AL_TRUE;
 }

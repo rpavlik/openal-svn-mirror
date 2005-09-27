@@ -18,6 +18,9 @@
 typedef struct _AL_MixFunc {
 	void ( *funcs[ MAXMIXSOURCES + 1 ] )( ALshort *dst,
 					      alMixEntry *entries );
+	void ( *func_n )( ALshort *dst,
+	                  alMixEntry *entries,
+	                  ALuint numents );
 	ALuint max;
 } ALMixFunc;
 
