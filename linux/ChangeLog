@@ -1,3 +1,10 @@
+2005-09-27  Elias Naur <elias@oddlabs.com>
+
+	* linux/src/al_filter.c: Disabled
+	_AL_CUTTOFF_ATTENUATION to avoid problems with
+	too little distance attenuation. For now, I kept
+	the #define in case any problems show up.
+	
 2005-09-26  Elias Naur <elias@oddlabs.com>
 
 	* linux/src/al_source.c: Don't set source new_readindex

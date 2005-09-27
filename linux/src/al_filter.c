@@ -95,7 +95,7 @@
  * distance attenuated.  The purpose of this culling is to avoid pop-off
  * artifacts.
  */
-#define _AL_CUTTOFF_ATTENUATION 0.01
+#define _AL_CUTTOFF_ATTENUATION 0.00
 
 /*
  * TPITCH_MAX sets the number of discrete values for AL_PITCH we can have.
