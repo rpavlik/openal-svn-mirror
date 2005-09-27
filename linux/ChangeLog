@@ -1,3 +1,13 @@
+2005-09-27  Prakash Punnoor <prakash@punnoor.de>
+
+	* configure.ac, src/Makefile.in,
+	src/arch/i386/x86_cpu_caps_detect_prk.nasm,
+	src/arch/i386/x86_cpu_caps_prk.c,
+	src/arch/i386/x86_cpu_caps_prk.h,
+	src/arch/portable/cpu_caps.c,
+	src/al_cpu_caps.h, alc/alc_context.c: added x86 cpu caps
+	detection/framework to safely use SIMD code in OpenAL
+
 2005-09-27  Elias Naur <elias@oddlabs.com>
 
 	* linux/src/al_filter.c: Disabled
