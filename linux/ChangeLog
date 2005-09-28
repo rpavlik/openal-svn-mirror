@@ -1,3 +1,8 @@
+2005-09-28  Prakash Punnoor <prakash@punnoor.de>
+
+	* configure.ac: Cleaned up quotations. The whole file is still a
+	bit of a mess, though...
+
 2005-09-27  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/al_mixfunc.c, src/al_mixfunc.h, src/al_mixmanager.c:
