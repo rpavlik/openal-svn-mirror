@@ -190,13 +190,13 @@ dnl Special objs for architectures
 case "$target" in
     *i386* | *i486* | *i586* | *i686*)
         ARCH_OBJS="\$(x86_OBJS)"
+        INCLUDES="$INCLUDES -Iarch/i386"
 
         AC_PATH_PROG([NASM], [nasm], [no])
         if test "x$NASM" != xno; then
             AC_DEFINE([HAVE_NASM], [1], [have nasm])
             AC_DEFINE([HAVE_CPU_CAPS_DETECTION], [1], [detect cpu capabilities])
             ARCH_OBJS="$ARCH_OBJS \$(x86_NASM_OBJS)"
-            INCLUDES="$INCLUDES -Iarch/i386"
 
             case "$target" in
             *linux*)
@@ -210,6 +210,7 @@ case "$target" in
         ;;
     *x86_64*)
         ARCH_OBJS="\$(x86_OBJS)"
+        INCLUDES="$INCLUDES -Iarch/i386"
         ;;
     *)
         ARCH_OBJS="\$(PORTABLE_OBJS)"
