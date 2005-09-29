@@ -1,9 +1,13 @@
+2005-09-29  Prakash Punnoor <prakash@punnoor.de>
+
+	* configure.ac: fix up compilation on x86(_64) which I broke...
+
 2005-09-29  Elias Naur <elias@oddlabs.com>
 
 	* linux/src/al_filter.c: Added comment about the previous value
 	of _AL_CUTTOFF_ATTENUATION and why it is now 0.
 
-2005-09-28  Prakash Punnoor <prakash@punnoor.de>
+2005-09-28  Sven Panne  <sven.panne@aedion.de>
 
 	* configure.ac: Cleaned up quotations. The whole file is still a
 	bit of a mess, though...
