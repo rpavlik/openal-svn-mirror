@@ -94,6 +94,11 @@
  * _AL_CUTTOFF_ATTENUATION is the value below which, sounds are not further
  * distance attenuated.  The purpose of this culling is to avoid pop-off
  * artifacts.
+ *
+ * Elias: This has been found to cause insufficient distance attenuation
+ * and has therefore been effectively disabled by setting it to 0. If no
+ * problems show up, the value should be completely removed.
+ * The original was value 0.01
  */
 #define _AL_CUTTOFF_ATTENUATION 0.00
 
