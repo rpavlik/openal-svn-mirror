@@ -1,3 +1,13 @@
+2005-09-30  Prakash Punnoor <prakash@punnoor.de>
+
+	* admin/openal.spec: Synched with CREDITS/AUTHORS changes.
+
+	* AUTHORS: Added. This is the standard (autotools) name for such a
+	file. Added a few more people to the list and sorted it
+	alphabetically.
+
+	* CREDITS: Removed.
+
 2005-09-29  Prakash Punnoor <prakash@punnoor.de>
 
 	* configure.ac: fix up compilation on x86(_64) which I broke...
@@ -659,7 +669,7 @@
 	whitespace are more trouble with shell scripting than they are
 	worth.
 
-2005-03-25  Sven Panne  <sven.panne@aedion.de>	
+2005-03-25  Sven Panne  <sven.panne@aedion.de>
 
 	* linux/test/teststrings.c: Fixed context/device handling to make
 	valgrind's memory leak checker happy plus a few cosmetic changes.
@@ -905,7 +915,7 @@
 	in the ALSA driver. Enable this at configure time with:
 	   ./configure --enable-alsa --enable-alsa-dlopen
 
-2004-01-29  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
+2004-01-29  Joseph I. Valenzuela  <jvalenzu@infinite-monkeys.org>
 
 	* openal/include/AL/altypes.h
 	* openal/include/AL/alctypes.h
@@ -949,11 +959,11 @@
 	For the first sample in a chunk to be resampled*2, use dampened
         extrapolation instead of interpolation to somewhat reduce 'clicking'.
 
-2003-11-03  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
+2003-11-03  Joseph I. Valenzuela  <jvalenzu@infinite-monkeys.org>
 
 	* Michel Danzer's big endian patch
 
-2003-10-23  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
+2003-10-23  Joseph I. Valenzuela  <jvalenzu@infinite-monkeys.org>
 
 	* audioconvert/ac_freq.c
 	Added Adam Moss's patch to improve fidelity of low-sampled sounds
@@ -964,32 +974,32 @@
 	* (many)
 	Removed trailing spaces and tabs.
 
-2003-05-15  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
+2003-05-15  Joseph I. Valenzuela  <jvalenzu@infinite-monkeys.org>
 
 	* src/arch/alsa/alsa.c:
 	Moves alsa/asoundlib.h inclusion below sys/time.h
 
-2003-05-07  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
+2003-05-07  Joseph I. Valenzuela  <jvalenzu@infinite-monkeys.org>
 
 	* src/al_filter.c:
 	Changed doppler to multiply existing pitch, if present.
 
-2003-04-01  J. Valenzuela  <jvalenzu@infinite-monkeys.org>
+2003-04-01  Joseph I. Valenzuela  <jvalenzu@infinite-monkeys.org>
 
 	* misc
 	Joe Tennies's vector patches
 
-2003-03-23  Joseph Valenzuela  <jvalenzu@formosa.infinite-monkeys.org>
+2003-03-23  Joseph I. Valenzuela  <jvalenzu@formosa.infinite-monkeys.org>
 
 	* src/al_source.c:
 	Sunil's updated patch
 
-2003-03-21  Joseph Valenzuela  <jvalenzu@formosa.infinite-monkeys.org>
+2003-03-21  Joseph I. Valenzuela  <jvalenzu@formosa.infinite-monkeys.org>
 
 	* src/al_source.c
 	queueing pizzatch
 
-2003-01-13  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
+2003-01-13  Joseph I. Valenzuela  <jvalenzu@infinite-monkeys.org>
 
 	* al/aluttypes.h
 	* linux/include/al/alexttypes.h
@@ -1011,13 +1021,13 @@
 	* src/threads/morphosthreads.h
 	Added Ruediger Hanke <tomjoad@muenster.de>'s MorphOS files.
 
-2003-01-06  Erik Greenwald <erik@smluc.org> <erik@math.smsu.edu>
+2003-01-06  Erik Greenwald <erik@smluc.org>
 
 	* src/arch/bsd/bsd_dsp.c
 	* src/arch/bsd/bsd_dsp.h
 	Fixes for FreeBSD 4.7 (-stable)
 
-2003-01-02  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
+2003-01-02  Joseph I. Valenzuela  <jvalenzu@infinite-monkeys.org>
 
 	* src/arch/linux/lin_dsp.c
 	Fix to try /dev/sound/dsp as well as /dev/dsp.  Thanks to
@@ -1039,21 +1049,21 @@
 	* src/al_source.c
 	Addition queue fixes.
 
-2002-12-30  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
+2002-12-30  Joseph I. Valenzuela  <jvalenzu@infinite-monkeys.org>
 
 	* openal/linux/src/al_mixer.c
 	* openal/linux/src/al_source.c
 	Fix assertions for queue mixing, not done yet.
 
 
-2002-12-17  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
+2002-12-17  Joseph I. Valenzuela  <jvalenzu@infinite-monkeys.org>
 	* src/al_queue.c
 	* src/al_mixer.c
 	* src/al_source.c
 	* src/al_source.h
 	Re-added Zoltan Ponekker's patch to fix queue looping.
 
-2002-12-04  Joseph Valenzuela  <jvalenzu@infinite-monkeys.org>
+2002-12-04  Joseph I. Valenzuela  <jvalenzu@infinite-monkeys.org>
 
 	* src/al_filter.c
 	Added John Quigley's change to queue gain stuff.
@@ -1064,13 +1074,13 @@
 	* src/al_source.h
 	Added Zoltan Ponekker's patch to consolidate queue looping.
 
-2002-11-19  Joseph Valenzuela  <jvalenzu@formosa>
+2002-11-19  Joseph I. Valenzuela  <jvalenzu@formosa>
 
 	* openal/linux/src/al_source.c
 	* openal/include/AL/al.h
 	Added alGetSource3f for compatibility with win implementation.
 
-2002-09-19  Joseph Valenzuela  <jvalenzu@formosa>
+2002-09-19  Joseph I. Valenzuela  <jvalenzu@formosa>
 
 	* src/arch/alsa/alsa.c
 	Added Dirk's alsa changes
@@ -1078,7 +1088,7 @@
 	* CREDITS
 	Added Dirk Ehlke's name
 
-2002-09-17  Joseph Valenzuela  <jvalenzu@formosa>
+2002-09-17  Joseph I. Valenzuela  <jvalenzu@formosa>
 
 	* src/al_filter.c
 	Fixed stupidity where source's gain wasn't being applied
@@ -1121,7 +1131,7 @@
 	* src/al_vector.h
 	Added a vector product function.
 
-2002-09-07  Joseph Valenzuela  <jvalenzu@formosa>
+2002-09-07  Joseph I. Valenzuela  <jvalenzu@formosa>
 
 	* src/al_filter.c:
 	Messed with pitch again.  Both removed and reintroduced lookup
@@ -1134,7 +1144,7 @@
 	* src/arch/sdl/sdl.c:
 	Patched to function, again.
 
-2002-09-05  Joseph Valenzuela  <jvalenzu@formosa>
+2002-09-05  Joseph I. Valenzuela  <jvalenzu@formosa>
 
 	* configure.in, al_debug.h, al_debug.c
 	added ALD_FILTER debug category
@@ -1150,7 +1160,7 @@
 	* fix bug that incorrectly reported LAL_VERSION as 1
  	  instead of "0.0.6"
 
-2002-07-12  Joseph Valenzuela  <jvalenzu@formosa>
+2002-07-12  Joseph I. Valenzuela  <jvalenzu@formosa>
 
 	* /usr/local/cvs-repository/openal/linux/Makefile.in
 	* /usr/local/cvs-repository/openal/linux/aclocal.m4
@@ -1214,7 +1224,7 @@
 	* src/al_siteconfig.h
 	- doh!
 
-2002-05-06  Joseph Valenzuela  <jvalenzu@formosa>
+2002-05-06  Joseph I. Valenzuela  <jvalenzu@formosa>
 
 	* openal/linux/CREDITS
 	- vanity change
@@ -1245,7 +1255,7 @@
 	  how did I not catch this before
 
 
-2002-05-03  Joseph Valenzuela  <jvalenzu@formosa>
+2002-05-03  Joseph I. Valenzuela  <jvalenzu@formosa>
 
 	* Darwin updates
 
@@ -2769,7 +2779,7 @@
 	* test/teststream.c
 	Added multichannel call
 
-2000-08-24    <tsaotsao@TOROFO>
+2000-08-24  Joseph I. Valenzuela  <tsaotsao@TOROFO>
 
 	* src/arch/windows/windows_native.c:
 	Updates in the windows backend
@@ -2790,7 +2800,7 @@
 	* src/include/AL/alkludgetypes.h
 	Changed sign of IMA decodestate member
 
-2000-08-22   Joseph I. Valenzuela  <tsaotsao@TOROFO>
+2000-08-22  Joseph I. Valenzuela  <tsaotsao@TOROFO>
 	* ChangeLog
 	notes changes
 

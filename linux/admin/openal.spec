@@ -1,5 +1,5 @@
 #
-# spec file for package openal (Version 20050923)
+# spec file for package openal (Version 20050930)
 #
 # Copyright (c) 2005 SUSE LINUX Products GmbH, Nuernberg, Germany.
 # This file and all modifications and additions to the pristine
@@ -17,13 +17,12 @@ Name:         openal
 License:      LGPL
 Group:        System/Libraries
 Autoreqprov:  on
-Version:      20050923
+Version:      20050930
 Release:      1
 URL:          http://www.openal.org/
 Icon:         openal.xpm
 Summary:      Open Audio Library
-#Source:       openal-%{version}.tar.bz2
-Source:       openal.tar.bz2
+Source:       openal-%{version}.tar.bz2
 BuildRoot:    %{_tmppath}/%{name}-%{version}-build
 
 %description
@@ -35,7 +34,24 @@ simple C-based API.
 
 Authors:
 --------
-    Garin Hiebert <ghiebert@creativelabs.com>
+    Adam D. Moss <adam@steambird.com>
+    Bernd Kreimeier <bk@oddworld.com>
+    Christopher Purnell <cjp@lost.org.uk>
+    Dirk Ehlke <dehlke@mip.informatik.uni-kiel.de>
+    Elias Naur <elias@oddlabs.com>
+    Erik Greenwald <erik@smluc.org>
+    Erik Hofman <erik@ehofman.com>
+    Garin Hiebert <garinh@cheesetoast.net>
+    Guillaume Borios <gborios@free.fr>
+    Jason Daly <jdaly@ist.ucf.edu>
+    John E. Stone <j.stone@acm.org>
+    Joseph I. Valenzuela <valenzuela@treyarch.com>
+    Michael Vance <michael@linuxgames.com>
+    Prakash Punnoor <prakash@punnoor.de>
+    Ryan C. Gordon <ryan@epicgames.com>
+    Sven Panne <sven.panne@aedion.de>
+    Yotam Gingold <ygingold@cs.brown.edu>
+    Zoltan Ponekker <pontscho@kac.poliod.hu>
 
 %package devel
 Summary:      Static libraries, header files and tests for openal library
@@ -51,7 +67,24 @@ simple C-based API.
 
 Authors:
 --------
-    Garin Hiebert <ghiebert@creativelabs.com>
+    Adam D. Moss <adam@steambird.com>
+    Bernd Kreimeier <bk@oddworld.com>
+    Christopher Purnell <cjp@lost.org.uk>
+    Dirk Ehlke <dehlke@mip.informatik.uni-kiel.de>
+    Elias Naur <elias@oddlabs.com>
+    Erik Greenwald <erik@smluc.org>
+    Erik Hofman <erik@ehofman.com>
+    Garin Hiebert <garinh@cheesetoast.net>
+    Guillaume Borios <gborios@free.fr>
+    Jason Daly <jdaly@ist.ucf.edu>
+    John E. Stone <j.stone@acm.org>
+    Joseph I. Valenzuela <valenzuela@treyarch.com>
+    Michael Vance <michael@linuxgames.com>
+    Prakash Punnoor <prakash@punnoor.de>
+    Ryan C. Gordon <ryan@epicgames.com>
+    Sven Panne <sven.panne@aedion.de>
+    Yotam Gingold <ygingold@cs.brown.edu>
+    Zoltan Ponekker <pontscho@kac.poliod.hu>
 
 %debug_package
 %prep
@@ -87,7 +120,7 @@ make -C linux DESTDIR=$RPM_BUILD_ROOT%{_prefix}/ \
 # documentation
 install -m 755 -d $RPM_BUILD_ROOT%{_defaultdocdir}/%{name}
 install -m 644 linux/ChangeLog			\
-	       linux/CREDITS 			\
+	       linux/AUTHORS 			\
 	       README				\
 	       docs/spec1-1/OpenAL1-1Spec.pdf	\
 	       $RPM_BUILD_ROOT%{_defaultdocdir}/%{name}/
@@ -107,7 +140,7 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root)
 %doc %{_defaultdocdir}/%{name}/ChangeLog
-%doc %{_defaultdocdir}/%{name}/CREDITS
+%doc %{_defaultdocdir}/%{name}/AUTHORS
 %doc %{_defaultdocdir}/%{name}/README
 /etc/openalrc
 %{_libdir}/libopenal.so.*
@@ -122,6 +155,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/pkgconfig/openal.pc
 
 %changelog -n openal
+* Fri Sep 30 2005 - sven.panne@aedion.de
+- Updated authors
 * Fri Sep 23 2005 - sven.panne@aedion.de
 - Various changes to bring the spec file in line with the OpenAL repository again.
 * Tue Mar 15 2005 - sbrabec@suse.cz
