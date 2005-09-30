@@ -77,15 +77,15 @@ void _alDetectCPUCaps()
 		
 		if (_alDetectx86CPUCaps(&caps1, &caps2, &caps3)) {
 			
-			x86cpu_caps.mmx = (caps1 >> MMX_BIT) & 1;
-			x86cpu_caps.sse = (caps1 >> SSE_BIT) & 1;
-			x86cpu_caps.sse2 = (caps1 >> SSE2_BIT) & 1;
+			x86cpu_caps.mmx &= (caps1 >> MMX_BIT) & 1;
+			x86cpu_caps.sse &= (caps1 >> SSE_BIT) & 1;
+			x86cpu_caps.sse2 &= (caps1 >> SSE2_BIT) & 1;
 			
-			x86cpu_caps.sse3 = (caps2 >> SSE3_BIT) & 1;
+			x86cpu_caps.sse3 &= (caps2 >> SSE3_BIT) & 1;
 			
-			x86cpu_caps.amd_3dnow = (caps3 >> AMD_3DNOW_BIT) & 1;
-			x86cpu_caps.amd_3dnowext = (caps3 >> AMD_3DNOWEXT_BIT) & 1;
-			x86cpu_caps.amd_sse_mmx = (caps3 >> AMD_SSE_MMX_BIT) & 1;
+			x86cpu_caps.amd_3dnow &= (caps3 >> AMD_3DNOW_BIT) & 1;
+			x86cpu_caps.amd_3dnowext &= (caps3 >> AMD_3DNOWEXT_BIT) & 1;
+			x86cpu_caps.amd_sse_mmx &= (caps3 >> AMD_SSE_MMX_BIT) & 1;
 			/* FIXME: For Cyrix MMXEXT detect Cyrix CPU first! */
 			/*
 			x86cpu_caps.cyrix_mmxext = (caps3 >> CYRIX_MMXEXT_BIT) & 1;
@@ -128,7 +128,7 @@ void _alDetectCPUCaps()
 			x86cpu_caps_use.amd_sse_mmx = !atoi(env);
 		
 		env = getenv("OPENAL_DISABLE_SIMD");
-		if (env)
+		if (env  &&  atoi(env))
 			memset(&x86cpu_caps_use, 0, sizeof x86cpu_caps_use);
 	}
 	/* end check environment vars */
