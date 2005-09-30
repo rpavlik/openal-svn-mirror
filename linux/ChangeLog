@@ -1,5 +1,16 @@
 2005-09-30  Prakash Punnoor <prakash@punnoor.de>
 
+	* configure.ac, src/Makefile.in, src/al_mixer.h, src/al_mixfunc.c,
+	src/mixaudio16.c, src/mixaudio16.h, src/arch/i386/memcpy_mmx_prk.nasm,
+	src/arch/i386/mixaudio16_mmx_prk.c, src/arch/i386/mixaudio16_mmx_prk.h:
+	add MMX audio mixing
+
+	* x86_cpu_caps_prk.c: fix OPENAL_DISABLE_SIMD handling and SIMD
+	should only be enabled at runtime detection, if SIMD was enabled
+	at compile time
+
+2005-09-30  Sven Panne  <sven.panne@aedion.de>
+
 	* admin/openal.spec: Synched with CREDITS/AUTHORS changes.
 
 	* AUTHORS: Added. This is the standard (autotools) name for such a
