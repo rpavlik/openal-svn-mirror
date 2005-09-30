@@ -52,7 +52,9 @@ EXT_OBJS=$(addsuffix .o, $(addprefix extensions/al_ext_, loki mp3 vorbis capture
 EXT_DLL_OBJS=$(addsuffix .o, $(addprefix extensions/al_ext_, ))
 
 x86_OBJS=arch/i386/floatmul.o arch/i386/x86_cpu_caps_prk.o
+x86_MMX_OBJS=arch/i386/mixaudio16_mmx_prk.o
 x86_NASM_OBJS=arch/i386/x86_cpu_caps_detect_prk.o
+x86_MMX_NASM_OBJS=arch/i386/memcpy_mmx_prk.o
 
 PORTABLE_OBJS=arch/portable/floatmul.o arch/portable/cpu_caps.o
 

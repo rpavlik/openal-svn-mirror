@@ -15,11 +15,30 @@
 #define _AL_MIXER_H_
 
 #include <AL/al.h>
+#include "al_siteconfig.h"
 
 /*
  * Number of sources for which optimized mixing functions exist.
  */
-#define MAXMIXSOURCES 64
+#if defined(USE_LIGHT_GEN_MIXING) && defined(__MMX__)
+#define GENMIXSOURCES 8
+#else
+#define GENMIXSOURCES 64
+#endif /* USE_LIGHT_GEN_MIXING && __MMX__ */
+
+#ifdef __MMX__
+#define MMXMIXSOURCES 32
+#else
+#define MMXMIXSOURCES 0
+#endif /* __MMX__ */
+
+/* set MAXMIXSOURCES to MAX */
+#if GENMIXSOURCES<MMXMIXSOURCES
+#define MAXMIXSOURCES MMXMIXSOURCES
+#else
+#define MAXMIXSOURCES GENMIXSOURCES
+#endif
+
 
 /*
  * int (*mixer_iterate)( void *dummy )

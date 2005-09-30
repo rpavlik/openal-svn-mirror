@@ -189,14 +189,15 @@ esac
 dnl Special objs for architectures
 case "$target" in
     *i386* | *i486* | *i586* | *i686*)
-        ARCH_OBJS="\$(x86_OBJS)"
+        ARCH_OBJS="\$(x86_OBJS) \$(x86_MMX_OBJS)"
         INCLUDES="$INCLUDES -Iarch/i386"
 
         AC_PATH_PROG([NASM], [nasm], [no])
         if test "x$NASM" != xno; then
             AC_DEFINE([HAVE_NASM], [1], [have nasm])
             AC_DEFINE([HAVE_CPU_CAPS_DETECTION], [1], [detect cpu capabilities])
-            ARCH_OBJS="$ARCH_OBJS \$(x86_NASM_OBJS)"
+            AC_DEFINE([HAVE_MMX_MEMCPY], [1], [mmx memcpy])
+            ARCH_OBJS="$ARCH_OBJS \$(x86_NASM_OBJS) \$(x86_MMX_NASM_OBJS)"
 
             case "$target" in
             *linux*)
@@ -209,13 +210,37 @@ case "$target" in
         fi
         ;;
     *x86_64*)
-        ARCH_OBJS="\$(x86_OBJS)"
+        ARCH_OBJS="\$(x86_OBJS) \$(x86_MMX_OBJS)"
         INCLUDES="$INCLUDES -Iarch/i386"
         ;;
     *)
         ARCH_OBJS="\$(PORTABLE_OBJS)"
         ;;
 esac
+
+
+AC_ARG_ENABLE([optim-generic],
+[AS_HELP_STRING([--enable-optim-generic],
+                [x86(_64): even if mmx enabled, build optimized instead of light generic mixing routines  @<:@i686/x86_64:default=no@:>@])])
+
+case "$target" in
+*i686* | *x86_64*)
+    if test "x$enable_optim_generic" != xyes; then
+        enable_optim_generic=no
+    fi
+    ;;
+*)
+    if test "x$enable_optim_generic" != xno; then
+        enable_optim_generic=yes
+    fi
+    ;;
+esac
+
+if test "x$enable_optim_generic" = xno; then
+    AC_DEFINE([USE_LIGHT_GEN_MIXING], [1], [build light generic mixing routines])
+fi
+
+
 
 dnl Check for headers/libs required for native backends
 dnl Special OS objs for target systems

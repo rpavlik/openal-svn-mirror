@@ -419,6 +419,7 @@ void MixAudio16_8(ALshort *dst, alMixEntry *entries) {
 	return;
 }
 
+#ifndef USE_LIGHT_GEN_MIXING
 void MixAudio16_9(ALshort *dst, alMixEntry *entries) {
 	ALshort *srcs0[2];
 	ALshort *srcs1[2];
@@ -9153,3 +9154,4 @@ void MixAudio16_64(ALshort *dst, alMixEntry *entries) {
 	
 	return;
 }
+#endif /* USE_LIGHT_GEN_MIXING */

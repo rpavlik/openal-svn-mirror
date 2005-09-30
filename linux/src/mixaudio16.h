@@ -10,6 +10,11 @@
 
 #include <AL/al.h>
 #include "al_types.h"
+#include "al_siteconfig.h"
+
+#ifdef __MMX__
+#include "mixaudio16_mmx_prk.h"
+#endif /* __MMX__ */
 
 /*
  * max_audioval is the maximum value of a signed short.
@@ -49,6 +54,7 @@ void MixAudio16_5( ALshort *dst, alMixEntry *entries );
 void MixAudio16_6( ALshort *dst, alMixEntry *entries );
 void MixAudio16_7( ALshort *dst, alMixEntry *entries );
 void MixAudio16_8( ALshort *dst, alMixEntry *entries );
+#ifndef USE_LIGHT_GEN_MIXING
 void MixAudio16_9( ALshort *dst, alMixEntry *entries );
 void MixAudio16_10( ALshort *dst, alMixEntry *entries );
 void MixAudio16_11( ALshort *dst, alMixEntry *entries );
@@ -105,5 +111,5 @@ void MixAudio16_61( ALshort *dst, alMixEntry *entries );
 void MixAudio16_62( ALshort *dst, alMixEntry *entries );
 void MixAudio16_63( ALshort *dst, alMixEntry *entries );
 void MixAudio16_64( ALshort *dst, alMixEntry *entries );
-
+#endif /* USE_LIGHT_GEN_MIXING */
 #endif /* _MIX_AUDIO16_H_ */
