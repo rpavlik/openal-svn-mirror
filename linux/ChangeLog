@@ -1,3 +1,9 @@
+2005-10-01  Prakash Punnoor <prakash@punnoor.de>
+
+	* INSTALL: added instructions for using x86 SIMD
+
+	* configure.ac: checks for MMX now
+
 2005-09-30  Prakash Punnoor <prakash@punnoor.de>
 
 	* configure.ac, src/Makefile.in, src/al_mixer.h, src/al_mixfunc.c,
