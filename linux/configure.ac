@@ -203,20 +203,19 @@ AC_MSG_RESULT([$$2])
 ])
 
 
+dnl Special objs for architectures
 case "$target" in
     *i386* | *i486* | *i586* | *i686* | *x86_64*)
     INCLUDES="$INCLUDES -Iarch/i386"
     ARCH_OBJS="\$(x86_OBJS)"
 
-    MACRO_TEST([__MMX__], have_mmx)
+    MACRO_TEST([__MMX__], [have_mmx])
     if test "x$have_mmx" = xyes; then
         ARCH_OBJS="$ARCH_OBJS \$(x86_MMX_OBJS)"
     fi
     ;;
 esac
 
-
-dnl Special objs for architectures
 case "$target" in
     *i386* | *i486* | *i586* | *i686*)
         AC_PATH_PROG([NASM], [nasm], [no])
