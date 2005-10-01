@@ -13,6 +13,24 @@ Compilation / installation goes something like this:
 	[run tests]
 	make install
 
+If you are on x86(_64) if may be wise to send your CFLAGS along to
+configure, as dependening on them, SIMD code will be activated, ie:
+
+	CFLAGS="-march=athlon-xp" ./configure --prefix=/usr/local
+
+configure will detect that "-march=athlon-xp" activates MMX, SSE,
+3dNOW!, SSE-MMX and 3dNOW! extended. You can also explicitly enable a
+specific SIMD instruction set via CFLAGS, ie -mmmx activates MMX on the
+GCC compiler. Refer to its manual. Currently OpenAL only features some
+MMX code though, so other SIMD instruction set are ignored.
+On x86 (32 bit) it is advised to have nasm installed. Then it is safe
+to activate all SIMD instruction sets at compile time, as at runtime the
+detection will only activate supported SIMD routines.
+(Above example shouldn't be used as such though, as it doesn't do any
+optimization, so send more flags and/or use the optimization configure
+option.)
+
+
 configure options:
 	--enable-debug        Enable debugging info.
 	--enable-optimization Enables optimization.
