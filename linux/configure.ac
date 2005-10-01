@@ -186,18 +186,49 @@ case "$target" in
     OS_OBJS="\$(LIN_OBJS)" ;;
 esac
 
+
+dnl MACRO_TEST([MACRO], [VAR_RESULT])
+dnl
+AC_DEFUN([MACRO_TEST], [dnl
+
+AC_MSG_CHECKING([for $1 macro])
+
+AC_TRY_COMPILE([
+#ifndef $1
+#error $1 macro not defined
+#endif
+],, $2=yes, $2=no)
+
+AC_MSG_RESULT([$$2])
+])
+
+
+case "$target" in
+    *i386* | *i486* | *i586* | *i686* | *x86_64*)
+    INCLUDES="$INCLUDES -Iarch/i386"
+    ARCH_OBJS="\$(x86_OBJS)"
+
+    MACRO_TEST([__MMX__], have_mmx)
+    if test "x$have_mmx" = xyes; then
+        ARCH_OBJS="$ARCH_OBJS \$(x86_MMX_OBJS)"
+    fi
+    ;;
+esac
+
+
 dnl Special objs for architectures
 case "$target" in
     *i386* | *i486* | *i586* | *i686*)
-        ARCH_OBJS="\$(x86_OBJS) \$(x86_MMX_OBJS)"
-        INCLUDES="$INCLUDES -Iarch/i386"
-
         AC_PATH_PROG([NASM], [nasm], [no])
         if test "x$NASM" != xno; then
             AC_DEFINE([HAVE_NASM], [1], [have nasm])
             AC_DEFINE([HAVE_CPU_CAPS_DETECTION], [1], [detect cpu capabilities])
-            AC_DEFINE([HAVE_MMX_MEMCPY], [1], [mmx memcpy])
-            ARCH_OBJS="$ARCH_OBJS \$(x86_NASM_OBJS) \$(x86_MMX_NASM_OBJS)"
+            ARCH_OBJS="$ARCH_OBJS \$(x86_NASM_OBJS)"
+
+            if test "x$have_mmx" = xyes; then
+                AC_DEFINE([HAVE_MMX_MEMCPY], [1], [mmx memcpy])
+                ARCH_OBJS="$ARCH_OBJS \$(x86_MMX_NASM_OBJS)"
+            fi
 
             case "$target" in
             *linux*)
@@ -208,10 +239,6 @@ case "$target" in
                 ;;
             esac
         fi
-        ;;
-    *x86_64*)
-        ARCH_OBJS="\$(x86_OBJS) \$(x86_MMX_OBJS)"
-        INCLUDES="$INCLUDES -Iarch/i386"
         ;;
     *)
         ARCH_OBJS="\$(PORTABLE_OBJS)"
