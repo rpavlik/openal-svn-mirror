@@ -1,3 +1,11 @@
+2005-10-06  Prakash Punnoor <prakash@punnoor.de>
+
+	* src/arch/i386/floatmul.c: added MMX routine
+
+	* src/arch/i386/x86_simd_support_prk.h,
+	src/arch/i386/mixaudio16_mmx_prk.c:  moved common SIMD support code
+	into above header file
+
 2005-10-01  Prakash Punnoor <prakash@punnoor.de>
 
 	* INSTALL: added instructions for using x86 SIMD

@@ -22,50 +22,11 @@
 
 #ifdef __MMX__
 #include <string.h>
+#include "x86_simd_support_prk.h"
 
 #ifdef HAVE_MMX_MEMCPY
 void _alMMXmemcpy(void* dst, void* src, int n);
 #endif /* HAVE_MMX_MEMCPY */
-
-
-/*
- * We use built-ins for gcc instead of Intel/MSVC style intrinsics
- * as (older) gccs are slower with them
- */
-#if __GNUC__ && !__INTEL_COMPILER
-#if __GNUC__ < 4
-typedef short v4hi __attribute__ ((__mode__(__V4HI__)));
-typedef int   v2si __attribute__ ((__mode__(__V2SI__)));
-typedef int   di   __attribute__ ((__mode__(__DI__)));
-#else
-typedef short v4hi __attribute__ ((vector_size (8)));
-typedef int   v2si __attribute__ ((vector_size (8)));
-typedef int   di   __attribute__ ((vector_size (8)));
-#endif
-
-#define ALIGN16(x) x __attribute__((aligned(16)))
-typedef unsigned long aint;
-
-#else /* NO GCC */
-#include <mmintrin.h>
-typedef __m64 v4hi;
-typedef __m64 v2si;
-typedef __m64 di;
-
-#define __builtin_ia32_pand(X,Y)	_mm_and_si64(X,Y)
-#define __builtin_ia32_pcmpeqw(X,Y)	_mm_cmpeq_pi16(X,Y)
-#define __builtin_ia32_punpcklwd(X,Y)	_mm_unpacklo_pi16(X,Y)
-#define __builtin_ia32_punpckhwd(X,Y)	_mm_unpackhi_pi16(X,Y)
-#define __builtin_ia32_paddd(X,Y)	_mm_add_pi32(X,Y)
-#define __builtin_ia32_paddsw(X,Y)	_mm_adds_pi16(X,Y)
-#define __builtin_ia32_packssdw(X,Y)	_mm_packs_pi32(X,Y)
-#define __builtin_ia32_emms() 		_mm_empty()
-
-#define ALIGN16(x) __declspec(align(16)) x
-
-/* FIXME: msvc++'s long in x86_64 isn't 8bytes? */
-typedef unsigned long aint;
-#endif /* __GNUC__ */
 
 
 /* prepare sign-extension from 16bit to 32 bit for stream ST */
@@ -181,7 +142,6 @@ typedef unsigned long aint;
 	temp  = (v2si)__builtin_ia32_punpckhwd(indata, signmask);		\
 	hiout = __builtin_ia32_paddd(hiout, temp);
 
-#define MMX_ALIGN 8
 
 
 union {

@@ -1,5 +1,4 @@
 /***************************************************************************
- *   MMX routine                                                           *
  *   Copyright (C) 2005 by Prakash Punnoor                                 *
  *   prakash@punnoor.de                                                    *
  *                                                                         *
@@ -18,68 +17,52 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#include "al_siteconfig.h"
+#ifndef _X86_SIMD_SUPPORT_H_
+#define _X86_SIMD_SUPPORT_H_
 
-#include <AL/al.h>
-#include "al_cpu_caps.h"
-#include "x86_simd_support_prk.h"
-
-/* MMX routine needs 16 */
-#define SCALING_POWER  16
-#define SCALING_FACTOR (1 << SCALING_POWER)
-
-void _alFloatMul(ALshort *bpt, ALfloat sa, ALuint len);
-
-void _alFloatMul(ALshort *bpt, ALfloat sa, ALuint len) {
-	ALint scaled_sa = sa * SCALING_FACTOR;
-	ALint iter;
-	
 #ifdef __MMX__
-	if (_alHaveMMX()) {
-		union {
-			short s[4];
-			v4hi v;
-		} ALIGN16(v_sa);
-		ALuint samples_main;
-		ALuint samples_pre;
-		ALuint samples_post;
-		
-		
-		v_sa.s[0] = scaled_sa;
-		v_sa.s[1] = v_sa.s[0];
-		v_sa.s[2] = scaled_sa;
-		v_sa.s[3] = v_sa.s[0];
-		
-		samples_pre = MMX_ALIGN - (aint)bpt % MMX_ALIGN;
-		samples_pre /= sizeof(ALshort);
-		samples_main = len - samples_pre;
-		samples_post = samples_main % 8;
-		samples_main = samples_main / 8;
-		len = samples_post;
-		
-		while(samples_pre--) {
-			iter = *bpt;
-			iter *= scaled_sa;
-			iter >>= SCALING_POWER;
-			*bpt = iter;
-			++bpt;
-		}
-		
-		while (samples_main--) {
-			*(v4hi*)bpt = __builtin_ia32_pmulhw(*(v4hi*)bpt, v_sa.v);
-			bpt += 4;
-			*(v4hi*)bpt = __builtin_ia32_pmulhw(*(v4hi*)bpt, v_sa.v);
-			bpt += 4;
-		}
-		__builtin_ia32_emms();
-	}
+/*
+ * We use built-ins for gcc instead of Intel/MSVC style intrinsics
+ * as (older) gccs are slower with them
+ */
+#if __GNUC__ && !__INTEL_COMPILER
+#if __GNUC__ < 4
+typedef short v4hi __attribute__ ((__mode__(__V4HI__)));
+typedef int   v2si __attribute__ ((__mode__(__V2SI__)));
+typedef int   di   __attribute__ ((__mode__(__DI__)));
+#else
+typedef short v4hi __attribute__ ((vector_size (8)));
+typedef int   v2si __attribute__ ((vector_size (8)));
+typedef int   di   __attribute__ ((vector_size (8)));
+#endif
+
+#define ALIGN16(x) x __attribute__((aligned(16)))
+typedef unsigned long aint;
+
+#else /* NO GCC */
+#include <mmintrin.h>
+typedef __m64 v4hi;
+typedef __m64 v2si;
+typedef __m64 di;
+
+#define __builtin_ia32_pand(X,Y)	_mm_and_si64(X,Y)
+#define __builtin_ia32_pcmpeqw(X,Y)	_mm_cmpeq_pi16(X,Y)
+#define __builtin_ia32_packssdw(X,Y)	_mm_packs_pi32(X,Y)
+#define __builtin_ia32_punpcklwd(X,Y)	_mm_unpacklo_pi16(X,Y)
+#define __builtin_ia32_punpckhwd(X,Y)	_mm_unpackhi_pi16(X,Y)
+#define __builtin_ia32_paddd(X,Y)	_mm_add_pi32(X,Y)
+#define __builtin_ia32_paddsw(X,Y)	_mm_adds_pi16(X,Y)
+#define __builtin_ia32_pmulhw(X,Y)	_mm_mulhi_pi16(X,Y)
+#define __builtin_ia32_emms() 		_mm_empty()
+
+#define ALIGN16(x) __declspec(align(16)) x
+
+/* FIXME: msvc++'s long in x86_64 isn't 8bytes? */
+typedef unsigned long aint;
+#endif /* __GNUC__ */
+
+#define MMX_ALIGN 8
 #endif /* __MMX__ */
 
-	while(len--) {
-		iter = *bpt;
-		iter *= scaled_sa;
-		iter >>= SCALING_POWER;
-		*bpt = iter;
-		++bpt;
-	}
-}
+#endif /* _X86_SIMD_SUPPORT_H_ */
+
