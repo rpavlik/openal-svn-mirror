@@ -249,23 +249,24 @@ AC_ARG_ENABLE([optim-generic],
 [AS_HELP_STRING([--enable-optim-generic],
                 [x86(_64): even if mmx enabled, build optimized instead of light generic mixing routines  @<:@i686/x86_64:default=no@:>@])])
 
-case "$target" in
-*i686* | *x86_64*)
-    if test "x$enable_optim_generic" != xyes; then
-        enable_optim_generic=no
-    fi
-    ;;
-*)
-    if test "x$enable_optim_generic" != xno; then
-        enable_optim_generic=yes
-    fi
-    ;;
-esac
+if test "x$have_mmx" = xyes; then
+    case "$target" in
+    *i686* | *x86_64*)
+        if test "x$enable_optim_generic" != xyes; then
+            enable_optim_generic=no
+        fi
+        ;;
+    *)
+        if test "x$enable_optim_generic" != xno; then
+            enable_optim_generic=yes
+        fi
+        ;;
+    esac
 
-if test "x$enable_optim_generic" = xno; then
-    AC_DEFINE([USE_LIGHT_GEN_MIXING], [1], [build light generic mixing routines])
+    if test "x$enable_optim_generic" = xno; then
+        AC_DEFINE([USE_LIGHT_GEN_MIXING], [1], [build light generic mixing routines])
+    fi
 fi
-
 
 
 dnl Check for headers/libs required for native backends

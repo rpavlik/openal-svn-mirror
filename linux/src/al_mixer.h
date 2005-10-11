@@ -20,11 +20,11 @@
 /*
  * Number of sources for which optimized mixing functions exist.
  */
-#if defined(USE_LIGHT_GEN_MIXING) && defined(__MMX__)
+#ifdef USE_LIGHT_GEN_MIXING
 #define GENMIXSOURCES 8
 #else
 #define GENMIXSOURCES 64
-#endif /* USE_LIGHT_GEN_MIXING && __MMX__ */
+#endif /* USE_LIGHT_GEN_MIXING */
 
 #ifdef __MMX__
 #define MMXMIXSOURCES 32
