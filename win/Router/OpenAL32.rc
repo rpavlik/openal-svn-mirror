@@ -28,8 +28,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 6,14,357,9
- PRODUCTVERSION 6,14,357,9
+ FILEVERSION 6,14,357,11
+ PRODUCTVERSION 6,14,357,11
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -47,14 +47,14 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "Portions (C) Creative Labs Inc. and NVIDIA Corp.\0"
             VALUE "FileDescription", "Standard OpenAL(TM) Implementation\0"
-            VALUE "FileVersion", "6.14.0357.9\0"
+            VALUE "FileVersion", "6.14.0357.11\0"
             VALUE "InternalName", "\0"
             VALUE "LegalCopyright", "Copyright (C) 2000-2005\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "OpenAL32.dll\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "Standard OpenAL(TM) Library\0"
-            VALUE "ProductVersion", "6.14.0357.9\0"
+            VALUE "ProductVersion", "6.14.0357.11\0"
             VALUE "SpecialBuild", "\0"
         END
     END

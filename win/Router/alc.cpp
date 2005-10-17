@@ -321,7 +321,7 @@ ALvoid BuildDeviceSpecifierList()
 								if (alcIsExtensionPresentFxn(NULL, "ALC_ENUMERATION_EXT")) {
 									// this DLL can enumerate devices -- so add complete list of devices
 									specifier = alcGetStringFxn(0, ALC_DEVICE_SPECIFIER);
-									if (specifier)
+									if ((specifier) && strlen(specifier))
 									{
 										do {
 											specifierSize = strlen((char*)specifier);
@@ -344,7 +344,7 @@ ALvoid BuildDeviceSpecifierList()
 										alcMakeContextCurrentFxn((ALCcontext *)context);
 										if (context != NULL) {
 											specifier = alcGetStringFxn(device, ALC_DEVICE_SPECIFIER);
-											if (specifier)
+											if ((specifier) && strlen(specifier))
 											{
 												specifierSize = strlen((char*)specifier);
 
@@ -377,7 +377,7 @@ ALvoid BuildDeviceSpecifierList()
 										alcMakeContextCurrentFxn((ALCcontext *)context);
 										if (context != NULL) {
 											specifier = alcGetStringFxn(device, ALC_DEVICE_SPECIFIER);
-											if (specifier)
+											if ((specifier) && strlen(specifier))
 											{
 												specifierSize = strlen((char*)specifier);
 
@@ -464,7 +464,7 @@ ALvoid BuildDeviceSpecifierList()
 								if (alcIsExtensionPresentFxn(NULL, "ALC_ENUMERATION_EXT")) {
 									// this DLL can enumerate devices -- so add complete list of devices
 									specifier = alcGetStringFxn(0, ALC_DEVICE_SPECIFIER);
-									if (specifier)
+									if ((specifier) && strlen(specifier))
 									{
 										do {
 											specifierSize = strlen((char*)specifier);
@@ -487,7 +487,7 @@ ALvoid BuildDeviceSpecifierList()
 										alcMakeContextCurrentFxn((ALCcontext *)context);
 										if (context != NULL) {
 											specifier = alcGetStringFxn(device, ALC_DEVICE_SPECIFIER);
-											if (specifier)
+											if ((specifier) && strlen(specifier))
 											{
 												specifierSize = strlen((char*)specifier);
 
@@ -520,7 +520,7 @@ ALvoid BuildDeviceSpecifierList()
 										alcMakeContextCurrentFxn((ALCcontext *)context);
 										if (context != NULL) {
 											specifier = alcGetStringFxn(device, ALC_DEVICE_SPECIFIER);
-											if (specifier)
+											if ((specifier) && strlen(specifier))
 											{
 												specifierSize = strlen((char*)specifier);
 
