@@ -53,6 +53,7 @@ typedef __m64 di;
 #define __builtin_ia32_paddd(X,Y)	_mm_add_pi32(X,Y)
 #define __builtin_ia32_paddsw(X,Y)	_mm_adds_pi16(X,Y)
 #define __builtin_ia32_pmulhw(X,Y)	_mm_mulhi_pi16(X,Y)
+#define __builtin_ia32_psllw(X,Y)	_mm_slli_pi16(X,Y)
 #define __builtin_ia32_emms() 		_mm_empty()
 
 #define ALIGN16(x) __declspec(align(16)) x

@@ -1,4 +1,8 @@
 2005-10-11  Prakash Punnoor <prakash@punnoor.de>
+	* src/arch/i386/floatmul.c, src/arch/i386/x86_simd_support_prk.h:
+	fix MMX floatmul for 1.0f > sa >= 0.5f
+
+2005-10-11  Prakash Punnoor <prakash@punnoor.de>
 
 	* configure.ac, src/al_mixer.h: only allow stripped down generic
 	mixing if MMX is present

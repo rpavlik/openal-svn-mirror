@@ -43,12 +43,8 @@ void _alFloatMul(ALshort *bpt, ALfloat sa, ALuint len) {
 		ALuint samples_main;
 		ALuint samples_pre;
 		ALuint samples_post;
+		v4hi temp;
 		
-		
-		v_sa.s[0] = scaled_sa;
-		v_sa.s[1] = v_sa.s[0];
-		v_sa.s[2] = scaled_sa;
-		v_sa.s[3] = v_sa.s[0];
 		
 		samples_pre = MMX_ALIGN - (aint)bpt % MMX_ALIGN;
 		samples_pre /= sizeof(ALshort);
@@ -65,11 +61,34 @@ void _alFloatMul(ALshort *bpt, ALfloat sa, ALuint len) {
 			++bpt;
 		}
 		
-		while (samples_main--) {
-			*(v4hi*)bpt = __builtin_ia32_pmulhw(*(v4hi*)bpt, v_sa.v);
-			bpt += 4;
-			*(v4hi*)bpt = __builtin_ia32_pmulhw(*(v4hi*)bpt, v_sa.v);
-			bpt += 4;
+		if (scaled_sa < (1 << 15)) {
+			/* we do signed multiplication, so 1 << 15 is the max */
+			v_sa.s[0] = scaled_sa;
+			v_sa.s[1] = v_sa.s[0];
+			v_sa.s[2] = scaled_sa;
+			v_sa.s[3] = v_sa.s[0];
+			
+			while (samples_main--) {
+				*(v4hi*)bpt = __builtin_ia32_pmulhw(*(v4hi*)bpt, v_sa.v);
+				bpt += 4;
+				*(v4hi*)bpt = __builtin_ia32_pmulhw(*(v4hi*)bpt, v_sa.v);
+				bpt += 4;
+			}
+		} else {
+			/* we lose 1 bit here, but well... */
+			v_sa.s[0] = scaled_sa >> 1;
+			v_sa.s[1] = v_sa.s[0];
+			v_sa.s[2] = v_sa.s[0];
+			v_sa.s[3] = v_sa.s[0];
+			
+			while (samples_main--) {
+				temp = __builtin_ia32_pmulhw(*(v4hi*)bpt, v_sa.v);
+				*(v4hi*)bpt = __builtin_ia32_psllw(temp, 1);
+				bpt += 4;
+				temp = __builtin_ia32_pmulhw(*(v4hi*)bpt, v_sa.v);
+				*(v4hi*)bpt = __builtin_ia32_psllw(temp, 1);
+				bpt += 4;
+			}
 		}
 		__builtin_ia32_emms();
 	}
