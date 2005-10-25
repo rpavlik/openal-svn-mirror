@@ -239,6 +239,8 @@ case "$target" in
             esac
         fi
         ;;
+    *x86_64*)
+        ;;
     *)
         ARCH_OBJS="\$(PORTABLE_OBJS)"
         ;;

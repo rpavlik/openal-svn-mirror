@@ -1,3 +1,6 @@
+2005-10-25  Prakash Punnoor <prakash@punnoor.de>
+	* linux/configure.ac: x86_64 related fix
+
 2005-10-24  Prakash Punnoor <prakash@punnoor.de>
 	* linux/Makefile.in: (gentoo patch) install at correct dirs
 
