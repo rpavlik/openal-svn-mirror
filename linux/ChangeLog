@@ -1,10 +1,17 @@
+2005-10-27  Sven Panne  <sven.panne@aedion.de>
+
+	* admin/openal.spec: Synched with latest Makefile changes.
+
 2005-10-25  Prakash Punnoor <prakash@punnoor.de>
+
 	* linux/configure.ac: x86_64 related fix
 
 2005-10-24  Prakash Punnoor <prakash@punnoor.de>
+
 	* linux/Makefile.in: (gentoo patch) install at correct dirs
 
 2005-10-22  Prakash Punnoor <prakash@punnoor.de>
+
 	* src/arch/i386/floatmul.c, src/arch/i386/x86_simd_support_prk.h:
 	fix MMX floatmul for 1.0f > sa >= 0.5f
 

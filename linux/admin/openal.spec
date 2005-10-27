@@ -1,5 +1,5 @@
 #
-# spec file for package openal (Version 20050930)
+# spec file for package openal (Version 20051027)
 #
 # Copyright (c) 2005 SUSE LINUX Products GmbH, Nuernberg, Germany.
 # This file and all modifications and additions to the pristine
@@ -17,7 +17,7 @@ Name:         openal
 License:      LGPL
 Group:        System/Libraries
 Autoreqprov:  on
-Version:      20050930
+Version:      20051027
 Release:      1
 URL:          http://www.openal.org/
 Icon:         openal.xpm
@@ -113,7 +113,7 @@ make
 
 %install
 rm -rf $RPM_BUILD_ROOT
-make -C linux DESTDIR=$RPM_BUILD_ROOT%{_prefix}/ \
+make -C linux DESTDIR=$RPM_BUILD_ROOT \
 	      DESTLIB=$RPM_BUILD_ROOT%{_libdir} \
 	      install
 #
@@ -155,6 +155,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/pkgconfig/openal.pc
 
 %changelog -n openal
+* Thu Oct 27 2005 - sven.panne@aedion.de
+- Synched with latest Makefile changes
 * Fri Sep 30 2005 - sven.panne@aedion.de
 - Updated authors
 * Fri Sep 23 2005 - sven.panne@aedion.de
