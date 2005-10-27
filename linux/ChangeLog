@@ -1,7 +1,9 @@
-2005-10-25  Prakash Punnoor <prakash@punnoor.de>
+2005-10-27  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/arch/alsa/alsa.c: merge Dino Puller's patch for being 
 	able to use alsa with dmix
+
+	* configure.ac: make CFLAGS overwriteable by user
 
 2005-10-27  Sven Panne  <sven.panne@aedion.de>
 

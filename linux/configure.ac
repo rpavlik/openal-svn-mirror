@@ -70,11 +70,11 @@ if test "x$enable_optimization" = xyes; then
 
   # add -march
   case "$target" in
-    *i386*) CFLAGS="$CFLAGS -march=i386" ;;
-    *i486*) CFLAGS="$CFLAGS -march=i486" ;;
-    *i586*) CFLAGS="$CFLAGS -march=i586" ;;
-    *i686*) CFLAGS="$CFLAGS -march=i686" ;;
-    mips*)  CFLAGS="$CFLAGS -march=mips" ;;
+    *i386*) CFLAGS="-march=i386 $CFLAGS" ;;
+    *i486*) CFLAGS="-march=i486 $CFLAGS" ;;
+    *i586*) CFLAGS="-march=i586 $CFLAGS" ;;
+    *i686*) CFLAGS="-march=i686 $CFLAGS" ;;
+    mips*)  CFLAGS="-march=mips $CFLAGS" ;;
   esac
 fi
 
@@ -810,11 +810,11 @@ fi
 # Stupid audiofile headers
 if test "x$SHOULD_USE_FPIC" = xyes; then
   AC_DEFINE([PIC], [1], [undocumented])
-  CFLAGS="$CFLAGS -fPIC"
+  CFLAGS="-fPIC $CFLAGS"
 fi
 
 # add warnings to CFALGS
-CFLAGS="$CFLAGS $WFLAGS"
+CFLAGS="$WFLAGS $CFLAGS"
 
 # okay, rdynamic okay?
 if test "x$SHOULD_USE_RDYNAMIC" = xyes; then
