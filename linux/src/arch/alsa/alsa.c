@@ -60,6 +60,7 @@ static int (*psnd_pcm_hw_params_set_buffer_size_near)(snd_pcm_t *pcm, snd_pcm_hw
 static int (*psnd_pcm_hw_params_set_channels)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val) = NULL;
 static int (*psnd_pcm_hw_params_set_format)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_format_t val) = NULL;
 static int (*psnd_pcm_hw_params_set_periods)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val, int dir) = NULL;
+static int (*psnd_pcm_hw_params_set_periods_near)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int *val, int *dir) = NULL;
 static int (*psnd_pcm_hw_params_set_rate)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val, int dir) = NULL;
 static int (*psnd_pcm_hw_params_set_rate_near)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int *val, int *dir) = NULL;
 static size_t (*psnd_pcm_hw_params_sizeof)(void) = NULL;
@@ -145,6 +146,7 @@ static int openal_load_alsa_library(void)
 	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_set_format);
 	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_set_period_size);
 	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_set_periods);
+	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_set_periods_near);
 	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_set_rate);
 	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_set_rate_near);
 	OPENAL_LOAD_ALSA_SYMBOL(snd_pcm_hw_params_sizeof);
@@ -452,7 +454,7 @@ ALboolean set_read_alsa( void *handle,
 		return AL_FALSE;
 	}
 
-	err = psnd_pcm_hw_params_set_periods(phandle, setup, ai->periods, 0);
+	err = psnd_pcm_hw_params_set_periods_near(phandle, setup, &ai->periods, 0);
 	if (err < 0) {
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
 				"set_read_alsa: %s\n", psnd_strerror(err));
@@ -624,7 +626,7 @@ ALboolean set_write_alsa(void *handle,
 
 
 	/* Set number of periods. Periods used to be called fragments. */
-	err = psnd_pcm_hw_params_set_periods(phandle, setup, ai->periods, 0);
+	err = psnd_pcm_hw_params_set_periods_near(phandle, setup, &ai->periods, 0);
 	if (err < 0) {
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
 				"set_write_alsa: %s\n", psnd_strerror(err));
@@ -814,4 +816,3 @@ static int FRAMESIZE(snd_pcm_format_t fmt, unsigned int chans) {
 
 	return(retval*chans);
 }
-

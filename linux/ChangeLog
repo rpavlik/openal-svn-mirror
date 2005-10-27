@@ -1,14 +1,19 @@
+2005-10-25  Prakash Punnoor <prakash@punnoor.de>
+
+	* src/arch/alsa/alsa.c: merge Dino Puller's patch for being 
+	able to use alsa with dmix
+
 2005-10-27  Sven Panne  <sven.panne@aedion.de>
 
 	* admin/openal.spec: Synched with latest Makefile changes.
 
 2005-10-25  Prakash Punnoor <prakash@punnoor.de>
 
-	* linux/configure.ac: x86_64 related fix
+	* configure.ac: x86_64 related fix
 
 2005-10-24  Prakash Punnoor <prakash@punnoor.de>
 
-	* linux/Makefile.in: (gentoo patch) install at correct dirs
+	* Makefile.in: (gentoo patch) install at correct dirs
 
 2005-10-22  Prakash Punnoor <prakash@punnoor.de>
 
