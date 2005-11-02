@@ -1491,70 +1491,102 @@ const ALCchar *alcGetString( ALCdevice *dev, ALCenum token )
 	return (const ALubyte *) "";
 }
 
-AL_context *_alcGetDevicesContext(ALCdevice *deviceHandle)
-{
-	if(!deviceHandle)
-	{
-		_alcSetError(ALC_INVALID_DEVICE);
-
-		return 0;
-	}
-
-	return deviceHandle->cc;
-}
-
 /* evil */
-extern ALint __alcGetAvailableSamples( void );
+extern ALint __alcGetAvailableSamples (void);
 
-void alcGetIntegerv( ALCdevice *deviceHandle, ALCenum  token,
-		     ALCsizei  size , ALCint *dest )
+/*
+ * SUP FIXME: Do we have to do some locking below?
+ */
+void
+alcGetIntegerv (ALCdevice *deviceHandle, ALCenum token,
+                ALCsizei size, ALCint *dest)
 {
-	AL_context *cc = _alcGetDevicesContext(deviceHandle);
-	if(!cc)
-	{
-		return;
-	}
+  AL_context *cc;
 
-	if((dest == NULL) || (size == 0))
-	{
-		return;
-	}
+  if (dest == NULL)
+    {
+      _alcSetError (ALC_INVALID_VALUE);
+      return;
+    }
 
-	switch(token)
-	{
-		case ALC_CAPTURE_SAMPLES:
-		  *dest = __alcGetAvailableSamples();
-		  break;
-		  /* JIV FIXME: move major/minor to header
-		     and copy attributes at context creation
-		     time.
-		     Check size
-		   */
-		case ALC_MAJOR_VERSION:
-		  *dest = 1;
-		  break;
-		case ALC_MINOR_VERSION:
-		  *dest = 0;
-		  break;
-		case ALC_ATTRIBUTES_SIZE:
-		  *dest = 2 * cc->NumFlags + 1;
-		  break;
-		case ALC_ALL_ATTRIBUTES:
-		{
-			int i;
+  /*
+   * JIV FIXME: move major/minor to header and copy attributes at context
+   * creation time.
+   */
+  switch (token)
+    {
+    case ALC_MAJOR_VERSION:
+      if (size < 1)
+        {
+          _alcSetError (ALC_INVALID_VALUE);
+          return;
+        }
+      *dest = 1;
+      return;
 
-			for(i = 0; i < 2 * cc->NumFlags; i++)
-			{
-				dest[i] = cc->Flags[i];
-			}
+    case ALC_MINOR_VERSION:
+      if (size < 1)
+        {
+          _alcSetError (ALC_INVALID_VALUE);
+          return;
+        }
+      *dest = 0;
+      return;
+    }
 
-			dest[2 * cc->NumFlags] = 0;
-		}
-		break;
-		default:
-		  _alcSetError(ALC_INVALID_ENUM);
-		  break;
-	}
+  if (deviceHandle == NULL)
+    {
+      _alcSetError (ALC_INVALID_DEVICE);
+      return;
+    }
+
+  cc = deviceHandle->cc;
+  if (cc == NULL)
+    {
+      _alcSetError (ALC_INVALID_CONTEXT);
+      return;
+    }
+
+  switch (token)
+    {
+    case ALC_CAPTURE_SAMPLES:
+      if (size < 1)
+        {
+          _alcSetError (ALC_INVALID_VALUE);
+          return;
+        }
+      *dest = __alcGetAvailableSamples ();
+      return;
+
+    case ALC_ATTRIBUTES_SIZE:
+      if (size < 1)
+        {
+          _alcSetError (ALC_INVALID_VALUE);
+          return;
+        }
+      *dest = 2 * cc->NumFlags + 1;
+      return;
+
+    case ALC_ALL_ATTRIBUTES:
+      {
+        int i;
+        if (size < 2 * cc->NumFlags + 1)
+          {
+            _alcSetError (ALC_INVALID_VALUE);
+            return;
+          }
+        for (i = 0; i < 2 * cc->NumFlags; i++)
+          {
+            dest[i] = cc->Flags[i];
+          }
+
+        dest[2 * cc->NumFlags] = 0;
+      }
+      return;
+
+    }
+
+  _alcSetError (ALC_INVALID_ENUM);
 }
 
 

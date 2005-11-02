@@ -1,3 +1,9 @@
+2005-11-02  Sven Panne  <sven.panne@aedion.de>
+
+	* src/alc/alc_context.c, src/alc/alc_device.h: Fixed error handling for
+	alcGetIntegerv, previously a device was needed even for querying
+	ALC_MAJOR_VERSION and ALC_MINOR_VERSION, which was wrong.
+
 2005-10-27  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/arch/alsa/alsa.c: merge Dino Puller's patch for being 
