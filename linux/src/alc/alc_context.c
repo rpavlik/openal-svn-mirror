@@ -1494,101 +1494,104 @@ const ALCchar *alcGetString( ALCdevice *dev, ALCenum token )
 /* evil */
 extern ALint __alcGetAvailableSamples (void);
 
-/*
- * SUP FIXME: Do we have to do some locking below?
- */
-void
-alcGetIntegerv (ALCdevice *deviceHandle, ALCenum token,
-                ALCsizei size, ALCint *dest)
+static AL_context *
+_alcGetContextOfDevice (ALCdevice *deviceHandle)
 {
   AL_context *cc;
-
-  if (dest == NULL)
-    {
-      _alcSetError (ALC_INVALID_VALUE);
-      return;
-    }
-
-  /*
-   * JIV FIXME: move major/minor to header and copy attributes at context
-   * creation time.
-   */
-  switch (token)
-    {
-    case ALC_MAJOR_VERSION:
-      if (size < 1)
-        {
-          _alcSetError (ALC_INVALID_VALUE);
-          return;
-        }
-      *dest = 1;
-      return;
-
-    case ALC_MINOR_VERSION:
-      if (size < 1)
-        {
-          _alcSetError (ALC_INVALID_VALUE);
-          return;
-        }
-      *dest = 0;
-      return;
-    }
 
   if (deviceHandle == NULL)
     {
       _alcSetError (ALC_INVALID_DEVICE);
-      return;
+      return NULL;
     }
 
   cc = deviceHandle->cc;
   if (cc == NULL)
     {
       _alcSetError (ALC_INVALID_CONTEXT);
-      return;
+      return NULL;
     }
+
+  return cc;
+}
+
+static int
+_alcIsDestinationValid (ALCsizei neededSize, ALCsizei size, ALCint *dest)
+{
+  if ((neededSize > size) || (dest == NULL))
+    {
+      _alcSetError (ALC_INVALID_VALUE);
+      return 0;
+    }
+  return 1;
+}
+
+/*
+ * FIXME: Do we have to do some locking below? Move major/minor to
+ * header and copy attributes at context creation time.
+ */
+void
+alcGetIntegerv (ALCdevice *deviceHandle, ALCenum token,
+                ALCsizei size, ALCint *dest)
+{
+  AL_context *cc;
+  ALint i;
 
   switch (token)
     {
-    case ALC_CAPTURE_SAMPLES:
-      if (size < 1)
-        {
-          _alcSetError (ALC_INVALID_VALUE);
-          return;
-        }
-      *dest = __alcGetAvailableSamples ();
-      return;
-
     case ALC_ATTRIBUTES_SIZE:
-      if (size < 1)
+      cc = _alcGetContextOfDevice (deviceHandle);
+      if ((cc == NULL) || !_alcIsDestinationValid (1, size, dest))
         {
-          _alcSetError (ALC_INVALID_VALUE);
           return;
         }
       *dest = 2 * cc->NumFlags + 1;
       return;
 
     case ALC_ALL_ATTRIBUTES:
-      {
-        int i;
-        if (size < 2 * cc->NumFlags + 1)
-          {
-            _alcSetError (ALC_INVALID_VALUE);
-            return;
-          }
-        for (i = 0; i < 2 * cc->NumFlags; i++)
-          {
-            dest[i] = cc->Flags[i];
-          }
-
-        dest[2 * cc->NumFlags] = 0;
-      }
+      cc = _alcGetContextOfDevice (deviceHandle);
+      if ((cc == NULL)
+          || !_alcIsDestinationValid (2 * cc->NumFlags + 1, size, dest))
+        {
+          return;
+        }
+      for (i = 0; i < 2 * cc->NumFlags; i++)
+        {
+          dest[i] = cc->Flags[i];
+        }
+      dest[2 * cc->NumFlags] = 0;
       return;
 
+    case ALC_MAJOR_VERSION:
+      if (!_alcIsDestinationValid (1, size, dest))
+        {
+          return;
+        }
+      *dest = 1;
+      return;
+
+    case ALC_MINOR_VERSION:
+      if (!_alcIsDestinationValid (1, size, dest))
+        {
+          return;
+        }
+      *dest = 0;
+      return;
+
+    case ALC_CAPTURE_SAMPLES:
+      cc = _alcGetContextOfDevice (deviceHandle);
+      if ((cc == NULL) || !_alcIsDestinationValid (1, size, dest))
+        {
+          return;
+        }
+      *dest = __alcGetAvailableSamples ();
+      return;
+
+    default:
+      _alcSetError (ALC_INVALID_ENUM);
+      return;
     }
-
-  _alcSetError (ALC_INVALID_ENUM);
 }
-
 
 /*
  Capture functions

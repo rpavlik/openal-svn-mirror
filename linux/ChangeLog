@@ -1,3 +1,7 @@
+2005-11-03  Sven Panne  <sven.panne@aedion.de>
+
+	* src/alc/alc_context.c: Minor aesthetical changes in alcGetIntegerv.
+
 2005-11-02  Sven Panne  <sven.panne@aedion.de>
 
 	* src/alc/alc_context.c, src/alc/alc_device.h: Fixed error handling for
