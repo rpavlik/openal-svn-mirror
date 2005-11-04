@@ -115,6 +115,21 @@ static ALCextension alcExtensions[] = {
 	{ NULL,							(ALvoid *) NULL				} };
 
 static ALCfunction  alcFunctions[] = {
+	{ "alcCreateContext",           (ALvoid *) alcCreateContext         },
+	{ "alcMakeContextCurrent",      (ALvoid *) alcMakeContextCurrent    },
+	{ "alcProcessContext",          (ALvoid *) alcProcessContext        },
+	{ "alcSuspendContext",          (ALvoid *) alcSuspendContext        },
+	{ "alcDestroyContext",          (ALvoid *) alcDestroyContext        },
+	{ "alcGetCurrentContext",       (ALvoid *) alcGetCurrentContext     },
+	{ "alcGetContextsDevice",       (ALvoid *) alcGetContextsDevice     },
+	{ "alcOpenDevice",              (ALvoid *) alcOpenDevice            },
+	{ "alcCloseDevice",             (ALvoid *) alcCloseDevice           },
+	{ "alcGetError",                (ALvoid *) alcGetError              },
+	{ "alcIsExtensionPresent",      (ALvoid *) alcIsExtensionPresent    },
+	{ "alcGetProcAddress",          (ALvoid *) alcGetProcAddress        },
+	{ "alcGetEnumValue",            (ALvoid *) alcGetEnumValue          },
+	{ "alcGetString",               (ALvoid *) alcGetString             },
+	{ "alcGetIntegerv",             (ALvoid *) alcGetIntegerv           },
 	{ "alcCaptureOpenDevice",		(ALvoid *) alcCaptureOpenDevice		},
 	{ "alcCaptureCloseDevice",		(ALvoid *) alcCaptureCloseDevice	},
 	{ "alcCaptureStart",			(ALvoid *) alcCaptureStart			},
@@ -620,6 +635,8 @@ ALCAPI void ALCAPIENTRY alcCaptureSamples(ALCdevice *pDevice, ALCvoid *pBuffer, 
 
 	if ((pDevice) && (pDevice->bIsCaptureDevice))
 	{
+		SuspendContext(NULL);
+
 		// Check that we have the requested numbers of Samples
 		ulCapturedSamples = (pDevice->ulWriteCapturedDataPos - pDevice->ulReadCapturedDataPos) / pDevice->wfexCaptureFormat.nBlockAlign;
 
@@ -653,6 +670,8 @@ ALCAPI void ALCAPIENTRY alcCaptureSamples(ALCdevice *pDevice, ALCvoid *pBuffer, 
 		{
 			SetALCError(ALC_INVALID_VALUE);
 		}
+
+		ProcessContext(NULL);
 	}
 	else
 	{
@@ -715,6 +734,8 @@ DWORD WINAPI CaptureThreadProc(LPVOID lpParameter)
 	{
 		if ((msg.message==WIM_DATA)&&(!pDevice->bWaveInShutdown))
 		{
+			SuspendContext(NULL);
+
 			pWaveHdr = ((LPWAVEHDR)msg.lParam);
 
 			// Calculate offset in local buffer to write data to
@@ -751,6 +772,8 @@ DWORD WINAPI CaptureThreadProc(LPVOID lpParameter)
 			// Send buffer back to capture more data
 			waveInAddBuffer(pDevice->hWaveInHandle,pWaveHdr,sizeof(WAVEHDR));
 			pDevice->lWaveInBuffersCommitted++;
+
+			ProcessContext(NULL);
 		}
 	}
 
@@ -902,6 +925,8 @@ ALCAPI ALCvoid ALCAPIENTRY alcGetIntegerv(ALCdevice *device,ALCenum param,ALsize
 
 	if ((device)&&(device->bIsCaptureDevice))
 	{
+		SuspendContext(NULL);
+
 		// Capture device
 		switch (param)
 		{
@@ -921,6 +946,8 @@ ALCAPI ALCvoid ALCAPIENTRY alcGetIntegerv(ALCdevice *device,ALCenum param,ALsize
 			SetALCError(ALC_INVALID_ENUM);
 			break;
 		}
+
+		ProcessContext(NULL);
 	}
 	else
 	{
