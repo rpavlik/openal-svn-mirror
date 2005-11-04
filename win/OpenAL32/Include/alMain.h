@@ -4,11 +4,6 @@
 #define AL_MAX_CHANNELS		4
 #define AL_MAX_SOURCES		32
 
-#define ALAPI __declspec(dllexport)
-#define ALAPIENTRY __cdecl
-#define ALCAPI __declspec(dllexport)
-#define ALCAPIENTRY __cdecl
-
 #include "alu.h"
 #include "windows.h"
 #include "mmsystem.h"

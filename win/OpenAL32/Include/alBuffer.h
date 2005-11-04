@@ -1,9 +1,6 @@
 #ifndef _AL_BUFFER_H_
 #define _AL_BUFFER_H_
 
-#define ALAPI __declspec(dllexport)
-#define ALAPIENTRY __cdecl
-
 #include "AL/al.h"
 
 #ifdef __cplusplus

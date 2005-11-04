@@ -1,9 +1,6 @@
 #ifndef _AL_LISTENER_H_
 #define _AL_LISTENER_H_
 
-#define ALAPI __declspec(dllexport)
-#define ALAPIENTRY __cdecl
-
 #include "AL/al.h"
 
 #include "eax.h"

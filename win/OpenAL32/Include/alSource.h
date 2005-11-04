@@ -3,9 +3,6 @@
 
 #define AL_NUM_SOURCE_PARAMS	128
 
-#define ALAPI __declspec(dllexport)
-#define ALAPIENTRY __cdecl
-
 #include "AL/al.h"
 
 #include "eax.h"
