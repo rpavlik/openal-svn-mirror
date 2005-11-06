@@ -17,13 +17,8 @@
 /* #undef DEBUG_STUB */
 /* #undef DEBUG_QUEUE */
 
-/* #undef BOMB */
 #define PIC 1
 
-/* #undef DMALLOC */
-/* #undef DMALLOC_FUNC_CHECK */
-
-/* #undef PARANOID_LOCKS */
 /* #undef EMPTY_LOCKS */
 
 #define USE_POSIXTHREADS 1

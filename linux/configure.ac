@@ -16,12 +16,10 @@ CFLAGS="-D_ISOC99_SOURCE $CFLAGS"
 
 AC_PROG_CC
 AC_C_CONST
-AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_LN_S
 
 REDUNDANT_DECLS_WARN=yes       # warnings about redudant decls
-SHOULD_ENFORCE_ANSI=no         # whether we should use -ansi
 SHADOW_WARN=yes                # warn about shadow variables
 BROKEN_PTHREAD_FLAG=no         # BSD use -pthread, not -lpthread
 NO_PTHREAD_FLAG=no
@@ -64,7 +62,6 @@ AC_ARG_ENABLE([optimization],
                 [enable optimization @<:@default=no@:>@])])
 
 if test "x$enable_optimization" = xyes; then
-  enable_paranoid_locks=no
   enable_empty_locks=no
   CFLAGS="-O6 -fexpensive-optimizations -funroll-all-loops -funroll-loops -fomit-frame-pointer -finline-functions -ffast-math $CFLAGS"
 
@@ -81,15 +78,6 @@ fi
 # keep CFLAGS variable if set, otherwise set it to just debug
 if test -z "$CFLAGS"; then
   CFLAGS="-g -O2"
-fi
-
-# optimization stuff
-AC_ARG_ENABLE([paranoid-locks],
-[AS_HELP_STRING([--enable-paranoid-locks],
-                [enable paranoid locks @<:@default=no@:>@])])
-
-if test "x$enable_paranoid_locks" = xyes; then
-  AC_DEFINE([PARANOID_LOCKS], [1], [undocumented])
 fi
 
 # no mutex locking for sync. driver
@@ -145,13 +133,11 @@ case "$target" in
     AC_DEFINE([SOLARIS_TARGET], [1], [undocumented])
     OS_OBJS="\$(SOLARIS_OBJS)"
     REDUNDANT_DECLS_WARN=no
-    SHOULD_ENFORCE_ANSI=no ;;
     *irix*)
     AC_DEFINE([IRIX_TARGET], [1], [undocumented])
     OS_OBJS="\$(IRIS_OBJS)"
     SHOULD_USE_RDYNAMIC=no
     REDUNDANT_DECLS_WARN=no
-    SHOULD_ENFORCE_ANSI=no ;;
     *cygwin*|*mingw*)
     AC_DEFINE([WINDOWS_TARGET], [1], [undocumented])
     CFLAGS="-DAL_BUILD_LIBRARY $CFLAGS"
@@ -162,7 +148,6 @@ case "$target" in
     SHADOW_WARN=no
     DO_MINOR_LIBS=no
     REDUNDANT_DECLS_WARN=no
-    SHOULD_ENFORCE_ANSI=no ;;
     *darwin*)
     # I think darwin can use dlopen with fink, but
     # I don't want to require fink
@@ -173,7 +158,6 @@ case "$target" in
     DO_MINOR_LIBS=no
     LIBS="$LIBS -I/System/Library/Frameworks/CoreAudio.framework/Headers/ -framework CoreAudio"
     AC_DEFINE([DARWIN_TARGET], [1], [undocumented])
-    SHOULD_ENFORCE_ANSI=no
     SHOULD_USE_WERROR=no
     OS_OBJS="\$(DARWIN_OBJS)" ;;
 	 *morphos*)
@@ -181,7 +165,6 @@ case "$target" in
 	 OS_OBJS="\$(MORPHOS_OBJS)"
     REDUNDANT_DECLS_WARN=no
 	 SHOULD_USE_FPIC=no
-    SHOULD_ENFORCE_ANSI=no ;;
     *)
     OS_OBJS="\$(LIN_OBJS)" ;;
 esac
@@ -220,7 +203,6 @@ case "$target" in
     *i386* | *i486* | *i586* | *i686*)
         AC_PATH_PROG([NASM], [nasm], [no])
         if test "x$NASM" != xno; then
-            AC_DEFINE([HAVE_NASM], [1], [have nasm])
             AC_DEFINE([HAVE_CPU_CAPS_DETECTION], [1], [detect cpu capabilities])
             ARCH_OBJS="$ARCH_OBJS \$(x86_NASM_OBJS)"
 
@@ -274,22 +256,10 @@ fi
 dnl Check for headers/libs required for native backends
 dnl Special OS objs for target systems
 case "$target" in
-    *linux*)
-    # No extra libs needed
-    ;;
-    *bsd*)
-    # No extra libs needed
-    ;;
-    *solaris*)
-    # No extra libs needed
-    ;;
     *irix*)
     # need dmedia
     AC_DEFINE([IRIS_SUPPORT], [1], [undocumented])
     LIBS="$LIBS -laudio"
-    ;;
-    *cygwin*|*mingw*)
-    # No extra libs needed
     ;;
     *)
     # No extra libs needed
@@ -298,32 +268,6 @@ esac
 
 dnl check for sizeof
 AC_CHECK_SIZEOF([void *])
-
-# dmalloc stuff
-AC_ARG_ENABLE([dmalloc],
-[AS_HELP_STRING([--enable-dmalloc],
-                [enable DMALLOC support @<:@default=no@:>@])])
-
-if test "x$enable_dmalloc" = xyes; then
-    AC_CHECK_HEADER([dmalloc.h],
-    	[dnl header found
-	AC_DEFINE([DMALLOC], [1], [undocumented])
-	AC_DEFINE([DMALLOC_FUNC_CHECK], [1], [undocumented])
-    	INCLUDES="$INCLUDES -include \"/usr/include/dmalloc.h\""
-    	LIBS="$LIBS -ldmallocth"
-	SHOULD_USE_WERROR=no
-    	REDUNDANT_DECLS_WARN=no],
-	[dnl header not found, check local/include
-	dnl invalid cache
-	AC_CHECK_HEADER([/usr/local/include/dmalloc.h],
-		[dnl header found in local/include
-		AC_DEFINE([DMALLOC], [1], [undocumented])
-		AC_DEFINE([DMALLOC_FUNC_CHECK], [1], [undocumented])
-		INCLUDES="$CFLAGS -include \"/usr/local/include/dmalloc.h\""
-		LIBS="$LIBS -ldmallocth"
-		SHOULD_USE_WERROR=no
-		REDUNDANT_DECLS_WARN=no])])
-fi
 
 # efence stuff
 AC_ARG_ENABLE([efence],
@@ -773,12 +717,6 @@ fi
 #   This is where we prune down warnings based on the limitations of
 #   the platform or included headers.
 
-# warning pruning based on CPU type
-case "$target" in
-  *alpha*)
-    SHOULD_ENFORCE_ANSI=no ;; # f***ed up math headers
-esac
-
 if test -n "$HAVESDL"; then
   # If we don't have SDL, we can use -ansi for gcc.  If we do, SDL
   # uses long long which is bad mojo
@@ -795,11 +733,6 @@ if test "x$REDUNDANT_DECLS_WARN" = xno; then
   WFLAGS="$WFLAGS -Wno-redundant-decls"
 else
   WFLAGS="$WFLAGS -Wredundant-decls"
-fi
-
-# Typical UNIX doesn't like -ansi
-if test "x$SHOULD_ENFORCE_ANSI" = xyes; then
-  WFLAGS="-ansi $WFLAGS"
 fi
 
 # Stupid audiofile headers
@@ -820,9 +753,6 @@ CFLAGS="$WFLAGS $CFLAGS"
 if test "x$SHOULD_USE_RDYNAMIC" = xyes; then
   AC_DEFINE_UNQUOTED([RDYNAMIC], ["-rdynamic"], [undocumented])
 fi
-
-# Da domb!
-AC_DEFINE([BOMB], [1], [undocumented])
 
 AC_DEFINE([LINUX_AL], [1], [undocumented])
 

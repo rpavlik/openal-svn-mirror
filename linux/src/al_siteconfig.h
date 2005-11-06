@@ -24,28 +24,6 @@
 
 #endif
 
-#ifdef DMALLOC
-/* do nothing */
-#undef malloc
-#undef calloc
-#undef realloc
-#undef new
-#undef free
-#undef strspn
-#include <stdlib.h>
-#include <string.h>
-#undef malloc
-#undef calloc
-#undef realloc
-#undef new
-#undef free
-#undef strspn
-#endif
-
-#ifdef DMALLOC
-#include "/usr/local/include/dmalloc.h"
-#endif
-
 #ifdef BROKEN_LIBIO
 #include <libio.h>
 #define __underflow __broken_underflow
