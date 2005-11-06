@@ -119,25 +119,31 @@ case "$target" in
     dnl subtest for mips/linux systems with broken libio headers
     case "$target" in
     	*mips* )
-	AC_DEFINE([BROKEN_LIBIO], [1], [undocumented]) ;;
-	*) ;;
+	AC_DEFINE([BROKEN_LIBIO], [1], [undocumented])
+        ;;
+	*)
+        ;;
     esac
     WFLAGS="$WFLAGS -ansi"
     AC_DEFINE([LINUX_TARGET], [1], [undocumented])
-    OS_OBJS="\$(LIN_OBJS)" ;;
+    OS_OBJS="\$(LIN_OBJS)"
+    ;;
     *bsd*)
     BROKEN_PTHREAD_FLAG=yes
     AC_DEFINE([BSD_TARGET], [1], [undocumented])
-    OS_OBJS="\$(BSD_OBJS)" ;;
+    OS_OBJS="\$(BSD_OBJS)"
+    ;;
     *solaris*)
     AC_DEFINE([SOLARIS_TARGET], [1], [undocumented])
     OS_OBJS="\$(SOLARIS_OBJS)"
     REDUNDANT_DECLS_WARN=no
+    ;;
     *irix*)
     AC_DEFINE([IRIX_TARGET], [1], [undocumented])
     OS_OBJS="\$(IRIS_OBJS)"
     SHOULD_USE_RDYNAMIC=no
     REDUNDANT_DECLS_WARN=no
+    ;;
     *cygwin*|*mingw*)
     AC_DEFINE([WINDOWS_TARGET], [1], [undocumented])
     CFLAGS="-DAL_BUILD_LIBRARY $CFLAGS"
@@ -148,6 +154,7 @@ case "$target" in
     SHADOW_WARN=no
     DO_MINOR_LIBS=no
     REDUNDANT_DECLS_WARN=no
+    ;;
     *darwin*)
     # I think darwin can use dlopen with fink, but
     # I don't want to require fink
@@ -160,13 +167,15 @@ case "$target" in
     AC_DEFINE([DARWIN_TARGET], [1], [undocumented])
     SHOULD_USE_WERROR=no
     OS_OBJS="\$(DARWIN_OBJS)" ;;
-	 *morphos*)
-	 AC_DEFINE([MORPHOS_TARGET], [1], [undocumented])
-	 OS_OBJS="\$(MORPHOS_OBJS)"
+    *morphos*)
+    AC_DEFINE([MORPHOS_TARGET], [1], [undocumented])
+    OS_OBJS="\$(MORPHOS_OBJS)"
     REDUNDANT_DECLS_WARN=no
-	 SHOULD_USE_FPIC=no
+    SHOULD_USE_FPIC=no
+    ;;
     *)
-    OS_OBJS="\$(LIN_OBJS)" ;;
+    OS_OBJS="\$(LIN_OBJS)"
+    ;;
 esac
 
 
