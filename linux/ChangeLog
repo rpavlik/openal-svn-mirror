@@ -1,3 +1,7 @@
+2005-11-07  Prakash Punnoor <prakash@punnoor.de>
+
+	* src/arch/irix/iris.c: fix missing alext.h include
+
 2005-11-06  Prakash Punnoor <prakash@punnoor.de>
 
 	* configure.ac, config-osx.h, src/al_siteconfig.h: cleaning-up:
@@ -18,7 +22,7 @@
 	* src/arch/alsa/alsa.c: merge Dino Puller's patch for being 
 	able to use alsa with dmix
 
-	* configure.ac: make CFLAGS overwriteable by user
+	* configure.ac: make CFLAGS overrideable by user
 
 2005-10-27  Sven Panne  <sven.panne@aedion.de>
 

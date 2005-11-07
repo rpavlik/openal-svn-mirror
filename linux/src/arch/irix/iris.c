@@ -61,6 +61,7 @@
 #include "al_siteconfig.h"
 
 #include <AL/al.h>
+#include <AL/alext.h>
 
 #include "arch/interface/interface_sound.h"
 #include "arch/irix/iris.h"
