@@ -80,14 +80,6 @@
 #include <AL/alc.h>
 #endif
 
-#ifndef AL_INVALID_ENUM
-#define AL_INVALID_ENUM AL_ILLEGAL_ENUM
-#endif
-
-#ifndef AL_INVALID_OPERATION
-#define AL_INVALID_OPERATION AL_ILLEGAL_COMMAND
-#endif
-
 #endif // LINUX
 
 #ifdef __MACOS__
@@ -1543,21 +1535,10 @@ ALvoid SA_StringQueries(ALvoid)
 		printf("OpenAL Extensions supported are :\n%s\n", tempString);
 		printf("\nError Codes are :-\n");
 		printf("AL_NO_ERROR : '%s'\n", tempString = alGetString(AL_NO_ERROR));
-
-#ifdef LINUX
-		printf("AL_ILLEGAL_ENUM : '%s'\n", tempString = alGetString(AL_ILLEGAL_ENUM));
-#else
-// ***** FIXME ***** warning: Check the spec: pretty sure INVALID_ENUM changed to ILLEGAL_ENUM
+		printf("AL_INVALID_NAME : '%s'\n", tempString = alGetString(AL_INVALID_NAME));
 		printf("AL_INVALID_ENUM : '%s'\n", tempString = alGetString(AL_INVALID_ENUM));
-#endif
 		printf("AL_INVALID_VALUE : '%s'\n", tempString = alGetString(AL_INVALID_VALUE));
-
-#ifdef LINUX
-		printf("AL_ILLEGAL_COMMAND: '%s'\n", tempString = alGetString(AL_ILLEGAL_COMMAND));
-#else
-// ***** FIXME ***** warning Check the spec: pretty sure INVALID_OPERATION changed to ILLEGAL_COMMAND
 		printf("AL_INVALID_OPERATION : '%s'\n", tempString = alGetString(AL_INVALID_OPERATION));
-#endif
 		printf("AL_OUT_OF_MEMORY : '%s'\n", tempString = alGetString(AL_OUT_OF_MEMORY));
 		CRForNextTest();
 	}
