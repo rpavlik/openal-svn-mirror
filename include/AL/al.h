@@ -46,11 +46,17 @@ extern "C" {
  #pragma export on
 #endif
 
-/* The OPENAL, ALAPI, and ALAPIENTRY macros are deprecated, but are included for applications porting code
-   from AL 1.0 */
+/*
+ * The OPENAL, ALAPI, ALAPIENTRY, AL_INVALID, AL_ILLEGAL_ENUM, and
+ * AL_ILLEGAL_COMMAND macros are deprecated, but are included for
+ * applications porting code from AL 1.0
+ */
 #define OPENAL
 #define ALAPI AL_API
 #define ALAPIENTRY AL_APIENTRY
+#define AL_INVALID                                (-1)
+#define AL_ILLEGAL_ENUM                           AL_INVALID_ENUM
+#define AL_ILLEGAL_COMMAND                        AL_INVALID_OPERATION
 
 #define AL_VERSION_1_0
 #define AL_VERSION_1_1
@@ -98,9 +104,7 @@ typedef void ALvoid;
 
 /* Enumerant values begin at column 50. No tabs. */
 
-/* bad value */
-#define AL_INVALID                                -1
-
+/* "no distance model" or "no buffer" */
 #define AL_NONE                                   0
 
 /* Boolean False. */
@@ -323,7 +327,6 @@ typedef void ALvoid;
 /** 
  * Invalid parameter passed to AL call.
  */
-#define AL_ILLEGAL_ENUM                           0xA002
 #define AL_INVALID_ENUM                           0xA002
 
 /** 
@@ -334,7 +337,6 @@ typedef void ALvoid;
 /** 
  * Illegal call.
  */
-#define AL_ILLEGAL_COMMAND                        0xA004
 #define AL_INVALID_OPERATION                      0xA004
 
   
