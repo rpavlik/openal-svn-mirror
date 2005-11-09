@@ -858,55 +858,7 @@ ALenum alGetEnumValue( const ALchar *ename ) {
 	if(ustrcmp("AL_DOPPLER_VELOCITY", ename) == 0) {
 		return AL_DOPPLER_VELOCITY;
 	}
-#ifdef LINUX_AL
-	if(ustrcmp("AL_ENV_ROOM_IASIG", ename) == 0) {
-		return AL_ENV_ROOM_IASIG;
-	}
 
-	if(ustrcmp("AL_ENV_ROOM_HIGH_FREQUENCY_IASIG", ename) == 0) {
-		return AL_ENV_ROOM_HIGH_FREQUENCY_IASIG;
-	}
-
-	if(ustrcmp("AL_ENV_ROOM_ROLLOFF_FACTOR_IASIG", ename) == 0) {
-		return AL_ENV_ROOM_ROLLOFF_FACTOR_IASIG;
-	}
-
-	if(ustrcmp("AL_ENV_DECAY_TIME_IASIG", ename) == 0) {
-		return AL_ENV_DECAY_TIME_IASIG;
-	}
-
-	if(ustrcmp("AL_ENV_DECAY_HIGH_FREQUENCY_RATIO_IASIG", ename) == 0) {
-		return AL_ENV_DECAY_HIGH_FREQUENCY_RATIO_IASIG;
-	}
-
-	if(ustrcmp("AL_ENV_REFLECTIONS_IASIG", ename) == 0) {
-		return AL_ENV_REFLECTIONS_IASIG;
-	}
-
-	if(ustrcmp("AL_ENV_REFLECTIONS_DELAY_IASIG", ename) == 0) {
-		return AL_ENV_REFLECTIONS_DELAY_IASIG;
-	}
-
-	if(ustrcmp("AL_ENV_REVERB_IASIG", ename) == 0) {
-		return AL_ENV_REVERB_IASIG;
-	}
-
-	if(ustrcmp("AL_ENV_REVERB_DELAY_IASIG", ename) == 0) {
-		return AL_ENV_REVERB_DELAY_IASIG;
-	}
-
-	if(ustrcmp("AL_ENV_DIFFUSION_IASIG", ename) == 0) {
-		return AL_ENV_DIFFUSION_IASIG;
-	}
-
-	if(ustrcmp("AL_ENV_DENSITY_IASIG", ename) == 0) {
-		return AL_ENV_DENSITY_IASIG;
-	}
-
-	if(ustrcmp("AL_ENV_HIGH_FREQUENCY_REFERENCE_IASIG", ename) == 0) {
-		return AL_ENV_HIGH_FREQUENCY_REFERENCE_IASIG;
-	}
-#endif
 	if(ustrcmp("ALC_INVALID", ename) == 0) {
 		return ALC_INVALID;
 	}

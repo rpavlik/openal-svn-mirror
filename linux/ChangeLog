@@ -1,3 +1,8 @@
+2005-11-09  Sven Panne  <sven.panne@aedion.de>
+
+	* src/al_ext.c, src/al_ext.h: Removed AL_ENV_* tokens, they were
+	unused and without any functionality.
+
 2005-11-07  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/arch/irix/iris.c: fix missing alext.h include
