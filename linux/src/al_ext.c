@@ -943,14 +943,6 @@ ALenum alGetEnumValue( const ALchar *ename ) {
 	if(ustrcmp("AL_INVALID", ename) == 0) {
 		return AL_INVALID;
 	}
-
-	if(ustrcmp("AL_ILLEGAL_ENUM", ename) == 0) {
-		return AL_ILLEGAL_ENUM;
-	}
-
-	if(ustrcmp("AL_ILLEGAL_COMMAND", ename) == 0) {
-		return AL_ILLEGAL_COMMAND;
-	}
 #endif
 	return 0;
 }

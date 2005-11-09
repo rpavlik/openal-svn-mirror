@@ -298,10 +298,10 @@ void alSourcei( ALuint sid, ALenum param, ALint i1 )
 	/*
 	 * If param refers to a integer attribute, accept it.
 	 * If it refers to a float attribute, delegate it to alSourcefv.  If
-	 * it is an invalid attribute, set ILLEGAL_ENUM and bail out.
+	 * it is an invalid attribute, set INVALID_ENUM and bail out.
 	 *
 	 * Float vectors are obviously not possible, so we set
-	 * ILLEGAL_COMMAND.  This is probably a spec violation.
+	 * INVALID_OPERATION.  This is probably a spec violation.
 	 */
 	switch( param ) {
 		case AL_BUFFER:
@@ -474,10 +474,10 @@ void alSourcef( ALuint sid, ALenum param, ALfloat f1 ) {
 	/*
 	 * If param refers to a integer attribute, delegate it to alSourcei.
 	 * If it refers to a float attribute, delegate it to alSourcefv.  If
-	 * it is an invalid attribute, set ILLEGAL_ENUM and bail out.
+	 * it is an invalid attribute, set INVALID_ENUM and bail out.
 	 *
 	 * Float vectors are obviously not possible, so we set
-	 * ILLEGAL_COMMAND.  This is probably a spec violation.
+	 * INVALID_OPERATION.  This is probably a spec violation.
 	 */
 	switch( param ) {
 		case AL_BUFFER:

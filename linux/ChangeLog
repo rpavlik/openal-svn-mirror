@@ -1,5 +1,8 @@
 2005-11-09  Sven Panne  <sven.panne@aedion.de>
 
+	* src/al_buffer.c, src/al_ext.c, src/al_source.c: Removed
+	AL_ILLEGAL_* tokens from implementation.
+
 	* src/al_ext.c, src/al_ext.h: Removed AL_ENV_* tokens, they were
 	unused and without any functionality.
 

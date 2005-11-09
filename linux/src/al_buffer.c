@@ -335,7 +335,7 @@ ALboolean alIsBuffer( ALuint bid ) {
  *
  * If value is NULL, legal NOP.
  * If buffer is not a valid buffer id, set INVALID_NAME.
- * If param is not a valid buffer param, set ILLEGAL_ENUM.
+ * If param is not a valid buffer param, set INVALID_ENUM.
  *
  */
 void alGetBufferiv( ALuint buffer, ALenum param, ALint *value ) {
@@ -406,7 +406,7 @@ void alGetBufferiv( ALuint buffer, ALenum param, ALint *value ) {
  *
  * If value is NULL, legal NOP.
  * If buffer is not a valid buffer id, set INVALID_NAME.
- * If param is not a valid buffer param, set ILLEGAL_ENUM.
+ * If param is not a valid buffer param, set INVALID_ENUM.
  */
 void alGetBufferfv( ALuint buffer, ALenum param, ALfloat *value ) {
 	AL_buffer *buf;
@@ -493,7 +493,7 @@ void alGetBufferfv( ALuint buffer, ALenum param, ALfloat *value ) {
  *
  * If value is NULL, legal NOP.
  * If buffer is not a valid buffer id, set INVALID_NAME.
- * If param is not a valid buffer param, set ILLEGAL_ENUM.
+ * If param is not a valid buffer param, set INVALID_ENUM.
  *
  * This would do conversion, if there were any non integer/boolean
  * buffer params.  But there aren't as of the time of this
@@ -525,7 +525,7 @@ void alGetBufferi( ALuint buffer, ALenum param, ALint *value )
  *
  * If value is NULL, legal NOP.
  * If buffer is not a valid buffer id, set INVALID_NAME.
- * If param is not a valid buffer param, set ILLEGAL_ENUM.
+ * If param is not a valid buffer param, set INVALID_ENUM.
  */
 void alGetBufferf( ALuint buffer, ALenum param, ALfloat *value )
 {
