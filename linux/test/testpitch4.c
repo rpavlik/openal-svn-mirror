@@ -65,7 +65,7 @@ static void init( const char *fname )
 	alGenSources( 3, chords );
 
 	for ( i = 0; i < 3; i++ ) {
-		alSourcef( chords[i], AL_GAIN_LINEAR_LOKI, 0.10 );
+		alSourcef( chords[i], AL_GAIN, 0.10 );
 		alSourcei( chords[i], AL_BUFFER, boom );
 		alSourcei( chords[i], AL_LOOPING, AL_FALSE );
 	}

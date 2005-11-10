@@ -47,7 +47,7 @@ static void init( const ALbyte *fname )
 	alGenSources( NUMSOURCES, &multis );
 
 	alSourcei( multis, AL_LOOPING, AL_FALSE );
-	alSourcef( multis, AL_GAIN_LINEAR_LOKI, 1.0 );
+	alSourcef( multis, AL_GAIN, 1.0 );
 
 	alSourceQueueBuffers( multis, 1, &boom );
 	alSourceQueueBuffers( multis, 1, &boom );

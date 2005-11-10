@@ -578,11 +578,11 @@ void alf_coning( ALuint cid,
 	}
 
 	/* set source specific gain */
-	temp = _alGetSourceParam( src, AL_GAIN_LINEAR_LOKI );
+	temp = _alGetSourceParam( src, AL_GAIN );
 	if( temp != NULL ) {
 		gain =  * (ALfloat *) temp;
 	} else {
-		_alSourceGetParamDefault( AL_GAIN_LINEAR_LOKI, &gain );
+		_alSourceGetParamDefault( AL_GAIN, &gain );
 	}
 
 	/* get source specific max distance */
@@ -866,8 +866,7 @@ void alf_da( ALuint cid,
 
 		isrel = _alGetSourceParam( src, AL_SOURCE_RELATIVE );
 		if ( isrel && *isrel ) {
-			ALfloat *gp = _alGetSourceParam(src,
-							AL_GAIN_LINEAR_LOKI);
+			ALfloat *gp = _alGetSourceParam(src, AL_GAIN);
 
 			if(gp)
 			{
@@ -902,11 +901,11 @@ void alf_da( ALuint cid,
 	}
 
 	/* set source specific gain */
-	temp = _alGetSourceParam( src, AL_GAIN_LINEAR_LOKI );
+	temp = _alGetSourceParam( src, AL_GAIN );
 	if( temp != NULL ) {
 		gain = * (ALfloat *) temp;
 	} else {
-		_alSourceGetParamDefault( AL_GAIN_LINEAR_LOKI, &gain );
+		_alSourceGetParamDefault( AL_GAIN, &gain );
 	}
 
 	/* set source specific max distance */
@@ -1192,7 +1191,7 @@ void alf_listenergain( ALuint cid,
 	void *temp;
 	ALuint i;
 
-	temp = _alGetListenerParam( cid, AL_GAIN_LINEAR_LOKI );
+	temp = _alGetListenerParam( cid, AL_GAIN );
 
 	if(temp == NULL) {
 		_alDebug( ALD_SOURCE, __FILE__, __LINE__,

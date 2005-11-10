@@ -104,7 +104,7 @@ int main( int argc, char *argv[] )
 		ALfloat gain = ( sin( i ) / 2.0 ) + .5;
 
 		fprintf( stderr, "%f\n", gain );
-		alListenerf( AL_GAIN_LINEAR_LOKI, gain );
+		alListenerf( AL_GAIN, gain );
 
 		microSleep( 800000 );
 	}

@@ -77,7 +77,7 @@ static void init( const ALbyte *fname )
 	alSourcefv( multis[0], AL_VELOCITY, zeroes );
 	alSourcefv( multis[0], AL_ORIENTATION, back );
 	alSourcei( multis[0], AL_BUFFER, boom );
-	alSourcef( multis[0], AL_GAIN_LINEAR_LOKI, 0.99 );
+	alSourcef( multis[0], AL_GAIN, 0.99 );
 	alSourcef( multis[i], AL_MAX_GAIN, 1.0 );
 
 	for ( i = 1; i < NUMSOURCES; i++ ) {
@@ -90,7 +90,7 @@ static void init( const ALbyte *fname )
 		alSourcefv( multis[i], AL_ORIENTATION, back );
 		alSourcei( multis[i], AL_BUFFER, boom );
 		alSourcef( multis[i], AL_MAX_GAIN, 0.0f );
-		alSourcef( multis[i], AL_GAIN_LINEAR_LOKI, 0.01f );
+		alSourcef( multis[i], AL_GAIN, 0.01f );
 	}
 }
 

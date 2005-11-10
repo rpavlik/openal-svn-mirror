@@ -73,7 +73,7 @@ static void init( const ALbyte *fname )
 	alGenSources( NUMSOURCES, movingSource );
 
 	for ( i = 0; i < NUMSOURCES; i++ ) {
-		alSourcef( movingSource[i], AL_GAIN_LINEAR_LOKI, 0.25 );
+		alSourcef( movingSource[i], AL_GAIN, 0.25 );
 		alSourcei( movingSource[i], AL_BUFFER, boom );
 		alSourcei( movingSource[i], AL_LOOPING, AL_TRUE );
 		alSourcef( movingSource[i], AL_PITCH, 1.00 );

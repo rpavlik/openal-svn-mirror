@@ -43,9 +43,9 @@ static void iterate( void )
 
 	}
 
-	alSourcef( movingSource, AL_GAIN_LINEAR_LOKI, newgain );
+	alSourcef( movingSource, AL_GAIN, newgain );
 
-	fprintf( stderr, "GAIN_LINEAR = %f\n", newgain );
+	fprintf( stderr, "GAIN = %f\n", newgain );
 
 	microSleep( 500000 );
 }

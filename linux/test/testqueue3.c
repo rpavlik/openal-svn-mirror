@@ -60,7 +60,7 @@ static void init( const ALbyte *fname )
 	alSourcefv( multis, AL_POSITION, position );
 	alSourcefv( multis, AL_VELOCITY, zeroes );
 	alSourcefv( multis, AL_ORIENTATION, back );
-	alSourcef( multis, AL_GAIN_LINEAR_LOKI, 1.0f );
+	alSourcef( multis, AL_GAIN, 1.0f );
 
 	alSourceQueueBuffers( multis, 1, &boom );
 	alSourceQueueBuffers( multis, 1, &boom );

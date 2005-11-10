@@ -47,22 +47,6 @@ int main( void )
 			 pregain, postgain );
 	}
 
-	alListenerf( AL_GAIN_LINEAR_LOKI, pregain );
-	alGetListenerfv( AL_GAIN_LINEAR_LOKI, &postgain );
-
-	if( postgain != pregain ) {
-		fprintf( stderr, "Listener GAIN_LINEAR f***ed up: %f vs %f\n",
-			 pregain, postgain );
-	}
-
-	alSourcef( sid, AL_GAIN_LINEAR_LOKI, pregain );
-	alGetSourcefv( sid, AL_GAIN_LINEAR_LOKI, &postgain );
-
-	if( postgain != pregain ) {
-		fprintf( stderr, "Source GAIN f***ed up: %f vs %f\n",
-			 pregain, postgain );
-	}
-
 	fprintf( stderr, "All tests okay\n" );
 
 	fflush( stderr );

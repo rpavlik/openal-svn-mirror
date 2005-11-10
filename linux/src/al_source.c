@@ -1218,9 +1218,9 @@ void alGetSourcefv( ALuint sid, ALenum param, ALfloat *values ) {
 	switch( param ) {
 		/* scalars */
 		case AL_GAIN:
+		case AL_GAIN_LINEAR_LOKI:
 		case AL_MIN_GAIN:
 		case AL_MAX_GAIN:
-		case AL_GAIN_LINEAR_LOKI:
 		case AL_CONE_INNER_ANGLE:
 		case AL_CONE_OUTER_ANGLE:
 		case AL_CONE_OUTER_GAIN:
@@ -2814,7 +2814,7 @@ static void _alInitSource( ALuint sid ) {
 	 * initialize gain
 	 */
 	src->gain.isset = AL_FALSE;
-	_alSourceGetParamDefault( AL_GAIN_LINEAR_LOKI, &src->gain.data );
+	_alSourceGetParamDefault( AL_GAIN, &src->gain.data );
 
 	src->attenuationmin.isset = AL_FALSE;
 	_alSourceGetParamDefault( AL_MIN_GAIN, &src->attenuationmin.data );

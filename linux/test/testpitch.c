@@ -65,7 +65,7 @@ static void init( const ALbyte *fname )
 
 	alGenSources( 1, &movingSource );
 
-	alSourcef( movingSource, AL_GAIN_LINEAR_LOKI, 0.40 );
+	alSourcef( movingSource, AL_GAIN, 0.40 );
 	alSourcei( movingSource, AL_BUFFER, boom );
 	alSourcei( movingSource, AL_LOOPING, AL_TRUE );
 }

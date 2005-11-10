@@ -1,3 +1,18 @@
+2005-11-10  Sven Panne  <sven.panne@aedion.de>
+
+	* ChangeLog, include/AL/alext.h, src/al_ext.c, src/al_filter.c,
+	src/al_listen.c, src/al_source.c, test/testchannel.c,
+	test/testgain.c, test/testgainlinear.c, test/testmultinothread.c,
+	test/testpitch.c, test/testpitch2.c, test/testpitch3.c,
+	test/testpitch4.c, test/testpitchnothread.c,
+	test/testpitchnothread2.c, test/testqueue.c, test/testqueue2.c,
+	test/testqueue3.c, test/testtime.c: The non-standard
+	AL_GAIN_LINEAR_LOKI token seems to behave exactly as the standard
+	AL_GAIN, at least in the current code base. Therefore the former
+	has been deprecated in the extension header and is not used
+	internally anymore. Nevertheless, for legacy reasons it is still
+	recognized in getters and setters.
+
 2005-11-09  Sven Panne  <sven.panne@aedion.de>
 
 	* src/al_buffer.c, src/al_ext.c, src/al_source.c: Removed

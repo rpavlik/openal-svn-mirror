@@ -723,9 +723,6 @@ ALenum alGetEnumValue( const ALchar *ename ) {
 		return AL_GAIN;
 	}
 
-	if(ustrcmp("AL_GAIN_LINEAR_LOKI", ename) == 0) {
-		return AL_GAIN_LINEAR_LOKI;
-	}
 #ifdef LINUX_AL
 	if(ustrcmp("AL_BYTE_LOKI", ename) == 0) {
 		return AL_BYTE_LOKI;

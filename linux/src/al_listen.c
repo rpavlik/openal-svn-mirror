@@ -65,10 +65,8 @@ void alListenerf( ALenum param, ALfloat value ) {
 
 	/* check range */
 	switch( param ) {
-		case AL_GAIN_LINEAR_LOKI:
-			inrange = _alCheckRangef(value, 0.0f, 1.0f);
-			break;
 		case AL_GAIN:
+		case AL_GAIN_LINEAR_LOKI:
 			inrange = _alCheckRangef(value, 0.0f, 1.0f);
 			break;
 		default:
@@ -90,10 +88,8 @@ void alListenerf( ALenum param, ALfloat value ) {
 	}
 
 	switch( param ) {
-		case AL_GAIN_LINEAR_LOKI:
-			dc->listener.Gain = value;
-			break;
 		case AL_GAIN:
+		case AL_GAIN_LINEAR_LOKI:
 			dc->listener.Gain = value;
 			break;
 		default:
@@ -305,8 +301,8 @@ void alGetListenerfv( ALenum param, ALfloat *values ) {
 	ALsizei numarguments = 1;
 
 	switch( param ) {
-		case AL_GAIN_LINEAR_LOKI:
 		case AL_GAIN:
+		case AL_GAIN_LINEAR_LOKI:
 			/* only one float */
 			numarguments = 1;
 			break;
@@ -376,7 +372,7 @@ void alGetListenerfv( ALenum param, ALfloat *values ) {
 	 */
 	switch(param) {
 		case AL_GAIN:
-			fv = _alDCGetListenerParam( AL_GAIN_LINEAR_LOKI );
+			fv = _alDCGetListenerParam( AL_GAIN );
 			if( fv == NULL ) {
 				values[0] = 1.0f;
 			} else {

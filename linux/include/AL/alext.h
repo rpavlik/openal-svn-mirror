@@ -28,17 +28,8 @@ extern "C" {
 /**
  * token extensions, base 0x20000
  */
-/**
- * Indicate the gain (volume amplification) applied, in a
- * normalized linear scale.  This affects the value retrieved
- * by AL_GAIN.
- *
- * Type:   ALfloat.
- * Range:  ]0.0-  ]
- * A value of 1.0 means un-attenuated/unchanged.
- * A value of 0.0 is  interpreted as zero volume - the channel
- *  is effectively disabled.
- */
+
+/* deprecated, use AL_GAIN */
 #define AL_GAIN_LINEAR_LOKI                      0x20000
 
 /*
