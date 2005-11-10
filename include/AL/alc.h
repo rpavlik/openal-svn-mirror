@@ -26,10 +26,14 @@ extern "C" {
  #pragma export on
 #endif
 
-/* The ALCAPI, and ALCAPIENTRY macros are deprecated, but are included for applications porting code
-   from AL 1.0 */
+/*
+ * The ALCAPI, ALCAPIENTRY, and ALC_INVALID macros are deprecated, but are
+ * included for applications porting code from AL 1.0
+ */
 #define ALCAPI ALC_API
 #define ALCAPIENTRY ALC_APIENTRY
+#define ALC_INVALID 0
+
 
 #define ALC_VERSION_0_1         1
 
@@ -78,9 +82,6 @@ typedef void ALCvoid;
 
 
 /* Enumerant values begin at column 50. No tabs. */
-
-/* bad value */
-#define ALC_INVALID                              0
 
 /* Boolean False. */
 #define ALC_FALSE                                0

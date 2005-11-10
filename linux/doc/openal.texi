@@ -645,13 +645,13 @@ or NULL on error.  The context is associated with the passed device and
 uses it to do its rendering.
 
 @code{attrlist} is usually @code{NULL}, but you can pass it an integer array
-terminated by @code{ALC_INVALID} in alc enum / integer pairs.
+terminated by zero in alc enum / integer pairs.
 
 @lisp
 	int attrlist[] = @{ ALC_SYNC, AL_TRUE,
 			   ALC_SOURCES, 100,
 			   ALC_FREQUENCY, 44100,
-			   ALC_INVALID @};
+			   0 @};
 	ALCdevice *dev = alcOpenDevice( NULL );
 
 	ALCcontext *context = alcCreateContext( dev, attrlist );
@@ -1364,7 +1364,7 @@ static void init( void ) @{
 int main( int argc, char* argv[] ) @{
 	ALCdevice *dev;
         int attrlist[] = @{ ALC_FREQUENCY, 22050,
-                            ALC_INVALID @};
+                            0 @};
         time_t shouldend;
         ALint state = AL_INITIAL;
 

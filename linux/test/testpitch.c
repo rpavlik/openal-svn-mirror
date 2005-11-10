@@ -75,7 +75,7 @@ int main( int argc, char *argv[] )
 	ALCdevice *device;
 	time_t shouldend;
 	int attributeList[] = { ALC_FREQUENCY, 22050,
-		ALC_INVALID
+		0
 	};
 
 	device = alcOpenDevice( NULL );

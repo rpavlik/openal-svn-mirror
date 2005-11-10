@@ -202,8 +202,6 @@ unsigned int g_ovSize;
 
 static ALenums enumeration[]={
 	// Types
-	{ (ALchar *)"AL_INVALID",                           AL_INVALID                          },
-	{ (ALchar *)"ALC_INVALID",						    ALC_INVALID							},
 	{ (ALchar *)"AL_NONE",							    AL_NONE								},
 	{ (ALchar *)"AL_FALSE",							    AL_FALSE							},
 	{ (ALchar *)"ALC_FALSE",						    ALC_FALSE							},

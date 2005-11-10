@@ -102,7 +102,7 @@ int main( int argc, char *argv[] )
 {
 	ALCdevice *device;
 	int attributeList[] = { ALC_FREQUENCY, 44100,
-		ALC_INVALID
+		0
 	};
 	time_t start;
 	int i;

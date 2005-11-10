@@ -52,7 +52,7 @@ int main( int argc, char *argv[] )
 {
 	ALCdevice *device;
 	int attributeList[] = { ALC_FREQUENCY, 22050,
-		ALC_INVALID, 0
+		0
 	};
 	void *data = NULL;
 	struct stat sbuf;

@@ -856,10 +856,6 @@ ALenum alGetEnumValue( const ALchar *ename ) {
 		return AL_DOPPLER_VELOCITY;
 	}
 
-	if(ustrcmp("ALC_INVALID", ename) == 0) {
-		return ALC_INVALID;
-	}
-
 	if(ustrcmp("ALC_FREQUENCY", ename) == 0) {
 		return ALC_FREQUENCY;
 	}
@@ -936,10 +932,5 @@ ALenum alGetEnumValue( const ALchar *ename ) {
 		return ALC_CAPTURE_SAMPLES;
 	}
 
-#if !AL_PURE_API
-	if(ustrcmp("AL_INVALID", ename) == 0) {
-		return AL_INVALID;
-	}
-#endif
 	return 0;
 }

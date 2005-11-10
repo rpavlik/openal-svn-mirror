@@ -1,5 +1,12 @@
 2005-11-10  Sven Panne  <sven.panne@aedion.de>
 
+	* doc/openal.texi, src/al_ext.c, src/alc/alc_context.c,
+	test/testcallback.c, test/testchannel.c, test/testchannel2.c,
+	test/testmulticontext.c, test/testmulticontext2.c,
+	test/testpitch.c, test/testpitch2.c, test/testpitch3.c,
+	test/testpitch4.c, linux/test/teststartstop.c: Do not use
+	AL_INVALID and ALC_INVALID, they are not in the 1.1 spec.
+
 	* ChangeLog, include/AL/alext.h, src/al_ext.c, src/al_filter.c,
 	src/al_listen.c, src/al_source.c, test/testchannel.c,
 	test/testgain.c, test/testgainlinear.c, test/testmultinothread.c,

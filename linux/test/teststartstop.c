@@ -85,7 +85,7 @@ int main( int argc, char *argv[] )
 #ifdef SYNCHRONIZED
 		ALC_SYNC, AL_TRUE,
 #endif
-		ALC_INVALID
+		0
 	};
 	time_t shouldend;
 

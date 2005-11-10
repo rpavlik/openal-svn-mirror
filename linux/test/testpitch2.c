@@ -73,7 +73,7 @@ int main( int argc, char *argv[] )
 {
 	ALCdevice *device;
 	int attributeList[] = { ALC_FREQUENCY, DEFFREQ,
-		ALC_INVALID
+		0
 	};
 	char *musicitr = musicstr;
 	ALfloat pitch = 1.0;

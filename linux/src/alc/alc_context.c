@@ -436,7 +436,7 @@ void alcSuspendContext( ALCcontext *alcHandle )
  *
  * Allocates, initialiaes, and returns an AL_context handle, suitable for
  * passing to other alc functions.  Uses dev as the write device for the
- * context.  attrlist is an int array, ALC_INVALID terminated, that contains
+ * context.  attrlist is an int array, zero terminated, that contains
  * attribute/value pairs used to initialize the context.
  *
  * We use a meet-or-exceed system here.  If any attribute in attrlist cannot
@@ -627,7 +627,7 @@ void _alcSetContext(const ALCint *attrlist, ALuint cid, AL_device *dev ) {
 		void *t = 0;
 
 		rdr.key = *attrlist++;
-		if(rdr.key != ALC_INVALID)
+		if(rdr.key != 0)
 		{
 			rdr.val = *attrlist++;
 		}
@@ -671,7 +671,7 @@ void _alcSetContext(const ALCint *attrlist, ALuint cid, AL_device *dev ) {
 					cc->should_sync = AL_FALSE;
 				}
 				break;
-			case ALC_INVALID:
+			case 0:
 				reading_keys = AL_FALSE;
 				break;
 			default:
