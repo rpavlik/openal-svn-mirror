@@ -1,5 +1,10 @@
 2005-11-11  Sven Panne  <sven.panne@aedion.de>
 
+	* src/al_state.c: Do not use al_state.h anymore. Made the internal
+	getters static.
+
+	* src/al_state.h: Removed.
+
 	* src/al_ext.c, src/alc/alc_context.c: Overhauled
 	alcGetProcessAddress and alGetProcAddress.
 

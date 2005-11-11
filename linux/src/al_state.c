@@ -15,10 +15,14 @@
 #include "al_types.h"
 #include "al_error.h"
 #include "al_main.h"
-#include "al_state.h"
 #include "al_ext.h"
 
 #include "alc/alc_error.h"
+
+static void _alGetBooleanv( ALenum param, ALboolean *bv );
+static void _alGetIntegerv( ALenum param, ALint *iv );
+static void _alGetDoublev( ALenum param, ALdouble *dv );
+static void _alGetFloatv( ALenum param, ALfloat *fv );
 
 /** State retrieval. */
 ALboolean alGetBoolean( ALenum param )
@@ -120,7 +124,7 @@ void alGetDoublev(ALenum param, ALdouble *dv ) {
  *
  * Non locking version of alGetFloatv.
  */
-void _alGetFloatv( ALenum param, ALfloat *fv ) {
+static void _alGetFloatv( ALenum param, ALfloat *fv ) {
 	AL_context *cc;
 
 	cc = _alcDCGetContext();
@@ -151,7 +155,7 @@ void _alGetFloatv( ALenum param, ALfloat *fv ) {
  *
  * Non locking version of alGetBooleanv.
  */
-void _alGetBooleanv(UNUSED(ALenum param), UNUSED(ALboolean *bv)) {
+static void _alGetBooleanv(UNUSED(ALenum param), UNUSED(ALboolean *bv)) {
 	_alStub("alGetBooleanv");
 
 	/* FIXME: don't set error if no current context */
@@ -165,7 +169,7 @@ void _alGetBooleanv(UNUSED(ALenum param), UNUSED(ALboolean *bv)) {
  *
  * Non locking version of alGetIntegerv
  */
-void _alGetIntegerv(UNUSED(ALenum param), UNUSED(ALint *iv)) {
+static void _alGetIntegerv(UNUSED(ALenum param), UNUSED(ALint *iv)) {
 	AL_context *cc;
 
 	cc = _alcDCGetContext();
@@ -194,7 +198,7 @@ void _alGetIntegerv(UNUSED(ALenum param), UNUSED(ALint *iv)) {
  * Non locking version of alGetDoublev
  *
  */
-void _alGetDoublev(ALenum param, ALdouble *dv) {
+static void _alGetDoublev(ALenum param, ALdouble *dv) {
 	AL_context *cc;
 
 	cc = _alcDCGetContext();
