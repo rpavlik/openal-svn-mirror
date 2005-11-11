@@ -1,5 +1,8 @@
 2005-11-11  Sven Panne  <sven.panne@aedion.de>
 
+	* src/al_able.c: Set an AL_INVALID_OPERATION when there is no
+	current context to ease debugging.
+
 	* src/al_able.c, src/al_distance.c, src/al_state.c: What to do
 	exactly regarding error handling when there is no current context
 	is a little bit of a dark corner in the spec. But under every

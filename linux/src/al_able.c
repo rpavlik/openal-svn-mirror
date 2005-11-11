@@ -9,7 +9,6 @@
 
 #include <AL/al.h>
 
-/* #include "al_main.h" */
 #include "al_error.h"
 
 /*
@@ -20,6 +19,10 @@
  */
 void alEnable( ALenum param )
 {
+	if (alcGetCurrentContext() == NULL) {
+		_alDCSetError( AL_INVALID_OPERATION );
+	}
+
 	_alcDCLockContext();
 	/* ToDo: We should somehow hook in the extension mechanism here */
 	switch (param) {
@@ -38,6 +41,10 @@ void alEnable( ALenum param )
  */
 void alDisable( ALenum param )
 {
+	if (alcGetCurrentContext() == NULL) {
+		_alDCSetError( AL_INVALID_OPERATION );
+	}
+
 	_alcDCLockContext();
 	/* ToDo: We should somehow hook in the extension mechanism here */
 	switch (param) {
@@ -58,6 +65,10 @@ void alDisable( ALenum param )
  */
 ALboolean alIsEnabled( ALenum param )
 {
+	if (alcGetCurrentContext() == NULL) {
+		_alDCSetError( AL_INVALID_OPERATION );
+	}
+
 	_alcDCLockContext();
 	/* ToDo: We should somehow hook in the extension mechanism here */
 	switch (param) {
