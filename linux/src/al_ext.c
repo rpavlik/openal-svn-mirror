@@ -660,277 +660,144 @@ static void _alExtPushFiniFunc( void (*func)(void) ) {
 }
 #endif /* NODLOPEN */
 
+#define DEFINE_AL_ENUM(e) { #e, e }
+
+typedef struct
+{
+	const ALchar *name;
+	ALenum value;
+} enumNameValuePair;
+
+enumNameValuePair alEnums[] = {
+	/* this has to be sorted! */
+	DEFINE_AL_ENUM(AL_BITS),
+	DEFINE_AL_ENUM(AL_BUFFER),
+	DEFINE_AL_ENUM(AL_BUFFERS_PROCESSED),
+	DEFINE_AL_ENUM(AL_BUFFERS_QUEUED),
+	DEFINE_AL_ENUM(AL_BYTE_OFFSET),
+	DEFINE_AL_ENUM(AL_CHANNELS),
+	DEFINE_AL_ENUM(AL_CHANNEL_MASK),
+	DEFINE_AL_ENUM(AL_CONE_INNER_ANGLE),
+	DEFINE_AL_ENUM(AL_CONE_OUTER_ANGLE),
+	DEFINE_AL_ENUM(AL_CONE_OUTER_GAIN),
+	DEFINE_AL_ENUM(AL_DIRECTION),
+	DEFINE_AL_ENUM(AL_DISTANCE_MODEL),
+	DEFINE_AL_ENUM(AL_DOPPLER_FACTOR),
+	DEFINE_AL_ENUM(AL_DOPPLER_VELOCITY),
+	DEFINE_AL_ENUM(AL_EXPONENT_DISTANCE),
+	DEFINE_AL_ENUM(AL_EXPONENT_DISTANCE_CLAMPED),
+	DEFINE_AL_ENUM(AL_EXTENSIONS),
+	DEFINE_AL_ENUM(AL_FALSE),
+	DEFINE_AL_ENUM(AL_FORMAT_MONO16),
+	DEFINE_AL_ENUM(AL_FORMAT_MONO8),
+	DEFINE_AL_ENUM(AL_FORMAT_STEREO16),
+	DEFINE_AL_ENUM(AL_FORMAT_STEREO8),
+	DEFINE_AL_ENUM(AL_FREQUENCY),
+	DEFINE_AL_ENUM(AL_GAIN),
+	DEFINE_AL_ENUM(AL_INITIAL),
+	DEFINE_AL_ENUM(AL_INVALID_ENUM),
+	DEFINE_AL_ENUM(AL_INVALID_NAME),
+	DEFINE_AL_ENUM(AL_INVALID_OPERATION),
+	DEFINE_AL_ENUM(AL_INVALID_VALUE),
+	DEFINE_AL_ENUM(AL_INVERSE_DISTANCE),
+	DEFINE_AL_ENUM(AL_INVERSE_DISTANCE_CLAMPED),
+	DEFINE_AL_ENUM(AL_LINEAR_DISTANCE),
+	DEFINE_AL_ENUM(AL_LINEAR_DISTANCE_CLAMPED),
+	DEFINE_AL_ENUM(AL_LOOPING),
+	DEFINE_AL_ENUM(AL_MAX_DISTANCE),
+	DEFINE_AL_ENUM(AL_MAX_GAIN),
+	DEFINE_AL_ENUM(AL_MIN_GAIN),
+	DEFINE_AL_ENUM(AL_NONE),
+	DEFINE_AL_ENUM(AL_NO_ERROR),
+	DEFINE_AL_ENUM(AL_ORIENTATION),
+	DEFINE_AL_ENUM(AL_OUT_OF_MEMORY),
+	DEFINE_AL_ENUM(AL_PAUSED),
+	DEFINE_AL_ENUM(AL_PENDING),
+	DEFINE_AL_ENUM(AL_PITCH),
+	DEFINE_AL_ENUM(AL_PLAYING),
+	DEFINE_AL_ENUM(AL_POSITION),
+	DEFINE_AL_ENUM(AL_PROCESSED),
+	DEFINE_AL_ENUM(AL_REFERENCE_DISTANCE),
+	DEFINE_AL_ENUM(AL_RENDERER),
+	DEFINE_AL_ENUM(AL_ROLLOFF_FACTOR),
+	DEFINE_AL_ENUM(AL_SAMPLE_OFFSET),
+	DEFINE_AL_ENUM(AL_SEC_OFFSET),
+	DEFINE_AL_ENUM(AL_SIZE),
+	DEFINE_AL_ENUM(AL_SOURCE_RELATIVE),
+	DEFINE_AL_ENUM(AL_SOURCE_STATE),
+	DEFINE_AL_ENUM(AL_SOURCE_TYPE),
+	DEFINE_AL_ENUM(AL_SPEED_OF_SOUND),
+	DEFINE_AL_ENUM(AL_STATIC),
+	DEFINE_AL_ENUM(AL_STOPPED),
+	DEFINE_AL_ENUM(AL_STREAMING),
+	DEFINE_AL_ENUM(AL_TRUE),
+	DEFINE_AL_ENUM(AL_UNDETERMINED),
+	DEFINE_AL_ENUM(AL_UNUSED),
+	DEFINE_AL_ENUM(AL_VELOCITY),
+	DEFINE_AL_ENUM(AL_VENDOR),
+	DEFINE_AL_ENUM(AL_VERSION)
+};
+
+#undef DEFINE_AL_ENUM
+
+static int
+compareEnumNameValuePairs(const void *s1, const void *s2)
+{
+	const enumNameValuePair *p1 = (const enumNameValuePair*)s1;
+	const enumNameValuePair *p2 = (const enumNameValuePair*)s2;
+	return strcmp((const char*)(p1->name), (const char*)(p2->name));
+}
+
+static ALboolean
+getStandardEnumValue(ALenum *value, const ALchar *enumName)
+{
+	enumNameValuePair key = { enumName, 0 };
+	enumNameValuePair *p = bsearch(&key, alEnums,
+				       sizeof(alEnums) / sizeof(alEnums[0]),
+				       sizeof(alEnums[0]),
+				       compareEnumNameValuePairs);
+	if (p == NULL) {
+		return AL_FALSE;
+	}
+	*value = p->value;
+	return AL_TRUE;
+}
+
+static ALboolean
+getExtensionEnumValue( ALenum *value, const ALchar *enumName )
+{
+	/* ToDo: Hook in our extension loader somehow */
+	const char *name = (const char*)enumName;
+	if (strcmp(name, "AL_BYTE_LOKI")) {
+		*value = AL_BYTE_LOKI;
+		return AL_TRUE;
+	} else if (strcmp(name, "AL_FORMAT_QUAD16_LOKI")) {
+		*value = AL_FORMAT_QUAD16_LOKI;
+		return AL_TRUE;
+	} else if (strcmp(name, "AL_FORMAT_QUAD8_LOKI")) {
+		*value = AL_FORMAT_QUAD8_LOKI;
+		return AL_TRUE;
+	} else {
+		return AL_FALSE;
+	}
+}
+
 /*
- * alGetEnumValue( const ALubyte *ename )
+ * alGetEnumValue( const ALubyte *enumName )
  *
  * Returns the integer value of an enumeration (usually an extension)
  * with the name ename.
  */
-ALenum alGetEnumValue( const ALchar *ename ) {
-	if(ustrcmp("AL_FALSE", ename) == 0) {
-		return AL_FALSE;
-	}
-
-	if(ustrcmp("AL_TRUE", ename) == 0) {
-		return AL_TRUE;
-	}
-
-	if(ustrcmp("AL_SOURCE_TYPE", ename) == 0) {
-		return AL_SOURCE_TYPE;
-	}
-
-	if(ustrcmp("AL_SOURCE_RELATIVE", ename) == 0) {
-		return AL_SOURCE_RELATIVE;
-	}
-#ifdef LINUX_AL
-	if(ustrcmp("AL_STREAMING", ename) == 0) {
-		return AL_STREAMING;
-	}
-#endif
-	if(ustrcmp("AL_CONE_INNER_ANGLE", ename) == 0) {
-		return AL_CONE_INNER_ANGLE;
-	}
-
-	if(ustrcmp("AL_CONE_OUTER_ANGLE", ename) == 0) {
-		return AL_CONE_OUTER_ANGLE;
-	}
-
-	if(ustrcmp("AL_PITCH", ename) == 0) {
-		return AL_PITCH;
-	}
-
-	if(ustrcmp("AL_POSITION", ename) == 0) {
-		return AL_POSITION;
-	}
-
-	if(ustrcmp("AL_DIRECTION", ename) == 0) {
-		return AL_DIRECTION;
-	}
-
-	if(ustrcmp("AL_VELOCITY", ename) == 0) {
-		return AL_VELOCITY;
-	}
-
-	if(ustrcmp("AL_LOOPING", ename) == 0) {
-		return AL_LOOPING;
-	}
-
-	if(ustrcmp("AL_BUFFER", ename) == 0) {
-		return AL_BUFFER;
-	}
-
-	if(ustrcmp("AL_GAIN", ename) == 0) {
-		return AL_GAIN;
-	}
-
-#ifdef LINUX_AL
-	if(ustrcmp("AL_BYTE_LOKI", ename) == 0) {
-		return AL_BYTE_LOKI;
-	}
-#endif
-	if(ustrcmp("AL_MIN_GAIN", ename) == 0) {
-		return AL_MIN_GAIN;
-	}
-
-	if(ustrcmp("AL_MAX_GAIN", ename) == 0) {
-		return AL_MAX_GAIN;
-	}
-
-	if(ustrcmp("AL_BUFFERS_QUEUED", ename) == 0) {
-		return AL_BUFFERS_QUEUED;
-	}
-
-	if(ustrcmp("AL_BUFFERS_PROCESSED", ename) == 0) {
-		return AL_BUFFERS_PROCESSED;
-	}
-
-	if(ustrcmp("AL_ORIENTATION", ename) == 0) {
-		return AL_ORIENTATION;
-	}
-
-	if(ustrcmp("AL_SOURCE_STATE", ename) == 0) {
-		return AL_SOURCE_STATE;
-	}
-
-	if(ustrcmp("AL_INITIAL", ename) == 0) {
-		return AL_INITIAL;
-	}
-
-	if(ustrcmp("AL_PLAYING", ename) == 0) {
-		return AL_PLAYING;
-	}
-
-	if(ustrcmp("AL_PAUSED", ename) == 0) {
-		return AL_PAUSED;
-	}
-
-	if(ustrcmp("AL_STOPPED", ename) == 0) {
-		return AL_STOPPED;
-	}
-
-	if(ustrcmp("AL_FORMAT_MONO8", ename) == 0) {
-		return AL_FORMAT_MONO8;
-	}
-
-	if(ustrcmp("AL_FORMAT_MONO16", ename) == 0) {
-		return AL_FORMAT_MONO16;
-	}
-
-	if(ustrcmp("AL_FORMAT_STEREO8", ename) == 0) {
-		return AL_FORMAT_STEREO8;
-	}
-
-	if(ustrcmp("AL_FORMAT_STEREO16", ename) == 0) {
-		return AL_FORMAT_STEREO16;
-	}
-
-	if(ustrcmp("AL_FORMAT_QUAD8_LOKI", ename) == 0) {
-		return AL_FORMAT_QUAD8_LOKI;
-	}
-
-	if(ustrcmp("AL_FORMAT_QUAD16_LOKI", ename) == 0) {
-		return AL_FORMAT_QUAD16_LOKI;
-	}
-
-	if(ustrcmp("AL_FREQUENCY", ename) == 0) {
-		return AL_FREQUENCY;
-	}
-
-	if(ustrcmp("AL_BITS", ename) == 0) {
-		return AL_BITS;
-	}
-
-	if(ustrcmp("AL_CHANNELS", ename) == 0) {
-		return AL_CHANNELS;
-	}
-
-	if(ustrcmp("AL_SIZE", ename) == 0) {
-		return AL_SIZE;
-	}
-
-	if(ustrcmp("AL_NO_ERROR", ename) == 0) {
-		return AL_NO_ERROR;
-	}
-
-	if(ustrcmp("AL_INVALID_NAME", ename) == 0) {
-		return AL_INVALID_NAME;
-	}
-
-	if(ustrcmp("AL_INVALID_ENUM", ename) == 0) {
-		return AL_INVALID_ENUM;
-	}
-
-	if(ustrcmp("AL_INVALID_VALUE", ename) == 0) {
-		return AL_INVALID_VALUE;
-	}
-
-	if(ustrcmp("AL_INVALID_OPERATION", ename) == 0) {
-		return AL_INVALID_OPERATION;
-	}
-
-	if(ustrcmp("AL_OUT_OF_MEMORY", ename) == 0) {
-		return AL_OUT_OF_MEMORY;
-	}
-
-	if(ustrcmp("AL_VENDOR", ename) == 0) {
-		return AL_VENDOR;
-	}
-
-	if(ustrcmp("AL_VERSION", ename) == 0) {
-		return AL_VERSION;
-	}
-
-	if(ustrcmp("AL_RENDERER", ename) == 0) {
-		return AL_RENDERER;
-	}
-
-	if(ustrcmp("AL_EXTENSIONS", ename) == 0) {
-		return AL_EXTENSIONS;
-	}
-
-	if(ustrcmp("AL_DOPPLER_FACTOR", ename) == 0) {
-		return AL_DOPPLER_FACTOR;
-	}
-
-	if(ustrcmp("AL_DOPPLER_VELOCITY", ename) == 0) {
-		return AL_DOPPLER_VELOCITY;
-	}
-
-	if(ustrcmp("ALC_FREQUENCY", ename) == 0) {
-		return ALC_FREQUENCY;
-	}
-
-	if(ustrcmp("ALC_REFRESH", ename) == 0) {
-		return ALC_REFRESH;
-	}
-
-	if(ustrcmp("ALC_SYNC", ename) == 0) {
-		return ALC_SYNC;
-	}
-
-	if(ustrcmp("ALC_NO_ERROR", ename) == 0) {
-		return ALC_NO_ERROR;
-	}
-
-	if(ustrcmp("ALC_INVALID_DEVICE", ename) == 0) {
-		return ALC_INVALID_DEVICE;
-	}
-
-	if(ustrcmp("ALC_INVALID_CONTEXT", ename) == 0) {
-		return ALC_INVALID_CONTEXT;
-	}
-
-	if(ustrcmp("ALC_INVALID_ENUM", ename) == 0) {
-		return ALC_INVALID_ENUM;
-	}
-
-	if(ustrcmp("ALC_INVALID_VALUE", ename) == 0) {
-		return ALC_INVALID_VALUE;
-	}
-
-	if(ustrcmp("ALC_OUT_OF_MEMORY", ename) == 0) {
-		return ALC_OUT_OF_MEMORY;
-	}
-
-	if(ustrcmp("ALC_DEFAULT_DEVICE_SPECIFIER", ename) == 0) {
-		return ALC_DEFAULT_DEVICE_SPECIFIER;
-	}
-
-	if(ustrcmp("ALC_DEVICE_SPECIFIER", ename) == 0) {
-		return ALC_DEVICE_SPECIFIER;
-	}
-
-	if(ustrcmp("ALC_EXTENSIONS", ename) == 0) {
-		return ALC_EXTENSIONS;
-	}
-
-	if(ustrcmp("ALC_MAJOR_VERSION", ename) == 0) {
-		return ALC_MAJOR_VERSION;
-	}
-
-	if(ustrcmp("ALC_MINOR_VERSION", ename) == 0) {
-		return ALC_MINOR_VERSION;
-	}
-
-	if(ustrcmp("ALC_ATTRIBUTES_SIZE", ename) == 0) {
-		return ALC_ATTRIBUTES_SIZE;
-	}
-
-	if(ustrcmp("ALC_ALL_ATTRIBUTES", ename) == 0) {
-		return ALC_ALL_ATTRIBUTES;
-	}
-
-	if(ustrcmp("ALC_FALSE", ename) == 0) {
-		return ALC_FALSE;
-	}
-
-	if(ustrcmp("ALC_TRUE", ename) == 0) {
-		return ALC_TRUE;
-	}
-
-	if(ustrcmp("ALC_CAPTURE_SAMPLES", ename) == 0) {
-		return ALC_CAPTURE_SAMPLES;
-	}
-
+ALenum
+alGetEnumValue( const ALchar *enumName )
+{
+	ALenum value;
+	if (getStandardEnumValue(&value, enumName) == AL_TRUE) {
+		return value;
+	}
+	if (getExtensionEnumValue(&value, enumName) == AL_TRUE) {
+		return value;
+	}
+	_alDCSetError( AL_INVALID_VALUE );
 	return 0;
 }

@@ -1410,9 +1410,81 @@ ALCboolean alcIsExtensionPresent( UNUSED(ALCdevice *device), const ALCchar *extN
  * Returns the alc extension function named funcName, or NULL if it doesn't
  * exist.
  */
-ALCvoid *alcGetProcAddress( UNUSED(ALCdevice *device), const ALCchar *funcName )
+void *
+alcGetProcAddress( UNUSED(ALCdevice *device), const ALCchar *funcName )
 {
-	return alGetProcAddress( funcName );
+	/*
+	 * ToDo: querying alGetEnumValue is not really correct, but currently
+	 * extensions are only reported through this.
+	 */
+	return alGetProcAddress( (const ALchar *)funcName );
+}
+
+#define DEFINE_ALC_ENUM(e) { #e, e }
+
+typedef struct
+{
+	const ALCchar *name;
+	ALCenum value;
+} enumNameValuePair;
+
+enumNameValuePair alcEnums[] = {
+	/* this has to be sorted! */
+	DEFINE_ALC_ENUM(ALC_ALL_ATTRIBUTES),
+	DEFINE_ALC_ENUM(ALC_ATTRIBUTES_SIZE),
+	DEFINE_ALC_ENUM(ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER),
+	DEFINE_ALC_ENUM(ALC_CAPTURE_DEVICE_SPECIFIER),
+	DEFINE_ALC_ENUM(ALC_CAPTURE_SAMPLES),
+	DEFINE_ALC_ENUM(ALC_DEFAULT_DEVICE_SPECIFIER),
+	DEFINE_ALC_ENUM(ALC_DEVICE_SPECIFIER),
+	DEFINE_ALC_ENUM(ALC_EXTENSIONS),
+	DEFINE_ALC_ENUM(ALC_FALSE),
+	DEFINE_ALC_ENUM(ALC_FREQUENCY),
+	DEFINE_ALC_ENUM(ALC_INVALID_CONTEXT),
+	DEFINE_ALC_ENUM(ALC_INVALID_DEVICE),
+	DEFINE_ALC_ENUM(ALC_INVALID_ENUM),
+	DEFINE_ALC_ENUM(ALC_INVALID_VALUE),
+	DEFINE_ALC_ENUM(ALC_MAJOR_VERSION),
+	DEFINE_ALC_ENUM(ALC_MINOR_VERSION),
+	DEFINE_ALC_ENUM(ALC_MONO_SOURCES),
+	DEFINE_ALC_ENUM(ALC_NO_ERROR),
+	DEFINE_ALC_ENUM(ALC_OUT_OF_MEMORY),
+	DEFINE_ALC_ENUM(ALC_REFRESH),
+	DEFINE_ALC_ENUM(ALC_STEREO_SOURCES),
+	DEFINE_ALC_ENUM(ALC_SYNC),
+	DEFINE_ALC_ENUM(ALC_TRUE)
+};
+
+#undef DEFINE_ALC_ENUM
+
+static int
+compareEnumNameValuePairs(const void *s1, const void *s2)
+{
+	const enumNameValuePair *p1 = (const enumNameValuePair*)s1;
+	const enumNameValuePair *p2 = (const enumNameValuePair*)s2;
+	return strcmp((const char*)(p1->name), (const char*)(p2->name));
+}
+
+static ALCboolean
+getStandardEnumValue(ALCenum *value, const ALCchar *enumName)
+{
+	enumNameValuePair key = { enumName, 0 };
+	enumNameValuePair *p = bsearch(&key, alcEnums,
+				       sizeof(alcEnums) / sizeof(alcEnums[0]),
+				       sizeof(alcEnums[0]),
+				       compareEnumNameValuePairs);
+	if (p == NULL) {
+		return ALC_FALSE;
+	}
+	*value = p->value;
+	return ALC_TRUE;
+}
+
+static ALCboolean
+getExtensionEnumValue( UNUSED(ALCenum *value), UNUSED(ALCdevice *device), UNUSED(const ALCchar *enumName) )
+{
+	/* ToDo: Hook in our extension loader somehow */
+	return ALC_FALSE;
 }
 
 /*
@@ -1420,8 +1492,18 @@ ALCvoid *alcGetProcAddress( UNUSED(ALCdevice *device), const ALCchar *funcName )
  *
  * Returns enum value for enumName.
  */
-ALCenum alcGetEnumValue( UNUSED(ALCdevice *device), const ALCchar *enumName ) {
-	return alGetEnumValue( enumName );
+ALCenum
+alcGetEnumValue( ALCdevice *device, const ALCchar *enumName )
+{
+	ALCenum value;
+	if (getStandardEnumValue(&value, enumName) == ALC_TRUE) {
+		return value;
+	}
+	if (getExtensionEnumValue(&value, device, enumName) == ALC_TRUE) {
+		return value;
+	}
+	_alcSetError( ALC_INVALID_VALUE );
+	return 0;
 }
 
 ALCdevice *alcGetContextsDevice(ALCcontext *handle)

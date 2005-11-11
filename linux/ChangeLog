@@ -1,5 +1,8 @@
 2005-11-11  Sven Panne  <sven.panne@aedion.de>
 
+	* src/al_ext.c, src/alc/alc_context.c: Overhauled alcGetEnumValue
+	and alGetEnumValue.
+
 	* doc/openal.texi: Added a tiny note about AL_BYTE_LOKI.
 
 2005-11-10  Sven Panne  <sven.panne@aedion.de>
