@@ -9,7 +9,7 @@
 
 #include <AL/al.h>
 
-#include "al_main.h"
+/* #include "al_main.h" */
 #include "al_error.h"
 
 /*
@@ -18,11 +18,14 @@
  * Enables param if possible for the current context.  If param does not
  * specify a valid enabling token, AL_INVALID_ENUM is set.
  */
-void alEnable( UNUSED(ALenum param) )
+void alEnable( ALenum param )
 {
 	_alcDCLockContext();
-	if(_alcDCGetContext() != NULL) {
+	/* ToDo: We should somehow hook in the extension mechanism here */
+	switch (param) {
+	default:
 		_alDCSetError( AL_INVALID_ENUM );
+		break;
 	}
 	_alcDCUnlockContext();
 }
@@ -33,11 +36,14 @@ void alEnable( UNUSED(ALenum param) )
  * Disables param if possible for the current context.  If param does not
  * specify a valid enabling token, AL_INVALID_ENUM is set.
  */
-void alDisable( UNUSED(ALenum param) )
+void alDisable( ALenum param )
 {
 	_alcDCLockContext();
-	if(_alcDCGetContext() != NULL) {
+	/* ToDo: We should somehow hook in the extension mechanism here */
+	switch (param) {
+	default:
 		_alDCSetError( AL_INVALID_ENUM );
+		break;
 	}
 	_alcDCUnlockContext();
 }
@@ -50,11 +56,14 @@ void alDisable( UNUSED(ALenum param) )
  *
  * if param is not a valid enable/disable token, AL_INVALID_ENUM is set.
  */
-ALboolean alIsEnabled(UNUSED(ALenum param))
+ALboolean alIsEnabled( ALenum param )
 {
 	_alcDCLockContext();
-	if(_alcDCGetContext() != NULL) {
+	/* ToDo: We should somehow hook in the extension mechanism here */
+	switch (param) {
+	default:
 		_alDCSetError( AL_INVALID_ENUM );
+		break;
 	}
 	_alcDCUnlockContext();
 	return AL_FALSE;

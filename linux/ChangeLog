@@ -1,5 +1,14 @@
 2005-11-11  Sven Panne  <sven.panne@aedion.de>
 
+	* src/al_able.c, src/al_distance.c, src/al_state.c: What to do
+	exactly regarding error handling when there is no current context
+	is a little bit of a dark corner in the spec. But under every
+	interpretation of the spec, setting an ALC error is completely
+	wrong. Now we call the internal error setter with
+	AL_INVALID_OPERATION, even when there is no current context to
+	record the error. This makes debugging easier and the error could
+	e.g. be reported to the user in some other way if desired.
+
 	* src/al_state.c: Do not use al_state.h anymore. Made the internal
 	getters static.
 

@@ -129,9 +129,8 @@ static void _alGetFloatv( ALenum param, ALfloat *fv ) {
 
 	cc = _alcDCGetContext();
 	if( cc == NULL ) {
-		/* no current context, set error and return */
-		_alcSetError( ALC_INVALID_CONTEXT );
-
+		/* even if there is no context, this is nice for debugging */
+		_alDCSetError( AL_INVALID_OPERATION );
 		return;
 	}
 
@@ -174,9 +173,8 @@ static void _alGetIntegerv(UNUSED(ALenum param), UNUSED(ALint *iv)) {
 
 	cc = _alcDCGetContext();
 	if( cc == NULL ) {
-		/* no current context, set error and return */
-		_alcSetError( ALC_INVALID_CONTEXT );
-
+		/* even if there is no context, this is nice for debugging */
+		_alDCSetError( AL_INVALID_OPERATION );
 		return;
 	}
 
@@ -203,9 +201,8 @@ static void _alGetDoublev(ALenum param, ALdouble *dv) {
 
 	cc = _alcDCGetContext();
 	if( cc == NULL ) {
-		/* no current context, set error and return */
-		_alcSetError( ALC_INVALID_CONTEXT );
-
+		/* even if there is no context, this is nice for debugging */
+		_alDCSetError( AL_INVALID_OPERATION );
 		return;
 	}
 
@@ -274,9 +271,8 @@ const ALchar *alGetString( ALenum param ) {
 
 	cc = _alcDCGetContext();
 	if( cc == NULL ) {
-		/* no current context, set error and return */
-		_alcSetError( ALC_INVALID_CONTEXT );
-
+		/* even if there is no context, this is nice for debugging */
+		_alDCSetError( AL_INVALID_OPERATION );
 		return NULL;
 	}
 	else

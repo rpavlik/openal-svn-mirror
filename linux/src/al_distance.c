@@ -124,9 +124,8 @@ void _alDistanceModel( ALenum distanceModel ) {
 
 	cc = _alcDCGetContext();
 	if( cc == NULL ) {
-		/* no current context, set error and return */
-		_alcSetError( ALC_INVALID_CONTEXT );
-
+		/* even if there is no context, this is nice for debugging */
+		_alDCSetError( AL_INVALID_OPERATION );
 		return;
 	}
 
