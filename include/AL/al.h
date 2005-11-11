@@ -212,14 +212,6 @@ typedef void ALvoid;
 #define AL_ORIENTATION                            0x100F
 
 /**
- * Specify the channel mask. (Creative)
- * Type: ALuint
- * Range: [0 - 255]
- */
-#define AL_CHANNEL_MASK                           0x3000
-
-
-/**
  * Source state information.
  */
 #define AL_SOURCE_STATE                           0x1010
