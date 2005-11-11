@@ -261,28 +261,146 @@ void _alDestroyExtensionGroups( void ) {
  * Extension support.
  */
 
+#define DEFINE_AL_PROC(p) { #p, p }
+
+typedef struct
+{
+	const ALchar *name;
+	void *value;
+} funcNameAddressPair;
+
+funcNameAddressPair alProcs[] = {
+	/* this has to be sorted! */
+	/* DEFINE_AL_PROC(alBuffer3f), TODO: NOT YET IMPLEMENTED!!! */
+	/* DEFINE_AL_PROC(alBuffer3i), TODO: NOT YET IMPLEMENTED!!! */
+	DEFINE_AL_PROC(alBufferData),
+	/* DEFINE_AL_PROC(alBufferf), TODO: NOT YET IMPLEMENTED!!! */
+	/* DEFINE_AL_PROC(alBufferfv), TODO: NOT YET IMPLEMENTED!!! */
+	/* DEFINE_AL_PROC(alBufferi), TODO: NOT YET IMPLEMENTED!!! */
+	/* DEFINE_AL_PROC(alBufferiv), TODO: NOT YET IMPLEMENTED!!! */
+	DEFINE_AL_PROC(alDeleteBuffers),
+	DEFINE_AL_PROC(alDeleteSources),
+	DEFINE_AL_PROC(alDisable),
+	DEFINE_AL_PROC(alDistanceModel),
+	DEFINE_AL_PROC(alDopplerFactor),
+	DEFINE_AL_PROC(alDopplerVelocity),
+	DEFINE_AL_PROC(alEnable),
+	DEFINE_AL_PROC(alGenBuffers),
+	DEFINE_AL_PROC(alGenSources),
+	DEFINE_AL_PROC(alGetBoolean),
+	DEFINE_AL_PROC(alGetBooleanv),
+	/* DEFINE_AL_PROC(alGetBuffer3f), TODO: NOT YET IMPLEMENTED!!! */
+	/* DEFINE_AL_PROC(alGetBuffer3i), TODO: NOT YET IMPLEMENTED!!! */
+	DEFINE_AL_PROC(alGetBufferf),
+	DEFINE_AL_PROC(alGetBufferfv),
+	DEFINE_AL_PROC(alGetBufferi),
+	DEFINE_AL_PROC(alGetBufferiv),
+	DEFINE_AL_PROC(alGetDouble),
+	DEFINE_AL_PROC(alGetDoublev),
+	DEFINE_AL_PROC(alGetEnumValue),
+	DEFINE_AL_PROC(alGetError),
+	DEFINE_AL_PROC(alGetFloat),
+	DEFINE_AL_PROC(alGetFloatv),
+	DEFINE_AL_PROC(alGetInteger),
+	DEFINE_AL_PROC(alGetIntegerv),
+	DEFINE_AL_PROC(alGetListener3f),
+	/* DEFINE_AL_PROC(alGetListener3i), TODO: NOT YET IMPLEMENTED!!! */
+	DEFINE_AL_PROC(alGetListenerf),
+	DEFINE_AL_PROC(alGetListenerfv),
+	DEFINE_AL_PROC(alGetListeneri),
+	DEFINE_AL_PROC(alGetListeneriv),
+	DEFINE_AL_PROC(alGetProcAddress),
+	DEFINE_AL_PROC(alGetSource3f),
+	/* DEFINE_AL_PROC(alGetSource3i), TODO: NOT YET IMPLEMENTED!!! */
+	DEFINE_AL_PROC(alGetSourcef),
+	DEFINE_AL_PROC(alGetSourcefv),
+	DEFINE_AL_PROC(alGetSourcei),
+	DEFINE_AL_PROC(alGetSourceiv),
+	DEFINE_AL_PROC(alGetString),
+	DEFINE_AL_PROC(alIsBuffer),
+	DEFINE_AL_PROC(alIsEnabled),
+	DEFINE_AL_PROC(alIsExtensionPresent),
+	DEFINE_AL_PROC(alIsSource),
+	DEFINE_AL_PROC(alListener3f),
+	/* DEFINE_AL_PROC(alListener3i), TODO: NOT YET IMPLEMENTED!!! */
+	DEFINE_AL_PROC(alListenerf),
+	DEFINE_AL_PROC(alListenerfv),
+	DEFINE_AL_PROC(alListeneri),
+	/* DEFINE_AL_PROC(alListeneriv), TODO: NOT YET IMPLEMENTED!!! */
+	DEFINE_AL_PROC(alSource3f),
+	/* DEFINE_AL_PROC(alSource3i), TODO: NOT YET IMPLEMENTED!!! */
+	DEFINE_AL_PROC(alSourcePause),
+	DEFINE_AL_PROC(alSourcePausev),
+	DEFINE_AL_PROC(alSourcePlay),
+	DEFINE_AL_PROC(alSourcePlayv),
+	DEFINE_AL_PROC(alSourceQueueBuffers),
+	DEFINE_AL_PROC(alSourceRewind),
+	DEFINE_AL_PROC(alSourceRewindv),
+	DEFINE_AL_PROC(alSourceStop),
+	DEFINE_AL_PROC(alSourceStopv),
+	DEFINE_AL_PROC(alSourceUnqueueBuffers),
+	DEFINE_AL_PROC(alSourcef),
+	DEFINE_AL_PROC(alSourcefv),
+	DEFINE_AL_PROC(alSourcei),
+	/* DEFINE_AL_PROC(alSourceiv), TODO: NOT YET IMPLEMENTED!!! */
+	DEFINE_AL_PROC(alSpeedOfSound)
+};
+
+#undef DEFINE_AL_PROC
+
+static int
+compareFuncNameAddressPairs(const void *s1, const void *s2)
+{
+	const funcNameAddressPair *p1 = (const funcNameAddressPair*)s1;
+	const funcNameAddressPair *p2 = (const funcNameAddressPair*)s2;
+	return strcmp((const char*)(p1->name), (const char*)(p2->name));
+}
+
+static ALboolean
+getStandardProcAddress(void **value, const ALchar *funcName)
+{
+	funcNameAddressPair key = { funcName, 0 };
+	funcNameAddressPair *p = bsearch(&key, alProcs,
+					 sizeof(alProcs) / sizeof(alProcs[0]),
+					 sizeof(alProcs[0]),
+					 compareFuncNameAddressPairs);
+	if (p == NULL) {
+		return AL_FALSE;
+	}
+	*value = p->value;
+	return AL_TRUE;
+}
+
+/* TODO: exporting this is a HACK */
+ALboolean
+_alGetExtensionProcAddress( void **procAddress, const ALchar *funcName )
+{
+	enode_t *retpair = get_node( etree, funcName );
+	if(retpair == NULL) {
+		return AL_FALSE;
+	}
+	*procAddress = retpair->addr;
+	return AL_TRUE;
+}
+
 /*
  * alGetProcAddress( const ALubyte *fname )
  *
  * Obtain the address of a function (usually an extension) with the name
  * fname. All addresses are context-independent.
  */
-void *alGetProcAddress( const ALchar *fname ) {
-	enode_t *retpair;
-
-	retpair = get_node( etree, fname );
-	if(retpair == NULL) {
-		/*
-		 * Unknown extension.  Return NULL.
-		 */
-		return NULL;
+void *
+alGetProcAddress( const ALchar *funcName )
+{
+	void *value;
+	if (getStandardProcAddress(&value, funcName) == AL_TRUE) {
+		return value;
 	}
-
-	_alDebug( ALD_EXT, __FILE__, __LINE__,
-		  "alGetProcAddress returning %s @ %p",
-		  retpair->name, retpair->addr );
-
-	return retpair->addr;
+	if (_alGetExtensionProcAddress(&value, funcName) == AL_TRUE) {
+		return value;
+	}
+	_alDCSetError( AL_INVALID_VALUE );
+	return NULL;
 }
 
 
@@ -676,7 +794,6 @@ enumNameValuePair alEnums[] = {
 	DEFINE_AL_ENUM(AL_BUFFERS_QUEUED),
 	DEFINE_AL_ENUM(AL_BYTE_OFFSET),
 	DEFINE_AL_ENUM(AL_CHANNELS),
-	DEFINE_AL_ENUM(AL_CHANNEL_MASK),
 	DEFINE_AL_ENUM(AL_CONE_INNER_ANGLE),
 	DEFINE_AL_ENUM(AL_CONE_OUTER_ANGLE),
 	DEFINE_AL_ENUM(AL_CONE_OUTER_GAIN),

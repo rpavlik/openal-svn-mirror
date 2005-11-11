@@ -1404,6 +1404,71 @@ ALCboolean alcIsExtensionPresent( UNUSED(ALCdevice *device), const ALCchar *extN
 	return alIsExtensionPresent( extName );
 }
 
+#define DEFINE_ALC_PROC(p) { #p, p }
+
+typedef struct
+{
+	const ALCchar *name;
+	void *value;
+} funcNameAddressPair;
+
+funcNameAddressPair alcProcs[] = {
+	DEFINE_ALC_PROC(alcCaptureCloseDevice),
+	DEFINE_ALC_PROC(alcCaptureOpenDevice),
+	DEFINE_ALC_PROC(alcCaptureSamples),
+	DEFINE_ALC_PROC(alcCaptureStart),
+	DEFINE_ALC_PROC(alcCaptureStop),
+	DEFINE_ALC_PROC(alcCloseDevice),
+	DEFINE_ALC_PROC(alcCreateContext),
+	DEFINE_ALC_PROC(alcDestroyContext),
+	DEFINE_ALC_PROC(alcGetContextsDevice),
+	DEFINE_ALC_PROC(alcGetCurrentContext),
+	DEFINE_ALC_PROC(alcGetEnumValue),
+	DEFINE_ALC_PROC(alcGetError),
+	DEFINE_ALC_PROC(alcGetIntegerv),
+	DEFINE_ALC_PROC(alcGetProcAddress),
+	DEFINE_ALC_PROC(alcGetString),
+	DEFINE_ALC_PROC(alcIsExtensionPresent),
+	DEFINE_ALC_PROC(alcMakeContextCurrent),
+	DEFINE_ALC_PROC(alcOpenDevice),
+	DEFINE_ALC_PROC(alcProcessContext),
+	DEFINE_ALC_PROC(alcSuspendContext)
+};
+
+#undef DEFINE_ALC_PROC
+
+static int
+compareFuncNameAddressPairs(const void *s1, const void *s2)
+{
+	const funcNameAddressPair *p1 = (const funcNameAddressPair*)s1;
+	const funcNameAddressPair *p2 = (const funcNameAddressPair*)s2;
+	return strcmp((const char*)(p1->name), (const char*)(p2->name));
+}
+
+static ALCboolean
+getStandardProcAddress(void **value, const ALCchar *funcName)
+{
+	funcNameAddressPair key = { funcName, 0 };
+	funcNameAddressPair *p = bsearch(&key, alcProcs,
+					 sizeof(alcProcs) / sizeof(alcProcs[0]),
+					 sizeof(alcProcs[0]),
+					 compareFuncNameAddressPairs);
+	if (p == NULL) {
+		return ALC_FALSE;
+	}
+	*value = p->value;
+	return ALC_TRUE;
+}
+
+static ALCboolean
+getExtensionProcAddress( void **procAddress, UNUSED(ALCdevice *device), const ALCchar *funcName )
+{
+
+	/* TODO: importing and using this is a HACK */
+	extern ALboolean _alGetExtensionProcAddress( void **procAddress, const ALchar *funcName );
+	return (_alGetExtensionProcAddress( procAddress, (const ALchar*)funcName) == AL_TRUE) ? ALC_TRUE : ALC_FALSE;
+}
+
 /*
  * alcGetProcAddress( UNUSED(ALCdevice *device), ALCubyte *funcName ).
  *
@@ -1411,13 +1476,17 @@ ALCboolean alcIsExtensionPresent( UNUSED(ALCdevice *device), const ALCchar *extN
  * exist.
  */
 void *
-alcGetProcAddress( UNUSED(ALCdevice *device), const ALCchar *funcName )
+alcGetProcAddress( ALCdevice *device, const ALCchar *funcName )
 {
-	/*
-	 * ToDo: querying alGetEnumValue is not really correct, but currently
-	 * extensions are only reported through this.
-	 */
-	return alGetProcAddress( (const ALchar *)funcName );
+	void *value;
+	if (getStandardProcAddress(&value, funcName) == ALC_TRUE) {
+		return value;
+	}
+	if (getExtensionProcAddress(&value, device, funcName) == ALC_TRUE) {
+		return value;
+	}
+	_alcSetError( ALC_INVALID_VALUE );
+	return NULL;
 }
 
 #define DEFINE_ALC_ENUM(e) { #e, e }
