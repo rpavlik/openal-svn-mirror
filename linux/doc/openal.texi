@@ -1041,7 +1041,8 @@ reports a source's position, in bytes, into the buffer, or -1 in the
 case of a non playing source.  There are no guarentees about the
 internal representation of data so the value returned using this
 token may not correspond with the equivilant offset in the user
-supplied data.
+supplied data. Note: This seems to be a read-only version of OpenAL
+1.1's AL_BYTE_OFFSET.
 
 @item AL_SOURCE_LOOPING_LOKI
 @vindex AL_SOURCE_LOOPING_LOKI
