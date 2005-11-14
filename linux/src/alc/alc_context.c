@@ -16,6 +16,7 @@
 #include "al_mixer.h"
 #include "al_main.h"
 #include "al_debug.h"
+#include "al_ext.h"
 #include "al_listen.h"
 #include "al_source.h"
 #include "al_spool.h"
@@ -1463,9 +1464,7 @@ getStandardProcAddress(void **value, const ALCchar *funcName)
 static ALCboolean
 getExtensionProcAddress( void **procAddress, UNUSED(ALCdevice *device), const ALCchar *funcName )
 {
-
-	/* TODO: importing and using this is a HACK */
-	extern ALboolean _alGetExtensionProcAddress( void **procAddress, const ALchar *funcName );
+	/* TODO: using _alGetExtensionProcAddress is a HACK */
 	return (_alGetExtensionProcAddress( procAddress, (const ALchar*)funcName) == AL_TRUE) ? ALC_TRUE : ALC_FALSE;
 }
 

@@ -84,6 +84,9 @@ void _alDestroyExtensionGroups( void );
  */
 ALboolean _alGetExtensionStrings( ALubyte *buffer, int size );
 
+/* TODO: exporting this is a HACK */
+ALboolean _alGetExtensionProcAddress( void **procAddress, const ALchar *funcName );
+
 /*
  * _alRegisterExtension( const ALubyte *name, ALvoid *addr )
  *

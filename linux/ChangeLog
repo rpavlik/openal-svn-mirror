@@ -1,3 +1,8 @@
+2005-11-14  Sven Panne  <sven.panne@aedion.de>
+
+	* src/al_ext.h, src/alc/alc_context.c: Cleaned up
+	_alGetExtensionProcAddress mess a tiny bit.
+
 2005-11-11  Sven Panne  <sven.panne@aedion.de>
 
 	* src/al_able.c: Set an AL_INVALID_OPERATION when there is no
