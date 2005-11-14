@@ -1,5 +1,12 @@
 2005-11-14  Sven Panne  <sven.panne@aedion.de>
 
+	* src/Makefile.in, src/al_error.c, src/al_error.h, src/al_ext.c,
+	src/al_ext.h, src/al_state.c, src/al_types.h,
+	src/alc/alc_context.c, src/alc/alc_error.c: First steps towards
+	cleaning up and refactoring the per-context state management.
+
+	* src/al_able.c: Removed.
+
 	* src/al_ext.h, src/alc/alc_context.c: Cleaned up
 	_alGetExtensionProcAddress mess a tiny bit.
 

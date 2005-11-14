@@ -281,9 +281,19 @@ typedef struct ALCdevice_struct {
 } AL_device;
 
 typedef struct _AL_context {
-	AL_listener listener;
 
-	ALuint enable_flags; /* for Enable(), Disable() */
+	/*
+	 * The following four fields are the "official" part of the context
+	 * state, the rest are implementation details. Note that there are
+	 * currently no enable/disable flags in the spec, so there is no field
+	 * for these.
+	 */
+	ALfloat doppler_factor;
+	ALfloat doppler_velocity; /* deprecated */
+	ALfloat speed_of_sound;
+	ALenum distance_model;
+
+	AL_listener listener;
 
 	spool_t source_pool;
 
@@ -305,8 +315,6 @@ typedef struct _AL_context {
 		ALfloat pos[3];
 	} _speaker_pos[_ALC_MAX_CHANNELS];
 
-	ALfloat doppler_factor;
-	ALfloat doppler_velocity;
 
 	ALint alErrorIndex;
 
@@ -321,7 +329,6 @@ typedef struct _AL_context {
 		ALfloat pcm;
 	} restore;
 
-	ALenum distance_model;
 	ALfloat (*distance_func)( ALfloat gain, ALfloat rolloff,
 				  ALfloat dis, ALfloat ref, ALfloat max );
 

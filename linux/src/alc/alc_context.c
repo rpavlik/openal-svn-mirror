@@ -735,9 +735,6 @@ AL_context *_alcInitContext( ALuint cid ) {
 
 	_alInitListener(&cc->listener);
 
-	/* nothing is enabled by default */
-	cc->enable_flags = 0;
-
 	/* Source initializations */
 	spool_init(&cc->source_pool);
 

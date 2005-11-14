@@ -26,25 +26,6 @@
 ALboolean _alShouldBombOnError_LOKI = AL_FALSE;
 
 /*
- * _alErrorStr holds string representations of al errors.
- *
- * 0 -> AL_NO_ERROR
- * 1 -> AL_INVALID_NAME
- * 2 -> AL_INVALID_ENUM
- * 3 -> AL_INVALID_VALUE
- * 4 -> AL_INVALID_OPERATION
- * 5 -> AL_OUT_OF_MEMORY
- */
-static const char *_alErrorStr[] = {
-	"No error",
-	"Invalid Name parameter",
-	"Illegal parameter",
-	"Invalid enum parameter value",
-	"Illegal call",
-	"Unable to allocate memory"
-};
-
-/*
  * index2ErrorNo( int index )
  *
  * Returns an al error from a simple index.
@@ -192,43 +173,4 @@ void _alSetError( ALuint cid, ALenum param ) {
 	}
 
 	return;
-}
-
-/*
- * _alIsError( ALenum param )
- *
- * _alIsError returns AL_TRUE if the passed param is an error message,
- * AL_FALSE otherwise.
- *
- */
-ALboolean _alIsError( ALenum param ) {
-	switch( param ) {
-		case AL_NO_ERROR:
-		case AL_INVALID_NAME:
-		case AL_INVALID_ENUM:
-		case AL_INVALID_VALUE:
-		case AL_INVALID_OPERATION:
-		case AL_OUT_OF_MEMORY:
-			return AL_TRUE;
-		default:
-			return AL_FALSE;
-	}
-
-	return AL_FALSE;
-}
-
-/*
- * _alGetErrorString( ALenum param )
- *
- * This function returns the string corresponding to the
- * error in question.  It doesn't validate that the passed
- * param, so calling functions should ensure that _alIsError(param)
- * return AL_TRUE before passing it to this function.
- */
-const ALubyte *_alGetErrorString( ALenum param ) {
-	int offset;
-
-	offset = ErrorNo2index( param );
-
-	return (const ALubyte *) _alErrorStr[offset];
 }

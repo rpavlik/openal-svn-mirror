@@ -76,13 +76,13 @@ ALboolean _alRegisterExtensionGroup( const ALubyte *extGroup );
 void _alDestroyExtensionGroups( void );
 
 /*
- * _alGetExtensionStrings( ALubyte *buffer, int size )
+ * _alGetExtensionStrings( ALchar *buffer, int size )
  *
  * Gets a list of extension groups registered, populating buffer up to size.
  *
  * Returns AL_FALSE if size < 1, AL_TRUE otherwise.
  */
-ALboolean _alGetExtensionStrings( ALubyte *buffer, int size );
+ALboolean _alGetExtensionStrings( ALchar *buffer, int size );
 
 /* TODO: exporting this is a HACK */
 ALboolean _alGetExtensionProcAddress( void **procAddress, const ALchar *funcName );

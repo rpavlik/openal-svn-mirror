@@ -170,7 +170,7 @@ void _alcSetError( ALenum param ) {
  *
  * This function returns the string corresponding to the
  * error in question.  It doesn't validate that the passed
- * param, so calling functions should ensure that _alIsError(param)
+ * param, so calling functions should ensure that _alcIsError(param)
  * return AL_TRUE before passing it to this function.
  */
 const ALubyte *_alcGetErrorString(ALenum param) {

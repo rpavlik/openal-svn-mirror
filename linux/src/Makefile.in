@@ -12,8 +12,7 @@ RANLIB=@RANLIB@
 NASM=@NASM@
 NASMFLAGS=@NASM_FORMAT@
 
-AL_OBJS=al_able.o       \
-	al_bpool.o 	\
+AL_OBJS=al_bpool.o 	\
 	al_buffer.o     \
 	al_config.o     \
 	al_debug.o      \

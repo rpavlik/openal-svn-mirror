@@ -180,13 +180,13 @@ ALboolean alIsExtensionPresent( const ALchar* gname ) {
 }
 
 /*
- * _alGetExtensionStrings( ALubyte* buffer, int size )
+ * _alGetExtensionStrings( ALchar* buffer, int size )
  *
  * Populate buffer, up to size-1, with a string representation of the
  * extension strings.  Returns AL_TRUE if size was greater or equal to 1,
  * AL_FALSE otherwise.
  */
-ALboolean _alGetExtensionStrings( ALubyte* buffer, int size ) {
+ALboolean _alGetExtensionStrings( ALchar* buffer, int size ) {
 	egroup_node_t *group = egroup_list;
 
 	if( size < 1 ) {

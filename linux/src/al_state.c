@@ -3,282 +3,198 @@
  *
  * al_state.c
  *
- * State management.  Mainly stubbed.
+ * Per-context state management.
  *
  */
 #include "al_siteconfig.h"
 
 #include <AL/al.h>
-#include <AL/alc.h>
-#include <stdio.h>
 
-#include "al_types.h"
 #include "al_error.h"
-#include "al_main.h"
 #include "al_ext.h"
 
-#include "alc/alc_error.h"
+/*
+ * A few general remarks about the code below:
+ *
+ *    * When there is no current context, we set an AL_INVALID_OPERATION. Even
+ *      without a context for recording this error, this is nice for
+ *      debugging.
+ *
+ *    * As a general contract with the user, we never modify any data via
+ *      pointers if an error condition occurs.
+ *
+ *    * Getting and locking the context should be done in a single atomic
+ *      operation, but our internal API is not yet capable of this.
+ *
+ *    * We should somehow hook in the extension mechanism here.
+ *
+ */
 
-static void _alGetBooleanv( ALenum param, ALboolean *bv );
-static void _alGetIntegerv( ALenum param, ALint *iv );
-static void _alGetDoublev( ALenum param, ALdouble *dv );
-static void _alGetFloatv( ALenum param, ALfloat *fv );
-
-/** State retrieval. */
-ALboolean alGetBoolean( ALenum param )
+void
+alEnable( ALenum param )
 {
-	ALboolean retval = AL_FALSE;
-
-	alGetBooleanv(param, &retval);
-
-	return retval;
-}
-
-ALint alGetInteger( ALenum param )
-{
-	ALint retval = -1;
-
-	alGetIntegerv(param, &retval);
-	return retval;
-}
-
-ALfloat alGetFloat( ALenum param )
-{
-	ALfloat retval = 0.0f;
-
-	alGetFloatv(param, &retval);
-
-	return retval;
-}
-
-ALdouble alGetDouble( ALenum param )
-{
-	ALdouble retval = 0.0;
-
-	alGetDoublev(param, &retval);
-	return retval;
-}
-
-/*
- * alGetFloatv( ALenum param, ALfloat *fv )
- *
- * Populated fv with the ALfloat representation for param.
- */
-void alGetFloatv( ALenum param, ALfloat *fv ) {
-	_alcDCLockContext();
-
-	_alGetFloatv( param, fv );
-
-	_alcDCUnlockContext();
-
-	return;
-}
-
-/*
- * alGetBooleanv( ALenum param, ALboolean *bv )
- *
- * Populated bv with the ALboolean representation for param.
- */
-void alGetBooleanv( ALenum param, ALboolean *bv ) {
-	_alcDCLockContext();
-
-	_alGetBooleanv( param, bv );
-
-	_alcDCUnlockContext();
-
-	return;
-}
-
-/*
- * alGetIntegerv( ALenum param, ALint *iv )
- *
- * Populated iv with the ALint representation for param.
- */
-void alGetIntegerv( ALenum param, ALint *iv ) {
-	_alcDCLockContext();
-
-	_alGetIntegerv( param, iv );
-
-	_alcDCUnlockContext();
-
-	return;
-}
-
-/*
- * alGetDoublev(ALenum param, ALdouble *dv )
- *
- * Populated dv with the double representation for param.
- */
-void alGetDoublev(ALenum param, ALdouble *dv ) {
-	_alcDCLockContext();
-
-	_alGetDoublev( param, dv );
-
-	_alcDCUnlockContext();
-
-	return;
-}
-
-/*
- * _alGetFloatv( ALenum param, ALfloat *fv )
- *
- * Non locking version of alGetFloatv.
- */
-static void _alGetFloatv( ALenum param, ALfloat *fv ) {
-	AL_context *cc;
-
-	cc = _alcDCGetContext();
+	AL_context *cc = _alcDCGetContext();
 	if( cc == NULL ) {
-		/* even if there is no context, this is nice for debugging */
 		_alDCSetError( AL_INVALID_OPERATION );
 		return;
 	}
+	_alcDCLockContext();
 
-	switch( param ) {
-		case AL_DOPPLER_FACTOR:
-			*fv = cc->doppler_factor;
-			break;
-		case AL_DOPPLER_VELOCITY:
-			*fv = cc->doppler_velocity;
-			break;
-		default:
-			_alDCSetError( AL_INVALID_ENUM );
-			break;
+	switch (param) {
+	default:
+		_alDCSetError( AL_INVALID_ENUM );
+		break;
 	}
 
-	return;
+	_alcDCUnlockContext();
 }
 
-/*
- * _alGetBooleanv( ALenum param, ALboolean *bv)
- *
- * Non locking version of alGetBooleanv.
- */
-static void _alGetBooleanv(UNUSED(ALenum param), UNUSED(ALboolean *bv)) {
-	_alStub("alGetBooleanv");
-
-	/* FIXME: don't set error if no current context */
-	_alDCSetError( AL_INVALID_ENUM );
-
-	return;
-}
-
-/*
- * _alGetIntegerv( ALenum param, ALint *iv )
- *
- * Non locking version of alGetIntegerv
- */
-static void _alGetIntegerv(UNUSED(ALenum param), UNUSED(ALint *iv)) {
-	AL_context *cc;
-
-	cc = _alcDCGetContext();
+void
+alDisable( ALenum param )
+{
+	AL_context *cc = _alcDCGetContext();
 	if( cc == NULL ) {
-		/* even if there is no context, this is nice for debugging */
 		_alDCSetError( AL_INVALID_OPERATION );
 		return;
 	}
+	_alcDCLockContext();
 
-	switch( param ) {
-		case AL_DISTANCE_MODEL:
-			*iv = cc->distance_model;
-			break;
-		default:
-			_alDCSetError( AL_INVALID_ENUM );
-			break;
+	switch (param) {
+	default:
+		_alDCSetError( AL_INVALID_ENUM );
+		break;
 	}
 
-	return;
+	_alcDCUnlockContext();
 }
 
-/*
- * _alGetDoublev( ALenum param, ALdouble *dv )
- *
- * Non locking version of alGetDoublev
- *
- */
-static void _alGetDoublev(ALenum param, ALdouble *dv) {
-	AL_context *cc;
-
-	cc = _alcDCGetContext();
+ALboolean
+alIsEnabled( ALenum param )
+{
+	AL_context *cc = _alcDCGetContext();
 	if( cc == NULL ) {
-		/* even if there is no context, this is nice for debugging */
 		_alDCSetError( AL_INVALID_OPERATION );
-		return;
+		return AL_FALSE;
+	}
+	_alcDCLockContext();
+
+	switch (param) {
+	default:
+		_alDCSetError( AL_INVALID_ENUM );
+		break;
 	}
 
-	switch( param ) {
-		case AL_DOPPLER_FACTOR:
-			*dv = cc->doppler_factor;
-			break;
-		case AL_DOPPLER_VELOCITY:
-			*dv = cc->doppler_velocity;
-			break;
-		default:
-			_alDCSetError( AL_INVALID_ENUM );
-			break;
-	}
-
-	return;
+	_alcDCUnlockContext();
+	return AL_FALSE;
 }
 
-/*
- * alGetString( ALenum param )
- *
- * Returns readable string representation of param, or NULL if no string
- * representation is available.
- */
-const ALchar *alGetString( ALenum param ) {
-	AL_context *cc;
+const ALchar*
+alGetString( ALenum param )
+{
+	const ALchar *value;
+	ALchar extensions[1024]; /* TODO: Ugly! */
 
-	static ALubyte extensions[4096];
-
-	/*
-	 * First, we check to see if the param corresponds to an
-	 * error, in which case we return the value from _alGetErrorString.
-	 */
-	if(_alIsError(param) == AL_TRUE) {
-		return _alGetErrorString(param);
-	}
-
-	/*
-	 * Next, we check to see if the param corresponds to an alc
-	 * error, in which case we return the value from _alcGetErrorString.
-	 */
-	if( alcIsError( param ) == AL_TRUE ) {
-		return _alcGetErrorString( param );
-	}
-
-	switch(param) {
-		case AL_VENDOR:
-			return (const ALubyte *) "J. Valenzuela";
-			break;
-		case AL_VERSION:
-			return (const ALubyte *) PACKAGE_VERSION;
-			break;
-		case AL_RENDERER:
-			return (const ALubyte *) "Software";
-			break;
-		case AL_EXTENSIONS:
-			_alGetExtensionStrings( extensions, sizeof( extensions ) );
-			return extensions;
-			break;
-		case 0xfeedabee:
-			return (const ALubyte *) "Mark 12:31";
-			break;
-		default:
-		  break;
-	}
-
-	cc = _alcDCGetContext();
+	AL_context *cc = _alcDCGetContext();
 	if( cc == NULL ) {
-		/* even if there is no context, this is nice for debugging */
 		_alDCSetError( AL_INVALID_OPERATION );
 		return NULL;
 	}
-	else
-	{
+	_alcDCLockContext();
+
+	switch (param) {
+	case AL_VERSION:
+		value = "1.1";
+		break;
+	case AL_RENDERER:
+		value = "Software";
+		break;
+	case AL_VENDOR:
+		value = "OpenAL Community";
+		break;
+	case AL_EXTENSIONS:
+		_alGetExtensionStrings( extensions, sizeof( extensions ) );
+		value = extensions;
+		break;
+	case AL_NO_ERROR:
+		value = "No Error";
+		break;
+	case AL_INVALID_NAME:
+		value = "Invalid Name";
+		break;
+	case AL_INVALID_ENUM:
+		value = "Invalid Enum";
+		break;
+	case AL_INVALID_VALUE:
+		value = "Invalid Value";
+		break;
+	case AL_INVALID_OPERATION:
+		value = "Invalid Operation";
+		break;
+	case AL_OUT_OF_MEMORY:
+		value = "Out of Memory";
+		break;
+	default:
+		value = NULL;
 		_alDCSetError( AL_INVALID_ENUM );
+		break;
 	}
 
-	return NULL;
+	_alcDCUnlockContext();
+	return value;
 }
+
+#define MAX_DATA_ENTRIES_FILLED 1
+
+/* everything is better than code duplication, even macros... */
+
+#define DEFINE_GETTER(type,conv,namev,name)		\
+void							\
+namev( ALenum param, type *data )			\
+{							\
+	AL_context *cc = _alcDCGetContext();		\
+	if( cc == NULL ) {				\
+		_alDCSetError( AL_INVALID_OPERATION );	\
+		return;					\
+	}						\
+	_alcDCLockContext();				\
+							\
+	switch( param ) {				\
+	case AL_DOPPLER_FACTOR:				\
+		data[0] = conv(cc->doppler_factor);	\
+		break;					\
+	case AL_DOPPLER_VELOCITY:			\
+		data[0] = conv(cc->doppler_velocity);	\
+		break;					\
+	case AL_SPEED_OF_SOUND:				\
+		data[0] = conv(cc->speed_of_sound);	\
+		break;					\
+	case AL_DISTANCE_MODEL:				\
+		data[0] = conv(cc->distance_model);	\
+		break;					\
+	default:					\
+		_alDCSetError( AL_INVALID_ENUM );	\
+		break;					\
+	}						\
+							\
+	_alcDCUnlockContext();				\
+}							\
+							\
+type							\
+name( ALenum param )					\
+{							\
+	type buf[MAX_DATA_ENTRIES_FILLED];		\
+	namev(param, buf);				\
+	return buf[0];					\
+}
+
+#define CONV_BOOLEAN(x) ((x) ? AL_TRUE : AL_FALSE)
+#define CONV_INTEGER(x) ((ALint)(x))
+#define CONV_FLOAT(x)   ((ALfloat)(x))
+#define CONV_DOUBLE(x)  ((ALdouble)(x))
+
+DEFINE_GETTER(ALboolean,CONV_BOOLEAN,alGetBooleanv,alGetBoolean)
+DEFINE_GETTER(ALint,CONV_INTEGER,alGetIntegerv,alGetInteger)
+DEFINE_GETTER(ALfloat,CONV_FLOAT,alGetFloatv,alGetFloat)
+DEFINE_GETTER(ALdouble,CONV_DOUBLE,alGetDoublev,alGetDouble)
+
+#undef DEFINE_GETTER
