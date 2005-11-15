@@ -7,6 +7,8 @@
  */
 #include "al_siteconfig.h"
 
+#include <math.h>
+
 #include "al_distance.h"
 #include "al_main.h"
 
@@ -14,114 +16,145 @@
  * No distance attenuation.  Which means we return 1.0 for all values.
  */
 static ALfloat
-noAttenuation( UNUSED(ALfloat dist),
-	       UNUSED(ALfloat rolloff),
-	       ALfloat gain,
-	       UNUSED(ALfloat ref),
-	       UNUSED(ALfloat max))
+noAttenuation( UNUSED(ALfloat distance),
+	       UNUSED(ALfloat rolloffFactor),
+	       ALfloat sourceGain,
+	       UNUSED(ALfloat referenceDistance),
+	       UNUSED(ALfloat maxDistance))
 {
-	return gain;
+	return sourceGain;
 }
 
-/*
- * We are using the linear adaptation of the spec's formula, because we are
- * dealing with all linear gains at this point:
- *
- * G = GAIN * REF / ( REF + ROLLOFF * ( dist - REF ) );
- */
 static ALfloat
-inverseDistance( ALfloat dist,
-		 ALfloat rolloff,
-		 ALfloat gain,
-		 ALfloat ref,
-		 UNUSED(ALfloat max))
+inverseDistance( ALfloat distance,
+		 ALfloat rolloffFactor,
+		 ALfloat sourceGain,
+		 ALfloat referenceDistance,
+		 ALfloat maxDistance)
 {
-	ALfloat retval;
+	ALfloat distDiff;
 
-	/* dist = MAX( dist, ref ) */
-	if( dist < ref ) {
-		dist = ref;
+	if ((maxDistance <= referenceDistance) || (referenceDistance == 0.0f)) {
+		return sourceGain;
 	}
 
-	/* formula, expressed in linear terms */
-	retval = gain * ref / ( ref + rolloff * ( dist - ref ) );
-
-	if( retval < 0.0 ) {
-		return 0.0;
-	} else if( retval > 1.0 ) {
-		return 1.0;
+	distDiff = referenceDistance + (rolloffFactor * (distance - referenceDistance));
+	if (distDiff <= 0.0f) {
+		return sourceGain * 1000000.0f;
 	}
 
-	return retval;
+	return sourceGain * referenceDistance / distDiff;
 }
 
 static ALfloat
-inverseDistanceClamped( ALfloat dist,
-			ALfloat rolloff,
-			ALfloat gain,
-			ALfloat ref,
-			ALfloat max )
+inverseDistanceClamped( ALfloat distance,
+			ALfloat rolloffFactor,
+			ALfloat sourceGain,
+			ALfloat referenceDistance,
+			ALfloat maxDistance )
 {
-	ALfloat retval;
+	ALfloat distDiff;
 
-	/* dist = MAX( dist, ref ) */
-	if( dist < ref ) {
-		dist = ref;
+	if ((maxDistance <= referenceDistance) || (referenceDistance == 0.0f)) {
+		return sourceGain;
 	}
 
-	/* dist = MIN( dist, max ) */
-	if( dist > max ) {
-		dist = max;
+	/* distance = MAX( distance, referenceDistance ) */
+	if( distance < referenceDistance ) {
+		distance = referenceDistance;
 	}
 
-	/* linear gain formula */
-	retval = gain * ref / ( ref + rolloff * ( dist - ref ) );
+	/* distance = MIN( distance, maxDistance ) */
+	if( distance > maxDistance ) {
+		distance = maxDistance;
+	}
 
-	return retval;
+	distDiff = referenceDistance + (rolloffFactor * (distance - referenceDistance));
+	if (distDiff <= 0.0f) {
+		return sourceGain * 1000000.0f;
+	}
+
+	return sourceGain * referenceDistance / distDiff;
 }
 
-/* TODO */
 static ALfloat
-linearDistance( UNUSED(ALfloat dist),
-		UNUSED(ALfloat rolloff),
-		ALfloat gain,
-		UNUSED(ALfloat ref),
-		UNUSED(ALfloat max))
+linearDistance( ALfloat distance,
+		ALfloat rolloffFactor,
+		ALfloat sourceGain,
+		ALfloat referenceDistance,
+		ALfloat maxDistance)
 {
-	return gain;
+	if (maxDistance <= referenceDistance) {
+		return sourceGain;
+	}
+
+	return sourceGain * (1 - rolloffFactor * (distance - referenceDistance) / (maxDistance - referenceDistance));
 }
 
-/* TODO */
 static ALfloat
-linearDistanceClamped( UNUSED(ALfloat dist),
-		       UNUSED(ALfloat rolloff),
-		       ALfloat gain,
-		       UNUSED(ALfloat ref),
-		       UNUSED(ALfloat max))
+linearDistanceClamped( ALfloat distance,
+		       ALfloat rolloffFactor,
+		       ALfloat sourceGain,
+		       ALfloat referenceDistance,
+		       ALfloat maxDistance)
 {
-	return gain;
+	if (maxDistance <= referenceDistance) {
+		return sourceGain;
+	}
+
+	/* distance = MAX( distance, referenceDistance ) */
+	if( distance < referenceDistance ) {
+		distance = referenceDistance;
+	}
+
+	/* distance = MIN( distance, maxDistance ) */
+	if( distance > maxDistance ) {
+		distance = maxDistance;
+	}
+
+	return sourceGain * (1 - rolloffFactor * (distance - referenceDistance) / (maxDistance - referenceDistance));
 }
 
-/* TODO */
 static ALfloat
-exponentDistance( UNUSED(ALfloat dist),
-		  UNUSED(ALfloat rolloff),
-		  ALfloat gain,
-		  UNUSED(ALfloat ref),
-		  UNUSED(ALfloat max))
+exponentDistance( ALfloat distance,
+		  ALfloat rolloffFactor,
+		  ALfloat sourceGain,
+		  ALfloat referenceDistance,
+		  ALfloat maxDistance)
 {
-	return gain;
+	if ((maxDistance <= referenceDistance) || (referenceDistance == 0.0f) || (distance == 0.0f)) {
+		return sourceGain;
+	}
+
+	return sourceGain * ((ALfloat)pow(distance / referenceDistance, -rolloffFactor));
 }
 
-/* TODO */
 static ALfloat
-exponentDistanceClamped( UNUSED(ALfloat dist),
-			 UNUSED(ALfloat rolloff),
-			 ALfloat gain,
-			 UNUSED(ALfloat ref),
-			 UNUSED(ALfloat max))
+exponentDistanceClamped( ALfloat distance,
+			 ALfloat rolloffFactor,
+			 ALfloat sourceGain,
+			 ALfloat referenceDistance,
+			 ALfloat maxDistance)
 {
-	return gain;
+	if ((maxDistance <= referenceDistance) || (referenceDistance == 0.0f)) {
+		return sourceGain;
+	}
+
+	/* distance = MAX( distance, referenceDistance ) */
+	if( distance < referenceDistance ) {
+		distance = referenceDistance;
+	}
+
+	/* distance = MIN( distance, maxDistance ) */
+	if( distance > maxDistance ) {
+		distance = maxDistance;
+	}
+
+	if (distance == 0.0f) {
+		return sourceGain;
+	}
+
+	return sourceGain * ((ALfloat)pow(distance / referenceDistance, -rolloffFactor));
 }
 
 void

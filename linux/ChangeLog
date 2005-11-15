@@ -1,5 +1,9 @@
 2005-11-15  Sven Panne  <sven.panne@aedion.de>
 
+	* src/al_distance.c: Implemented missing distance models and
+	(hopefully) fixed the existing ones. This will probably need more
+	thoughts and thorough testing...
+
 	* src/Makefile.in, src/al_distance.c, src/al_distance.h, src/al_state.c,
 	src/alc/alc_context.c: Moved doppler and distance model setters to where
 	they belong. Removed some arbitraty restrictions (MIN_DOPPLER,
