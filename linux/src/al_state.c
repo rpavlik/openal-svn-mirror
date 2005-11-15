@@ -10,6 +10,7 @@
 
 #include <AL/al.h>
 
+#include "al_distance.h"
 #include "al_error.h"
 #include "al_ext.h"
 
@@ -198,3 +199,92 @@ DEFINE_GETTER(ALfloat,CONV_FLOAT,alGetFloatv,alGetFloat)
 DEFINE_GETTER(ALdouble,CONV_DOUBLE,alGetDoublev,alGetDouble)
 
 #undef DEFINE_GETTER
+
+void
+alDopplerFactor( ALfloat value )
+{
+	AL_context *cc = _alcDCGetContext();
+	if( cc == NULL ) {
+		_alDCSetError( AL_INVALID_OPERATION );
+		return;
+	}
+	_alcDCLockContext();
+
+	if( value < 0.0f ) {
+		_alDCSetError( AL_INVALID_VALUE );
+		_alcDCUnlockContext();
+		return;
+	}
+	cc->doppler_factor = value;
+
+	_alcDCUnlockContext();
+}
+
+void
+alDopplerVelocity( ALfloat value )
+{
+	AL_context *cc = _alcDCGetContext();
+	if( cc == NULL ) {
+		_alDCSetError( AL_INVALID_OPERATION );
+		return;
+	}
+	_alcDCLockContext();
+
+	if( value <= 0.0f ) {
+		_alDCSetError( AL_INVALID_VALUE );
+		_alcDCUnlockContext();
+		return;
+	}
+	cc->doppler_velocity = value;
+
+	_alcDCUnlockContext();
+}
+
+void
+alSpeedOfSound( ALfloat value )
+{
+	AL_context *cc = _alcDCGetContext();
+	if( cc == NULL ) {
+		_alDCSetError( AL_INVALID_OPERATION );
+		return;
+	}
+	_alcDCLockContext();
+
+	if( value <= 0.0f ) {
+		_alDCSetError( AL_INVALID_VALUE );
+		_alcDCUnlockContext();
+		return;
+	}
+	cc->speed_of_sound = value;
+
+	_alcDCUnlockContext();
+}
+
+void
+alDistanceModel( ALenum distanceModel )
+{
+	AL_context *cc = _alcDCGetContext();
+	if( cc == NULL ) {
+		_alDCSetError( AL_INVALID_OPERATION );
+		return;
+	}
+	_alcDCLockContext();
+
+	switch( distanceModel ) {
+	case AL_NONE:
+	case AL_INVERSE_DISTANCE:
+	case AL_INVERSE_DISTANCE_CLAMPED:
+	case AL_LINEAR_DISTANCE:
+	case AL_LINEAR_DISTANCE_CLAMPED:
+	case AL_EXPONENT_DISTANCE:
+	case AL_EXPONENT_DISTANCE_CLAMPED:
+		cc->distance_model = distanceModel;
+		_alUpdateDistanceModel(cc);
+		break;
+	default:
+		_alDCSetError( AL_INVALID_ENUM );
+		break;
+	}
+
+	_alcDCUnlockContext();
+}

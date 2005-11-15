@@ -17,7 +17,6 @@ AL_OBJS=al_bpool.o 	\
 	al_config.o     \
 	al_debug.o      \
 	al_distance.o   \
-	al_doppler.o    \
 	al_error.o      \
 	al_ext.o        \
 	al_filter.o     \

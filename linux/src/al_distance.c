@@ -3,75 +3,39 @@
  *
  * al_distance.c
  *
- * Distance tweakage.
+ * Implementation of distance models.
  */
 #include "al_siteconfig.h"
 
-#include <AL/al.h>
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "al_distance.h"
-#include "al_error.h"
 #include "al_main.h"
-#include "alc/alc_context.h"
-#include "alc/alc_error.h"
-
-#define MIN_DISTANCE 0.001
-#define MAX_DISTANCE 40000
 
 /*
- * alDistanceModel( ALenum distanceModel )
- *
- * Sets the distance model for the current context.  If distanceModel is not
- * one of AL_NONE, AL_INVERSE_DISTANCE, or AL_INVERSE_DISTANCE_CLAMPED,
- * AL_INVALID_ENUM is set.
+ * No distance attenuation.  Which means we return 1.0 for all values.
  */
-void alDistanceModel( ALenum distanceModel ) {
-	_alcDCLockContext();
-
-	_alDistanceModel( distanceModel );
-
-	_alcDCUnlockContext();
-
-	return;
-}
-
-/*
- *  ALfloat foo( double value, double max )
- *
- *  these functions normalize the value value to somewhere
- *  within [0.0-1.0].  This is, effectively, the distance
- *  model.
- */
-
-
-/*
- * _alDistanceNone
- *
- * No distance attenuation.  Which means we return 1.0 for
- * all values.
- */
-ALfloat _alDistanceNone( UNUSED(ALfloat dis),
-			 UNUSED(ALfloat rolloff),
-			 UNUSED(ALfloat gain),
-			 UNUSED(ALfloat ref),
-			 UNUSED(ALfloat max)) {
+static ALfloat
+noAttenuation( UNUSED(ALfloat dist),
+	       UNUSED(ALfloat rolloff),
+	       ALfloat gain,
+	       UNUSED(ALfloat ref),
+	       UNUSED(ALfloat max))
+{
 	return gain;
 }
 
 /*
- * We are using the linear adaptation of the spec's
- * formula, because we are dealing with all linear
- * gains at this point:
+ * We are using the linear adaptation of the spec's formula, because we are
+ * dealing with all linear gains at this point:
  *
  * G = GAIN * REF / ( REF + ROLLOFF * ( dist - REF ) );
  */
-ALfloat _alDistanceInverse( ALfloat dist,
-			    ALfloat rolloff,
-			    ALfloat gain,
-			    ALfloat ref,
-			    UNUSED(ALfloat max)) {
+static ALfloat
+inverseDistance( ALfloat dist,
+		 ALfloat rolloff,
+		 ALfloat gain,
+		 ALfloat ref,
+		 UNUSED(ALfloat max))
+{
 	ALfloat retval;
 
 	/* dist = MAX( dist, ref ) */
@@ -91,11 +55,13 @@ ALfloat _alDistanceInverse( ALfloat dist,
 	return retval;
 }
 
-ALfloat _alDistanceInverseClamped( ALfloat dist,
-				   ALfloat rolloff,
-				   ALfloat gain,
-				   ALfloat ref,
-				   ALfloat max ) {
+static ALfloat
+inverseDistanceClamped( ALfloat dist,
+			ALfloat rolloff,
+			ALfloat gain,
+			ALfloat ref,
+			ALfloat max )
+{
 	ALfloat retval;
 
 	/* dist = MAX( dist, ref ) */
@@ -114,39 +80,78 @@ ALfloat _alDistanceInverseClamped( ALfloat dist,
 	return retval;
 }
 
-/*
- * _alDistanceModel( ALenum distanceModel )
- *
- * Non locking version of alDistanceModel.
- */
-void _alDistanceModel( ALenum distanceModel ) {
-	AL_context *cc;
+/* TODO */
+static ALfloat
+linearDistance( UNUSED(ALfloat dist),
+		UNUSED(ALfloat rolloff),
+		ALfloat gain,
+		UNUSED(ALfloat ref),
+		UNUSED(ALfloat max))
+{
+	return gain;
+}
 
-	cc = _alcDCGetContext();
-	if( cc == NULL ) {
-		/* even if there is no context, this is nice for debugging */
-		_alDCSetError( AL_INVALID_OPERATION );
-		return;
+/* TODO */
+static ALfloat
+linearDistanceClamped( UNUSED(ALfloat dist),
+		       UNUSED(ALfloat rolloff),
+		       ALfloat gain,
+		       UNUSED(ALfloat ref),
+		       UNUSED(ALfloat max))
+{
+	return gain;
+}
+
+/* TODO */
+static ALfloat
+exponentDistance( UNUSED(ALfloat dist),
+		  UNUSED(ALfloat rolloff),
+		  ALfloat gain,
+		  UNUSED(ALfloat ref),
+		  UNUSED(ALfloat max))
+{
+	return gain;
+}
+
+/* TODO */
+static ALfloat
+exponentDistanceClamped( UNUSED(ALfloat dist),
+			 UNUSED(ALfloat rolloff),
+			 ALfloat gain,
+			 UNUSED(ALfloat ref),
+			 UNUSED(ALfloat max))
+{
+	return gain;
+}
+
+void
+_alUpdateDistanceModel( AL_context *cc )
+{
+	switch( cc->distance_model) {
+	case AL_NONE:
+		cc->distance_func = noAttenuation;
+		break;
+	case AL_INVERSE_DISTANCE:
+		cc->distance_func = inverseDistance;
+		break;
+	case AL_INVERSE_DISTANCE_CLAMPED:
+		cc->distance_func = inverseDistanceClamped;
+		break;
+	case AL_LINEAR_DISTANCE:
+		cc->distance_func = linearDistance;
+		break;
+	case AL_LINEAR_DISTANCE_CLAMPED:
+		cc->distance_func = linearDistanceClamped;
+		break;
+	case AL_EXPONENT_DISTANCE:
+		cc->distance_func = exponentDistance;
+		break;
+	case AL_EXPONENT_DISTANCE_CLAMPED:
+		cc->distance_func = exponentDistanceClamped;
+		break;
+	default:
+		/* should never happen, just to be safe */
+		cc->distance_func = inverseDistanceClamped;
+		break;
 	}
-
-	switch( distanceModel ) {
-		case AL_NONE:
-			cc->distance_model = AL_NONE;
-			cc->distance_func = _alDistanceNone;
-			break;
-		case AL_INVERSE_DISTANCE:
-			cc->distance_model = AL_INVERSE_DISTANCE;
-			cc->distance_func = _alDistanceInverse;
-			break;
-		case AL_INVERSE_DISTANCE_CLAMPED:
-			cc->distance_model = AL_INVERSE_DISTANCE_CLAMPED;
-			cc->distance_func = _alDistanceInverseClamped;
-			break;
-		default:
-			_alDCSetError( AL_INVALID_ENUM );
-
-			break;
-		}
-
-	return;
 }

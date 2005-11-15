@@ -1,9 +1,24 @@
+2005-11-15  Sven Panne  <sven.panne@aedion.de>
+
+	* src/Makefile.in, src/al_distance.c, src/al_distance.h, src/al_state.c,
+	src/alc/alc_context.c: Moved doppler and distance model setters to where
+	they belong. Removed some arbitraty restrictions (MIN_DOPPLER,
+	MAX_DOPPLER, MIN_DOPPLER_VELOCITY, MAX_DOPPLER_VELOCITY), they were not
+	spec conformant. If things go wrong now, something else has to be fixed! 
+	The default distance model is now AL_INVERSE_DISTANCE_CLAMPED (not
+	AL_INVERSE_DISTANCE), as required by the spec. All distance models are
+	accepted now, although not all have been actually implemented
+	yet. Started to refactor setters a bit ("Set internal state in generic
+	frontend and notify backend about the change.").
+
+	* src/al_doppler.c: Removed.
+
 2005-11-14  Sven Panne  <sven.panne@aedion.de>
 
 	* src/Makefile.in, src/al_error.c, src/al_error.h, src/al_ext.c,
-	src/al_ext.h, src/al_state.c, src/al_types.h,
-	src/alc/alc_context.c, src/alc/alc_error.c: First steps towards
-	cleaning up and refactoring the per-context state management.
+	src/al_ext.h, src/al_state.c, src/al_types.h, src/alc/alc_context.c,
+	src/alc/alc_error.c: First steps towards cleaning up and refactoring the
+	per-context state management.
 
 	* src/al_able.c: Removed.
 
@@ -12,28 +27,27 @@
 
 2005-11-11  Sven Panne  <sven.panne@aedion.de>
 
-	* src/al_able.c: Set an AL_INVALID_OPERATION when there is no
-	current context to ease debugging.
+	* src/al_able.c: Set an AL_INVALID_OPERATION when there is no current
+	context to ease debugging.
 
-	* src/al_able.c, src/al_distance.c, src/al_state.c: What to do
-	exactly regarding error handling when there is no current context
-	is a little bit of a dark corner in the spec. But under every
-	interpretation of the spec, setting an ALC error is completely
-	wrong. Now we call the internal error setter with
-	AL_INVALID_OPERATION, even when there is no current context to
-	record the error. This makes debugging easier and the error could
-	e.g. be reported to the user in some other way if desired.
+	* src/al_able.c, src/al_distance.c, src/al_state.c: What to do exactly
+	regarding error handling when there is no current context is a little
+	bit of a dark corner in the spec. But under every interpretation of the
+	spec, setting an ALC error is completely wrong. Now we call the internal
+	error setter with AL_INVALID_OPERATION, even when there is no current
+	context to record the error. This makes debugging easier and the error
+	could e.g. be reported to the user in some other way if desired.
 
 	* src/al_state.c: Do not use al_state.h anymore. Made the internal
 	getters static.
 
 	* src/al_state.h: Removed.
 
-	* src/al_ext.c, src/alc/alc_context.c: Overhauled
-	alcGetProcessAddress and alGetProcAddress.
+	* src/al_ext.c, src/alc/alc_context.c: Overhauled alcGetProcessAddress
+	and alGetProcAddress.
 
-	* src/al_ext.c, src/alc/alc_context.c: Overhauled alcGetEnumValue
-	and alGetEnumValue.
+	* src/al_ext.c, src/alc/alc_context.c: Overhauled alcGetEnumValue and
+	alGetEnumValue.
 
 	* doc/openal.texi: Added a tiny note about AL_BYTE_LOKI.
 
@@ -41,23 +55,22 @@
 
 	* doc/openal.texi, src/al_ext.c, src/alc/alc_context.c,
 	test/testcallback.c, test/testchannel.c, test/testchannel2.c,
-	test/testmulticontext.c, test/testmulticontext2.c,
-	test/testpitch.c, test/testpitch2.c, test/testpitch3.c,
-	test/testpitch4.c, linux/test/teststartstop.c: Do not use
-	AL_INVALID and ALC_INVALID, they are not in the 1.1 spec.
+	test/testmulticontext.c, test/testmulticontext2.c, test/testpitch.c,
+	test/testpitch2.c, test/testpitch3.c, test/testpitch4.c,
+	linux/test/teststartstop.c: Do not use AL_INVALID and ALC_INVALID, they
+	are not in the 1.1 spec.
 
 	* ChangeLog, include/AL/alext.h, src/al_ext.c, src/al_filter.c,
-	src/al_listen.c, src/al_source.c, test/testchannel.c,
-	test/testgain.c, test/testgainlinear.c, test/testmultinothread.c,
-	test/testpitch.c, test/testpitch2.c, test/testpitch3.c,
-	test/testpitch4.c, test/testpitchnothread.c,
-	test/testpitchnothread2.c, test/testqueue.c, test/testqueue2.c,
-	test/testqueue3.c, test/testtime.c: The non-standard
+	src/al_listen.c, src/al_source.c, test/testchannel.c, test/testgain.c,
+	test/testgainlinear.c, test/testmultinothread.c, test/testpitch.c,
+	test/testpitch2.c, test/testpitch3.c, test/testpitch4.c,
+	test/testpitchnothread.c, test/testpitchnothread2.c, test/testqueue.c,
+	test/testqueue2.c, test/testqueue3.c, test/testtime.c: The non-standard
 	AL_GAIN_LINEAR_LOKI token seems to behave exactly as the standard
-	AL_GAIN, at least in the current code base. Therefore the former
-	has been deprecated in the extension header and is not used
-	internally anymore. Nevertheless, for legacy reasons it is still
-	recognized in getters and setters.
+	AL_GAIN, at least in the current code base. Therefore the former has
+	been deprecated in the extension header and is not used internally
+	anymore. Nevertheless, for legacy reasons it is still recognized in
+	getters and setters.
 
 2005-11-09  Sven Panne  <sven.panne@aedion.de>
 

@@ -717,21 +717,26 @@ void _alcSetContext(const ALCint *attrlist, ALuint cid, AL_device *dev ) {
  *
  * assumes locked context
  */
-AL_context *_alcInitContext( ALuint cid ) {
-	AL_context *cc;
-
-	cc = _alcGetContext(cid);
+AL_context *
+_alcInitContext( ALuint cid )
+{
+	AL_context *cc = _alcGetContext(cid);
 	if(cc == NULL) {
 		/* invalid context */
 		return NULL;
 	}
 
+	/* initialize spec parameters */
+	cc->doppler_factor = 1.0f;
+	cc->doppler_velocity = 1.0f;
+	cc->speed_of_sound = 343.3f;
+	cc->distance_model = AL_INVERSE_DISTANCE_CLAMPED;
+
+	_alUpdateDistanceModel(cc);
+
 	_alInitTimeFilters(cc->time_filters);
 
 	cc->alErrorIndex   = AL_NO_ERROR;
-
-	cc->doppler_factor    = 1.0;
-	cc->doppler_velocity  = 1.0;
 
 	_alInitListener(&cc->listener);
 
@@ -756,12 +761,6 @@ AL_context *_alcInitContext( ALuint cid ) {
 	 */
 	cc->should_sync = AL_FALSE;
 	cc->issuspended = AL_FALSE; /* deviates */
-
-	/*
-	 * set distance model stuff
-	 */
-	cc->distance_model = AL_INVERSE_DISTANCE;
-	cc->distance_func  = _alDistanceInverse;
 
 	cc->Flags = 0;
 	cc->NumFlags = 0;
