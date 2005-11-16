@@ -1,3 +1,9 @@
+2005-11-16  Sven Panne  <sven.panne@aedion.de>
+
+	* src/al_distance.c, src/al_filter.c, src/al_types.h: Centralized
+	multiplication with source gain. Made the distance models follow
+	the spec more closely (at least I hope so :-).
+
 2005-11-15  Sven Panne  <sven.panne@aedion.de>
 
 	* src/al_distance.c: Implemented missing distance models and

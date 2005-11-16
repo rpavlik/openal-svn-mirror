@@ -329,8 +329,8 @@ typedef struct _AL_context {
 		ALfloat pcm;
 	} restore;
 
-	ALfloat (*distance_func)( ALfloat gain, ALfloat rolloff,
-				  ALfloat dis, ALfloat ref, ALfloat max );
+	ALfloat (*distance_func)( ALfloat dist, ALfloat rolloff,
+				  ALfloat ref, ALfloat max );
 
 	ALint *Flags;
 	ALint NumFlags;

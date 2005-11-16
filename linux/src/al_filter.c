@@ -137,7 +137,6 @@ static time_filter_set software_time_filters[] = {
  *             ALfloat source_rolloff,
  *             ALfloat *speaker_pos,
  *             ALfloat (*df)( ALfloat dist, ALfloat rolloff,
- *                            ALfloat gain,
  *                            ALfloat ref, ALfloat max))
  *
  * computes distance attenuation with respect to a speaker position.
@@ -159,8 +158,7 @@ static ALfloat compute_sa( ALfloat *source_pos, ALfloat source_max,
 			   ALfloat source_ref, ALfloat source_gain,
 			   ALfloat source_rolloff,
 			   ALfloat *speaker_pos,
-			   ALfloat df( ALfloat dist, ALfloat rolloff, ALfloat gain,
-			   	       ALfloat ref, ALfloat max ));
+			   ALfloat df( ALfloat dist, ALfloat rolloff, ALfloat ref, ALfloat max ));
 
 #if USE_TPITCH_LOOKUP
 /*
@@ -523,8 +521,7 @@ void alf_coning( ALuint cid,
 	ALfloat srcDir[3];
 	ALfloat icone;      /* inner cone angle. */
 	ALfloat ocone;      /* outer cone angle.  */
-	ALfloat (*df)( ALfloat gain, ALfloat rolloff, ALfloat dist,
-		       ALfloat ref, ALfloat max ); /* distance model func */
+	ALfloat (*df)( ALfloat dist, ALfloat rolloff, ALfloat ref, ALfloat max ); /* distance model func */
 	ALfloat smax;       /* source specific max distance */
 	ALfloat ref;        /* source specific reference distance */
 	ALfloat gain;       /* source specific gain */
@@ -569,7 +566,7 @@ void alf_coning( ALuint cid,
 		return;
 	}
 
-	/* set source specific ref distance */
+	/* get source specific ref distance */
 	temp = _alGetSourceParam( src, AL_REFERENCE_DISTANCE );
 	if( temp != NULL ) {
 		ref = * (ALfloat *) temp;
@@ -577,7 +574,7 @@ void alf_coning( ALuint cid,
 		_alSourceGetParamDefault( AL_REFERENCE_DISTANCE, &ref );
 	}
 
-	/* set source specific gain */
+	/* get source specific gain */
 	temp = _alGetSourceParam( src, AL_GAIN );
 	if( temp != NULL ) {
 		gain =  * (ALfloat *) temp;
@@ -597,13 +594,6 @@ void alf_coning( ALuint cid,
 	temp = _alGetSourceParam( src, AL_ROLLOFF_FACTOR );
 	if( temp != NULL ) {
 		rolloff =  * (ALfloat *) temp;
-
-#if 0  /* rcg02012001 Don't need this. Handled in compute_sa(), now. */
-		if( rolloff == 0.0f ) {
-			/* FIXME: use epsilon */
-			return;
-		}
-#endif
 	} else {
 		_alSourceGetParamDefault( AL_ROLLOFF_FACTOR, &rolloff );
 	}
@@ -798,8 +788,7 @@ void alf_da( ALuint cid,
 	ALfloat *listener_position;
 	ALfloat *temp;
 	ALuint i;
-	ALfloat (*df)( ALfloat gain, ALfloat rolloff, ALfloat dist,
-		       ALfloat ref, ALfloat max ); /* distance model func */
+	ALfloat (*df)( ALfloat dist, ALfloat rolloff, ALfloat ref, ALfloat max ); /* distance model func */
 	ALfloat gain; /* source specific gain */
 	ALfloat ref;  /* source specific ref distance */
 	ALfloat smax;        /* source specific max distance */
@@ -920,13 +909,6 @@ void alf_da( ALuint cid,
 	temp = _alGetSourceParam( src, AL_ROLLOFF_FACTOR );
 	if( temp != NULL ) {
 		rolloff =  * (ALfloat *) temp;
-
-#if 0  /* rcg02012001 Don't need this. Handled in compute_sa(), now. */
-		if( rolloff == 0.0f ) {
-			/* FIXME: use epsilon */
-			return;
-		}
-#endif
 	} else {
 		_alSourceGetParamDefault( AL_ROLLOFF_FACTOR, &rolloff );
 	}
@@ -1730,7 +1712,6 @@ void alf_tpitch( UNUSED(ALuint cid),
  *             ALfloat source_rolloff,
  *             ALfloat *speaker_pos,
  *             ALfloat (*df)( ALfloat dist, ALfloat rolloff,
- *                            ALfloat gain,
  *                            ALfloat ref, ALfloat max))
  *
  * computes distance attenuation with respect to a speaker position.
@@ -1748,33 +1729,23 @@ void alf_tpitch( UNUSED(ALuint cid),
  * max        = maximum distance, beyond which everything is clamped at
  *              some small value near, but not equal to, zero.
  */
-static ALfloat compute_sa( ALfloat *source_pos, ALfloat source_max,
-			   ALfloat source_ref, ALfloat source_gain,
-			   ALfloat source_rolloff,
-			   ALfloat *speaker_pos,
-			   ALfloat (*df)( ALfloat dist, ALfloat rolloff,
-			   		  ALfloat gain,
-			   		  ALfloat ref, ALfloat max)) {
-	ALfloat distance;
+static ALfloat
+compute_sa( ALfloat *source_pos, ALfloat source_max,
+	    ALfloat source_ref, ALfloat source_gain,
+	    ALfloat source_rolloff,
+	    ALfloat *speaker_pos,
+	    ALfloat (*df)( ALfloat dist, ALfloat rolloff, ALfloat ref, ALfloat max))
+{
 	ALfloat retval;
 
-#if 1
-	/* rcg02012001 "Optimize" for rolloff == 0.0 */
+	/* "Optimize" for rolloff == 0.0 */
 	if (source_rolloff > 0.0) {
+		ALfloat distance;
 		distance = _alVectorMagnitude( source_pos, speaker_pos );
-
-		retval = df( distance, source_rolloff, source_gain, source_ref,
-		             source_max );
-	}
-	else {
+		retval = source_gain * df( distance, source_rolloff, source_ref, source_max );
+	} else {
 		retval = source_gain;
 	}
-#else
-	distance = _alVectorMagnitude( source_pos, speaker_pos );
-
-	retval = df( distance, source_rolloff, source_gain, source_ref,
-		     source_max );
-#endif
 
 	if( retval > 1.0 ) {
 		return 1.0;

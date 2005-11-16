@@ -18,45 +18,41 @@
 static ALfloat
 noAttenuation( UNUSED(ALfloat distance),
 	       UNUSED(ALfloat rolloffFactor),
-	       ALfloat sourceGain,
 	       UNUSED(ALfloat referenceDistance),
 	       UNUSED(ALfloat maxDistance))
 {
-	return sourceGain;
+	return 1.0f;
 }
 
 static ALfloat
 inverseDistance( ALfloat distance,
 		 ALfloat rolloffFactor,
-		 ALfloat sourceGain,
 		 ALfloat referenceDistance,
-		 ALfloat maxDistance)
+		 UNUSED(ALfloat maxDistance))
 {
-	ALfloat distDiff;
-
-	if ((maxDistance <= referenceDistance) || (referenceDistance == 0.0f)) {
-		return sourceGain;
+	/*
+	 * At this distance, the gain formula has a singularity and smaller
+	 * distances would result in a negative gain. In these cases, the spec
+	 * explicitly requires "no attenuation".
+	 */
+	ALfloat critDist = referenceDistance + (rolloffFactor * (distance - referenceDistance));
+	if (critDist <= 0.0f) {
+		return 1.0f;
 	}
 
-	distDiff = referenceDistance + (rolloffFactor * (distance - referenceDistance));
-	if (distDiff <= 0.0f) {
-		return sourceGain * 1000000.0f;
-	}
-
-	return sourceGain * referenceDistance / distDiff;
+	return referenceDistance / critDist;
 }
 
 static ALfloat
 inverseDistanceClamped( ALfloat distance,
 			ALfloat rolloffFactor,
-			ALfloat sourceGain,
 			ALfloat referenceDistance,
 			ALfloat maxDistance )
 {
-	ALfloat distDiff;
+	ALfloat critDist;
 
-	if ((maxDistance <= referenceDistance) || (referenceDistance == 0.0f)) {
-		return sourceGain;
+	if (maxDistance <= referenceDistance) {
+		return 1.0;
 	}
 
 	/* distance = MAX( distance, referenceDistance ) */
@@ -69,37 +65,40 @@ inverseDistanceClamped( ALfloat distance,
 		distance = maxDistance;
 	}
 
-	distDiff = referenceDistance + (rolloffFactor * (distance - referenceDistance));
-	if (distDiff <= 0.0f) {
-		return sourceGain * 1000000.0f;
+	/*
+	 * At this distance, the gain formula has a singularity and smaller
+	 * distances would result in a negative gain. In these cases, the spec
+	 * explicitly requires "no attenuation".
+	 */
+	critDist = referenceDistance + (rolloffFactor * (distance - referenceDistance));
+	if (critDist <= 0.0f) {
+		return 1.0f;
 	}
 
-	return sourceGain * referenceDistance / distDiff;
+	return referenceDistance / critDist;
 }
 
 static ALfloat
 linearDistance( ALfloat distance,
 		ALfloat rolloffFactor,
-		ALfloat sourceGain,
 		ALfloat referenceDistance,
 		ALfloat maxDistance)
 {
 	if (maxDistance <= referenceDistance) {
-		return sourceGain;
+		return 1.0f;
 	}
 
-	return sourceGain * (1 - rolloffFactor * (distance - referenceDistance) / (maxDistance - referenceDistance));
+	return 1.0f - rolloffFactor * (distance - referenceDistance) / (maxDistance - referenceDistance);
 }
 
 static ALfloat
 linearDistanceClamped( ALfloat distance,
 		       ALfloat rolloffFactor,
-		       ALfloat sourceGain,
 		       ALfloat referenceDistance,
 		       ALfloat maxDistance)
 {
 	if (maxDistance <= referenceDistance) {
-		return sourceGain;
+		return 1.0f;
 	}
 
 	/* distance = MAX( distance, referenceDistance ) */
@@ -112,32 +111,39 @@ linearDistanceClamped( ALfloat distance,
 		distance = maxDistance;
 	}
 
-	return sourceGain * (1 - rolloffFactor * (distance - referenceDistance) / (maxDistance - referenceDistance));
+	return 1.0f - rolloffFactor * (distance - referenceDistance) / (maxDistance - referenceDistance);
 }
 
 static ALfloat
 exponentDistance( ALfloat distance,
 		  ALfloat rolloffFactor,
-		  ALfloat sourceGain,
 		  ALfloat referenceDistance,
-		  ALfloat maxDistance)
+		  UNUSED(ALfloat maxDistance))
 {
-	if ((maxDistance <= referenceDistance) || (referenceDistance == 0.0f) || (distance == 0.0f)) {
-		return sourceGain;
+	ALfloat quotient;
+
+	if (referenceDistance == 0.0f) {
+		return 1.0f;
 	}
 
-	return sourceGain * ((ALfloat)pow(distance / referenceDistance, -rolloffFactor));
+	quotient = distance / referenceDistance;
+	if (quotient == 0.0f) {
+		return 1.0f;
+	}
+
+	return (ALfloat)pow(quotient, -rolloffFactor);
 }
 
 static ALfloat
 exponentDistanceClamped( ALfloat distance,
 			 ALfloat rolloffFactor,
-			 ALfloat sourceGain,
 			 ALfloat referenceDistance,
 			 ALfloat maxDistance)
 {
+	ALfloat quotient;
+
 	if ((maxDistance <= referenceDistance) || (referenceDistance == 0.0f)) {
-		return sourceGain;
+		return 1.0f;
 	}
 
 	/* distance = MAX( distance, referenceDistance ) */
@@ -150,11 +156,12 @@ exponentDistanceClamped( ALfloat distance,
 		distance = maxDistance;
 	}
 
-	if (distance == 0.0f) {
-		return sourceGain;
+	quotient = distance / referenceDistance;
+	if (quotient == 0.0f) {
+		return 1.0f;
 	}
 
-	return sourceGain * ((ALfloat)pow(distance / referenceDistance, -rolloffFactor));
+	return (ALfloat)pow(quotient, -rolloffFactor);
 }
 
 void
