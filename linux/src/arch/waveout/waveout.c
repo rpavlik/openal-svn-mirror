@@ -290,7 +290,7 @@ ALboolean set_write_waveout(void *handle,
 		  ALenum *fmt,
 		  ALuint *speed) {
 	waveout_t *whandle;
-	ALuint chans = _al_ALCHANNELS( *fmt );
+	ALuint chans = _alGetChannelsFromFormat( *fmt );
 
 	if(handle == NULL) {
 		return AL_FALSE;
@@ -301,7 +301,7 @@ ALboolean set_write_waveout(void *handle,
 	whandle->speed    = *speed;
 	whandle->format   = *fmt;
 	whandle->channels = chans;
-	whandle->bitspersample = _al_formatbits(*fmt);
+	whandle->bitspersample = _alGetBitsFromFormat(*fmt);
 
         return AL_TRUE;
 }

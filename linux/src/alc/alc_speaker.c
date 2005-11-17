@@ -61,8 +61,8 @@ void _alcSpeakerMove( ALuint cid ) {
 		return;
 	}
 
-	pos = cc->listener.Position;
-	ori = cc->listener.Orientation;
+	pos = cc->listener.position;
+	ori = cc->listener.orientation;
 
 	m  = _alMatrixAlloc(3, 3);
 	pm = _alMatrixAlloc(1, 3);
@@ -79,7 +79,7 @@ void _alcSpeakerMove( ALuint cid ) {
 	/* reset speaker position */
 	_alcSpeakerInit(cid);
 
-	_alVectorInverse( ipos, cc->listener.Position );
+	_alVectorInverse( ipos, cc->listener.position );
 
 	/* rotate about at and up vectors */
 	for(i = 0; i < _alcGetNumSpeakers(cid); i++) {
@@ -139,7 +139,7 @@ void _alcSpeakerInit( ALuint cid ) {
 		return;
 	}
 
-	lpos = lis->Position;
+	lpos = lis->position;
 
 	/*
 	 * A speaker distance of one simplifies the math later.
@@ -192,7 +192,7 @@ void _alcSpeakerInit( ALuint cid ) {
  * assumes locked context
  */
 ALuint _alcGetNumSpeakers( ALuint cid ) {
-	return _al_ALCHANNELS( _alcGetWriteFormat( cid ) );
+	return _alGetChannelsFromFormat( _alcGetWriteFormat( cid ) );
 }
 
 /*

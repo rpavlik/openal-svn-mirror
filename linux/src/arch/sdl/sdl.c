@@ -138,8 +138,8 @@ ALboolean set_write_sdl(UNUSED(void *handle),
 		ALuint *bufsiz,
 		ALenum *fmt,
 		ALuint *speed) {
-	ALuint bytesPerSample   = _al_formatbits(*fmt) >> 3;
-	ALuint channels = _al_ALCHANNELS(*fmt);
+	ALuint bytesPerSample   = _alGetBitsFromFormat(*fmt) >> 3;
+	ALuint channels = _alGetChannelsFromFormat(*fmt);
 
         memset(&sdl_info, '\0', sizeof (sdl_info));
         sdl_info.spec.freq     = *speed;

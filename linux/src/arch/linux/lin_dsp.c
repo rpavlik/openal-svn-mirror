@@ -479,7 +479,7 @@ ALboolean set_write_native(UNUSED(void *handle),
 			   ALuint *speed) {
 	int write_fd = *(int *)handle;
 	ALuint linformat;
-	ALuint channels = _al_ALCHANNELS(*fmt);
+	ALuint channels = _alGetChannelsFromFormat(*fmt);
 	int err;
 
 	if(write_fd < 0) {

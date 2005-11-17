@@ -163,12 +163,12 @@ ALsizei alCaptureGetData_EXT( UNUSED(ALvoid* data),
 		ALuint samples;
 		void *temp;
 
-		samples = n / (_al_formatbits(format) / 8);
+		samples = n / (_alGetBitsFromFormat(format) / 8);
 
 		/* Set size to the bytes of raw audio data we need */
 		size = _al_PCMRatioify(rate, dev->speed,
 		                       format, dev->format, samples);
-		size *= (_al_formatbits(dev->format) / 8);
+		size *= (_alGetBitsFromFormat(dev->format) / 8);
 
         	if ( n > (ALsizei)size )
 			temp = malloc( n );

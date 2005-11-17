@@ -288,7 +288,7 @@ ALenum _al_AC2ALFMT( ALuint acformat, ALuint channels ) {
  *
  * Returns the equivilant (sort of) audioconvert format specified by alfmt.
  * audioconvert formats do not have channel information, so this should be
- * combined with _al_ALCHANNELS.
+ * combined with _alGetChannelsFromFormat.
  */
 ALushort _al_AL2ACFMT( ALenum alformat ) {
 	switch( alformat ) {
@@ -312,11 +312,11 @@ ALushort _al_AL2ACFMT( ALenum alformat ) {
 }
 
 /*
- * _al_ALCHANNELS(fmt)
+ * _alGetChannelsFromFormat(fmt)
  *
  * evaluates to the number of channels in an openal format.
  */
-ALubyte _al_ALCHANNELS(ALenum alformat)
+ALubyte _alGetChannelsFromFormat(ALenum alformat)
 {
 	switch( alformat ) {
 		case AL_FORMAT_MONO8:
@@ -345,7 +345,7 @@ ALubyte _al_ALCHANNELS(ALenum alformat)
  * channel width to accomedate new_channel_num channels.
  */
 ALenum _al_formatscale(ALenum format, ALuint new_channel_num) {
-	int fmt_bits = _al_formatbits(format);
+	int fmt_bits = _alGetBitsFromFormat(format);
 
 	switch(new_channel_num) {
 		case 1:
@@ -664,8 +664,8 @@ ALuint _al_PCMRatioify( ALuint ffreq, ALuint tfreq,
 
 	ret *= ((float) tfreq / (float) ffreq);
 
-	ret *= (_al_formatbits( ffmt ) / 8 );
-	ret /= (_al_formatbits( tfmt ) / 8 );
+	ret *= (_alGetBitsFromFormat( ffmt ) / 8 );
+	ret /= (_alGetBitsFromFormat( tfmt ) / 8 );
 
 	return ret;
 }
@@ -830,11 +830,11 @@ ALboolean _al_RAWFORMAT(ALenum format)
 }
 
 /*
- * _al_formatbits( ALenum format )
+ * _alGetBitsFromFormat( ALenum format )
  *
- * Returns bit depth of format.
+ * Returns the number of bits per sample for the given format.
  */
-ALbyte _al_formatbits(ALenum format)
+ALbyte _alGetBitsFromFormat(ALenum format)
 {
 	switch(format) {
 		case AL_FORMAT_MONO16:

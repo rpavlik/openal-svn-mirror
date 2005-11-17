@@ -1,8 +1,25 @@
+2005-11-17  Sven Panne  <sven.panne@aedion.de>
+
+	* src/al_bpool.c, src/al_buffer.c, src/al_filter.c, src/al_listen.c,
+	src/al_main.c, src/al_main.h, src/al_mixer.c, src/al_source.c,
+	src/al_types.h, src/alc/alc_context.c, src/alc/alc_speaker.c,
+	src/arch/alsa/alsa.c, src/arch/arts/arts.c, src/arch/bsd/bsd_dsp.c,
+	src/arch/esd/esd.c, src/arch/irix/iris.c, src/arch/linux/lin_dsp.c,
+	src/arch/sdl/sdl.c, src/arch/solaris/solaris_native.c,
+	src/arch/waveout/waveout.c, src/arch/windows/windows_native.c,
+	src/extensions/al_ext_capture.c, src/extensions/al_ext_loki.c,
+	src/extensions/al_ext_mp3.c, src/extensions/al_ext_vorbis.c: To make a
+	mapping of the spec to the implementation easier, useless naming
+	creativity has been replaced by a simple naming convention. If the spec
+	describes an attribute AL_FOO_BAR, the corresponding struct has a field
+	foo_bar. Furthermore, the fields are ordered in the same way as they are
+	described in the spec.
+
 2005-11-16  Sven Panne  <sven.panne@aedion.de>
 
 	* src/al_distance.c, src/al_filter.c, src/al_types.h: Centralized
-	multiplication with source gain. Made the distance models follow
-	the spec more closely (at least I hope so :-).
+	multiplication with source gain. Made the distance models follow the
+	spec more closely (at least I hope so :-).
 
 2005-11-15  Sven Panne  <sven.panne@aedion.de>
 

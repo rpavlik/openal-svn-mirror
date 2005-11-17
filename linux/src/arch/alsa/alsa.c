@@ -525,7 +525,7 @@ ALboolean set_write_alsa(void *handle,
 	if( (ai == NULL) || (ai->handle == NULL) )
 		return AL_FALSE;
 
-	ai->channels    = (unsigned int) _al_ALCHANNELS(*fmt);
+	ai->channels    = (unsigned int) _alGetChannelsFromFormat(*fmt);
 	ai->format      = (unsigned int) AL2ALSAFMT(*fmt);
 	ai->speed       = (unsigned int) *speed;
 	ai->framesize   = (unsigned int) FRAMESIZE(ai->format, ai->channels);

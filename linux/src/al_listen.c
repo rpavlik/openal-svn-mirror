@@ -90,7 +90,7 @@ void alListenerf( ALenum param, ALfloat value ) {
 	switch( param ) {
 		case AL_GAIN:
 		case AL_GAIN_LINEAR_LOKI:
-			dc->listener.Gain = value;
+			dc->listener.gain = value;
 			break;
 		default:
 			_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
@@ -159,25 +159,25 @@ void alListenerfv( ALenum pname, const ALfloat *pv ) {
 
 	switch( pname ) {
 		case AL_POSITION:
-			dc->listener.Position[0] = pv[0];
-			dc->listener.Position[1] = pv[1];
-			dc->listener.Position[2] = pv[2];
+			dc->listener.position[0] = pv[0];
+			dc->listener.position[1] = pv[1];
+			dc->listener.position[2] = pv[2];
 
 			_alcDCSpeakerMove();
 			break;
 		case AL_VELOCITY:
-			dc->listener.Velocity[0] = pv[0];
-			dc->listener.Velocity[1] = pv[1];
-			dc->listener.Velocity[2] = pv[2];
+			dc->listener.velocity[0] = pv[0];
+			dc->listener.velocity[1] = pv[1];
+			dc->listener.velocity[2] = pv[2];
 			break;
 		case AL_ORIENTATION:
-			dc->listener.Orientation[0] = pv[0]; /* at */
-			dc->listener.Orientation[1] = pv[1];
-			dc->listener.Orientation[2] = pv[2];
+			dc->listener.orientation[0] = pv[0]; /* at */
+			dc->listener.orientation[1] = pv[1];
+			dc->listener.orientation[2] = pv[2];
 
-			dc->listener.Orientation[3] = pv[3]; /* up */
-			dc->listener.Orientation[4] = pv[4];
-			dc->listener.Orientation[5] = pv[5];
+			dc->listener.orientation[3] = pv[3]; /* up */
+			dc->listener.orientation[4] = pv[4];
+			dc->listener.orientation[5] = pv[5];
 
 			_alcDCSpeakerMove();
 			break;
@@ -481,15 +481,15 @@ void *_alGetListenerParam( ALuint cid, ALenum param ) {
 	switch(param) {
 		case AL_GAIN:
 		case AL_GAIN_LINEAR_LOKI:
-			return &list->Gain;
+			return &list->gain;
 			break;
 		case AL_VELOCITY:
-			return &list->Velocity;
+			return &list->velocity;
 			break;
 		case AL_POSITION:
-			return &list->Position;
+			return &list->position;
 		case AL_ORIENTATION:
-			return &list->Orientation;
+			return &list->orientation;
 		default:
 			_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
 				  "_alGetListenerParam(%d, ...) passed bad param 0x%x",
@@ -517,20 +517,20 @@ void _alInitListener( AL_listener *listener ) {
 	if(err == AL_FALSE) {
 		/* no preset position */
 		for(i = 0; i < 3; i++) {
-			listener->Position[i] = 0.0f;
+			listener->position[i] = 0.0f;
 		}
 	} else {
-		memcpy( listener->Position, tempfv, SIZEOFVECTOR);
+		memcpy( listener->position, tempfv, SIZEOFVECTOR);
 	}
 
 	err = _alGetGlobalVector("listener-velocity", ALRC_FLOAT, 3, tempfv);
 	if(err == AL_FALSE) {
 		/* no preset velocity */
 		for(i = 0; i < 3; i++) {
-			listener->Velocity[i] = 0.0f;
+			listener->velocity[i] = 0.0f;
 		}
 	} else {
-		memcpy( listener->Velocity, tempfv, SIZEOFVECTOR);
+		memcpy( listener->velocity, tempfv, SIZEOFVECTOR);
 	}
 
 	err = _alGetGlobalVector("listener-orientation", ALRC_FLOAT, 6, tempfv);
@@ -538,19 +538,19 @@ void _alInitListener( AL_listener *listener ) {
 		/* no preset orientation */
 
 		/* at */
-		listener->Orientation[0] = 0.0f;
-		listener->Orientation[1] = 0.0f;
-		listener->Orientation[2] = -1.0f;
+		listener->orientation[0] = 0.0f;
+		listener->orientation[1] = 0.0f;
+		listener->orientation[2] = -1.0f;
 
 		/* up */
-		listener->Orientation[3] = 0.0f;
-		listener->Orientation[4] = 1.0f;
-		listener->Orientation[5] = 0.0f;
+		listener->orientation[3] = 0.0f;
+		listener->orientation[4] = 1.0f;
+		listener->orientation[5] = 0.0f;
 	} else {
-		memcpy( listener->Orientation, tempfv, 2 * SIZEOFVECTOR);
+		memcpy( listener->orientation, tempfv, 2 * SIZEOFVECTOR);
 	}
 
-	listener->Gain = 1.0f;
+	listener->gain = 1.0f;
 
 	return;
 }

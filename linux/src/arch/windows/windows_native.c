@@ -232,7 +232,7 @@ ALboolean set_write_native(UNUSED(void *handle),
 	int i;
 	char *bufptr;
         HWAVEOUT hwo;
-	ALuint channels = _al_ALCHANNELS(*fmt);
+	ALuint channels = _alGetChannelsFromFormat(*fmt);
 
 	/* close previous instance */
 	waveOutClose(WinAudioHandle.hwo);
@@ -241,7 +241,7 @@ ALboolean set_write_native(UNUSED(void *handle),
 
 	pwfx->wFormatTag      = DEF_FORMAT;
 	pwfx->nChannels       = channels;
-	pwfx->wBitsPerSample  = _al_formatbits(*fmt);
+	pwfx->wBitsPerSample  = _alGetBitsFromFormat(*fmt);
 	pwfx->nBlockAlign     = pwfx->nChannels * (pwfx->wBitsPerSample / 8);
 	pwfx->nSamplesPerSec  = *speed;
 	pwfx->nAvgBytesPerSec = pwfx->nSamplesPerSec * pwfx->nBlockAlign;

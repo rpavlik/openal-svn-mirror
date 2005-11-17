@@ -207,7 +207,7 @@ void alReverbDelay_LOKI(ALuint sid, ALfloat param) {
 		return;
 	}
 
-	src->reverb_delay = param * canon_speed * _al_ALCHANNELS(canon_format);
+	src->reverb_delay = param * canon_speed * _alGetChannelsFromFormat(canon_format);
 
 	src->flags |= ALS_REVERB;
 
@@ -240,12 +240,12 @@ void alBufferi_LOKI(ALuint buffer, ALenum param, ALint value) {
 
 	switch(param) {
 		case AL_FREQUENCY:
-		  buf->freq = value;
+		  buf->frequency = value;
 		  break;
 		case AL_BITS:
 		  switch(value) {
 		      case 8:
-			switch(_al_ALCHANNELS(buf->format)) {
+			switch(_alGetChannelsFromFormat(buf->format)) {
 			    case 1:
 			      buf->format = AL_FORMAT_MONO8;
 			      break;
@@ -257,7 +257,7 @@ void alBufferi_LOKI(ALuint buffer, ALenum param, ALint value) {
 			}
 			break;
 		      case 16:
-			switch(_al_ALCHANNELS(buf->format)) {
+			switch(_alGetChannelsFromFormat(buf->format)) {
 			    case 1:
 			      buf->format = AL_FORMAT_MONO16;
 			      break;
@@ -273,7 +273,7 @@ void alBufferi_LOKI(ALuint buffer, ALenum param, ALint value) {
 		case AL_CHANNELS:
 		  switch(value) {
 		      case 1:
-			switch(_al_formatbits(buf->format)) {
+			switch(_alGetBitsFromFormat(buf->format)) {
 			    case 8:
 			      buf->format = AL_FORMAT_MONO8;
 			      break;
@@ -284,7 +284,7 @@ void alBufferi_LOKI(ALuint buffer, ALenum param, ALint value) {
 			}
 			break;
 		      case 2:
-			switch(_al_formatbits(buf->format)) {
+			switch(_alGetBitsFromFormat(buf->format)) {
 			    case 8:
 			      buf->format = AL_FORMAT_STEREO8;
 			      break;
@@ -384,7 +384,7 @@ void alBufferWriteData_LOKI( ALuint  bid,
 				      size,
 				      freq,
 				      internalFormat,
-				      buf->freq,
+				      buf->frequency,
 				      &retsize,
 				      AL_FALSE);
 
@@ -415,7 +415,7 @@ void alBufferWriteData_LOKI( ALuint  bid,
 		/* don't use realloc */
 		_alBufferFreeOrigBuffers(buf);
 
-		for(i = 0; i < _al_ALCHANNELS(buf->format); i++)
+		for(i = 0; i < _alGetChannelsFromFormat(buf->format); i++)
 		{
 			temp_copies[i] = malloc(retsize);
 			success = (temp_copies[i] != NULL) ? AL_TRUE : AL_FALSE;
@@ -425,7 +425,7 @@ void alBufferWriteData_LOKI( ALuint  bid,
 		{
 			free(cdata);
 
-			for(i = 0; i < _al_ALCHANNELS(buf->format); i++)
+			for(i = 0; i < _alGetChannelsFromFormat(buf->format); i++)
 			{
 				free(temp_copies[i]);
 			}
@@ -440,7 +440,7 @@ void alBufferWriteData_LOKI( ALuint  bid,
 			return;
 		}
 
-		switch(_al_ALCHANNELS(buf->format))
+		switch(_alGetChannelsFromFormat(buf->format))
 		{
 			case 1:
 			  for(i = 0; i < elementsof(buf->orig_buffers); i++)
@@ -490,12 +490,12 @@ void alBufferWriteData_LOKI( ALuint  bid,
 
 	_alMonoify((ALshort **) buf->orig_buffers,
 		   cdata,
-		   retsize / _al_ALCHANNELS(buf->format),
-		   buf->num_buffers, _al_ALCHANNELS(buf->format));
+		   retsize / _alGetChannelsFromFormat(buf->format),
+		   buf->num_buffers, _alGetChannelsFromFormat(buf->format));
 
 	free(cdata);
 
-	buf->size = retsize / _al_ALCHANNELS(buf->format);
+	buf->size = retsize / _alGetChannelsFromFormat(buf->format);
 
 	_alUnlockBuffer();
 
@@ -545,8 +545,8 @@ ALsizei alBufferAppendWriteData_LOKI( ALuint   buffer,
 	ALuint tfreq = 0;   /* buffer's target frequency */
 	void *temp = NULL;
 	ALuint i;
-	ALuint bufchan = _al_ALCHANNELS(internalFormat); /* channels in internal format */
-	int formatWidth = _al_formatbits(format) / 8;
+	ALuint bufchan = _alGetChannelsFromFormat(internalFormat); /* channels in internal format */
+	int formatWidth = _alGetBitsFromFormat(format) / 8;
 
 	_alLockBuffer();
 
@@ -591,13 +591,13 @@ ALsizei alBufferAppendWriteData_LOKI( ALuint   buffer,
 	 * the number of channels
 	 */
 	csamps  = osamps;
-	csamps -= (csamps % _al_ALCHANNELS(format));
+	csamps -= (csamps % _alGetChannelsFromFormat(format));
 	csamps *= formatWidth;
 
 	orig_csamps = csamps;
 
 	/* Set psize to the value that csamps would be in converted format */
-	psize = _al_PCMRatioify( freq, buf->freq, format, buf->format, csamps );
+	psize = _al_PCMRatioify( freq, buf->frequency, format, buf->format, csamps );
 
 	/* set retval.  We'll scale it later */
 	retval = osamps;
@@ -730,7 +730,7 @@ ALsizei alBufferAppendWriteData_LOKI( ALuint   buffer,
 	 * get buffer params first
 	 */
 	tformat = buf->format;
-	tfreq = buf->freq;
+	tfreq = buf->frequency;
 
 	_alUnlockBuffer();
 
@@ -739,7 +739,7 @@ ALsizei alBufferAppendWriteData_LOKI( ALuint   buffer,
 	 *  data that we will use.
 	 */
 	csamps  = retval;
-	csamps -= (csamps % _al_ALCHANNELS(format));
+	csamps -= (csamps % _alGetChannelsFromFormat(format));
 	csamps *= formatWidth;
 
 	/*
@@ -915,13 +915,13 @@ ALsizei alBufferAppendData_LOKI( ALuint   buffer,
 	 * the number of channels
 	 */
 	csamps  = osamps;
-	csamps -= (csamps % _al_ALCHANNELS(format));
-	csamps *= (_al_formatbits(format) / 8);
+	csamps -= (csamps % _alGetChannelsFromFormat(format));
+	csamps *= (_alGetBitsFromFormat(format) / 8);
 
 	orig_csamps = csamps;
 
 	/* Set psize to the value that csamps would be in converted format */
-	psize = _al_PCMRatioify(freq, buf->freq, format, buf->format, csamps);
+	psize = _al_PCMRatioify(freq, buf->frequency, format, buf->format, csamps);
 
 	/* set nsamps */
 	nsamps = osamps;
@@ -1056,7 +1056,7 @@ ALsizei alBufferAppendData_LOKI( ALuint   buffer,
 	 * get buffer params first
 	 */
 	tformat = buf->format;
-	tfreq   = buf->freq;
+	tfreq   = buf->frequency;
 
 	_alUnlockBuffer();
 
@@ -1065,8 +1065,8 @@ ALsizei alBufferAppendData_LOKI( ALuint   buffer,
 	 *  data that we will use.
 	 */
 	csamps  = nsamps;
-	csamps -= (csamps % _al_ALCHANNELS(format));
-	csamps *= (_al_formatbits(format) / 8);
+	csamps -= (csamps % _alGetChannelsFromFormat(format));
+	csamps *= (_alGetBitsFromFormat(format) / 8);
 
 	/*
 	 * We should decide how much data to use such that csize is
@@ -1077,18 +1077,18 @@ ALsizei alBufferAppendData_LOKI( ALuint   buffer,
 	 *
 	 * nsamps = number of samples that csize represents
 	 */
-	if(scratch.size < csamps * (_al_formatbits(format)/8)) {
-		temp = realloc(scratch.data, csamps * (_al_formatbits(format)/8));
+	if(scratch.size < csamps * (_alGetBitsFromFormat(format)/8)) {
+		temp = realloc(scratch.data, csamps * (_alGetBitsFromFormat(format)/8));
 		if(temp == NULL) {
 			/* oops */
 			return 0;
 		}
 
 		scratch.data = temp;
-		scratch.size = csamps * (_al_formatbits(format)/8);
+		scratch.size = csamps * (_alGetBitsFromFormat(format)/8);
 	}
 
-	memcpy(scratch.data, data, csamps * (_al_formatbits(format)>>3));
+	memcpy(scratch.data, data, csamps * (_alGetBitsFromFormat(format)>>3));
 
 	temp = _alBufferCanonizeData(format,
 				     scratch.data,
@@ -1118,10 +1118,10 @@ ALsizei alBufferAppendData_LOKI( ALuint   buffer,
 			"first time!");
 
 		/* first time */
-		buf->size = csize / _al_ALCHANNELS(buf->format);
+		buf->size = csize / _alGetChannelsFromFormat(buf->format);
 
 		for(i = 0; i < buf->num_buffers; i++) {
-			temp = realloc(buf->orig_buffers[i], csize / _al_ALCHANNELS(buf->format));
+			temp = realloc(buf->orig_buffers[i], csize / _alGetChannelsFromFormat(buf->format));
 			if(temp == NULL) {
 				_alUnlockBuffer();
 
@@ -1133,8 +1133,8 @@ ALsizei alBufferAppendData_LOKI( ALuint   buffer,
 
 		_alMonoify((ALshort **) buf->orig_buffers,
 			   scratch.data,
-			   csize / _al_ALCHANNELS(buf->format),
-			   buf->num_buffers, _al_ALCHANNELS(buf->format));
+			   csize / _alGetChannelsFromFormat(buf->format),
+			   buf->num_buffers, _alGetChannelsFromFormat(buf->format));
 
 		buf->appendpos    = csize;
 
@@ -1146,8 +1146,8 @@ ALsizei alBufferAppendData_LOKI( ALuint   buffer,
 	_alMonoifyOffset((ALshort **) buf->orig_buffers,
 			 copyoffset,
 			 scratch.data,
-			 csize / _al_ALCHANNELS(buf->format),
-			 buf->num_buffers, _al_ALCHANNELS(buf->format));
+			 csize / _alGetChannelsFromFormat(buf->format),
+			 buf->num_buffers, _alGetChannelsFromFormat(buf->format));
 
 /*
 	offset_memcpy(buf->_orig_buffer, copyoffset, bufferAppendScratch, copysize);

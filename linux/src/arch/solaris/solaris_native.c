@@ -211,7 +211,7 @@ ALboolean set_write_native(void *handle,
 		     unsigned int *speed) {
   solaris_audio* sa ;
 
-  ALuint channels = _al_ALCHANNELS(*fmt);
+  ALuint channels = _alGetChannelsFromFormat(*fmt);
 
   if( handle == NULL )
 	  return AL_FALSE ;

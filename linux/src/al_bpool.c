@@ -302,7 +302,7 @@ static void _alBufferInit( AL_buffer *buf, ALuint bid ) {
 	buf->appendpos	    = 0;
 
 	buf->format         = canon_format;
-	buf->freq           = canon_speed;
+	buf->frequency      = canon_speed;
 	buf->size           = 0;
 
 	buf->callback                = NULL;

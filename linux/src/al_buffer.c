@@ -369,13 +369,13 @@ void alGetBufferiv( ALuint buffer, ALenum param, ALint *value ) {
 
 	switch( param ) {
 		case AL_FREQUENCY:
-		  retref = buf->freq;
+		  retref = buf->frequency;
 		  break;
 		case AL_BITS:
-		  retref = _al_formatbits( buf->format );
+		  retref = _alGetBitsFromFormat( buf->format );
 		  break;
 		case AL_CHANNELS:
-		  retref = _al_ALCHANNELS( buf->format );
+		  retref = _alGetChannelsFromFormat( buf->format );
 		  break;
 		case AL_SIZE:
 		  retref = buf->size;
@@ -649,7 +649,7 @@ void alBufferData( ALuint  bid,
 	}
 
 	tformat = buf->format;
-	tfreq   = buf->freq;
+	tfreq   = buf->frequency;
 
 	_alUnlockBuffer();
 
@@ -680,7 +680,7 @@ void alBufferData( ALuint  bid,
 		/* don't use realloc */
 		_alBufferFreeOrigBuffers(buf);
 
-		for(i = 0; i < _al_ALCHANNELS(buf->format); i++)
+		for(i = 0; i < _alGetChannelsFromFormat(buf->format); i++)
 		{
 			temp_copies[i] = malloc(retsize);
 			success = (temp_copies[i] != NULL) ? AL_TRUE : AL_FALSE;
@@ -690,7 +690,7 @@ void alBufferData( ALuint  bid,
 		{
 			free(cdata);
 
-			for(i = 0; i < _al_ALCHANNELS(buf->format); i++)
+			for(i = 0; i < _alGetChannelsFromFormat(buf->format); i++)
 			{
 				free(temp_copies[i]);
 			}
@@ -705,7 +705,7 @@ void alBufferData( ALuint  bid,
 			return;
 		}
 
-		switch(_al_ALCHANNELS(buf->format))
+		switch(_alGetChannelsFromFormat(buf->format))
 		{
 			case 1:
 			  for(i = 0; i < elementsof(buf->orig_buffers); i++)
@@ -754,10 +754,10 @@ void alBufferData( ALuint  bid,
 
 	_alMonoify((ALshort **) buf->orig_buffers,
 		   cdata,
-		   retsize / _al_ALCHANNELS(tformat),
-		   buf->num_buffers, _al_ALCHANNELS(tformat));
+		   retsize / _alGetChannelsFromFormat(tformat),
+		   buf->num_buffers, _alGetChannelsFromFormat(tformat));
 
-	buf->size = retsize / _al_ALCHANNELS(tformat);
+	buf->size = retsize / _alGetChannelsFromFormat(tformat);
 
 	_alUnlockBuffer();
 
@@ -1263,15 +1263,15 @@ static ALvoid *_alConvert( ALvoid *data,
 
 	_alDebug(ALD_CONVERT, __FILE__, __LINE__,
 		"_alConvert [f_size|f_channels|f_freq] [%d|%d|%d]",
-		f_size, _al_ALCHANNELS(f_format), f_freq);
+		f_size, _alGetChannelsFromFormat(f_format), f_freq);
 
-	if(_al_ALCHANNELS(f_format) != 0) {
+	if(_alGetChannelsFromFormat(f_format) != 0) {
 		_alDebug(ALD_CONVERT, __FILE__, __LINE__,
 			"_alConvert [t_channels|f_channels|t/f] [%d|%d|%d]",
-			_al_ALCHANNELS(t_format),
-			_al_ALCHANNELS(f_format),
-			_al_ALCHANNELS(t_format) /
-			_al_ALCHANNELS(f_format));
+			_alGetChannelsFromFormat(t_format),
+			_alGetChannelsFromFormat(f_format),
+			_alGetChannelsFromFormat(t_format) /
+			_alGetChannelsFromFormat(f_format));
 	}
 
 	if(f_freq != 0) {
@@ -1283,29 +1283,29 @@ static ALvoid *_alConvert( ALvoid *data,
 	if(f_format != 0) {
 		_alDebug(ALD_CONVERT, __FILE__, __LINE__,
 			"_alConvert [t_bits|f_bits|t/f] [%d|%d|%d]",
-			_al_formatbits(t_format),
-			_al_formatbits(f_format),
-			(_al_formatbits(t_format) / _al_formatbits(f_format)));
+			_alGetBitsFromFormat(t_format),
+			_alGetBitsFromFormat(f_format),
+			(_alGetBitsFromFormat(t_format) / _alGetBitsFromFormat(f_format)));
 	}
 
 	_alDebug(ALD_CONVERT, __FILE__, __LINE__,
 		"_alConvert f|c|s [0x%x|%d|%d] -> [0x%x|%d|%d]",
 		/* from */
-		f_format, _al_ALCHANNELS(f_format), f_freq,
+		f_format, _alGetChannelsFromFormat(f_format), f_freq,
 		/* to */
 		t_format,
-		_al_ALCHANNELS(t_format),
+		_alGetChannelsFromFormat(t_format),
 		t_freq);
 
 	if(acBuildAudioCVT(&s16le,
 		/* from */
 		_al_AL2ACFMT(f_format),
-		_al_ALCHANNELS(f_format),
+		_alGetChannelsFromFormat(f_format),
 		f_freq,
 
 		/* to */
 		_al_AL2ACFMT(t_format),
-		_al_ALCHANNELS(t_format),
+		_alGetChannelsFromFormat(t_format),
 		t_freq) < 0) {
 		_alDebug(ALD_CONVERT, __FILE__, __LINE__,
 			"Couldn't build audio convertion data structure.");

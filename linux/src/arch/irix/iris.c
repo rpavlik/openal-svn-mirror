@@ -402,7 +402,7 @@ ALboolean set_write_native(void *handle,
                            unsigned int *speed)
 {
     _ALhandle *alh = (_ALhandle *)handle;
-    ALuint channels = _al_ALCHANNELS(*fmt);
+    ALuint channels = _alGetChannelsFromFormat(*fmt);
     unsigned int data_format;
     ALpv params[2];
     int i, result;

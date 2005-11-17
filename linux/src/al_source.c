@@ -267,13 +267,13 @@ void _alSource2D( AL_source *src ) {
 	src->direction.isset = AL_FALSE;
 	_alSourceGetParamDefault( AL_DIRECTION, src->direction.data );
 
-	src->coneinnerangle.isset = AL_FALSE;
-	_alSourceGetParamDefault( AL_CONE_INNER_ANGLE, &src->coneinnerangle.data );
+	src->cone_inner_angle.isset = AL_FALSE;
+	_alSourceGetParamDefault( AL_CONE_INNER_ANGLE, &src->cone_inner_angle.data );
 
-	src->coneouterangle.isset = AL_FALSE;
-	_alSourceGetParamDefault( AL_CONE_OUTER_ANGLE, &src->coneouterangle.data );
+	src->cone_outer_angle.isset = AL_FALSE;
+	_alSourceGetParamDefault( AL_CONE_OUTER_ANGLE, &src->cone_outer_angle.data );
 
-	src->coneoutergain.isset = AL_FALSE;
+	src->cone_outer_gain.isset = AL_FALSE;
 }
 
 /*
@@ -423,12 +423,12 @@ void alSourcei( ALuint sid, ALenum param, ALint i1 )
 
 			break;
 		case AL_LOOPING:
-			src->islooping.isset = AL_TRUE;
-			src->islooping.data = i1;
+			src->looping.isset = AL_TRUE;
+			src->looping.data = i1;
 			break;
 		case AL_SOURCE_RELATIVE:
-			src->isrelative.isset = AL_TRUE;
-			src->isrelative.data = i1;
+			src->relative.isset = AL_TRUE;
+			src->relative.data = i1;
 			/* If this is a relative source with zero position,
 			   perform the 2D sound hack...
 			   (Tribes 2 reuses 3D sources as 2D sources)
@@ -679,8 +679,8 @@ void alSourcefv( ALuint sid, ALenum param, const ALfloat *fv1 )
 		     (Tribes 2 reuses 3D sources as 2D sources)
 		   */
 		  if ( !fv1[0] && !fv1[1] && !fv1[2] &&
-		       source->isrelative.isset &&
-		       source->isrelative.data ) {
+		       source->relative.isset &&
+		       source->relative.data ) {
 			_alSource2D(source);
 		  }
 		  break;
@@ -710,24 +710,24 @@ void alSourcefv( ALuint sid, ALenum param, const ALfloat *fv1 )
 		  source->flags      |= ALS_NEEDPITCH;
 		  break;
 		case AL_MIN_GAIN:
-		  source->attenuationmin.isset = AL_TRUE;
-		  source->attenuationmin.data  = fv1[0];
+		  source->min_gain.isset = AL_TRUE;
+		  source->min_gain.data  = fv1[0];
 		  break;
 		case AL_MAX_GAIN:
-		  source->attenuationmax.isset = AL_TRUE;
-		  source->attenuationmax.data  = fv1[0];
+		  source->max_gain.isset = AL_TRUE;
+		  source->max_gain.data  = fv1[0];
 		  break;
 		case AL_CONE_INNER_ANGLE:
-		  source->coneinnerangle.isset = AL_TRUE;
-		  source->coneinnerangle.data  = fv1[0];
+		  source->cone_inner_angle.isset = AL_TRUE;
+		  source->cone_inner_angle.data  = fv1[0];
 		  break;
 		case AL_CONE_OUTER_ANGLE:
-		  source->coneouterangle.isset = AL_TRUE;
-		  source->coneouterangle.data  = fv1[0];
+		  source->cone_outer_angle.isset = AL_TRUE;
+		  source->cone_outer_angle.data  = fv1[0];
 		  break;
 		case AL_CONE_OUTER_GAIN:
-		  source->coneoutergain.isset = AL_TRUE;
-		  source->coneoutergain.data  = fv1[0];
+		  source->cone_outer_gain.isset = AL_TRUE;
+		  source->cone_outer_gain.data  = fv1[0];
 		  break;
 		case AL_PITCH:
 		  /* only set pitch if it differs from 1.0 */
@@ -756,8 +756,8 @@ void alSourcefv( ALuint sid, ALenum param, const ALfloat *fv1 )
 		  source->gain.data = fv1[0];
 		  break;
 		case AL_REFERENCE_DISTANCE:
-		  source->ref_distance.isset = AL_TRUE;
-		  source->ref_distance.data = fv1[0];
+		  source->reference_distance.isset = AL_TRUE;
+		  source->reference_distance.data = fv1[0];
 		  break;
 		case AL_MAX_DISTANCE:
 		  source->max_distance.isset = AL_TRUE;
@@ -1430,7 +1430,7 @@ static void _alSplitSourceCallback( ALuint cid,
 	int *bid            = NULL;
 	ALuint nsamps = 0;
 	int resultsamps     = -1;
-	int bufchannels     = _al_ALCHANNELS( samp->format );
+	int bufchannels     = _alGetChannelsFromFormat( samp->format );
 
 	src = _alGetSource( cid, sourceid );
 	if(src == NULL) {
@@ -1455,7 +1455,7 @@ static void _alSplitSourceCallback( ALuint cid,
 	resultsamps = samp->callback(sourceid, *bid,
 				     stereoptr,
 				     samp->format,
-				     samp->freq,
+				     samp->frequency,
 				     nsamps);
 
 	if(resultsamps < 0) {
@@ -1535,7 +1535,7 @@ static void _alSplitSourceLooping( ALuint cid,
 	char *bufptr;
 	int i;
 	int bi;
-	int bufchannels = _al_ALCHANNELS(samp->format);
+	int bufchannels = _alGetChannelsFromFormat(samp->format);
 	char *mdp;
 
 	src = _alGetSource(cid, sourceid);
@@ -2816,24 +2816,24 @@ static void _alInitSource( ALuint sid ) {
 	src->gain.isset = AL_FALSE;
 	_alSourceGetParamDefault( AL_GAIN, &src->gain.data );
 
-	src->attenuationmin.isset = AL_FALSE;
-	_alSourceGetParamDefault( AL_MIN_GAIN, &src->attenuationmin.data );
+	src->min_gain.isset = AL_FALSE;
+	_alSourceGetParamDefault( AL_MIN_GAIN, &src->min_gain.data );
 
-	src->attenuationmax.isset = AL_FALSE;
-	_alSourceGetParamDefault( AL_MAX_GAIN, &src->attenuationmax.data );
+	src->max_gain.isset = AL_FALSE;
+	_alSourceGetParamDefault( AL_MAX_GAIN, &src->max_gain.data );
 
 	/* cone initializations */
-	src->coneinnerangle.isset = AL_FALSE;
+	src->cone_inner_angle.isset = AL_FALSE;
 	_alSourceGetParamDefault( AL_CONE_INNER_ANGLE,
-				  &src->coneinnerangle.data );
+				  &src->cone_inner_angle.data );
 
-	src->coneouterangle.isset = AL_FALSE;
+	src->cone_outer_angle.isset = AL_FALSE;
 	_alSourceGetParamDefault( AL_CONE_OUTER_ANGLE,
-				  &src->coneouterangle.data );
+				  &src->cone_outer_angle.data );
 
-	src->coneoutergain.isset = AL_FALSE;
+	src->cone_outer_gain.isset = AL_FALSE;
 	_alSourceGetParamDefault( AL_CONE_OUTER_GAIN,
-				  &src->coneoutergain.data );
+				  &src->cone_outer_gain.data );
 
 	/*
 	 * initialize streaming, source relative, looping, pitch
@@ -2844,11 +2844,11 @@ static void _alInitSource( ALuint sid ) {
 	_alSourceGetParamDefault( AL_STREAMING, &src->isstreaming.data );
 #endif
 
-	src->isrelative.isset = AL_FALSE;
-	_alSourceGetParamDefault( AL_SOURCE_RELATIVE, &src->isrelative.data );
+	src->relative.isset = AL_FALSE;
+	_alSourceGetParamDefault( AL_SOURCE_RELATIVE, &src->relative.data );
 
-	src->islooping.isset = AL_FALSE;
-	_alSourceGetParamDefault( AL_LOOPING, &src->islooping.data );
+	src->looping.isset = AL_FALSE;
+	_alSourceGetParamDefault( AL_LOOPING, &src->looping.data );
 
 	src->pitch.isset = AL_FALSE;
 	_alSourceGetParamDefault( AL_PITCH, &src->pitch.data );
@@ -2856,9 +2856,9 @@ static void _alInitSource( ALuint sid ) {
 	/*
 	 * initialize reference distance, max distance, rolloff factor
 	 */
-	src->ref_distance.isset = AL_FALSE;
+	src->reference_distance.isset = AL_FALSE;
 	_alSourceGetParamDefault( AL_REFERENCE_DISTANCE,
-				  &src->ref_distance.data );
+				  &src->reference_distance.data );
 
 	src->max_distance.isset = AL_FALSE;
 	_alSourceGetParamDefault( AL_MAX_DISTANCE,
@@ -3065,8 +3065,8 @@ ALint _alSourceBytesLeftByChannel(AL_source *src, AL_buffer *samp) {
  */
 ALboolean _alSourceIsQueue( AL_source * src ) {
 
-	if ( src->islooping.isset == AL_TRUE &&
-	     src->islooping.data == AL_TRUE &&
+	if ( src->looping.isset == AL_TRUE &&
+	     src->looping.data == AL_TRUE &&
 	     src->bid_queue.size > 1 ) return AL_TRUE;
 
 	return AL_FALSE;
@@ -3213,13 +3213,13 @@ void *_alGetSourceParam(AL_source *source, ALenum param )
 			}
 			break;
 		case AL_CONE_INNER_ANGLE:
-			return &source->coneinnerangle.data;
+			return &source->cone_inner_angle.data;
 			break;
 		case AL_CONE_OUTER_ANGLE:
-			return &source->coneouterangle.data;
+			return &source->cone_outer_angle.data;
 			break;
 		case AL_CONE_OUTER_GAIN:
-			return &source->coneoutergain.data;
+			return &source->cone_outer_gain.data;
 			break;
 		case AL_DIRECTION:
 			return &source->direction.data;
@@ -3229,7 +3229,7 @@ void *_alGetSourceParam(AL_source *source, ALenum param )
 			return &source->gain.data;
 			break;
 		case AL_LOOPING:
-			return &source->islooping.data;
+			return &source->looping.data;
 			break;
 		case AL_PITCH:
 			return &source->pitch.data;
@@ -3238,7 +3238,7 @@ void *_alGetSourceParam(AL_source *source, ALenum param )
 			return &source->position.data;
 			break;
 		case AL_SOURCE_RELATIVE:
-			return &source->isrelative.data;
+			return &source->relative.data;
 			break;
 #ifdef LINUX_AL
 		case AL_STREAMING:
@@ -3249,16 +3249,16 @@ void *_alGetSourceParam(AL_source *source, ALenum param )
 			return &source->velocity.data;
 			break;
 		case AL_MIN_GAIN:
-		 	return &source->attenuationmin.data;
+		 	return &source->min_gain.data;
 			break;
 		case AL_MAX_GAIN:
-			return &source->attenuationmax.data;
+			return &source->max_gain.data;
 			break;
 		case AL_SOURCE_STATE:
 			return &source->state;
 			break;
 		case AL_REFERENCE_DISTANCE:
-			return &source->ref_distance.data;
+			return &source->reference_distance.data;
 			break;
 		case AL_MAX_DISTANCE:
 			return &source->max_distance.data;
@@ -3292,13 +3292,13 @@ ALboolean _alSourceIsParamSet( AL_source *source, ALenum param ) {
 			return AL_TRUE;
 			break;
 		case AL_CONE_INNER_ANGLE:
-			return source->coneinnerangle.isset;
+			return source->cone_inner_angle.isset;
 			break;
 		case AL_CONE_OUTER_ANGLE:
-			return source->coneouterangle.isset;
+			return source->cone_outer_angle.isset;
 			break;
 		case AL_CONE_OUTER_GAIN:
-			return source->coneoutergain.isset;
+			return source->cone_outer_gain.isset;
 			break;
 		case AL_DIRECTION:
 			return source->direction.isset;
@@ -3308,7 +3308,7 @@ ALboolean _alSourceIsParamSet( AL_source *source, ALenum param ) {
 			return source->gain.isset;
 			break;
 		case AL_LOOPING:
-			return source->islooping.isset;
+			return source->looping.isset;
 			break;
 		case AL_PITCH:
 			return source->pitch.isset;
@@ -3317,7 +3317,7 @@ ALboolean _alSourceIsParamSet( AL_source *source, ALenum param ) {
 			return source->position.isset;
 			break;
 		case AL_SOURCE_RELATIVE:
-			return source->isrelative.isset;
+			return source->relative.isset;
 			break;
 #ifdef LINUX_AL
 		case AL_STREAMING:
@@ -3328,13 +3328,13 @@ ALboolean _alSourceIsParamSet( AL_source *source, ALenum param ) {
 			return source->velocity.isset;
 			break;
 		case AL_MIN_GAIN:
-			return source->attenuationmin.isset;
+			return source->min_gain.isset;
 			break;
 		case AL_MAX_GAIN:
-			return source->attenuationmax.isset;
+			return source->max_gain.isset;
 			break;
 		case AL_REFERENCE_DISTANCE:
-			return source->ref_distance.isset;
+			return source->reference_distance.isset;
 			break;
 		case AL_MAX_DISTANCE:
 			return source->max_distance.isset;

@@ -696,22 +696,22 @@ void _alSetMixer( ALboolean synchronous )
 		"_alSetMixer f|c|s [0x%x|%d|%d] -> [0x%x|%d|%d]",
 		/* from */
 		canon_format,
-		_al_ALCHANNELS( ex_format ), /* ignore channel settings.  We handle this */
+		_alGetChannelsFromFormat( ex_format ), /* ignore channel settings.  We handle this */
 		canon_speed,
 		/* to */
 		ex_format,
-		_al_ALCHANNELS( ex_format ),
+		_alGetChannelsFromFormat( ex_format ),
 		ex_speed);
 
 	if(acBuildAudioCVT(&s16le,
 		/* from */
 		_al_AL2ACFMT( canon_format ),
-		_al_ALCHANNELS( ex_format ), /* ignore channel settings.  We handle this */
+		_alGetChannelsFromFormat( ex_format ), /* ignore channel settings.  We handle this */
 		canon_speed,
 
 		/* to */
 		_al_AL2ACFMT(ex_format),
-		_al_ALCHANNELS(ex_format),/* ignore channel settings.  We handle this */
+		_alGetChannelsFromFormat(ex_format),/* ignore channel settings.  We handle this */
 		ex_speed) < 0)
 	{
 		_alDebug(ALD_CONVERT, __FILE__, __LINE__,

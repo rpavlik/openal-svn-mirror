@@ -218,8 +218,8 @@ ALboolean set_write_arts(void *handle,
          * returns 0 if it fails.
          */
 	ahandle->stream = parts_play_stream(*speed,
-					    _al_formatbits(*fmt),
-					    _al_ALCHANNELS(*fmt),
+					    _alGetBitsFromFormat(*fmt),
+					    _alGetChannelsFromFormat(*fmt),
                                             genartskey());
         
         if (ahandle->stream == 0) {

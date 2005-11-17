@@ -4,7 +4,12 @@
  * al_types.h
  *
  * internal type definitions
+ *
+ * Naming convention: If the spec describes an attribute AL_FOO_BAR, the
+ * corresponding struct has a field foo_bar. Furthermore, the fields are ordered
+ * in the same way as they are described in the spec.
  */
+
 #ifndef _LAL_TYPES_H_
 #define _LAL_TYPES_H_
 
@@ -118,6 +123,15 @@ typedef struct _AL_bufsourcelist {
  *  Our buffer
  */
 typedef struct {
+	/*
+	 * The following three fields are the "official" part of the buffer
+	 * state, the rest are implementation details. Note that the bits per
+	 * sample and the number of channels can be calculated from the format.
+	 */
+	ALuint frequency;
+	ALuint size;
+	ALshort format;
+
 	ALuint bid;         /* unique identifier */
 
 	void *orig_buffers[_ALC_MAX_CHANNELS];    /* original buffer: unadulturated */
@@ -125,10 +139,6 @@ typedef struct {
 
 	Bufenum flags;
 	/* int refcount; */
-
-	ALuint  size;
-	ALshort format;
-	ALuint  freq;
 
 	/* our refcount */
 	AL_bufsourcelist queue_list;
@@ -155,28 +165,31 @@ typedef struct _AL_sourcestate {
 
 typedef struct _AL_source {
 	/*
-	 * non-buffer specific params
+	 * The following sixteen fields are the "official" part of the source
+	 * state, the rest are implementation details. Note that the AL_BUFFER,
+	 * AL_BUFFERS_QUEUED, and AL_BUFFERS_PROCESSED attributes are implicitly
+	 * in bid_queue. Furthermore, AL_SEC_OFFSET, AL_SAMPLE_OFFSET, and
+	 * AL_BYTE_OFFSET can probably calculated from one of the fields below,
+	 * but this has not been implemented yet.
 	 */
 	AL_float3vparam position;
-	AL_float3vparam direction;
 	AL_float3vparam velocity;
-
 	AL_floatparam gain;
-	AL_floatparam attenuationmin;
-	AL_floatparam attenuationmax;
-	AL_floatparam ref_distance;
-	AL_floatparam max_distance;
+	AL_boolparam relative;
+	AL_intparam source_type; /* TODO: Currently unused. We should probably use this instead of isstreaming. */
+	AL_boolparam looping;
+	AL_floatparam min_gain;
+	AL_floatparam max_gain;
+	AL_floatparam reference_distance;
 	AL_floatparam rolloff_factor;
+	AL_floatparam max_distance;
+	AL_floatparam pitch;
+	AL_float3vparam direction;
+	AL_floatparam cone_inner_angle;
+	AL_floatparam cone_outer_angle;
+	AL_floatparam cone_outer_gain;
 
 	AL_boolparam isstreaming;
-	AL_boolparam isrelative;
-	AL_boolparam islooping;
-
-	AL_floatparam coneinnerangle;
-	AL_floatparam coneouterangle;
-	AL_floatparam coneoutergain;
-
-	AL_floatparam pitch;
 
 	struct {
 		AL_sourcestate *queuestate;
@@ -223,11 +236,14 @@ typedef struct _AL_source {
 } AL_source;
 
 typedef struct _AL_listener {
-	ALfloat Position[3];
-	ALfloat Velocity[3];
-	ALfloat Orientation[6];
-
-	ALfloat Gain;
+	/*
+	 * The following four fields are the "official" part of the listener
+	 * state. We are lucky and need nothing else here... :-)
+	 */
+	ALfloat position[3];
+	ALfloat velocity[3];
+	ALfloat gain;
+	ALfloat orientation[6];
 } AL_listener;
 
 typedef struct _AL_capture {
@@ -281,7 +297,6 @@ typedef struct ALCdevice_struct {
 } AL_device;
 
 typedef struct _AL_context {
-
 	/*
 	 * The following four fields are the "official" part of the context
 	 * state, the rest are implementation details. Note that there are

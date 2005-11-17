@@ -111,13 +111,6 @@ ALboolean _alInit( void );
 void _alExit( void );
 
 /*
- * _al_formatbits( ALenum format )
- *
- * Returns bit depth of format.
- */
-ALbyte _al_formatbits( ALenum format );
-
-/*
  * _al_AL2FMT( ALuint channels, ALuint bits )
  *
  * Returns the openal format that has the number of channels channels and the
@@ -138,16 +131,23 @@ ALenum _al_AC2ALFMT( ALuint acformat, ALuint channels );
  *
  * Returns the equivilant (sort of) audioconvert format specified by alfmt.
  * audioconvert formats do not have channel information, so this should be
- * combined with _al_ALCHANNELS.
+ * combined with _alGetChannelsFromFormat.
  */
 ALushort _al_AL2ACFMT( ALenum alfmt );
 
 /*
- * _al_ALCHANNELS(fmt)
+ * _alGetChannelsFromFormat(fmt)
  *
  * evaluates to the number of channels in an openal format.
  */
-ALubyte  _al_ALCHANNELS(ALenum alformat);
+ALubyte  _alGetChannelsFromFormat(ALenum alformat);
+
+/*
+ * _alGetBitsFromFormat( ALenum format )
+ *
+ * Returns the number of bits per sample for the given format.
+ */
+ALbyte _alGetBitsFromFormat( ALenum format );
 
 /*
  * _al_formatscale( ALenum format, ALuint new_channel_num )

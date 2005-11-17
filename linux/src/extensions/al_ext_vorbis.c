@@ -193,7 +193,7 @@ ALint Vorbis_Callback(UNUSED(ALuint sid),
 	int index;
 	ALuint offset;
 	long ret = 0;
-	int bps = _al_formatbits(format)>>3; /* bytes per sample */
+	int bps = _alGetBitsFromFormat(format)>>3; /* bytes per sample */
 	int bytesToRead = samples * bps;
 	ALint current_section;
 	ALint retval = 0;

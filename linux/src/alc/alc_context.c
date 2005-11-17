@@ -1914,7 +1914,7 @@ ALCdevice *alcCaptureOpenDevice( const ALCchar *deviceName, ALCuint frequency, A
 
 	captureFmt = format;
 	captureFreq = frequency;
-	captureFmtSize = _al_formatbits( format ) / 8;
+	captureFmtSize = _alGetBitsFromFormat( format ) / 8;
 	if( ( format == AL_FORMAT_STEREO8 ) || ( format == AL_FORMAT_STEREO16 ) ) {
 		captureFmtSize *= 2;
 	}

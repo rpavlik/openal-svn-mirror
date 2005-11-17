@@ -139,7 +139,7 @@ void *grab_write_esd(void) {
 		default: break;
 	}
 
-	switch(_al_formatbits(DEF_FORMAT)) {
+	switch(_alGetBitsFromFormat(DEF_FORMAT)) {
 		case 8:  fmt |= ESD_BITS8; break;
 		case 16: fmt |= ESD_BITS16; break;
 		default: break;
@@ -290,7 +290,7 @@ ALboolean set_write_esd(UNUSED(void *handle),
 		  ALuint *speed) {
 	esd_openal_info_t *eh;
 	int socket;
-	ALuint chans = _al_ALCHANNELS(*fmt);
+	ALuint chans = _alGetChannelsFromFormat(*fmt);
 
 	if(handle == NULL) {
 		return AL_FALSE;
@@ -308,7 +308,7 @@ ALboolean set_write_esd(UNUSED(void *handle),
 		default: break;
 	}
 
-	switch(_al_formatbits(*fmt)) {
+	switch(_alGetBitsFromFormat(*fmt)) {
 		case 8:  eh->fmt |= ESD_BITS8; break;
 		case 16: eh->fmt |= ESD_BITS16; break;
 		default: break;

@@ -320,7 +320,7 @@ ALboolean set_write_native(UNUSED(void *handle),
 		     UNUSED(unsigned int *bufsiz),
 		     ALenum *fmt,
 		     unsigned int *speed) {
-	ALuint channels = _al_ALCHANNELS(*fmt);
+	ALuint channels = _alGetChannelsFromFormat(*fmt);
 
 	if(dsp_fd < 0) {
 		return AL_FALSE;

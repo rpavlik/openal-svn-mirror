@@ -156,7 +156,7 @@ ALint MP3_Callback(ALuint sid,
 
 	}
 
-	bps = _al_formatbits( format );
+	bps = _alGetBitsFromFormat( format );
 
 	/* get buffer specific information */
 	i = mp3bid_get( bid, &mpeg );

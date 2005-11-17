@@ -283,7 +283,7 @@ void _alApplyFilters( ALuint cid, ALuint sid ) {
 	int i;
 
 	/* initialize */
-	ic = _al_ALCHANNELS( _ALC_CANON_FMT );
+	ic = _alGetChannelsFromFormat( _ALC_CANON_FMT );
 
 	_alcLockContext( cid );
 
@@ -312,7 +312,7 @@ void _alApplyFilters( ALuint cid, ALuint sid ) {
 	if(f_buffers.len < len / sizeof (ALshort))
 	{
 		void *temp;
-		ALuint newlen = len * _al_ALCHANNELS(samp->format);
+		ALuint newlen = len * _alGetChannelsFromFormat(samp->format);
 
 		for(i = 0; i < mc; i++)
 		{
@@ -379,7 +379,7 @@ void _alApplyFilters( ALuint cid, ALuint sid ) {
 
 			cc = _alcGetContext(cid);
 			if(cc != NULL) {
-				_alSourceTranslate(src, cc->listener.Position );
+				_alSourceTranslate(src, cc->listener.position );
 			}
 
 			_alcUnlockContext( cid );
@@ -441,7 +441,7 @@ void _alApplyFilters( ALuint cid, ALuint sid ) {
 		cc = _alcGetContext(cid);
 
 		if(cc != NULL) {
-			_alVectorInverse(ipos, cc->listener.Position);
+			_alVectorInverse(ipos, cc->listener.position);
 			_alSourceTranslate(src, ipos);
 		}
 
@@ -1294,7 +1294,7 @@ void alf_tpitch( UNUSED(ALuint cid),
 		return;
 	}
 
-	bufchans = _al_ALCHANNELS(samp->format); /* we need bufchans to
+	bufchans = _alGetChannelsFromFormat(samp->format); /* we need bufchans to
 						      * scale our increment
 						      * of the soundpos,
 						      * because of
@@ -1553,7 +1553,7 @@ void alf_tpitch( UNUSED(ALuint cid),
 		return;
 	}
 
-	bufchans = _al_ALCHANNELS(samp->format); /* we need bufchans to
+	bufchans = _alGetChannelsFromFormat(samp->format); /* we need bufchans to
 						      * scale our increment
 						      * of the soundpos,
 						      * because of
