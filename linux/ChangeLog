@@ -1,5 +1,8 @@
 2005-11-17  Sven Panne  <sven.panne@aedion.de>
 
+	* src/al_ext.c, src/al_filter.c, src/al_listen.c, src/al_listen.h:
+	Cleaned up listener state handling.
+
 	* src/al_bpool.c, src/al_buffer.c, src/al_filter.c, src/al_listen.c,
 	src/al_main.c, src/al_main.h, src/al_mixer.c, src/al_source.c,
 	src/al_types.h, src/alc/alc_context.c, src/alc/alc_speaker.c,

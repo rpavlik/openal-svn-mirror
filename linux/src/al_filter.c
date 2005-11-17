@@ -514,7 +514,7 @@ void alf_coning( ALuint cid,
 	ALfloat sa;  /* speaker attenuation */
 	ALfloat *sp; /* source position  */
 	ALfloat *sd; /* source direction */
-	ALfloat *lp; /* listener position */
+	ALfloat lp[3]; /* listener position */
 	ALfloat theta; /* angle between listener and source's direction
 			* vector, with the source's position as origin.
 			*/
@@ -539,8 +539,6 @@ void alf_coning( ALuint cid,
 		return;
 	}
 
-	lp = _alGetListenerParam( cid, AL_POSITION );
-
 	/*
 	 * The source specific max is set to max at this point, but may be
 	 * altered below of the application has set it.
@@ -549,6 +547,8 @@ void alf_coning( ALuint cid,
 	df = cc->distance_func;
 
 	_alcUnlockContext( cid );
+
+	alGetListenerfv(AL_POSITION, lp);
 
 	/* If no direction set, return */
 	sd = _alGetSourceParam( src, AL_DIRECTION );
@@ -785,7 +785,7 @@ void alf_da( ALuint cid,
 	AL_context *cc;
 	ALfloat *sp; /* source position */
 	ALfloat sa;  /* speaker attenuation */
-	ALfloat *listener_position;
+	ALfloat listener_position[3];
 	ALfloat *temp;
 	ALuint i;
 	ALfloat (*df)( ALfloat dist, ALfloat rolloff, ALfloat ref, ALfloat max ); /* distance model func */
@@ -836,14 +836,7 @@ void alf_da( ALuint cid,
 	}
 
 	/* ambient near listener */
-	listener_position = _alGetListenerParam( cid, AL_POSITION );
-	if(listener_position == NULL) {
-		/*
-		 * The listener position is unset.  This shouldn't
-		 * happen.
-		 */
-		return;
-	}
+	alGetListenerfv(AL_POSITION, listener_position);
 
 	sp = _alGetSourceParam( src, AL_POSITION );
 	if(sp == NULL) {
@@ -1007,8 +1000,8 @@ void alf_tdoppler( ALuint cid,
 	AL_context *cc;
 	ALfloat *sv; /* source velocity */
 	ALfloat *sp; /* source position */
-	ALfloat *lv; /* listener velocity */
-	ALfloat *lp; /* listener position */
+	ALfloat lv[3]; /* listener velocity */
+	ALfloat lp[3]; /* listener position */
 	ALfloat relative_velocity;  /* speed of source wrt listener */
 	ALfloat zeros[] = { 0.0, 0.0, 0.0 };
 	AL_sourcestate *srcstate;
@@ -1037,22 +1030,22 @@ void alf_tdoppler( ALuint cid,
 		return;
 	}
 
-	lv = _alGetListenerParam( cid, AL_VELOCITY );
-	lp = _alGetListenerParam( cid, AL_POSITION );
-
 	doppler_factor   = cc->doppler_factor;
 	doppler_velocity = cc->doppler_velocity;
 
 	_alcUnlockContext( cid );
 
+	alGetListenerfv(AL_VELOCITY, lv);
+	alGetListenerfv(AL_POSITION, lp);
+
 	sp = _alGetSourceParam(src, AL_POSITION );
 	sv = _alGetSourceParam(src, AL_VELOCITY );
 
-	if((sp == NULL) || (lp == NULL)) {
+	if(sp == NULL) {
 		return;
 	}
 
-	if((sv == NULL) && (lv == NULL)) {
+	if(sv == NULL) {
 		/* no velocity set, no doppler effect */
 		return;
 	}
@@ -1068,14 +1061,6 @@ void alf_tdoppler( ALuint cid,
 		 * zero vector.
 		 */
 		sv = zeros;
-	}
-
-	if(lv == NULL) {
-		/*
-		 * if unset, set to the velocity to the
-		 * zero vector.
-		 */
-		lv = zeros;
 	}
 
 	relative_velocity = _alVectorMagnitude(sv, lv);
@@ -1163,31 +1148,20 @@ void alf_minmax( UNUSED(ALuint cid),
  *
  * Implements listener gain.
  */
-void alf_listenergain( ALuint cid,
-		       AL_source *src,
-		       UNUSED(AL_buffer *samp),
-		       UNUSED(ALshort **buffers),
-		       ALuint nc,
-		       UNUSED(ALuint len) ) {
-	ALfloat gain = 1.0f;
-	void *temp;
+void
+alf_listenergain( UNUSED(ALuint cid),
+		  AL_source *src,
+		  UNUSED(AL_buffer *samp),
+		  UNUSED(ALshort **buffers),
+		  ALuint nc,
+		  UNUSED(ALuint len) )
+{
+	ALfloat gain;
 	ALuint i;
-
-	temp = _alGetListenerParam( cid, AL_GAIN );
-
-	if(temp == NULL) {
-		_alDebug( ALD_SOURCE, __FILE__, __LINE__,
-		       "listenergain: got NULL param" );
-		return;
-	}
-
-	gain = * (ALfloat *) temp;
-
+	alGetListenerfv(AL_GAIN, &gain);
 	for(i = 0; i < nc; i++) {
 		src->srcParams.gain[i] *= gain;
 	}
-
-	return;
 }
 
 /*
@@ -1769,14 +1743,14 @@ void alf_panning( ALuint cid,
                  UNUSED(ALshort **buffers),
                  ALuint nc,
                  UNUSED(ALuint len) ) {
-	ALfloat *lp; /* listener position */
+	ALfloat lp[3]; /* listener position */
 	ALfloat *sp; /* source position */
 	ALfloat *sd; /* speaker position */
 	ALfloat m;
 	ALfloat sa;
 	ALuint i;
 
-	lp = _alGetListenerParam( cid, AL_POSITION );
+	alGetListenerfv(AL_POSITION, lp);
 	sp = _alGetSourceParam(src, AL_POSITION );
 
 	if ((sp == NULL) || (lp == NULL)) {

@@ -10,497 +10,279 @@
 
 #include <AL/al.h>
 #include <AL/alext.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "al_debug.h"
+#include "al_config.h"
 #include "al_error.h"
-#include "al_types.h"
 #include "al_listen.h"
 #include "al_main.h"
-#include "al_error.h"
-#include "al_config.h"
-
+#include "al_types.h"
 #include "alc/alc_context.h"
 #include "alc/alc_speaker.h"
 
-/*
- * alListeneri( ALenum param, ALint value )
- *
- * Sets the listener attribute associated with param to int value.  If param
- * is not a valid listener attribute, set AL_INVALID_ENUM.  If value is not a
- * valid value for the attribute, set AL_INVALID_VALUE.
- */
-void alListeneri( ALenum param, ALint value )
+#define MAX_LISTENER_NUM_VALUES 6
+
+static ALint
+numValuesForAttribute( ALenum param )
 {
-	ALfloat fv = value;
-
-	alListenerf(param, fv);
-
-	return;
+	switch (param) {
+	case AL_POSITION:
+	case AL_VELOCITY:
+		return 3;
+	case AL_GAIN:
+	case AL_GAIN_LINEAR_LOKI:
+		return 1;
+	case AL_ORIENTATION:
+		return 6;
+		break;
+	default:
+		return 0;
+	}
 }
 
-/*
- * alListenerf( ALenum param, ALfloat value )
- *
- * Sets the listener attribute associated with param to float value.  If param
- * is not a valid listener attribute, set AL_INVALID_ENUM.  If value is not a
- * valid value for the attribute, set AL_INVALID_VALUE.
- */
-void alListenerf( ALenum param, ALfloat value ) {
-	AL_context *dc;
-	ALboolean inrange = AL_TRUE;
-
-	_alcDCLockContext();
-	dc = _alcDCGetContext();
-	if(dc == NULL) {
-		_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
-			  "alListenerf: no current context\n");
-
-		_alcDCUnlockContext();
-
+static void
+setListenerAttributef( ALenum param, const ALfloat *values, ALint numValues)
+{
+	/* TODO: As usual, we should better have a getter for a *locked* context */
+	AL_context *cc = _alcDCGetContext();
+	if( cc == NULL ) {
+		_alDCSetError(AL_INVALID_OPERATION);
 		return;
 	}
+	_alcDCLockContext();
 
-	/* check range */
-	switch( param ) {
-		case AL_GAIN:
-		case AL_GAIN_LINEAR_LOKI:
-			inrange = _alCheckRangef(value, 0.0f, 1.0f);
-			break;
-		default:
-			/*
-			 * Unknown param, error below.
-			 */
-			break;
+	if (numValues != numValuesForAttribute(param)) {
+		_alDCSetError(AL_INVALID_ENUM);
+		_alcDCUnlockContext();
+		return;
 	}
-
-	if(inrange == AL_FALSE) {
-		_alDebug(ALD_CONTEXT, __FILE__, __LINE__,
-			 "alListenerf(0x%x): value %f out of range",
-			 param, value);
-
+	if( values == NULL ) {
 		_alDCSetError(AL_INVALID_VALUE);
 		_alcDCUnlockContext();
-
 		return;
 	}
 
 	switch( param ) {
-		case AL_GAIN:
-		case AL_GAIN_LINEAR_LOKI:
-			dc->listener.gain = value;
+	case AL_POSITION:
+		if ((cc->listener.position[0] == values[0]) &&
+		    (cc->listener.position[1] == values[1]) &&
+		    (cc->listener.position[2] == values[2])) {
 			break;
-		default:
-			_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
-				  "alListenerf: invalid param 0x%x.",
-				  param );
+		}
+		cc->listener.position[0] = values[0];
+		cc->listener.position[1] = values[1];
+		cc->listener.position[2] = values[2];
+		_alcDCSpeakerMove();
+		break;
 
-			_alDCSetError( AL_INVALID_ENUM );
+	case AL_VELOCITY:
+		cc->listener.velocity[0] = values[0];
+		cc->listener.velocity[1] = values[1];
+		cc->listener.velocity[2] = values[2];
+		break;
 
+	case AL_GAIN:
+	case AL_GAIN_LINEAR_LOKI:
+		if (values[0] < 0.0f) {
+			_alDCSetError(AL_INVALID_VALUE);
 			break;
-	}
+		}
+		cc->listener.gain = values[0];
+		break;
 
-	_alcDCUnlockContext();
-
-	return;
-}
-
-/*
- * alListener3f( ALenum pname, ALfloat f1, ALfloat f2, ALfloat f3 )
- *
- * Sets the listener attribute associated with param to float vector composed
- * of { f1, f2, f3 }.  If param is not a valid listener attribute, set
- * AL_INVALID_ENUM. If any member of f1, f2, f3 is not a valid value for the
- * attribute, set AL_INVALID_VALUE.
- */
-void alListener3f( ALenum pname, ALfloat f1, ALfloat f2, ALfloat f3 ) {
-	ALfloat fv[3];
-
-	fv[0] = f1;
-	fv[1] = f2;
-	fv[2] = f3;
-
-	alListenerfv( pname, fv );
-
-	return;
-}
-
-/*
- * alListenerfv( ALenum pname, ALfloat *pv )
- *
- * Sets the listener attribute associated with param to float vector pv. If
- * param is not a valid listener attribute, set AL_INVALID_ENUM. If any member
- * of pv is not a valid value for the attribute, set AL_INVALID_VALUE.
- */
-void alListenerfv( ALenum pname, const ALfloat *pv ) {
-	AL_context *dc;
-
-	_alcDCLockContext();
-
-	if( pv == NULL ) {
-		/* silently ignore */
-		_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
-				"alListenerfv: invalid values NULL\n" );
-
-		_alcDCUnlockContext();
-
-		return;
-	}
-
-	dc = _alcDCGetContext();
-	if(dc == NULL) {
-		/* okay, this is weird */
-		_alcDCUnlockContext();
-
-		return;
-	}
-
-	switch( pname ) {
-		case AL_POSITION:
-			dc->listener.position[0] = pv[0];
-			dc->listener.position[1] = pv[1];
-			dc->listener.position[2] = pv[2];
-
-			_alcDCSpeakerMove();
+	case AL_ORIENTATION:
+		if ((cc->listener.orientation[0] == values[0]) &&
+		    (cc->listener.orientation[1] == values[1]) &&
+		    (cc->listener.orientation[2] == values[2]) &&
+		    (cc->listener.orientation[3] == values[3]) &&
+		    (cc->listener.orientation[4] == values[4]) &&
+		    (cc->listener.orientation[5] == values[5])) {
 			break;
-		case AL_VELOCITY:
-			dc->listener.velocity[0] = pv[0];
-			dc->listener.velocity[1] = pv[1];
-			dc->listener.velocity[2] = pv[2];
-			break;
-		case AL_ORIENTATION:
-			dc->listener.orientation[0] = pv[0]; /* at */
-			dc->listener.orientation[1] = pv[1];
-			dc->listener.orientation[2] = pv[2];
+		}
+		cc->listener.orientation[0] = values[0]; /* at */
+		cc->listener.orientation[1] = values[1];
+		cc->listener.orientation[2] = values[2];
+		cc->listener.orientation[3] = values[3]; /* up */
+		cc->listener.orientation[4] = values[4];
+		cc->listener.orientation[5] = values[5];
+		_alcDCSpeakerMove();
+		break;
 
-			dc->listener.orientation[3] = pv[3]; /* up */
-			dc->listener.orientation[4] = pv[4];
-			dc->listener.orientation[5] = pv[5];
-
-			_alcDCSpeakerMove();
-			break;
-		default:
-			_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
-				  "alListenerfv: param 0x%x in not valid.",
-				  pname);
-
-			_alDCSetError( AL_INVALID_ENUM );
-
-			break;
-	}
-
-	_alcDCUnlockContext();
-
-	return;
-}
-
-/*
- * alGetListeneri( ALenum pname, ALint *value )
- *
- * Populates value with the value of the listener attribute pname.  If pname
- * is not a valid listener attribute, AL_INVALID_ENUM is set.  If value is
- * NULL, this is a legal NOP.
- */
-void alGetListeneri( ALenum pname, ALint *value )
-{
-	ALint safety_first[6];
-
-	alGetListeneriv( pname, safety_first );
-
-	*value = safety_first[0];
-}
-
-/*
- * alGetListeneriv( ALenum pname, ALint *value )
- *
- * Populates value with the value of the listener attribute pname.  If pname
- * is not a valid listener attribute, AL_INVALID_ENUM is set.  If value is
- * NULL, this is a legal NOP.
- */
-void alGetListeneriv( ALenum pname, ALint *value ) {
-	AL_context *cc;
-	ALint *temp;
-
-	_alcDCLockContext();
-
-	if(value == NULL) {
-		/* silently ignore */
-		_alDebug(ALD_CONTEXT, __FILE__, __LINE__,
-		      "alGetListeneri: invalid values NULL\n");
-
-		_alcDCUnlockContext();
-
-		return;
-	}
-
-	cc = _alcDCGetContext();
-	if(cc == NULL) {
-		/*
-		 * There is no current context, which means that
-		 * we cannot set the error.  But if there is no
-		 * current context we should not have been able
-		 * to get here, since we've already locked the
-		 * default context.  So this is weird.
-		 *
-		 * In any case, set and error, unlock, and pray.
-		 */
-		_alDCSetError( AL_INVALID_OPERATION );
-		_alcDCUnlockContext();
-
-		return;
-	}
-
-	temp = _alDCGetListenerParam( pname );
-	if(temp == NULL) {
-		_alDebug(ALD_CONTEXT, __FILE__, __LINE__,
-			"alGetListeneriv: param 0x%x not valid", pname);
-
+	default:
 		_alDCSetError( AL_INVALID_ENUM );
-		_alcDCUnlockContext();
-
-		return;
+		break;
 	}
-
-	*value = *temp;
 
 	_alcDCUnlockContext();
-
-	return;
 }
 
-/*
- * alGetListenerfv( ALenum pname, ALfloat *values )
- *
- * Populates values with the values of the listener attribute pname.  If pname
- * is not a valid listener attribute, AL_INVALID_ENUM is set.  If values is
- * NULL, this is a legal NOP.
- */
-void alGetListenerf( ALenum param, ALfloat *value )
+static void
+setListenerAttributei( ALenum param, const ALint *intValues, ALint numValues)
 {
-	ALfloat safety_first[6];
-
-	alGetListenerfv( param, safety_first );
-
-	*value = safety_first[0];
-
-	return;
+	ALfloat floatValues[MAX_LISTENER_NUM_VALUES];
+	int i;
+	for (i = 0; i < numValues; i++) {
+		floatValues[i] = (ALfloat)intValues[i];
+	}
+	setListenerAttributef(param, floatValues, numValues);
 }
 
-/*
- * alGetListenerfv( ALenum pname, ALfloat *values )
- *
- * Populates values with the values of the listener attribute pname.  If pname
- * is not a valid listener attribute, AL_INVALID_ENUM is set.  If values is
- * NULL, this is a legal NOP.
- */
-void alGetListenerfv( ALenum param, ALfloat *values ) {
-	AL_context *cc;
-	ALfloat *fv;
-	ALsizei numarguments = 1;
+void
+alListenerf( ALenum param, ALfloat value )
+{
+	setListenerAttributef(param, &value, 1);
+}
 
-	switch( param ) {
-		case AL_GAIN:
-		case AL_GAIN_LINEAR_LOKI:
-			/* only one float */
-			numarguments = 1;
-			break;
-		case AL_ORIENTATION:
-			numarguments = 6;
-			break;
-		case AL_POSITION:
-		case AL_VELOCITY:
-			numarguments = 3;
-			break;
-		default:
-			_alcDCLockContext();
-			_alDCSetError( AL_INVALID_ENUM );
-			_alcDCUnlockContext();
+void
+alListener3f( ALenum param, ALfloat value1, ALfloat value2, ALfloat value3 )
+{
+	ALfloat values[3] = { value1, value2, value3 };
+	setListenerAttributef(param, values, 3);
+}
 
-			return;
-			break;
+void
+alListenerfv( ALenum param, const ALfloat *values )
+{
+	setListenerAttributef(param, values, numValuesForAttribute(param));
+}
+ 
+void
+alListeneri( ALenum param, ALint value )
+{
+	setListenerAttributei(param, &value, 1);
+}
+
+void
+alListener3i( ALenum param, ALint value1, ALint value2, ALint value3 )
+{
+	ALint values[3] = { value1, value2, value3 };
+	setListenerAttributei(param, values, 3);
+}
+
+void
+alListeneriv( ALenum param, const ALint *values )
+{
+	setListenerAttributei(param, values, numValuesForAttribute(param));
+}
+
+static ALboolean
+getListenerAttribute( ALenum param, ALfloat *values, ALint numValues )
+{
+	ALboolean ok = AL_FALSE;
+	/* TODO: As usual, we should better have a getter for a *locked* context */
+	AL_context *cc = _alcDCGetContext();
+	if( cc == NULL ) {
+		_alDCSetError(AL_INVALID_OPERATION);
+		return ok;
 	}
-
-	if( values == NULL ) {
-		/* silently ignore */
-
-		_alDebug(ALD_CONTEXT, __FILE__, __LINE__,
-		      "alGetListenerfv: invalid values NULL\n");
-
-		return;
-	}
-
 	_alcDCLockContext();
 
-	cc = _alcDCGetContext();
-
-	if(cc == NULL) {
-		/*
-		 * There is no current context, which means that
-		 * we cannot set the error.  But if there is no
-		 * current context we should not have been able
-		 * to get here, since we've already locked the
-		 * default context.  So this is weird.
-		 *
-		 * In any case, set and error, unlock, and pray.
-		 */
-
-		_alDCSetError( AL_INVALID_OPERATION );
+	if (numValues != numValuesForAttribute(param)) {
+		_alDCSetError(AL_INVALID_ENUM);
 		_alcDCUnlockContext();
-
-		return;
+		return ok;
+	}
+	if( values == NULL ) {
+		_alDCSetError(AL_INVALID_VALUE);
+		_alcDCUnlockContext();
+		return ok;
 	}
 
-	fv = _alDCGetListenerParam( param );
-	if( fv != NULL ) {
-		/*
-		 * we actually have a value for the param, so
-		 * copy it and return.  Otherwise, set default
-		 * below or do conversion.
-		 */
+	switch( param ) {
+	case AL_POSITION:
+		values[0] = cc->listener.position[0];
+		values[1] = cc->listener.position[1];
+		values[2] = cc->listener.position[2];
+		ok = AL_TRUE;
+		break;
 
-		memcpy( values, fv, sizeof *values * numarguments );
+	case AL_VELOCITY:
+		values[0] = cc->listener.velocity[0];
+		values[1] = cc->listener.velocity[1];
+		values[2] = cc->listener.velocity[2];
+		ok = AL_TRUE;
+		break;
 
-		_alcDCUnlockContext();
+	case AL_GAIN:
+	case AL_GAIN_LINEAR_LOKI:
+		values[0] = cc->listener.gain;
+		ok = AL_TRUE;
+		break;
 
-		return;
-	}
+	case AL_ORIENTATION:
+		values[0] = cc->listener.orientation[0]; /* at */
+		values[1] = cc->listener.orientation[1];
+		values[2] = cc->listener.orientation[2];
+		values[3] = cc->listener.orientation[3]; /* up */
+		values[4] = cc->listener.orientation[4];
+		values[5] = cc->listener.orientation[5];
+		ok = AL_TRUE;
+		break;
 
-	/*
-	 * set default or do conversion.
-	 */
-	switch(param) {
-		case AL_GAIN:
-			fv = _alDCGetListenerParam( AL_GAIN );
-			if( fv == NULL ) {
-				values[0] = 1.0f;
-			} else {
-				values[0] = fv[0];
-			}
-			break;
-		case AL_POSITION:
-		case AL_VELOCITY:
-			values[0] = 0.0f;
-			values[1] = 0.0f;
-			values[2] = 0.0f;
-			break;
-		case AL_ORIENTATION:
-			/* at */
-			values[0] = 0.0f;
-			values[1] = 0.0f;
-			values[2] = -1.0f;
-
-			/* up */
-			values[3] = 0.0f;
-			values[4] = 1.0f;
-			values[5] = 0.0f;
-
-			break;
-		default:
-			_alDebug(ALD_CONTEXT, __FILE__, __LINE__,
-				"alGetListenerfv: param 0x%x not valid",
-				param );
-
-		  _alDCSetError( AL_INVALID_ENUM );
-
-		  break;
+	default:
+		_alDCSetError( AL_INVALID_ENUM );
+		break;
 	}
 
 	_alcDCUnlockContext();
-
-	return;
+	return ok;
 }
 
-/*
- * alGetListener4f( ALenum pname, ALfloat *f1, ALfloat *f2, ALfloat *f3 )
- *
- * Populates values with the values of the listener attribute pname.  If pname
- * is not a valid listener attribute, AL_INVALID_ENUM is set.  If values is
- * NULL, this is a legal NOP.
- */
-void alGetListener3f( ALenum param,
-		      ALfloat *f1, ALfloat *f2, ALfloat *f3 )
+void
+alGetListenerf( ALenum param, ALfloat *value )
 {
-	ALfloat safety_first[6];
-
-	alGetListenerfv(param, safety_first);
-
-	*f1 = safety_first[0];
-	*f2 = safety_first[1];
-	*f3 = safety_first[2];
-
-	return;
+	getListenerAttribute(param, value, 1);
 }
 
-/*
- * _alDestroyListener(UNUSED(AL_listener *ls))
- *
- * Doesn't do anything.
- *
- */
-void _alDestroyListener(UNUSED(AL_listener *ls))
+void
+alGetListener3f( ALenum param, ALfloat *value1, ALfloat *value2, ALfloat *value3 )
 {
-	/* not needed */
-
-	return;
+	ALfloat floatValues[3];
+	if (getListenerAttribute(param, floatValues, 3)) {
+		*value1 = floatValues[0];
+		*value2 = floatValues[1];
+		*value3 = floatValues[2];
+	}
 }
 
-/*
- * _alGetListenerParam( ALuint cid, ALenum param )
- *
- * Returns a pointer to the listener attribute specified by param, for the
- * context named cid, or NULL if param is invalid.
- *
- * assumes locked context
- *
- * FIXME: add case statements for other params
- */
-void *_alGetListenerParam( ALuint cid, ALenum param ) {
-	AL_context *cc;
-	AL_listener *list;
+void
+alGetListenerfv( ALenum param, ALfloat *values )
+{
+	getListenerAttribute(param, values, numValuesForAttribute(param));
+}
 
-	cc = _alcGetContext( cid );
-	if(cc == NULL) {
-		/*
-		 * cid is an invalid context.	We can't set an error
-		 * here because this requires a valid context.
-		 */
-
-		_alDebug(ALD_CONTEXT, __FILE__, __LINE__,
-			"_alGetListenerParam: called with invalid context %d",
-			cid);
-
-		_alDCSetError( AL_INVALID_OPERATION );
-
-		return NULL;
+void
+alGetListeneri( ALenum param, ALint *value )
+{
+	ALfloat floatValues[1];
+	if (getListenerAttribute(param, floatValues, 1)) {
+		*value = floatValues[0];
 	}
+}
 
-	list = &cc->listener;
-
-	switch(param) {
-		case AL_GAIN:
-		case AL_GAIN_LINEAR_LOKI:
-			return &list->gain;
-			break;
-		case AL_VELOCITY:
-			return &list->velocity;
-			break;
-		case AL_POSITION:
-			return &list->position;
-		case AL_ORIENTATION:
-			return &list->orientation;
-		default:
-			_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
-				  "_alGetListenerParam(%d, ...) passed bad param 0x%x",
-				  param);
-
-			_alSetError( cid, AL_INVALID_ENUM );
-
-			break;
+void
+alGetListener3i( ALenum param, ALint *value1, ALint *value2, ALint *value3 )
+{
+	ALfloat floatValues[3];
+	if (getListenerAttribute(param, floatValues, 3)) {
+		*value1 = (ALint)floatValues[0];
+		*value2 = (ALint)floatValues[1];
+		*value3 = (ALint)floatValues[2];
 	}
+}
 
-	return NULL;
+void
+alGetListeneriv( ALenum param, ALint *values )
+{
+	ALfloat floatValues[MAX_LISTENER_NUM_VALUES];
+	int i;
+	int n = numValuesForAttribute(param);
+	if (getListenerAttribute(param, floatValues, n)) {
+		for (i = 0; i < n; i++) {
+			values[i] = (ALint)floatValues[i];
+		}
+	}
 }
 
 /*
@@ -508,7 +290,9 @@ void *_alGetListenerParam( ALuint cid, ALenum param ) {
  *
  * Initializes already allocated listener.
  */
-void _alInitListener( AL_listener *listener ) {
+void
+_alInitListener( AL_listener *listener )
+{
 	ALfloat tempfv[6];
 	ALboolean err;
 	int i;
@@ -533,6 +317,8 @@ void _alInitListener( AL_listener *listener ) {
 		memcpy( listener->velocity, tempfv, SIZEOFVECTOR);
 	}
 
+	listener->gain = 1.0f;
+
 	err = _alGetGlobalVector("listener-orientation", ALRC_FLOAT, 6, tempfv);
 	if(err == AL_FALSE) {
 		/* no preset orientation */
@@ -549,8 +335,15 @@ void _alInitListener( AL_listener *listener ) {
 	} else {
 		memcpy( listener->orientation, tempfv, 2 * SIZEOFVECTOR);
 	}
+}
 
-	listener->gain = 1.0f;
-
-	return;
+/*
+ * _alDestroyListener(UNUSED(AL_listener *ls))
+ *
+ * Doesn't do anything.
+ *
+ */
+void
+_alDestroyListener(UNUSED(AL_listener *ls))
+{
 }

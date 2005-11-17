@@ -304,7 +304,7 @@ funcNameAddressPair alProcs[] = {
 	DEFINE_AL_PROC(alGetInteger),
 	DEFINE_AL_PROC(alGetIntegerv),
 	DEFINE_AL_PROC(alGetListener3f),
-	/* DEFINE_AL_PROC(alGetListener3i), TODO: NOT YET IMPLEMENTED!!! */
+	DEFINE_AL_PROC(alGetListener3i),
 	DEFINE_AL_PROC(alGetListenerf),
 	DEFINE_AL_PROC(alGetListenerfv),
 	DEFINE_AL_PROC(alGetListeneri),
@@ -322,11 +322,11 @@ funcNameAddressPair alProcs[] = {
 	DEFINE_AL_PROC(alIsExtensionPresent),
 	DEFINE_AL_PROC(alIsSource),
 	DEFINE_AL_PROC(alListener3f),
-	/* DEFINE_AL_PROC(alListener3i), TODO: NOT YET IMPLEMENTED!!! */
+	DEFINE_AL_PROC(alListener3i),
 	DEFINE_AL_PROC(alListenerf),
 	DEFINE_AL_PROC(alListenerfv),
 	DEFINE_AL_PROC(alListeneri),
-	/* DEFINE_AL_PROC(alListeneriv), TODO: NOT YET IMPLEMENTED!!! */
+	DEFINE_AL_PROC(alListeneriv),
 	DEFINE_AL_PROC(alSource3f),
 	/* DEFINE_AL_PROC(alSource3i), TODO: NOT YET IMPLEMENTED!!! */
 	DEFINE_AL_PROC(alSourcePause),
