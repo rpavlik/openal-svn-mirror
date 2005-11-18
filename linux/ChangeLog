@@ -1,5 +1,7 @@
 2005-11-18  Sven Panne  <sven.panne@aedion.de>
 
+	* src/al_buffer.c, src/al_ext.c: Cleaned up buffer state handling.
+
 	* src/al_bpool.h, src/al_buffer.h, src/al_debug.h, src/al_error.h,
 	src/al_ext.h, src/al_filter.h, src/al_listen.h, src/al_main.h,
 	src/al_mixer.h, src/al_mixfunc.h, src/al_mixmanager.h, src/al_mspool.h,

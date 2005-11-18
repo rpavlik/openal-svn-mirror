@@ -328,224 +328,6 @@ ALboolean alIsBuffer( ALuint bid ) {
 }
 
 /*
- * alGetBufferiv( ALuint buffer, ALenum param, ALint *value )
- *
- * Retrieve an integer value, associated with buffer param param,
- * from the buffer named.
- *
- * If value is NULL, legal NOP.
- * If buffer is not a valid buffer id, set INVALID_NAME.
- * If param is not a valid buffer param, set INVALID_ENUM.
- *
- */
-void alGetBufferiv( ALuint buffer, ALenum param, ALint *value ) {
-	AL_buffer *buf;
-	int retref = 0;
-
-	if(value == NULL) {
-		/* silently ignore */
-
-		_alDebug(ALD_BUFFER, __FILE__, __LINE__,
-			"alGetBufferi: NULL value",
-			buffer, param);
-
-		return;
-	}
-
-	_alLockBuffer();
-	buf = _alGetBuffer(buffer);
-
-	if(buf == NULL) {
-		_alUnlockBuffer();
-
-		_alDebug(ALD_BUFFER, __FILE__, __LINE__,
-			"buffer id %d is a bad index", buffer);
-
-		_alcDCLockContext();
-		_alDCSetError( AL_INVALID_NAME );
-		_alcDCUnlockContext();
-		return;
-	}
-
-	switch( param ) {
-		case AL_FREQUENCY:
-		  retref = buf->frequency;
-		  break;
-		case AL_BITS:
-		  retref = _alGetBitsFromFormat( buf->format );
-		  break;
-		case AL_CHANNELS:
-		  retref = _alGetChannelsFromFormat( buf->format );
-		  break;
-		case AL_SIZE:
-		  retref = buf->size;
-		  break;
-		default:
-		  _alDebug(ALD_BUFFER, __FILE__, __LINE__,
-			"alGetBufferi bad param 0x%x", param);
-
-		  _alcDCLockContext();
-		  _alDCSetError( AL_INVALID_ENUM );
-		  _alcDCUnlockContext();
-
-		  break;
-	}
-
-	_alUnlockBuffer();
-
-	*value = retref;
-
-	return;
-}
-
-/*
- * alGetBufferfv( ALuint buffer, ALenum param, ALfloat *value )
- *
- * Retrieve a float value, associated with buffer param param,
- * from the buffer named.  This is the vector form.
- *
- * If value is NULL, legal NOP.
- * If buffer is not a valid buffer id, set INVALID_NAME.
- * If param is not a valid buffer param, set INVALID_ENUM.
- */
-void alGetBufferfv( ALuint buffer, ALenum param, ALfloat *value ) {
-	AL_buffer *buf;
-
-	/*
-	 * Check for invalid type request: eg integer/boolean
-	 * types.  We need to convert these.
-	 */
-	switch( param ) {
-		case AL_FREQUENCY:
-		case AL_BITS:
-		case AL_CHANNELS:
-		case AL_SIZE:
-			/* conversion to integer */
-			do {
-				ALint temp = 0;
-
-				alGetBufferiv( buffer, param, &temp );
-
-				/*
-				 * JIV FIXME
-				 *
-				 * how do we know if we've failed?
-				 */
-				*value = temp;
-
-				return;
-			} while(0);
-			break;
-			break;
-		default:
-			/*
-			 * either float or invalid pname.
-			 */
-			break;
-	}
-
-	if(value == NULL) {
-		/* silently ignore */
-		_alDebug(ALD_BUFFER, __FILE__, __LINE__,
-			"alGetBufferf: invalid NULL value" );
-
-		return;
-	}
-
-	_alLockBuffer();
-
-	buf = _alGetBuffer( buffer );
-	if(buf == NULL) {
-		_alUnlockBuffer();
-
-		_alDebug(ALD_BUFFER, __FILE__, __LINE__,
-			"alGetBufferf: invalid bid %d", buffer );
-
-		_alcDCLockContext();
-		_alDCSetError( AL_INVALID_NAME );
-		_alcDCUnlockContext();
-
-		return;
-	}
-
-	switch( param ) {
-		default:
-		  _alDebug(ALD_BUFFER, __FILE__, __LINE__,
-			"alGetBufferf: bad parameter 0x%x", param);
-
-		  _alcDCLockContext();
-		  _alDCSetError( AL_INVALID_ENUM );
-		  _alcDCUnlockContext();
-
-		  break;
-	}
-
-	_alUnlockBuffer();
-
-	return;
-}
-
-/*
- * alGetBufferi( ALuint buffer, ALenum param, ALint *value )
- *
- * Retrieve an integer value, associated with buffer param param,
- * from the buffer named.
- *
- * If value is NULL, legal NOP.
- * If buffer is not a valid buffer id, set INVALID_NAME.
- * If param is not a valid buffer param, set INVALID_ENUM.
- *
- * This would do conversion, if there were any non integer/boolean
- * buffer params.  But there aren't as of the time of this
- * writing.
- */
-void alGetBufferi( ALuint buffer, ALenum param, ALint *value )
-{
-	ALint safety_first[6];
-
-	/*
-	 * We don't have any vector buffer parameters, but we may
-	 * in the future.
-	 */
-	alGetBufferiv( buffer, param, safety_first );
-
-	if(value)
-	{
-		*value = safety_first[0];
-	}
-
-	return;
-}
-
-/*
- * alGetBufferf( ALuint buffer, ALenum param, ALfloat *value )
- *
- * Retrieve a float value, associated with buffer param param,
- * from the buffer named.
- *
- * If value is NULL, legal NOP.
- * If buffer is not a valid buffer id, set INVALID_NAME.
- * If param is not a valid buffer param, set INVALID_ENUM.
- */
-void alGetBufferf( ALuint buffer, ALenum param, ALfloat *value )
-{
-	ALfloat safety_first[6];
-
-	/*
-	 * We don't have any vector buffer parameters, but we may
-	 * in the future.
-	 */
-	alGetBufferfv( buffer, param, safety_first );
-
-	if(value)
-	{
-		*value = safety_first[0];
-	}
-
-	return;
-}
-
-/*
  * alBufferData( ALuint  bid,
  *               ALenum  format,
  *               ALvoid  *data,
@@ -1699,4 +1481,227 @@ ALsizei alBufferAppendData( ALuint   buffer,
 		            ALsizei  osamps,
                             ALsizei  freq) {
 	return alBufferAppendData_LOKI(buffer, format, data, osamps, freq);
+}
+
+/* no attributes for now, but 0-sized arrays might not work with every compiler */
+#define MAX_LISTENER_NUM_VALUES 1
+
+static ALint
+numValuesForAttribute( ALenum param )
+{
+	switch (param) {
+	default:
+		return 0;
+	}
+}
+
+static void
+setBufferAttributef( ALuint bid, ALenum param, const ALfloat *values, ALint numValues)
+{
+	_alLockBuffer();
+
+	if (!alIsBuffer(bid)) {
+		_alcDCLockContext();
+		_alDCSetError( AL_INVALID_NAME );
+		_alcDCUnlockContext();
+		_alUnlockBuffer();
+		return;
+	}
+
+	if (numValues != numValuesForAttribute(param)) {
+		_alcDCLockContext();
+		_alDCSetError(AL_INVALID_ENUM);
+		_alcDCUnlockContext();
+		_alUnlockBuffer();
+		return;
+	}
+
+	if( values == NULL ) {
+		_alcDCLockContext();
+		_alDCSetError(AL_INVALID_VALUE);
+		_alcDCUnlockContext();
+		_alUnlockBuffer();
+		return;
+	}
+
+	switch (param) {
+	default:
+		_alcDCLockContext();
+		_alDCSetError( AL_INVALID_ENUM );
+		_alcDCUnlockContext();
+		break;
+	}
+
+	_alUnlockBuffer();
+}
+
+static void
+setBufferAttributei( ALuint bid, ALenum param, const ALint *intValues, ALint numValues)
+{
+	ALfloat floatValues[MAX_LISTENER_NUM_VALUES];
+	int i;
+	for (i = 0; i < numValues; i++) {
+		floatValues[i] = (ALfloat)intValues[i];
+	}
+	setBufferAttributef(bid, param, floatValues, numValues);
+}
+
+void
+alBufferf( ALuint bid, ALenum param, ALfloat value )
+{
+	setBufferAttributef(bid, param, &value, 1);
+}
+
+void
+alBuffer3f( ALuint bid, ALenum param, ALfloat value1, ALfloat value2, ALfloat value3 )
+{
+	ALfloat values[3] = { value1, value2, value3 };
+	setBufferAttributef(bid, param, values, 3);
+}
+
+void
+alBufferfv( ALuint bid, ALenum param, const ALfloat *values )
+{
+	setBufferAttributef(bid, param, values, numValuesForAttribute(param));
+}
+
+void
+alBufferi( ALuint bid, ALenum param, ALint value )
+{
+	setBufferAttributei(bid, param, &value, 1);
+}
+
+void
+alBuffer3i( ALuint bid, ALenum param, ALint value1, ALint value2, ALint value3 )
+{
+	ALint values[3] = { value1, value2, value3 };
+	setBufferAttributei(bid, param, values, 3);
+}
+
+void
+alBufferiv( ALuint bid, ALenum param, const ALint *values )
+{
+	setBufferAttributei(bid, param, values, numValuesForAttribute(param));
+}
+
+static ALboolean
+getBufferAttribute( ALuint bid, ALenum param, ALfloat *values, ALint numValues )
+{
+	ALboolean ok = AL_FALSE;
+	AL_buffer *buf;
+
+	_alLockBuffer();
+
+	buf = _alGetBuffer(bid);
+	if (buf == NULL) {
+		_alcDCLockContext();
+		_alDCSetError( AL_INVALID_NAME );
+		_alcDCUnlockContext();
+		_alUnlockBuffer();
+		return ok;
+	}
+
+	if (numValues != numValuesForAttribute(param)) {
+		_alcDCLockContext();
+		_alDCSetError(AL_INVALID_ENUM);
+		_alcDCUnlockContext();
+		_alUnlockBuffer();
+		return ok;
+	}
+
+	if( values == NULL ) {
+		_alcDCLockContext();
+		_alDCSetError(AL_INVALID_VALUE);
+		_alcDCUnlockContext();
+		_alUnlockBuffer();
+		return ok;
+	}
+
+	switch( param ) {
+
+	case AL_FREQUENCY:
+		values[0] = (ALfloat)buf->frequency;
+		ok = AL_TRUE;
+		break;
+
+	case AL_SIZE:
+		values[0] = (ALfloat)buf->size;
+		ok = AL_TRUE;
+		break;
+
+	case AL_BITS:
+		values[0] = _alGetBitsFromFormat( buf->format );
+		ok = AL_TRUE;
+		break;
+
+	case AL_CHANNELS:
+		values[0] = _alGetChannelsFromFormat( buf->format );
+		ok = AL_TRUE;
+		break;
+
+	default:
+		_alcDCLockContext();
+		_alDCSetError( AL_INVALID_ENUM );
+		_alcDCUnlockContext();
+		break;
+	}
+
+	_alUnlockBuffer();
+	return ok;
+}
+
+void
+alGetBufferf( ALuint bid, ALenum param, ALfloat *value )
+{
+	getBufferAttribute(bid, param, value, 1);
+}
+
+void
+alGetBuffer3f( ALuint bid, ALenum param, ALfloat *value1, ALfloat *value2, ALfloat *value3)
+{
+	ALfloat floatValues[3];
+	if (getBufferAttribute(bid, param, floatValues, 3)) {
+		*value1 = floatValues[0];
+		*value2 = floatValues[1];
+		*value3 = floatValues[2];
+	}
+}
+
+void
+alGetBufferfv( ALuint bid, ALenum param, ALfloat *values )
+{
+	getBufferAttribute(bid, param, values, numValuesForAttribute(param));
+}
+
+void
+alGetBufferi( ALuint bid, ALenum param, ALint *value )
+{
+	ALfloat floatValues[1];
+	if (getBufferAttribute(bid, param, floatValues, 1)) {
+		*value = floatValues[0];
+	}
+}
+
+void
+alGetBuffer3i( ALuint bid, ALenum param, ALint *value1, ALint *value2, ALint *value3)
+{
+	ALfloat floatValues[3];
+	if (getBufferAttribute(bid, param, floatValues, 3)) {
+		*value1 = (ALint)floatValues[0];
+		*value2 = (ALint)floatValues[1];
+		*value3 = (ALint)floatValues[2];
+	}
+}
+
+void
+alGetBufferiv( ALuint bid, ALenum param, ALint *values )
+{
+	ALfloat floatValues[MAX_LISTENER_NUM_VALUES];
+	int i;
+	int n = numValuesForAttribute(param);
+	if (getBufferAttribute(bid, param, floatValues, n)) {
+		for (i = 0; i < n; i++) {
+			values[i] = (ALint)floatValues[i];
+		}
+	}
 }

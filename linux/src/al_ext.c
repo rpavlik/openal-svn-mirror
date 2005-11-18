@@ -271,13 +271,13 @@ typedef struct
 
 funcNameAddressPair alProcs[] = {
 	/* this has to be sorted! */
-	/* DEFINE_AL_PROC(alBuffer3f), TODO: NOT YET IMPLEMENTED!!! */
-	/* DEFINE_AL_PROC(alBuffer3i), TODO: NOT YET IMPLEMENTED!!! */
+	DEFINE_AL_PROC(alBuffer3f),
+	DEFINE_AL_PROC(alBuffer3i),
 	DEFINE_AL_PROC(alBufferData),
-	/* DEFINE_AL_PROC(alBufferf), TODO: NOT YET IMPLEMENTED!!! */
-	/* DEFINE_AL_PROC(alBufferfv), TODO: NOT YET IMPLEMENTED!!! */
-	/* DEFINE_AL_PROC(alBufferi), TODO: NOT YET IMPLEMENTED!!! */
-	/* DEFINE_AL_PROC(alBufferiv), TODO: NOT YET IMPLEMENTED!!! */
+	DEFINE_AL_PROC(alBufferf),
+	DEFINE_AL_PROC(alBufferfv),
+	DEFINE_AL_PROC(alBufferi),
+	DEFINE_AL_PROC(alBufferiv),
 	DEFINE_AL_PROC(alDeleteBuffers),
 	DEFINE_AL_PROC(alDeleteSources),
 	DEFINE_AL_PROC(alDisable),
@@ -289,8 +289,8 @@ funcNameAddressPair alProcs[] = {
 	DEFINE_AL_PROC(alGenSources),
 	DEFINE_AL_PROC(alGetBoolean),
 	DEFINE_AL_PROC(alGetBooleanv),
-	/* DEFINE_AL_PROC(alGetBuffer3f), TODO: NOT YET IMPLEMENTED!!! */
-	/* DEFINE_AL_PROC(alGetBuffer3i), TODO: NOT YET IMPLEMENTED!!! */
+	DEFINE_AL_PROC(alGetBuffer3f),
+	DEFINE_AL_PROC(alGetBuffer3i),
 	DEFINE_AL_PROC(alGetBufferf),
 	DEFINE_AL_PROC(alGetBufferfv),
 	DEFINE_AL_PROC(alGetBufferi),
