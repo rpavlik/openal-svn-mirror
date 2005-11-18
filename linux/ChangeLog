@@ -1,3 +1,10 @@
+2005-11-18  Sven Panne  <sven.panne@aedion.de>
+
+	* src/al_config.c, src/al_config.h, al_listen.c: Removed the rather
+	obscure feature of being able to initialise some listener attributes via
+	configuration file variables ("listener-position", "listener-velocity",
+	"listener-orientation").
+
 2005-11-17  Sven Panne  <sven.panne@aedion.de>
 
 	* src/al_ext.c, src/al_filter.c, src/al_listen.c, src/al_listen.h:

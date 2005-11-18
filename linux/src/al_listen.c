@@ -11,14 +11,10 @@
 #include <AL/al.h>
 #include <AL/alext.h>
 #include <stdlib.h>
-#include <string.h>
 
-#include "al_config.h"
 #include "al_error.h"
 #include "al_listen.h"
 #include "al_main.h"
-#include "al_types.h"
-#include "alc/alc_context.h"
 #include "alc/alc_speaker.h"
 
 #define MAX_LISTENER_NUM_VALUES 6
@@ -286,62 +282,34 @@ alGetListeneriv( ALenum param, ALint *values )
 }
 
 /*
- * _alInitListener( AL_listener *listener )
- *
  * Initializes already allocated listener.
  */
 void
 _alInitListener( AL_listener *listener )
 {
-	ALfloat tempfv[6];
-	ALboolean err;
-	int i;
+	listener->position[0] = 0.0f;
+	listener->position[1] = 0.0f;
+	listener->position[2] = 0.0f;
 
-	err = _alGetGlobalVector("listener-position", ALRC_FLOAT, 3, tempfv);
-	if(err == AL_FALSE) {
-		/* no preset position */
-		for(i = 0; i < 3; i++) {
-			listener->position[i] = 0.0f;
-		}
-	} else {
-		memcpy( listener->position, tempfv, SIZEOFVECTOR);
-	}
-
-	err = _alGetGlobalVector("listener-velocity", ALRC_FLOAT, 3, tempfv);
-	if(err == AL_FALSE) {
-		/* no preset velocity */
-		for(i = 0; i < 3; i++) {
-			listener->velocity[i] = 0.0f;
-		}
-	} else {
-		memcpy( listener->velocity, tempfv, SIZEOFVECTOR);
-	}
+	listener->velocity[0] = 0.0f;
+	listener->velocity[1] = 0.0f;
+	listener->velocity[2] = 0.0f;
 
 	listener->gain = 1.0f;
 
-	err = _alGetGlobalVector("listener-orientation", ALRC_FLOAT, 6, tempfv);
-	if(err == AL_FALSE) {
-		/* no preset orientation */
+	/* at */
+	listener->orientation[0] = 0.0f;
+	listener->orientation[1] = 0.0f;
+	listener->orientation[2] = -1.0f;
 
-		/* at */
-		listener->orientation[0] = 0.0f;
-		listener->orientation[1] = 0.0f;
-		listener->orientation[2] = -1.0f;
-
-		/* up */
-		listener->orientation[3] = 0.0f;
-		listener->orientation[4] = 1.0f;
-		listener->orientation[5] = 0.0f;
-	} else {
-		memcpy( listener->orientation, tempfv, 2 * SIZEOFVECTOR);
-	}
+	/* up */
+	listener->orientation[3] = 0.0f;
+	listener->orientation[4] = 1.0f;
+	listener->orientation[5] = 0.0f;
 }
 
 /*
- * _alDestroyListener(UNUSED(AL_listener *ls))
- *
  * Doesn't do anything.
- *
  */
 void
 _alDestroyListener(UNUSED(AL_listener *ls))
