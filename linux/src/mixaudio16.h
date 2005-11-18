@@ -27,8 +27,6 @@
 #define min_audioval -(1<<(16-1))
 
 /*
- * MixAudio16_n( ALshort *dst, alMixEntry *entries, ALuint numents );
- *
  * Mix a numents number of streams into dst, clamping above by max_audioval
  * and below by min_audioval to prevent overflow.
  */

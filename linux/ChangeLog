@@ -1,5 +1,15 @@
 2005-11-18  Sven Panne  <sven.panne@aedion.de>
 
+	* src/al_bpool.h, src/al_buffer.h, src/al_debug.h, src/al_error.h,
+	src/al_ext.h, src/al_filter.h, src/al_listen.h, src/al_main.h,
+	src/al_mixer.h, src/al_mixfunc.h, src/al_mixmanager.h, src/al_mspool.h,
+	src/al_queue.h, src/al_rctree.h, src/al_rcvar.h, src/al_source.h,
+	src/al_spool.h, src/al_threadlib.h, src/al_vector.h, src/mixaudio16.h,
+	src/alc/alc_context.h, src/alc/alc_device.h, src/alc/alc_error.h,
+	src/alc/alc_speaker.h: Started to remove the repetition of function
+	prototypes in comments. Previously we had each and every signature in 4
+	different places, which is a maintenance nightmare.
+
 	* src/al_config.c, src/al_config.h, al_listen.c: Removed the rather
 	obscure feature of being able to initialise some listener attributes via
 	configuration file variables ("listener-position", "listener-velocity",

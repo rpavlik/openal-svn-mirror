@@ -12,8 +12,6 @@
 #include "alc/alc_context.h"
 
 /*
- * _alSetError( ALuint cid, ALenum param )
- *
  * Sets the context specific error for the context specified by cid to the
  * value param.
  */

@@ -13,22 +13,16 @@
 
 #include "al_types.h"
 /*
- * _alcDevicePause( AL_device *dev )
- *
  * Pauses a device.
  */
 void _alcDevicePause( AL_device *dev );
 
 /*
- * _alcDeviceResume( AL_device *dev );
- *
  * Resumes a device.
  */
 void _alcDeviceResume( AL_device *dev );
 
 /*
- * _alcDeviceSet( AL_device *dev )
- *
  * Sets the attributes for the device from the settings in the device.  The
  * library is free to change the parameters associated with the device, but
  * until _alcDeviceSet is called, none of the changes are important.

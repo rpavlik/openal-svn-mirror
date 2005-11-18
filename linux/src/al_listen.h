@@ -12,15 +12,11 @@
 #include "al_types.h"
 
 /*
- * _alInitListener( AL_listener *listener )
- *
  * Initializes a listener to the default values for all its elements.
  */
 void _alInitListener( AL_listener *listener );
 
 /*
- * _alDestroyListener( AL_listener *listener )
- *
  * Performs any needed finalization on a listener.
  */
 void _alDestroyListener( AL_listener *listener );

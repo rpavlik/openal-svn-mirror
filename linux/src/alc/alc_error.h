@@ -13,23 +13,17 @@
 #include <AL/alc.h>
 
 /*
- * alcIsError( ALCenum param )
- *
  * Returns AL_TRUE if param specifies a valid alc error, AL_FALSE otherwise.
  */
 ALboolean alcIsError( ALCenum param );
 
 /*
- * _alcSetError( ALCenum param )
- *
  * Sets the context-independant error to param, if param is a valid context
  * error.
  */
 void _alcSetError( ALCenum param );
 
 /*
- * _alcGetErrorString( ALCenum param )
- *
  * Returns a const ALubyte * string giving a readable representation of the
  * error param, or NULL if param is not an alc error.
  */

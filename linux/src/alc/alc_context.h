@@ -61,167 +61,123 @@ extern ALenum canon_format;
 extern ALuint canon_speed;
 
 /*
- * _alcDestroyAll( void )
- *
  * Deallocates the data structures allocated in _alcInitContexts.
  */
 void _alcDestroyAll( void );
 
 /*
- * _alcInitContext( ALuint cid )
- *
  * Initialize the context named by cid.
  */
 AL_context *_alcInitContext( ALuint cid );
 
 /*
- * _alcGetContext( ALuint cid )
- *
  * Returns pointer to the AL_context named by cid, or NULL if cid is not a
  * valid context name.
  */
 AL_context *_alcGetContext( ALuint cid );
 
 /*
- * _alcIsContext( ALuint cid )
- *
  * Returns AL_TRUE if cid names a valid context, AL_FALSE otherwise.
  */
 ALboolean _alcIsContext( ALuint cid );
 
 /*
- * void _alcSetContext( const ALCint *attrlist, ALuint cid, AL_device *dev )
- *
  * Sets context id paramaters according to an attribute list and device.
  */
 void _alcSetContext( const ALCint *attrlist, ALuint cid, AL_device *dev );
 
 /*
- * _alcGetNewContextId( void )
- *
  * Returns a new id for use as a context name.
  */
 ALint _alcGetNewContextId( void );
 
 /*
- * _alcInUse( ALuint cid )
- *
  * Returns AL_TRUE if the context named by cid is in use, AL_FALSE otherwise.
  */
 ALboolean _alcInUse( ALuint cid );
 
 /*
- * _alcSetUse( ALuint cid, ALboolean value )
- *
  * Sets the use flag of context with id cid to value.
  */
 ALboolean _alcSetUse( ALuint cid, ALboolean value );
 
 /*
- * _alcGetReadBufsiz( ALuint cid )
- *
  * Returns the preferred read buffer size of the context named by cid,
  * in bytes.
  */
 ALuint _alcGetReadBufsiz( ALuint cid );
 
 /*
- * _alcGetWriteBufsiz( ALuint cid )
- *
  * Returns the preferred write buffer size of the context named by cid,
  * in bytes.
  */
 ALuint _alcGetWriteBufsiz( ALuint cid );
 
 /*
- * _alcGetReadFormat( ALuint cid )
- *
  * Returns the preferred read openal format of the context named by cid.
  */
 ALenum _alcGetReadFormat( ALuint cid );
 
 /*
- * _alcGetWriteFormat( ALuint cid )
- *
  * Returns the preferred write openal format of the context named by cid.
  */
 ALenum _alcGetWriteFormat( ALuint cid );
 
 /*
- * _alcGetReadSpeed( ALuint cid )
- *
  * Returns the preferred sampling rate of the read device associated with the
  * context named by cid.
  */
 ALuint _alcGetReadSpeed( ALuint cid );
 
 /*
- * _alcGetWriteSpeed( ALuint cid )
- *
  * Returns the preferred sampling rate of the write device associated with the
  * context named by cid.
  */
 ALuint _alcGetWriteSpeed( ALuint cid );
 
 /*
- * _alcGetListener( ALuint cid )
- *
  * Returns a pointer to the listener associated with context named by cid, or
  * NULL if cid does not name a valid context.
  */
 AL_listener *_alcGetListener( ALuint cid );
 
 /*
- * _alcIsContextSuspended( ALuint cid )
- *
  * Returns AL_TRUE if this context is suspended, AL_FALSE otherwise.
  * Suspended contexts do not have their sources updated, or mixed.
  */
 ALboolean _alcIsContextSuspended( ALuint cid );
 
 /*
- * _alcGetTimeFilters( ALuint cid )
- *
  * Returns a pointer to the time_filter_set associated with the context named
  * by cid, or NULL if cid does not name a context.
  */
 time_filter_set *_alcGetTimeFilters( ALuint cid );
 
 /*
- * FL_alcLockContext( ALuint cid, const char *fn, int ln )
- *
  * Locks the mutex associated with the context named by cid, passing fn and ln
  * to _alLockPrintf for debugging purposes.
  */
 void FL_alcLockContext( ALuint cid, const char *fn, int ln );
 
 /*
- * FL_alcUnlockContext( ALuint cid, const char *fn, int ln )
- *
  * Unlocks the mutex associated with the context named by cid, passing fn and ln
  * to _alLockPrintf for debugging purposes.
  */
 void FL_alcUnlockContext( ALuint cid, const char *fn, int ln );
 
 /*
- * FL_alcLockAllContexts( const char *fn, int ln )
- *
  * Locks the mutex associated guarding all contexts, passing fn and ln to
  * _alLockPrintf for debugging purposes.
  */
 void FL_alcLockAllContexts( const char *fn, int ln );
 
 /*
- * FL_alcUnlockAllContexts( const char *fn, int ln )
- *
  * Unlocks the mutex associated guarding all contexts, passing fn and ln to
  * _alLockPrintf for debugging purposes.
  */
 void FL_alcUnlockAllContexts( const char *fn, int ln );
 
 /*
- * _alcDeviceWrite( ALuint cid, ALvoid *data, ALuint bytes_to_write )
- *
  * Write bytes_to_write worth of data from data to the device associated with
  * the context named by cid.
  */

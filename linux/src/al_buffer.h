@@ -13,39 +13,29 @@
 #include "al_types.h"
 
 /*
- * _alInitBuffers( void )
- *
  * Initialize data structures common to all buffers.  Returns AL_TRUE if
  * initialization was successful, AL_FALSE otherwise.
  */
 ALboolean _alInitBuffers( void );
 
 /*
- * _alDestroyBuffers( void )
- *
  * Destroys data structures created by _alInitBuffers, and any AL_buffer or
  * bpool objects as well.
  */
 void _alDestroyBuffers( void );
 
 /*
- * _alIsBuffer( ALuint bid )
- *
  * Non locking version of alIsBuffer.
  */
 ALboolean _alIsBuffer( ALuint bid );
 
 /*
- * _alGetBuffer( ALuint id )
- *
  * Returns a pointer to the AL_buffer object named by id.  If id does not name
  * a buffer, NULL is returned.
  */
 AL_buffer *_alGetBuffer( ALuint id );
 
 /*
- * _alGetBufferFromSid( ALuint cid, ALuint sid )
- *
  * Returns a pointer to the AL_buffer object associated with the source named
  * by sid from the context named by cid.  If sid in cid is not a valid source,
  * or is a valid source but does not have its buffer attribute set, NULL is
@@ -59,8 +49,6 @@ AL_buffer *_alGetBufferFromSid( ALuint cid, ALuint sid );
  */
 
 /*
- * _alGetBidState( ALuint bid )
- *
  * Returns one member of the set AL_UNUSED, AL_PROCESSED, or AL_PENDING.  If the
  * AL_buffer named by bid is not being used by a playing source, AL_UNUSED is
  * returned.  If it is being used by a playing source, but is part of a queue
@@ -70,8 +58,6 @@ AL_buffer *_alGetBufferFromSid( ALuint cid, ALuint sid );
 ALenum _alGetBidState( ALuint bid );
 
 /*
- * _alGetBufferState( AL_buffer *buffer )
- *
  * Returns one member of the set AL_UNUSED, AL_PROCESSED, or AL_PENDING.  If the
  * AL_buffer (buffer) is not being used by a playing source, AL_UNUSED is
  * returned.  If it is being used by a playing source, but is part of a queue
@@ -81,8 +67,6 @@ ALenum _alGetBidState( ALuint bid );
 ALenum _alGetBufferState( AL_buffer *buffer );
 
 /*
- * _alBidAddQueueRef( ALuint bid, ALuint sid )
- *
  * adds a queue reference to the buffer named by bid.  The queue reference
  * refers to the source named by sid.
  *
@@ -93,16 +77,12 @@ ALenum _alGetBufferState( AL_buffer *buffer );
 void _alBidAddQueueRef( ALuint bid, ALuint sid );
 
 /*
- * _alBidRemoveQueueRef( ALuint bid, ALuint sid )
- *
  * removes a queue reference to the buffer named by bid.  The first queue
  * reference refering to sid will be removed.
  */
 void _alBidRemoveQueueRef( ALuint bid, ALuint sid );
 
 /*
- * _alBidAddCurrentRef( ALuint bid, ALuint sid )
- *
  * adds a current reference to the buffer named by bid.  The reference refers
  * to the source named by sid.
  *
@@ -112,24 +92,18 @@ void _alBidRemoveQueueRef( ALuint bid, ALuint sid );
 void _alBidAddCurrentRef( ALuint bid, ALuint sid );
 
 /*
- * _alBidRemoveCurrentRef( ALuint bid, ALuint sid )
- *
  * removes a current reference to the buffer named by bid.  The first current
  * reference refering to sid will be removed.
  */
 void _alBidRemoveCurrentRef( ALuint bid, ALuint sid );
 
 /*
- * _alBidIsStreaming( ALuint bid )
- *
  * Returns AL_TRUE if the AL_buffer named by bid is valid and is a streaming
  * buffer ( created by alGenStreamingBuffer_LOKI ), AL_FALSE otherwise.
  */
 ALboolean _alBidIsStreaming( ALuint bid );
 
 /*
- * _alBidIsCallback( ALuint bid )
- *
  * Returns AL_TRUE if the AL_buffer named by bid is valid and is a callback
  * buffer ( has been used with the call alBufferDataWithCallback ), AL_FALSE
  * otherwise.
@@ -137,8 +111,6 @@ ALboolean _alBidIsStreaming( ALuint bid );
 ALboolean _alBidIsCallback( ALuint bid );
 
 /*
- * _alBufferIsCallback( AL_buffer *buffer )
- *
  * Returns AL_TRUE if the AL_buffer (buffer) is a callback buffer ( has been
  * used with the call alBufferDataWithCallback ), AL_FALSE otherwise.
  */
@@ -146,32 +118,17 @@ ALboolean _alBufferIsCallback( AL_buffer *buffer );
 
 
 /*
- * _alBufferFreeOrigBuffers(AL_buffer *buf)
- *
- *
  * Free the orig_buffers of buf.  Don't just use free(buf->orig_buffer[n]
  * because there are duplicates in there.
  */
 void _alBufferFreeOrigBuffers(AL_buffer *buf);
 
 /*
- * _alNumBufferHint( ALuint num_buffers )
- *
  * Reserves space for num_buffers AL_buffer objects.
  */
 void _alNumBufferHint( ALuint num_buffers );
 
 /*
- * _alBufferDataWithCallback_LOKI( ALuint bid,
- *                                 int (*callback)( ALuint sid,
- *                                                  ALuint bid,
- *                                                  ALshort *outdata,
- *                                                  ALenum format,
- *                                                  ALint freq,
- *                                                  ALint samples ),
- *                                 DestroyCallback_LOKI source_destroyer,
- *                                 DestroyCallback_LOKI buffer_destroyer)
- *
  * Associates the AL_buffer named by bid with a callback.  This is somewhat
  * equivilant to calling alBufferData( bid, ... ), except that instead of
  * getting all the data at once, whenever the buffer is required to provide
@@ -192,35 +149,24 @@ void _alBufferDataWithCallback_LOKI( ALuint bid,
 					DestroyCallback_LOKI buffer_destroyer );
 
 /*
- * _alBidCallDestroyCallbackSource( ALuint sid )
- *
  * Calls the source-callback-completion notification function for the
  * buffer associated with the source named by sid.
  */
 void _alBidCallDestroyCallbackSource( ALuint sid );
 
 /*
- * FL_alLockBuffer( const char *fn, int ln )
- *
  * Locks the buffer mutex.  fn and ln name the file and line that this call
  * takes place in, for debugging purposes.
  */
 ALboolean FL_alLockBuffer( const char *fn, int ln );
 
 /*
- * FL_alUnlockBuffer( const char *fn, int ln )
- *
  * Unlocks the buffer mutex.  fn and ln name the file and line that this call
  * takes place in, for debugging purposes.
  */
 ALboolean FL_alUnlockBuffer( const char *fn, int ln );
 
 /*
- * ALvoid *_alBufferCanonizeData(
- *                    ALenum format, ALvoid *data, ALuint size, ALuint ffreq,
- *                    ALenum tformat, ALuint tfreq, ALuint *retsize,
- *                    ALenum should_use_passed_data )
- *
  * convert data passed from the format specified by the tuple format and
  * ffreq, into the format specified by tformat and tfreq.  *retsize is set to
  * the resulting size.

@@ -45,22 +45,16 @@ typedef struct _AL_rctree {
 typedef	AL_rctree *(*alrc_prim)( AL_rctree *env, AL_rctree *args );
 
 /*
- * _alRcTreeAlloc( void )
- *
  * Allocate, initialize, and return an AL_rctree object.
  */
 AL_rctree *_alRcTreeAlloc( void );
 
 /*
- * _alRcTreeFree( AL_rctree *node )
- *
  * Finalize and deallocate an AL_rctree object.
  */
 void _alRcTreeFree( AL_rctree *node );
 
 /*
- * _alRcTreeDestroyAll( void )
- *
  * Deallocates any and all AL_rctree objects creates thus far.
  */
 void _alRcTreeDestroyAll( void );

@@ -25,16 +25,12 @@ typedef struct _AL_MixFunc {
 } ALMixFunc;
 
 /*
- * _alMixFuncInit( ALMixFunc *mf, ALuint size )
- *
  * _alMixFuncInit initializes the already allocated ALMixFunc object (mf) to
  * contain at least size mixing functions.
  */
 ALboolean _alMixFuncInit( ALMixFunc *mf, ALuint size );
 
 /*
- * _alMixFuncDestroy( ALMixFunc *mf );
- *
  * _alMixFuncDestroy performs any needed finalization on the ALMixFunc object
  * mf.
  */

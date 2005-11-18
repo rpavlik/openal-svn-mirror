@@ -51,38 +51,28 @@ typedef struct {
  */
 
 /*
- * bpool_init( bpool_t *bpool )
- *
  * initializes buffer pool object (bpool).
  */
 void bpool_init( bpool_t *bpool );
 
 /*
- * bpool_alloc( bpool_t *bpool )
- *
  * allocates a buffer pool node from bpool, returns index or -1
  * on error.
  */
 int bpool_alloc( bpool_t *bpool );
 
 /*
- * bpool_free( bpool_t *bpool, void (*freer_func)(void *) )
- *
  * dealloc all buffer pool nodes in a buffer pool object, using freer_func to
  * finalize each node.
  */
 void bpool_free( bpool_t *bpool, void (*freer_func)(void *) );
 
 /*
- * bpool_first_free_index( bpool_t *bpool )
- *
  * returns index of first unused buffer pool node in bpool.
  */
 int bpool_first_free_index( bpool_t *bpool );
 
 /*
- * bpool_dealloc( bpool_t *bpool, ALuint bid, void (*freer_func)(void *) )
- *
  * finalizes a single buffer pool node, named by bid.  Returns AL_TRUE if the
  * buffer pool node was valid, in use, and was finalized.  Returns AL_FALSE if
  * the buffer pool node was invalid, not in use, or any other error occured.
@@ -91,8 +81,6 @@ ALboolean bpool_dealloc( bpool_t *bpool, ALuint bid,
 				void (*freer_func)(void *) );
 
 /*
- * bpool_resize( bpool_t *bpool, size_t newsize )
- *
  * increase size of buffer pool object (bpool) until it can contain up to
  * newsize objects.  Return AL_TRUE if resize operation was successful,
  * AL_FALSE otherwise.
@@ -100,8 +88,6 @@ ALboolean bpool_dealloc( bpool_t *bpool, ALuint bid,
 ALboolean bpool_resize( bpool_t *bpool, size_t newsize );
 
 /*
- * bpool_index( bpool_t *bpool, ALuint bindex )
- *
  * retrieve a buffer pool node from a buffer pool ( bpool ), with index
  * bindex.  Returns NULL if bindex is not a valid index into the bpool.
  *
@@ -111,8 +97,6 @@ ALboolean bpool_resize( bpool_t *bpool, size_t newsize );
 AL_buffer *bpool_index( bpool_t *bpool, ALuint bindex );
 
 /*
- * bpool_bid_to_index( bpool_t *bpool, ALuint bid )
- *
  * converts an AL_buffer name (bid) to buffer pool node index suitable
  * for passing to bpool_index.  Returns -1 if bid does not name a buffer id
  * within bpool.
@@ -120,8 +104,6 @@ AL_buffer *bpool_index( bpool_t *bpool, ALuint bindex );
 int bpool_bid_to_index( bpool_t *bpool, ALuint bid );
 
 /*
- * bpool_next_bid( void )
- *
  * return next suitable AL_buffer name (bid) suitable for using in
  * al calls ( alBufferData( bid, ... ), etc ).  These should be sequential
  * and unique.

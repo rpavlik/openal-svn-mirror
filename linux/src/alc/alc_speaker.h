@@ -22,23 +22,17 @@ typedef enum {
 } _alcSpeakerEnum;
 
 /*
- * _alcSpeakerInit( ALuint cid )
- *
  * Initializes the speaker setup for the context named by cid.
  */
 void _alcSpeakerInit( ALuint cid );
 
 /*
- *  _alcSpeakerMove( ALuint cid )
- *
  *  Updates the speaker setup for the context named by cid for changes in
  *  listener position and orientation.
  */
 void _alcSpeakerMove( ALuint cid );
 
 /*
- * _alcGetSpeakerPosition( ALuint cid, ALuint speaker_num )
- *
  * Returns the 3-tuple position (x/y/z) of the speaker enumerated by
  * speaker_num for the context named by cid, or NULL if cid does not name a
  * context.
@@ -46,8 +40,6 @@ void _alcSpeakerMove( ALuint cid );
 ALfloat *_alcGetSpeakerPosition( ALuint cid, ALuint speaker_num );
 
 /*
- * _alcGetNumSpeakers( ALuint cid )
- *
  * Returns the number of speakers associated with the context named by cid.
  */
 ALuint _alcGetNumSpeakers( ALuint cid );

@@ -36,31 +36,23 @@ typedef struct _AL_MixManager {
 /* Mix manager funcs */
 
 /*
- * _alMixManagerInit( ALMixManager *mixman, ALuint size )
- *
  * Initializes the already allocated ALMixManager object *mixman, to
  * accomodate at least size entries.
  */
 ALboolean _alMixManagerInit( ALMixManager *mixman, ALuint size );
 
 /*
- * _alMixManagerDestroy( ALMixManager *mixman )
- *
  * Performs finalization on the ALMixManager object *mixman.
  */
 void _alMixManagerDestroy( ALMixManager *mixman );
 
 /*
- * _alMixManagerAdd( ALMixManager *mixman, ALvoid *dataptr, int bytes_to_write )
- *
  * Adds an entry to the ALMixManager object *mixman, with data dataptr of
  * length bytes_to_write in bytes.
  */
 void _alMixManagerAdd( ALMixManager *mixman, ALvoid *dataptr, int bytes_to_write );
 
 /*
- * _alMixManagerMix( ALMixManager *mixman, ALMixFunc *mf, ALvoid *dataptr )
- *
  * Mixes each entry in ALMixManager *mixman, using mixing functions from
  * ALMixFunc, populating dataptr.
  */

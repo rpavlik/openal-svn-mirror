@@ -56,15 +56,11 @@ typedef struct _alMixPool
 } _alMixPool;
 
 /*
- * _alMixPoolAlloc( _alMixPool *mspool )
- *
  * Initializes an already allocated _alMixPool object.
  */
 int _alMixPoolAlloc( _alMixPool *mspool );
 
 /*
- * _alMixPoolResize( _alMixPool *mspool, size_t newsize )
- *
  * Initializes an already allocated _alMixPool object.  Returns AL_TRUE,
  * inless initialization failed for some reason, in which case AL_FALSE is
  * returned.
@@ -72,9 +68,6 @@ int _alMixPoolAlloc( _alMixPool *mspool );
 ALboolean _alMixPoolResize( _alMixPool *mspool, size_t newsize );
 
 /*
- * _alMixPoolDealloc( _alMixPool *mspool, int msindex,
- *                   void (*freer_func)(void *))
- *
  * Finalize a _alMixSource, indexed by msindex, using freer_func,
  * from mspool.
  */
@@ -82,23 +75,17 @@ ALboolean _alMixPoolDealloc( _alMixPool *mspool, int msindex,
 			     void (*freer_func)(void *));
 
 /*
- * _alMixPoolIndex( _alMixPool *mspool, int msindex )
- *
  * Return _alMixSource from mspool using simple index, or NULL if msindex is
  * not a valid index.
  */
 _alMixSource *_alMixPoolIndex( _alMixPool *mspool, int msindex );
 
 /*
- * _alMixPoolFirstFreeIndex( _alMixPool *mspool )
- *
  * Returns first available index in mspool, or -1 if nothing is available.
  */
 int _alMixPoolFirstFreeIndex( _alMixPool *mspool );
 
 /*
- * _alMixPoolFree( _alMixPool *mspool, void (*freer_func)(void *) )
- *
  * Finalizes each _alMixSource in the _alMixPool object, using freer_func.
  */
 void _alMixPoolFree( _alMixPool *mspool, void (*freer_func)(void *) );

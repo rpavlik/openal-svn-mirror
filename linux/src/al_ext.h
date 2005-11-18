@@ -42,8 +42,6 @@
 /* bookkeeping stuff */
 
 /*
- * _alInitExtensions( void )
- *
  * Initialize data structures neccesary for the registration and management of
  * extension groups and extension functions.  Return AL_TRUE if successful,
  * AL_FALSE otherwise.
@@ -51,15 +49,11 @@
 ALboolean _alInitExtensions( void );
 
 /*
- * _alDestroyExtensions( void )
- *
  * Deallocs the data structures allocated in _alInitExtensions.
  */
 void _alDestroyExtensions( void );
 
 /*
- * _alRegisterExtensionGroup( const ALubyte *extGroup )
- *
  * Registers an extension group.  Before registration, queries of
  * alIsExtensionPresent( extGroup) will return AL_FALSE, after will
  * return AL_TRUE.
@@ -69,15 +63,11 @@ void _alDestroyExtensions( void );
 ALboolean _alRegisterExtensionGroup( const ALubyte *extGroup );
 
 /*
- * _alDestroyExtensionGroups( void )
- *
  * Destroy data structures needed to hold extension group information.
  */
 void _alDestroyExtensionGroups( void );
 
 /*
- * _alGetExtensionStrings( ALchar *buffer, int size )
- *
  * Gets a list of extension groups registered, populating buffer up to size.
  *
  * Returns AL_FALSE if size < 1, AL_TRUE otherwise.
@@ -88,8 +78,6 @@ ALboolean _alGetExtensionStrings( ALchar *buffer, int size );
 ALboolean _alGetExtensionProcAddress( void **procAddress, const ALchar *funcName );
 
 /*
- * _alRegisterExtension( const ALubyte *name, ALvoid *addr )
- *
  * Adds a function to the available extension registry.  Before registration,
  * queries of alGetProcAddress( name ) will return NULL.  After, they will
  * return addr.
@@ -99,8 +87,6 @@ ALboolean _alGetExtensionProcAddress( void **procAddress, const ALchar *funcName
 ALboolean _alRegisterExtension( const ALubyte *name, ALvoid *addr );
 
 /*
- * _alLoadDL( const char *fname )
- *
  * dlopens a shared object, gets the extension table from it, and
  * the runs _alRegisterExtension on each extension pair in it.
  *
@@ -113,8 +99,6 @@ ALboolean _alLoadDL( const char *fname );
  */
 
 /*
- * lal_addTimeFilter( const char *name, time_filter *addr )
- *
  * add a filter by name, replacing if already there.  Returns
  * AL_TRUE if function was added or replaced, AL_FALSE if that
  * wasn't possible.

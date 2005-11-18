@@ -39,29 +39,21 @@ typedef struct ThreadData *ThreadID;
 #endif
 
 /*
- * _alCreateThread( int (*fn )(void *) )
- *
  * Creates a thread, which starts by running fn.
  */
 extern ThreadID _alCreateThread( int ( *fn ) ( void * ) );
 
 /*
- * _alWaitThread( ThreadID thread )
- *
  * Waits for thread to terminate before returning.
  */
 extern int _alWaitThread( ThreadID thread );
 
 /*
- * _alSelfThread( void )
- *
  * Returns the identifier for the callee's thread.
  */
 extern unsigned int _alSelfThread( void );
 
 /*
- * _alExitThread( void )
- *
  * Forces the callee to terminate.
  */
 extern void _alExitThread( void );
