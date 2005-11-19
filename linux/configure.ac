@@ -18,6 +18,8 @@ AC_PROG_CC
 AC_C_CONST
 AC_PROG_INSTALL
 AC_PROG_LN_S
+# needed for testcase
+AC_PROG_CXX
 
 REDUNDANT_DECLS_WARN=yes       # warnings about redudant decls
 SHADOW_WARN=yes                # warn about shadow variables
