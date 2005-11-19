@@ -6,9 +6,9 @@
  */
 
 #ifdef DARWIN_PBBUILDER
-#include "../config-osx.h"
+#include "config-osx.h"
 #else
-#include "../config.h"
+#include "config.h"
 #endif /* DARWIN_PBBUILDER */
 
 

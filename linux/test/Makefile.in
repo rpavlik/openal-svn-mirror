@@ -21,7 +21,7 @@ TEST_PROGS=testreverb testda testmulti testalut testtime  \
 	   testleak2 testmulticontext2 teststartstop testdevice \
 	   teststrings testcpp testattributes
 
-INC=-I../src -I../include -I../../include -I../audioconvert @INCLUDES@
+INC=-I../src -I../include -I../../include -I../audioconvert -I.. @INCLUDES@
 LIBOPENAL=../src/libopenal.a
 LIBS=-lalut testlib.o -L../src $(LIBOPENAL) @LIBS@
 
