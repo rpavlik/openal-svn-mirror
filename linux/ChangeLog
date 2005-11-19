@@ -1,6 +1,9 @@
 2005-11-19  Prakash Punnoor <prakash@punnoor.de>
 
 	* configure.ac: Put back AC_PROG_CXX, as it is needed for testcase
+	
+	* src/al_siteconfig.h, src/Makefile.in, test/Makefile.in: don't include
+	via "../config.h"; add .. to includes
 
 2005-11-18  Sven Panne  <sven.panne@aedion.de>
 
