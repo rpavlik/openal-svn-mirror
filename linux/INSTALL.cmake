@@ -15,6 +15,8 @@ build system.)
 
 o building shared OpenAL lib, using (next) to identical parameters
   as the autoconf build system does
+- only native, alsa, waveout and null backends supported yet
+- no vorbis, smpeg, sdl support yet
 - no debug options yet
 - no static lib is built yet
 - testcase isn't built yet
