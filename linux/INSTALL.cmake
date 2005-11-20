@@ -15,10 +15,10 @@ build system.)
 
 o building shared OpenAL lib, using (next) to identical parameters
   as the autoconf build system does
-- no debug flags yet
+- no debug options yet
 - no static lib is built yet
 - testcase isn't built yet
-+ out of tree builts are supported
++ out of tree builds are supported
 + correct dependency tracking of source files
 + prepared for adding support for non GNU compiler
   (setting libraries to link to probably needs cleaning up)
