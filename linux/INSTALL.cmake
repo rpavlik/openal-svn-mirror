@@ -15,10 +15,11 @@ build system.)
 
 o building shared OpenAL lib, using (next) to identical parameters
   as the autoconf build system does
-- only native, alsa, waveout and null backends supported yet
-- no vorbis, smpeg, sdl support yet
+o all backends and vorbis/mp3/SDL support should be handled by cmake
+- only native backends tested yet
 - no debug options yet
-- no static lib is built yet
+- no static lib is built yet - this might become harder to realise
+  with cmake...
 - testcase isn't built yet
 + out of tree builds are supported
 + correct dependency tracking of source files
