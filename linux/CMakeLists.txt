@@ -184,17 +184,22 @@ OPTION(ENABLE_EMPTY_LOCKS "enable empty locks" OFF)
 # debug stuff
 OPTION(ENABLE_DEBUG "enable debug" OFF)
 
+#sound backends
 OPTION(ENABLE_ALSA "alsa backend" OFF)
 OPTION(ENABLE_ALSA_DLOPEN "alsa dynamic loading" OFF)
 OPTION(ENABLE_ARTS "arts backend" OFF)
+OPTION(ENABLE_ARTS_DLOPEN "arts dynamic loading" OFF)
 OPTION(ENABLE_ESD "esd backend" OFF)
 OPTION(ENABLE_ESD_DLOPEN " esd dynamic loading" OFF)
 OPTION(ENABLE_WAVEOUT "wave out backend" ON)
 OPTION(ENABLE_NULLOUT "null out backend" ON)
 OPTION(ENABLE_SDL "sdl backend" OFF)
 OPTION(ENABLE_DSOUND "directsound backend" OFF)
+
+#additional codecs
 OPTION(ENABLE_VORBIS "vorbis support" OFF)
 OPTION(ENABLE_SMPEG "smpeg support" OFF)
+
 OPTION(ENABLE_CAPTURE "capture support" OFF)
 
 
