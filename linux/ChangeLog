@@ -1,3 +1,11 @@
+2005-11-20  Prakash Punnoor <prakash@punnoor.de>
+
+	* CMakeLists.txt, CMakeModules/CMakeASMCompiler.cmake.in,
+	CMakeModules/CMakeASMInformation.cmake,
+	CMakeModules/CMakeDetermineASMCompiler.cmake, INSTALL.cmake:
+	preliminary CMake support
+
+
 2005-11-19  Prakash Punnoor <prakash@punnoor.de>
 
 	* configure.ac: Put back AC_PROG_CXX, as it is needed for testcase
