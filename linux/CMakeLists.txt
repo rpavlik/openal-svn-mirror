@@ -1,7 +1,9 @@
 # cmake project file by Prakash Punnoor
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/admin/CMakeModules")
+CMAKE_MINIMUM_REQUIRED(VERSION 2.0)
 
-PROJECT(OpenAL ASM C)
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/admin/CMakeModules")
+# need CXX for testcpp only
+PROJECT(OpenAL ASM C CXX)
 SET(PACKAGE "openal")
 SET(PACKAGE_TARNAME "openal")
 SET(PACKAGE_NAME "openal")
@@ -202,6 +204,8 @@ OPTION(SMPEG "smpeg support" OFF)
 
 OPTION(CAPTURE "capture support" OFF)
 
+#want test-suit?
+OPTION(BUILD_TESTS "build the test-suite" OFF)
 
 IF(OPTIMIZATION)
   SET(EMPTY_LOCKS OFF)
@@ -723,6 +727,86 @@ SET_TARGET_PROPERTIES(openal PROPERTIES LINKER_LANGUAGE C)
 SET_TARGET_PROPERTIES(openal PROPERTIES VERSION ${PACKAGE_VERSION}
                                         SOVERSION ${PACKAGE_MAJOR_VERSION})
 TARGET_LINK_LIBRARIES(openal ${ADD_LIBS})
+
+#test-suite
+IF(BUILD_TESTS)
+  FIND_LIBRARY(ALUT NAMES alut PATHS /usr/lib /usr/local/lib)
+  IF(ALUT MATCHES "NOTFOUND")
+    MESSAGE("alut not installed, cannot build tests")
+  ELSE(ALUT MATCHES "NOTFOUND")
+    ADD_LIBRARY(testlib test/testlib.c)
+    TARGET_LINK_LIBRARIES(testlib ${ADD_LIBS} openal ${ALUT})
+
+    SET(TESTS reverb
+              da
+              multi
+              alut
+              time
+              multialut
+              alinitexit
+              single
+              nothread
+              pitch
+              pitch2
+              pitch3
+              pitch4
+              doppler
+              sourcestop
+              ext
+              stream
+              callback
+              orient
+              relative
+              channel
+              channel2
+              pause
+              pitchnothread
+              pitchnothread2
+              gain
+              loop
+              listener
+              listener2
+              listener3
+              listener4
+              bufferuniq
+              sourceuniq
+              gendelbuffer_error
+              gendelsource_error
+              multichannel
+              mp3
+              mp32
+              vorbis
+              gainlinear
+              multimp3
+              queue
+              queue2
+              queue3
+              capture
+              capture2
+              leak
+              multicontext
+              strings
+              attributes)
+
+    FOREACH(TEST ${TESTS})
+      SET(TEST_SRC test/test${TEST}.c)
+      #bug? Why doesn't this flag get added?
+      SET_SOURCE_FILES_PROPERTIES(${TEST_SRC} PROPERTIES COMPILE_FLAGS "-Wno-unused")
+      ADD_EXECUTABLE(test${TEST} ${TEST_SRC})
+      TARGET_LINK_LIBRARIES(test${TEST} testlib ${ADD_LIBS} openal ${ALUT})
+    ENDFOREACH(TEST)
+
+    #great, here it works...
+    SET_SOURCE_FILES_PROPERTIES(test/testcpp.cc PROPERTIES COMPILE_FLAGS "-Wno-unused")
+    ADD_EXECUTABLE(testcpp test/testcpp.cc)
+    TARGET_LINK_LIBRARIES(testcpp testlib ${ADD_LIBS} openal ${ALUT})
+  ENDIF(ALUT MATCHES "NOTFOUND")
+ENDIF(BUILD_TESTS)
+
+#ADD_EXECUTABLE(testreverb test/testreverb.c)
+#TARGET_LINK_LIBRARIES(testreverb testlib ${ADD_LIBS} alut openal)
+#ADD_EXECUTABLE(testda test/testda.c)
+#TARGET_LINK_LIBRARIES(testda testlib ${ADD_LIBS} alut openal)
 
 #needed for openal.pc.in and openal-config.in
 SET(prefix ${CMAKE_INSTALL_PREFIX})

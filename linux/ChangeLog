@@ -26,7 +26,8 @@
 
 	* src/mixaudio16.c: fix NDEBUG related stuff
 
-	* CMakeLists.txt: add debug stuff; make options names shorter
+	* CMakeLists.txt: add debug stuff; make options names shorter;
+	added test-suite
 
 	* INSTALL.cmake: update status; more ccmake info;
 	merged to INSTALL; removed
@@ -40,6 +41,8 @@
 	* admin/CMakeModules/CMakeASMCompiler.cmake.in,
 	admin/CMakeModules/CMakeASMInformation.cmake,
 	admin/CMakeModules/CMakeDetermineASMCompiler.cmake: added
+
+	* README: added test-suite
 
 2005-11-20  Prakash Punnoor <prakash@punnoor.de>
 

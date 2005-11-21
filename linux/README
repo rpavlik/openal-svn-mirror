@@ -4,7 +4,7 @@
 - Building OpenAL with CMake
 
 
-= Building OpenAL with autotools=
+= Building OpenAL with autotools =
 
 If this is your first time retrieving CVS, you will need to build the
 configure script and config.h.in dependency.  Just run
@@ -88,17 +88,20 @@ Current status:
 (+,o,- indicates feature more/same/less then default OpenAL
 build system.)
 
-o building shared OpenAL lib, using (next) to identical parameters
+o builds shared OpenAL lib, using (next) to identical parameters
   as the autoconf build system does
-o all backends and vorbis/mp3/SDL support should be handled by cmake
-- only native, alsa backends and vorbis support compile tested yet
-- no static lib is built yet - this might become harder to realise
-  with cmake...
-- testcase isn't built yet
+o builds the test-suite, if specified
+o all backends and vorbis/mp3/SDL support should be handled by CMake
+
 + out of tree builds are supported
 + correct dependency tracking of source files
 + prepared for adding support for non GNU compiler
   (setting link libraries probably needs cleaning up)
+
+- only native, alsa backends and vorbis support compile tested yet
+- no static lib is built yet - this might become harder to realise
+  with CMake...
+
 
 This document explains briefly how to build CMake on Linux via out
 of tree build:
@@ -136,7 +139,7 @@ ccmake .. -DCMAKE_INSTALL_PREFIX:STRING="/usr" -DCMAKE_C_FLAGS:STRING="-march=at
 
 make VERBOSE=1
 
-- If you want to install to a differnt directory (using same prefix):, use
+- If you want to install to a different directory (using same prefix):, use
 
 make install DESTDIR=/foo/bar
 
