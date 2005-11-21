@@ -1,4 +1,2 @@
 #! /bin/sh
-set -e
-autoheader
-autoconf
+autoreconf --install --force --warnings=all

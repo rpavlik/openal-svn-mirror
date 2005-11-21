@@ -2,6 +2,7 @@
 English.lproj
 English.pbproj
 Makefile
+Makefile.in
 OpenAL.pbproj
 autom4te.cache
 build

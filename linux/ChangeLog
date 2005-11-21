@@ -1,5 +1,14 @@
 2005-11-21  Sven Panne  <sven.panne@aedion.de>
 
+	* .cvsignore, autogen.sh, src/.cvsignore: Synched with recent
+	changes regarding the move to automake.
+
+	* COPYING, Makefile.am, NEWS, README, include/.cvsignore,
+	include/Makefile.am, src/Makefile.am: Added.
+
+	* INSTALL, Makefile.in, config.guess, config.sub, install-sh,
+	src/Makefile.in: Removed.
+
 	* configure.ac: Define NDEBUG unless debugging is enabled.
 
 	* src/mixaudio16.c: Fixed a "comparison between signed and
