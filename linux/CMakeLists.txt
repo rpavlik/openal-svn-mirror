@@ -724,15 +724,15 @@ SET_TARGET_PROPERTIES(openal PROPERTIES VERSION ${PACKAGE_VERSION}
                                         SOVERSION ${PACKAGE_MAJOR_VERSION})
 TARGET_LINK_LIBRARIES(openal ${ADD_LIBS})
 
-#needed fo openal.pc.in and openal-config.in
+#needed for openal.pc.in and openal-config.in
 SET(prefix ${CMAKE_INSTALL_PREFIX})
 SET(exec_prefix "\${prefix}")
 SET(libdir "\${exec_prefix}/lib")
 SET(includedir "\${prefix}/include")
 SET(requirements "")
 
-CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/openal.pc.in ${CMAKE_BINARY_DIR}/openal.pc @ONLY)
-CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/openal-config.in ${CMAKE_BINARY_DIR}/openal-config @ONLY)
+CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/admin/openal.pc.in ${CMAKE_BINARY_DIR}/admin/openal.pc @ONLY)
+CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/admin/openal-config.in ${CMAKE_BINARY_DIR}/admin/openal-config @ONLY)
 
 #info file
 IF(UNIX)
@@ -757,5 +757,5 @@ INSTALL_TARGETS(/lib openal)
 INSTALL_FILES(/include/AL FILES ${CMAKE_SOURCE_DIR}/../include/AL/al.h
                                 ${CMAKE_SOURCE_DIR}/../include/AL/alc.h
                                 include/AL/alext.h)
-INSTALL_PROGRAMS(/bin FILES openal-config)
-INSTALL_FILES(/lib/pkgconfig FILES openal.pc)
+INSTALL_PROGRAMS(/bin FILES admin/openal-config)
+INSTALL_FILES(/lib/pkgconfig FILES admin/openal.pc)

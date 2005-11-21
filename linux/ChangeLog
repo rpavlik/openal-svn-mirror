@@ -1,3 +1,13 @@
+2005-11-21  Sven Panne  <sven.panne@aedion.de>
+
+	* .cvsignore, CMakeLists.txt, Makefile.in, configure.ac: Updated to
+	follow toplevel directory cleanup.
+
+	* admin/.cvsignore, admin/.indent.pro, admin/openal-config.in,
+	admin/openal.pc.in: Added.
+
+	* .indent.pro, openal-config.in, openal.pc.in: Removed.
+
 2005-11-21  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/mixaudio16.c: fix NDEBUG related stuff
@@ -10,8 +20,8 @@
 
 	* CMakeLists.txt, CMakeModules/CMakeASMCompiler.cmake.in,
 	CMakeModules/CMakeASMInformation.cmake,
-	CMakeModules/CMakeDetermineASMCompiler.cmake, INSTALL.cmake:
-	preliminary CMake support
+	CMakeModules/CMakeDetermineASMCompiler.cmake, INSTALL.cmake: preliminary
+	CMake support
 
 
 2005-11-19  Prakash Punnoor <prakash@punnoor.de>

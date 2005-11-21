@@ -15,7 +15,7 @@ INSTALL_DEPS=all
 SUBDIRS := doc src test
 RM_RF := $(RM) -r
 CLEAN_FILES :=
-DISTCLEAN_FILES := config.cache config.log config.status configure.lineno configure.status.lineno Makefile config.h openal-config openal.pc tags TAGS
+DISTCLEAN_FILES := config.cache config.log config.status configure.lineno configure.status.lineno Makefile config.h admin/openal-config admin/openal.pc tags TAGS
 MAINTAINER_CLEAN_FILES := autom4te.cache
 REPO_CLEAN_FILES := config.h.in configure
 
@@ -60,8 +60,8 @@ install: $(INSTALL_DEPS)
 	$(INSTALL) -d -m 755 $(DESTLIB)
 	$(INSTALL) -d -m 755 $(DESTBIN)
 	$(INSTALL) -d -m 755 $(DESTPKG)
-	$(INSTALL) -m 755 openal-config $(DESTBIN)
-	$(INSTALL) -m 444 openal.pc $(DESTPKG)
+	$(INSTALL) -m 755 admin/openal-config $(DESTBIN)
+	$(INSTALL) -m 444 admin/openal.pc $(DESTPKG)
 	$(INSTALL) -m 755 src/libopenal.a $(DESTLIB)
 	$(INSTALL) -m 444 ../include/AL/al.h $(DESTINC)/AL
 	$(INSTALL) -m 444 ../include/AL/alc.h $(DESTINC)/AL

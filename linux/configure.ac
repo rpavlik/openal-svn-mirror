@@ -787,12 +787,12 @@ AC_SUBST([requirements])
 
 # Generate output.
 AC_CONFIG_FILES([Makefile
+                 admin/openal-config
+                 admin/openal.pc
                  doc/Makefile
-                 openal-config
-                 openal.pc
                  src/Makefile
                  test/Makefile])
 
-AC_CONFIG_COMMANDS([default], [chmod +x openal-config])
+AC_CONFIG_COMMANDS([default], [chmod +x admin/openal-config])
 AC_OUTPUT
 

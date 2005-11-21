@@ -11,5 +11,3 @@ config.h.in
 config.log
 config.status
 configure
-openal-config
-openal.pc
