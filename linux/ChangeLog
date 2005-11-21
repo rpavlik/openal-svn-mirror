@@ -1,5 +1,7 @@
 2005-11-21  Sven Panne  <sven.panne@aedion.de>
 
+	* configure.ac: Define NDEBUG unless debugging is enabled.
+
 	* src/mixaudio16.c: Fixed a "comparison between signed and
 	unsigned" warning in an assertion.
 
