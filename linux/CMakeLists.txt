@@ -1,5 +1,5 @@
 # cmake project file by Prakash Punnoor
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMakeModules")
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/admin/CMakeModules")
 
 PROJECT(OpenAL ASM C)
 SET(PACKAGE "openal")
