@@ -97,7 +97,9 @@ AC_ARG_ENABLE([debug],
                 [enable debug @<:@default=no@:>@])])
 
 if test "x$enable_debug" = xyes; then
-  AC_DEFINE([DEBUG], [1], [undocumented])
+  AC_DEFINE([DEBUG], [1], [Define to 1 if you want to include debugging code.])
+else
+  AC_DEFINE([NDEBUG], [1], [Define to 1 if you want to disable assert().])
 fi
 
 AC_C_BIGENDIAN

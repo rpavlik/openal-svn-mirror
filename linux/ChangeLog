@@ -1,5 +1,8 @@
 2005-11-21  Sven Panne  <sven.panne@aedion.de>
 
+	* src/mixaudio16.c: Fixed a "comparison between signed and
+	unsigned" warning in an assertion.
+
 	* .cvsignore, CMakeLists.txt, Makefile.in, configure.ac: Updated to
 	follow toplevel directory cleanup.
 

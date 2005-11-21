@@ -50,7 +50,7 @@ void MixAudio16_n( ALshort *dst, alMixEntry *entries, ALuint numents ) {
 
 		for(i = 0; i < numents; i++)
 		{
-			assert(entries[i].bytes >= si * sizeof(ALshort));
+			assert(entries[i].bytes >= si * (ALint)sizeof(ALshort));
 			sample += ((ALshort *) entries[i].data)[si];
 		}
 
