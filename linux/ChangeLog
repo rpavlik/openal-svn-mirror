@@ -28,7 +28,18 @@
 
 	* CMakeLists.txt: add debug stuff; make options names shorter
 
-	* INSTALL.cmake: update status; more ccmake info
+	* INSTALL.cmake: update status; more ccmake info;
+	merged to INSTALL; removed
+
+	* INSTALL: merged INSTALL.cmake
+
+	* CMakeModules/CMakeASMCompiler.cmake.in,
+	CMakeModules/CMakeASMInformation.cmake,
+	CMakeModules/CMakeDetermineASMCompiler.cmake: moved
+
+	* admin/CMakeModules/CMakeASMCompiler.cmake.in,
+	admin/CMakeModules/CMakeASMInformation.cmake,
+	admin/CMakeModules/CMakeDetermineASMCompiler.cmake: added
 
 2005-11-20  Prakash Punnoor <prakash@punnoor.de>
 
