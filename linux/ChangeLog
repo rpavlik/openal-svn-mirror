@@ -1,3 +1,11 @@
+2005-11-21  Prakash Punnoor <prakash@punnoor.de>
+
+	* src/mixaudio16.c: fix NDEBUG related stuff
+
+	* CMakeLists.txt: add debug stuff; make options names shorter
+
+	* INSTALL.cmake: update status; more ccmake info
+
 2005-11-20  Prakash Punnoor <prakash@punnoor.de>
 
 	* CMakeLists.txt, CMakeModules/CMakeASMCompiler.cmake.in,
