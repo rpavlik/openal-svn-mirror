@@ -1,10 +1,12 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_INIT([OpenAL library], [0.0.8], [openal-devel@opensource.creative.com], [openal])
-AC_PREREQ([2.50])
-AC_CONFIG_SRCDIR([doc/openal.texi])
-AC_CONFIG_HEADER([config.h])
-AC_SUBST([PACKAGE_VERSION_MAJOR], [`echo $PACKAGE_VERSION | sed 's/^\(@<:@^.@:>@*\)\(\.\{0,1\}\(.*\)\)$/\1'/`])
+AC_CONFIG_AUX_DIR([admin])
+AC_CANONICAL_TARGET
+AM_INIT_AUTOMAKE
+AC_PREREQ([2.56])
+AC_CONFIG_SRCDIR([AUTHORS])
+AC_CONFIG_HEADERS([config.h])
 
 # Compatibility hack for older autoconf versions
 m4_ifdef([AS_HELP_STRING], [], [AC_DEFUN([AS_HELP_STRING], [AC_HELP_STRING($][@)])])
@@ -16,9 +18,10 @@ CFLAGS="-D_ISOC99_SOURCE $CFLAGS"
 
 AC_PROG_CC
 AC_C_CONST
-AC_PROG_INSTALL
-AC_PROG_LN_S
-# needed for testcase
+AC_EXEEXT
+AC_LIBTOOL_WIN32_DLL
+AC_PROG_LIBTOOL
+AC_SUBST([LIBTOOL_DEPS])
 AC_PROG_CXX
 
 REDUNDANT_DECLS_WARN=yes       # warnings about redudant decls
@@ -55,8 +58,6 @@ if test "x$enable_profile" = xyes; then
   CFLAGS="-O2 -fexpensive-optimizations -ffast-math -funroll-loops -funroll-all-loops -g -pg $CFLAGS"
   LDFLAGS="-g -pg"
 fi
-
-AC_CANONICAL_TARGET
 
 # optimization stuff
 AC_ARG_ENABLE([optimization],
@@ -182,30 +183,20 @@ case "$target" in
     ;;
 esac
 
-
-dnl MACRO_TEST([MACRO], [VAR_RESULT])
-dnl
-AC_DEFUN([MACRO_TEST], [dnl
-
-AC_MSG_CHECKING([for $1 macro])
-
-AC_TRY_COMPILE([
-#ifndef $1
-#error $1 macro not defined
-#endif
-],, $2=yes, $2=no)
-
-AC_MSG_RESULT([$$2])
-])
-
-
 dnl Special objs for architectures
 case "$target" in
     *i386* | *i486* | *i586* | *i686* | *x86_64*)
-    INCLUDES="$INCLUDES -Iarch/i386"
+    ARCH_INCLUDES="$ARCH_INCLUDES -Iarch/i386"
     ARCH_OBJS="\$(x86_OBJS)"
 
-    MACRO_TEST([__MMX__], [have_mmx])
+    AC_MSG_CHECKING([for MMX support])    
+    AC_PREPROC_IFELSE(
+        [AC_LANG_PROGRAM([[
+#ifndef __MMX__
+#error no MMX support
+#endif]], [])],
+        [have_mmx=yes], [have_mmx=no])
+    AC_MSG_RESULT([$have_mmx])
     if test "x$have_mmx" = xyes; then
         ARCH_OBJS="$ARCH_OBJS \$(x86_MMX_OBJS)"
     fi
@@ -717,15 +708,6 @@ if test "x$enable_capture" = xyes; then
   AC_DEFINE([CAPTURE_SUPPORT], [1], [undocumented])
 fi
 
-# makeinfo stuff
-AC_CHECK_PROG([MAKEINFO], [makeinfo], [yes], [no])
-if test "x$MAKEINFO" = xyes; then
-  MAKEINFO='makeinfo'
-else
-  # for silly people without texinfo
-  MAKEINFO='@echo'
-fi
-
 # Warning flags
 #   This is where we prune down warnings based on the limitations of
 #   the platform or included headers.
@@ -778,8 +760,7 @@ AC_SUBST([CFLAGS])
 AC_SUBST([DEFINES])
 AC_SUBST([LDFLAGS])
 AC_SUBST([LIBS])
-AC_SUBST([INCLUDES])
-AC_SUBST([MAKEINFO])
+AC_SUBST([ARCH_INCLUDES])
 AC_SUBST([OS_OBJS])
 AC_SUBST([ARCH_OBJS])
 AC_SUBST([SHARED_LIBRARY_EXT])
@@ -789,11 +770,12 @@ AC_SUBST([requirements])
 
 # Generate output.
 AC_CONFIG_FILES([Makefile
+                 admin/Makefile
                  admin/openal-config
                  admin/openal.pc
-                 doc/Makefile
-                 src/Makefile
-                 test/Makefile])
+                 include/AL/Makefile
+                 include/Makefile
+                 src/Makefile])
 
 AC_CONFIG_COMMANDS([default], [chmod +x admin/openal-config])
 AC_OUTPUT

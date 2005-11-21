@@ -1,2 +1,11 @@
+Makefile
+Makefile.in
+compile
+config.guess
+config.sub
+depcomp
+install-sh
+ltmain.sh
+missing
 openal-config
 openal.pc

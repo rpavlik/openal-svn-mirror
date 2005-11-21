@@ -1,32 +1,71 @@
 # We want to build a libopeanl library with libtool.
 lib_LTLIBRARIES = libopenal.la
 
-# libopenal consists of the followin sources and internal headers:
+# libopenal consists of the following sources and internal headers:
 libopenal_la_SOURCES =		\
-	al_bpool.o		\
-	al_buffer.o		\
-	al_config.o		\
-	al_debug.o		\
-	al_distance.o		\
-	al_error.o		\
-	al_ext.o		\
-	al_filter.o		\
-	al_listen.o		\
-	al_main.o		\
-	al_mixer.o		\
-	al_mixfunc.o		\
-	al_mixmanager.o		\
-	al_mspool.o		\
-	al_mutexlib.o		\
-	al_queue.o		\
-	al_rctree.o		\
-	al_rcvar.o		\
-	al_source.o		\
-	al_spool.o		\
-	al_state.o		\
-	al_threadlib.o		\
-	al_vector.o		\
-	mixaudio16.o
+	al_bpool.c		\
+	al_buffer.c		\
+	al_config.c		\
+	al_debug.c		\
+	al_distance.c		\
+	al_error.c		\
+	al_ext.c		\
+	al_filter.c		\
+	al_listen.c		\
+	al_main.c		\
+	al_mixer.c		\
+	al_mixfunc.c		\
+	al_mixmanager.c		\
+	al_mspool.c		\
+	al_mutexlib.c		\
+	al_queue.c		\
+	al_rctree.c		\
+	al_rcvar.c		\
+	al_source.c		\
+	al_spool.c		\
+	al_state.c		\
+	al_threadlib.c		\
+	al_vector.c		\
+	mixaudio16.c
+
+# backend sources
+libopenal_la_SOURCES +=		\
+	arch/interface/interface_sound.c \
+	arch/alsa/alsa.c	\
+	arch/arts/arts.c	\
+	arch/esd/esd.c		\
+	arch/null/null.c	\
+	arch/sdl/sdl.c		\
+	arch/waveout/waveout.c	\
+	arch/portable/cpu_caps.c
+
+# OS-specific sources
+libopenal_la_SOURCES +=		\
+	arch/linux/lin_dsp.c
+
+# ALC sources
+libopenal_la_SOURCES +=		\
+	alc/alc_context.c	\
+	alc/alc_device.c	\
+	alc/alc_error.c		\
+	alc/alc_speaker.c
+
+# audiconvert sources
+libopenal_la_SOURCES +=		\
+	audioconvert/ac_misc.c	\
+	audioconvert/ac_freq.c	\
+	audioconvert/ac_bits.c	\
+	audioconvert/ac_channels.c \
+	audioconvert/ac_helper.c \
+	audioconvert/ac_adpcm.c	\
+	audioconvert/ac_endian.c
+
+# extension sources
+libopenal_la_SOURCES +=		\
+	extensions/al_ext_capture.c \
+	extensions/al_ext_loki.c \
+	extensions/al_ext_mp3.c	\
+	extensions/al_ext_vorbis.c
 
 # We use sin and friends, so we might need -lm, autoconf takes care of this.
 libopenal_la_LIBADD = $(LIBM)

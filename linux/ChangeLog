@@ -1,5 +1,13 @@
 2005-11-21  Sven Panne  <sven.panne@aedion.de>
 
+	* .cvsignore, Makefile.am, admin/.cvsignore, configure.ac,
+	include/Makefile.am, src/.cvsignore, src/Makefile.am, src/al_cpu_caps.h:
+	More steps towards automake support. Things build and install at least
+	on Linux now when all backends are enabled (without MMX).
+
+	* admin/Makefile.am, include/AL/.cvsignore, include/AL/Makefile.am:
+	Added.
+
 	* .cvsignore, autogen.sh, src/.cvsignore: Synched with recent
 	changes regarding the move to automake.
 
