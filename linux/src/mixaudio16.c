@@ -34,9 +34,7 @@
 void MixAudio16_n( ALshort *dst, alMixEntry *entries, ALuint numents ) {
 	int sample;
 	ALuint i;
-#ifndef NDEBUG
 	int si = 0; /* source iterator */
-#endif
 	int len;
 
 	if(numents == 0)
@@ -52,8 +50,7 @@ void MixAudio16_n( ALshort *dst, alMixEntry *entries, ALuint numents ) {
 
 		for(i = 0; i < numents; i++)
 		{
-			assert(entries[i].bytes >= si * 2);
-				
+			assert(entries[i].bytes >= si * sizeof(ALshort));
 			sample += ((ALshort *) entries[i].data)[si];
 		}
 
@@ -71,9 +68,7 @@ void MixAudio16_n( ALshort *dst, alMixEntry *entries, ALuint numents ) {
 		}
 
 		dst++;
-#ifndef NDEBUG
 		si++;
-#endif
 	}
 	return;
 }
