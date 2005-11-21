@@ -28,17 +28,10 @@ REDUNDANT_DECLS_WARN=yes       # warnings about redudant decls
 SHADOW_WARN=yes                # warn about shadow variables
 BROKEN_PTHREAD_FLAG=no         # BSD use -pthread, not -lpthread
 NO_PTHREAD_FLAG=no
-SHOULD_USE_FPIC=yes            # use -fPIC to compile position independent objs
 SHOULD_USE_WERROR=no           # turn warnings into errors
-SHARED_LIBRARY_EXT=so	       # shared library extension
-SHOULD_USE_RDYNAMIC=yes        # doesn't work on irix
-DO_MINOR_LIBS=yes              # wheether to copy foo.0.0
 
 # warns
 WFLAGS="-Wall -W -Wbad-function-cast -Wcast-qual -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wimplicit-function-declaration -Waggregate-return -Winline -Wpointer-arith -fno-common"
-
-# We start off with a blank requirement.
-requirements=""
 
 # werror stuff
 AC_ARG_ENABLE([werror],
@@ -146,7 +139,6 @@ case "$target" in
     *irix*)
     AC_DEFINE([IRIX_TARGET], [1], [undocumented])
     OS_OBJS="\$(IRIS_OBJS)"
-    SHOULD_USE_RDYNAMIC=no
     REDUNDANT_DECLS_WARN=no
     ;;
     *cygwin*|*mingw*)
@@ -154,20 +146,15 @@ case "$target" in
     CFLAGS="-DAL_BUILD_LIBRARY $CFLAGS"
     OS_OBJS="\$(WINDOWS_OBJS)"
     LIBS="$LIBS -lwinmm"         # need that mm library for waveOutOpen etc
-    SHARED_LIBRARY_EXT=dll       # shared library extension
-    SHOULD_USE_FPIC=no      # all code is position independant, causes error
     SHADOW_WARN=no
-    DO_MINOR_LIBS=no
     REDUNDANT_DECLS_WARN=no
     ;;
     *darwin*)
     # I think darwin can use dlopen with fink, but
     # I don't want to require fink
     AC_DEFINE([NODLOPEN], [1], [undocumented])
-    SHARED_LIBRARY_EXT=dylib
     BROKEN_PTHREAD_FLAG=yes
     NO_PTHREAD_FLAG=yes
-    DO_MINOR_LIBS=no
     LIBS="$LIBS -I/System/Library/Frameworks/CoreAudio.framework/Headers/ -framework CoreAudio"
     AC_DEFINE([DARWIN_TARGET], [1], [undocumented])
     SHOULD_USE_WERROR=no
@@ -176,7 +163,6 @@ case "$target" in
     AC_DEFINE([MORPHOS_TARGET], [1], [undocumented])
     OS_OBJS="\$(MORPHOS_OBJS)"
     REDUNDANT_DECLS_WARN=no
-    SHOULD_USE_FPIC=no
     ;;
     *)
     OS_OBJS="\$(LIN_OBJS)"
@@ -563,18 +549,6 @@ if test "x$enable_esd" = xyes; then
   fi
 fi
 
-dnl check for IRIS headers
-dnl AC_ARG_ENABLE([iris],
-dnl [AS_HELP_STRING([--enable-iris],
-dnl                 [enable the irix backend @<:@default=no@:>@])])
-dnl
-dnl if test "x$enable_iris" = xyes; then
-dnl   CPPFLAGS=" "
-dnl   OS_OBJS="$OS_OBJS \$(IRIS_OBJS)"
-dnl   DEFINES="$DEFINES -DIRIS_SUPPORT"
-dnl   LIBS="$LIBS -laudio"
-dnl fi
-
 # enable wave output?
 AC_ARG_ENABLE([waveout],
 [AS_HELP_STRING([--enable-waveout],
@@ -735,38 +709,22 @@ if test "x$SHADOW_WARN" = xyes; then
   WFLAGS="-Wshadow $WFLAGS"
 fi
 
-# Stupid audiofile headers
-if test "x$SHOULD_USE_FPIC" = xyes; then
-  AC_DEFINE([PIC], [1], [undocumented])
-  CFLAGS="-fPIC $CFLAGS"
-fi
-
 # add warnings to CFALGS
 CFLAGS="$WFLAGS $CFLAGS"
 
-# okay, rdynamic okay?
-if test "x$SHOULD_USE_RDYNAMIC" = xyes; then
-  AC_DEFINE_UNQUOTED([RDYNAMIC], ["-rdynamic"], [undocumented])
-fi
-
 AC_DEFINE([LINUX_AL], [1], [undocumented])
 
-AC_SUBST([DO_MINOR_LIBS])
-AC_SUBST([NASM])
-AC_SUBST([NASM_FORMAT])
-AC_SUBST([RANLIB])
+AC_SUBST([ARCH_INCLUDES])
+AC_SUBST([ARCH_OBJS])
 AC_SUBST([CC])
 AC_SUBST([CFLAGS])
-AC_SUBST([DEFINES])
 AC_SUBST([LDFLAGS])
 AC_SUBST([LIBS])
-AC_SUBST([ARCH_INCLUDES])
+AC_SUBST([NASM])
+AC_SUBST([NASM_FORMAT])
 AC_SUBST([OS_OBJS])
-AC_SUBST([ARCH_OBJS])
-AC_SUBST([SHARED_LIBRARY_EXT])
+AC_SUBST([RANLIB])
 AC_SUBST([SIZEOF_VOID_P])
-AC_SUBST([RDYNAMIC])
-AC_SUBST([requirements])
 
 # Generate output.
 AC_CONFIG_FILES([Makefile

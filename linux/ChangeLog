@@ -1,5 +1,10 @@
 2005-11-21  Sven Panne  <sven.panne@aedion.de>
 
+	* configure.ac: Removed some remnants of the old build system, i.e.
+	requirements, DO_MINOR_LIBS, SHARED_LIBRARY_EXT, SHOULD_USE_FPIC and
+	SHOULD_USE_RDYNAMIC. Furthermore, some Irix stuff which has been
+	commented out for some time now has been nuked.
+
 	* .cvsignore, Makefile.am, admin/.cvsignore, configure.ac,
 	include/Makefile.am, src/.cvsignore, src/Makefile.am, src/al_cpu_caps.h:
 	More steps towards automake support. Things build and install at least
