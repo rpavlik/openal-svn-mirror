@@ -16,15 +16,14 @@ build system.)
 o building shared OpenAL lib, using (next) to identical parameters
   as the autoconf build system does
 o all backends and vorbis/mp3/SDL support should be handled by cmake
-- only native backends tested yet
-- no debug options yet
+- only native, alsa backends and vorbis support compile tested yet
 - no static lib is built yet - this might become harder to realise
   with cmake...
 - testcase isn't built yet
 + out of tree builds are supported
 + correct dependency tracking of source files
 + prepared for adding support for non GNU compiler
-  (setting libraries to link to probably needs cleaning up)
+  (setting link libraries probably needs cleaning up)
 
 This document explains briefly how to build CMake on Linux via out
 of tree build:
@@ -53,8 +52,10 @@ Some Tips:
 ccmake .. -DCMAKE_INSTALL_PREFIX:STRING="/usr" -DCMAKE_C_FLAGS:STRING="-march=athlon-xp -O2"
 
   sets the two variables defined on command line and then starts
-  the GUI. Btw, to set boolean vars, use -DVAR:BOOL=X, where X
-  is eg. ON or OFF.
+  the GUI. Press 'c' the first time and every time you want to commit
+  changes in the config. Finally press 'g' to run the generator.
+  Btw, to set boolean vars from the command line, use -DVAR:BOOL=X,
+  where X is eg. ON or OFF.
 
 - If you want more output at compile time, use
 
