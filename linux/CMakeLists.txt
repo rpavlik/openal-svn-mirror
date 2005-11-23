@@ -166,20 +166,14 @@ IF(CMAKE_WORDS_BIGENDIAN)
   ADD_DEFINE(WORDS_BIGENDIAN)
 ENDIF(CMAKE_WORDS_BIGENDIAN)
 
-# werror stuff
-OPTION(SHOULD_USE_WERROR "enable fail on all warning" OFF)
 
-# profile stuff
+OPTION(BUILD_STATIC "build static library too" ON)
 OPTION(PROFILE "enable profile" OFF)
-
-# optimization stuff
 OPTION(OPTIMIZATION "enable optimization" OFF)
+OPTION(DEBUG "enable debug" OFF)
 
 # no mutex locking for sync. driver
 OPTION(EMPTY_LOCKS "enable empty locks" OFF)
-
-# debug stuff
-OPTION(DEBUG "enable debug" OFF)
 
 #sound backends
 OPTION(ALSA "alsa backend" OFF)
@@ -212,6 +206,7 @@ ENDIF(EMPTY_LOCKS)
 
 IF(DEBUG)
   ADD_DEFINE(DEBUG)
+  OPTION(USE_WERROR      "enable fail on all warning"   OFF)
   OPTION(OPT_EFENCE      "enable efence support"        OFF)
   OPTION(DEBUG_MAXIMUS   "enable all debugging"         OFF)
   OPTION(DEBUG_STUB      "enable stub debugging"        OFF)
@@ -372,7 +367,7 @@ IF(CMAKE_SYSTEM MATCHES "Darwin")
   SET(ADD_LIBS "${ADD_LIBS} -I/System/Library/Frameworks/CoreAudio.framework/Headers/ -framework CoreAudio")
   SET(BROKEN_PTHREAD_FLAG ON)
   SET(NO_PTHREAD_FLAG ON)
-  SET(SHOULD_USE_WERROR OFF)
+  SET(USE_WERROR OFF)
 ELSE(CMAKE_SYSTEM MATCHES "Darwin")
 
 IF(CMAKE_SYSTEM MATCHES "morphos")
@@ -573,7 +568,7 @@ ENDIF(SMPEG)
 IF(SDL)
   # If we don't have SDL, we can use -ansi for gcc.  If we do, SDL
   # uses long long which is bad mojo
-  SET(SHOULD_USE_WERROR OFF)
+  SET(USE_WERROR OFF)
 ENDIF(SDL)
 
 
@@ -629,9 +624,9 @@ IF(CMAKE_COMPILER_IS_GNUCC)
   SET(WFLAGS "${WFLAGS} -Wall -W -Wbad-function-cast -Wcast-qual -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wimplicit-function-declaration -Waggregate-return -Winline -Wpointer-arith -fno-common")
 
   # Should we use turn warnings into errors?
-  IF(SHOULD_USE_WERROR)
+  IF(USE_WERROR)
     SET(WFLAGS "${WFLAGS} -Werror -pedantic-errors")
-  ENDIF(SHOULD_USE_WERROR)
+  ENDIF(USE_WERROR)
 
   # if we are forced to live with redundant decls, turn off those errors
   IF(REDUNDANT_DECLS_WARN)
@@ -696,10 +691,22 @@ SET(OPENAL_OBJS ${AL_OBJS}
                 ${AC_OBJS}
                 ${EXT_OBJS})
 
-#ADD_LIBRARY(openal-static STATIC ${OPENAL_OBJS})
-#SET_TARGET_PROPERTIES(openal-static PROPERTIES OUTPUT_NAME openal)
-#SET_TARGET_PROPERTIES(openal-static PROPERTIES LINKER_LANGUAGE C)
-#TARGET_LINK_LIBRARIES(openal-static ${ADD_LIBS})
+IF(BUILD_STATIC)
+  #we can't create a static library with the same name
+  #as the shared one, so we copy it over after creation
+  ADD_LIBRARY(openal-static STATIC ${OPENAL_OBJS})
+  SET_TARGET_PROPERTIES(openal-static PROPERTIES OUTPUT_NAME openal)
+  SET_TARGET_PROPERTIES(openal-static PROPERTIES LINKER_LANGUAGE C)
+  TARGET_LINK_LIBRARIES(openal-static ${ADD_LIBS})
+  ADD_CUSTOM_COMMAND(
+    TARGET openal-static
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND}
+    ARGS -E copy
+      ${CMAKE_BINARY_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}openal-static${CMAKE_STATIC_LIBRARY_SUFFIX}
+      ${CMAKE_BINARY_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}openal${CMAKE_STATIC_LIBRARY_SUFFIX})
+  INSTALL_FILES(/lib FILES ${CMAKE_STATIC_LIBRARY_PREFIX}openal${CMAKE_STATIC_LIBRARY_SUFFIX})
+ENDIF(BUILD_STATIC)
 
 ADD_LIBRARY(openal SHARED ${OPENAL_OBJS})
 SET_TARGET_PROPERTIES(openal PROPERTIES LINKER_LANGUAGE C)
@@ -779,7 +786,7 @@ IF(BUILD_TESTS)
     ADD_EXECUTABLE(testcpp test/testcpp.cc)
     TARGET_LINK_LIBRARIES(testcpp testlib ${ADD_LIBS} openal ${ALUT})
 
-    #copy over testdata, so test-suite can be used
+    #copy over testdata, so test-suite can be used in binary dir
     SET(TESTDATA boom.mp3
                  boom.ogg
                  boom.wav

@@ -1,7 +1,9 @@
-2005-11-22  Prakash Punnoor <prakash@punnoor.de>
+2005-11-23  Prakash Punnoor <prakash@punnoor.de>
 
 	* CMakeLists.txt: remove fpic and rdynamic magic - let CMake
-	handle it
+	handle it; made CMake build system feature complete
+
+	* README: updated due to feature-completeness
 
 2005-11-21  Sven Panne  <sven.panne@aedion.de>
 

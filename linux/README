@@ -85,11 +85,14 @@ Makefiles will be built, and on Windows MS VC++ project files, if
 you wish. You can get CMake at cmake.org.
 
 Current status:
+The build system is feature complete, so it (should) build every-
+thing as the (old) default one has done.
+
 (+,o,- indicates feature more/same/less then default OpenAL
 build system.)
 
-o builds shared OpenAL lib, using (next) to identical parameters
-  as the autoconf build system does
+o builds shared OpenAL lib
+o builds static OpenAL lib; can be deactivated
 o builds the test-suite, if specified
 o all backends and vorbis/mp3/SDL support should be handled by CMake
 
@@ -99,12 +102,11 @@ o all backends and vorbis/mp3/SDL support should be handled by CMake
   (setting link libraries probably needs cleaning up)
 
 - only native, alsa backends and vorbis support compile tested yet
-- no static lib is built yet - this might become harder to realise
-  with CMake...
+  (so please report back if it works for you! :-)
 
 
-This document explains briefly how to build CMake on Linux via out
-of tree build:
+This document explains briefly how to build CMake on Linux via out-
+of-tree build:
 
 - Change to the linux dir.
 - Create a dir, eg "default", and change into it.
@@ -125,6 +127,7 @@ on yours. I'll try to fix this with your help.
 Some Tips:
 
 - You can use a console GUI named ccmake for configuring cmake.
+  This also comes in handy, to find out about available options.
   It also takes some parameters as cmake as such does, so eg:
 
 ccmake .. -DCMAKE_INSTALL_PREFIX:STRING="/usr" -DCMAKE_C_FLAGS:STRING="-march=athlon-xp -O2"
