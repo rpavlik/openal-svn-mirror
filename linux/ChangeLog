@@ -1,3 +1,8 @@
+2005-11-22  Prakash Punnoor <prakash@punnoor.de>
+
+	* CMakeLists.txt: remove fpic and rdynamic magic - let CMake
+	handle it
+
 2005-11-21  Sven Panne  <sven.panne@aedion.de>
 
 	* configure.ac: Removed some remnants of the old build system, i.e.

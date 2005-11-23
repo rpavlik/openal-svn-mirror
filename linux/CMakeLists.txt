@@ -136,14 +136,9 @@ SET(MORPHOS_OBJS         src/arch/morphos/morphos_native.c
 SET(WINDOWS_OBJS         src/arch/windows/windows_native.c)
 
 SET(REDUNDANT_DECLS_WARN ON)       # warnings about redudant decls
-SET(SHOULD_ENFORCE_ANSI OFF)       # whether we should use -ansi
 SET(SHADOW_WARN ON)                # warn about shadow variables
 SET(BROKEN_PTHREAD_FLAG OFF)       # BSD uses -pthread, not -lpthread
 SET(NO_PTHREAD_FLAG OFF)
-SET(SHOULD_USE_FPIC ON)            # use -fPIC to compile position independent objs
-SET(SHOULD_USE_WERROR OFF)         # turn warnings into errors
-SET(SHOULD_USE_RDYNAMIC ON)        # doesn't work on irix
-SET(EMPTY_LOCKS OFF)
 
 SET(ADD_CFLAGS "")
 SET(ADD_LDFLAGS "")
@@ -308,8 +303,6 @@ ELSE(DEBUG)
 ENDIF(DEBUG)
 
 
-
-
 #library stuff
 CHECK_LIBRARY_EXISTS("m" "sin" "" HAVE_LIB_M)
 
@@ -357,7 +350,6 @@ IF(CMAKE_SYSTEM MATCHES "IRIX")
   ADD_DEFINE("IRIX_TARGET 1")
   ADD_DEFINE(IRIS_SUPPORT)
   SET(OS_OBJS ${IRIX_OBJS})
-  SET(SHOULD_USE_RDYNAMIC OFF)
   SET(REDUNDANT_DECLS_WARN OFF)
   SET(ADD_LIBS "${ADD_LIBS} -laudio")
 ELSE(CMAKE_SYSTEM MATCHES "IRIX")
@@ -368,8 +360,6 @@ IF(CMAKE_SYSTEM MATCHES "Windows")
   SET(OS_OBJS ${WINDOWS_OBJS})
   # need that mm library for waveOutOpen etc
   SET(ADD_LIBS "${ADD_LIBS} -lwinmm")
-  # all code is position independant, causes error
-  SET(SHOULD_USE_FPIC OFF)
   SET(SHADOW_WARN OFF)
   SET(REDUNDANT_DECLS_WARN OFF)
 
@@ -389,8 +379,6 @@ IF(CMAKE_SYSTEM MATCHES "morphos")
   ADD_DEFINE("MORPHOS_TARGET 1")
   SET(OS_OBJS ${MORPHOS_OBJS})
   SET(REDUNDANT_DECLS_WARN OFF)
-  SET(SHOULD_USE_FPIC OFF)
-
   CHECK_INCLUDE_FILE(dlfcn.h MOSTHREAD_AVAILABLE)
 ELSE(CMAKE_SYSTEM MATCHES "morphos")
 
@@ -656,16 +644,6 @@ IF(CMAKE_COMPILER_IS_GNUCC)
     SET(WFLAGS "${WFLAGS} -Wshadow")
   ENDIF(SHADOW_WARN)
 
-  IF(SHOULD_USE_FPIC)
-    ADD_DEFINE(PIC)
-    SET(ADD_CFLAGS "${ADD_CFLAGS} -fPIC")
-  ENDIF(SHOULD_USE_FPIC)
-
-  IF(SHOULD_USE_RDYNAMIC)
-    ADD_DEFINE(RDYNAMIC)
-    SET(ADD_CFLAGS "${ADD_CFLAGS} -rdynamic")
-  ENDIF(SHOULD_USE_RDYNAMIC)
-
   IF(CMAKE_SYSTEM MATCHES "Linux")
     SET(WFLAGS "${WFLAGS} -ansi")
   ENDIF(CMAKE_SYSTEM MATCHES "Linux")
@@ -706,6 +684,7 @@ ENDIF(NOT CONFIG_H_VALS_OLD STREQUAL CONFIG_H_VALS OR NOT EXISTS ${CONFIG_H_FILE
 
 
 SET(CMAKE_C_FLAGS "${WFLAGS} ${ADD_CFLAGS} ${CMAKE_C_FLAGS}")
+SET(CMAKE_CXX_FLAGS "${ADD_CFLAGS} ${CMAKE_CXX_FLAGS}")
 SET(CMAKE_SHARED_LINKER_FLAGS "${ADD_LDFLAGS} ${CMAKE_SHARED_LINKER_FLAGS}")
 SET(CMAKE_MODULE_LINKER_FLAGS "${ADD_LDFLAGS} ${CMAKE_MODULE_LINKER_FLAGS}")
 
@@ -790,23 +769,31 @@ IF(BUILD_TESTS)
 
     FOREACH(TEST ${TESTS})
       SET(TEST_SRC test/test${TEST}.c)
-      #bug? Why doesn't this flag get added?
+      #gets added at the beginning thus having no effect
       SET_SOURCE_FILES_PROPERTIES(${TEST_SRC} PROPERTIES COMPILE_FLAGS "-Wno-unused")
       ADD_EXECUTABLE(test${TEST} ${TEST_SRC})
       TARGET_LINK_LIBRARIES(test${TEST} testlib ${ADD_LIBS} openal ${ALUT})
     ENDFOREACH(TEST)
 
-    #great, here it works...
     SET_SOURCE_FILES_PROPERTIES(test/testcpp.cc PROPERTIES COMPILE_FLAGS "-Wno-unused")
     ADD_EXECUTABLE(testcpp test/testcpp.cc)
     TARGET_LINK_LIBRARIES(testcpp testlib ${ADD_LIBS} openal ${ALUT})
+
+    #copy over testdata, so test-suite can be used
+    SET(TESTDATA boom.mp3
+                 boom.ogg
+                 boom.wav
+                 fire2.wav
+                 multiboom.wav
+                 multisample.wav
+                 sample.wav)
+
+    FOREACH(TESTDATUM ${TESTDATA})
+      CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/test/${TESTDATUM} ${CMAKE_BINARY_DIR}/${TESTDATUM} COPYONLY)
+    ENDFOREACH(TESTDATUM)
   ENDIF(ALUT MATCHES "NOTFOUND")
 ENDIF(BUILD_TESTS)
 
-#ADD_EXECUTABLE(testreverb test/testreverb.c)
-#TARGET_LINK_LIBRARIES(testreverb testlib ${ADD_LIBS} alut openal)
-#ADD_EXECUTABLE(testda test/testda.c)
-#TARGET_LINK_LIBRARIES(testda testlib ${ADD_LIBS} alut openal)
 
 #needed for openal.pc.in and openal-config.in
 SET(prefix ${CMAKE_INSTALL_PREFIX})
