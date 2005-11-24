@@ -27,6 +27,6 @@ void alExtFini_03282000( void );
  * AL_EXT_PAIR is a macro that expands to a name, address pair
  * for use in the extension table.
  */
-#define AL_EXT_PAIR(x) { (const ALubyte *) #x, (void *) x }
+#define AL_EXT_PAIR(x) { (const ALubyte *) #x, (AL_funcPtr) x }
 
 #endif /* AL_EXT_NEEDED_H_ */

@@ -133,7 +133,10 @@ alListenerf( ALenum param, ALfloat value )
 void
 alListener3f( ALenum param, ALfloat value1, ALfloat value2, ALfloat value3 )
 {
-	ALfloat values[3] = { value1, value2, value3 };
+	ALfloat values[3];
+	values[0] = value1;
+	values[1] = value2;
+	values[2] = value3;
 	setListenerAttributef(param, values, 3);
 }
 
@@ -152,7 +155,10 @@ alListeneri( ALenum param, ALint value )
 void
 alListener3i( ALenum param, ALint value1, ALint value2, ALint value3 )
 {
-	ALint values[3] = { value1, value2, value3 };
+	ALint values[3];
+	values[0] = value1;
+	values[1] = value2;
+	values[2] = value3;
 	setListenerAttributei(param, values, 3);
 }
 

@@ -10,6 +10,7 @@
 #define AL_RCVAR_H_
 
 #include <AL/al.h>
+#include <stdlib.h>
 
 /*
  * opaque pointer to a lisp-like var.  Calling code shouldn't mess with it
@@ -75,13 +76,13 @@ Rcvar rc_cdr( Rcvar sym );
  * If sym has type ALRC_SYMBOL, this call populates retstr ( up to len bytes )
  * with the name of the symbol.
  */
-Rcvar rc_symtostr0( Rcvar sym, char *retstr, int len );
+Rcvar rc_symtostr0( Rcvar sym, char *retstr, size_t len );
 
 /*
  * If sym has type ALRC_STRING, this call populates retstr ( up to len bytes )
  * with the value of the string.
  */
-Rcvar rc_tostr0( Rcvar sym, char *retstr, int len );
+Rcvar rc_tostr0( Rcvar sym, char *retstr, size_t len );
 
 /*
  * Returns AL_TRUE if sym is a boolean type and equal to #t, AL_FALSE

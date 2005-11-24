@@ -66,8 +66,6 @@ _alDecodeScratch f_buffers;
  * Our extension functions
  */
 static AL_extension exts[] = {
-	{ (const ALubyte *) "alLokiTest",
-	           (void *) alLokiTest },
 #ifdef BUILTIN_EXT_LOKI
 	BUILTIN_EXT_LOKI,
 #endif /* BUILDIN_EXT_LOKI */
@@ -308,7 +306,7 @@ ALushort _al_AL2ACFMT( ALenum alformat ) {
 	fprintf(stderr, "AL2ACFMT: wtf? format = 0x%x\n", alformat);
 #endif
 
-	return -1;
+	return 0;
 }
 
 /*
@@ -402,28 +400,6 @@ void _alBuffersAppend(void **dsts, void **srcs, int len, int offset, int nc) {
 		for(k = 0; k < len; k++) {
 			dstp[k] = srcp[k];
 		}
-	}
-
-	return;
-}
-
-/*
- * _alBuffersCopy( void **dsts, void **srcs, int len, int nc )
- *
- * Copies srcs[0..nc-1][0..(len/2)-1] to dsts[0..nc-1][0..(len/2)-1].
- */
-void _alBuffersCopy(void **dsts, void **srcs, int len, int nc) {
-	ALshort *dstp;
-	ALshort *srcp;
-	int i;
-
-	len /= sizeof(ALshort);
-
-	for(i = 0; i < nc; i++) {
-		dstp = dsts[i];
-		srcp = srcs[i];
-
-		memcpy(dstp, srcp, len);
 	}
 
 	return;
@@ -610,7 +586,7 @@ void _alMatrixFree(ALmatrix *m) {
 int _alSlurp(const char *fname, void **buffer) {
 	struct stat buf;
 	FILE *fh;
-	ALint len;
+	size_t len;
 
 	if((fname == NULL) || (buffer == NULL)) {
 		return -1;
@@ -621,7 +597,7 @@ int _alSlurp(const char *fname, void **buffer) {
 		return -1;
 	}
 
-	len = (ALint) buf.st_size;
+	len = buf.st_size;
 	if(len <= 0) {
 		return -1;
 	}

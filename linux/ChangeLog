@@ -1,7 +1,19 @@
+2005-11-24  Sven Panne  <sven.panne@aedion.de>
+
+	* configure.ac, src/al_buffer.c, src/al_config.c, src/al_ext.c,
+	src/al_ext.h, src/al_listen.c, src/al_main.c, src/al_main.h,
+	src/al_rctree.h, src/al_rcvar.c, src/al_rcvar.h, src/al_source.c,
+	src/al_types.h, src/mixaudio16.c, src/alc/alc_context.c,
+	src/alc/alc_device.c, src/arch/alsa/alsa.c, src/arch/linux/lin_dsp.c,
+	src/arch/sdl/sdl.c, src/extensions/al_ext_capture.c,
+	src/extensions/al_ext_mp3.c, src/extensions/al_ext_needed.h,
+	test/testext.c: Added more GCC warnings and tried to fix some of
+	them. The general problem with the code is "primitive obsession".
+
 2005-11-23  Prakash Punnoor <prakash@punnoor.de>
 
-	* CMakeLists.txt: remove fpic and rdynamic magic - let CMake
-	handle it; made CMake build system feature complete
+	* CMakeLists.txt: remove fpic and rdynamic magic - let CMake handle it;
+	made CMake build system feature complete
 
 	* README: updated due to feature-completeness
 

@@ -65,7 +65,7 @@ static struct {
 /* data structure storing extension functions.  Simple binary tree. */
 typedef struct _enode_t {
 	ALubyte name[ _AL_EXT_NAMELEN + 1 ];
-	void *addr;
+	AL_funcPtr addr;
 
 	struct _enode_t *left;
 	struct _enode_t *right;
@@ -82,20 +82,16 @@ static enode_t *etree    = NULL;
 static MutexID ext_mutex = NULL;
 
 /*
- * add_node( enode_t *treenode, const ALubyte *name, void *addr )
- *
  * Adds a new node to treenode, with name name and address addr.  Returns
  * treenode.
  */
-static enode_t *add_node( enode_t *treenode, const ALubyte *name, void *addr );
+static enode_t *add_node( enode_t *treenode, const ALubyte *name, AL_funcPtr addr );
 
 /*
- * get_node( enode_t *treenode, const ALubyte *name )
- *
  * Returns the node that exists in treenode with a matching name, or NULL if
  * no such node exists.
  */
-static enode_t *get_node( enode_t *treenode, const ALubyte *name );
+static enode_t *get_node( enode_t *treenode, const ALchar *name );
 
 /*
  * _alDestroyExtension( void *extp )
@@ -112,11 +108,9 @@ static void _alDestroyExtension( void *extp );
 static void tree_free( enode_t *treehead, void (*ff)(void *) );
 
 /*
- * new_ext( const ALubyte *name, void *addr )
- *
  * Allocate and return a new extension node.
  */
-static enode_t *new_ext( const ALubyte *name, void *addr );
+static enode_t *new_ext( const ALubyte *name, AL_funcPtr addr );
 
 #ifndef NODLOPEN
 /* following functions unneeded in we don't have dlopen */
@@ -180,13 +174,11 @@ ALboolean alIsExtensionPresent( const ALchar* gname ) {
 }
 
 /*
- * _alGetExtensionStrings( ALchar* buffer, int size )
- *
  * Populate buffer, up to size-1, with a string representation of the
  * extension strings.  Returns AL_TRUE if size was greater or equal to 1,
  * AL_FALSE otherwise.
  */
-ALboolean _alGetExtensionStrings( ALchar* buffer, int size ) {
+ALboolean _alGetExtensionStrings( ALchar* buffer, size_t size ) {
 	egroup_node_t *group = egroup_list;
 
 	if( size < 1 ) {
@@ -196,7 +188,7 @@ ALboolean _alGetExtensionStrings( ALchar* buffer, int size ) {
 	buffer[0] = '\0';
 
 	while( group ) {
-		int length = strlen( (char *) group->name ) + 1;
+		size_t length = strlen( (char *) group->name ) + 1;
 
 		if( length < size ) {
 			strncat( (char *) buffer, (char *) group->name, size );
@@ -213,8 +205,6 @@ ALboolean _alGetExtensionStrings( ALchar* buffer, int size ) {
 }
 
 /*
- * _alRegisterExtensionGroup( const ALubyte* gname )
- *
  * Add an extension group (see above) to the current list of extensions,
  * returning AL_TRUE.  AL_FALSE is returned on error.
  */
@@ -261,12 +251,12 @@ void _alDestroyExtensionGroups( void ) {
  * Extension support.
  */
 
-#define DEFINE_AL_PROC(p) { #p, p }
+#define DEFINE_AL_PROC(p) { #p, (AL_funcPtr)p }
 
 typedef struct
 {
 	const ALchar *name;
-	void *value;
+	AL_funcPtr value;
 } funcNameAddressPair;
 
 funcNameAddressPair alProcs[] = {
@@ -357,13 +347,15 @@ compareFuncNameAddressPairs(const void *s1, const void *s2)
 }
 
 static ALboolean
-getStandardProcAddress(void **value, const ALchar *funcName)
+getStandardProcAddress(AL_funcPtr *value, const ALchar *funcName)
 {
-	funcNameAddressPair key = { funcName, 0 };
-	funcNameAddressPair *p = bsearch(&key, alProcs,
-					 sizeof(alProcs) / sizeof(alProcs[0]),
-					 sizeof(alProcs[0]),
-					 compareFuncNameAddressPairs);
+	funcNameAddressPair key;
+	funcNameAddressPair *p;
+	key.name = funcName;
+	p = bsearch(&key, alProcs,
+		    sizeof(alProcs) / sizeof(alProcs[0]),
+		    sizeof(alProcs[0]),
+		    compareFuncNameAddressPairs);
 	if (p == NULL) {
 		return AL_FALSE;
 	}
@@ -373,9 +365,10 @@ getStandardProcAddress(void **value, const ALchar *funcName)
 
 /* TODO: exporting this is a HACK */
 ALboolean
-_alGetExtensionProcAddress( void **procAddress, const ALchar *funcName )
+_alGetExtensionProcAddress( AL_funcPtr *procAddress, const ALchar *funcName )
 {
-	enode_t *retpair = get_node( etree, funcName );
+	enode_t *retpair;
+	retpair = get_node( etree, funcName );
 	if(retpair == NULL) {
 		return AL_FALSE;
 	}
@@ -392,12 +385,12 @@ _alGetExtensionProcAddress( void **procAddress, const ALchar *funcName )
 void *
 alGetProcAddress( const ALchar *funcName )
 {
-	void *value;
+	AL_funcPtr value;
 	if (getStandardProcAddress(&value, funcName) == AL_TRUE) {
-		return value;
+		return (void *)value; /* NOTE: The cast is not valid ISO C! */
 	}
 	if (_alGetExtensionProcAddress(&value, funcName) == AL_TRUE) {
-		return value;
+		return (void *)value; /* NOTE: The cast is not valid ISO C! */
 	}
 	_alDCSetError( AL_INVALID_VALUE );
 	return NULL;
@@ -405,14 +398,12 @@ alGetProcAddress( const ALchar *funcName )
 
 
 /*
- * _alRegisterExtension( const ALubyte *name, void *addr )
- *
  * _alRegisterExtension is called to register an extension in our tree.
  * extensions are not via GetProcAddress until they have been registered.
  *
  * Returns AL_TRUE if the name/addr pair was added, AL_FALSE otherwise.
  */
-ALboolean _alRegisterExtension( const ALubyte *name, void *addr ) {
+ALboolean _alRegisterExtension( const ALubyte *name, AL_funcPtr addr ) {
 	enode_t *temp;
 
 	_alLockExtension();
@@ -488,14 +479,12 @@ void _alDestroyExtensions( void ) {
 }
 
 /*
- * add_node( enode_t *treehead, const ALubyte *name, void *addr )
- *
  * Adds a function with name "name" and address "addr" to the tree with root
  * at treehead.
  *
  * assumes locked extensions
  */
-static enode_t *add_node( enode_t *treehead, const ALubyte *name, void *addr ) {
+static enode_t *add_node( enode_t *treehead, const ALubyte *name, AL_funcPtr addr ) {
 	int i;
 	enode_t *retval;
 
@@ -528,12 +517,10 @@ static enode_t *add_node( enode_t *treehead, const ALubyte *name, void *addr ) {
 }
 
 /*
- * new_ext( const ALubyte *name, void *addr )
- *
  * Returns a new extension node, using name and addr as initializers, or NULL
  * if resources were not available.
  */
-static enode_t *new_ext( const ALubyte *name, void *addr ) {
+static enode_t *new_ext( const ALubyte *name, AL_funcPtr addr ) {
 	enode_t *retval = malloc( sizeof *retval );
 	if(retval == NULL) {
 		return NULL;
@@ -572,12 +559,10 @@ static void tree_free( enode_t *treehead, void (*ff)(void *) ) {
 }
 
 /*
- * get_node( enode_t *treehead, const ALubyte *name )
- *
  * Retrieve enode_t pointer for extension with name "name" from
  * tree with root "treehead", or NULL if not found.
  */
-static enode_t *get_node( enode_t *treehead, const ALubyte *name ) {
+static enode_t *get_node( enode_t *treehead, const ALchar *name ) {
 	int i;
 
 	if((name == NULL) || (treehead == NULL)) {
@@ -593,12 +578,6 @@ static enode_t *get_node( enode_t *treehead, const ALubyte *name ) {
 	}
 
 	return treehead;
-}
-
-void alLokiTest(UNUSED(void *dummy)) {
-	fprintf(stderr, "LokiTest\n");
-
-	return;
 }
 
 #ifdef NODLOPEN
@@ -868,11 +847,13 @@ compareEnumNameValuePairs(const void *s1, const void *s2)
 static ALboolean
 getStandardEnumValue(ALenum *value, const ALchar *enumName)
 {
-	enumNameValuePair key = { enumName, 0 };
-	enumNameValuePair *p = bsearch(&key, alEnums,
-				       sizeof(alEnums) / sizeof(alEnums[0]),
-				       sizeof(alEnums[0]),
-				       compareEnumNameValuePairs);
+	enumNameValuePair key;
+	enumNameValuePair *p;
+	key.name = enumName;
+	p = bsearch(&key, alEnums,
+		    sizeof(alEnums) / sizeof(alEnums[0]),
+		    sizeof(alEnums[0]),
+		    compareEnumNameValuePairs);
 	if (p == NULL) {
 		return AL_FALSE;
 	}

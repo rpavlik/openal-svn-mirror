@@ -72,10 +72,10 @@ void _alDestroyExtensionGroups( void );
  *
  * Returns AL_FALSE if size < 1, AL_TRUE otherwise.
  */
-ALboolean _alGetExtensionStrings( ALchar *buffer, int size );
+ALboolean _alGetExtensionStrings( ALchar *buffer, size_t size );
 
 /* TODO: exporting this is a HACK */
-ALboolean _alGetExtensionProcAddress( void **procAddress, const ALchar *funcName );
+ALboolean _alGetExtensionProcAddress( AL_funcPtr *procAddress, const ALchar *funcName );
 
 /*
  * Adds a function to the available extension registry.  Before registration,
@@ -84,7 +84,7 @@ ALboolean _alGetExtensionProcAddress( void **procAddress, const ALchar *funcName
  *
  * Returns AL_FALSE if name has already been registered, AL_TRUE otherwise.
  */
-ALboolean _alRegisterExtension( const ALubyte *name, ALvoid *addr );
+ALboolean _alRegisterExtension( const ALubyte *name, AL_funcPtr addr );
 
 /*
  * dlopens a shared object, gets the extension table from it, and

@@ -3200,9 +3200,8 @@ void *_alGetSourceParam(AL_source *source, ALenum param )
 			if( source->bid_queue.size > 0 )
 			{
 				int rind = source->bid_queue.read_index;
-				int size = source->bid_queue.size;
 
-				assert(rind < size);
+				assert(rind < source->bid_queue.size);
 				return &source->bid_queue.queue[rind];
 			}
 			else

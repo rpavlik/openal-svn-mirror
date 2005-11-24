@@ -55,7 +55,7 @@ static size_t (*psnd_pcm_info_sizeof)(void) = NULL;
 static int (*psnd_pcm_close)(snd_pcm_t *pcm) = NULL;
 static int (*psnd_pcm_hw_params)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params) = NULL;
 static int (*psnd_pcm_hw_params_any)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params) = NULL;
-static int (*psnd_pcm_hw_params_set_access)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_access_t access) = NULL;
+static int (*psnd_pcm_hw_params_set_access)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_access_t acc) = NULL;
 static int (*psnd_pcm_hw_params_set_buffer_size_near)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val) = NULL;
 static int (*psnd_pcm_hw_params_set_channels)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val) = NULL;
 static int (*psnd_pcm_hw_params_set_format)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_format_t val) = NULL;
@@ -172,8 +172,8 @@ static int FRAMESIZE(snd_pcm_format_t fmt, unsigned int chans);
  * get either the default device name or something the
  * user specified
  */
-static void get_in_device_name(char *retref, int retsize);
-static void get_out_device_name(char *retref, int retsize);
+static void get_in_device_name(char *retref, size_t retsize);
+static void get_out_device_name(char *retref, size_t retsize);
 
 struct alsa_info
 {
@@ -242,7 +242,7 @@ void *grab_read_alsa( void )
 	return retval;
 }
 
-static void get_out_device_name(char *retref, int retsize)
+static void get_out_device_name(char *retref, size_t retsize)
 {
 	Rcvar rcv;
 
@@ -264,7 +264,7 @@ static void get_out_device_name(char *retref, int retsize)
 	retref[retsize - 1] = '\0';
 }
 
-static void get_in_device_name(char *retref, int retsize)
+static void get_in_device_name(char *retref, size_t retsize)
 {
 	Rcvar rcv;
 

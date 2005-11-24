@@ -28,7 +28,7 @@ typedef struct _AL_rctree {
 
 		struct {
 			char c_str[ALRC_MAXSTRLEN];
-			int len;
+			size_t len;
 		} str;
 		struct _AL_rctree *(*proc)(struct _AL_rctree *env, struct _AL_rctree *args);
 		struct {

@@ -176,11 +176,6 @@ void _alStartMixerThread( void );
 void _alWaitForMixerThreadToDie( void );
 
 /*
- * Copies srcs[0..nc-1][0..(len/2)-1] to dsts[0..nc-1][0..(len/2)-1].
- */
-void _alBuffersCopy( void **dsts, void **srcs, int len, int nc );
-
-/*
  * Copies srcs[0..nc-1][0..(len/2)-1] to
  * dsts[0..nc-1][offset/2..((offset + len)/2)-1].
  */

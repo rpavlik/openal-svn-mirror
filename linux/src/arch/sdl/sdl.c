@@ -40,15 +40,15 @@ struct {
 } sdl_info;
 
 static void *ringbuffer;
-static int  ringbuffersize;
-static int  readOffset;
-static int  writeOffset;
+static Uint32 ringbuffersize;
+static Uint32 readOffset;
+static Uint32 writeOffset;
 
 static void dummy(void *unused, Uint8 *stream, int len);
 
 /* sdl stuff */
 static void dummy(UNUSED(void *unused), Uint8 *stream, int len) {
-	memcpy_offset(stream, ringbuffer, readOffset, len);
+	memcpy_offset(stream, ringbuffer, readOffset, (size_t)len);
 	readOffset += len;
 
 	if(readOffset >= ringbuffersize) {
@@ -100,7 +100,7 @@ void *grab_read_sdl(void) {
 }
 
 void firsttime_sdl_blitbuffer(UNUSED(void *handle), void *data, int bytes)  {
-	offset_memcpy(ringbuffer, writeOffset, data, bytes);
+	offset_memcpy(ringbuffer, writeOffset, data, (size_t)bytes);
 	writeOffset = bytes;
 
 	/* next time, skip pause audio */
@@ -120,7 +120,7 @@ void sdl_blitbuffer(UNUSED(void *handle), void *data, int bytes)  {
 		SDL_LockAudio();
 	}
 
-	offset_memcpy(ringbuffer, writeOffset, data, bytes);
+	offset_memcpy(ringbuffer, writeOffset, data, (size_t)bytes);
 	writeOffset += bytes;
 
 	SDL_UnlockAudio();

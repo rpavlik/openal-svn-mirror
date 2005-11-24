@@ -1401,12 +1401,12 @@ ALCboolean alcIsExtensionPresent( UNUSED(ALCdevice *device), const ALCchar *extN
 	return alIsExtensionPresent( extName );
 }
 
-#define DEFINE_ALC_PROC(p) { #p, p }
+#define DEFINE_ALC_PROC(p) { #p, (AL_funcPtr)p }
 
 typedef struct
 {
 	const ALCchar *name;
-	void *value;
+	AL_funcPtr value;
 } funcNameAddressPair;
 
 funcNameAddressPair alcProcs[] = {
@@ -1443,13 +1443,15 @@ compareFuncNameAddressPairs(const void *s1, const void *s2)
 }
 
 static ALCboolean
-getStandardProcAddress(void **value, const ALCchar *funcName)
+getStandardProcAddress(AL_funcPtr *value, const ALCchar *funcName)
 {
-	funcNameAddressPair key = { funcName, 0 };
-	funcNameAddressPair *p = bsearch(&key, alcProcs,
-					 sizeof(alcProcs) / sizeof(alcProcs[0]),
-					 sizeof(alcProcs[0]),
-					 compareFuncNameAddressPairs);
+	funcNameAddressPair key;
+	funcNameAddressPair *p;
+	key.name = funcName;
+	p = bsearch(&key, alcProcs,
+		    sizeof(alcProcs) / sizeof(alcProcs[0]),
+		    sizeof(alcProcs[0]),
+		    compareFuncNameAddressPairs);
 	if (p == NULL) {
 		return ALC_FALSE;
 	}
@@ -1458,7 +1460,7 @@ getStandardProcAddress(void **value, const ALCchar *funcName)
 }
 
 static ALCboolean
-getExtensionProcAddress( void **procAddress, UNUSED(ALCdevice *device), const ALCchar *funcName )
+getExtensionProcAddress( AL_funcPtr *procAddress, UNUSED(ALCdevice *device), const ALCchar *funcName )
 {
 	/* TODO: using _alGetExtensionProcAddress is a HACK */
 	return (_alGetExtensionProcAddress( procAddress, (const ALchar*)funcName) == AL_TRUE) ? ALC_TRUE : ALC_FALSE;
@@ -1473,12 +1475,12 @@ getExtensionProcAddress( void **procAddress, UNUSED(ALCdevice *device), const AL
 void *
 alcGetProcAddress( ALCdevice *device, const ALCchar *funcName )
 {
-	void *value;
+	AL_funcPtr value;
 	if (getStandardProcAddress(&value, funcName) == ALC_TRUE) {
-		return value;
+		return (void *)value; /* NOTE: The cast is not valid ISO C! */
 	}
 	if (getExtensionProcAddress(&value, device, funcName) == ALC_TRUE) {
-		return value;
+		return (void *)value; /* NOTE: The cast is not valid ISO C! */
 	}
 	_alcSetError( ALC_INVALID_VALUE );
 	return NULL;
@@ -1532,11 +1534,13 @@ compareEnumNameValuePairs(const void *s1, const void *s2)
 static ALCboolean
 getStandardEnumValue(ALCenum *value, const ALCchar *enumName)
 {
-	enumNameValuePair key = { enumName, 0 };
-	enumNameValuePair *p = bsearch(&key, alcEnums,
-				       sizeof(alcEnums) / sizeof(alcEnums[0]),
-				       sizeof(alcEnums[0]),
-				       compareEnumNameValuePairs);
+	enumNameValuePair key;
+	enumNameValuePair *p;
+	key.name = enumName;
+	p = bsearch(&key, alcEnums,
+		    sizeof(alcEnums) / sizeof(alcEnums[0]),
+		    sizeof(alcEnums[0]),
+		    compareEnumNameValuePairs);
 	if (p == NULL) {
 		return ALC_FALSE;
 	}

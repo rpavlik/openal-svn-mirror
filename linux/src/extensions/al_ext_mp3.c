@@ -92,15 +92,15 @@ static void mp3map_update(int i, ALuint offset);
 static void mp3map_remove(ALuint sid);
 
 ALboolean alutLoadMP3_LOKI(ALuint bid, ALvoid *data, ALint size) {
-	static void (*alBufferi)(ALuint, ALenum, ALint) = NULL;
+	static void (*palBufferi_LOKI)(ALuint, ALenum, ALint) = NULL;
 	SMPEG *newMpeg;
 	SDL_AudioSpec spec;
 
-	if(alBufferi == NULL) {
-		alBufferi = (void (*)(ALuint, ALenum, ALint))
-			    alGetProcAddress((ALubyte *) "alBufferi_LOKI");
+	if(palBufferi_LOKI == NULL) {
+		palBufferi_LOKI = (void (*)(ALuint, ALenum, ALint))
+			    alGetProcAddress((const ALchar *) "alBufferi_LOKI");
 
-		if(alBufferi == NULL) {
+		if(palBufferi_LOKI == NULL) {
 			fprintf(stderr, "Need alBufferi_LOKI\n");
 			return AL_FALSE;
 		}
@@ -118,7 +118,7 @@ ALboolean alutLoadMP3_LOKI(ALuint bid, ALvoid *data, ALint size) {
 	_alcDCUnlockContext();
 
 	/* implicitly multichannel */
-	alBufferi( bid, AL_CHANNELS, spec.channels );
+	palBufferi_LOKI( bid, AL_CHANNELS, spec.channels );
 
 	SMPEG_actualSpec( newMpeg, &spec );
 
@@ -181,7 +181,7 @@ ALint MP3_Callback(ALuint sid,
 		SMPEG_play( mpeg );
 	}
 
-	memset( outdata, 0, bytesRequested );
+	memset( outdata, 0, (size_t)bytesRequested );
 
 	bytesPlayed = SMPEG_playAudio( mpeg, (ALubyte *) outdata, bytesRequested );
 	bytesPlayed /= 2;

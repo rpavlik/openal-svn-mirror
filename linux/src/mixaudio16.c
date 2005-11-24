@@ -89,7 +89,7 @@ void MixAudio16_0(UNUSED(ALshort *dst), UNUSED(alMixEntry *entries)) {
 }
 
 void MixAudio16_1(ALshort *dst, alMixEntry *entries) {
-	memcpy(dst, entries->data, entries->bytes);
+	memcpy(dst, entries->data, (size_t)entries->bytes);
 
 	return;
 }

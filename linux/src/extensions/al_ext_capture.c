@@ -88,10 +88,10 @@ ALboolean alCaptureInit_EXT( UNUSED(ALenum format),
 		capture_device = cc->read_device;
 		if ( capture_device == NULL ) {
 			char spec[1024];
-			char *fmt="'( (direction \"read\") (sampling-rate %d))";
+			const char *fmt="'( (direction \"read\") (sampling-rate %d))";
 
 			snprintf(spec, sizeof(spec), fmt, rate);
-			capture_device = alcOpenDevice((ALubyte *)spec);
+			capture_device = alcOpenDevice((ALchar *)spec);
 			if ( capture_device ) {
 				_alcSetContext(NULL, cid, capture_device);
 				_alcDeviceSet(capture_device);
@@ -140,7 +140,7 @@ ALboolean alCaptureStop_EXT( void )
 }
 
 ALsizei alCaptureGetData_EXT( UNUSED(ALvoid* data),
-                              UNUSED(ALsizei n),
+                              ALsizei n,
                               UNUSED(ALenum format),
                               UNUSED(ALuint rate) )
 {
@@ -158,7 +158,7 @@ ALsizei alCaptureGetData_EXT( UNUSED(ALvoid* data),
 	dev = cc->read_device;
 
 	if ( (dev->format == format) && (dev->speed == rate) ) {
-		size = _alcDeviceRead(cid, data, n);
+		size = _alcDeviceRead(cid, data, (ALuint)n);
 	} else {
 		ALuint samples;
 		void *temp;
@@ -171,9 +171,9 @@ ALsizei alCaptureGetData_EXT( UNUSED(ALvoid* data),
 		size *= (_alGetBitsFromFormat(dev->format) / 8);
 
         	if ( n > (ALsizei)size )
-			temp = malloc( n );
+			temp = malloc( (size_t)n );
 		else
-			temp = malloc( size );
+			temp = malloc( (size_t)size );
 
 		if ( size > 0 ) {
 			size = _alcDeviceRead(cid, temp, size);
@@ -188,7 +188,7 @@ ALsizei alCaptureGetData_EXT( UNUSED(ALvoid* data),
 						     AL_TRUE);
 		} else {
 			/* Hmm, zero size in record.. */
-			memset(temp, 0, n);
+			memset(temp, 0, (size_t)n);
 			size = n;
 		}
 		if(temp == NULL) {

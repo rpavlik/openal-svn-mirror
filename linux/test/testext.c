@@ -7,8 +7,8 @@
 
 static ALCcontext *context;
 
-#define BADPROC           "lokitest"
-#define GOODPROC          "alLokiTest"
+#define BADPROC           "BufferDataWithCallback_LOKI"
+#define GOODPROC          "alBufferDataWithCallback_LOKI"
 
 typedef void blah_type( void * );
 

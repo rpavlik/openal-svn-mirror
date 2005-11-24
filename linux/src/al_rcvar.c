@@ -78,12 +78,10 @@ Rcvar rc_cdr(Rcvar symp) {
 }
 
 /*
- * rc_tostr0( Rcvar sym, char *retstr, int len )
- *
  * If sym has type ALRC_STRING, this call populates retstr ( up to len bytes )
  * with the value of the string.
  */
-Rcvar rc_tostr0( Rcvar symp, char *retstr, int len ) {
+Rcvar rc_tostr0( Rcvar symp, char *retstr, size_t len ) {
 	AL_rctree *sym = (AL_rctree *) symp;
 	static AL_rctree retval;
 
@@ -111,12 +109,10 @@ Rcvar rc_tostr0( Rcvar symp, char *retstr, int len ) {
 }
 
 /*
- * rc_symtostr0( Rcvar sym, char *retstr, int len )
- *
  * If sym has type ALRC_SYMBOL, this call populates retstr ( up to len bytes )
  * with the name of the symbol.
  */
-Rcvar rc_symtostr0( Rcvar symp, char *retstr, int len ) {
+Rcvar rc_symtostr0( Rcvar symp, char *retstr, size_t len ) {
 	AL_rctree *sym = (AL_rctree *) symp;
 	static AL_rctree retval;
 

@@ -28,18 +28,22 @@ REDUNDANT_DECLS_WARN=yes       # warnings about redudant decls
 SHADOW_WARN=yes                # warn about shadow variables
 BROKEN_PTHREAD_FLAG=no         # BSD use -pthread, not -lpthread
 NO_PTHREAD_FLAG=no
-SHOULD_USE_WERROR=no           # turn warnings into errors
 
-# warns
-WFLAGS="-Wall -W -Wbad-function-cast -Wcast-qual -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wimplicit-function-declaration -Waggregate-return -Winline -Wpointer-arith -fno-common"
+# Checks for library functions.
+AC_CHECK_LIBM
+AC_SUBST([LIBM])
 
-# werror stuff
+# There are some warnings which are note enabled (yet):
+#    -Wpadded: Perhaps good for optimizing out data layout, but not in general
+#    -Wfloat-equal: Often we should use an epsilon, but there are some correct uses, too
+WFLAGS="-Wall -pedantic -W -Waggregate-return -Wbad-function-cast -Wcast-align -Wcast-qual -Wconversion -Wdisabled-optimization -Wendif-labels -Winline -Wlong-long -Wmissing-declarations -Wmissing-noreturn -Wmissing-prototypes -Wnested-externs -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wsign-compare -Wstrict-prototypes -Wwrite-strings"
+
+# -Werror stuff
 AC_ARG_ENABLE([werror],
 [AS_HELP_STRING([--enable-werror],
-                [enable fail on all warnings @<:@default=no@:>@])])
-
+                [enable failure on all warnings @<:@default=no@:>@])])
 if test "x$enable_werror" = xyes; then
-  SHOULD_USE_WERROR=yes
+  WFLAGS="$WFLAGS -Werror -pedantic-errors"
 fi
 
 # profile stuff
@@ -99,16 +103,15 @@ fi
 AC_C_BIGENDIAN
 
 dnl library stuff
-dnl I'm afraid we need libm
 case "$target" in
     *darwin*)
     RANLIB=ranlib
-    AC_CHECK_LIB([m], [sin], [LIBS="$LIBS -lm"], [echo "don't need libm..."]) ;;
+    ;;
     *)
     RANLIB=echo
     dnl Should be allow dlopen of extensions?
     AC_CHECK_LIB([dl], [dlopen], [LIBS="$LIBS -ldl"], [AC_DEFINE([NODLOPEN], [1], [undocumented]) echo "Can't dlopen extensions."])
-    AC_CHECK_LIB([m], [sin], [LIBS="$LIBS -lm"], [echo "I'm afraid you'll need libm."; exit 1]) ;;
+    ;;
 esac
 
 dnl Special OS objs for target systems
@@ -157,7 +160,6 @@ case "$target" in
     NO_PTHREAD_FLAG=yes
     LIBS="$LIBS -I/System/Library/Frameworks/CoreAudio.framework/Headers/ -framework CoreAudio"
     AC_DEFINE([DARWIN_TARGET], [1], [undocumented])
-    SHOULD_USE_WERROR=no
     OS_OBJS="\$(DARWIN_OBJS)" ;;
     *morphos*)
     AC_DEFINE([MORPHOS_TARGET], [1], [undocumented])
@@ -680,21 +682,6 @@ AC_ARG_ENABLE([capture],
 
 if test "x$enable_capture" = xyes; then
   AC_DEFINE([CAPTURE_SUPPORT], [1], [undocumented])
-fi
-
-# Warning flags
-#   This is where we prune down warnings based on the limitations of
-#   the platform or included headers.
-
-if test -n "$HAVESDL"; then
-  # If we don't have SDL, we can use -ansi for gcc.  If we do, SDL
-  # uses long long which is bad mojo
-  SHOULD_USE_WERROR=no
-fi
-
-# Should we use turn warnings into errors?
-if test "x$SHOULD_USE_WERROR" = xyes; then
-  WFLAGS="$WFLAGS -Werror -pedantic-errors"
 fi
 
 # if we are forced to live with redundant decls, turn off those errors

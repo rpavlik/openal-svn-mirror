@@ -99,9 +99,11 @@ typedef struct {
 } AL_shortparam;
 
 
+typedef void (*AL_funcPtr)(void);
+
 typedef struct _AL_extension {
 	const ALubyte *name;
-	void *addr;
+	AL_funcPtr addr;
 } AL_extension;
 
 /* internal use destruction callbacks */

@@ -37,7 +37,6 @@ ALCdevice *alcOpenDevice( const ALchar *deviceSpecifier ) {
 	Rcvar freq_sym = NULL;
 	Rcvar speakers = NULL;
 	UNUSED(Rcvar devices) = NULL;
-	int i;
 
 	if( num_devices == 0 ) {
 		/* first initialization */
@@ -108,16 +107,17 @@ ALCdevice *alcOpenDevice( const ALchar *deviceSpecifier ) {
 	/* copy specifier */
 	if(deviceSpecifier)
 	{
-		i = strlen((const char *) deviceSpecifier);
-		retval->specifier = malloc(i+1);
+		size_t len;
+		len = strlen((const char *) deviceSpecifier);
+		retval->specifier = malloc(len+1);
 		if(retval->specifier == NULL)
 		{
 			free(retval);
 			return NULL;
 		}
 
-		memcpy(retval->specifier, deviceSpecifier, i);
-		retval->specifier[i] = '\0';
+		memcpy(retval->specifier, deviceSpecifier, len);
+		retval->specifier[len] = '\0';
 	}
 	else
 	{
@@ -147,15 +147,18 @@ ALCdevice *alcOpenDevice( const ALchar *deviceSpecifier ) {
 	}
 
 	if( speakers != NULL ) {
-		ALenum fmt;
-
 		switch(rc_type( speakers )) {
 			case ALRC_INTEGER:
 			case ALRC_FLOAT:
-				fmt = _al_formatscale( retval->format,
-						       rc_toint( speakers ) );
-				if ( fmt >= 0 )
-					retval->format = fmt;
+				{
+					ALint s = rc_toint( speakers );
+					if (s >= 0) {
+						ALenum fmt = _al_formatscale( retval->format, (ALuint)s );
+						if ( fmt >= 0 ) {
+							retval->format = fmt;
+						}
+					}
+				}
 				break;
 			default:
 				break;

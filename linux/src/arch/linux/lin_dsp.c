@@ -46,7 +46,7 @@
 #define DONTCARE ( 8 << 16)
 
 /* convert an alc channel to a linux dsp channel */
-static int alcChannel_to_dsp_channel(ALuint alcc);
+static int alcChannel_to_dsp_channel(ALCenum alcc);
 
 /* /dev/dsp variables */
 static fd_set dsp_fd_set;
@@ -174,11 +174,11 @@ void *grab_write_native(void)
 	const char *writepath = NULL;
 	int divisor = DONTCARE | _alSpot( _ALC_DEF_BUFSIZ );
 	const char *tried_paths[] = {
-		lin_getwritepath(),
+		"",
 		"/dev/sound/dsp",
 		"/dev/dsp"
 	};
-
+	tried_paths[0] = lin_getwritepath();
 	write_fd = try_to_open(tried_paths, 3, &writepath, O_WRONLY | O_NONBLOCK);
 	if(write_fd < 0) {
 		perror("open /dev/[sound/]dsp");
@@ -293,15 +293,14 @@ void release_native(void *handle) {
 	return;
 }
 
-float get_nativechannel(UNUSED(void *handle), ALCenum channel) {
-	int retval = 0;
-
-	channel = alcChannel_to_dsp_channel(channel);
-
-	if(ioctl(mixer_fd, MIXER_READ(channel), &retval) < 0) {
+float
+get_nativechannel(UNUSED(void *handle), ALCenum channel)
+{
+	int request = alcChannel_to_dsp_channel(channel);
+	int retval;
+	if(ioctl(mixer_fd, MIXER_READ(request), &retval) < 0) {
 		return -1;
 	}
-
 	return (retval >> 8) / 100.0;
 }
 
@@ -317,15 +316,14 @@ float get_nativechannel(UNUSED(void *handle), ALCenum channel) {
  * Kludgey, and obviously not the right way to do this
  */
 int set_nativechannel(UNUSED(void *handle), ALCenum channel, float volume) {
+	int request = alcChannel_to_dsp_channel(channel);
 	int unnormalizedvolume;
 
 	unnormalizedvolume = volume * 100;
 	unnormalizedvolume <<= 8;
 	unnormalizedvolume += (volume * 100);
 
-	channel = alcChannel_to_dsp_channel(channel);
-
-	if(ioctl(mixer_fd, MIXER_WRITE(channel), &unnormalizedvolume) < 0) {
+	if(ioctl(mixer_fd, MIXER_WRITE(request), &unnormalizedvolume) < 0) {
 		return -1;
 	}
 
@@ -333,7 +331,7 @@ int set_nativechannel(UNUSED(void *handle), ALCenum channel, float volume) {
 }
 
 /* convert the mixer channel from ALC to /dev/mixer format */
-static int alcChannel_to_dsp_channel(ALuint alcc) {
+static int alcChannel_to_dsp_channel(ALCenum alcc) {
 	switch(alcc) {
 		case ALC_CHAN_MAIN_LOKI: return SOUND_MIXER_VOLUME;
 		case ALC_CHAN_CD_LOKI:   return SOUND_MIXER_CD;
@@ -455,11 +453,11 @@ static int aquire_read(void) {
 	const char *readpath = NULL;
 	int divisor = _alSpot(_ALC_DEF_BUFSIZ) | (1<<16);
 	const char *tried_paths[] = {
-		lin_getreadpath(),
+		"",
 		"/dev/sound/dsp",
 		"/dev/dsp"
 	};
-
+	tried_paths[0] = lin_getreadpath();
 	read_fd = try_to_open(tried_paths, 3, &readpath, O_RDONLY | O_NONBLOCK);
 	if(read_fd >= 0) {
 #if 0 /* Reads should be non-blocking */

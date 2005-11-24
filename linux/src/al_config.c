@@ -154,15 +154,6 @@ static ALboolean is_lispchar( int ch );
 static ALboolean is_whitespace( int ch );
 
 /*
- * is_floatWS( const char *foo, int offset, int len )
- *
- * Returns AL_TRUE if foo[offset...] describes a float.  Instead of simply
- * being limited to the NUL character, any form of whitespace or moving into
- * foo[len] is also a terminating condition.
- */
-static int is_floatWS( const char *foo, int offset, int len );
-
-/*
  * AL_rctree_copy( AL_rctree *src )
  *
  * Returns a copy of src, including car and cdr sections.
@@ -256,7 +247,7 @@ static AL_rctree *quote_prim( AL_rctree *env, AL_rctree *args );
 
 /* symbols to be defined as primitives */
 static struct _global_table {
-	char *symname;
+	const char *symname;
 	alrc_prim datum;
 } global_primitive_table[] = {
 	{ "and",             and_prim      },
@@ -508,15 +499,13 @@ static ALboolean is_whitespace( int ch ) {
 }
 
 /*
- * is_floatWS( const char *foo, int offset, int len )
- *
  * Returns AL_TRUE if foo[offset...] describes a float.  Instead of simply
  * being limited to the NUL character, any form of whitespace or moving into
  * foo[len] is also a terminating condition.
  */
-static int is_floatWS( const char *foo, int offset, int len ) {
+static int is_floatWS( const char *foo, ALuint offset, size_t len ) {
 	int decimalPoints = 0;
-	int i = offset;
+	ALuint i = offset;
 
 	if ( offset >= len ) {
 		return -1;
@@ -780,7 +769,7 @@ static AL_rctree *load_ext_prim(UNUSED(AL_rctree *env), AL_rctree *args) {
 	AL_rctree *retval;
 	static char fname[128]; /* FIXME */
 	char *symname;
-	int len;
+	size_t len;
 
 	if(args->type != ALRC_STRING) {
 		_alDebug(ALD_CONFIG, __FILE__, __LINE__,
@@ -1344,7 +1333,7 @@ static int getTokenStr( const char *data, char *outp,
 	int start  = 0;
 	int end    = 0;
 	int tokenlen = 0;
-	int retlen = 0;
+	size_t retlen = 0;
 
 	while(is_whitespace(data[offset]) && (offset < size)) {
 		offset++;

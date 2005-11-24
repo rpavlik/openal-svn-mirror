@@ -1555,7 +1555,10 @@ alBufferf( ALuint bid, ALenum param, ALfloat value )
 void
 alBuffer3f( ALuint bid, ALenum param, ALfloat value1, ALfloat value2, ALfloat value3 )
 {
-	ALfloat values[3] = { value1, value2, value3 };
+	ALfloat values[3];
+	values[0] = value1;
+	values[1] = value2;
+	values[2] = value3;
 	setBufferAttributef(bid, param, values, 3);
 }
 
@@ -1574,7 +1577,10 @@ alBufferi( ALuint bid, ALenum param, ALint value )
 void
 alBuffer3i( ALuint bid, ALenum param, ALint value1, ALint value2, ALint value3 )
 {
-	ALint values[3] = { value1, value2, value3 };
+	ALint values[3];
+	values[0] = value1;
+	values[1] = value2;
+	values[2] = value3;
 	setBufferAttributei(bid, param, values, 3);
 }
 
