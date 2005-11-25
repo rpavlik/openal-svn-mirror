@@ -1,3 +1,10 @@
+2005-11-25  Prakash Punnoor <prakash@punnoor.de>
+
+	* CMakeLists.txt:minor clean-up
+	
+	* README: typos...
+	
+
 2005-11-24  Sven Panne  <sven.panne@aedion.de>
 
 	* configure.ac, src/al_buffer.c, src/al_config.c, src/al_ext.c,

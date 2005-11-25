@@ -128,7 +128,7 @@ Some Tips:
 
 - You can use a console GUI named ccmake for configuring cmake.
   This also comes in handy, to find out about available options.
-  It also takes some parameters as cmake as such does, so eg:
+  You can also set options via command-line:
 
 ccmake .. -DCMAKE_INSTALL_PREFIX:STRING="/usr" -DCMAKE_C_FLAGS:STRING="-march=athlon-xp -O2"
 
@@ -147,13 +147,13 @@ make VERBOSE=1
 make install DESTDIR=/foo/bar
 
 - CMake doesn't has a distclean target by default, so you better
-  really do an out of tree build, then you can simple delete its
+  really do an out-of-tree build, then you can simply delete its
   content when you want a distclean... Furthermore it is easier
-  to have differnt build using different parameters via out of
+  to have different builds using different parameters via out-of-
   tree builds.
 
 - If you are interested in variables to set, take a look into
-  CMakeCache.txt.
+  CMakeCache.txt after having run the configuring stage.
 
 
 Cheers,

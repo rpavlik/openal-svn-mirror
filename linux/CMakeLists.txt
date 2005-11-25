@@ -367,7 +367,6 @@ IF(CMAKE_SYSTEM MATCHES "Darwin")
   SET(ADD_LIBS "${ADD_LIBS} -I/System/Library/Frameworks/CoreAudio.framework/Headers/ -framework CoreAudio")
   SET(BROKEN_PTHREAD_FLAG ON)
   SET(NO_PTHREAD_FLAG ON)
-  SET(USE_WERROR OFF)
 ELSE(CMAKE_SYSTEM MATCHES "Darwin")
 
 IF(CMAKE_SYSTEM MATCHES "morphos")
@@ -564,12 +563,6 @@ IF(SMPEG)
     SET(SDL OFF)
   ENDIF(SDL)
 ENDIF(SMPEG)
-
-IF(SDL)
-  # If we don't have SDL, we can use -ansi for gcc.  If we do, SDL
-  # uses long long which is bad mojo
-  SET(USE_WERROR OFF)
-ENDIF(SDL)
 
 
 # enable capture support?
