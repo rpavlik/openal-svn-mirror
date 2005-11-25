@@ -141,6 +141,7 @@ SET(BROKEN_PTHREAD_FLAG OFF)       # BSD uses -pthread, not -lpthread
 SET(NO_PTHREAD_FLAG OFF)
 
 SET(ADD_CFLAGS "")
+SET(ADD_LIBS "")
 SET(ADD_LDFLAGS "")
 SET(WFLAGS "")
 
@@ -207,7 +208,7 @@ ENDIF(EMPTY_LOCKS)
 IF(DEBUG)
   ADD_DEFINE(DEBUG)
   OPTION(USE_WERROR      "enable fail on all warning"   OFF)
-  OPTION(OPT_EFENCE      "enable efence support"        OFF)
+  OPTION(EFENCE          "enable efence support"        OFF)
   OPTION(DEBUG_MAXIMUS   "enable all debugging"         OFF)
   OPTION(DEBUG_STUB      "enable stub debugging"        OFF)
   OPTION(DEBUG_LOOP      "enable looping debugging"     OFF)
@@ -225,9 +226,15 @@ IF(DEBUG)
   OPTION(DEBUG_QUEUE     "enable queue debugging"       OFF)
   OPTION(DEBUG_FILTER    "enable filter debugging"      OFF)
 
-  IF(OPT_EFENCE)
-    SET(ADD_LIBS "${ADD_LIBS} -lefence")
-  ENDIF(OPT_EFENCE)
+  IF(EFENCE)
+    FIND_LIBRARY(EFENCE_LIB NAMES efence PATHS /usr/lib /usr/local/lib)
+     IF(EFENCE_LIB MATCHES "NOTFOUND")
+      MESSAGE("Electric Fence not installed - disabled.")
+      SET(EFENCE OFF)
+    ELSE(EFENCE_LIB MATCHES "NOTFOUND")
+      SET(ADD_LIBS ${ADD_LIBS} ${EFENCE_LIB})
+    ENDIF(EFENCE_LIB MATCHES "NOTFOUND")
+  ENDIF(EFENCE)
 
   IF(DEBUG_MAXIMUS)
     ADD_DEFINE(DEBUG_MAXIMUS)
@@ -309,13 +316,13 @@ IF(NOT CMAKE_SYSTEM MATCHES "Darwin")
 ENDIF(NOT CMAKE_SYSTEM MATCHES "Darwin")
 
 IF(HAVE_LIB_DL)
-  SET(ADD_LIBS "${ADD_LIBS} -ldl")
+  SET(ADD_LIBS ${ADD_LIBS} dl)
 ELSE(HAVE_LIB_DL)
   ADD_DEFINE(NODLOPEN)
 ENDIF(HAVE_LIB_DL)
 
 IF(HAVE_LIB_M)
-  SET(ADD_LIBS "${ADD_LIBS} -lm")
+  SET(ADD_LIBS ${ADD_LIBS} m)
 ENDIF(HAVE_LIB_M)
 
 
@@ -346,7 +353,7 @@ IF(CMAKE_SYSTEM MATCHES "IRIX")
   ADD_DEFINE(IRIS_SUPPORT)
   SET(OS_OBJS ${IRIX_OBJS})
   SET(REDUNDANT_DECLS_WARN OFF)
-  SET(ADD_LIBS "${ADD_LIBS} -laudio")
+  SET(ADD_LIBS ${ADD_LIBS} audio)
 ELSE(CMAKE_SYSTEM MATCHES "IRIX")
 
 IF(CMAKE_SYSTEM MATCHES "Windows")
@@ -354,7 +361,7 @@ IF(CMAKE_SYSTEM MATCHES "Windows")
   ADD_DEFINE(AL_BUILD_LIBRARY)
   SET(OS_OBJS ${WINDOWS_OBJS})
   # need that mm library for waveOutOpen etc
-  SET(ADD_LIBS "${ADD_LIBS} -lwinmm")
+  SET(ADD_LIBS ${ADD_LIBS} winmm)
   SET(SHADOW_WARN OFF)
   SET(REDUNDANT_DECLS_WARN OFF)
 
@@ -364,7 +371,8 @@ ELSE(CMAKE_SYSTEM MATCHES "Windows")
 IF(CMAKE_SYSTEM MATCHES "Darwin")
   ADD_DEFINE("DARWIN_TARGET 1")
   SET(OS_OBJS ${DARWIN_OBJS})
-  SET(ADD_LIBS "${ADD_LIBS} -I/System/Library/Frameworks/CoreAudio.framework/Headers/ -framework CoreAudio")
+  #FIXME
+  SET(ADD_LDFLAGS "${ADD_LDFLAGS} -I/System/Library/Frameworks/CoreAudio.framework/Headers/ -framework CoreAudio")
   SET(BROKEN_PTHREAD_FLAG ON)
   SET(NO_PTHREAD_FLAG ON)
 ELSE(CMAKE_SYSTEM MATCHES "Darwin")
@@ -434,7 +442,7 @@ IF(ALSA)
     IF(ALSA_DLOPEN)
       ADD_DEFINE("OPENAL_DLOPEN_ALSA 1")
     ELSE(ALSA_DLOPEN)
-      SET(ADD_LIBS "${ADD_LIBS} -lasound")
+      SET(ADD_LIBS ${ADD_LIBS} asound)
     ENDIF(ALSA_DLOPEN)
   ELSE(FOUND_ALSA)
     MESSAGE("Alsa not found - Alsa support disabled.")
@@ -528,7 +536,7 @@ IF(DSOUND)
   IF(CMAKE_SYSTEM MATCHES "Windows")
     CHECK_INCLUDE_FILE(dsound.h FOUND_DSOUND)
     IF(FOUND_DSOUND)
-      SET(ADD_LIBS "${ADD_LIBS} -ldsound")
+      SET(ADD_LIBS ${ADD_LIBS} dsound)
     ELSE(FOUND_DSOUND)
       MESSAGE("dsound.h not found - DirectSound support disabled.")
       SET(DSOUND OFF)
@@ -539,7 +547,7 @@ ENDIF(DSOUND)
 IF(VORBIS)
   CHECK_LIBRARY_EXISTS("vorbisfile" "ov_info" "" HAVE_VORBISFILE)
   IF(HAVE_VORBISFILE)
-    SET(ADD_LIBS "${ADD_LIBS} -lvorbis -lvorbisfile")
+    SET(ADD_LIBS ${ADD_LIBS} vorbis vorbisfile)
   ELSE(HAVE_VORBISFILE)
     MESSAGE("Vorbisfile not found - Vorbis support disabled.")
     SET(VORBIS OFF)
@@ -709,12 +717,12 @@ TARGET_LINK_LIBRARIES(openal ${ADD_LIBS})
 
 #test-suite
 IF(BUILD_TESTS)
-  FIND_LIBRARY(ALUT NAMES alut PATHS /usr/lib /usr/local/lib)
-  IF(ALUT MATCHES "NOTFOUND")
+  FIND_LIBRARY(ALUT_LIB NAMES alut PATHS /usr/lib /usr/local/lib)
+  IF(ALUT_LIB MATCHES "NOTFOUND")
     MESSAGE("alut not installed, cannot build tests")
-  ELSE(ALUT MATCHES "NOTFOUND")
+  ELSE(ALUT_LIB MATCHES "NOTFOUND")
     ADD_LIBRARY(testlib test/testlib.c)
-    TARGET_LINK_LIBRARIES(testlib ${ADD_LIBS} openal ${ALUT})
+    TARGET_LINK_LIBRARIES(testlib ${ADD_LIBS} openal ${ALUT_LIB})
 
     SET(TESTS reverb
               da
@@ -772,12 +780,12 @@ IF(BUILD_TESTS)
       #gets added at the beginning thus having no effect
       SET_SOURCE_FILES_PROPERTIES(${TEST_SRC} PROPERTIES COMPILE_FLAGS "-Wno-unused")
       ADD_EXECUTABLE(test${TEST} ${TEST_SRC})
-      TARGET_LINK_LIBRARIES(test${TEST} testlib ${ADD_LIBS} openal ${ALUT})
+      TARGET_LINK_LIBRARIES(test${TEST} testlib ${ADD_LIBS} openal ${ALUT_LIB})
     ENDFOREACH(TEST)
 
     SET_SOURCE_FILES_PROPERTIES(test/testcpp.cc PROPERTIES COMPILE_FLAGS "-Wno-unused")
     ADD_EXECUTABLE(testcpp test/testcpp.cc)
-    TARGET_LINK_LIBRARIES(testcpp testlib ${ADD_LIBS} openal ${ALUT})
+    TARGET_LINK_LIBRARIES(testcpp testlib ${ADD_LIBS} openal ${ALUT_LIB})
 
     #copy over testdata, so test-suite can be used in binary dir
     SET(TESTDATA boom.mp3
@@ -791,7 +799,7 @@ IF(BUILD_TESTS)
     FOREACH(TESTDATUM ${TESTDATA})
       CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/test/${TESTDATUM} ${CMAKE_BINARY_DIR}/${TESTDATUM} COPYONLY)
     ENDFOREACH(TESTDATUM)
-  ENDIF(ALUT MATCHES "NOTFOUND")
+  ENDIF(ALUT_LIB MATCHES "NOTFOUND")
 ENDIF(BUILD_TESTS)
 
 
@@ -807,8 +815,8 @@ CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/admin/openal-config.in ${CMAKE_BINARY_DIR}/ad
 
 #info file
 IF(UNIX)
-  FIND_PROGRAM(MAKEINFO NAMES makeinfo)
-  IF(NOT MAKEINFO MATCHES "NOTFOUND")
+  FIND_PROGRAM(MAKEINFO_PRG NAMES makeinfo)
+  IF(NOT MAKEINFO_PRG MATCHES "NOTFOUND")
     IF(NOT EXISTS ${CMAKE_BINARY_DIR}/doc)
       MAKE_DIRECTORY(${CMAKE_BINARY_DIR}/doc)
     ENDIF(NOT EXISTS ${CMAKE_BINARY_DIR}/doc)
@@ -816,12 +824,12 @@ IF(UNIX)
     ADD_CUSTOM_COMMAND(
       OUTPUT    ${CMAKE_BINARY_DIR}/doc/openal.info
       DEPENDS   ${CMAKE_SOURCE_DIR}/doc/openal.texi
-      COMMAND   cd ${CMAKE_BINARY_DIR}/doc && ${MAKEINFO}
+      COMMAND   cd ${CMAKE_BINARY_DIR}/doc && ${MAKEINFO_PRG}
       ARGS      ${CMAKE_SOURCE_DIR}/doc/openal.texi)
 
     ADD_CUSTOM_TARGET(InfoFile ALL echo DEPENDS ${CMAKE_BINARY_DIR}/doc/openal.info)
     INSTALL_FILES(/share/info FILES doc/openal.info)
-  ENDIF(NOT MAKEINFO MATCHES "NOTFOUND")
+  ENDIF(NOT MAKEINFO_PRG MATCHES "NOTFOUND")
 ENDIF(UNIX)
 
 INSTALL_TARGETS(/lib openal)
