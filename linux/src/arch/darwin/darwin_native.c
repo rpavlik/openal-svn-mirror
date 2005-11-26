@@ -409,13 +409,13 @@ void  release_native(void *handle)
 float get_nativechannel(UNUSED(void *handle), UNUSED(ALCenum channel))
 {
     implement_me("float get_nativechannel()");
-    return NULL;
+    return 0;
 }
 
 int   set_nativechannel(UNUSED(void *handle),UNUSED( ALCenum channel),UNUSED( float volume))
 {
     implement_me("int set_nativechannel()");
-    return NULL;
+    return 0;
 }
 
 void pause_nativedevice(void *handle) /* Not tested :-( */
