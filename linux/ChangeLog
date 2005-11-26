@@ -1,9 +1,15 @@
+2005-11-26  Prakash Punnoor <prakash@punnoor.de>
+
+	* CMakeLists.txt: make ASM and CXX detection optional
+	
+	* src/arch/darwin/darwin_native.c: NULL isn't float nor int;
+	Darwin target should now compile using CMake
+
 2005-11-25  Prakash Punnoor <prakash@punnoor.de>
 
-	* CMakeLists.txt:minor clean-up
-	
+	* CMakeLists.txt: minor clean-up
+
 	* README: typos...
-	
 
 2005-11-24  Sven Panne  <sven.panne@aedion.de>
 
