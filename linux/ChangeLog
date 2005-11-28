@@ -1,13 +1,16 @@
 2005-11-28  Sven Panne  <sven.panne@aedion.de>
 
+	* configure.ac, src/Makefile.am: Don't disturb user variables like
+	CFLAGS. Cleaned up some old stuff.
+
 	* src/Makefile.am: Added path to local <AL/alext.h>.
 
 2005-11-26  Prakash Punnoor <prakash@punnoor.de>
 
 	* CMakeLists.txt: make ASM and CXX detection optional
 	
-	* src/arch/darwin/darwin_native.c: NULL isn't float nor int;
-	Darwin target should now compile using CMake
+	* src/arch/darwin/darwin_native.c: NULL isn't float nor int; Darwin
+	target should now compile using CMake
 
 2005-11-25  Prakash Punnoor <prakash@punnoor.de>
 

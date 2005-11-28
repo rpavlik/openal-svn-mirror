@@ -67,14 +67,17 @@ libopenal_la_SOURCES +=			\
 	extensions/al_ext_mp3.c		\
 	extensions/al_ext_vorbis.c
 
-# We use sin and friends, so we might need -lm, autoconf takes care of this.
-libopenal_la_LIBADD = $(LIBM)
-
-# The following libtool flag is neccessary for building DLLs on Windows.
-libopenal_la_LDFLAGS = -no-undefined
-
 # The first path is needed to find <AL/alc.h> and <AL/al.h> and the second one
 # is needed for <AL/alext.h>
 libopenal_la_CPPFLAGS =			\
 	-I$(top_srcdir)/../include	\
 	-I$(top_srcdir)/include
+
+# Add compiler flags.
+libopenal_la_CFLAGS = $(WARNINGCFLAGS) $(OPTIMIZATIONCFLAGS) $(FEATURECFLAGS)
+
+# The -no-undefined flag is neccessary for building DLLs on Windows.
+libopenal_la_LDFLAGS = -no-undefined $(PROFILINGLDFLAGS)
+
+# We use sin and friends, so we might need -lm, autoconf takes care of this.
+libopenal_la_LIBADD = $(LIBM)

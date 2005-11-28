@@ -14,7 +14,7 @@ m4_ifdef([AS_HELP_STRING], [], [AC_DEFUN([AS_HELP_STRING], [AC_HELP_STRING($][@)
 # Checks for programs.
 
 # We need ISO C99 features for e.g. snprintf.
-CFLAGS="-D_ISOC99_SOURCE $CFLAGS"
+FEATURECFLAGS="-D_ISOC99_SOURCE"
 
 AC_PROG_CC
 AC_C_CONST
@@ -24,8 +24,6 @@ AC_PROG_LIBTOOL
 AC_SUBST([LIBTOOL_DEPS])
 AC_PROG_CXX
 
-REDUNDANT_DECLS_WARN=yes       # warnings about redudant decls
-SHADOW_WARN=yes                # warn about shadow variables
 BROKEN_PTHREAD_FLAG=no         # BSD use -pthread, not -lpthread
 NO_PTHREAD_FLAG=no
 
@@ -36,24 +34,15 @@ AC_SUBST([LIBM])
 # There are some warnings which are note enabled (yet):
 #    -Wpadded: Perhaps good for optimizing out data layout, but not in general
 #    -Wfloat-equal: Often we should use an epsilon, but there are some correct uses, too
-WFLAGS="-Wall -pedantic -W -Waggregate-return -Wbad-function-cast -Wcast-align -Wcast-qual -Wconversion -Wdisabled-optimization -Wendif-labels -Winline -Wlong-long -Wmissing-declarations -Wmissing-noreturn -Wmissing-prototypes -Wnested-externs -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wsign-compare -Wstrict-prototypes -Wwrite-strings"
+WARNINGCFLAGS="-Wall -ansi -pedantic -W -Waggregate-return -Wbad-function-cast -Wcast-align -Wcast-qual -Wconversion -Wdisabled-optimization -Wendif-labels -Winline -Wlong-long -Wmissing-declarations -Wmissing-noreturn -Wmissing-prototypes -Wnested-externs -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wsign-compare -Wstrict-prototypes -Wwrite-strings"
 
 # -Werror stuff
 AC_ARG_ENABLE([werror],
 [AS_HELP_STRING([--enable-werror],
                 [enable failure on all warnings @<:@default=no@:>@])])
+
 if test "x$enable_werror" = xyes; then
-  WFLAGS="$WFLAGS -Werror -pedantic-errors"
-fi
-
-# profile stuff
-AC_ARG_ENABLE([profile],
-[AS_HELP_STRING([--enable-profile],
-                [enable profile @<:@default=no@:>@])])
-
-if test "x$enable_profile" = xyes; then
-  CFLAGS="-O2 -fexpensive-optimizations -ffast-math -funroll-loops -funroll-all-loops -g -pg $CFLAGS"
-  LDFLAGS="-g -pg"
+  WARNINGCFLAGS="$WARNINGCFLAGS -Werror"
 fi
 
 # optimization stuff
@@ -63,21 +52,42 @@ AC_ARG_ENABLE([optimization],
 
 if test "x$enable_optimization" = xyes; then
   enable_empty_locks=no
-  CFLAGS="-O6 -fexpensive-optimizations -funroll-all-loops -funroll-loops -fomit-frame-pointer -finline-functions -ffast-math $CFLAGS"
+  OPTIMIZATIONCFLAGS="-fexpensive-optimizations -funroll-all-loops -funroll-loops -finline-functions -ffast-math"
 
-  # add -march
+  # -pg and -fomit-frame-pointer are incompatible
+  if test "x$enable_profile" != xyes; then
+    OPTIMIZATIONCFLAGS="$OPTIMIZATIONCFLAGS -fomit-frame-pointer"
+  fi
+
+  # add architecture-specific optimization flags
   case "$target" in
-    *i386*) CFLAGS="-march=i386 $CFLAGS" ;;
-    *i486*) CFLAGS="-march=i486 $CFLAGS" ;;
-    *i586*) CFLAGS="-march=i586 $CFLAGS" ;;
-    *i686*) CFLAGS="-march=i686 $CFLAGS" ;;
-    mips*)  CFLAGS="-march=mips $CFLAGS" ;;
+    *i386*) OPTIMIZATIONCFLAGS="-march=i386 $OPTIMIZATIONCFLAGS" ;;
+    *i486*) OPTIMIZATIONCFLAGS="-march=i486 $OPTIMIZATIONCFLAGS" ;;
+    *i586*) OPTIMIZATIONCFLAGS="-march=i586 $OPTIMIZATIONCFLAGS" ;;
+    *i686*) OPTIMIZATIONCFLAGS="-march=i686 $OPTIMIZATIONCFLAGS" ;;
+    mips*)  OPTIMIZATIONCFLAGS="-march=mips $OPTIMIZATIONCFLAGS" ;;
   esac
 fi
 
-# keep CFLAGS variable if set, otherwise set it to just debug
-if test -z "$CFLAGS"; then
-  CFLAGS="-g -O2"
+# profiling stuff
+AC_ARG_ENABLE([profile],
+[AS_HELP_STRING([--enable-profile],
+                [enable profile @<:@default=no@:>@])])
+
+if test "x$enable_profile" = xyes; then
+  OPTIMIZATIONCFLAGS="$OPTIMIZATIONCFLAGS -pg"
+  PROFILINGLDFLAGS="$LDFLAGS -pg"
+fi
+
+# debugging stuff
+AC_ARG_ENABLE([debug],
+[AS_HELP_STRING([--enable-debug],
+                [enable debug code and assertions @<:@default=no@:>@])])
+
+if test "x$enable_debug" = xyes; then
+  AC_DEFINE([DEBUG], [1], [Define to 1 if you want to include debugging code.])
+else
+  AC_DEFINE([NDEBUG], [1], [Define to 1 if you want to disable the assert() macro.])
 fi
 
 # no mutex locking for sync. driver
@@ -87,17 +97,6 @@ AC_ARG_ENABLE([empty-locks],
 
 if test "x$enable_empty_locks" = xyes; then
   AC_DEFINE([EMPTY_LOCKS], [1], [undocumented])
-fi
-
-# debug stuff
-AC_ARG_ENABLE([debug],
-[AS_HELP_STRING([--enable-debug],
-                [enable debug @<:@default=no@:>@])])
-
-if test "x$enable_debug" = xyes; then
-  AC_DEFINE([DEBUG], [1], [Define to 1 if you want to include debugging code.])
-else
-  AC_DEFINE([NDEBUG], [1], [Define to 1 if you want to disable the assert() macro.])
 fi
 
 AC_C_BIGENDIAN
@@ -125,7 +124,6 @@ case "$target" in
 	*)
         ;;
     esac
-    WFLAGS="$WFLAGS -ansi"
     AC_DEFINE([LINUX_TARGET], [1], [undocumented])
     OS_OBJS="\$(LIN_OBJS)"
     ;;
@@ -137,20 +135,16 @@ case "$target" in
     *solaris*)
     AC_DEFINE([SOLARIS_TARGET], [1], [undocumented])
     OS_OBJS="\$(SOLARIS_OBJS)"
-    REDUNDANT_DECLS_WARN=no
     ;;
     *irix*)
     AC_DEFINE([IRIX_TARGET], [1], [undocumented])
     OS_OBJS="\$(IRIS_OBJS)"
-    REDUNDANT_DECLS_WARN=no
     ;;
     *cygwin*|*mingw*)
     AC_DEFINE([WINDOWS_TARGET], [1], [undocumented])
-    CFLAGS="-DAL_BUILD_LIBRARY $CFLAGS"
+    FEATURECFLAGS="-DAL_BUILD_LIBRARY $FEATURECFLAGS"
     OS_OBJS="\$(WINDOWS_OBJS)"
     LIBS="$LIBS -lwinmm"         # need that mm library for waveOutOpen etc
-    SHADOW_WARN=no
-    REDUNDANT_DECLS_WARN=no
     ;;
     *darwin*)
     # I think darwin can use dlopen with fink, but
@@ -164,7 +158,6 @@ case "$target" in
     *morphos*)
     AC_DEFINE([MORPHOS_TARGET], [1], [undocumented])
     OS_OBJS="\$(MORPHOS_OBJS)"
-    REDUNDANT_DECLS_WARN=no
     ;;
     *)
     OS_OBJS="\$(LIN_OBJS)"
@@ -470,9 +463,7 @@ AC_ARG_ENABLE([alsa],
 if test "x$enable_alsa" = xyes; then
     AC_CHECK_HEADERS([time.h])
     AC_CHECK_HEADER([alsa/asoundlib.h],
-      [SHADOW_WARN=no
-       REDUNDANT_DECLS_WARN=no
-       AC_DEFINE([ALSA_SUPPORT], [1], [undocumented])
+      [AC_DEFINE([ALSA_SUPPORT], [1], [undocumented])
        OS_OBJS="$OS_OBJS \$(ALSA_OBJS)"],
       [enable_alsa=no],
       [#if HAVE_TIME_H
@@ -505,10 +496,10 @@ AC_ARG_ENABLE([arts-dlopen],
 if test "x$enable_arts" = xyes; then
   AC_PATH_PROG([HAVEARTS], [artsc-config], [], [$PATH])
   if test -n "$HAVEARTS"; then
-    ARTS_CFLAGS=`$HAVEARTS --cflags`
+    ARTS_FEATURECFLAGS=`$HAVEARTS --cflags`
     ARTS_LIBS=`$HAVEARTS --libs`
     AC_DEFINE(ARTS_SUPPORT, [1], [undocumented])
-    CFLAGS="$CFLAGS $ARTS_CFLAGS"
+    FEATURECFLAGS="$FEATURECFLAGS $ARTS_FEATURECFLAGS"
     OS_OBJS="$OS_OBJS \$(ARTS_OBJS)"
     if test "x$enable_arts_dlopen" = xyes; then
       AC_DEFINE([OPENAL_DLOPEN_ARTS], [1], [undocumented])
@@ -533,13 +524,11 @@ AC_ARG_ENABLE([esd-dlopen],
 if test "x$enable_esd" = xyes; then
   AC_PATH_PROG([HAVEESD], [esd-config], [], [$PATH])
   if test -n "$HAVEESD"; then
-    ESD_CFLAGS=`$HAVEESD --cflags`
+    ESD_FEATURECFLAGS=`$HAVEESD --cflags`
     ESD_LIBS=`$HAVEESD --libs`
     AC_DEFINE(ESD_SUPPORT, [1], [undocumented])
-    CFLAGS="$CFLAGS $ESD_CFLAGS"
+    FEATURECFLAGS="$FEATURECFLAGS $ESD_FEATURECFLAGS"
     OS_OBJS="$OS_OBJS \$(ESD_OBJS)"
-    # bad audiofile.h!  bad!
-    SHADOW_WARN=no
     if test "x$enable_esd_dlopen" = xyes; then
       AC_DEFINE([OPENAL_DLOPEN_ESD], [1], [undocumented])
     else
@@ -581,9 +570,9 @@ if test "x$enable_sdl" = xyes; then
   case "$target" in
     *cygwin*)
       HAVESDL=1
-      SDL_CFLAGS="-I/cygwin/usr/include/SDL"
+      SDL_FEATURECFLAGS="-I/cygwin/usr/include/SDL"
       SDL_LIBS=""
-      CFLAGS="$CFLAGS $SDL_CFLAGS"
+      FEATURECFLAGS="$FEATURECFLAGS $SDL_FEATURECFLAGS"
       LIBS="$LIBS $SDL_LIBS"
       OS_OBJS="$OS_OBJS \$(SDL_OBJS)"
       AC_DEFINE([SDL_SUPPORT], [1], [undocumented])
@@ -592,10 +581,10 @@ if test "x$enable_sdl" = xyes; then
     *)
       AC_PATH_PROG([HAVESDL], [sdl-config], [], [$PATH])
       if test -n "$HAVESDL"; then
-        SDL_CFLAGS=`$HAVESDL --cflags`
+        SDL_FEATURECFLAGS=`$HAVESDL --cflags`
         SDL_LIBS=`$HAVESDL --libs`
         AC_DEFINE([SDL_SUPPORT], [1], [undocumented])
-        CFLAGS="$CFLAGS $SDL_CFLAGS"
+        FEATURECFLAGS="$FEATURECFLAGS $SDL_FEATURECFLAGS"
         LIBS="$LIBS $SDL_LIBS"
         OLDCPPFLAGS="$CPPFLAGS"
         CPPFLAGS="-I/usr/local/include/SDL -I/usr/local/include"
@@ -651,10 +640,10 @@ if test "x$enable_smpeg" = xyes; then
     if test -z "$HAVESDL"; then
       AC_PATH_PROG([HAVESDL], [sdl-config], [], [$PATH])
       if test -n "$HAVESDL"; then
-              SDL_CFLAGS=`$HAVESDL --cflags`
+              SDL_FEATURECFLAGS=`$HAVESDL --cflags`
               SDL_LIBS=`$HAVESDL --libs`
               AC_DEFINE([SDL_SUPPORT], [1], [undocumented])
-              CFLAGS="$CFLAGS $SDL_CFLAGS"
+              FEATURECFLAGS="$FEATURECFLAGS $SDL_FEATURECFLAGS"
               LIBS="$LIBS $SDL_LIBS"
               OLDCPPFLAGS="$CPPFLAGS"
               CPPFLAGS="-I/usr/local/include/SDL -I/usr/local/include"
@@ -662,10 +651,10 @@ if test "x$enable_smpeg" = xyes; then
       fi
     fi
     if test -n "$HAVESDL"; then
-      SMPEG_CFLAGS=`$HAVESMPEG --cflags`
+      SMPEG_FEATURECFLAGS=`$HAVESMPEG --cflags`
       SMPEG_LIBS=`$HAVESMPEG --libs`
       AC_DEFINE([SMPEG_SUPPORT], [1], [undocumented])
-      CFLAGS="$CFLAGS $SMPEG_CFLAGS"
+      FEATURECFLAGS="$FEATURECFLAGS $SMPEG_FEATURECFLAGS"
       LIBS="$LIBS $SMPEG_LIBS"
     else
       AC_MSG_WARN([smpeg requires SDL, and none found.])
@@ -684,34 +673,20 @@ if test "x$enable_capture" = xyes; then
   AC_DEFINE([CAPTURE_SUPPORT], [1], [undocumented])
 fi
 
-# if we are forced to live with redundant decls, turn off those errors
-if test "x$REDUNDANT_DECLS_WARN" = xno; then
-  WFLAGS="$WFLAGS -Wno-redundant-decls"
-else
-  WFLAGS="$WFLAGS -Wredundant-decls"
-fi
-
-# Stupid audiofile headers
-if test "x$SHADOW_WARN" = xyes; then
-  WFLAGS="-Wshadow $WFLAGS"
-fi
-
-# add warnings to CFALGS
-CFLAGS="$WFLAGS $CFLAGS"
-
 AC_DEFINE([LINUX_AL], [1], [undocumented])
 
 AC_SUBST([ARCH_INCLUDES])
 AC_SUBST([ARCH_OBJS])
-AC_SUBST([CC])
-AC_SUBST([CFLAGS])
-AC_SUBST([LDFLAGS])
+AC_SUBST([FEATURECFLAGS])
 AC_SUBST([LIBS])
 AC_SUBST([NASM])
 AC_SUBST([NASM_FORMAT])
+AC_SUBST([OPTIMIZATIONCFLAGS])
 AC_SUBST([OS_OBJS])
+AC_SUBST([PROFILINGLDFLAGS])
 AC_SUBST([RANLIB])
 AC_SUBST([SIZEOF_VOID_P])
+AC_SUBST([WARNINGCFLAGS])
 
 # Generate output.
 AC_CONFIG_FILES([Makefile
@@ -724,4 +699,3 @@ AC_CONFIG_FILES([Makefile
 
 AC_CONFIG_COMMANDS([default], [chmod +x admin/openal-config])
 AC_OUTPUT
-
