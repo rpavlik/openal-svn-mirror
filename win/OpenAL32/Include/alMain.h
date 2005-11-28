@@ -18,6 +18,8 @@
 
 #define NUMWAVEBUFFERS	4
 
+#define SWMIXER_OUTPUT_RATE		44100
+
 #define AL_FORMAT_MONO_IMA4                      0x1300
 #define AL_FORMAT_STEREO_IMA4                    0x1301
 
