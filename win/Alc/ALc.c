@@ -42,8 +42,8 @@
 // DEFINITIONS
 
 #define SPEEDOFSOUNDMETRESPERSEC	(343.3f)
-#define MAX_NUM_SOURCES			64
-#define OUTPUT_BUFFER_SIZE		32768
+#define MAX_NUM_SOURCES				64
+#define OUTPUT_BUFFER_SIZE			(32768*SWMIXER_OUTPUT_RATE/22050)
 
 #define	TIMERINTERVAL	50
 
@@ -998,7 +998,7 @@ ALCAPI ALCvoid ALCAPIENTRY alcGetIntegerv(ALCdevice *device,ALCenum param,ALsize
 							if (device->lpDS3DListener)
 								data[1] = 44100;
 							else
-								data[1] = 22050;
+								data[1] = SWMIXER_OUTPUT_RATE;
 
 							data[2] = ALC_REFRESH;
 							if (device->lpDS3DListener)
@@ -1409,7 +1409,7 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(const ALCchar *deviceName)
 		device->bInUse=AL_TRUE;
 		device->bIsCaptureDevice=AL_FALSE;
 		//Set output format
-		device->Frequency=22050;
+		device->Frequency=SWMIXER_OUTPUT_RATE;
 		device->Channels=2;
 		device->Format=AL_FORMAT_STEREO16;
 		//Wave-Out properties
@@ -2630,39 +2630,49 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 				{
 					if (ALSource->CurrentState != AL_STOPPED)
 					{
-						ALSource->CurrentState = AL_STOPPED;
-
-						// Lock as much of buffer as possible, and fill with silence 
-						// So that the DSBuffer does not need to be stopped
-						IDirectSoundBuffer_GetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, &PlayCursor, &WriteCursor);
-						
-						if (PlayCursor > WriteCursor)
-							DataToCopy = PlayCursor - WriteCursor;
-						else
-							DataToCopy = ((88200 - WriteCursor) + PlayCursor);
-
-						if (SUCCEEDED(IDirectSoundBuffer_Lock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,WriteCursor,DataToCopy,&lpPart1,&Part1Size,&lpPart2,&Part2Size,0)))
+						if (ALSource->CurrentState == AL_PAUSED)
 						{
-							if (lpPart1)
-							{
-								memset(lpPart1, 0, Part1Size);
-								ALSource->OldWriteCursor += Part1Size;
-							}
-							
-							if (lpPart2)
-							{
-								memset(lpPart2, 0, Part2Size);
-								ALSource->OldWriteCursor += Part2Size;
-							}
-
-							// Update Old Play and Old Write Cursors
-							if (ALSource->OldWriteCursor >= 88200)
-								ALSource->OldWriteCursor -= 88200;
-							
-							ALSource->OldPlayCursor = PlayCursor;
-
-							IDirectSoundBuffer_Unlock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, lpPart1, Part1Size, lpPart2, Part2Size);
+							// DSBuffer is already stopped, so just re-set position to 0
+							IDirectSoundBuffer_SetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, 0);
+							ALSource->OldWriteCursor = 0;
+							ALSource->OldPlayCursor = 0;
 						}
+						else
+						{
+							// Lock as much of buffer as possible, and fill with silence 
+							// So that the DSBuffer does not need to be stopped
+							IDirectSoundBuffer_GetCurrentPosition((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, &PlayCursor, &WriteCursor);
+							
+							if (PlayCursor > WriteCursor)
+								DataToCopy = PlayCursor - WriteCursor;
+							else
+								DataToCopy = ((88200 - WriteCursor) + PlayCursor);
+
+							if (SUCCEEDED(IDirectSoundBuffer_Lock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1,WriteCursor,DataToCopy,&lpPart1,&Part1Size,&lpPart2,&Part2Size,0)))
+							{
+								if (lpPart1)
+								{
+									memset(lpPart1, 0, Part1Size);
+									ALSource->OldWriteCursor += Part1Size;
+								}
+								
+								if (lpPart2)
+								{
+									memset(lpPart2, 0, Part2Size);
+									ALSource->OldWriteCursor += Part2Size;
+								}
+
+								// Update Old Play and Old Write Cursors
+								if (ALSource->OldWriteCursor >= 88200)
+									ALSource->OldWriteCursor -= 88200;
+								
+								ALSource->OldPlayCursor = PlayCursor;
+
+								IDirectSoundBuffer_Unlock((LPDIRECTSOUNDBUFFER)ALSource->uservalue1, lpPart1, Part1Size, lpPart2, Part2Size);
+							}
+						}
+
+						ALSource->CurrentState = AL_STOPPED;
 
 						// Mark all buffers in queue as PROCESSED
 						ALSource->BuffersProcessed = ALSource->BuffersInQueue;
@@ -2801,7 +2811,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 	{
 		bServiceNow = AL_FALSE;
 
-		if ((ALSource->uservalue1) && (ALSource->state == AL_PLAYING))
+		if ((ALSource->uservalue1) && ((ALSource->state == AL_PLAYING) || (ALSource->state == AL_PAUSED)))
 		{
 			// Some buffer(s) have been added to the queue
 
