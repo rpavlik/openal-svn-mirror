@@ -1,3 +1,7 @@
+2005-11-28  Sven Panne  <sven.panne@aedion.de>
+
+	* src/Makefile.am: Added path to local <AL/alext.h>.
+
 2005-11-26  Prakash Punnoor <prakash@punnoor.de>
 
 	* CMakeLists.txt: make ASM and CXX detection optional
