@@ -1,5 +1,5 @@
 #
-# spec file for package openal (Version 20051027)
+# spec file for package openal (Version 20051128)
 #
 # Copyright (c) 2005 SUSE LINUX Products GmbH, Nuernberg, Germany.
 # This file and all modifications and additions to the pristine
@@ -9,15 +9,15 @@
 #
 
 # norootforbuild
-# neededforbuild  SDL-devel-packages alsa alsa-devel arts arts-devel audiofile esound esound-devel gcc-c++ glib2 glib2-devel gpp libgpp libogg libogg-devel libvorbis libvorbis-devel smpeg smpeg-devel x-devel-packages
+# neededforbuild SDL SDL-devel aalib aalib-devel alsa alsa-devel arts arts-devel audiofile esound esound-devel glib2 glib2-devel libogg libogg-devel libstdc++-devel libvorbis libvorbis-devel pkgconfig resmgr slang smpeg smpeg-devel xorg-x11-libs
 
-BuildRequires: aaa_base acl attr bash bind-utils bison bzip2 coreutils cpio cpp cracklib cvs cyrus-sasl db devs diffutils e2fsprogs file filesystem fillup findutils flex gawk gdbm-devel glibc glibc-devel glibc-locale gpm grep groff gzip info insserv klogd less libacl libattr libgcc libnscd libselinux libstdc++ libxcrypt libzio m4 make man mktemp module-init-tools ncurses ncurses-devel net-tools netcfg openldap2-client openssl pam pam-modules patch permissions popt procinfo procps psmisc pwdutils rcs readline sed strace syslogd sysvinit tar tcpd texinfo timezone unzip util-linux vim zlib zlib-devel SDL SDL-devel aalib aalib-devel alsa alsa-devel arts arts-devel audiofile autoconf automake binutils esound esound-devel expat fontconfig fontconfig-devel gcc gcc-c++ gdbm gettext glib2 glib2-devel gnome-filesystem libogg libogg-devel libstdc++-devel libtool libvorbis libvorbis-devel perl resmgr rpm slang slang-devel xorg-x11-devel xorg-x11-libs
+BuildRequires: aaa_base acl attr bash bind-utils bison bzip2 coreutils cpio cpp cracklib cvs cyrus-sasl db devs diffutils e2fsprogs file filesystem fillup findutils flex gawk gdbm-devel glibc glibc-devel glibc-locale gpm grep groff gzip info insserv klogd less libacl libattr libgcc libnscd libselinux libstdc++ libxcrypt libzio m4 make man mktemp module-init-tools ncurses ncurses-devel net-tools netcfg openldap2-client openssl pam pam-modules patch permissions popt procinfo procps psmisc pwdutils rcs readline sed strace syslogd sysvinit tar tcpd texinfo timezone unzip util-linux vim zlib zlib-devel autoconf automake binutils gcc gdbm gettext libtool perl rpm SDL SDL-devel aalib aalib-devel alsa alsa-devel arts arts-devel audiofile esound esound-devel glib2 glib2-devel libogg libogg-devel libstdc++-devel libvorbis libvorbis-devel pkgconfig resmgr slang smpeg smpeg-devel xorg-x11-libs dialog expat fontconfig fontconfig-devel freeglut freeglut-devel freetype2 freetype2-devel gcc-c++ gnome-filesystem jack jack-devel libjpeg liblcms liblcms-devel libmng libmng-devel libpng libpng-devel libsndfile libtiff pciutils qt3 qt3-devel xorg-x11-Mesa xorg-x11-Mesa-devel xorg-x11-devel aaa_skel ash bind-libs gpg libgcj logrotate openslp suse-build-key suse-release tcsh
 
 Name:         openal
 License:      LGPL
 Group:        System/Libraries
 Autoreqprov:  on
-Version:      20051027
+Version:      20051128
 Release:      1
 URL:          http://www.openal.org/
 Icon:         openal.xpm
@@ -91,7 +91,7 @@ Authors:
 %setup -q -n openal
 
 %build
-%{?suse_update_config:%{suse_update_config -f linux}}
+%{?suse_update_config:%{suse_update_config -f linux/admin}}
 cd linux
 ./autogen.sh
 export CFLAGS="$RPM_OPT_FLAGS"
@@ -151,10 +151,14 @@ rm -rf $RPM_BUILD_ROOT
 %{_prefix}/bin/openal-config
 %{_includedir}/AL
 %{_libdir}/libopenal.a
+%{_libdir}/libopenal.la
 %{_libdir}/libopenal.so
 %{_libdir}/pkgconfig/openal.pc
 
 %changelog -n openal
+* Mon Nov 28 2005 - sven.panne@aedion.de
+- Fixed build dependencies
+- Updated file list
 * Thu Oct 27 2005 - sven.panne@aedion.de
 - Synched with latest Makefile changes
 * Fri Sep 30 2005 - sven.panne@aedion.de

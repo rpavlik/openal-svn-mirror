@@ -1,5 +1,7 @@
 2005-11-28  Sven Panne  <sven.panne@aedion.de>
 
+	* admin/openal.spec: Updated build dependencies.
+
 	* configure.ac, src/Makefile.am: Don't disturb user variables like
 	CFLAGS. Cleaned up some old stuff.
 
