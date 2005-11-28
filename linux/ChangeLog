@@ -1,5 +1,8 @@
 2005-11-28  Sven Panne  <sven.panne@aedion.de>
 
+	* src/Makefile.am: Temporarily added portable floating point
+	multiplication code to the library.
+
 	* admin/openal.spec: Updated build dependencies.
 
 	* configure.ac, src/Makefile.am: Don't disturb user variables like

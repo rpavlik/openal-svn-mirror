@@ -43,6 +43,10 @@ libopenal_la_SOURCES +=			\
 libopenal_la_SOURCES +=			\
 	arch/linux/lin_dsp.c
 
+# processor-specific sources
+libopenal_la_SOURCES +=			\
+	arch/portable/floatmul.c
+
 # ALC sources
 libopenal_la_SOURCES +=			\
 	alc/alc_context.c		\
