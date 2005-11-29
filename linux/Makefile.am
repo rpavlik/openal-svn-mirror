@@ -20,6 +20,8 @@ EXTRA_DIST =							\
 	admin/RPM/openal.xpm					\
 	admin/autotools/.indent.pro				\
 	autogen.sh						\
+	common/specification/OpenAL1-1Spec.pdf			\
+	common/specification/OpenAL1-1Spec.sxw			\
 	config-osx.h						\
 	src/arch/bsd/bsd_dsp.c					\
 	src/arch/bsd/bsd_dsp.h					\

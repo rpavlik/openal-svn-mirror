@@ -1,5 +1,10 @@
 2005-11-29  Sven Panne  <sven.panne@aedion.de>
 
+	* CMakeLists.txt, Makefile.am, configure.ac, common/Makefile.am:
+	Slightly rearranged the common subdirectory.
+
+	* common/include/.cvsignore, common/include/Makefile.am: Added.
+
 	* Makefile.am, configure.ac, include/Makefile.am, src/Makefile.am: We
 	"mount" the common headers via a CVS alias module "portable" now.
 
