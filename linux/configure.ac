@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_INIT([OpenAL library], [0.0.8], [openal-devel@opensource.creative.com], [openal])
-AC_CONFIG_AUX_DIR([admin])
+AC_CONFIG_AUX_DIR([admin/autotools])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE
 AC_PREREQ([2.56])
@@ -691,11 +691,12 @@ AC_SUBST([WARNINGCFLAGS])
 # Generate output.
 AC_CONFIG_FILES([Makefile
                  admin/Makefile
-                 admin/openal-config
-                 admin/openal.pc
+                 admin/pkgconfig/Makefile
+                 admin/pkgconfig/openal-config
+                 admin/pkgconfig/openal.pc
                  include/AL/Makefile
                  include/Makefile
                  src/Makefile])
 
-AC_CONFIG_COMMANDS([default], [chmod +x admin/openal-config])
+AC_CONFIG_COMMANDS([default], [chmod +x admin/pkgconfig/openal-config])
 AC_OUTPUT

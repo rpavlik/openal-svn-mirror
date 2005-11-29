@@ -812,8 +812,8 @@ SET(libdir "\${exec_prefix}/lib")
 SET(includedir "\${prefix}/include")
 SET(requirements "")
 
-CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/admin/openal.pc.in ${CMAKE_BINARY_DIR}/admin/openal.pc @ONLY)
-CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/admin/openal-config.in ${CMAKE_BINARY_DIR}/admin/openal-config @ONLY)
+CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/admin/pkgconfig/openal.pc.in ${CMAKE_BINARY_DIR}/admin/pkgconfig/openal.pc @ONLY)
+CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/admin/pkgconfig/openal-config.in ${CMAKE_BINARY_DIR}/admin/pkgconfig/openal-config @ONLY)
 
 #info file
 IF(UNIX)

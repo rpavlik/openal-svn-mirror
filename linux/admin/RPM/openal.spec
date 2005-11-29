@@ -91,7 +91,7 @@ Authors:
 %setup -q -n openal
 
 %build
-%{?suse_update_config:%{suse_update_config -f linux/admin}}
+%{?suse_update_config:%{suse_update_config -f linux/admin/autotools}}
 cd linux
 ./autogen.sh
 export CFLAGS="$RPM_OPT_FLAGS"

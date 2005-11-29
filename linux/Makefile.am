@@ -16,13 +16,13 @@ permissions:
 	find . -type f \! -perm +222 \! -name "*.sh" -exec chmod +w {} \;
 
 # Automatically reformat all C headers and sources with indent according to
-# admin/.indent.pro, but be make-friendly and take some precautions to leave
-# those files untouched which wouldn't change. Do not reformat the public AL
-# extension header, it won't look the way we want it due to the 'extern "C" {
+# admin/autotools/.indent.pro, but be make-friendly and take some precautions to
+# leave those files untouched which wouldn't change. Do not reformat the public
+# AL extension header, it won't look the way we want it due to the 'extern "C" {
 # ... }' wrapper in it.
 indent:
 	@for i in `find . \( -name "*.c" -o -name "*.h" \) \! -name alut.h -print` ; do \
-	    cat $$i | ( cd admin ; indent ) > indent.tmp ; \
+	    cat $$i | ( cd admin/autotools ; indent ) > indent.tmp ; \
 	    if diff $$i indent.tmp > /dev/null 2>&1 ; then \
 		: ; \
 	    else \

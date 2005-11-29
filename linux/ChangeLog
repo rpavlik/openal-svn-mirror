@@ -1,3 +1,16 @@
+2005-11-29  Sven Panne  <sven.panne@aedion.de>
+
+	* CMakeLists.txt, Makefile.am, admin/.cvsignore, admin/Makefile.am,
+	configure.ac: Cleaned up admin directory structure.
+
+	* admin/RPM/openal.spec, admin/RPM/openal.xpm,
+	admin/autotools/.cvsignore, admin/autotools/.indent.pro,
+	admin/pkgconfig/.cvsignore, admin/pkgconfig/Makefile.am,
+	admin/pkgconfig/openal-config.in, admin/pkgconfig/openal.pc.in: Added.
+
+	* admin/.indent.pro, admin/openal-config.in, admin/openal.pc.in,
+	admin/openal.spec admin/openal.xpm: Removed.
+
 2005-11-28  Sven Panne  <sven.panne@aedion.de>
 
 	* src/Makefile.am: Temporarily added portable floating point
