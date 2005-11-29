@@ -134,8 +134,6 @@ SET(MORPHOS_OBJS         src/arch/morphos/morphos_native.c
                          src/arch/morphos/morphos_dispatcher.c)
 SET(WINDOWS_OBJS         src/arch/windows/windows_native.c)
 
-SET(REDUNDANT_DECLS_WARN ON)       # warnings about redudant decls
-SET(SHADOW_WARN ON)                # warn about shadow variables
 SET(BROKEN_PTHREAD_FLAG OFF)       # BSD uses -pthread, not -lpthread
 SET(NO_PTHREAD_FLAG OFF)
 
@@ -344,14 +342,12 @@ ELSE(CMAKE_SYSTEM MATCHES "BSD")
 IF(CMAKE_SYSTEM MATCHES "SunOS")
   ADD_DEFINE("SOLARIS_TARGET 1")
   SET(OS_OBJS ${SOLARIS_OBJS})
-  SET(REDUNDANT_DECLS_WARN OFF)
 ELSE(CMAKE_SYSTEM MATCHES "SunOS")
 
 IF(CMAKE_SYSTEM MATCHES "IRIX")
   ADD_DEFINE("IRIX_TARGET 1")
   ADD_DEFINE(IRIS_SUPPORT)
   SET(OS_OBJS ${IRIX_OBJS})
-  SET(REDUNDANT_DECLS_WARN OFF)
   SET(ADD_LIBS ${ADD_LIBS} audio)
 ELSE(CMAKE_SYSTEM MATCHES "IRIX")
 
@@ -361,8 +357,6 @@ IF(CMAKE_SYSTEM MATCHES "Windows")
   SET(OS_OBJS ${WINDOWS_OBJS})
   # need that mm library for waveOutOpen etc
   SET(ADD_LIBS ${ADD_LIBS} winmm)
-  SET(SHADOW_WARN OFF)
-  SET(REDUNDANT_DECLS_WARN OFF)
 
   CHECK_INCLUDE_FILE(windows.h WINTHREAD_AVAILABLE)
 ELSE(CMAKE_SYSTEM MATCHES "Windows")
@@ -379,7 +373,6 @@ ELSE(CMAKE_SYSTEM MATCHES "Darwin")
 IF(CMAKE_SYSTEM MATCHES "morphos")
   ADD_DEFINE("MORPHOS_TARGET 1")
   SET(OS_OBJS ${MORPHOS_OBJS})
-  SET(REDUNDANT_DECLS_WARN OFF)
   CHECK_INCLUDE_FILE(dlfcn.h MOSTHREAD_AVAILABLE)
 ELSE(CMAKE_SYSTEM MATCHES "morphos")
 
@@ -429,8 +422,6 @@ IF(ALSA)
   CHECK_INCLUDE_FILE(alsa/asoundlib.h FOUND_ALSA)
   IF(FOUND_ALSA)
     SET(OS_OBJS ${OS_OBJS} ${ALSA_OBJS})
-    SET(SHADOW_WARN OFF)
-    SET(REDUNDANT_DECLS_WARN OFF)
     ADD_DEFINE(ALSA_SUPPORT)
 
     CHECK_INCLUDE_FILE(time.h HAVE_TIME_H)
@@ -477,9 +468,6 @@ IF(ESD)
     SET(ADD_CFLAGS "${ADD_CFLAGS} ${ESD_CFLAGS}")
     SET(OS_OBJS ${OS_OBJS} ${ESD_OBJS})
     ADD_DEFINE(ESD_SUPPORT)
-
-    # bad audiofile.h!  bad!
-    SET(SHADOW_WARN OFF)
 
     IF(ESD_DLOPEN)
       ADD_DEFINE("OPENAL_DLOPEN_ESD 1")
@@ -622,27 +610,12 @@ ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_6
 #compiler specific settings
 IF(CMAKE_COMPILER_IS_GNUCC)
   # warns
-  SET(WFLAGS "${WFLAGS} -Wall -W -Wbad-function-cast -Wcast-qual -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wimplicit-function-declaration -Waggregate-return -Winline -Wpointer-arith -fno-common")
+  SET(WFLAGS "${WFLAGS} -Wall -ansi -pedantic -W -Waggregate-return -Wbad-function-cast -Wcast-align -Wcast-qual -Wconversion -Wdisabled-optimization -Wendif-labels -Winline -Wlong-long -Wmissing-declarations -Wmissing-noreturn -Wmissing-prototypes -Wnested-externs -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wsign-compare -Wstrict-prototypes -Wwrite-strings")
 
   # Should we use turn warnings into errors?
   IF(USE_WERROR)
     SET(WFLAGS "${WFLAGS} -Werror -pedantic-errors")
   ENDIF(USE_WERROR)
-
-  # if we are forced to live with redundant decls, turn off those errors
-  IF(REDUNDANT_DECLS_WARN)
-    SET(WFLAGS "${WFLAGS} -Wredundant-decls")
-  ELSE(REDUNDANT_DECLS_WARN)
-    SET(WFLAGS "${WFLAGS} -Wno-redundant-decls")
-  ENDIF(REDUNDANT_DECLS_WARN)
-
-  IF(SHADOW_WARN)
-    SET(WFLAGS "${WFLAGS} -Wshadow")
-  ENDIF(SHADOW_WARN)
-
-  IF(CMAKE_SYSTEM MATCHES "Linux")
-    SET(WFLAGS "${WFLAGS} -ansi")
-  ENDIF(CMAKE_SYSTEM MATCHES "Linux")
 
   IF(PROFILE)
     SET(ADD_CFLAGS "${ADD_CFLAGS} -O2 -fexpensive-optimizations -ffast-math -funroll-loops -funroll-all-loops -g -pg")

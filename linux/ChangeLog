@@ -10,7 +10,8 @@
 
 2005-11-29  Prakash Punnoor <prakash@punnoor.de>
 	
-	* CMakeLists.txt: Sven missed two lines on clean-up
+	* CMakeLists.txt: Sven missed two lines on clean-up; sync warning-
+	flags to configure.ac
 
 2005-11-29  Sven Panne  <sven.panne@aedion.de>
 
