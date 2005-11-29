@@ -3,9 +3,55 @@
 SUBDIRS = admin src include
 
 # The following files should be in our source distribution in addition to the
-# standard ones included by automake itself:
-EXTRA_DIST =				\
-	autogen.sh
+# standard ones included by automake itself. A few remarks:
+#
+#  * As a temporary measure until the build system is fixed we mention a few
+#    files which don't really belong here.
+#
+#  * We do not mention the doc and test subdirectories, they are really too much
+#    out-of-date.
+EXTRA_DIST =							\
+	CMakeLists.txt						\
+	NOTES							\
+	PLATFORM						\
+	admin/CMakeModules/CMakeASMCompiler.cmake.in		\
+	admin/CMakeModules/CMakeASMInformation.cmake		\
+	admin/CMakeModules/CMakeDetermineASMCompiler.cmake	\
+	admin/RPM/openal.spec					\
+	admin/RPM/openal.xpm					\
+	admin/autotools/.indent.pro				\
+	autogen.sh						\
+	config-osx.h						\
+	src/arch/bsd/bsd_dsp.c					\
+	src/arch/bsd/bsd_dsp.h					\
+	src/arch/darwin/CVS_Update.txt				\
+	src/arch/darwin/Changes.rtf				\
+	src/arch/darwin/FAQ					\
+	src/arch/darwin/TODO					\
+	src/arch/darwin/Tests_Results.rtf			\
+	src/arch/darwin/changes.txt				\
+	src/arch/darwin/darwin_native.c				\
+	src/arch/darwin/darwin_native.h				\
+	src/arch/i386/floatmul.c				\
+	src/arch/i386/memcpy_mmx_prk.nasm			\
+	src/arch/i386/mix16.nasm				\
+	src/arch/i386/mixaudio16_mmx_prk.c			\
+	src/arch/i386/mixaudio16_mmx_prk.h			\
+	src/arch/i386/x86_cpu_caps_detect_prk.nasm		\
+	src/arch/i386/x86_cpu_caps_prk.c			\
+	src/arch/i386/x86_simd_support_prk.h			\
+	src/arch/irix/README					\
+	src/arch/irix/iris.c					\
+	src/arch/irix/iris.h					\
+	src/arch/morphos/morphos_dispatcher.c			\
+	src/arch/morphos/morphos_dispatcher.h			\
+	src/arch/morphos/morphos_native.c			\
+	src/arch/morphos/morphos_native.h			\
+	src/arch/solaris/README					\
+	src/arch/solaris/solaris_native.c			\
+	src/arch/solaris/solaris_native.h			\
+	src/arch/windows/windows_native.c			\
+	src/arch/windows/windows_native.h
 
 # Automatically rebuild libtool if it becomes out-of-date.
 libtool: $(LIBTOOL_DEPS)

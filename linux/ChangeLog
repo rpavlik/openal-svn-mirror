@@ -1,4 +1,9 @@
-2005-11-26  Prakash Punnoor <prakash@punnoor.de>
+2005-11-29  Sven Panne  <sven.panne@aedion.de>
+
+	* Makefile.am, src/Makefile.am: Added missing files for
+	distribution. Still far from perfect, but better.
+
+2005-11-29  Prakash Punnoor <prakash@punnoor.de>
 	
 	* CMakeLists.txt: Sven missed two lines on clean-up
 
