@@ -50,7 +50,7 @@ INCLUDE(${CMAKE_ROOT}/Modules/CheckIncludeFile.cmake)
 INCLUDE(${CMAKE_ROOT}/Modules/CheckLibraryExists.cmake)
 INCLUDE(${CMAKE_ROOT}/Modules/TestBigEndian.cmake)
 
-INCLUDE_DIRECTORIES(${OpenAL_SOURCE_DIR}/../include)
+INCLUDE_DIRECTORIES(${OpenAL_SOURCE_DIR}/common/include)
 INCLUDE_DIRECTORIES(${OpenAL_SOURCE_DIR}/include)
 INCLUDE_DIRECTORIES(${OpenAL_SOURCE_DIR}/src)
 INCLUDE_DIRECTORIES(${OpenAL_SOURCE_DIR}/src/arch)
