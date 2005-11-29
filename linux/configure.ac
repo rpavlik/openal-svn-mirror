@@ -694,7 +694,7 @@ AC_CONFIG_FILES([Makefile
                  admin/pkgconfig/Makefile
                  admin/pkgconfig/openal-config
                  admin/pkgconfig/openal.pc
-                 include/AL/Makefile
+                 common/Makefile
                  include/Makefile
                  src/Makefile])
 

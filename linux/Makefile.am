@@ -1,6 +1,5 @@
 # Build, install and distribute the following subdirectories:
-# TODO: doc and test subdirectories still missing
-SUBDIRS = admin src include
+SUBDIRS = admin src common include
 
 # The following files should be in our source distribution in addition to the
 # standard ones included by automake itself. A few remarks:

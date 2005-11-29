@@ -123,7 +123,7 @@ libopenal_la_SOURCES +=			\
 # The first path is needed to find <AL/alc.h> and <AL/al.h> and the second one
 # is needed for <AL/alext.h>
 libopenal_la_CPPFLAGS =			\
-	-I$(top_srcdir)/../include	\
+	-I$(top_srcdir)/common		\
 	-I$(top_srcdir)/include
 
 # Add compiler flags.

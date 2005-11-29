@@ -1,5 +1,10 @@
 2005-11-29  Sven Panne  <sven.panne@aedion.de>
 
+	* Makefile.am, configure.ac, include/Makefile.am, src/Makefile.am: We
+	"mount" the common headers via a CVS alias module "portable" now.
+
+	* common/.cvsignore, common/Makefile.am: Added.
+
 	* Makefile.am, src/Makefile.am: Added missing files for
 	distribution. Still far from perfect, but better.
 
