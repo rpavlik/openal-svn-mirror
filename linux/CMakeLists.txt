@@ -838,5 +838,5 @@ INSTALL_TARGETS(/lib openal)
 INSTALL_FILES(/include/AL FILES ${CMAKE_SOURCE_DIR}/../include/AL/al.h
                                 ${CMAKE_SOURCE_DIR}/../include/AL/alc.h
                                 include/AL/alext.h)
-INSTALL_PROGRAMS(/bin FILES admin/openal-config)
-INSTALL_FILES(/lib/pkgconfig FILES admin/openal.pc)
+INSTALL_PROGRAMS(/bin FILES admin/pkgconfig/openal-config)
+INSTALL_FILES(/lib/pkgconfig FILES admin/pkgconfig/openal.pc)

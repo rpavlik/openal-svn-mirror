@@ -1,3 +1,7 @@
+2005-11-26  Prakash Punnoor <prakash@punnoor.de>
+	
+	* CMakeLists.txt: Sven missed two lines on clean-up
+
 2005-11-29  Sven Panne  <sven.panne@aedion.de>
 
 	* CMakeLists.txt, Makefile.am, admin/.cvsignore, admin/Makefile.am,
