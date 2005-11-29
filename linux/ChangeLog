@@ -1,5 +1,7 @@
 2005-11-29  Sven Panne  <sven.panne@aedion.de>
 
+	* admin/RPM/openal.spec: Synched with new directory structure.
+
 	* CMakeLists.txt, Makefile.am, configure.ac, common/Makefile.am:
 	Slightly rearranged the common subdirectory.
 

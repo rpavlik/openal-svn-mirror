@@ -1,5 +1,5 @@
 #
-# spec file for package openal (Version 20051128)
+# spec file for package openal (Version 0.0.8)
 #
 # Copyright (c) 2005 SUSE LINUX Products GmbH, Nuernberg, Germany.
 # This file and all modifications and additions to the pristine
@@ -17,12 +17,12 @@ Name:         openal
 License:      LGPL
 Group:        System/Libraries
 Autoreqprov:  on
-Version:      20051128
+Version:      0.0.8
 Release:      1
 URL:          http://www.openal.org/
 Icon:         openal.xpm
 Summary:      Open Audio Library
-Source:       openal-%{version}.tar.bz2
+Source:       openal-%{version}.tar.gz
 BuildRoot:    %{_tmppath}/%{name}-%{version}-build
 
 %description
@@ -88,11 +88,10 @@ Authors:
 
 %debug_package
 %prep
-%setup -q -n openal
+%setup -q
 
 %build
-%{?suse_update_config:%{suse_update_config -f linux/admin/autotools}}
-cd linux
+%{?suse_update_config:%{suse_update_config -f admin/autotools}}
 ./autogen.sh
 export CFLAGS="$RPM_OPT_FLAGS"
 %ifarch ia64
@@ -113,16 +112,16 @@ make
 
 %install
 rm -rf $RPM_BUILD_ROOT
-make -C linux DESTDIR=$RPM_BUILD_ROOT \
-	      DESTLIB=$RPM_BUILD_ROOT%{_libdir} \
-	      install
+make DESTDIR=$RPM_BUILD_ROOT \
+     DESTLIB=$RPM_BUILD_ROOT%{_libdir} \
+     install
 #
 # documentation
 install -m 755 -d $RPM_BUILD_ROOT%{_defaultdocdir}/%{name}
-install -m 644 linux/ChangeLog			\
-	       linux/AUTHORS 			\
-	       README				\
-	       docs/spec1-1/OpenAL1-1Spec.pdf	\
+install -m 644 ChangeLog				\
+	       AUTHORS 					\
+	       README					\
+	       common/specification/OpenAL1-1Spec.pdf	\
 	       $RPM_BUILD_ROOT%{_defaultdocdir}/%{name}/
 #
 # configuration
@@ -149,13 +148,17 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root)
 %doc %{_defaultdocdir}/%{name}/OpenAL1-1Spec.pdf
 %{_prefix}/bin/openal-config
-%{_includedir}/AL
+%{_includedir}/AL/al.h
+%{_includedir}/AL/alc.h
+%{_includedir}/AL/alext.h
 %{_libdir}/libopenal.a
 %{_libdir}/libopenal.la
 %{_libdir}/libopenal.so
 %{_libdir}/pkgconfig/openal.pc
 
 %changelog -n openal
+* Tue Nov 29 2005 - sven.panne@aedion.de
+- Synched with new directory structure
 * Mon Nov 28 2005 - sven.panne@aedion.de
 - Fixed build dependencies
 - Updated file list
