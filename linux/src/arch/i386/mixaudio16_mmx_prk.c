@@ -25,7 +25,7 @@
 #include "x86_simd_support_prk.h"
 
 #ifdef HAVE_MMX_MEMCPY
-void _alMMXmemcpy(void* dst, void* src, int n);
+void _alMMXmemcpy(void* dst, void* src, unsigned int n);
 #endif /* HAVE_MMX_MEMCPY */
 
 
@@ -190,7 +190,7 @@ void MixAudio16_MMX_0(UNUSED(ALshort *dst), UNUSED(alMixEntry *entries))
 
 void MixAudio16_MMX_1(ALshort *dst, alMixEntry *entries)
 {
-	int len = entries->bytes;
+	unsigned int len = entries->bytes;
 	
 #ifdef HAVE_MMX_MEMCPY
 	if (len < 300) {

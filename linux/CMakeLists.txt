@@ -609,6 +609,7 @@ ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_6
 
 #compiler specific settings
 IF(CMAKE_COMPILER_IS_GNUCC)
+  ADD_DEFINITIONS(-std=c99)
   # warns
   SET(WFLAGS "${WFLAGS} -Wall -ansi -pedantic -W -Waggregate-return -Wbad-function-cast -Wcast-align -Wcast-qual -Wconversion -Wdisabled-optimization -Wendif-labels -Winline -Wlong-long -Wmissing-declarations -Wmissing-noreturn -Wmissing-prototypes -Wnested-externs -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wsign-compare -Wstrict-prototypes -Wwrite-strings")
 

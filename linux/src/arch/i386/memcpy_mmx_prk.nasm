@@ -18,7 +18,7 @@
 ;*   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
 ;***************************************************************************
 
-; void _alMMXmemcpy(void* dst, void* src, int n);
+; void _alMMXmemcpy(void* dst, void* src, unsigned int n);
 ; pretty straight-forward implementation
 ; by design broken for n<8, so check that before calling
 ; x86 32 bit only!

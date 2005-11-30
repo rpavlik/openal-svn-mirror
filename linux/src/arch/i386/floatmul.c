@@ -83,10 +83,10 @@ void _alFloatMul(ALshort *bpt, ALfloat sa, ALuint len) {
 			
 			while (samples_main--) {
 				temp = __builtin_ia32_pmulhw(*(v4hi*)bpt, v_sa.v);
-				*(v4hi*)bpt = __builtin_ia32_psllw(temp, 1);
+				*(v4hi*)bpt = __builtin_ia32_psllw(temp, 1LL);
 				bpt += 4;
 				temp = __builtin_ia32_pmulhw(*(v4hi*)bpt, v_sa.v);
-				*(v4hi*)bpt = __builtin_ia32_psllw(temp, 1);
+				*(v4hi*)bpt = __builtin_ia32_psllw(temp, 1LL);
 				bpt += 4;
 			}
 		}
