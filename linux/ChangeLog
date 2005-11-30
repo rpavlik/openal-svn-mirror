@@ -1,5 +1,9 @@
 2005-11-30  Sven Panne  <sven.panne@aedion.de>
 
+	* CMakeLists.txt, config-osx.h, configure.ac, src/al_main.c,
+	src/arch/linux/lin_dsp.c: Always include capture support, as required by
+	OpenAL 1.1.
+
 	* Makefile.am, configure.ac: Cleaned up handling of warning-related
 	configure options so we have three now: --enable-warnings (default
 	"yes"), --enable-gcc-warnings (default "no"), and --enable-werror

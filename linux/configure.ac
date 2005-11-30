@@ -705,15 +705,6 @@ if test "x$enable_smpeg" = xyes; then
   fi
 fi
 
-# enable capture support?
-AC_ARG_ENABLE([capture],
-[AS_HELP_STRING([--enable-capture],
-                [enable capture support @<:@default=no@:>@])])
-
-if test "x$enable_capture" = xyes; then
-  AC_DEFINE([CAPTURE_SUPPORT], [1], [undocumented])
-fi
-
 AC_DEFINE([LINUX_AL], [1], [undocumented])
 
 AC_SUBST([ARCH_INCLUDES])

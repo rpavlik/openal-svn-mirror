@@ -238,10 +238,6 @@ void *grab_read_native(void)
 {
 	static int read_fd;
 
-#ifndef CAPTURE_SUPPORT
-	return NULL;
-#endif
-
 	read_fd = aquire_read();
 	if( read_fd < 0) {
 		return NULL;

@@ -36,7 +36,6 @@
 /* #undef VORBIS_SUPPORT */
 /* #undef ALSA_SUPPORT */
 /* #undef ARTS_SUPPORT */
-/* #undef CAPTURE_SUPPORT */
 /* #undef ESD_SUPPORT */
 /* #undef IRIS_SUPPORT */
 /* #undef SDL_SUPPORT */

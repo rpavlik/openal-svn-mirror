@@ -130,14 +130,12 @@ ALboolean _alInit( void ) {
 
 #ifdef VORBIS_SUPPORT
 	_alRegisterExtensionGroup( (const ALubyte*) "AL_EXT_vorbis" );
-#endif /* CAPTURE_SUPPORT */
-
-#ifdef CAPTURE_SUPPORT
-	_alRegisterExtensionGroup( (const ALubyte*) "AL_EXT_capture" );
-	_alRegisterExtensionGroup( (const ALubyte*) "ALC_EXT_capture" );
-#endif /* CAPTURE_SUPPORT */
+#endif /* VORBIS_SUPPORT */
 
 #endif /* BUILTIN_EXT_LOKI */
+
+	_alRegisterExtensionGroup( (const ALubyte*) "AL_EXT_capture" );
+	_alRegisterExtensionGroup( (const ALubyte*) "ALC_EXT_capture" );
 
 	for(i = 0; exts[i].addr != NULL; i++) {
 		_alRegisterExtension(exts[i].name, exts[i].addr);
