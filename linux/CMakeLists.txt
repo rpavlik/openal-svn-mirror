@@ -169,6 +169,7 @@ OPTION(BUILD_STATIC "build static library too" ON)
 OPTION(PROFILE "enable profile" OFF)
 OPTION(OPTIMIZATION "enable optimization" OFF)
 OPTION(DEBUG "enable debug" OFF)
+OPTION(WARNINGS "enable warnings" ON)
 
 # no mutex locking for sync. driver
 OPTION(EMPTY_LOCKS "enable empty locks" OFF)
@@ -189,8 +190,6 @@ OPTION(DSOUND "directsound backend" OFF)
 OPTION(VORBIS "vorbis support" OFF)
 OPTION(SMPEG "smpeg support" OFF)
 
-OPTION(CAPTURE "capture support" OFF)
-
 #want test-suit?
 OPTION(BUILD_TESTS "build the test-suite" OFF)
 
@@ -204,7 +203,10 @@ ENDIF(EMPTY_LOCKS)
 
 IF(DEBUG)
   ADD_DEFINE(DEBUG)
-  OPTION(USE_WERROR      "enable fail on all warning"   OFF)
+  IF(WARNINGS)
+    OPTION(MORE_WARNINGS   "enable more warnings"         OFF)
+    OPTION(USE_WERROR      "enable fail on all warning"   OFF)
+  ENDIF(WARNINGS)
   OPTION(EFENCE          "enable efence support"        OFF)
   OPTION(DEBUG_MAXIMUS   "enable all debugging"         OFF)
   OPTION(DEBUG_STUB      "enable stub debugging"        OFF)
@@ -604,13 +606,19 @@ ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_6
 #compiler specific settings
 IF(CMAKE_COMPILER_IS_GNUCC)
   ADD_DEFINITIONS(-std=c99)
-  # warns
-  SET(WFLAGS "${WFLAGS} -Wall -ansi -pedantic -W -Waggregate-return -Wbad-function-cast -Wcast-align -Wcast-qual -Wconversion -Wdisabled-optimization -Wendif-labels -Winline -Wlong-long -Wmissing-declarations -Wmissing-noreturn -Wmissing-prototypes -Wnested-externs -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wsign-compare -Wstrict-prototypes -Wwrite-strings")
 
-  # Should we use turn warnings into errors?
-  IF(USE_WERROR)
-    SET(WFLAGS "${WFLAGS} -Werror -pedantic-errors")
-  ENDIF(USE_WERROR)
+  IF(WARNINGS)
+    SET(WFLAGS "${WFLAGS} -Wall -ansi -pedantic -W")
+
+    IF(MORE_WARNINGS)
+      SET(WFLAGS "${WFLAGS} -Waggregate-return -Wbad-function-cast -Wcast-align -Wcast-qual -Wconversion -Wdisabled-optimization -Wendif-labels -Winline -Wlong-long -Wmissing-declarations -Wmissing-noreturn -Wmissing-prototypes -Wnested-externs -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wsign-compare -Wstrict-prototypes -Wwrite-strings")
+    ENDIF(MORE_WARNINGS)
+
+    # Should we use turn warnings into errors?
+    IF(USE_WERROR)
+      SET(WFLAGS "${WFLAGS} -Werror -pedantic-errors")
+    ENDIF(USE_WERROR)
+  ENDIF(WARNINGS)
 
   IF(PROFILE)
     SET(ADD_CFLAGS "${ADD_CFLAGS} -O2 -fexpensive-optimizations -ffast-math -funroll-loops -funroll-all-loops -g -pg")
@@ -636,6 +644,8 @@ IF(CMAKE_COMPILER_IS_GNUCC)
     ENDIF(NOT ${ADD_CFLAGS} MATCHES "O")
   ENDIF(${CMAKE_C_FLAGS} MATCHES "^ $")
 
+ELSE(CMAKE_COMPILER_IS_GNUCC)
+  MESSAGE("Your compiler isn't fully supported yet - no flags set.")
 ENDIF(CMAKE_COMPILER_IS_GNUCC)
 
 ADD_DEFINE(LINUX_AL)

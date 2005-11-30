@@ -3,7 +3,9 @@
 	* src/arch/i386/floatmul.c, src/arch/i386/mixaudio16_mmx_prk.c
 	src/arch/i386/memcpy_mmx_prk.nasm: fix warnings
 
-	* CMakeLists.txt: gcc should compile in C99 mode
+	* CMakeLists.txt: gcc should compile in C99 mode; remove capture option;
+	warnings handling similar to configure.ac (enable DEBUG to have options
+	MORE_WARNINGS and WERROR)
 
 2005-11-30  Sven Panne  <sven.panne@aedion.de>
 
