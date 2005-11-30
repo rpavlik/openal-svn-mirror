@@ -1,6 +1,9 @@
 # Build, install and distribute the following subdirectories:
 SUBDIRS = admin src common include
 
+# We keep our local autoconf macros in a separate 'm4'subdirectory.
+ACLOCAL_AMFLAGS = -I admin/autotools/m4
+
 # The following files should be in our source distribution in addition to the
 # standard ones included by automake itself. A few remarks:
 #

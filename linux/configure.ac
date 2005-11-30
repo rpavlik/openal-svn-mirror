@@ -1,4 +1,6 @@
+################################################################################
 # Process this file with autoconf to produce a configure script.
+################################################################################
 
 AC_INIT([OpenAL library], [0.0.8], [openal-devel@opensource.creative.com], [openal])
 AC_CONFIG_AUX_DIR([admin/autotools])
@@ -11,7 +13,9 @@ AC_CONFIG_HEADERS([config.h])
 # Compatibility hack for older autoconf versions
 m4_ifdef([AS_HELP_STRING], [], [AC_DEFUN([AS_HELP_STRING], [AC_HELP_STRING($][@)])])
 
+################################################################################
 # Checks for programs.
+################################################################################
 
 # We need ISO C99 features for e.g. snprintf.
 FEATURECFLAGS="-D_ISOC99_SOURCE"
@@ -27,25 +31,62 @@ AC_PROG_CXX
 BROKEN_PTHREAD_FLAG=no         # BSD use -pthread, not -lpthread
 NO_PTHREAD_FLAG=no
 
+################################################################################
 # Checks for library functions.
+################################################################################
+
 AC_CHECK_LIBM
 AC_SUBST([LIBM])
 
-# There are some warnings which are note enabled (yet):
-#    -Wpadded: Perhaps good for optimizing out data layout, but not in general
-#    -Wfloat-equal: Often we should use an epsilon, but there are some correct uses, too
-WARNINGCFLAGS="-Wall -ansi -pedantic -W -Waggregate-return -Wbad-function-cast -Wcast-align -Wcast-qual -Wconversion -Wdisabled-optimization -Wendif-labels -Winline -Wlong-long -Wmissing-declarations -Wmissing-noreturn -Wmissing-prototypes -Wnested-externs -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wsign-compare -Wstrict-prototypes -Wwrite-strings"
+################################################################################
+# handling of warning-related options
+################################################################################
 
-# -Werror stuff
+AC_ARG_ENABLE([warnings],
+[AS_HELP_STRING([--enable-warnings],
+                [enable pedantic compiler warnings @<:@default=yes@:>@])])
+
+if test "x$enable_warnings" = xno; then
+  WARNINGCFLAGS=""
+else
+  AX_CFLAGS_WARN_ALL_ANSI([WARNINGCFLAGS])
+fi
+
+AC_ARG_ENABLE([gcc-warnings],
+[AS_HELP_STRING([--enable-gcc-warnings],
+                [enable additional GCC-specific warnings @<:@default=no@:>@])])
+
+if test "x$enable_gcc_warnings" = xyes; then
+  if test "x$enable_warnings" = xno; then
+    AC_MSG_WARN([--enable-gcc-warnings ignored because of --disable-warnings])
+  elif test "x$GCC" != xyes; then
+    AC_MSG_WARN([--enable-gcc-warnings ignored because no GCC was detected])
+  else
+    # There are some warnings which are note enabled (yet):
+    #    -Wpadded: Perhaps good for optimizing out data layout, but not in general
+    #    -Wfloat-equal: Often we should use an epsilon, but there are some correct uses, too
+    WARNINGCFLAGS="$WARNINGCFLAGS -W -Waggregate-return -Wbad-function-cast -Wcast-align -Wcast-qual -Wconversion -Wdisabled-optimization -Wendif-labels -Winline -Wlong-long -Wmissing-declarations -Wmissing-noreturn -Wmissing-prototypes -Wnested-externs -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wsign-compare -Wstrict-prototypes -Wwrite-strings"
+  fi
+fi
+
 AC_ARG_ENABLE([werror],
 [AS_HELP_STRING([--enable-werror],
                 [enable failure on all warnings @<:@default=no@:>@])])
 
 if test "x$enable_werror" = xyes; then
-  WARNINGCFLAGS="$WARNINGCFLAGS -Werror"
+  if test "x$enable_warnings" = xno; then
+    AC_MSG_WARN([--enable-werror ignored because of --disable-warnings])
+  elif test "x$GCC" != xyes; then
+    AC_MSG_WARN([--enable-werror ignored because no GCC was detected])
+  else
+    WARNINGCFLAGS="$WARNINGCFLAGS -Werror"
+  fi
 fi
 
-# optimization stuff
+################################################################################
+# handling of optimization-related options
+################################################################################
+
 AC_ARG_ENABLE([optimization],
 [AS_HELP_STRING([--enable-optimization],
                 [enable optimization @<:@default=no@:>@])])

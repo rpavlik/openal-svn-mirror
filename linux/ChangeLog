@@ -1,3 +1,12 @@
+2005-11-30  Sven Panne  <sven.panne@aedion.de>
+
+	* Makefile.am, configure.ac: Cleaned up handling of warning-related
+	configure options so we have three now: --enable-warnings (default
+	"yes"), --enable-gcc-warnings (default "no"), and --enable-werror
+	(default "no").
+
+	* admin/autotools/m4/alut_check_cflags_wall.m4: Added.
+
 2005-11-29  Sven Panne  <sven.panne@aedion.de>
 
 	* admin/RPM/openal.spec: Synched with new directory structure.
