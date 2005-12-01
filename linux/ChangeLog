@@ -1,5 +1,9 @@
 2005-12-01  Sven Panne  <sven.panne@aedion.de>
 
+	* configure.ac: Moved debugging-related options together. Renamed
+	--enable-stub-notify to --enable-debug-stub, the former seems to be a
+	cut-n-paste error. Added explanations for debugging-related #defines.
+
 	* CMakeLists.txt, config-osx.h, configure.ac, src/al_main.c,
 	src/al_mutexlib.c, src/al_mutexlib.h, src/al_threadlib.c,
 	src/al_threadlib.h: Cleaned up threading detection.

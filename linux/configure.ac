@@ -120,6 +120,150 @@ if test "x$enable_efence" = xyes; then
      LIBS=$openal_saved_LIBS])
 fi
 
+# stubifying
+AC_ARG_ENABLE([debug-stub],
+[AS_HELP_STRING([--enable-debug-stub],
+                [enable stub debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_stub" = xyes; then
+  AC_DEFINE([DEBUG_STUB], [1], [Define to 1 to enable stub debugging.])
+fi
+
+# looping debug notification
+AC_ARG_ENABLE([debug-loop],
+[AS_HELP_STRING([--enable-debug-loop],
+                [enable looping debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_loop" = xyes; then
+  AC_DEFINE([DEBUG_LOOP], [1], [Define to 1 to enable looping debugging.])
+fi
+
+# conversion debug notification
+AC_ARG_ENABLE([debug-convert],
+[AS_HELP_STRING([--enable-debug-convert],
+                [enable conversion debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_convert" = xyes; then
+  AC_DEFINE([DEBUG_CONVERT], [1], [Define to 1 to enable conversion debugging.])
+fi
+
+# config file debug notification
+AC_ARG_ENABLE([debug-config],
+[AS_HELP_STRING([--enable-debug-config],
+                [enable config file debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_config" = xyes; then
+  AC_DEFINE([DEBUG_CONFIG], [1], [Define to 1 to enable config file debugging.])
+fi
+
+# lock debug notification
+AC_ARG_ENABLE([debug-lock],
+[AS_HELP_STRING([--enable-debug-lock],
+                [enable lock debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_lock" = xyes; then
+  AC_DEFINE([DEBUG_LOCK], [1], [Define to 1 to enable lock debugging.])
+fi
+
+# extension debug notification
+AC_ARG_ENABLE([debug-ext],
+[AS_HELP_STRING([--enable-debug-ext],
+                [enable extension debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_ext" = xyes; then
+  AC_DEFINE([DEBUG_EXT], [1], [Define to 1 to enable extension debugging.])
+fi
+
+# buffer debug notification
+AC_ARG_ENABLE([debug-buffer],
+[AS_HELP_STRING([--enable-debug-buffer],
+                [enable buffer debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_buffer" = xyes; then
+  AC_DEFINE([DEBUG_BUFFER], [1], [Define to 1 to enable buffer debugging.])
+fi
+
+# source debug notification
+AC_ARG_ENABLE([debug-source],
+[AS_HELP_STRING([--enable-debug-source],
+                [enable source debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_source" = xyes; then
+  AC_DEFINE([DEBUG_SOURCE], [1], [Define to 1 to enable source debugging.])
+fi
+
+# mixer debug notification
+AC_ARG_ENABLE([debug-mixer],
+[AS_HELP_STRING([--enable-debug-mixer],
+                [enable mixer debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_mixer" = xyes; then
+  AC_DEFINE([DEBUG_MIXER], [1], [Define to 1 to enable mixer debugging.])
+fi
+
+# streaming debug notification
+AC_ARG_ENABLE([debug-streaming],
+[AS_HELP_STRING([--enable-debug-streaming],
+                [enable streaming debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_streaming" = xyes; then
+  AC_DEFINE([DEBUG_STREAMING], [1], [Define to 1 to enable streaming debugging.])
+fi
+
+# math debug notification
+AC_ARG_ENABLE([debug-math],
+[AS_HELP_STRING([--enable-debug-math],
+                [enable math debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_math" = xyes; then
+  AC_DEFINE([DEBUG_MATH], [1], [Define to 1 to enable math debugging.])
+fi
+
+# mem debug notification
+AC_ARG_ENABLE([debug-mem],
+[AS_HELP_STRING([--enable-debug-mem],
+                [enable memory debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_mem" = xyes; then
+  AC_DEFINE([DEBUG_MEM], [1], [Define to 1 to enable memory debugging.])
+fi
+
+# context debug notification
+AC_ARG_ENABLE([debug-context],
+[AS_HELP_STRING([--enable-debug-context],
+                [enable context debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_context" = xyes; then
+  AC_DEFINE([DEBUG_CONTEXT], [1], [Define to 1 to enable context debugging.])
+fi
+
+# debug queue structures/functions/etc
+AC_ARG_ENABLE([debug-queue],
+[AS_HELP_STRING([--enable-debug-queue],
+                [enable queue debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_queue" = xyes; then
+  AC_DEFINE([DEBUG_QUEUE], [1], [Define to 1 to enable queue debugging.])
+fi
+
+# debug filter
+AC_ARG_ENABLE([debug-filter],
+[AS_HELP_STRING([--enable-debug-filter],
+                [enable filter debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_filter" = xyes; then
+  AC_DEFINE([DEBUG_FILTER], [1], [Define to 1 to enable filter debugging.])
+fi
+
+# debug maximus
+AC_ARG_ENABLE([debug-maximus],
+[AS_HELP_STRING([--enable-debug-maximus],
+                [enable all debugging @<:@default=no@:>@])])
+
+if test "x$enable_debug_maximus" = xyes; then
+  AC_DEFINE([DEBUG_MAXIMUS], [1], [Define to 1 to enable all debugging.])
+fi
+
 ################################################################################
 # Handle optimization-related options.
 ################################################################################
@@ -317,151 +461,6 @@ esac
 
 dnl check for sizeof
 AC_CHECK_SIZEOF([void *])
-
-# stubifying
-AC_ARG_ENABLE([stub-notify],
-[AS_HELP_STRING([--enable-debug-stub],
-                [enable stub debugging @<:@default=no@:>@])])
-
-if test "x$enable_debug_stub" = xyes; then
-  AC_DEFINE([DEBUG_STUB], [1], [undocumented])
-fi
-
-dnl looping debug notification
-
-AC_ARG_ENABLE([debug-loop],
-[AS_HELP_STRING([--enable-debug-loop],
-                [enable looping debugging @<:@default=no@:>@])])
-
-if test "x$enable_debug_loop" = xyes; then
-  AC_DEFINE([DEBUG_LOOP], [1], [undocumented])
-fi
-
-# conversion debug notification
-AC_ARG_ENABLE([debug-convert],
-[AS_HELP_STRING([--enable-debug-convert],
-                [enable convertion debugging @<:@default=no@:>@])])
-
-if test "x$enable_debug_convert" = xyes; then
-  AC_DEFINE([DEBUG_CONVERT], [1], [undocumented])
-fi
-
-# config file debug notification
-AC_ARG_ENABLE([debug-config],
-[AS_HELP_STRING([--enable-debug-config],
-                [enable config file debugging @<:@default=no@:>@])])
-
-if test "x$enable_debug_config" = xyes; then
-  AC_DEFINE([DEBUG_CONFIG], [1], [undocumented])
-fi
-
-# lock debug notification
-AC_ARG_ENABLE([debug-lock],
-[AS_HELP_STRING([--enable-debug-lock],
-                [enable lock debugging @<:@default=no@:>@])])
-
-if test "x$enable_debug_lock" = xyes; then
-  AC_DEFINE([DEBUG_LOCK], [1], [undocumented])
-fi
-
-# extension debug notification
-AC_ARG_ENABLE([debug-ext],
-[AS_HELP_STRING([--enable-debug-ext],
-                [enable extension debugging @<:@default=no@:>@])])
-
-if test "x$enable_debug_ext" = xyes; then
-  AC_DEFINE([DEBUG_EXT], [1], [undocumented])
-fi
-
-# buffer debug notification
-AC_ARG_ENABLE([debug-buffer],
-[AS_HELP_STRING([--enable-debug-buffer],
-                [enable buffer debugging @<:@default=no@:>@])])
-
-if test "x$enable_debug_buffer" = xyes; then
-  AC_DEFINE([DEBUG_BUFFER], [1], [undocumented])
-fi
-
-# source debug notification
-AC_ARG_ENABLE([debug-source],
-[AS_HELP_STRING([--enable-debug-source],
-                [enable source debugging @<:@default=no@:>@])])
-
-if test "x$enable_debug_source" = xyes; then
-  AC_DEFINE([DEBUG_SOURCE], [1], [undocumented])
-fi
-
-# mixer debug notification
-AC_ARG_ENABLE([debug-mixer],
-[AS_HELP_STRING([--enable-debug-mixer],
-                [enable mixer debugging @<:@default=no@:>@])])
-
-if test "x$enable_debug_mixer" = xyes; then
-  AC_DEFINE([DEBUG_MIXER], [1], [undocumented])
-fi
-
-# streaming debug notification
-AC_ARG_ENABLE([debug-streaming],
-[AS_HELP_STRING([--enable-debug-streaming],
-                [enable streaming debugging @<:@default=no@:>@])])
-
-if test "x$enable_debug_streaming" = xyes; then
-  AC_DEFINE([DEBUG_STREAMING], [1], [undocumented])
-fi
-
-# math debug notification
-AC_ARG_ENABLE([debug-math],
-[AS_HELP_STRING([--enable-debug-math],
-                [enable math debugging @<:@default=no@:>@])])
-
-if test "x$enable_debug_math" = xyes; then
-  AC_DEFINE([DEBUG_MATH], [1], [undocumented])
-fi
-
-# mem debug notification
-AC_ARG_ENABLE([debug-mem],
-[AS_HELP_STRING([--enable-debug-mem],
-                [enable mem debugging @<:@default=no@:>@])])
-
-if test "x$enable_debug_mem" = xyes; then
-  AC_DEFINE([DEBUG_MEM], [1], [undocumented])
-fi
-
-# context debug notification
-AC_ARG_ENABLE([debug-context],
-[AS_HELP_STRING([--enable-debug-context],
-                [enable context debugging @<:@default=no@:>@])])
-
-if test "x$enable_debug_context" = xyes; then
-  AC_DEFINE([DEBUG_CONTEXT], [1], [undocumented])
-fi
-
-# debug queue structures/functions/etc
-AC_ARG_ENABLE([debug-queue],
-[AS_HELP_STRING([--enable-debug-queue],
-                [enable queue debugging @<:@default=no@:>@])])
-
-if test "x$enable_debug_queue" = xyes; then
-  AC_DEFINE([DEBUG_QUEUE], [1], [undocumented])
-fi
-
-# debug filter
-AC_ARG_ENABLE([debug-filter],
-[AS_HELP_STRING([--enable-debug-filter],
-                [enable filter debugging @<:@default=no@:>@])])
-
-if test "x$enable_debug_filter" = xyes; then
-  AC_DEFINE([DEBUG_FILTER], [1], [undocumented])
-fi
-
-# debug maximus
-AC_ARG_ENABLE([debug-maximus],
-[AS_HELP_STRING([--enable-debug-maximus],
-                [enable all debugging @<:@default=no@:>@])])
-
-if test "x$enable_debug_maximus" = xyes; then
-  AC_DEFINE([DEBUG_MAXIMUS], [1], [undocumented])
-fi
 
 
 dnl check for ALSA headers
