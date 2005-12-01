@@ -10,17 +10,17 @@
 
 #include "al_siteconfig.h"
 
-#if defined(USE_POSIXTHREADS)
+#if defined(USE_POSIXTHREADING)
 
 #include <pthread.h>
 typedef pthread_t *ThreadID;
 
-#elif defined(USE_WINDOWSTHREADS)
+#elif defined(USE_WINDOWSTHREADING)
 
 #include <windows.h>
 typedef HANDLE ThreadID;
 
-#elif defined(USE_MORPHOSTHREADS)
+#elif defined(USE_MORPHOSTHREADING)
 
 #include <exec/ports.h>
 #include <dos/dosextens.h>

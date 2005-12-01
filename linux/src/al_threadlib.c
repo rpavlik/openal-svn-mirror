@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include "al_threadlib.h"
 
-#if defined(USE_POSIXMUTEX)
+#if defined(USE_POSIXTHREADING)
 
 typedef int ( *ptfunc ) ( void * );
 
@@ -59,7 +59,7 @@ void _alExitThread( void )
 	pthread_exit( NULL );
 }
 
-#elif defined(USE_WINDOWSMUTEX)
+#elif defined(USE_WINDOWSTHREADING)
 
 /* for _alMicroSleep */
 #include "al_main.h"
@@ -101,7 +101,7 @@ unsigned int _alSelfThread( void )
 	return ( unsigned int ) GetCurrentThreadId(  );
 }
 
-#elif defined(USE_MORPHOSMUTEX)
+#elif defined(USE_MORPHOSTHREADING)
 
 #include <dos/dostags.h>
 #include <proto/dos.h>

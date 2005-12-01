@@ -28,9 +28,6 @@ AC_PROG_LIBTOOL
 AC_SUBST([LIBTOOL_DEPS])
 AC_PROG_CXX
 
-BROKEN_PTHREAD_FLAG=no         # BSD use -pthread, not -lpthread
-NO_PTHREAD_FLAG=no
-
 ################################################################################
 # Checks for library functions.
 ################################################################################
@@ -38,8 +35,19 @@ NO_PTHREAD_FLAG=no
 AC_CHECK_LIBM
 AC_SUBST([LIBM])
 
+ACX_PTHREAD(
+  [LIBS="$PTHREAD_LIBS $LIBS"
+   FEATURECFLAGS="$FEATURECFLAGS $PTHREAD_CFLAGS"
+   CC=$PTHREAD_CC
+   AC_DEFINE([USE_POSIXTHREADING], [1], [Define to 1 if POSIX threading should be used.])],
+  [AC_CHECK_HEADER([windows.h],
+    [AC_DEFINE([USE_WINDOWSTHREADING], [1], [Define to 1 if Windows threading should be used.])],
+    [AC_CHECK_HEADER([dos/dosextens.h],
+      [AC_DEFINE([USE_MORPHOSTHREADING], [1], [Define to 1 if MorphOS threading should be used.])],
+      [AC_DEFINE([NO_THREADING], [1], [undocumented])])])])
+
 ################################################################################
-# handling of warning-related options
+# Handle warning-related options.
 ################################################################################
 
 AC_ARG_ENABLE([warnings],
@@ -86,7 +94,7 @@ if test "x$enable_werror" = xyes; then
 fi
 
 ################################################################################
-# handling of debugging-related options
+# Handle debugging-related options.
 ################################################################################
 
 AC_ARG_ENABLE([debug],
@@ -105,7 +113,7 @@ AC_ARG_ENABLE([efence],
 
 if test "x$enable_efence" = xyes; then
   openal_saved_LIBS=$LIBS
-  LIBS="$LIBS -lefence"
+  LIBS="-lefence $LIBS"
   AC_LINK_IFELSE([AC_LANG_PROGRAM([extern int EF_ALIGNMENT;], [EF_ALIGNMENT = 8;])],
     [:],
     [AC_MSG_WARN([--enable-efence ignored because the Electric Fence library was not found.])
@@ -113,7 +121,7 @@ if test "x$enable_efence" = xyes; then
 fi
 
 ################################################################################
-# handling of optimization-related options
+# Handle optimization-related options.
 ################################################################################
 
 AC_ARG_ENABLE([optimization],
@@ -168,7 +176,7 @@ case "$target" in
     *)
     RANLIB=echo
     dnl Should be allow dlopen of extensions?
-    AC_CHECK_LIB([dl], [dlopen], [LIBS="$LIBS -ldl"], [AC_DEFINE([NODLOPEN], [1], [undocumented]) echo "Can't dlopen extensions."])
+    AC_CHECK_LIB([dl], [dlopen], [LIBS="-ldl $LIBS"], [AC_DEFINE([NODLOPEN], [1], [undocumented]) echo "Can't dlopen extensions."])
     ;;
 esac
 
@@ -187,7 +195,6 @@ case "$target" in
     OS_OBJS="\$(LIN_OBJS)"
     ;;
     *bsd*)
-    BROKEN_PTHREAD_FLAG=yes
     AC_DEFINE([BSD_TARGET], [1], [undocumented])
     OS_OBJS="\$(BSD_OBJS)"
     ;;
@@ -203,14 +210,12 @@ case "$target" in
     AC_DEFINE([WINDOWS_TARGET], [1], [undocumented])
     FEATURECFLAGS="-DAL_BUILD_LIBRARY $FEATURECFLAGS"
     OS_OBJS="\$(WINDOWS_OBJS)"
-    LIBS="$LIBS -lwinmm"         # need that mm library for waveOutOpen etc
+    LIBS="-lwinmm $LIBS"         # need that mm library for waveOutOpen etc
     ;;
     *darwin*)
     # I think darwin can use dlopen with fink, but
     # I don't want to require fink
     AC_DEFINE([NODLOPEN], [1], [undocumented])
-    BROKEN_PTHREAD_FLAG=yes
-    NO_PTHREAD_FLAG=yes
     LIBS="$LIBS -I/System/Library/Frameworks/CoreAudio.framework/Headers/ -framework CoreAudio"
     AC_DEFINE([DARWIN_TARGET], [1], [undocumented])
     OS_OBJS="\$(DARWIN_OBJS)" ;;
@@ -303,7 +308,7 @@ case "$target" in
     *irix*)
     # need dmedia
     AC_DEFINE([IRIS_SUPPORT], [1], [undocumented])
-    LIBS="$LIBS -laudio"
+    LIBS="-laudio $LIBS"
     ;;
     *)
     # No extra libs needed
@@ -458,52 +463,6 @@ if test "x$enable_debug_maximus" = xyes; then
   AC_DEFINE([DEBUG_MAXIMUS], [1], [undocumented])
 fi
 
-# Check available thread packages
-AC_CHECK_HEADER([pthread.h], [PTHREAD_AVAILABLE=yes], [PTHREAD_AVAILABLE=no])
-
-dnl do some platform specific threead mojo
-case "$target" in
-	*cygwin*|*mingw*)
-		AC_CHECK_HEADER([windows.h], [WINTHREAD_AVAILABLE=yes]) ;;
-	*morphos*)
-		AC_CHECK_HEADER([dlfcn.h], [MOSTHREAD_AVAILABLE=yes]) ;;
-	*) ;;
-esac
-
-dnl threadify.
-if test "x$PTHREAD_AVAILABLE" = xyes; then
-
-    if test "x$NO_PTHREAD_FLAG" = xyes; then
-        LIBS="$LIBS"
-    else
-    if test "x$BROKEN_PTHREAD_FLAG" = xyes; then
-	LIBS="$LIBS -pthread"
-    else
-	LIBS="$LIBS -lpthread"
-    fi
-    fi
-
-    AC_DEFINE([USE_POSIXMUTEX], [1], [undocumented])
-    AC_DEFINE([USE_POSIXTHREADS], [1], [undocumented])
-else
-	dnl no pthread, check others
-
-	if test "x$WINTHREAD_AVAILABLE" = xyes; then
-    		AC_DEFINE([USE_WINDOWSMUTEX], [1], [undocumented])
-    		AC_DEFINE([USE_WINDOWSTHREADS], [1], [undocumented])
-	else
-
-		if test "x$MOSTHREAD_AVAILABLE" = xyes; then
-				AC_DEFINE([USE_MORPHOSMUTEX], [1], [undocumented])
-				AC_DEFINE([USE_MORPHOSTHREADS], [1], [undocumented])
-		else
-
-    		dnl no thread available
-
-    		AC_DEFINE([NO_THREADS], [1], [undocumented])
-		fi
-	fi
-fi
 
 dnl check for ALSA headers
 AC_ARG_ENABLE([alsa],
@@ -530,7 +489,7 @@ if test "x$enable_alsa" = xyes; then
     AC_DEFINE([OPENAL_DLOPEN_ALSA], [1], [undocumented])
   else
     AC_DEFINE([OPENAL_DLOPEN_ALSA], [0], [undocumented])
-    LIBS="$LIBS -lasound"
+    LIBS="-lasound $LIBS"
   fi
 fi
 
@@ -555,7 +514,7 @@ if test "x$enable_arts" = xyes; then
       AC_DEFINE([OPENAL_DLOPEN_ARTS], [1], [undocumented])
     else
       AC_DEFINE([OPENAL_DLOPEN_ARTS], [0], [undocumented])
-      LIBS="$LIBS $ARTS_LIBS"
+      LIBS="$ARTS_LIBS $LIBS"
     fi
   else
     AC_MSG_WARN([artsc-config not found. No aRts support compiled in.])
@@ -583,7 +542,7 @@ if test "x$enable_esd" = xyes; then
       AC_DEFINE([OPENAL_DLOPEN_ESD], [1], [undocumented])
     else
       AC_DEFINE([OPENAL_DLOPEN_ESD], [0], [undocumented])
-      LIBS="$LIBS $ESD_LIBS"
+      LIBS="$ESD_LIBS $LIBS"
     fi
   else
     AC_MSG_WARN([esd-config not found. No esd support compiled in.])
@@ -623,7 +582,7 @@ if test "x$enable_sdl" = xyes; then
       SDL_FEATURECFLAGS="-I/cygwin/usr/include/SDL"
       SDL_LIBS=""
       FEATURECFLAGS="$FEATURECFLAGS $SDL_FEATURECFLAGS"
-      LIBS="$LIBS $SDL_LIBS"
+      LIBS="$SDL_LIBS $LIBS"
       OS_OBJS="$OS_OBJS \$(SDL_OBJS)"
       AC_DEFINE([SDL_SUPPORT], [1], [undocumented])
       ;;
@@ -635,7 +594,7 @@ if test "x$enable_sdl" = xyes; then
         SDL_LIBS=`$HAVESDL --libs`
         AC_DEFINE([SDL_SUPPORT], [1], [undocumented])
         FEATURECFLAGS="$FEATURECFLAGS $SDL_FEATURECFLAGS"
-        LIBS="$LIBS $SDL_LIBS"
+        LIBS="$SDL_LIBS $LIBS"
         OLDCPPFLAGS="$CPPFLAGS"
         CPPFLAGS="-I/usr/local/include/SDL -I/usr/local/include"
         OS_OBJS="$OS_OBJS \$(SDL_OBJS)"
@@ -657,7 +616,7 @@ if test "x$enable_dsound" = xyes; then
     *cygwin*|*mingw*)
       AC_CHECK_HEADER([dsound.h],
         [AC_DEFINE([DSOUND_SUPPORT], [1], [undocumented])
-        LIBS="$LIBS -ldsound"])
+        LIBS="-ldsound $LIBS"])
       AC_DEFINE([DSOUND_SUPPORT], [1], [undocumented])
       ;;
     *)
@@ -674,7 +633,7 @@ AC_ARG_ENABLE([vorbis],
 if test "x$enable_vorbis" = xyes; then
     AC_CHECK_LIB([vorbisfile], [ov_info],
       [AC_DEFINE([VORBIS_SUPPORT], [1], [undocumented])
-      LIBS="$LIBS -lvorbis -lvorbisfile"], [], [-lvorbis])
+      LIBS="-lvorbis -lvorbisfile $LIBS"], [], [-lvorbis])
 fi
 
 # enable SMPEG for mp3 stuff?
@@ -705,7 +664,7 @@ if test "x$enable_smpeg" = xyes; then
       SMPEG_LIBS=`$HAVESMPEG --libs`
       AC_DEFINE([SMPEG_SUPPORT], [1], [undocumented])
       FEATURECFLAGS="$FEATURECFLAGS $SMPEG_FEATURECFLAGS"
-      LIBS="$LIBS $SMPEG_LIBS"
+      LIBS="$SMPEG_LIBS $LIBS"
     else
       AC_MSG_WARN([smpeg requires SDL, and none found.])
     fi

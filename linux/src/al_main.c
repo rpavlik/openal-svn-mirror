@@ -161,7 +161,7 @@ ALboolean _alInit( void ) {
 void _alExit( void ) {
 	int i;
 
-#ifndef NO_THREADS
+#ifndef NO_THREADING
 	/* we could be sync, so we check mixthread for a valid ID */
 	if(mixthread != NULL) {
 		time_for_mixer_to_die = AL_TRUE;
@@ -172,7 +172,7 @@ void _alExit( void ) {
 			_alMicroSleep(100000);
 		}
 	}
-#endif /* NO_THREADS */
+#endif /* NO_THREADING */
 
 	for(i = 0; i < _ALC_MAX_CHANNELS; i++) {
 		if(f_buffers.data[i] != NULL) {

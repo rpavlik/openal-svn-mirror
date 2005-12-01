@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include "al_mutexlib.h"
 
-#if defined(USE_POSIXMUTEX)
+#if defined(USE_POSIXTHREADING)
 
 MutexID _alCreateMutex( void )
 {
@@ -47,7 +47,7 @@ void _alUnlockMutex( MutexID mutex )
 	pthread_mutex_unlock( mutex );
 }
 
-#elif defined(USE_WINDOWSMUTEX)
+#elif defined(USE_WINDOWSTHREADING)
 
 MutexID _alCreateMutex( void )
 {
@@ -79,7 +79,7 @@ void _alUnlockMutex( MutexID mutex )
 	LeaveCriticalSection( mutex );
 }
 
-#elif defined(USE_MORPHOSMUTEX)
+#elif defined(USE_MORPHOSTHREADING)
 
 #include <proto/exec.h>
 

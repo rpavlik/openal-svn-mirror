@@ -21,8 +21,7 @@
 
 /* #undef EMPTY_LOCKS */
 
-#define USE_POSIXTHREADS 1
-#define USE_POSIXMUTEX 1
+#define USE_POSIXTHREADING 1
 
 #define NODLOPEN 1
 #define RDYNAMIC "-rdynamic"

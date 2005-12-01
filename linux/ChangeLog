@@ -1,5 +1,11 @@
 2005-12-01  Sven Panne  <sven.panne@aedion.de>
 
+	* CMakeLists.txt, config-osx.h, configure.ac, src/al_main.c,
+	src/al_mutexlib.c, src/al_mutexlib.h, src/al_threadlib.c,
+	src/al_threadlib.h: Cleaned up threading detection.
+
+	* admin/autotools/m4/acx_pthread.m4: Added.
+
 	* configure.ac: Renamed --enable-gcc-warnings to
 	--enable-more-warnings. Actually test for libefence when --enable-efence
 	has been given.

@@ -20,17 +20,17 @@
 
 #else
 
-#if defined(USE_POSIXMUTEX)
+#if defined(USE_POSIXTHREADING)
 
 #include <pthread.h>
 typedef pthread_mutex_t *MutexID;
 
-#elif defined(USE_WINDOWSMUTEX)
+#elif defined(USE_WINDOWSTHREADING)
 
 #include <windows.h>
 typedef LPCRITICAL_SECTION MutexID;
 
-#elif defined(USE_MORPHOSMUTEX)
+#elif defined(USE_MORPHOSTHREADING)
 
 #include <exec/semaphores.h>
 typedef struct SignalSemaphore *MutexID;
