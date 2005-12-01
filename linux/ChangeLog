@@ -1,3 +1,9 @@
+2005-12-01  Sven Panne  <sven.panne@aedion.de>
+
+	* configure.ac: Renamed --enable-gcc-warnings to
+	--enable-more-warnings. Actually test for libefence when --enable-efence
+	has been given.
+
 2005-11-30  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/arch/i386/floatmul.c, src/arch/i386/mixaudio16_mmx_prk.c

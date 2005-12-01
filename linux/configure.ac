@@ -49,18 +49,20 @@ AC_ARG_ENABLE([warnings],
 if test "x$enable_warnings" = xno; then
   WARNINGCFLAGS=""
 else
-  AX_CFLAGS_WARN_ALL_ANSI([WARNINGCFLAGS])
+  # Doing it in two steps gives a nicer message...
+  AX_CFLAGS_WARN_ALL_ANSI([flags])
+  WARNINGCFLAGS=$flags
 fi
 
-AC_ARG_ENABLE([gcc-warnings],
-[AS_HELP_STRING([--enable-gcc-warnings],
-                [enable additional GCC-specific warnings @<:@default=no@:>@])])
+AC_ARG_ENABLE([more-warnings],
+[AS_HELP_STRING([--enable-more-warnings],
+                [enable even more compiler warnings @<:@default=no@:>@])])
 
-if test "x$enable_gcc_warnings" = xyes; then
+if test "x$enable_more_warnings" = xyes; then
   if test "x$enable_warnings" = xno; then
-    AC_MSG_WARN([--enable-gcc-warnings ignored because of --disable-warnings])
+    AC_MSG_WARN([--enable-more-warnings ignored because of --disable-warnings])
   elif test "x$GCC" != xyes; then
-    AC_MSG_WARN([--enable-gcc-warnings ignored because no GCC was detected])
+    AC_MSG_WARN([--enable-more-warnings ignored because no GCC was detected])
   else
     # There are some warnings which are note enabled (yet):
     #    -Wpadded: Perhaps good for optimizing out data layout, but not in general
@@ -81,6 +83,33 @@ if test "x$enable_werror" = xyes; then
   else
     WARNINGCFLAGS="$WARNINGCFLAGS -Werror"
   fi
+fi
+
+################################################################################
+# handling of debugging-related options
+################################################################################
+
+AC_ARG_ENABLE([debug],
+[AS_HELP_STRING([--enable-debug],
+                [enable debug code and assertions @<:@default=no@:>@])])
+
+if test "x$enable_debug" = xyes; then
+  AC_DEFINE([DEBUG], [1], [Define to 1 if you want to include debugging code.])
+else
+  AC_DEFINE([NDEBUG], [1], [Define to 1 if you want to disable the assert() macro.])
+fi
+
+AC_ARG_ENABLE([efence],
+[AS_HELP_STRING([--enable-efence],
+                [enable Electric Fence support @<:@default=no@:>@])])
+
+if test "x$enable_efence" = xyes; then
+  openal_saved_LIBS=$LIBS
+  LIBS="$LIBS -lefence"
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([extern int EF_ALIGNMENT;], [EF_ALIGNMENT = 8;])],
+    [:],
+    [AC_MSG_WARN([--enable-efence ignored because the Electric Fence library was not found.])
+     LIBS=$openal_saved_LIBS])
 fi
 
 ################################################################################
@@ -118,17 +147,6 @@ AC_ARG_ENABLE([profile],
 if test "x$enable_profile" = xyes; then
   OPTIMIZATIONCFLAGS="$OPTIMIZATIONCFLAGS -pg"
   PROFILINGLDFLAGS="$LDFLAGS -pg"
-fi
-
-# debugging stuff
-AC_ARG_ENABLE([debug],
-[AS_HELP_STRING([--enable-debug],
-                [enable debug code and assertions @<:@default=no@:>@])])
-
-if test "x$enable_debug" = xyes; then
-  AC_DEFINE([DEBUG], [1], [Define to 1 if you want to include debugging code.])
-else
-  AC_DEFINE([NDEBUG], [1], [Define to 1 if you want to disable the assert() macro.])
 fi
 
 # no mutex locking for sync. driver
@@ -294,15 +312,6 @@ esac
 
 dnl check for sizeof
 AC_CHECK_SIZEOF([void *])
-
-# efence stuff
-AC_ARG_ENABLE([efence],
-[AS_HELP_STRING([--enable-efence],
-                [enable EFENCE support @<:@default=no@:>@])])
-
-if test "x$enable_efence" = xyes; then
-  LIBS="$LIBS -lefence"
-fi
 
 # stubifying
 AC_ARG_ENABLE([stub-notify],
