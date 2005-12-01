@@ -17,8 +17,9 @@ m4_ifdef([AS_HELP_STRING], [], [AC_DEFUN([AS_HELP_STRING], [AC_HELP_STRING($][@)
 # Checks for programs.
 ################################################################################
 
-# We need ISO C99 features for e.g. snprintf.
-FEATURECFLAGS="-D_ISOC99_SOURCE"
+# We need ISO C99 features (e.g. snprintf) and POSIX IEEE Std 1003.1b-1993
+# features (e.g. struct timespec, used in <alsa/asoundlib.h>)
+FEATURECFLAGS="-D_ISOC99_SOURCE -D_POSIX_C_SOURCE=199309"
 
 AC_PROG_CC
 AC_C_CONST
@@ -446,8 +447,10 @@ if test "x$have_mmx" = xyes; then
 fi
 
 
-dnl Check for headers/libs required for native backends
-dnl Special OS objs for target systems
+################################################################################
+# Checks for backends.
+################################################################################
+
 case "$target" in
     *irix*)
     # need dmedia
@@ -459,38 +462,44 @@ case "$target" in
     ;;
 esac
 
-dnl check for sizeof
-AC_CHECK_SIZEOF([void *])
+# check for ALSA backend
 
-
-dnl check for ALSA headers
 AC_ARG_ENABLE([alsa],
 [AS_HELP_STRING([--enable-alsa],
-                [enable the alsa backend @<:@default=no@:>@])])
-
-if test "x$enable_alsa" = xyes; then
-    AC_CHECK_HEADERS([time.h])
-    AC_CHECK_HEADER([alsa/asoundlib.h],
-      [AC_DEFINE([ALSA_SUPPORT], [1], [undocumented])
-       OS_OBJS="$OS_OBJS \$(ALSA_OBJS)"],
-      [enable_alsa=no],
-      [#if HAVE_TIME_H
-#include <time.h>
-#endif])
-fi
+                [enable ALSA backend @<:@default=yes@:>@])])
 
 AC_ARG_ENABLE([alsa-dlopen],
 [AS_HELP_STRING([--enable-alsa-dlopen],
-                [dlopen alsa libs at runtime @<:@default=no@:>@])])
+                [dynamically load ALSA libs at runtime @<:@default=no@:>@])])
 
-if test "x$enable_alsa" = xyes; then
-  if test "x$enable_alsa_dlopen" = xyes; then
-    AC_DEFINE([OPENAL_DLOPEN_ALSA], [1], [undocumented])
-  else
-    AC_DEFINE([OPENAL_DLOPEN_ALSA], [0], [undocumented])
-    LIBS="-lasound $LIBS"
-  fi
+AC_CHECK_HEADER([alsa/asoundlib.h],
+   [openal_have_alsa_asoundlib_h=yes],
+   [openal_have_alsa_asoundlib_h=no])
+
+AC_SEARCH_LIBS([snd_pcm_info_sizeof], [asound],
+  [openal_have_asound_lib=yes],
+  [openal_have_asound_lib=no])
+
+AC_MSG_CHECKING([for ALSA support])
+if test "x$enable_alsa" = xno; then
+  openal_alsa_support=disabled
+elif test "x$openal_have_alsa_asoundlib_h" = xno; then
+  openal_alsa_support=none
+elif test "x$enable_alsa_dlopen" = xyes; then
+  openal_alsa_support=dynamic
+  AC_DEFINE([OPENAL_DLOPEN_ALSA], [1], [dynamically load ALSA libs at runtime])
+elif test "x$openal_have_asound_lib" = xyes; then
+  openal_alsa_support=static
+else
+  openal_alsa_support=none
 fi
+AC_MSG_RESULT([$openal_alsa_support])
+
+if test "x$openal_alsa_support" = xdynamic || test "x$openal_alsa_support" = xstatic; then
+  AC_DEFINE([ALSA_SUPPORT], [1], [Define to 1 if the ALSA backend should be used.])
+  OS_OBJS="$OS_OBJS \$(ALSA_OBJS)"
+fi
+
 
 # enable arts sound?
 AC_ARG_ENABLE([arts],
@@ -671,6 +680,8 @@ if test "x$enable_smpeg" = xyes; then
     AC_MSG_WARN([smpeg not found.  No support compiled in.])
   fi
 fi
+
+AC_CHECK_SIZEOF([void *])
 
 AC_DEFINE([LINUX_AL], [1], [undocumented])
 

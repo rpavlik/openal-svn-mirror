@@ -1,5 +1,7 @@
 2005-12-01  Sven Panne  <sven.panne@aedion.de>
 
+	* configure.ac, src/arch/alsa/alsa.c: Cleaned up ALSA detection.
+
 	* configure.ac: Moved debugging-related options together. Renamed
 	--enable-stub-notify to --enable-debug-stub, the former seems to be a
 	cut-n-paste error. Added explanations for debugging-related #defines.
