@@ -3222,7 +3222,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 		bServiceNow = AL_FALSE;
 
 		// Only has an effect if the Source is playing
-		if ((ALSource->uservalue1) && (ALSource->state == AL_PLAYING))
+		if ((ALSource->uservalue1) && ((ALSource->state == AL_PLAYING) || (ALSource->state == AL_PAUSED)))
 		{
 			// Find out whether Looping has been enabled or disabled
 			if (ALSource->bLooping == AL_TRUE)
@@ -3288,7 +3288,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 
 				ALSource->BuffersAddedToDSBuffer = (ALSource->BuffersAddedToDSBuffer % ALSource->BuffersInQueue);
 
-				if (WriteCursor > PlayCursor)
+				if (WriteCursor >= PlayCursor)
 					DataCommitted = WriteCursor - PlayCursor;
 				else
 					DataCommitted = (88200 - PlayCursor) + WriteCursor;
