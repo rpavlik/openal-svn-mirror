@@ -1,3 +1,7 @@
+2005-12-02  Sven Panne  <sven.panne@aedion.de>
+
+	* src/Makefile.am: Fixed include path.
+
 2005-12-01  Sven Panne  <sven.panne@aedion.de>
 
 	* configure.ac, src/arch/alsa/alsa.c: Cleaned up ALSA detection.
