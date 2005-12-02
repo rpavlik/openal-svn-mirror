@@ -99,7 +99,6 @@ export LDFLAGS=-Wl,-relax
 %endif
 ./configure --prefix=%{_prefix}		\
 	    --enable-optimization	\
-	    --enable-alsa		\
 	    --enable-arts		\
 	    --enable-esd		\
 	    --enable-null		\

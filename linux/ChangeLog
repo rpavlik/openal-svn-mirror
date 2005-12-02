@@ -1,5 +1,7 @@
 2005-12-02  Sven Panne  <sven.panne@aedion.de>
 
+	* admin/RPM/openal.spec: ALSA support is now autodetected.
+
 	* src/Makefile.am: Fixed include path.
 
 2005-12-01  Sven Panne  <sven.panne@aedion.de>
