@@ -231,7 +231,7 @@ IF(DEBUG)
       MESSAGE("Electric Fence not installed - disabled.")
       SET(EFENCE OFF)
     ELSE(EFENCE_LIB MATCHES "NOTFOUND")
-      SET(ADD_LIBS ${ADD_LIBS} ${EFENCE_LIB})
+      SET(ADD_LIBS ${ADD_LIBS} efence)
     ENDIF(EFENCE_LIB MATCHES "NOTFOUND")
   ENDIF(EFENCE)
 
@@ -418,8 +418,7 @@ IF(ALSA)
         MESSAGE("Alsa library not found - Alsa support disabled.")
         SET(ALSA OFF)
       ELSE(ALSA_LIB MATCHES "NOTFOUND")
-
-        SET(ADD_LIBS ${ADD_LIBS} ${ALSA_LIB})
+        SET(ADD_LIBS ${ADD_LIBS} asound)
       ENDIF(ALSA_LIB MATCHES "NOTFOUND")
     ENDIF(ALSA_DLOPEN)
 
@@ -699,7 +698,7 @@ IF(BUILD_TESTS)
     MESSAGE("alut not installed, cannot build tests")
   ELSE(ALUT_LIB MATCHES "NOTFOUND")
     ADD_LIBRARY(testlib test/testlib.c)
-    TARGET_LINK_LIBRARIES(testlib ${ADD_LIBS} openal ${ALUT_LIB})
+    TARGET_LINK_LIBRARIES(testlib ${ADD_LIBS} openal alut)
 
     SET(TESTS reverb
               da
@@ -757,12 +756,12 @@ IF(BUILD_TESTS)
       # gets added at the beginning thus having no effect
       SET_SOURCE_FILES_PROPERTIES(${TEST_SRC} PROPERTIES COMPILE_FLAGS "-Wno-unused")
       ADD_EXECUTABLE(test${TEST} ${TEST_SRC})
-      TARGET_LINK_LIBRARIES(test${TEST} testlib ${ADD_LIBS} openal ${ALUT_LIB})
+      TARGET_LINK_LIBRARIES(test${TEST} testlib ${ADD_LIBS} openal alut)
     ENDFOREACH(TEST)
 
     SET_SOURCE_FILES_PROPERTIES(test/testcpp.cc PROPERTIES COMPILE_FLAGS "-Wno-unused")
     ADD_EXECUTABLE(testcpp test/testcpp.cc)
-    TARGET_LINK_LIBRARIES(testcpp testlib ${ADD_LIBS} openal ${ALUT_LIB})
+    TARGET_LINK_LIBRARIES(testcpp testlib ${ADD_LIBS} openal alut)
 
     # copy over testdata, so test-suite can be used in binary dir
     SET(TESTDATA boom.mp3
