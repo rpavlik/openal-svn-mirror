@@ -26,7 +26,7 @@ MACRO(ADD_DEFINE ARG)
 SET(CONFIG_H_CONTENT "${CONFIG_H_CONTENT}#define ${ARG}
 
 ")
-#can't cache mulitline values
+# can't cache mulitline values
 SET(CONFIG_H_VALS "${CONFIG_H_VALS}${ARG}" CACHE INTERNAL "")
 ENDMACRO(ADD_DEFINE ARG)
 
@@ -41,8 +41,10 @@ ENDMACRO(MACRO_TEST ARG VAR)
 
 ADD_DEFINE("PACKAGE_VERSION \"${PACKAGE_VERSION}\"")
 
-# We need ISO C99 features for e.g. snprintf.
-ADD_DEFINITIONS(-D_ISOC99_SOURCE)
+# We need ISO C99 features (e.g. snprintf) and POSIX IEEE Std 1003.1b-1993
+# features (e.g. struct timespec, used in <alsa/asoundlib.h>)
+ADD_DEFINITIONS(-D_ISOC99_SOURCE -D_POSIX_C_SOURCE=199309)
+
 ADD_DEFINE("SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P}")
 
 INCLUDE(${CMAKE_ROOT}/Modules/CheckCSourceCompiles.cmake)
@@ -134,13 +136,11 @@ SET(MORPHOS_OBJS         src/arch/morphos/morphos_native.c
                          src/arch/morphos/morphos_dispatcher.c)
 SET(WINDOWS_OBJS         src/arch/windows/windows_native.c)
 
-SET(BROKEN_PTHREAD_FLAG OFF)       # BSD uses -pthread, not -lpthread
-SET(NO_PTHREAD_FLAG OFF)
 
 SET(ADD_CFLAGS "")
 SET(ADD_LIBS "")
 SET(ADD_LDFLAGS "")
-SET(WFLAGS "")
+SET(ADD_WFLAGS "")
 
 IF(CMAKE_UNAME)
   EXEC_PROGRAM(uname ARGS -m OUTPUT_VARIABLE CMAKE_SYSTEM_MACHINE)
@@ -174,7 +174,7 @@ OPTION(WARNINGS "enable warnings" ON)
 # no mutex locking for sync. driver
 OPTION(EMPTY_LOCKS "enable empty locks" OFF)
 
-#sound backends
+# sound backends
 OPTION(ALSA "alsa backend" OFF)
 OPTION(ALSA_DLOPEN "alsa dynamic loading" OFF)
 OPTION(ARTS "arts backend" OFF)
@@ -186,11 +186,11 @@ OPTION(NULLOUT "null out backend" ON)
 OPTION(SDL "sdl backend" OFF)
 OPTION(DSOUND "directsound backend" OFF)
 
-#additional codecs
+# additional codecs
 OPTION(VORBIS "vorbis support" OFF)
 OPTION(SMPEG "smpeg support" OFF)
 
-#want test-suit?
+# want test-suit?
 OPTION(BUILD_TESTS "build the test-suite" OFF)
 
 IF(OPTIMIZATION)
@@ -227,7 +227,7 @@ IF(DEBUG)
 
   IF(EFENCE)
     FIND_LIBRARY(EFENCE_LIB NAMES efence PATHS /usr/lib /usr/local/lib)
-     IF(EFENCE_LIB MATCHES "NOTFOUND")
+    IF(EFENCE_LIB MATCHES "NOTFOUND")
       MESSAGE("Electric Fence not installed - disabled.")
       SET(EFENCE OFF)
     ELSE(EFENCE_LIB MATCHES "NOTFOUND")
@@ -304,7 +304,7 @@ ELSE(DEBUG)
 ENDIF(DEBUG)
 
 
-#library stuff
+# library stuff
 CHECK_LIBRARY_EXISTS("m" "sin" "" HAVE_LIB_M)
 
 IF(NOT CMAKE_SYSTEM MATCHES "Darwin")
@@ -338,7 +338,6 @@ ELSE(CMAKE_SYSTEM MATCHES "Linux")
 IF(CMAKE_SYSTEM MATCHES "BSD")
   ADD_DEFINE("BSD_TARGET 1")
   SET(OS_OBJS ${BSD_OBJS})
-  SET(BROKEN_PTHREAD_FLAG ON)
 ELSE(CMAKE_SYSTEM MATCHES "BSD")
 
 IF(CMAKE_SYSTEM MATCHES "SunOS")
@@ -357,10 +356,8 @@ IF(CMAKE_SYSTEM MATCHES "Windows")
   ADD_DEFINE("WINDOWS_TARGET 1")
   ADD_DEFINE(AL_BUILD_LIBRARY)
   SET(OS_OBJS ${WINDOWS_OBJS})
-  # need that mm library for waveOutOpen etc
+  # need winmm library for waveOutOpen etc.
   SET(ADD_LIBS ${ADD_LIBS} winmm)
-
-  CHECK_INCLUDE_FILE(windows.h WINTHREAD_AVAILABLE)
 ELSE(CMAKE_SYSTEM MATCHES "Windows")
 
 IF(CMAKE_SYSTEM MATCHES "Darwin")
@@ -368,8 +365,6 @@ IF(CMAKE_SYSTEM MATCHES "Darwin")
   SET(OS_OBJS ${DARWIN_OBJS})
   #FIXME
   SET(ADD_LDFLAGS "${ADD_LDFLAGS} -I/System/Library/Frameworks/CoreAudio.framework/Headers/ -framework CoreAudio")
-  SET(BROKEN_PTHREAD_FLAG ON)
-  SET(NO_PTHREAD_FLAG ON)
 ELSE(CMAKE_SYSTEM MATCHES "Darwin")
 
 IF(CMAKE_SYSTEM MATCHES "morphos")
@@ -388,55 +383,60 @@ ENDIF(CMAKE_SYSTEM MATCHES "SunOS")
 ENDIF(CMAKE_SYSTEM MATCHES "BSD")
 ENDIF(CMAKE_SYSTEM MATCHES "Linux")
 
-CHECK_INCLUDE_FILE(pthread.h PTHREAD_AVAILABLE)
-
-#threadify
-IF(PTHREAD_AVAILABLE)
-  IF(NOT NO_PTHREAD_FLAG)
-    IF(BROKEN_PTHREAD_FLAG)
-      SET(ADD_LIBS "${ADD_LIBS} -pthread")
-    ELSE(BROKEN_PTHREAD_FLAG)
-      SET(ADD_LIBS "${ADD_LIBS} -lpthread")
-    ENDIF(BROKEN_PTHREAD_FLAG)
-  ENDIF(NOT NO_PTHREAD_FLAG)
-
-  ADD_DEFINE(USE_POSIXTHREADING)
-ELSE(PTHREAD_AVAILABLE)
-
-IF(WINTHREAD_AVAILABLE)
-  ADD_DEFINE(USE_WINDOWSTHREADING)
-ELSE(WINTHREAD_AVAILABLE)
-
+# threads handling
 IF(MOSTHREAD_AVAILABLE)
   ADD_DEFINE(USE_MORPHOSTHREADING)
 ELSE(MOSTHREAD_AVAILABLE)
 
-  ADD_DEFINE(NO_THREADING)
+  FIND_PACKAGE(Threads)
+  IF(CMAKE_USE_WIN32_THREADS_INIT)
+    ADD_DEFINE(USE_WINDOWSTHREADING)
+  ELSE(CMAKE_USE_WIN32_THREADS_INIT)
+
+  IF(CMAKE_USE_PTHREADS_INIT)
+    ADD_DEFINE(USE_POSIXTHREADING)
+    SET(ADD_LIBS ${ADD_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+  ELSE(CMAKE_USE_PTHREADS_INIT)
+
+    ADD_DEFINE(NO_THREADING)
+  ENDIF(CMAKE_USE_PTHREADS_INIT)
+  ENDIF(CMAKE_USE_WIN32_THREADS_INIT)
 ENDIF(MOSTHREAD_AVAILABLE)
-ENDIF(WINTHREAD_AVAILABLE)
-ENDIF(PTHREAD_AVAILABLE)
 
-#sound backends
+
+# sound backends
 IF(ALSA)
-  CHECK_INCLUDE_FILE(alsa/asoundlib.h FOUND_ALSA)
-  IF(FOUND_ALSA)
-    SET(OS_OBJS ${OS_OBJS} ${ALSA_OBJS})
-    ADD_DEFINE(ALSA_SUPPORT)
+  CHECK_INCLUDE_FILE(alsa/asoundlib.h HAVE_ASOUNDLIB_H)
 
-    CHECK_INCLUDE_FILE(time.h HAVE_TIME_H)
-    IF(HAVE_TIME_H)
-      ADD_DEFINE("HAVE_TIME_H 1")
-    ENDIF(HAVE_TIME_H)
-
+  IF(HAVE_ASOUNDLIB_H)
     IF(ALSA_DLOPEN)
       ADD_DEFINE("OPENAL_DLOPEN_ALSA 1")
     ELSE(ALSA_DLOPEN)
-      SET(ADD_LIBS ${ADD_LIBS} asound)
+
+      FIND_LIBRARY(ALSA_LIB NAMES asound PATHS /usr/lib /usr/local/lib)
+      IF(ALSA_LIB MATCHES "NOTFOUND")
+        MESSAGE("Alsa library not found - Alsa support disabled.")
+        SET(ALSA OFF)
+      ELSE(ALSA_LIB MATCHES "NOTFOUND")
+
+        SET(ADD_LIBS ${ADD_LIBS} ${ALSA_LIB})
+      ENDIF(ALSA_LIB MATCHES "NOTFOUND")
     ENDIF(ALSA_DLOPEN)
-  ELSE(FOUND_ALSA)
+
+    IF(ALSA)
+      SET(OS_OBJS ${OS_OBJS} ${ALSA_OBJS})
+      ADD_DEFINE(ALSA_SUPPORT)
+
+      CHECK_INCLUDE_FILE(time.h HAVE_TIME_H)
+      IF(HAVE_TIME_H)
+        ADD_DEFINE("HAVE_TIME_H 1")
+      ENDIF(HAVE_TIME_H)
+    ENDIF(ALSA)
+  ELSE(HAVE_ASOUNDLIB_H)
+
     MESSAGE("Alsa not found - Alsa support disabled.")
     SET(ALSA OFF)
-  ENDIF(FOUND_ALSA)
+  ENDIF(HAVE_ASOUNDLIB_H)
 ENDIF(ALSA)
 
 IF(ARTS)
@@ -570,7 +570,7 @@ IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
   ENDIF(MMX_ENABLED)
 
   IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86")
-    #nasm stuff to do!
+    # nasm stuff
     FIND_PROGRAM(HAVE_NASM NAMES nasm)
 
     IF(NOT HAVE_NASM MATCHES "NOTFOUND")
@@ -581,6 +581,7 @@ IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
 
       IF(MMX_ENABLED)
         SET(ARCH_OBJS ${ARCH_OBJS} ${x86_MMX_NASM_OBJS})
+        ADD_DEFINE(HAVE_MMX_MEMCPY)
       ENDIF(MMX_ENABLED)
     ENDIF(NOT HAVE_NASM MATCHES "NOTFOUND")
   ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "i.86")
@@ -600,20 +601,20 @@ ELSE(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64
 ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
 
 
-#compiler specific settings
+# compiler specific settings
 IF(CMAKE_COMPILER_IS_GNUCC)
   ADD_DEFINITIONS(-std=c99)
 
   IF(WARNINGS)
-    SET(WFLAGS "${WFLAGS} -Wall -ansi -pedantic -W")
+    SET(ADD_WFLAGS "${ADD_WFLAGS} -Wall -ansi -pedantic -W")
 
     IF(MORE_WARNINGS)
-      SET(WFLAGS "${WFLAGS} -Waggregate-return -Wbad-function-cast -Wcast-align -Wcast-qual -Wconversion -Wdisabled-optimization -Wendif-labels -Winline -Wlong-long -Wmissing-declarations -Wmissing-noreturn -Wmissing-prototypes -Wnested-externs -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wsign-compare -Wstrict-prototypes -Wwrite-strings")
+      SET(ADD_WFLAGS "${ADD_WFLAGS} -Waggregate-return -Wbad-function-cast -Wcast-align -Wcast-qual -Wconversion -Wdisabled-optimization -Wendif-labels -Winline -Wlong-long -Wmissing-declarations -Wmissing-noreturn -Wmissing-prototypes -Wnested-externs -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wsign-compare -Wstrict-prototypes -Wwrite-strings")
     ENDIF(MORE_WARNINGS)
 
     # Should we use turn warnings into errors?
     IF(USE_WERROR)
-      SET(WFLAGS "${WFLAGS} -Werror -pedantic-errors")
+      SET(ADD_WFLAGS "${ADD_WFLAGS} -Werror -pedantic-errors")
     ENDIF(USE_WERROR)
   ENDIF(WARNINGS)
 
@@ -640,21 +641,21 @@ IF(CMAKE_COMPILER_IS_GNUCC)
       MESSAGE("No CFLAGS found; setting default ones.")
     ENDIF(NOT ${ADD_CFLAGS} MATCHES "O")
   ENDIF(${CMAKE_C_FLAGS} MATCHES "^ $")
-
 ELSE(CMAKE_COMPILER_IS_GNUCC)
+
   MESSAGE("Your compiler isn't fully supported yet - no flags set.")
 ENDIF(CMAKE_COMPILER_IS_GNUCC)
 
 ADD_DEFINE(LINUX_AL)
 
-#Generate config.h only if values differ
+# Generate config.h only if values differ
 IF(NOT CONFIG_H_VALS_OLD STREQUAL CONFIG_H_VALS OR NOT EXISTS ${CONFIG_H_FILE})
   MESSAGE(STATUS "Writing config.h")
   FILE(WRITE ${CONFIG_H_FILE} "${CONFIG_H_CONTENT}")
 ENDIF(NOT CONFIG_H_VALS_OLD STREQUAL CONFIG_H_VALS OR NOT EXISTS ${CONFIG_H_FILE})
 
 
-SET(CMAKE_C_FLAGS "${WFLAGS} ${ADD_CFLAGS} ${CMAKE_C_FLAGS}")
+SET(CMAKE_C_FLAGS "${ADD_WFLAGS} ${ADD_CFLAGS} ${CMAKE_C_FLAGS}")
 SET(CMAKE_CXX_FLAGS "${ADD_CFLAGS} ${CMAKE_CXX_FLAGS}")
 SET(CMAKE_SHARED_LINKER_FLAGS "${ADD_LDFLAGS} ${CMAKE_SHARED_LINKER_FLAGS}")
 SET(CMAKE_MODULE_LINKER_FLAGS "${ADD_LDFLAGS} ${CMAKE_MODULE_LINKER_FLAGS}")
@@ -668,10 +669,10 @@ SET(OPENAL_OBJS ${AL_OBJS}
                 ${EXT_OBJS})
 
 IF(BUILD_STATIC)
-  #we can't create a static library with the same name
-  #as the shared one, so we copy it over after creation
+  # we can't create a static library with the same name
+  # as the shared one, so we copy it over after creation
   ADD_LIBRARY(openal-static STATIC ${OPENAL_OBJS})
-  SET_TARGET_PROPERTIES(openal-static PROPERTIES OUTPUT_NAME openal)
+  #SET_TARGET_PROPERTIES(openal-static PROPERTIES OUTPUT_NAME openal)
   SET_TARGET_PROPERTIES(openal-static PROPERTIES LINKER_LANGUAGE C)
   TARGET_LINK_LIBRARIES(openal-static ${ADD_LIBS})
   ADD_CUSTOM_COMMAND(
@@ -686,11 +687,10 @@ ENDIF(BUILD_STATIC)
 
 ADD_LIBRARY(openal SHARED ${OPENAL_OBJS})
 SET_TARGET_PROPERTIES(openal PROPERTIES LINKER_LANGUAGE C)
-SET_TARGET_PROPERTIES(openal PROPERTIES VERSION ${PACKAGE_VERSION}
-                                        SOVERSION ${PACKAGE_MAJOR_VERSION})
+SET_TARGET_PROPERTIES(openal PROPERTIES VERSION ${PACKAGE_VERSION} SOVERSION ${PACKAGE_MAJOR_VERSION})
 TARGET_LINK_LIBRARIES(openal ${ADD_LIBS})
 
-#test-suite
+# build test-suite
 IF(BUILD_TESTS)
   # need CXX for testcpp only
   PROJECT(OpenAL CXX)
@@ -754,7 +754,7 @@ IF(BUILD_TESTS)
 
     FOREACH(TEST ${TESTS})
       SET(TEST_SRC test/test${TEST}.c)
-      #gets added at the beginning thus having no effect
+      # gets added at the beginning thus having no effect
       SET_SOURCE_FILES_PROPERTIES(${TEST_SRC} PROPERTIES COMPILE_FLAGS "-Wno-unused")
       ADD_EXECUTABLE(test${TEST} ${TEST_SRC})
       TARGET_LINK_LIBRARIES(test${TEST} testlib ${ADD_LIBS} openal ${ALUT_LIB})
@@ -764,7 +764,7 @@ IF(BUILD_TESTS)
     ADD_EXECUTABLE(testcpp test/testcpp.cc)
     TARGET_LINK_LIBRARIES(testcpp testlib ${ADD_LIBS} openal ${ALUT_LIB})
 
-    #copy over testdata, so test-suite can be used in binary dir
+    # copy over testdata, so test-suite can be used in binary dir
     SET(TESTDATA boom.mp3
                  boom.ogg
                  boom.wav
@@ -780,7 +780,7 @@ IF(BUILD_TESTS)
 ENDIF(BUILD_TESTS)
 
 
-#needed for openal.pc.in and openal-config.in
+# needed for openal.pc.in and openal-config.in
 SET(prefix ${CMAKE_INSTALL_PREFIX})
 SET(exec_prefix "\${prefix}")
 SET(libdir "\${exec_prefix}/lib")
@@ -790,7 +790,7 @@ SET(requirements "")
 CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/admin/pkgconfig/openal.pc.in ${CMAKE_BINARY_DIR}/admin/pkgconfig/openal.pc @ONLY)
 CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/admin/pkgconfig/openal-config.in ${CMAKE_BINARY_DIR}/admin/pkgconfig/openal-config @ONLY)
 
-#info file
+# info file
 IF(UNIX)
   FIND_PROGRAM(MAKEINFO_PRG NAMES makeinfo)
   IF(NOT MAKEINFO_PRG MATCHES "NOTFOUND")
