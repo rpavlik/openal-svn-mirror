@@ -1,7 +1,8 @@
 2005-11-03  Prakash Punnoor <prakash@punnoor.de>
 
 	* CMakeLists.txt: C99 stuff, better alsa detection, threading
-	clean-up; forgot to define HAVE_MMX_MEMCPY; fix library linking
+	clean-up; forgot to define HAVE_MMX_MEMCPY; fix library linking;
+	only link openal and alut to testcase
 
 2005-12-02  Sven Panne  <sven.panne@aedion.de>
 
