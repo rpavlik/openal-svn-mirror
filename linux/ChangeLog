@@ -1,3 +1,9 @@
+2005-12-04  Sven Panne  <sven.panne@aedion.de>
+
+	* configure.ac, src/Makefile.am: Do ALSA detection and conditional
+	inclusion the autotools way, minimizing tests and giving nice feedback
+	to the user.
+
 2005-11-03  Prakash Punnoor <prakash@punnoor.de>
 
 	* CMakeLists.txt: C99 stuff, better alsa detection, threading

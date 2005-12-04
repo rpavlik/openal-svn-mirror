@@ -55,13 +55,17 @@ libopenal_la_SOURCES =			\
 	mixaudio16.c
 
 # backend sources
+if ALSAENABLED
+libopenal_la_SOURCES +=			\
+	arch/alsa/alsa.c		\
+	arch/alsa/alsa.h
+endif
+
 libopenal_la_SOURCES +=			\
 	arch/interface/interface_sound.c \
 	arch/interface/interface_sound.h \
 	arch/interface/platform.h	\
 	arch/portable/cpu_caps.c	\
-	arch/alsa/alsa.c		\
-	arch/alsa/alsa.h		\
 	arch/arts/arts.c		\
 	arch/arts/arts.h		\
 	arch/esd/esd.c			\

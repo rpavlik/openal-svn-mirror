@@ -466,40 +466,41 @@ esac
 
 AC_ARG_ENABLE([alsa],
 [AS_HELP_STRING([--enable-alsa],
-                [enable ALSA backend @<:@default=yes@:>@])])
+                [enable ALSA backend @<:@default=autodetect@:>@])])
 
 AC_ARG_ENABLE([alsa-dlopen],
 [AS_HELP_STRING([--enable-alsa-dlopen],
                 [dynamically load ALSA libs at runtime @<:@default=no@:>@])])
 
-AC_CHECK_HEADER([alsa/asoundlib.h],
-   [openal_have_alsa_asoundlib_h=yes],
-   [openal_have_alsa_asoundlib_h=no])
-
-AC_SEARCH_LIBS([snd_pcm_info_sizeof], [asound],
-  [openal_have_asound_lib=yes],
-  [openal_have_asound_lib=no])
-
-AC_MSG_CHECKING([for ALSA support])
 if test "x$enable_alsa" = xno; then
   openal_alsa_support=disabled
-elif test "x$openal_have_alsa_asoundlib_h" = xno; then
-  openal_alsa_support=none
-elif test "x$enable_alsa_dlopen" = xyes; then
-  openal_alsa_support=dynamic
-  AC_DEFINE([OPENAL_DLOPEN_ALSA], [1], [dynamically load ALSA libs at runtime])
-elif test "x$openal_have_asound_lib" = xyes; then
-  openal_alsa_support=static
 else
-  openal_alsa_support=none
+  AC_CHECK_HEADER([alsa/asoundlib.h],
+    [if test "x$enable_alsa_dlopen" = xyes; then
+       openal_alsa_support=dynamic
+       AC_DEFINE([OPENAL_DLOPEN_ALSA], [1], [dynamically load ALSA libs at runtime])
+     else
+       AC_SEARCH_LIBS([snd_pcm_info_sizeof], [asound],
+         [openal_alsa_support=static],
+         [openal_alsa_support=none
+          AC_MSG_WARN([--enable-alsa ignored because the ALSA library could not be found.])])
+     fi],
+    [openal_alsa_support=none
+     AC_MSG_WARN([--enable-alsa ignored because the ALSA header could not be found.])])
 fi
+
+AC_MSG_CHECKING([for ALSA support])
 AC_MSG_RESULT([$openal_alsa_support])
-
 if test "x$openal_alsa_support" = xdynamic || test "x$openal_alsa_support" = xstatic; then
-  AC_DEFINE([ALSA_SUPPORT], [1], [Define to 1 if the ALSA backend should be used.])
-  OS_OBJS="$OS_OBJS \$(ALSA_OBJS)"
+  openal_alsa_enabled=yes
+else
+  openal_alsa_enabled=no
 fi
 
+if test "x$openal_alsa_enabled" = xyes; then
+  AC_DEFINE([ALSA_SUPPORT], [1], [Define to 1 if the ALSA backend should be used.])
+fi
+AM_CONDITIONAL([ALSAENABLED], [test "x$openal_alsa_enabled" = xyes])
 
 # enable arts sound?
 AC_ARG_ENABLE([arts],
