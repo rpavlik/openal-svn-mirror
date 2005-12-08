@@ -1,3 +1,9 @@
+2005-12-08  Sven Panne  <sven.panne@aedion.de>
+
+	* admin/pkgconfig/openal-config.in: Overhauled quite a bit. The order of
+	commandline options does not matter anymore. Added more standard GNU
+	prefixes. Added --static option (currently a no-op).
+
 2005-12-04  Sven Panne  <sven.panne@aedion.de>
 
 	* configure.ac, src/Makefile.am: Do ALSA detection and conditional
