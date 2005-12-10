@@ -1483,13 +1483,17 @@ ALsizei alBufferAppendData( ALuint   buffer,
 	return alBufferAppendData_LOKI(buffer, format, data, osamps, freq);
 }
 
-/* no attributes for now, but 0-sized arrays might not work with every compiler */
-#define MAX_LISTENER_NUM_VALUES 1
+#define MAX_BUFFER_NUM_VALUES 1
 
 static ALint
 numValuesForAttribute( ALenum param )
 {
 	switch (param) {
+	case AL_FREQUENCY:
+	case AL_SIZE:
+	case AL_BITS:
+	case AL_CHANNELS:
+		return 1;
 	default:
 		return 0;
 	}
@@ -1538,7 +1542,7 @@ setBufferAttributef( ALuint bid, ALenum param, const ALfloat *values, ALint numV
 static void
 setBufferAttributei( ALuint bid, ALenum param, const ALint *intValues, ALint numValues)
 {
-	ALfloat floatValues[MAX_LISTENER_NUM_VALUES];
+	ALfloat floatValues[MAX_BUFFER_NUM_VALUES];
 	int i;
 	for (i = 0; i < numValues; i++) {
 		floatValues[i] = (ALfloat)intValues[i];
@@ -1702,7 +1706,7 @@ alGetBuffer3i( ALuint bid, ALenum param, ALint *value1, ALint *value2, ALint *va
 void
 alGetBufferiv( ALuint bid, ALenum param, ALint *values )
 {
-	ALfloat floatValues[MAX_LISTENER_NUM_VALUES];
+	ALfloat floatValues[MAX_BUFFER_NUM_VALUES];
 	int i;
 	int n = numValuesForAttribute(param);
 	if (getBufferAttribute(bid, param, floatValues, n)) {

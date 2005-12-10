@@ -1,3 +1,9 @@
+2005-12-10  Sven Panne  <sven.panne@aedion.de>
+
+	* src/al_buffer.c: Fixed buffer attribute getters (thanks to Shawn
+	Kirst for  pointing this out).  Renamed MAX_LISTENER_NUM_VALUES to
+	the more sensible MAX_BUFFER_NUM_VALUES.
+
 2005-12-08  Sven Panne  <sven.panne@aedion.de>
 
 	* admin/pkgconfig/openal-config.in: Overhauled quite a bit. The order of
