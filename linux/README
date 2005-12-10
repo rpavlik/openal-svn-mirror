@@ -105,7 +105,7 @@ o all backends and vorbis/mp3/SDL support should be handled by CMake
   (so please report back if it works for you! :-)
 
 
-This document explains briefly how to build CMake on Linux via out-
+This document explains briefly how to build with CMake on Linux via out-
 of-tree build:
 
 - Change to the linux dir.
@@ -115,6 +115,9 @@ of-tree build:
 cmake .. -DCMAKE_INSTALL_PREFIX:STRING="/usr" -DCMAKE_C_FLAGS:STRING="-march=athlon-xp -O2"
 make
 make install
+
+  If you exported your CFLAGS, there is no need to specify them
+  explicitly, as CMake will pick them up.
 
 - OpenAL should get installed as you got used to it.
 
