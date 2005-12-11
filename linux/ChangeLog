@@ -1,3 +1,7 @@
+2005-12-11  Prakash Punnoor <prakash@punnoor.de>
+
+	* CMakeLists.txt: don't check for time.h anymore
+
 2005-12-10  Prakash Punnoor <prakash@punnoor.de>
 
 	* CMakeLists.txt: set some vars for openal-config.in;
