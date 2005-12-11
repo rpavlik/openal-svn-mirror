@@ -175,10 +175,10 @@ OPTION(WARNINGS "enable warnings" ON)
 OPTION(EMPTY_LOCKS "enable empty locks" OFF)
 
 # sound backends
-IF(LINUX)
+IF(CMAKE_SYSTEM MATCHES "Linux")
   OPTION(ALSA "alsa backend" OFF)
   OPTION(ALSA_DLOPEN "alsa dynamic loading" OFF)
-ENDIF(LINUX)
+ENDIF(CMAKE_SYSTEM MATCHES "Linux")
 OPTION(ARTS "arts backend" OFF)
 OPTION(ARTS_DLOPEN "arts dynamic loading" OFF)
 OPTION(ESD "esd backend" OFF)

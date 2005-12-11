@@ -1,6 +1,7 @@
 2005-12-11  Prakash Punnoor <prakash@punnoor.de>
 
-	* CMakeLists.txt: don't check for time.h anymore
+	* CMakeLists.txt: don't check for time.h anymore;
+	correctly check for Linux for ALSA
 
 2005-12-10  Prakash Punnoor <prakash@punnoor.de>
 
