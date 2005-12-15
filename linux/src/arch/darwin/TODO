@@ -1,5 +1,0 @@
-Implements what's not !
-Add a preference file to determine which is the default Audio Controller (by now, it is the first found).
-Optimize for Altivec.
-Clean up everything.
-Try to make all test programs work.
