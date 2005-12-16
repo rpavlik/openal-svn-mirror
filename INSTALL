@@ -1,7 +1,0 @@
-Please check the individual OS-specific directories for OpenAL installation
-information. Note that the "linux" subdirectory is not meant to be used on its
-own, but is a part of the "portable" CVS module.
-
-The OpenAL Utility Toolkit (ALUT) is in it's own directory that is
-OS-independent.  Install ALUT *after* installing OpenAL.
-
