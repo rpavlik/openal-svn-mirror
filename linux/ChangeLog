@@ -4,6 +4,9 @@
 	
 	* CMakeLists.txt, common/include/AL/alc.h, common/include/AL/al.h:
 	gcc visibility support
+	
+	* src/arch/i386/x86_cpu_caps_detect_prk.nasm,
+	src/arch/i386/memcpy_mmx_prk.nasm: prevent executable stack
 
 2005-12-15  Sven Panne  <sven.panne@aedion.de>
 
