@@ -33,7 +33,11 @@ extern "C" {
   #define AL_API __declspec(dllimport)
  #endif
 #else
- #define AL_API extern
+ #if defined(HAVE_GCC_VISIBILITY)
+  #define AL_API __attribute__((visibility("default")))
+ #else
+  #define AL_API extern
+ #endif
 #endif
 
 #if defined(_WIN32)
