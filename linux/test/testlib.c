@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -119,4 +120,48 @@ ALboolean sourceIsPlaying( ALuint sid )
 	alGetSourceiv( sid, AL_SOURCE_STATE, &state );
 	return ( ( state == AL_PLAYING )
 		 || ( state == AL_PAUSED ) ) ? AL_TRUE : AL_FALSE;
+}
+
+void _RotatePointAboutAxis( const ALfloat angle, ALfloat *point,
+                              const ALfloat *axis ) {
+	ALfloat m[3][3];
+	ALfloat pm0, pm1, pm2;
+
+	ALfloat s = sin( angle );
+	ALfloat c = cos( angle );
+	ALfloat t = 1.0f - c;
+
+	ALfloat x = axis[0];
+	ALfloat y = axis[1];
+	ALfloat z = axis[2];
+
+	if(angle == 0.0f) {
+		/* FIXME: use epsilon? */
+		return;
+	}
+
+	m[0][0] = t * x * x + c;
+	m[0][1] = t * x * y - s * z;
+	m[0][2] = t * x * z + s * y;
+
+	m[1][0] = t * x * y + s * z;
+	m[1][1] = t * y * y + c;
+	m[1][2] = t * y * z - s * x;
+
+	m[2][0] = t * x * z - s * y;
+	m[2][1] = t * y * z + s * x;
+	m[2][2] = t * z * z + c;
+
+	pm0 = point[0];
+	pm1 = point[1];
+	pm2 = point[2];
+
+	/*
+	 * pm * m
+	 */
+	point[0] = pm0 * m[0][0] + pm1 * m[1][0] + pm2 * m[2][0];
+	point[1] = pm0 * m[0][1] + pm1 * m[1][1] + pm2 * m[2][1];
+	point[2] = pm0 * m[0][2] + pm1 * m[1][2] + pm2 * m[2][2];
+
+	return;
 }
