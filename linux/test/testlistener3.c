@@ -1,5 +1,4 @@
 #include "testlib.h"
-#include "../src/al_vector.h"
 
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -40,7 +39,7 @@ static void iterate( void )
 	/*
 	 * rotate at vector about up vector by angle degrees.
 	 */
-	_alRotatePointAboutAxis( TORAD( angle ), orientation, &orientation[3] );
+	_RotatePointAboutAxis( TORAD( angle ), orientation, &orientation[3] );
 
 	angle += 15;		/* increment fifeteen degrees degree */
 

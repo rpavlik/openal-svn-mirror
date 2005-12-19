@@ -1,3 +1,11 @@
+2005-12-19  Prakash Punnoor <prakash@punnoor.de>
+
+	* test/testlib.c, test/testlib.h: Add _RotatePointAboutAxis()
+	
+	* test/testlistener3.c, test/testlistener4.c:
+	Use _RotatePointAboutAxis() instead of OpenAL internal one to
+	prevent linking error if symbol visibility is used
+l
 2005-12-17  Prakash Punnoor <prakash@punnoor.de>
 
 	* admin/CMakeModules/CMakeASMInformation.cmake: don't use C flags
