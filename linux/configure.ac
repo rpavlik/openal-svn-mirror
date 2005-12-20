@@ -28,6 +28,8 @@ AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 AC_SUBST([LIBTOOL_DEPS])
 AC_PROG_CXX
+AC_ARG_VAR([PKG_CONFIG], [package configuration utility])
+AC_CHECK_PROGS([PKG_CONFIG], [pkg-config], [none])
 
 ################################################################################
 # Checks for library functions.
@@ -45,7 +47,9 @@ ACX_PTHREAD(
     [AC_DEFINE([USE_WINDOWSTHREADING], [1], [Define to 1 if Windows threading should be used.])],
     [AC_CHECK_HEADER([dos/dosextens.h],
       [AC_DEFINE([USE_MORPHOSTHREADING], [1], [Define to 1 if MorphOS threading should be used.])],
-      [AC_DEFINE([NO_THREADING], [1], [undocumented])])])])
+      [AC_DEFINE([NO_THREADING], [1], [undocumented])],
+      [AC_INCLUDES_DEFAULT([])])],
+    [AC_INCLUDES_DEFAULT([])])])
 
 ################################################################################
 # Handle warning-related options.
@@ -451,6 +455,7 @@ fi
 # Checks for backends.
 ################################################################################
 
+# ToDo: Convert this into a real feature check...
 case "$target" in
     *irix*)
     # need dmedia
@@ -462,7 +467,48 @@ case "$target" in
     ;;
 esac
 
-# check for ALSA backend
+
+# Detecting backends in the various configurations and on the various platforms
+# is a nightmare, but let's at least describe the general ideas:
+#
+#  * Every non-trivial backend has two switches: One for enabling/disabling the
+#    backend and one for enabling/disabling dlopening the relevant libraries at
+#    runtime.
+#
+#  * If the backend has been disabled explicitly, there is nothing to do,
+#    otherwise we need at least the relevant header.
+#
+#  * To find any needed flags for the C compiler, use pkg-config or the outdated
+#    foo-config. If neither is available, assume that no special flags are
+#    needed (and guess a library later if necessary).
+#
+#  * If static linking to the backend has been requested, we have to find out
+#    any needed linker flags, too.
+#
+# ToDo: There is far too much cut-n-paste below, we should really refactor this
+# using some nice macros...
+
+
+# OPENAL_BACKEND_ENABLE(BACKEND-NAME, SUPPORT-VAR, SUPPORT-DEFINE, SUPPORT-MAKEVAR)
+#----------------------------------------------------------------------------------
+AC_DEFUN([OPENAL_BACKEND_ENABLE],
+[AC_MSG_CHECKING([for $1 backend support])
+ AC_MSG_RESULT([[$]$2])
+
+ case [$]$2 in
+   dynamic|static) openal_backend_support_yn=yes ;;
+   *) openal_backend_support_yn=no ;;
+ esac
+
+ if test "x$openal_backend_support_yn" = xyes; then
+   AC_DEFINE([$3], [1], [Define to 1 if the $1 backend should be used.])
+ fi
+
+ AM_CONDITIONAL([$4], [test "x$openal_backend_support_yn" = xyes])
+]) # OPENAL_BACKEND_ENABLE
+
+
+# check for ALSA backend #######################################################
 
 AC_ARG_ENABLE([alsa],
 [AS_HELP_STRING([--enable-alsa],
@@ -470,169 +516,345 @@ AC_ARG_ENABLE([alsa],
 
 AC_ARG_ENABLE([alsa-dlopen],
 [AS_HELP_STRING([--enable-alsa-dlopen],
-                [dynamically load ALSA libs at runtime @<:@default=no@:>@])])
+                [dynamically load ALSA libs @<:@default=yes@:>@])])
 
 if test "x$enable_alsa" = xno; then
-  openal_alsa_support=disabled
+  openal_backend_alsa_support=disabled
 else
+  AC_CACHE_CHECK([for ALSA compiler flags], [openal_cv_cflags_alsa],
+    [openal_cv_cflags_alsa=unknown
+     test "x$PKG_CONFIG" != xnone && "$PKG_CONFIG" --exists alsa && openal_cv_cflags_alsa="`$PKG_CONFIG --cflags alsa`"
+     test -z "$openal_cv_cflags_alsa" && openal_cv_cflags_alsa=none])
+  case $openal_cv_cflags_alsa in
+    unknown|none) openal_cflags_alsa="" ;;
+    *) openal_cflags_alsa=$openal_cv_cflags_alsa ;;
+  esac
+  openal_saved_CFLAGS=$CFLAGS
+  CFLAGS="$CFLAGS $openal_cflags_alsa"
   AC_CHECK_HEADER([alsa/asoundlib.h],
-    [if test "x$enable_alsa_dlopen" = xyes; then
-       openal_alsa_support=dynamic
-       AC_DEFINE([OPENAL_DLOPEN_ALSA], [1], [dynamically load ALSA libs at runtime])
+    [if test "x$enable_alsa_dlopen" != xno; then
+       openal_backend_alsa_support=dynamic
+       FEATURECFLAGS="$FEATURECFLAGS $openal_cflags_alsa"
+       AC_DEFINE([OPENAL_DLOPEN_ALSA], [1], [dynamically load ALSA libs])
      else
-       AC_SEARCH_LIBS([snd_pcm_info_sizeof], [asound],
-         [openal_alsa_support=static],
-         [openal_alsa_support=none
-          AC_MSG_WARN([--enable-alsa ignored because the ALSA library could not be found.])])
+       AC_CACHE_CHECK([for ALSA linker flags], [openal_cv_libs_alsa],
+         [if test "x$PKG_CONFIG" != xnone && "$PKG_CONFIG" --exists alsa; then
+            openal_cv_libs_alsa="`$PKG_CONFIG --libs alsa`"
+            if test -z "$openal_cv_libs_alsa"; then
+              openal_cv_libs_alsa=none
+            fi
+          else
+            openal_cv_libs_alsa=unknown
+          fi])
+       if test "x$openal_cv_libs_alsa" = xunknown; then
+         openal_libs_alsa="-lasound"
+       else
+         openal_libs_alsa=$openal_cv_libs_alsa
+       fi
+       openal_saved_LIBS=$LIBS
+       LIBS="$openal_libs_alsa $LIBS"
+       AC_CACHE_CHECK([for snd_pcm_info_sizeof], [openal_cv_func_snd_pcm_info_sizeof],
+         [AC_LINK_IFELSE([AC_LANG_CALL([], [snd_pcm_info_sizeof])],
+            [openal_cv_func_snd_pcm_info_sizeof=yes],
+            [openal_cv_func_snd_pcm_info_sizeof=no])])
+       if test "x$openal_cv_func_snd_pcm_info_sizeof" = xyes; then
+         openal_backend_alsa_support=static
+         FEATURECFLAGS="$FEATURECFLAGS $openal_cflags_alsa"
+         LIBS="$openal_libs_alsa $LIBS"
+       else
+         openal_backend_alsa_support=none
+         LIBS=$openal_saved_LIBS
+         if test "x$enable_alsa" = xyes; then
+           AC_MSG_WARN([--enable-alsa ignored because the ALSA library could not be found.])
+         fi
+       fi
      fi],
-    [openal_alsa_support=none
-     AC_MSG_WARN([--enable-alsa ignored because the ALSA header could not be found.])])
+    [openal_backend_alsa_support=none
+     if test "x$enable_alsa" = xyes; then
+       AC_MSG_WARN([--enable-alsa ignored because the ALSA header could not be found.])
+     fi],
+    [AC_INCLUDES_DEFAULT([])])
+  CFLAGS=$openal_saved_CFLAGS
 fi
 
-AC_MSG_CHECKING([for ALSA support])
-AC_MSG_RESULT([$openal_alsa_support])
-if test "x$openal_alsa_support" = xdynamic || test "x$openal_alsa_support" = xstatic; then
-  openal_alsa_enabled=yes
-else
-  openal_alsa_enabled=no
-fi
+OPENAL_BACKEND_ENABLE([ALSA], [openal_backend_alsa_support], [ALSA_SUPPORT], [ALSAENABLED])
 
-if test "x$openal_alsa_enabled" = xyes; then
-  AC_DEFINE([ALSA_SUPPORT], [1], [Define to 1 if the ALSA backend should be used.])
-fi
-AM_CONDITIONAL([ALSAENABLED], [test "x$openal_alsa_enabled" = xyes])
+# check for aRts backend #######################################################
 
-# enable arts sound?
 AC_ARG_ENABLE([arts],
 [AS_HELP_STRING([--enable-arts],
-                [enable aRts backend @<:@default=no@:>@])])
+                [enable aRts backend @<:@default=autodetect@:>@])])
 
 AC_ARG_ENABLE([arts-dlopen],
 [AS_HELP_STRING([--enable-arts-dlopen],
-                [dlopen aRts lib at runtime @<:@default=no@:>@])])
+                [dynamically load aRts libs @<:@default=yes@:>@])])
 
-if test "x$enable_arts" = xyes; then
-  AC_PATH_PROG([HAVEARTS], [artsc-config], [], [$PATH])
-  if test -n "$HAVEARTS"; then
-    ARTS_FEATURECFLAGS=`$HAVEARTS --cflags`
-    ARTS_LIBS=`$HAVEARTS --libs`
-    AC_DEFINE(ARTS_SUPPORT, [1], [undocumented])
-    FEATURECFLAGS="$FEATURECFLAGS $ARTS_FEATURECFLAGS"
-    OS_OBJS="$OS_OBJS \$(ARTS_OBJS)"
-    if test "x$enable_arts_dlopen" = xyes; then
-      AC_DEFINE([OPENAL_DLOPEN_ARTS], [1], [undocumented])
-    else
-      AC_DEFINE([OPENAL_DLOPEN_ARTS], [0], [undocumented])
-      LIBS="$ARTS_LIBS $LIBS"
-    fi
-  else
-    AC_MSG_WARN([artsc-config not found. No aRts support compiled in.])
-  fi
+if test "x$enable_arts" = xno; then
+  openal_backend_arts_support=disabled
+else
+  AC_ARG_VAR([ARTSC_CONFIG], [aRts configuration utility])
+  AC_CHECK_PROGS([ARTSC_CONFIG], [artsc-config], [none])
+  AC_CACHE_CHECK([for aRts compiler flags], [openal_cv_cflags_arts],
+    [openal_cv_cflags_arts=unknown
+     test "x$ARTSC_CONFIG" != xnone && openal_cv_cflags_arts="`$ARTSC_CONFIG --cflags`"
+     test -z "$openal_cv_cflags_arts" && openal_cv_cflags_arts=none])
+  case $openal_cv_cflags_arts in
+    unknown|none) openal_cflags_arts="" ;;
+    *) openal_cflags_arts=$openal_cv_cflags_arts ;;
+  esac
+  openal_saved_CFLAGS=$CFLAGS
+  CFLAGS="$CFLAGS $openal_cflags_arts"
+  AC_CHECK_HEADER([artsc.h],
+    [if test "x$enable_arts_dlopen" != xno; then
+       openal_backend_arts_support=dynamic
+       FEATURECFLAGS="$FEATURECFLAGS $openal_cflags_arts"
+       AC_DEFINE([OPENAL_DLOPEN_ARTS], [1], [dynamically load aRts libs])
+     else
+       AC_CACHE_CHECK([for aRts linker flags], [openal_cv_libs_arts],
+         [if test "x$ARTSC_CONFIG" != xnone; then
+            openal_cv_libs_arts="`$ARTSC_CONFIG --libs`"
+            if test -z "$openal_cv_libs_arts"; then
+              openal_cv_libs_arts=none
+            fi
+          else
+            openal_cv_libs_arts=unknown
+          fi])
+       if test "x$openal_cv_libs_arts" = xunknown; then
+         openal_libs_arts="-lartsc"
+       else
+         openal_libs_arts=$openal_cv_libs_arts
+       fi
+       openal_saved_LIBS=$LIBS
+       LIBS="$openal_libs_arts $LIBS"
+       AC_CACHE_CHECK([for arts_free], [openal_cv_func_arts_free],
+         [AC_LINK_IFELSE([AC_LANG_CALL([], [arts_free])],
+            [openal_cv_func_arts_free=yes],
+            [openal_cv_func_arts_free=no])])
+       if test "x$openal_cv_func_arts_free" = xyes; then
+         openal_backend_arts_support=static
+         FEATURECFLAGS="$FEATURECFLAGS $openal_cflags_arts"
+         LIBS="$openal_libs_arts $LIBS"
+       else
+         openal_backend_arts_support=none
+         LIBS=$openal_saved_LIBS
+         if test "x$enable_arts" = xyes; then
+           AC_MSG_WARN([--enable-arts ignored because the aRts library could not be found.])
+         fi
+       fi
+     fi],
+    [openal_backend_arts_support=none
+     if test "x$enable_arts" = xyes; then
+       AC_MSG_WARN([--enable-arts ignored because the aRts header could not be found.])
+     fi],
+    [AC_INCLUDES_DEFAULT([])])
+  CFLAGS=$openal_saved_CFLAGS
 fi
 
-# enable esd sound?
+OPENAL_BACKEND_ENABLE([aRts], [openal_backend_arts_support], [ARTS_SUPPORT], [ARTSENABLED])
+
+# check for ESD backend #######################################################
+
 AC_ARG_ENABLE([esd],
 [AS_HELP_STRING([--enable-esd],
-                [enable esd backend @<:@default=no@:>@])])
+                [enable ESD backend @<:@default=autodetect@:>@])])
 
 AC_ARG_ENABLE([esd-dlopen],
 [AS_HELP_STRING([--enable-esd-dlopen],
-                [dlopen esd lib at runtime @<:@default=no@:>@])])
+                [dynamically load ESD libs @<:@default=yes@:>@])])
 
-if test "x$enable_esd" = xyes; then
-  AC_PATH_PROG([HAVEESD], [esd-config], [], [$PATH])
-  if test -n "$HAVEESD"; then
-    ESD_FEATURECFLAGS=`$HAVEESD --cflags`
-    ESD_LIBS=`$HAVEESD --libs`
-    AC_DEFINE(ESD_SUPPORT, [1], [undocumented])
-    FEATURECFLAGS="$FEATURECFLAGS $ESD_FEATURECFLAGS"
-    OS_OBJS="$OS_OBJS \$(ESD_OBJS)"
-    if test "x$enable_esd_dlopen" = xyes; then
-      AC_DEFINE([OPENAL_DLOPEN_ESD], [1], [undocumented])
-    else
-      AC_DEFINE([OPENAL_DLOPEN_ESD], [0], [undocumented])
-      LIBS="$ESD_LIBS $LIBS"
-    fi
-  else
-    AC_MSG_WARN([esd-config not found. No esd support compiled in.])
-  fi
+if test "x$enable_esd" = xno; then
+  openal_backend_esd_support=disabled
+else
+  AC_ARG_VAR([ESD_CONFIG], [esd configuration utility])
+  AC_CHECK_PROGS([ESD_CONFIG], [esd-config], [none])
+  AC_CACHE_CHECK([for ESD compiler flags], [openal_cv_cflags_esd],
+    [openal_cv_cflags_esd=unknown
+     test "x$ESD_CONFIG" != xnone && openal_cv_cflags_esd="`$ESD_CONFIG --cflags`"
+     test -z "$openal_cv_cflags_esd" && openal_cv_cflags_esd=none])
+  case $openal_cv_cflags_esd in
+    unknown|none) openal_cv_cflags_esd="" ;;
+    *) openal_cflags_esd=$openal_cv_cflags_esd ;;
+  esac
+  openal_saved_CFLAGS=$CFLAGS
+  CFLAGS="$CFLAGS $openal_cflags_esd"
+  AC_CHECK_HEADER([esd.h],
+    [if test "x$enable_esd_dlopen" != xno; then
+       openal_backend_esd_support=dynamic
+       FEATURECFLAGS="$FEATURECFLAGS $openal_cflags_esd"
+       AC_DEFINE([OPENAL_DLOPEN_ESD], [1], [dynamically load ESD libs])
+     else
+       AC_CACHE_CHECK([for ESD linker flags], [openal_cv_libs_esd],
+         [if test "x$ESD_CONFIG" != xnone; then
+            openal_cv_libs_esd="`$ESD_CONFIG --libs`"
+            if test -z "$openal_cv_libs_esd"; then
+              openal_cv_libs_esd=none
+            fi
+          else
+            openal_cv_libs_esd=unknown
+          fi])
+       if test "x$openal_cv_libs_esd" = xunknown; then
+         openal_libs_esd="-lesd"
+       else
+         openal_libs_esd=$openal_cv_libs_esd
+       fi
+       openal_saved_LIBS=$LIBS
+       LIBS="$openal_libs_esd $LIBS"
+       AC_CACHE_CHECK([for esd_audio_open], [openal_cv_func_esd_audio_open],
+         [AC_LINK_IFELSE([AC_LANG_CALL([], [esd_audio_open])],
+            [openal_cv_func_esd_audio_open=yes],
+            [openal_cv_func_esd_audio_open=no])])
+       if test "x$openal_cv_func_esd_audio_open" = xyes; then
+         openal_backend_esd_support=static
+         FEATURECFLAGS="$FEATURECFLAGS $openal_cflags_esd"
+         LIBS="$openal_libs_esd $LIBS"
+       else
+         openal_backend_esd_support=none
+         LIBS=$openal_saved_LIBS
+         if test "x$enable_esd" = xyes; then
+           AC_MSG_WARN([--enable-esd ignored because the ESD library could not be found.])
+         fi
+       fi
+     fi],
+    [openal_backend_esd_support=none
+     if test "x$enable_esd" = xyes; then
+       AC_MSG_WARN([--enable-esd ignored because the ESD header could not be found.])
+     fi],
+    [AC_INCLUDES_DEFAULT([])])
+  CFLAGS=$openal_saved_CFLAGS
 fi
 
-# enable wave output?
-AC_ARG_ENABLE([waveout],
-[AS_HELP_STRING([--enable-waveout],
-                [enable waveout backend @<:@default=yes@:>@])])
+OPENAL_BACKEND_ENABLE([ESD], [openal_backend_esd_support], [ESD_SUPPORT], [ESDENABLED])
 
-if test "x$enable_waveout" != xno; then
-  AC_DEFINE([WAVEOUT_SUPPORT], [1], [undocumented])
-  OS_OBJS="$OS_OBJS \$(WAVEOUT_OBJS)"
-fi
+# check for null backend #######################################################
 
-# enable null output?
 AC_ARG_ENABLE([null],
 [AS_HELP_STRING([--enable-null],
                 [enable null backend @<:@default=yes@:>@])])
 
-if test "x$enable_null" != xno; then
-  AC_DEFINE([NULL_SUPPORT], [1], [undocumented])
-  OS_OBJS="$OS_OBJS \$(NULL_OBJS)"
-fi
+case $enable_null in
+  no) openal_backend_null_support=disabled ;;
+  *) openal_backend_null_support=static ;;
+esac
 
-# enable SDL sound?
+OPENAL_BACKEND_ENABLE([null], [openal_backend_null_support], [NULL_SUPPORT], [NULLENABLED])
+
+# check for SDL backend ########################################################
+
 AC_ARG_ENABLE([sdl],
 [AS_HELP_STRING([--enable-sdl],
-                [enable SDL backend @<:@default=no@:>@])])
+                [enable SDL backend @<:@default=autodetect@:>@])])
 
-if test "x$enable_sdl" = xyes; then
-  # On cygwin targets, we don't rely on sdl-config.
-  case "$target" in
-    *cygwin*)
-      HAVESDL=1
-      SDL_FEATURECFLAGS="-I/cygwin/usr/include/SDL"
-      SDL_LIBS=""
-      FEATURECFLAGS="$FEATURECFLAGS $SDL_FEATURECFLAGS"
-      LIBS="$SDL_LIBS $LIBS"
-      OS_OBJS="$OS_OBJS \$(SDL_OBJS)"
-      AC_DEFINE([SDL_SUPPORT], [1], [undocumented])
-      ;;
-
-    *)
-      AC_PATH_PROG([HAVESDL], [sdl-config], [], [$PATH])
-      if test -n "$HAVESDL"; then
-        SDL_FEATURECFLAGS=`$HAVESDL --cflags`
-        SDL_LIBS=`$HAVESDL --libs`
-        AC_DEFINE([SDL_SUPPORT], [1], [undocumented])
-        FEATURECFLAGS="$FEATURECFLAGS $SDL_FEATURECFLAGS"
-        LIBS="$SDL_LIBS $LIBS"
-        OLDCPPFLAGS="$CPPFLAGS"
-        CPPFLAGS="-I/usr/local/include/SDL -I/usr/local/include"
-        OS_OBJS="$OS_OBJS \$(SDL_OBJS)"
-      else
-        AC_MSG_WARN([SDL not found. No SDL support compiled in.])
-      fi
-      ;;
+if test "x$enable_sdl" = xno; then
+  openal_backend_sdl_support=disabled
+else
+  AC_ARG_VAR([SDL_CONFIG], [sdl configuration utility])
+  AC_CHECK_PROGS([SDL_CONFIG], [sdl-config], [none])
+  AC_CACHE_CHECK([for SDL compiler flags], [openal_cv_cflags_sdl],
+    [openal_cv_cflags_sdl=unknown
+     test "x$SDL_CONFIG" != xnone && openal_cv_cflags_sdl="`$SDL_CONFIG --cflags`"
+     test -z "$openal_cv_cflags_sdl" && openal_cv_cflags_sdl=none])
+  case $openal_cv_cflags_sdl in
+    unknown|none) openal_cv_cflags_sdl="" ;;
+    *) openal_cflags_sdl=$openal_cv_cflags_sdl ;;
   esac
+  openal_saved_CFLAGS=$CFLAGS
+  CFLAGS="$CFLAGS $openal_cflags_sdl"
+  AC_CHECK_HEADER([sdl.h],
+    [if test "x$enable_sdl_dlopen" != xno; then
+       openal_backend_sdl_support=dynamic
+       FEATURECFLAGS="$FEATURECFLAGS $openal_cflags_sdl"
+       AC_DEFINE([OPENAL_DLOPEN_SDL], [1], [dynamically load SDL libs])
+     else
+       AC_CACHE_CHECK([for SDL linker flags], [openal_cv_libs_sdl],
+         [if test "x$SDL_CONFIG" != xnone; then
+            openal_cv_libs_sdl="`$SDL_CONFIG --libs`"
+            if test -z "$openal_cv_libs_sdl"; then
+              openal_cv_libs_sdl=none
+            fi
+          else
+            openal_cv_libs_sdl=unknown
+          fi])
+       if test "x$openal_cv_libs_sdl" = xunknown; then
+         openal_libs_sdl="-lsdl"
+       else
+         openal_libs_sdl=$openal_cv_libs_sdl
+       fi
+       openal_saved_LIBS=$LIBS
+       LIBS="$openal_libs_sdl $LIBS"
+       AC_CACHE_CHECK([for SDL_LockAudio], [openal_cv_func_sdl_lockaudio],
+         [AC_LINK_IFELSE([AC_LANG_CALL([], [SDL_LockAudio])],
+            [openal_cv_func_sdl_lockaudio=yes],
+            [openal_cv_func_sdl_lockaudio=no])])
+       if test "x$openal_cv_func_sdl_lockaudio" = xyes; then
+         openal_backend_sdl_support=static
+         FEATURECFLAGS="$FEATURECFLAGS $openal_cflags_sdl"
+         LIBS="$openal_libs_sdl $LIBS"
+       else
+         openal_backend_sdl_support=none
+         LIBS=$openal_saved_LIBS
+         if test "x$enable_sdl" = xyes; then
+           AC_MSG_WARN([--enable-sdl ignored because the SDL library could not be found.])
+         fi
+       fi
+     fi],
+    [openal_backend_sdl_support=none
+     if test "x$enable_sdl" = xyes; then
+       AC_MSG_WARN([--enable-sdl ignored because the SDL header could not be found.])
+     fi],
+    [AC_INCLUDES_DEFAULT([])])
+  CFLAGS=$openal_saved_CFLAGS
 fi
 
-# enable directsound backend?
-AC_ARG_ENABLE([dsound],
-[AS_HELP_STRING([--enable-dsound],
-                [enable directsound backend @<:@default=no@:>@])])
+OPENAL_BACKEND_ENABLE([SDL], [openal_backend_sdl_support], [SDL_SUPPORT], [SDLENABLED])
 
-if test "x$enable_dsound" = xyes; then
-  # On cygwin targets, we don't rely on sdl-config.
-  case "$target" in
-    *cygwin*|*mingw*)
-      AC_CHECK_HEADER([dsound.h],
-        [AC_DEFINE([DSOUND_SUPPORT], [1], [undocumented])
-        LIBS="-ldsound $LIBS"])
-      AC_DEFINE([DSOUND_SUPPORT], [1], [undocumented])
-      ;;
-    *)
-      echo "No dsound on nonwindows"
-      ;;
-  esac
+# check for WAVE backend #######################################################
+
+AC_ARG_ENABLE([waveout],
+[AS_HELP_STRING([--enable-waveout],
+                [enable WAVE backend @<:@default=yes@:>@])])
+
+case $enable_waveout in
+  no) openal_backend_waveout_support=disabled ;;
+  *) openal_backend_waveout_support=static ;;
+esac
+
+OPENAL_BACKEND_ENABLE([WAVE], [openal_backend_waveout_support], [WAVEOUT_SUPPORT], [WAVEOUTENABLED])
+
+# check for native Windows backend #############################################
+
+AC_ARG_ENABLE([windows],
+[AS_HELP_STRING([--enable-windows],
+                [enable native Windows backend @<:@default=autodetect@:>@])])
+
+if test "x$enable_windows" = xno; then
+  openal_backend_windows_support=disabled
+else
+  AC_CHECK_HEADER([windows.h],
+    [openal_libs_windows="-lwinmm"
+     openal_saved_LIBS=$LIBS
+     LIBS="$openal_libs_windows $LIBS"
+     AC_CACHE_CHECK([for waveOutClose], [openal_cv_func_waveoutclose],
+       [AC_LINK_IFELSE([AC_LANG_CALL([], [waveOutClose])],
+          [openal_cv_func_waveoutclose=yes],
+          [openal_cv_func_waveoutclose=no])])
+     if test "x$openal_cv_func_waveoutclose" = xyes; then
+       openal_backend_windows_support=static
+       LIBS="$openal_libs_windows $LIBS"
+     else
+       openal_backend_windows_support=none
+       LIBS=$openal_saved_LIBS
+       if test "x$enable_windows" = xyes; then
+         AC_MSG_WARN([--enable-windows ignored because the Windows Multimedia library could not be found.])
+       fi
+     fi],
+    [openal_backend_windows_support=none
+     if test "x$enable_windows" = xyes; then
+       AC_MSG_WARN([--enable-windows ignored because the Windows header could not be found.])
+     fi],
+    [AC_INCLUDES_DEFAULT([])])
 fi
+
+OPENAL_BACKEND_ENABLE([native Windows], [openal_backend_windows_support], [WINDOWS_SUPPORT], [WINDOWSENABLED])
 
 # enable vorbis support?
 AC_ARG_ENABLE([vorbis],

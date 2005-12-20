@@ -61,21 +61,47 @@ libopenal_la_SOURCES +=			\
 	arch/alsa/alsa.h
 endif
 
+if ARTSENABLED
+libopenal_la_SOURCES +=			\
+	arch/arts/arts.c		\
+	arch/arts/arts.h
+endif
+
+if ESDENABLED
+libopenal_la_SOURCES +=			\
+	arch/esd/esd.c			\
+	arch/esd/esd.h
+endif
+
+if SDLENABLED
+libopenal_la_SOURCES +=			\
+	arch/sdl/sdl.c			\
+	arch/sdl/sdl.h
+endif
+
+if NULLENABLED
+libopenal_la_SOURCES +=			\
+	arch/null/null.c		\
+	arch/null/null.h
+endif
+
+if WAVEOUTENABLED
+libopenal_la_SOURCES +=			\
+	arch/waveout/waveout.c		\
+	arch/waveout/waveout.h
+endif
+
+if WINDOWSENABLED
+libopenal_la_SOURCES +=			\
+	arch/windows/windows_native.c	\
+	arch/windows/windows_native.h
+endif
+
 libopenal_la_SOURCES +=			\
 	arch/interface/interface_sound.c \
 	arch/interface/interface_sound.h \
 	arch/interface/platform.h	\
-	arch/portable/cpu_caps.c	\
-	arch/arts/arts.c		\
-	arch/arts/arts.h		\
-	arch/esd/esd.c			\
-	arch/esd/esd.h			\
-	arch/null/null.c		\
-	arch/null/null.h		\
-	arch/sdl/sdl.c			\
-	arch/sdl/sdl.h			\
-	arch/waveout/waveout.c		\
-	arch/waveout/waveout.h
+	arch/portable/cpu_caps.c
 
 # OS-specific sources
 libopenal_la_SOURCES +=			\

@@ -1,3 +1,8 @@
+2005-12-19  Sven Panne  <sven.panne@aedion.de>
+
+	* configure.ac, src/Makefile.am: Improved backend detection. Still not
+	perfect and far too much cut-n-paste, but better than before.
+
 2005-12-19  Prakash Punnoor <prakash@punnoor.de>
 
 	* test/testlib.c, test/testlib.h: Add _RotatePointAboutAxis()
