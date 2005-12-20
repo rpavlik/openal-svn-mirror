@@ -19,6 +19,7 @@
 #include "al_debug.h"
 #include "al_main.h"
 #include "al_vector.h"
+#include "al_matrix.h"
 
 #include "alc/alc_error.h"
 #include "alc/alc_speaker.h"
