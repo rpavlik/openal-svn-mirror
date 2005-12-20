@@ -1,3 +1,11 @@
+2005-12-20  Prakash Punnoor <prakash@punnoor.de>
+
+	* src/al_main.c, src/al_main.h,	src/alc/alc_speaker.c:
+	move matrix stuff into separate object; deactivate _alRotatePointAboutAxis,
+	as it is not used and wasn't specified int he header anyway
+	
+	* src/al_matrix.c, src/al_matrix.h: added;
+
 2005-12-19  Sven Panne  <sven.panne@aedion.de>
 
 	* configure.ac, src/Makefile.am: Improved backend detection. Still not

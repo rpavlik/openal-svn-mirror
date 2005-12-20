@@ -51,6 +51,8 @@ libopenal_la_SOURCES =			\
 	al_types.h			\
 	al_vector.c			\
 	al_vector.h			\
+	al_matrix.c			\
+	al_matrix.h			\
 	mixaudio16.h			\
 	mixaudio16.c
 

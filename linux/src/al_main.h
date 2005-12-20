@@ -149,22 +149,6 @@ ALboolean _al_RAWFORMAT( ALenum format );
 void _alFloatMul( ALshort *bpt, ALfloat sa, ALuint len );
 
 /*
- * Allocates, initializes, and returns a matrix with the dimensions matching
- * the passed arguments, or NULL on error.
- */
-ALmatrix *_alMatrixAlloc( int rows, int cols );
-
-/*
- * Frees a matrix allocated with _alMatrixAlloc.
- */
-void _alMatrixFree( ALmatrix *m );
-
-/*
- * Multiplies two matrices and places the result in result.
- */
-void _alMatrixMul( ALmatrix *result, ALmatrix *m1, ALmatrix *m2 );
-
-/*
  * Starts the mixer thread.
  */
 void _alStartMixerThread( void );

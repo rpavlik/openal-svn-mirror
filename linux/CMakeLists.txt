@@ -96,6 +96,7 @@ SET(AL_OBJS              src/al_bpool.c
                          src/al_state.c
                          src/al_threadlib.c
                          src/al_vector.c
+                         src/al_matrix.c
                          src/mixaudio16.c)
 
 SET(ALC_OBJS             src/alc/alc_context.c
