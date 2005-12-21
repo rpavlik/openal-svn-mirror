@@ -2,9 +2,11 @@
 
 	* src/al_main.c, src/al_main.h,	src/alc/alc_speaker.c:
 	move matrix stuff into separate object; deactivate _alRotatePointAboutAxis,
-	as it is not used and wasn't specified int he header anyway
+	as it is not used and wasn't specified in the header anyway
 	
-	* src/al_matrix.c, src/al_matrix.h: added;
+	* src/al_matrix.c, src/al_matrix.h: added
+	
+	* CMakeLists.txt, src/Makefile.am: compile al_matrix.c
 
 2005-12-19  Sven Panne  <sven.panne@aedion.de>
 
@@ -18,7 +20,7 @@
 	* test/testlistener3.c, test/testlistener4.c:
 	Use _RotatePointAboutAxis() instead of OpenAL internal one to
 	prevent linking error if symbol visibility is used
-l
+
 2005-12-17  Prakash Punnoor <prakash@punnoor.de>
 
 	* admin/CMakeModules/CMakeASMInformation.cmake: don't use C flags
