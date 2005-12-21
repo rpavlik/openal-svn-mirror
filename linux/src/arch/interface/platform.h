@@ -11,24 +11,24 @@
 #define PLATFORM_H_
 
 /* native audio support */
-#if LINUX_TARGET == 1
+#if USE_BACKEND_NATIVE_LINUX
 #include "arch/linux/lin_dsp.h"
-#elif BSD_TARGET == 1
+#elif USE_BACKEND_NATIVE_BSD
 #include "arch/bsd/bsd_dsp.h"
-#elif SOLARIS_TARGET == 1
+#elif USE_BACKEND_NATIVE_SOLARIS
 #include "arch/solaris/solaris_native.h"
-#elif IRIX_TARGET == 1
+#elif USE_BACKEND_NATIVE_IRIX
 #include "arch/irix/iris.h"
-#elif DARWIN_TARGET == 1
+#elif USE_BACKEND_NATIVE_DARWIN
 #include "arch/darwin/darwin_native.h"
-#elif MORPHOS_TARGET == 1
+#elif USE_BACKEND_NATIVE_MORPHOS
 #include "arch/morphos/morphos_native.h"
-#elif WINDOWS_TARGET == 1
+#elif USE_BACKEND_NATIVE_WINDOWS
 #include "arch/windows/windows_native.h"
-#endif /* LINUX_TARGET == 1 */
+#endif
 
 /* Here's the hacky stuff */
-#ifdef SDL_SUPPORT
+#ifdef USE_BACKEND_SDL
 #include "arch/sdl/sdl.h"
 #else
 #define grab_read_sdl()               NULL
@@ -37,9 +37,9 @@
 #define set_read_sdl(h,b,f,s)         AL_FALSE
 #define release_sdl(h)
 #define sdl_blitbuffer(h,d,b)
-#endif /* SDL_SUPPORT */
+#endif /* USE_BACKEND_SDL */
 
-#ifdef ALSA_SUPPORT
+#ifdef USE_BACKEND_ALSA
 #include "arch/alsa/alsa.h"
 #else
 #define grab_read_alsa()	      NULL
@@ -49,9 +49,9 @@
 #define release_alsa(h)
 #define alsa_blitbuffer(h,d,b)
 #define capture_alsa(h,d,b)           0
-#endif /* ALSA_SUPPORT */
+#endif /* USE_BACKEND_ALSA */
 
-#ifdef ARTS_SUPPORT
+#ifdef USE_BACKEND_ARTS
 #include "arch/arts/arts.h"
 #else
 #define grab_read_arts()	      NULL
@@ -60,9 +60,9 @@
 #define set_read_arts(h,b,f,s)        AL_FALSE
 #define release_arts(h)
 #define arts_blitbuffer(h,d,b)
-#endif /* ARTS_SUPPORT */
+#endif /* USE_BACKEND_ARTS */
 
-#ifdef ESD_SUPPORT
+#ifdef USE_BACKEND_ESD
 #include "arch/esd/esd.h"
 #else
 #define grab_read_esd()	              NULL
@@ -73,9 +73,9 @@
 #define esd_blitbuffer(h,d,b)
 #define pause_esd(h)
 #define resume_esd(h)
-#endif /* ESD_SUPPORT */
+#endif /* USE_BACKEND_ESD */
 
-#ifdef WAVEOUT_SUPPORT
+#ifdef USE_BACKEND_WAVEOUT
 #include "arch/waveout/waveout.h"
 #else
 #define grab_read_waveout()	      NULL
@@ -84,9 +84,9 @@
 #define set_write_waveout(h,b,f,s)    AL_FALSE
 #define release_waveout(h)
 #define waveout_blitbuffer(h,d,b)
-#endif /* WAVEOUT_SUPPORT */
+#endif /* USE_BACKEND_WAVEOUT */
 
-#ifdef NULL_SUPPORT
+#ifdef USE_BACKEND_NULL
 #include "arch/null/null.h"
 #else
 #define grab_read_null()	      NULL
@@ -95,6 +95,6 @@
 #define set_write_null(h,b,f,s)       AL_FALSE
 #define release_null(h)
 #define null_blitbuffer(h,d,b)
-#endif /* NULL_SUPPORT */
+#endif /* USE_BACKEND_NULL */
 
 #endif /* PLATFORM_H_ */

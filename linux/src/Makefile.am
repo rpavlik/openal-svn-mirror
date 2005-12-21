@@ -57,43 +57,62 @@ libopenal_la_SOURCES =			\
 	mixaudio16.c
 
 # backend sources
-if ALSAENABLED
+
+if USEBACKENDALSA
 libopenal_la_SOURCES +=			\
 	arch/alsa/alsa.c		\
 	arch/alsa/alsa.h
 endif
 
-if ARTSENABLED
+if USEBACKENDARTS
 libopenal_la_SOURCES +=			\
 	arch/arts/arts.c		\
 	arch/arts/arts.h
 endif
 
-if ESDENABLED
+if USEBACKENDESD
 libopenal_la_SOURCES +=			\
 	arch/esd/esd.c			\
 	arch/esd/esd.h
 endif
 
-if SDLENABLED
+if USEBACKENDNATIVEIRIX
 libopenal_la_SOURCES +=			\
-	arch/sdl/sdl.c			\
-	arch/sdl/sdl.h
+	arch/irix/iris.c		\
+	arch/irix/iris.h
 endif
 
-if NULLENABLED
+if USEBACKENDNATIVELINUX
+libopenal_la_SOURCES +=			\
+	arch/linux/lin_dsp.c		\
+	arch/linux/lin_dsp.h
+endif
+
+if USEBACKENDNULL
 libopenal_la_SOURCES +=			\
 	arch/null/null.c		\
 	arch/null/null.h
 endif
 
-if WAVEOUTENABLED
+if USEBACKENDSDL
+libopenal_la_SOURCES +=			\
+	arch/sdl/sdl.c			\
+	arch/sdl/sdl.h
+endif
+
+if USEBACKENDNATIVESOLARIS
+libopenal_la_SOURCES +=			\
+	arch/solaris/solaris_native.c	\
+	arch/solaris/solaris_native.h
+endif
+
+if USEBACKENDWAVEOUT
 libopenal_la_SOURCES +=			\
 	arch/waveout/waveout.c		\
 	arch/waveout/waveout.h
 endif
 
-if WINDOWSENABLED
+if USEBACKENDNATIVEWINDOWS
 libopenal_la_SOURCES +=			\
 	arch/windows/windows_native.c	\
 	arch/windows/windows_native.h
@@ -104,11 +123,6 @@ libopenal_la_SOURCES +=			\
 	arch/interface/interface_sound.h \
 	arch/interface/platform.h	\
 	arch/portable/cpu_caps.c
-
-# OS-specific sources
-libopenal_la_SOURCES +=			\
-	arch/linux/lin_dsp.c		\
-	arch/linux/lin_dsp.h
 
 # processor-specific sources
 libopenal_la_SOURCES +=			\

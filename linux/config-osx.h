@@ -28,20 +28,18 @@
 
 #define WORDS_BIGENDIAN 1
 
-#define DARWIN_TARGET 1
-#define NULL_SUPPORT 1
-#define WAVEOUT_SUPPORT 1
+#define USE_BACKEND_NATIVE_DARWIN 1
+#define USE_BACKEND_NULL 1
+#define USE_BACKEND_WAVEOUT 1
 /* #undef SMPEG_SUPPORT */
 /* #undef VORBIS_SUPPORT */
-/* #undef ALSA_SUPPORT */
-/* #undef ARTS_SUPPORT */
-/* #undef ESD_SUPPORT */
-/* #undef IRIS_SUPPORT */
-/* #undef SDL_SUPPORT */
-/* #undef DSOUND_SUPPORT */
+/* #undef USE_BACKEND_ALSA */
+/* #undef USE_BACKEND_ARTS */
+/* #undef USE_BACKEND_ESD */
+/* #undef USE_BACKEND_NATIVE_IRIX */
+/* #undef USE_BACKEND_SDL */
 /* #undef SMPEG_SUPPORT */
 /* #undef VORBIS_SUPPORT */
-/* #undef BROKEN_LIBIO */
 
 /* The number of bytes in a void *.  */
 #define SIZEOF_VOID_P 4

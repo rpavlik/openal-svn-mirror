@@ -24,18 +24,4 @@
 
 #endif
 
-#ifdef BROKEN_LIBIO
-#include <libio.h>
-#define __underflow __broken_underflow
-#define __overflow __broken_overflow
-#include <stdio.h>
-
-#define __ASSEMBLER__
-#include <errnos.h>
-
-#define __USE_POSIX
-#include <signal.h>
-
-#endif /* BROKEN_LIBIO */
-
 #endif /* AL_SITE_CONFIG_H_ */

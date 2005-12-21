@@ -331,50 +331,13 @@ esac
 
 dnl Special OS objs for target systems
 case "$target" in
-    *linux*)
-    dnl subtest for mips/linux systems with broken libio headers
-    case "$target" in
-    	*mips* )
-	AC_DEFINE([BROKEN_LIBIO], [1], [undocumented])
-        ;;
-	*)
-        ;;
-    esac
-    AC_DEFINE([LINUX_TARGET], [1], [undocumented])
-    OS_OBJS="\$(LIN_OBJS)"
-    ;;
-    *bsd*)
-    AC_DEFINE([BSD_TARGET], [1], [undocumented])
-    OS_OBJS="\$(BSD_OBJS)"
-    ;;
-    *solaris*)
-    AC_DEFINE([SOLARIS_TARGET], [1], [undocumented])
-    OS_OBJS="\$(SOLARIS_OBJS)"
-    ;;
-    *irix*)
-    AC_DEFINE([IRIX_TARGET], [1], [undocumented])
-    OS_OBJS="\$(IRIS_OBJS)"
-    ;;
-    *cygwin*|*mingw*)
-    AC_DEFINE([WINDOWS_TARGET], [1], [undocumented])
-    FEATURECFLAGS="-DAL_BUILD_LIBRARY $FEATURECFLAGS"
-    OS_OBJS="\$(WINDOWS_OBJS)"
-    LIBS="-lwinmm $LIBS"         # need that mm library for waveOutOpen etc
-    ;;
-    *darwin*)
-    # I think darwin can use dlopen with fink, but
-    # I don't want to require fink
-    AC_DEFINE([NODLOPEN], [1], [undocumented])
-    LIBS="$LIBS -I/System/Library/Frameworks/CoreAudio.framework/Headers/ -framework CoreAudio"
-    AC_DEFINE([DARWIN_TARGET], [1], [undocumented])
-    OS_OBJS="\$(DARWIN_OBJS)" ;;
-    *morphos*)
-    AC_DEFINE([MORPHOS_TARGET], [1], [undocumented])
-    OS_OBJS="\$(MORPHOS_OBJS)"
-    ;;
-    *)
-    OS_OBJS="\$(LIN_OBJS)"
-    ;;
+  # ToDo: Hmmm, OpenBSD/FreeBSD are using OSS, too, just like Linux. Perhaps some re-use is possible?
+  *bsd*) AC_DEFINE([USE_BACKEND_NATIVE_BSD], [1], [undocumented]) ;;
+  *darwin*) # I think darwin can use dlopen with fink, but I don't want to require fink
+            AC_DEFINE([NODLOPEN], [1], [undocumented])
+            LIBS="$LIBS -I/System/Library/Frameworks/CoreAudio.framework/Headers/ -framework CoreAudio"
+            AC_DEFINE([USE_BACKEND_NATIVE_DARWIN], [1], [undocumented]) ;;
+  *morphos*) AC_DEFINE([USE_BACKEND_NATIVE_MORPHOS], [1], [undocumented]) ;;
 esac
 
 dnl Special objs for architectures
@@ -454,20 +417,7 @@ fi
 ################################################################################
 # Checks for backends.
 ################################################################################
-
-# ToDo: Convert this into a real feature check...
-case "$target" in
-    *irix*)
-    # need dmedia
-    AC_DEFINE([IRIS_SUPPORT], [1], [undocumented])
-    LIBS="-laudio $LIBS"
-    ;;
-    *)
-    # No extra libs needed
-    ;;
-esac
-
-
+#
 # Detecting backends in the various configurations and on the various platforms
 # is a nightmare, but let's at least describe the general ideas:
 #
@@ -512,7 +462,7 @@ AC_DEFUN([OPENAL_BACKEND_ENABLE],
 
 AC_ARG_ENABLE([alsa],
 [AS_HELP_STRING([--enable-alsa],
-                [enable ALSA backend @<:@default=autodetect@:>@])])
+                [enable ALSA backend @<:@default=auto@:>@])])
 
 AC_ARG_ENABLE([alsa-dlopen],
 [AS_HELP_STRING([--enable-alsa-dlopen],
@@ -577,13 +527,14 @@ else
   CFLAGS=$openal_saved_CFLAGS
 fi
 
-OPENAL_BACKEND_ENABLE([ALSA], [openal_backend_alsa_support], [ALSA_SUPPORT], [ALSAENABLED])
+OPENAL_BACKEND_ENABLE([ALSA], [openal_backend_alsa_support],
+                      [USE_BACKEND_ALSA], [USEBACKENDALSA])
 
 # check for aRts backend #######################################################
 
 AC_ARG_ENABLE([arts],
 [AS_HELP_STRING([--enable-arts],
-                [enable aRts backend @<:@default=autodetect@:>@])])
+                [enable aRts backend @<:@default=auto@:>@])])
 
 AC_ARG_ENABLE([arts-dlopen],
 [AS_HELP_STRING([--enable-arts-dlopen],
@@ -650,13 +601,14 @@ else
   CFLAGS=$openal_saved_CFLAGS
 fi
 
-OPENAL_BACKEND_ENABLE([aRts], [openal_backend_arts_support], [ARTS_SUPPORT], [ARTSENABLED])
+OPENAL_BACKEND_ENABLE([aRts], [openal_backend_arts_support],
+                      [USE_BACKEND_ARTS], [USEBACKENDARTS])
 
 # check for ESD backend #######################################################
 
 AC_ARG_ENABLE([esd],
 [AS_HELP_STRING([--enable-esd],
-                [enable ESD backend @<:@default=autodetect@:>@])])
+                [enable ESD backend @<:@default=auto@:>@])])
 
 AC_ARG_ENABLE([esd-dlopen],
 [AS_HELP_STRING([--enable-esd-dlopen],
@@ -723,7 +675,66 @@ else
   CFLAGS=$openal_saved_CFLAGS
 fi
 
-OPENAL_BACKEND_ENABLE([ESD], [openal_backend_esd_support], [ESD_SUPPORT], [ESDENABLED])
+OPENAL_BACKEND_ENABLE([ESD], [openal_backend_esd_support],
+                      [USE_BACKEND_ESD], [USEBACKENDESD])
+
+# check for native IRIX backend #############################################
+
+AC_ARG_ENABLE([irix],
+[AS_HELP_STRING([--enable-irix],
+                [enable native IRIX backend @<:@default=auto@:>@])])
+
+if test "x$enable_irix" = xno; then
+  openal_backend_irix_support=disabled
+else
+  AC_CHECK_HEADER([dmedia/audio.h],
+    [openal_libs_irix="-laudio"
+     openal_saved_LIBS=$LIBS
+     LIBS="$openal_libs_irix $LIBS"
+     AC_CACHE_CHECK([for alGetResourceByName], [openal_cv_func_algetresourcebyname],
+       [AC_LINK_IFELSE([AC_LANG_CALL([], [alGetResourceByName])],
+          [openal_cv_func_algetresourcebyname=yes],
+          [openal_cv_func_algetresourcebyname=no])])
+     if test "x$openal_cv_func_algetresourcebyname" = xyes; then
+       openal_backend_irix_support=static
+       LIBS="$openal_libs_irix $LIBS"
+     else
+       openal_backend_irix_support=none
+       LIBS=$openal_saved_LIBS
+       if test "x$enable_irix" = xyes; then
+         AC_MSG_WARN([--enable-irix ignored because the Irix Multimedia library could not be found.])
+       fi
+     fi],
+    [openal_backend_irix_support=none
+     if test "x$enable_irix" = xyes; then
+       AC_MSG_WARN([--enable-irix ignored because the Irix header could not be found.])
+     fi],
+    [AC_INCLUDES_DEFAULT([])])
+fi
+
+OPENAL_BACKEND_ENABLE([native IRIX], [openal_backend_irix_support],
+                      [USE_BACKEND_NATIVE_IRIX], [USEBACKENDNATIVEIRIX])
+
+# check for native Linux backend #############################################
+
+AC_ARG_ENABLE([linux],
+[AS_HELP_STRING([--enable-linux],
+                [enable native Linux/OSS backend @<:@default=auto@:>@])])
+
+if test "x$enable_linux" = xno; then
+  openal_backend_linux_support=disabled
+else
+  AC_CHECK_HEADER([linux/soundcard.h],
+    [openal_backend_linux_support=static],
+    [openal_backend_linux_support=none
+     if test "x$enable_linux" = xyes; then
+       AC_MSG_WARN([--enable-linux ignored because the Linux OSS header could not be found.])
+     fi],
+    [AC_INCLUDES_DEFAULT([])])
+fi
+
+OPENAL_BACKEND_ENABLE([native Linux], [openal_backend_linux_support],
+                      [USE_BACKEND_NATIVE_LINUX], [USEBACKENDNATIVELINUX])
 
 # check for null backend #######################################################
 
@@ -736,13 +747,17 @@ case $enable_null in
   *) openal_backend_null_support=static ;;
 esac
 
-OPENAL_BACKEND_ENABLE([null], [openal_backend_null_support], [NULL_SUPPORT], [NULLENABLED])
+OPENAL_BACKEND_ENABLE([null], [openal_backend_null_support],
+                      [USE_BACKEND_NULL], [USEBACKENDNULL])
 
 # check for SDL backend ########################################################
 
 AC_ARG_ENABLE([sdl],
 [AS_HELP_STRING([--enable-sdl],
-                [enable SDL backend @<:@default=autodetect@:>@])])
+                [enable SDL backend @<:@default=auto@:>@])])
+
+# The SDL backend code is not ready for this yet, but we are... :-)
+enable_sdl_dlopen=no
 
 if test "x$enable_sdl" = xno; then
   openal_backend_sdl_support=disabled
@@ -759,7 +774,7 @@ else
   esac
   openal_saved_CFLAGS=$CFLAGS
   CFLAGS="$CFLAGS $openal_cflags_sdl"
-  AC_CHECK_HEADER([sdl.h],
+  AC_CHECK_HEADER([SDL.h],
     [if test "x$enable_sdl_dlopen" != xno; then
        openal_backend_sdl_support=dynamic
        FEATURECFLAGS="$FEATURECFLAGS $openal_cflags_sdl"
@@ -805,7 +820,29 @@ else
   CFLAGS=$openal_saved_CFLAGS
 fi
 
-OPENAL_BACKEND_ENABLE([SDL], [openal_backend_sdl_support], [SDL_SUPPORT], [SDLENABLED])
+OPENAL_BACKEND_ENABLE([SDL], [openal_backend_sdl_support],
+                      [USE_BACKEND_SDL], [USEBACKENDSDL])
+
+# check for native Solaris backend #############################################
+
+AC_ARG_ENABLE([solaris],
+[AS_HELP_STRING([--enable-solaris],
+                [enable native Solaris backend @<:@default=auto@:>@])])
+
+if test "x$enable_solaris" = xno; then
+  openal_backend_solaris_support=disabled
+else
+  AC_CHECK_HEADER([sys/audioio.h],
+    [openal_backend_solaris_support=static],
+    [openal_backend_solaris_support=none
+     if test "x$enable_solaris" = xyes; then
+       AC_MSG_WARN([--enable-solaris ignored because the Solaris audio header could not be found.])
+     fi],
+    [AC_INCLUDES_DEFAULT([])])
+fi
+
+OPENAL_BACKEND_ENABLE([native Solaris], [openal_backend_solaris_support],
+                      [USE_BACKEND_NATIVE_SOLARIS], [USEBACKENDNATIVESOLARIS])
 
 # check for WAVE backend #######################################################
 
@@ -818,13 +855,14 @@ case $enable_waveout in
   *) openal_backend_waveout_support=static ;;
 esac
 
-OPENAL_BACKEND_ENABLE([WAVE], [openal_backend_waveout_support], [WAVEOUT_SUPPORT], [WAVEOUTENABLED])
+OPENAL_BACKEND_ENABLE([WAVE], [openal_backend_waveout_support],
+                      [USE_BACKEND_WAVEOUT], [USEBACKENDWAVEOUT])
 
 # check for native Windows backend #############################################
 
 AC_ARG_ENABLE([windows],
 [AS_HELP_STRING([--enable-windows],
-                [enable native Windows backend @<:@default=autodetect@:>@])])
+                [enable native Windows backend @<:@default=auto@:>@])])
 
 if test "x$enable_windows" = xno; then
   openal_backend_windows_support=disabled
@@ -839,6 +877,7 @@ else
           [openal_cv_func_waveoutclose=no])])
      if test "x$openal_cv_func_waveoutclose" = xyes; then
        openal_backend_windows_support=static
+       FEATURECFLAGS="$FEATURECFLAGS -DAL_BUILD_LIBRARY"
        LIBS="$openal_libs_windows $LIBS"
      else
        openal_backend_windows_support=none
@@ -854,7 +893,8 @@ else
     [AC_INCLUDES_DEFAULT([])])
 fi
 
-OPENAL_BACKEND_ENABLE([native Windows], [openal_backend_windows_support], [WINDOWS_SUPPORT], [WINDOWSENABLED])
+OPENAL_BACKEND_ENABLE([native Windows], [openal_backend_windows_support],
+                      [USE_BACKEND_NATIVE_WINDOWS], [USEBACKENDNATIVEWINDOWS])
 
 # enable vorbis support?
 AC_ARG_ENABLE([vorbis],
@@ -882,12 +922,11 @@ if test "x$enable_smpeg" = xyes; then
       if test -n "$HAVESDL"; then
               SDL_FEATURECFLAGS=`$HAVESDL --cflags`
               SDL_LIBS=`$HAVESDL --libs`
-              AC_DEFINE([SDL_SUPPORT], [1], [undocumented])
+              AC_DEFINE([USE_BACKEND_SDL], [1], [undocumented])
               FEATURECFLAGS="$FEATURECFLAGS $SDL_FEATURECFLAGS"
               LIBS="$LIBS $SDL_LIBS"
               OLDCPPFLAGS="$CPPFLAGS"
               CPPFLAGS="-I/usr/local/include/SDL -I/usr/local/include"
-              OS_OBJS="$OS_OBJS \$(SDL_OBJS)"
       fi
     fi
     if test -n "$HAVESDL"; then
@@ -915,7 +954,6 @@ AC_SUBST([LIBS])
 AC_SUBST([NASM])
 AC_SUBST([NASM_FORMAT])
 AC_SUBST([OPTIMIZATIONCFLAGS])
-AC_SUBST([OS_OBJS])
 AC_SUBST([PROFILINGLDFLAGS])
 AC_SUBST([RANLIB])
 AC_SUBST([SIZEOF_VOID_P])

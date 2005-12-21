@@ -20,17 +20,11 @@
  * UNUNSED(x) flags a parameter or variable as (potentially) being unused, so
  * that gcc doesn't complain about it with -Wunused.
  */
-#ifdef __GNUC__
-
-    /* darwin os uses a cc based on gcc and have __GNUC__ defined.  */
-    #if !defined(DARWIN_TARGET) || __APPLE_CC__ >= 1041
-    #define UNUSED(x) x __attribute((unused))
-    #else
-    #define UNUSED(x) x
-    #endif /* DARWIN_TARGET */
+#if defined(__GNUC__) &&  (__GNUC__ >= 3)
+#define UNUSED(x) x __attribute((unused))
 #else
 #define UNUSED(x) x
-#endif /* GNU_C_ */
+#endif
 
 /*
  * _alLockPrintf is used for debugging purposes.  If DEBUG_LOCK is defined,

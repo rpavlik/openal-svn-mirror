@@ -24,15 +24,11 @@
 #include "audioconvert/ac_endian.h"
 #include "audioconvert/ac_wave.h"
 
-#ifdef __GNUC__
-    #ifndef DARWIN_TARGET /* darwin os uses a cc based on gcc and have __GNUC__ defined */
-    #define UNUSED(x) x __attribute((unused))
-    #else
-    #define UNUSED(x) x
-    #endif /* DARWIN_TARGET */
+#if defined(__GNUC__) &&  (__GNUC__ >= 3)
+#define UNUSED(x) x __attribute((unused))
 #else
 #define UNUSED(x) x
-#endif /* GNU_C_ */
+#endif
 
 #define PCM_CODE        0x0001
 #define MS_ADPCM_CODE   0x0002

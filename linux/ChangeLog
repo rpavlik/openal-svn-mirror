@@ -1,14 +1,23 @@
+2005-12-21  Sven Panne  <sven.panne@aedion.de>
+
+	* CMakeLists.txt, config-osx.h, configure.ac, src/Makefile.am,
+	src/al_main.h, src/al_mixer.c, src/al_siteconfig.h,
+	src/arch/interface/platform.h, src/audioconvert/ac_misc.c: Improved
+	backend detection even more. Removed obscure BROKEN_LIBIO stuff, if
+	there is really still some need for this (which I doubt), we should do
+	it differently.
+
 2005-12-20  Prakash Punnoor <prakash@punnoor.de>
 
-	* src/al_main.c, src/al_main.h,	src/alc/alc_speaker.c:
-	move matrix stuff into separate object; deactivate _alRotatePointAboutAxis,
-	as it is not used and wasn't specified in the header anyway
+	* src/al_main.c, src/al_main.h, src/alc/alc_speaker.c: move matrix stuff
+	into separate object; deactivate _alRotatePointAboutAxis, as it is not
+	used and wasn't specified in the header anyway
 	
 	* src/al_matrix.c, src/al_matrix.h: added
 	
 	* CMakeLists.txt, src/Makefile.am: compile al_matrix.c
 
-2005-12-19  Sven Panne  <sven.panne@aedion.de>
+2005-12-20  Sven Panne  <sven.panne@aedion.de>
 
 	* configure.ac, src/Makefile.am: Improved backend detection. Still not
 	perfect and far too much cut-n-paste, but better than before.
