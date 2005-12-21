@@ -1,3 +1,13 @@
+2005-12-21  Prakash Punnoor <prakash@punnoor.de>
+
+	* arch/i386/x86_floatmul.c: added; renamed i386 floatmul
+	
+	* CMakeLists.txt: renamed i386 floatmul
+	
+	* confuigure.ac, src/Makefile.am: MMX support back in,
+	NASM compilation rule missing, so beware that cpu caps detection is
+	missing
+	
 2005-12-21  Sven Panne  <sven.panne@aedion.de>
 
 	* Makefile.am, configure.ac, src/Makefile.am, src/arch/bsd/bsd_dsp.c,

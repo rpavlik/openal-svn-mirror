@@ -1,6 +1,12 @@
 # We want to build a libopeanl library with libtool.
 lib_LTLIBRARIES = libopenal.la
 
+# The first path is needed to find <AL/alc.h> and <AL/al.h> and the second one
+# is needed for <AL/alext.h>
+libopenal_la_CPPFLAGS =			\
+	-I$(top_srcdir)/common/include	\
+	-I$(top_srcdir)/include
+
 # libopenal consists of the following sources and internal headers:
 libopenal_la_SOURCES =			\
 	al_bpool.c			\
@@ -134,13 +140,42 @@ endif
 libopenal_la_SOURCES +=			\
 	arch/interface/interface_sound.c \
 	arch/interface/interface_sound.h \
-	arch/interface/platform.h	\
-	arch/portable/cpu_caps.c
+	arch/interface/platform.h
 
 # processor-specific sources
+
+if X86ENABLED
+libopenal_la_SOURCES +=			\
+	arch/i386/x86_floatmul.c	\
+	arch/i386/x86_cpu_caps_prk.c	\
+	arch/i386/x86_cpu_caps_prk.h	\
+	arch/i386/x86_simd_support_prk.h
+
+if X86MMXENABLED
+libopenal_la_CPPFLAGS +=		\
+	-I$(top_srcdir)/src/arch/i386
+	
+libopenal_la_SOURCES +=			\
+	arch/i386/mixaudio16_mmx_prk.c	\
+	arch/i386/mixaudio16_mmx_prk.h
+endif
+
+if X86NASMENABLED
+libopenal_la_SOURCES +=			\
+	arch/i386/x86_cpu_caps_detect_prk.nasm
+
+if X86NASMMMXENABLED
+libopenal_la_SOURCES +=			\
+	arch/i386/memcpy_mmx_prk.nasm
+endif
+endif
+
+else
+# no x86, so use portable stuff
 libopenal_la_SOURCES +=			\
 	arch/portable/floatmul.c	\
-	arch/i386/x86_cpu_caps_prk.h
+	arch/portable/cpu_caps.c
+endif
 
 # ALC sources
 libopenal_la_SOURCES +=			\
@@ -178,12 +213,6 @@ libopenal_la_SOURCES +=			\
 	extensions/al_ext_needed.h	\
 	extensions/al_ext_vorbis.c	\
 	extensions/al_ext_vorbis.h
-
-# The first path is needed to find <AL/alc.h> and <AL/al.h> and the second one
-# is needed for <AL/alext.h>
-libopenal_la_CPPFLAGS =			\
-	-I$(top_srcdir)/common/include	\
-	-I$(top_srcdir)/include
 
 # Add compiler flags.
 libopenal_la_CFLAGS = $(WARNINGCFLAGS) $(OPTIMIZATIONCFLAGS) $(FEATURECFLAGS)

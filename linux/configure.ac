@@ -340,20 +340,15 @@ esac
 dnl Special objs for architectures
 case "$target" in
     *i386* | *i486* | *i586* | *i686* | *x86_64*)
-    ARCH_INCLUDES="$ARCH_INCLUDES -Iarch/i386"
-    ARCH_OBJS="\$(x86_OBJS)"
+    openal_x86_support_yn=yes
 
-    AC_MSG_CHECKING([for MMX support])    
-    AC_PREPROC_IFELSE(
-        [AC_LANG_PROGRAM([[
+    AC_MSG_CHECKING([for MMX support])
+    AC_TRY_COMPILE([
 #ifndef __MMX__
 #error no MMX support
-#endif]], [])],
-        [have_mmx=yes], [have_mmx=no])
-    AC_MSG_RESULT([$have_mmx])
-    if test "x$have_mmx" = xyes; then
-        ARCH_OBJS="$ARCH_OBJS \$(x86_MMX_OBJS)"
-    fi
+#endif
+      ],, [openal_x86_mmx_support_yn=yes], [openal_x86_mmx_support_yn=no])
+    AC_MSG_RESULT([$openal_x86_mmx_support_yn])
     ;;
 esac
 
@@ -362,11 +357,11 @@ case "$target" in
         AC_PATH_PROG([NASM], [nasm], [no])
         if test "x$NASM" != xno; then
             AC_DEFINE([HAVE_CPU_CAPS_DETECTION], [1], [detect cpu capabilities])
-            ARCH_OBJS="$ARCH_OBJS \$(x86_NASM_OBJS)"
+            openal_x86_nasm_support_yn=yes
 
-            if test "x$have_mmx" = xyes; then
+            if test "x$openal_x86_mmx_support_yn" = xyes; then
                 AC_DEFINE([HAVE_MMX_MEMCPY], [1], [mmx memcpy])
-                ARCH_OBJS="$ARCH_OBJS \$(x86_MMX_NASM_OBJS)"
+                openal_x86_mmx_nasm_support_yn=yes
             fi
 
             case "$target" in
@@ -382,7 +377,6 @@ case "$target" in
     *x86_64*)
         ;;
     *)
-        ARCH_OBJS="\$(PORTABLE_OBJS)"
         ;;
 esac
 
@@ -391,7 +385,7 @@ AC_ARG_ENABLE([optim-generic],
 [AS_HELP_STRING([--enable-optim-generic],
                 [x86(_64): even if mmx enabled, build optimized instead of light generic mixing routines  @<:@i686/x86_64:default=no@:>@])])
 
-if test "x$have_mmx" = xyes; then
+if test "x$openal_x86_mmx_support_yn" = xyes; then
     case "$target" in
     *i686* | *x86_64*)
         if test "x$enable_optim_generic" != xyes; then
@@ -410,6 +404,10 @@ if test "x$have_mmx" = xyes; then
     fi
 fi
 
+AM_CONDITIONAL([X86ENABLED], [test "x$openal_x86_support_yn" = xyes])
+AM_CONDITIONAL([X86MMXENABLED], [test "x$openal_x86_mmx_support_yn" = xyes])
+AM_CONDITIONAL([X86NASMENABLED], [test "x$openal_x86_nasm_support_yn" = xyes])
+AM_CONDITIONAL([X86NASMMMXENABLED], [test "x$openal_x86_nasm_mmx_support_yn" = xyes])
 
 ################################################################################
 # Checks for backends.
@@ -1010,8 +1008,6 @@ AC_CHECK_SIZEOF([void *])
 
 AC_DEFINE([LINUX_AL], [1], [undocumented])
 
-AC_SUBST([ARCH_INCLUDES])
-AC_SUBST([ARCH_OBJS])
 AC_SUBST([FEATURECFLAGS])
 AC_SUBST([LIBS])
 AC_SUBST([NASM])
