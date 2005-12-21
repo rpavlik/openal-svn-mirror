@@ -354,7 +354,8 @@ esac
 
 case "$target" in
     *i386* | *i486* | *i586* | *i686*)
-        AC_PATH_PROG([NASM], [nasm], [no])
+        #AC_PATH_PROG([NASM], [nasm], [no])
+        NASM=no
         if test "x$NASM" != xno; then
             AC_DEFINE([HAVE_CPU_CAPS_DETECTION], [1], [detect cpu capabilities])
             openal_x86_nasm_support_yn=yes
