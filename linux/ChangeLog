@@ -4,9 +4,11 @@
 	
 	* CMakeLists.txt: renamed i386 floatmul
 	
-	* confuigure.ac, src/Makefile.am: MMX support back in,
+	* configure.ac, src/Makefile.am: MMX support back in,
 	NASM compilation rule missing, so beware that cpu caps detection is
 	missing
+	
+	* arch/i386/floatmul.c, arch/i386/mix16.nasm: removed
 	
 2005-12-21  Sven Panne  <sven.panne@aedion.de>
 
