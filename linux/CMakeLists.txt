@@ -126,7 +126,7 @@ SET(MORPHOS_OBJS         src/arch/morphos/morphos_native.c
                          src/arch/morphos/morphos_dispatcher.c)
 SET(WINDOWS_OBJS         src/arch/windows/windows_native.c)
 
-SET(x86_OBJS             src/arch/i386/floatmul.c
+SET(x86_OBJS             src/arch/i386/x86_floatmul.c
                          src/arch/i386/x86_cpu_caps_prk.c)
 SET(x86_MMX_OBJS         src/arch/i386/mixaudio16_mmx_prk.c)
 SET(x86_NASM_OBJS        src/arch/i386/x86_cpu_caps_detect_prk.nasm)
