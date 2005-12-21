@@ -64,7 +64,7 @@
 #include <AL/alext.h>
 
 #include "arch/interface/interface_sound.h"
-#include "arch/irix/iris.h"
+#include "arch/interface/platform.h"
 
 #include "al_config.h"
 #include "al_main.h"

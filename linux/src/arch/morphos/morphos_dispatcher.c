@@ -14,7 +14,7 @@
 
 #include "alc/alc_context.h"
 
-#include "arch/morphos/morphos_native.h"
+#include "arch/interface/platform.h"
 #include "arch/morphos/morphos_dispatcher.h"
 
 static ULONG OpenAL_SoundFunc(VOID)

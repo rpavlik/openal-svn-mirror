@@ -1,5 +1,19 @@
 2005-12-21  Sven Panne  <sven.panne@aedion.de>
 
+	* Makefile.am, configure.ac, src/Makefile.am, src/arch/bsd/bsd_dsp.c,
+	src/arch/darwin/darwin_native.c, src/arch/interface/platform.h,
+	src/arch/irix/iris.c, src/arch/linux/lin_dsp.c,
+	src/arch/morphos/morphos_dispatcher.c,
+	src/arch/morphos/morphos_native.c, src/arch/solaris/solaris_native.c,
+	src/arch/windows/windows_native.c: Unified all the headers for native
+	backends. Backend auto-detection should be complete now (modulo some
+	testing, of course).
+
+	* src/arch/bsd/bsd_dsp.h, src/arch/darwin/darwin_native.h,
+	src/arch/irix/iris.h, src/arch/linux/lin_dsp.h,
+	src/arch/morphos/morphos_native.h, src/arch/solaris/solaris_native.h
+	src/arch/windows/windows_native.h: Removed.
+
 	* CMakeLists.txt, config-osx.h, configure.ac, src/Makefile.am,
 	src/al_main.h, src/al_mixer.c, src/al_siteconfig.h,
 	src/arch/interface/platform.h, src/audioconvert/ac_misc.c: Improved

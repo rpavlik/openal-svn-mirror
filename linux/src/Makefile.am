@@ -70,6 +70,16 @@ libopenal_la_SOURCES +=			\
 	arch/arts/arts.h
 endif
 
+if USEBACKENDNATIVEBSD
+libopenal_la_SOURCES +=			\
+	arch/bsd/bsd_dsp.c
+endif
+
+if USEBACKENDNATIVEDARWIN
+libopenal_la_SOURCES +=			\
+	arch/darwin/darwin_native.c
+endif
+
 if USEBACKENDESD
 libopenal_la_SOURCES +=			\
 	arch/esd/esd.c			\
@@ -78,14 +88,19 @@ endif
 
 if USEBACKENDNATIVEIRIX
 libopenal_la_SOURCES +=			\
-	arch/irix/iris.c		\
-	arch/irix/iris.h
+	arch/irix/iris.c
 endif
 
 if USEBACKENDNATIVELINUX
 libopenal_la_SOURCES +=			\
-	arch/linux/lin_dsp.c		\
-	arch/linux/lin_dsp.h
+	arch/linux/lin_dsp.c
+endif
+
+if USEBACKENDNATIVEMORPHOS
+libopenal_la_SOURCES +=			\
+	arch/morphos/morphos_dispatcher.c \
+	arch/morphos/morphos_dispatcher.h \
+	arch/morphos/morphos_native.c
 endif
 
 if USEBACKENDNULL
@@ -102,8 +117,7 @@ endif
 
 if USEBACKENDNATIVESOLARIS
 libopenal_la_SOURCES +=			\
-	arch/solaris/solaris_native.c	\
-	arch/solaris/solaris_native.h
+	arch/solaris/solaris_native.c
 endif
 
 if USEBACKENDWAVEOUT
@@ -114,8 +128,7 @@ endif
 
 if USEBACKENDNATIVEWINDOWS
 libopenal_la_SOURCES +=			\
-	arch/windows/windows_native.c	\
-	arch/windows/windows_native.h
+	arch/windows/windows_native.c
 endif
 
 libopenal_la_SOURCES +=			\

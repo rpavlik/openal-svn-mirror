@@ -331,13 +331,10 @@ esac
 
 dnl Special OS objs for target systems
 case "$target" in
-  # ToDo: Hmmm, OpenBSD/FreeBSD are using OSS, too, just like Linux. Perhaps some re-use is possible?
-  *bsd*) AC_DEFINE([USE_BACKEND_NATIVE_BSD], [1], [undocumented]) ;;
   *darwin*) # I think darwin can use dlopen with fink, but I don't want to require fink
             AC_DEFINE([NODLOPEN], [1], [undocumented])
             LIBS="$LIBS -I/System/Library/Frameworks/CoreAudio.framework/Headers/ -framework CoreAudio"
             AC_DEFINE([USE_BACKEND_NATIVE_DARWIN], [1], [undocumented]) ;;
-  *morphos*) AC_DEFINE([USE_BACKEND_NATIVE_MORPHOS], [1], [undocumented]) ;;
 esac
 
 dnl Special objs for architectures
@@ -604,6 +601,51 @@ fi
 OPENAL_BACKEND_ENABLE([aRts], [openal_backend_arts_support],
                       [USE_BACKEND_ARTS], [USEBACKENDARTS])
 
+# check for native BSD/OSS backend #############################################
+
+# ToDo: Hmmm, OpenBSD/FreeBSD are using OSS, too, just like Linux. Perhaps some
+# re-use is possible?
+
+AC_ARG_ENABLE([bsd],
+[AS_HELP_STRING([--enable-bsd],
+                [enable native BSD/OSS backend @<:@default=auto@:>@])])
+
+if test "x$enable_bsd" = xno; then
+  openal_backend_bsd_support=disabled
+else
+  case "$target" in
+    *bsd*) openal_backend_bsd_support=static ;;
+    *) openal_backend_bsd_support=none
+       if test "x$enable_bsd" = xyes; then
+         AC_MSG_WARN([--enable-bsd ignored because this is no BSD build.])
+       fi ;;
+  esac
+fi
+
+OPENAL_BACKEND_ENABLE([native BSD/OSS], [openal_backend_bsd_support],
+                      [USE_BACKEND_NATIVE_BSD], [USEBACKENDNATIVEBSD])
+
+# check for native Darwin backend ##############################################
+
+AC_ARG_ENABLE([darwin],
+[AS_HELP_STRING([--enable-darwin],
+                [enable native Darwin backend @<:@default=auto@:>@])])
+
+if test "x$enable_darwin" = xno; then
+  openal_backend_darwin_support=disabled
+else
+  case "$target" in
+    *darwin*) openal_backend_darwin_support=static ;;
+    *) openal_backend_darwin_support=none
+       if test "x$enable_darwin" = xyes; then
+         AC_MSG_WARN([--enable-darwin ignored because this is no Darwin build.])
+       fi ;;
+  esac
+fi
+
+OPENAL_BACKEND_ENABLE([native Darwin], [openal_backend_darwin_support],
+                      [USE_BACKEND_NATIVE_DARWIN], [USEBACKENDNATIVEDARWIN])
+
 # check for ESD backend #######################################################
 
 AC_ARG_ENABLE([esd],
@@ -735,6 +777,27 @@ fi
 
 OPENAL_BACKEND_ENABLE([native Linux], [openal_backend_linux_support],
                       [USE_BACKEND_NATIVE_LINUX], [USEBACKENDNATIVELINUX])
+
+# check for native MorphOS backend #############################################
+
+AC_ARG_ENABLE([morphos],
+[AS_HELP_STRING([--enable-morphos],
+                [enable native MorphOS backend @<:@default=auto@:>@])])
+
+if test "x$enable_morphos" = xno; then
+  openal_backend_morphos_support=disabled
+else
+  case "$target" in
+    *morphos*) openal_backend_morphos_support=static ;;
+    *) openal_backend_morphos_support=none
+       if test "x$enable_morphos" = xyes; then
+         AC_MSG_WARN([--enable-morphos ignored because this is no MorphOS build.])
+       fi ;;
+  esac
+fi
+
+OPENAL_BACKEND_ENABLE([native MorphOS], [openal_backend_morphos_support],
+                      [USE_BACKEND_NATIVE_MORPHOS], [USEBACKENDNATIVEMORPHOS])
 
 # check for null backend #######################################################
 

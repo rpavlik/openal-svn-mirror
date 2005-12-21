@@ -26,7 +26,7 @@
 #include <stdlib.h>
 
 #include "arch/interface/interface_sound.h"
-#include "arch/solaris/solaris_native.h"
+#include "arch/interface/platform.h"
 
 #include "al_main.h"
 #include "al_debug.h"

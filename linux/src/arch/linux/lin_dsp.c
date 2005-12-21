@@ -29,7 +29,7 @@
 #include "al_debug.h"
 #include "alc/alc_context.h"
 #include "arch/interface/interface_sound.h"
-#include "arch/linux/lin_dsp.h"
+#include "arch/interface/platform.h"
 
 #ifdef WORDS_BIGENDIAN
 #define AFMT_S16 AFMT_S16_BE

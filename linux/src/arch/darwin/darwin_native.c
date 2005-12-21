@@ -13,7 +13,7 @@
 #include <CoreAudio/CoreAudio.h>
 
 #include "arch/interface/interface_sound.h"
-#include "arch/darwin/darwin_native.h"
+#include "arch/interface/platform.h"
 
 #include <fcntl.h>
 #include <stdlib.h>
@@ -287,13 +287,6 @@ ALboolean set_read_native(UNUSED(void *handle), UNUSED(unsigned int *bufsiz), UN
 {
     implement_me("ALboolean set_read_native()");
     return AL_FALSE;
-}
-
-
-int   grab_mixerfd(void)
-{
-    implement_me("int grab_mixerfd()");
-    return NULL;
 }
 
 

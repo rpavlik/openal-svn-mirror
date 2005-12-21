@@ -6,7 +6,7 @@
  */
 
 #include "arch/interface/interface_sound.h"
-#include "arch/morphos/morphos_native.h"
+#include "arch/interface/platform.h"
 #include "arch/morphos/morphos_dispatcher.h"
 
 #include <fcntl.h>

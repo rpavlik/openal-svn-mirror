@@ -24,7 +24,10 @@
 #include <unistd.h>
 
 #include "arch/interface/interface_sound.h"
-#include "arch/bsd/bsd_dsp.h"
+#include "arch/interface/platform.h"
+
+/* is this right? */
+#define _AL_DEF_BUFSIZ _ALC_DEF_BUFSIZ
 
 #include "al_main.h"
 #include "al_debug.h"
@@ -36,6 +39,7 @@
 #define AFMT_S16 AFMT_S16_LE
 #endif /* WORDS_BIGENDIAN */
 
+static int grab_mixerfd(void);
 static int alcChannel_to_dsp_channel(ALuint alcc);
 
 /* /dev/dsp variables */
