@@ -97,16 +97,7 @@ export CFLAGS="$RPM_OPT_FLAGS"
 %ifarch ia64
 export LDFLAGS=-Wl,-relax
 %endif
-./configure --prefix=%{_prefix}		\
-	    --enable-optimization	\
-	    --enable-arts		\
-	    --enable-esd		\
-	    --enable-null		\
-	    --enable-sdl		\
-	    --enable-smpeg		\
-	    --enable-vorbis		\
-	    --enable-waveout		\
-	    --enable-capture
+./configure --prefix=%{_prefix} --enable-optimization
 make
 
 %install
@@ -156,6 +147,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/pkgconfig/openal.pc
 
 %changelog -n openal
+* Thu Dec 22 2005 - sven.panne@aedion.de
+- Removed superfluous/outdated configure flags
 * Tue Nov 29 2005 - sven.panne@aedion.de
 - Synched with new directory structure
 * Mon Nov 28 2005 - sven.panne@aedion.de

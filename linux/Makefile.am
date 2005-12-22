@@ -32,14 +32,6 @@ EXTRA_DIST =							\
 	src/arch/darwin/TODO					\
 	src/arch/darwin/Tests_Results.rtf			\
 	src/arch/darwin/changes.txt				\
-	src/arch/i386/floatmul.c				\
-	src/arch/i386/memcpy_mmx_prk.nasm			\
-	src/arch/i386/mix16.nasm				\
-	src/arch/i386/mixaudio16_mmx_prk.c			\
-	src/arch/i386/mixaudio16_mmx_prk.h			\
-	src/arch/i386/x86_cpu_caps_detect_prk.nasm		\
-	src/arch/i386/x86_cpu_caps_prk.c			\
-	src/arch/i386/x86_simd_support_prk.h			\
 	src/arch/irix/README					\
 	src/arch/solaris/README
 
