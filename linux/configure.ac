@@ -78,7 +78,7 @@ if test "x$enable_more_warnings" = xyes; then
     AC_MSG_WARN([--enable-more-warnings ignored because no GCC was detected])
   else
     # There are some warnings which are note enabled (yet):
-    #    -Wpadded: Perhaps good for optimizing out data layout, but not in general
+    #    -Wpadded: Perhaps good for optimizing our data layout, but not in general
     #    -Wfloat-equal: Often we should use an epsilon, but there are some correct uses, too
     WARNINGCFLAGS="$WARNINGCFLAGS -W -Waggregate-return -Wbad-function-cast -Wcast-align -Wcast-qual -Wconversion -Wdisabled-optimization -Wendif-labels -Winline -Wlong-long -Wmissing-declarations -Wmissing-noreturn -Wmissing-prototypes -Wnested-externs -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wsign-compare -Wstrict-prototypes -Wwrite-strings"
   fi
@@ -1040,7 +1040,7 @@ AC_ARG_ENABLE([mp3],
                 [enable AL_EXT_mp3 support @<:@default=auto@:>@])])
 
 # The smpeg code is not ready for this yet, but we are... :-)
-enable_smpeg_dlopen=no
+enable_mp3_dlopen=no
 
 # For legacy reasons only, this misnomer will be nuked some day.
 AC_ARG_ENABLE([smpeg],
