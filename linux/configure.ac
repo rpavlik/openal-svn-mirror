@@ -435,23 +435,23 @@ AM_CONDITIONAL([X86NASMMMXENABLED], [test "x$openal_x86_nasm_mmx_support_yn" = x
 # using some nice macros...
 
 
-# OPENAL_BACKEND_ENABLE(BACKEND-NAME, SUPPORT-VAR, SUPPORT-DEFINE, SUPPORT-MAKEVAR)
-#----------------------------------------------------------------------------------
-AC_DEFUN([OPENAL_BACKEND_ENABLE],
-[AC_MSG_CHECKING([for $1 backend support])
+# OPENAL_ENABLE(FEATURE-NAME, SUPPORT-VAR, SUPPORT-DEFINE, SUPPORT-MAKEVAR)
+#--------------------------------------------------------------------------
+AC_DEFUN([OPENAL_ENABLE],
+[AC_MSG_CHECKING([for $1 support])
  AC_MSG_RESULT([[$]$2])
 
  case [$]$2 in
-   dynamic|static) openal_backend_support_yn=yes ;;
-   *) openal_backend_support_yn=no ;;
+   dynamic|static) openal_support_yn=yes ;;
+   *) openal_support_yn=no ;;
  esac
 
- if test "x$openal_backend_support_yn" = xyes; then
-   AC_DEFINE([$3], [1], [Define to 1 if the $1 backend should be used.])
+ if test "x$openal_support_yn" = xyes; then
+   AC_DEFINE([$3], [1], [Define to 1 if the $1 should be used.])
  fi
 
- AM_CONDITIONAL([$4], [test "x$openal_backend_support_yn" = xyes])
-]) # OPENAL_BACKEND_ENABLE
+ AM_CONDITIONAL([$4], [test "x$openal_support_yn" = xyes])
+]) # OPENAL_ENABLE
 
 
 # check for ALSA backend #######################################################
@@ -523,8 +523,8 @@ else
   CFLAGS=$openal_saved_CFLAGS
 fi
 
-OPENAL_BACKEND_ENABLE([ALSA], [openal_backend_alsa_support],
-                      [USE_BACKEND_ALSA], [USEBACKENDALSA])
+OPENAL_ENABLE([ALSA backend], [openal_backend_alsa_support],
+              [USE_BACKEND_ALSA], [USEBACKENDALSA])
 
 # check for aRts backend #######################################################
 
@@ -597,8 +597,8 @@ else
   CFLAGS=$openal_saved_CFLAGS
 fi
 
-OPENAL_BACKEND_ENABLE([aRts], [openal_backend_arts_support],
-                      [USE_BACKEND_ARTS], [USEBACKENDARTS])
+OPENAL_ENABLE([aRts backend], [openal_backend_arts_support],
+              [USE_BACKEND_ARTS], [USEBACKENDARTS])
 
 # check for native BSD/OSS backend #############################################
 
@@ -621,8 +621,8 @@ else
   esac
 fi
 
-OPENAL_BACKEND_ENABLE([native BSD/OSS], [openal_backend_bsd_support],
-                      [USE_BACKEND_NATIVE_BSD], [USEBACKENDNATIVEBSD])
+OPENAL_ENABLE([native BSD/OSS backend], [openal_backend_bsd_support],
+              [USE_BACKEND_NATIVE_BSD], [USEBACKENDNATIVEBSD])
 
 # check for native Darwin backend ##############################################
 
@@ -642,10 +642,10 @@ else
   esac
 fi
 
-OPENAL_BACKEND_ENABLE([native Darwin], [openal_backend_darwin_support],
-                      [USE_BACKEND_NATIVE_DARWIN], [USEBACKENDNATIVEDARWIN])
+OPENAL_ENABLE([native Darwin backend], [openal_backend_darwin_support],
+              [USE_BACKEND_NATIVE_DARWIN], [USEBACKENDNATIVEDARWIN])
 
-# check for ESD backend #######################################################
+# check for ESD backend ########################################################
 
 AC_ARG_ENABLE([esd],
 [AS_HELP_STRING([--enable-esd],
@@ -716,10 +716,10 @@ else
   CFLAGS=$openal_saved_CFLAGS
 fi
 
-OPENAL_BACKEND_ENABLE([ESD], [openal_backend_esd_support],
-                      [USE_BACKEND_ESD], [USEBACKENDESD])
+OPENAL_ENABLE([ESD backend], [openal_backend_esd_support],
+              [USE_BACKEND_ESD], [USEBACKENDESD])
 
-# check for native IRIX backend #############################################
+# check for native IRIX backend ################################################
 
 AC_ARG_ENABLE([irix],
 [AS_HELP_STRING([--enable-irix],
@@ -753,10 +753,10 @@ else
     [AC_INCLUDES_DEFAULT([])])
 fi
 
-OPENAL_BACKEND_ENABLE([native IRIX], [openal_backend_irix_support],
-                      [USE_BACKEND_NATIVE_IRIX], [USEBACKENDNATIVEIRIX])
+OPENAL_ENABLE([native IRIX backend], [openal_backend_irix_support],
+              [USE_BACKEND_NATIVE_IRIX], [USEBACKENDNATIVEIRIX])
 
-# check for native Linux backend #############################################
+# check for native Linux backend ###############################################
 
 AC_ARG_ENABLE([linux],
 [AS_HELP_STRING([--enable-linux],
@@ -774,8 +774,8 @@ else
     [AC_INCLUDES_DEFAULT([])])
 fi
 
-OPENAL_BACKEND_ENABLE([native Linux], [openal_backend_linux_support],
-                      [USE_BACKEND_NATIVE_LINUX], [USEBACKENDNATIVELINUX])
+OPENAL_ENABLE([native Linux backend], [openal_backend_linux_support],
+              [USE_BACKEND_NATIVE_LINUX], [USEBACKENDNATIVELINUX])
 
 # check for native MorphOS backend #############################################
 
@@ -795,8 +795,8 @@ else
   esac
 fi
 
-OPENAL_BACKEND_ENABLE([native MorphOS], [openal_backend_morphos_support],
-                      [USE_BACKEND_NATIVE_MORPHOS], [USEBACKENDNATIVEMORPHOS])
+OPENAL_ENABLE([native MorphOS backend], [openal_backend_morphos_support],
+              [USE_BACKEND_NATIVE_MORPHOS], [USEBACKENDNATIVEMORPHOS])
 
 # check for null backend #######################################################
 
@@ -809,8 +809,8 @@ case $enable_null in
   *) openal_backend_null_support=static ;;
 esac
 
-OPENAL_BACKEND_ENABLE([null], [openal_backend_null_support],
-                      [USE_BACKEND_NULL], [USEBACKENDNULL])
+OPENAL_ENABLE([null backend], [openal_backend_null_support],
+              [USE_BACKEND_NULL], [USEBACKENDNULL])
 
 # check for SDL backend ########################################################
 
@@ -882,8 +882,8 @@ else
   CFLAGS=$openal_saved_CFLAGS
 fi
 
-OPENAL_BACKEND_ENABLE([SDL], [openal_backend_sdl_support],
-                      [USE_BACKEND_SDL], [USEBACKENDSDL])
+OPENAL_ENABLE([SDL backend], [openal_backend_sdl_support],
+              [USE_BACKEND_SDL], [USEBACKENDSDL])
 
 # check for native Solaris backend #############################################
 
@@ -903,8 +903,8 @@ else
     [AC_INCLUDES_DEFAULT([])])
 fi
 
-OPENAL_BACKEND_ENABLE([native Solaris], [openal_backend_solaris_support],
-                      [USE_BACKEND_NATIVE_SOLARIS], [USEBACKENDNATIVESOLARIS])
+OPENAL_ENABLE([native Solaris backend], [openal_backend_solaris_support],
+              [USE_BACKEND_NATIVE_SOLARIS], [USEBACKENDNATIVESOLARIS])
 
 # check for WAVE backend #######################################################
 
@@ -917,8 +917,8 @@ case $enable_waveout in
   *) openal_backend_waveout_support=static ;;
 esac
 
-OPENAL_BACKEND_ENABLE([WAVE], [openal_backend_waveout_support],
-                      [USE_BACKEND_WAVEOUT], [USEBACKENDWAVEOUT])
+OPENAL_ENABLE([WAVE backend], [openal_backend_waveout_support],
+              [USE_BACKEND_WAVEOUT], [USEBACKENDWAVEOUT])
 
 # check for native Windows backend #############################################
 
@@ -955,55 +955,167 @@ else
     [AC_INCLUDES_DEFAULT([])])
 fi
 
-OPENAL_BACKEND_ENABLE([native Windows], [openal_backend_windows_support],
-                      [USE_BACKEND_NATIVE_WINDOWS], [USEBACKENDNATIVEWINDOWS])
+OPENAL_ENABLE([native Windows backend], [openal_backend_windows_support],
+              [USE_BACKEND_NATIVE_WINDOWS], [USEBACKENDNATIVEWINDOWS])
 
-# enable vorbis support?
+################################################################################
+# Checks for extensions.
+################################################################################
+
+# check for AL_EXT_vorbis extension ############################################
+
 AC_ARG_ENABLE([vorbis],
 [AS_HELP_STRING([--enable-vorbis],
-                [enable vorbis support @<:@default=no@:>@])])
+                [enable AL_EXT_vorbis extension @<:@default=auto@:>@])])
 
-if test "x$enable_vorbis" = xyes; then
-    AC_CHECK_LIB([vorbisfile], [ov_info],
-      [AC_DEFINE([VORBIS_SUPPORT], [1], [undocumented])
-      LIBS="-lvorbis -lvorbisfile $LIBS"], [], [-lvorbis])
+# The Vorbis code is not ready for this yet, but we are... :-)
+enable_vorbis_dlopen=no
+
+if test "x$enable_vorbis" = xno; then
+  openal_extension_vorbis_support=disabled
+else
+  AC_CACHE_CHECK([for Vorbis compiler flags], [openal_cv_cflags_vorbis],
+    [openal_cv_cflags_vorbis=unknown
+     test "x$PKG_CONFIG" != xnone && "$PKG_CONFIG" --exists vorbis && openal_cv_cflags_vorbis="`$PKG_CONFIG --cflags vorbisfile`"
+     test -z "$openal_cv_cflags_vorbis" && openal_cv_cflags_vorbis=none])
+  case $openal_cv_cflags_vorbis in
+    unknown|none) openal_cflags_vorbis="" ;;
+    *) openal_cflags_vorbis=$openal_cv_cflags_vorbis ;;
+  esac
+  openal_saved_CFLAGS=$CFLAGS
+  CFLAGS="$CFLAGS $openal_cflags_vorbis"
+  AC_CHECK_HEADER([vorbis/vorbisfile.h],
+    [if test "x$enable_vorbis_dlopen" != xno; then
+       openal_extension_vorbis_support=dynamic
+       FEATURECFLAGS="$FEATURECFLAGS $openal_cflags_vorbis"
+       AC_DEFINE([OPENAL_DLOPEN_Vorbis], [1], [dynamically load Vorbis libs])
+     else
+       AC_CACHE_CHECK([for Vorbis linker flags], [openal_cv_libs_vorbis],
+         [if test "x$PKG_CONFIG" != xnone && "$PKG_CONFIG" --exists vorbis; then
+            openal_cv_libs_vorbis="`$PKG_CONFIG --libs vorbisfile`"
+            if test -z "$openal_cv_libs_vorbis"; then
+              openal_cv_libs_vorbis=none
+            fi
+          else
+            openal_cv_libs_vorbis=unknown
+          fi])
+       if test "x$openal_cv_libs_vorbis" = xunknown; then
+         openal_libs_vorbis="-lvorbisfile -lvorbis -logg"
+       else
+         openal_libs_vorbis=$openal_cv_libs_vorbis
+       fi
+       openal_saved_LIBS=$LIBS
+       LIBS="$openal_libs_vorbis $LIBS"
+       AC_CACHE_CHECK([for ov_clear], [openal_cv_func_ov_clear],
+         [AC_LINK_IFELSE([AC_LANG_CALL([], [ov_clear])],
+            [openal_cv_func_ov_clear=yes],
+            [openal_cv_func_ov_clear=no])])
+       if test "x$openal_cv_func_ov_clear" = xyes; then
+         openal_extension_vorbis_support=static
+         FEATURECFLAGS="$FEATURECFLAGS $openal_cflags_vorbis"
+         LIBS="$openal_libs_vorbis $LIBS"
+       else
+         openal_extension_vorbis_support=none
+         LIBS=$openal_saved_LIBS
+         if test "x$enable_vorbis" = xyes; then
+           AC_MSG_WARN([--enable-vorbis ignored because the Vorbis library could not be found.])
+         fi
+       fi
+     fi],
+    [openal_extension_vorbis_support=none
+     if test "x$enable_vorbis" = xyes; then
+       AC_MSG_WARN([--enable-vorbis ignored because the Vorbis header could not be found.])
+     fi],
+    [AC_INCLUDES_DEFAULT([])])
+  CFLAGS=$openal_saved_CFLAGS
 fi
 
-# enable SMPEG for mp3 stuff?
+OPENAL_ENABLE([AL_EXT_vorbis supprt], [openal_extension_vorbis_support],
+              [ENABLE_EXTENSION_AL_EXT_VORBIS], [ENABLEEXTENSIONALEXTVORBIS])
+
+# check for AL_EXT_mp3 extension ###############################################
+
+AC_ARG_ENABLE([mp3],
+[AS_HELP_STRING([--enable-mp3],
+                [enable AL_EXT_mp3 support @<:@default=auto@:>@])])
+
+# The smpeg code is not ready for this yet, but we are... :-)
+enable_smpeg_dlopen=no
+
+# For legacy reasons only, this misnomer will be nuked some day.
 AC_ARG_ENABLE([smpeg],
 [AS_HELP_STRING([--enable-smpeg],
-                [enable smpeg support @<:@default=no@:>@])])
+                [deprecated, use --enable-mp3 instead])],
+[AC_MSG_WARN([DO NOT USE --enable-smpeg ANYMORE, IT WILL BE REMOVED SOON. USE --enable-mp3 INSTEAD.])
+ enable_mp3=$enable_smpeg])
 
-if test "x$enable_smpeg" = xyes; then
-  AC_PATH_PROG([HAVESMPEG], [smpeg-config], [], [$PATH])
-  if test -n "$HAVESMPEG"; then
-    # smpeg requires sdl
-    # Only test for SDL if we haven't already tested for it
-    if test -z "$HAVESDL"; then
-      AC_PATH_PROG([HAVESDL], [sdl-config], [], [$PATH])
-      if test -n "$HAVESDL"; then
-              SDL_FEATURECFLAGS=`$HAVESDL --cflags`
-              SDL_LIBS=`$HAVESDL --libs`
-              AC_DEFINE([USE_BACKEND_SDL], [1], [undocumented])
-              FEATURECFLAGS="$FEATURECFLAGS $SDL_FEATURECFLAGS"
-              LIBS="$LIBS $SDL_LIBS"
-              OLDCPPFLAGS="$CPPFLAGS"
-              CPPFLAGS="-I/usr/local/include/SDL -I/usr/local/include"
-      fi
-    fi
-    if test -n "$HAVESDL"; then
-      SMPEG_FEATURECFLAGS=`$HAVESMPEG --cflags`
-      SMPEG_LIBS=`$HAVESMPEG --libs`
-      AC_DEFINE([SMPEG_SUPPORT], [1], [undocumented])
-      FEATURECFLAGS="$FEATURECFLAGS $SMPEG_FEATURECFLAGS"
-      LIBS="$SMPEG_LIBS $LIBS"
-    else
-      AC_MSG_WARN([smpeg requires SDL, and none found.])
-    fi
-  else
-    AC_MSG_WARN([smpeg not found.  No support compiled in.])
-  fi
+if test "x$enable_mp3" = xno; then
+  openal_extension_smpeg_support=disabled
+else
+  AC_ARG_VAR([SMPEG_CONFIG], [smpeg configuration utility])
+  AC_CHECK_PROGS([SMPEG_CONFIG], [smpeg-config], [none])
+  AC_CACHE_CHECK([for SMPEG compiler flags], [openal_cv_cflags_smpeg],
+    [openal_cv_cflags_smpeg=unknown
+     test "x$SMPEG_CONFIG" != xnone && openal_cv_cflags_smpeg="`$SMPEG_CONFIG --cflags`"
+     test -z "$openal_cv_cflags_smpeg" && openal_cv_cflags_smpeg=none])
+  case $openal_cv_cflags_smpeg in
+    unknown|none) openal_cv_cflags_smpeg="" ;;
+    *) openal_cflags_smpeg=$openal_cv_cflags_smpeg ;;
+  esac
+  openal_saved_CFLAGS=$CFLAGS
+  CFLAGS="$CFLAGS $openal_cflags_smpeg"
+  AC_CHECK_HEADER([smpeg.h],
+    [if test "x$enable_mp3_dlopen" != xno; then
+       openal_extension_smpeg_support=dynamic
+       FEATURECFLAGS="$FEATURECFLAGS $openal_cflags_smpeg"
+       AC_DEFINE([OPENAL_DLOPEN_SMPEG], [1], [dynamically load SMPEG libs])
+     else
+       AC_CACHE_CHECK([for SMPEG linker flags], [openal_cv_libs_smpeg],
+         [if test "x$SMPEG_CONFIG" != xnone; then
+            openal_cv_libs_smpeg="`$SMPEG_CONFIG --libs`"
+            if test -z "$openal_cv_libs_smpeg"; then
+              openal_cv_libs_smpeg=none
+            fi
+          else
+            openal_cv_libs_smpeg=unknown
+          fi])
+       if test "x$openal_cv_libs_smpeg" = xunknown; then
+         openal_libs_smpeg="-lsmpeg"
+       else
+         openal_libs_smpeg=$openal_cv_libs_smpeg
+       fi
+       openal_saved_LIBS=$LIBS
+       LIBS="$openal_libs_smpeg $LIBS"
+       AC_CACHE_CHECK([for SMPEG_play], [openal_cv_func_SMPEG_play],
+         [AC_LINK_IFELSE([AC_LANG_CALL([], [SMPEG_play])],
+            [openal_cv_func_SMPEG_play=yes],
+            [openal_cv_func_SMPEG_play=no])])
+       if test "x$openal_cv_func_SMPEG_play" = xyes; then
+         openal_extension_smpeg_support=static
+         FEATURECFLAGS="$FEATURECFLAGS $openal_cflags_smpeg"
+         LIBS="$openal_libs_smpeg $LIBS"
+       else
+         openal_extension_smpeg_support=none
+         LIBS=$openal_saved_LIBS
+         if test "x$enable_mp3" = xyes; then
+           AC_MSG_WARN([--enable-smpeg ignored because the SMPEG library could not be found.])
+         fi
+       fi
+     fi],
+    [openal_extension_smpeg_support=none
+     if test "x$enable_mp3" = xyes; then
+       AC_MSG_WARN([--enable-smpeg ignored because the SMPEG header could not be found.])
+     fi],
+    [AC_INCLUDES_DEFAULT([])])
+  CFLAGS=$openal_saved_CFLAGS
 fi
+
+OPENAL_ENABLE([AL_EXT_mp3 extension], [openal_extension_smpeg_support],
+              [ENABLE_EXTENSION_AL_EXT_MP3], [ENABLEEXTENSIONALEXTMP3])
+
+################################################################################
+# Misc stuff
+################################################################################
 
 AC_CHECK_SIZEOF([void *])
 

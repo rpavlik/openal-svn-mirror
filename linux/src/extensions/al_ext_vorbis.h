@@ -24,7 +24,7 @@ ALint Vorbis_Callback(ALuint sid, ALuint bid,
 
 #ifndef OPENAL_EXTENSION
 
-#ifdef VORBIS_SUPPORT
+#ifdef ENABLE_EXTENSION_AL_EXT_VORBIS
 
 
 /*
@@ -52,7 +52,7 @@ ALint Vorbis_Callback(ALuint sid, ALuint bid,
 #define BUILTIN_EXT_VORBIS_INIT
 #define BUILTIN_EXT_VORBIS_FINI
 
-#endif /* VORBIS_SUPPORT */
+#endif /* ENABLE_EXTENSION_AL_EXT_VORBIS */
 
 #endif /* OPENAL_EXTENSION */
 

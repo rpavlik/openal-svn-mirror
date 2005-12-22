@@ -1,12 +1,19 @@
+2005-12-22  Sven Panne  <sven.panne@aedion.de>
+
+	* CMakeLists.txt, config-osx.h, configure.ac, src/Makefile.am,
+	src/al_buffer.c, src/al_main.c, src/extensions/al_ext_mp3.c,
+	src/extensions/al_ext_mp3.h, src/extensions/al_ext_vorbis.c,
+	src/extensions/al_ext_vorbis.h: Autodetect Vorbis and MP3 extenstions.
+
 2005-12-21  Prakash Punnoor <prakash@punnoor.de>
 
 	* arch/i386/x86_floatmul.c: added; renamed i386 floatmul
 	
 	* CMakeLists.txt: renamed i386 floatmul
 	
-	* configure.ac, src/Makefile.am: MMX support back in;
-	NASM compilation rule missing, so beware that cpu caps detection is
-	missing; deactivate NASM for the meanwhile
+	* configure.ac, src/Makefile.am: MMX support back in; NASM compilation
+	rule missing, so beware that cpu caps detection is missing; deactivate
+	NASM for the meanwhile
 	
 	* arch/i386/floatmul.c, arch/i386/mix16.nasm: removed
 	

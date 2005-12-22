@@ -31,7 +31,7 @@ ALint MP3_Callback(ALuint sid, ALuint bid,
 
 #ifndef OPENAL_EXTENSION
 
-#ifdef SMPEG_SUPPORT
+#ifdef ENABLE_EXTENSION_AL_EXT_MP3
 
 
 /*
@@ -56,7 +56,7 @@ ALint MP3_Callback(ALuint sid, ALuint bid,
 #define BUILTIN_EXT_MP3_INIT
 #define BUILTIN_EXT_MP3_FINI
 
-#endif /* SMPEG_SUPPORT */
+#endif /* ENABLE_EXTENSION_AL_EXT_MP3 */
 
 #endif /* OPENAL_EXTENSION */
 

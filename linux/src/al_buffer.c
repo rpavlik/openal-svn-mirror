@@ -362,7 +362,7 @@ void alBufferData( ALuint  bid,
 	}
 
 	switch(format) {
-#ifdef VORBIS_SUPPORT
+#ifdef ENABLE_EXTENSION_AL_EXT_VORBIS
 		/*
 		 * If compiled with the vorbis extension, and we get passed
 		 * vorbis data, then pass that to the correct extension.
@@ -375,7 +375,7 @@ void alBufferData( ALuint  bid,
 			}
 			return;
 			break;
-#endif /* VORBIS_SUPPORT */
+#endif /* ENABLE_EXTENSION_AL_EXT_VORBIS */
 		case AL_FORMAT_WAVE_EXT:
 		case AL_FORMAT_MONO8:
 		case AL_FORMAT_MONO16:

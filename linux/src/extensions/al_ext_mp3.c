@@ -21,7 +21,7 @@
 #define MAX_MP3 64
 #define MAX_MPEG_READ 512
 
-#ifdef SMPEG_SUPPORT
+#ifdef ENABLE_EXTENSION_AL_EXT_MP3
 
 #include <SDL/SDL.h>
 #include <smpeg.h>
@@ -321,4 +321,4 @@ static void mp3map_remove(ALuint sid) {
 
 /* without smpeg support, we don't do jack */
 
-#endif /* SMPEG_SUPPORT */
+#endif /* ENABLE_EXTENSION_AL_EXT_MP3 */

@@ -31,15 +31,13 @@
 #define USE_BACKEND_NATIVE_DARWIN 1
 #define USE_BACKEND_NULL 1
 #define USE_BACKEND_WAVEOUT 1
-/* #undef SMPEG_SUPPORT */
-/* #undef VORBIS_SUPPORT */
 /* #undef USE_BACKEND_ALSA */
 /* #undef USE_BACKEND_ARTS */
 /* #undef USE_BACKEND_ESD */
 /* #undef USE_BACKEND_NATIVE_IRIX */
 /* #undef USE_BACKEND_SDL */
-/* #undef SMPEG_SUPPORT */
-/* #undef VORBIS_SUPPORT */
+/* #undef ENABLE_EXTENSION_AL_EXT_MP3 */
+/* #undef ENABLE_EXTENSION_AL_EXT_VORBIS */
 
 /* The number of bytes in a void *.  */
 #define SIZEOF_VOID_P 4

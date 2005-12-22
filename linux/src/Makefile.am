@@ -154,7 +154,7 @@ libopenal_la_SOURCES +=			\
 if X86MMXENABLED
 libopenal_la_CPPFLAGS +=		\
 	-I$(top_srcdir)/src/arch/i386
-	
+
 libopenal_la_SOURCES +=			\
 	arch/i386/mixaudio16_mmx_prk.c	\
 	arch/i386/mixaudio16_mmx_prk.h
@@ -203,16 +203,25 @@ libopenal_la_SOURCES +=			\
 	audioconvert/audioconvert.h
 
 # extension sources
+
+if ENABLEEXTENSIONALEXTVORBIS
+libopenal_la_SOURCES +=			\
+	extensions/al_ext_vorbis.c	\
+	extensions/al_ext_vorbis.h
+endif
+
+if ENABLEEXTENSIONALEXTMP3
+libopenal_la_SOURCES +=			\
+	extensions/al_ext_mp3.c		\
+	extensions/al_ext_mp3.h
+endif
+
 libopenal_la_SOURCES +=			\
 	extensions/al_ext_capture.c	\
 	extensions/al_ext_capture.h	\
 	extensions/al_ext_loki.c	\
 	extensions/al_ext_loki.h	\
-	extensions/al_ext_mp3.c		\
-	extensions/al_ext_mp3.h		\
-	extensions/al_ext_needed.h	\
-	extensions/al_ext_vorbis.c	\
-	extensions/al_ext_vorbis.h
+	extensions/al_ext_needed.h
 
 # Add compiler flags.
 libopenal_la_CFLAGS = $(WARNINGCFLAGS) $(OPTIMIZATIONCFLAGS) $(FEATURECFLAGS)

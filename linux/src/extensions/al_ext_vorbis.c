@@ -26,7 +26,7 @@
 
 #define MAX_VORBIS 64
 
-#ifdef VORBIS_SUPPORT
+#ifdef ENABLE_EXTENSION_AL_EXT_VORBIS
 #include <vorbis/vorbisfile.h>
 
 static size_t ovfd_read(void *ptr, size_t size, size_t nmemb, void *datasource);
@@ -469,4 +469,4 @@ static int signed_format(ALenum format) {
 
 /* without vorbis support, we don't do jack */
 
-#endif /* VORBIS_SUPPORT */
+#endif /* ENABLE_EXTENSION_AL_EXT_VORBIS */
