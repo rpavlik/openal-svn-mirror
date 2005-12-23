@@ -354,15 +354,15 @@ esac
 
 case "$target" in
     *i386* | *i486* | *i586* | *i686*)
-        #AC_PATH_PROG([NASM], [nasm], [no])
-        NASM=no
+        AC_PATH_PROG([NASM], [nasm], [no])
+
         if test "x$NASM" != xno; then
             AC_DEFINE([HAVE_CPU_CAPS_DETECTION], [1], [detect cpu capabilities])
             openal_x86_nasm_support_yn=yes
 
             if test "x$openal_x86_mmx_support_yn" = xyes; then
                 AC_DEFINE([HAVE_MMX_MEMCPY], [1], [mmx memcpy])
-                openal_x86_mmx_nasm_support_yn=yes
+                openal_x86_nasm_mmx_support_yn=yes
             fi
 
             case "$target" in
@@ -1140,7 +1140,8 @@ AC_CONFIG_FILES([Makefile
                  common/Makefile
                  common/include/Makefile
                  include/Makefile
-                 src/Makefile])
+                 src/Makefile
+                 src/arch/i386/Makefile])
 
 AC_CONFIG_COMMANDS([default], [chmod +x admin/pkgconfig/openal-config])
 AC_OUTPUT

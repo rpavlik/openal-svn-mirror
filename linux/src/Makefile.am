@@ -161,13 +161,9 @@ libopenal_la_SOURCES +=			\
 endif
 
 if X86NASMENABLED
-libopenal_la_SOURCES +=			\
-	arch/i386/x86_cpu_caps_detect_prk.nasm
-
-if X86NASMMMXENABLED
-libopenal_la_SOURCES +=			\
-	arch/i386/memcpy_mmx_prk.nasm
-endif
+# autotools suck hard; this is the only way I got it working
+SUBDIRS = arch/i386
+asm_ldadd = $(top_builddir)/src/arch/i386/libx86_asm_routines.la
 endif
 
 else
@@ -230,4 +226,4 @@ libopenal_la_CFLAGS = $(WARNINGCFLAGS) $(OPTIMIZATIONCFLAGS) $(FEATURECFLAGS)
 libopenal_la_LDFLAGS = -no-undefined $(PROFILINGLDFLAGS)
 
 # We use sin and friends, so we might need -lm, autoconf takes care of this.
-libopenal_la_LIBADD = $(LIBM)
+libopenal_la_LIBADD = $(LIBM) $(asm_ldadd)

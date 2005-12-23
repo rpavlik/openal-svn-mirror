@@ -1,3 +1,11 @@
+2005-12-21  Prakash Punnoor <prakash@punnoor.de>
+
+	* arch/i386/Makefile.am: added; kludge for autotools vs. nasm
+	
+	* configure.ac, src/Makefile.am: finally nasm compilation (based on
+	LAME's way); quite a kludge, but autotools suck hard, better ways
+	welcome...
+
 2005-12-22  Sven Panne  <sven.panne@aedion.de>
 
 	* CMakeLists.txt, Makefile.am, admin/RPM/openal.spec, config-osx.h,
