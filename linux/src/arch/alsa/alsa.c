@@ -213,7 +213,7 @@ void *grab_read_alsa( void )
 		const char *serr = psnd_strerror(err);
 
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-				"grab_alsa: init failed: %s\n", serr);
+				"grab_alsa: init failed: %s", serr);
 
 		return NULL;
 	}
@@ -230,7 +230,7 @@ void *grab_read_alsa( void )
 	retval->setup_write	= 0;
 
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-			"grab_alsa: init ok, using %s\n", card_name);
+			"grab_alsa: init ok, using %s", card_name);
 
 	return retval;
 }
@@ -300,7 +300,7 @@ void *grab_write_alsa( void )
 		const char *serr = psnd_strerror(err);
 
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-			"grab_alsa: init failed: %s\n", serr);
+			"grab_alsa: init failed: %s", serr);
 
 		return NULL;
 	}
@@ -314,7 +314,7 @@ void *grab_write_alsa( void )
 		const char *serr = psnd_strerror(err);
 
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-			"grab_alsa: could not put device into blocking mode: %s\n", serr);
+			"grab_alsa: could not put device into blocking mode: %s", serr);
 	}
         
 	retval = malloc(sizeof *retval);
@@ -331,7 +331,7 @@ void *grab_write_alsa( void )
 	_alBlitBuffer = alsa_blitbuffer;
 
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-		 "grab_alsa: init ok, using %s\n", card_name);
+		 "grab_alsa: init ok, using %s", card_name);
 
 	return retval;
 }
@@ -364,13 +364,7 @@ ALboolean set_read_alsa( void *handle,
 	ai->periods     = 2;
 
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-			"alsa info (read):\n"\
-			" channels: %u\n"\
-			" format: %u\n"\
-			" speed: %u\n"\
-			" framesize: %u\n"\
-			" bufframesize: %u\n"\
-			" periods: %u",
+			"alsa info (read): channels: %u, format: %u, speed: %u, framesize: %u, bufframesize: %u,periods: %u",
 			ai->channels, ai->format, ai->speed, ai->framesize, ai->bufframesize, ai->periods);
 
 	phandle = ai->handle;
@@ -444,7 +438,7 @@ ALboolean set_read_alsa( void *handle,
 	err = psnd_pcm_hw_params_set_period_size_near(phandle, setup, &val, NULL);
 	if (err < 0) {
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-				"set_read_alsa: %s\n", psnd_strerror(err));
+				"set_read_alsa: %s", psnd_strerror(err));
 		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
 	}
@@ -453,7 +447,7 @@ ALboolean set_read_alsa( void *handle,
 	err = psnd_pcm_hw_params_set_periods_near(phandle, setup, &ai->periods, 0);
 	if (err < 0) {
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-				"set_read_alsa: %s\n", psnd_strerror(err));
+				"set_read_alsa: %s", psnd_strerror(err));
 		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
 	}
@@ -461,7 +455,7 @@ ALboolean set_read_alsa( void *handle,
 	err = psnd_pcm_hw_params_set_buffer_size_near(phandle, setup, &ai->bufframesize);
 	if (err < 0) {
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-				"set_read_alsa: %s, size: %d, speed: %d\n",
+				"set_read_alsa: %s, size: %d, speed: %d",
 				psnd_strerror(err), ai->bufframesize, ai->speed);
 		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
@@ -485,7 +479,7 @@ ALboolean set_read_alsa( void *handle,
 	if(err < 0)
 	{
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-				"set_read_alsa: %s\n", psnd_strerror(err));
+				"set_read_alsa: %s", psnd_strerror(err));
 		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
 	}
@@ -494,13 +488,13 @@ ALboolean set_read_alsa( void *handle,
 	if(err < 0)
 	{
 		_alDebug(ALD_MAXIMUS,  __FILE__, __LINE__,
-				"set_read_alsa %s\n", psnd_strerror(err));
+				"set_read_alsa %s", psnd_strerror(err));
 		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
 	}
 
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-			"set_read_alsa: handle: %p, phandle: %p\n", handle, phandle);
+			"set_read_alsa: handle: %p, phandle: %p", handle, phandle);
 	ai->setup_read = 1;
 
 	psnd_pcm_hw_params_free(setup);
@@ -529,13 +523,7 @@ ALboolean set_write_alsa(void *handle,
 	ai->periods     = 2;
 
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-			"alsa info (write):"\
-			" channels: %u"\
-			" format: %u"\
-			" speed: %u"\
-			" framesize: %u"\
-			" bufframesize: %u"\
-			" periods: %u",
+			"alsa info (write): channels: %u, format: %u, speed: %u, framesize: %u, bufframesize: %u, periods: %u",
 			ai->channels, ai->format, ai->speed, ai->framesize, ai->bufframesize, ai->periods);
 
 	phandle = ai->handle;
@@ -605,7 +593,7 @@ ALboolean set_write_alsa(void *handle,
 	} else if (err > 0) {
                 /* sampling rate is in 'err' */
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-                         "set_write_alsa: alsa speed returned is %u rather than %u\n",
+                         "set_write_alsa: alsa speed returned is %u rather than %u",
                          (unsigned int) err, ai->speed);
 		ai->speed = (unsigned int) err;
                 if (ai->speed > 200000) {
@@ -626,7 +614,7 @@ ALboolean set_write_alsa(void *handle,
 	err = psnd_pcm_hw_params_set_periods_near(phandle, setup, &ai->periods, 0);
 	if (err < 0) {
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-				"set_write_alsa: %s\n", psnd_strerror(err));
+				"set_write_alsa: %s", psnd_strerror(err));
 		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
 	}
@@ -634,7 +622,7 @@ ALboolean set_write_alsa(void *handle,
 	err = psnd_pcm_hw_params_set_buffer_size_near(phandle, setup, &ai->bufframesize);
 	if (err < 0) {
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-				"set_write_alsa: %s, size: %d, speed: %d\n",
+				"set_write_alsa: %s, size: %d, speed: %d",
 				psnd_strerror(err), ai->bufframesize, ai->speed);
 		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
@@ -657,7 +645,7 @@ ALboolean set_write_alsa(void *handle,
 	if(err < 0)
 	{
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-				"set_alsa: %s\n", psnd_strerror(err));
+				"set_alsa: %s", psnd_strerror(err));
 		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
 	}
@@ -666,13 +654,13 @@ ALboolean set_write_alsa(void *handle,
 	if(err < 0)
 	{
 		_alDebug(ALD_MAXIMUS,  __FILE__, __LINE__,
-				"set_alsa %s\n", psnd_strerror(err));
+				"set_alsa %s", psnd_strerror(err));
 		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
 	}
 
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-			"set_write_alsa: handle: %p, phandle: %p\n", handle, phandle);
+			"set_write_alsa: handle: %p, phandle: %p", handle, phandle);
 	ai->setup_write = 1;
 
 	psnd_pcm_hw_params_free(setup);
@@ -733,7 +721,7 @@ void alsa_blitbuffer(void *handle, void *data, int bytes)
 				const char *serr = psnd_strerror(err);
 
 				_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-                                 "alsa_blitbuffer: %s\n", serr);
+                                 "alsa_blitbuffer: %s", serr);
 
 				return;
 			}

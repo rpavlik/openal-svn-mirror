@@ -133,22 +133,22 @@ void _alDetectCPUCaps()
 	}
 	/* end check environment vars */
 
-	_alDebug(ALD_CONFIG, __FILE__, __LINE__,"mmx found %i  use %i\n",
+	_alDebug(ALD_CONFIG, __FILE__, __LINE__,"mmx found %i  use %i",
 	         x86cpu_caps.mmx, x86cpu_caps_use.mmx);
-	_alDebug(ALD_CONFIG, __FILE__, __LINE__,"sse found %i  use %i\n",
+	_alDebug(ALD_CONFIG, __FILE__, __LINE__,"sse found %i  use %i",
 	         x86cpu_caps.sse, x86cpu_caps_use.sse);
-	_alDebug(ALD_CONFIG, __FILE__, __LINE__,"sse2 found %i  use %i\n",
+	_alDebug(ALD_CONFIG, __FILE__, __LINE__,"sse2 found %i  use %i",
 	         x86cpu_caps.sse2, x86cpu_caps_use.sse2);
-	_alDebug(ALD_CONFIG, __FILE__, __LINE__,"sse3 found %i  use %i\n",
+	_alDebug(ALD_CONFIG, __FILE__, __LINE__,"sse3 found %i  use %i",
 	         x86cpu_caps.sse3, x86cpu_caps_use.sse3);
-	_alDebug(ALD_CONFIG, __FILE__, __LINE__,"amd_3dnow found %i  use %i\n",
+	_alDebug(ALD_CONFIG, __FILE__, __LINE__,"amd_3dnow found %i  use %i",
 	         x86cpu_caps.amd_3dnow, x86cpu_caps_use.amd_3dnow);
-	_alDebug(ALD_CONFIG, __FILE__, __LINE__,"amd_3dnowext found %i  use %i\n",
+	_alDebug(ALD_CONFIG, __FILE__, __LINE__,"amd_3dnowext found %i  use %i",
 	         x86cpu_caps.amd_3dnowext, x86cpu_caps_use.amd_3dnowext);
-	_alDebug(ALD_CONFIG, __FILE__, __LINE__,"amd_sse_mmx found %i  use %i\n",
+	_alDebug(ALD_CONFIG, __FILE__, __LINE__,"amd_sse_mmx found %i  use %i",
 	         x86cpu_caps.amd_sse_mmx, x86cpu_caps_use.amd_sse_mmx);
 	/*
-	_alDebug(ALD_CONFIG, __FILE__, __LINE__,"cyrix_mmxext found %i  use %i\n",
+	_alDebug(ALD_CONFIG, __FILE__, __LINE__,"cyrix_mmxext found %i  use %i",
 	         x86cpu_caps.cyrix_mmxext, x86cpu_caps_use.cyrix_mmxext);
 	*/
 
