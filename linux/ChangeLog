@@ -1,3 +1,10 @@
+2006-01-01  Prakash Punnoor <prakash@punnoor.de>
+
+	* admin/CMakeModules/FindPkgConfig.cmake: added
+	
+	* CMakeLists.txt: most of back-ends autodetection like configure.ac
+	does is in - but w/o huge copy&paste ;-)
+	
 2005-12-28  Sven Panne  <sven.panne@aedion.de>
 
 	* src/arch/alsa/alsa.c, src/arch/i386/x86_cpu_caps_prk.c: _alDebug
@@ -10,7 +17,7 @@
 	should fix problems for some soundcards (thanks to Shawn Kirst for
 	pointing this out). Removed some unused variables. Fixed two warnings.
 
-2005-12-21  Prakash Punnoor <prakash@punnoor.de>
+2005-12-23  Prakash Punnoor <prakash@punnoor.de>
 
 	* arch/i386/Makefile.am: added; kludge for autotools vs. nasm
 	

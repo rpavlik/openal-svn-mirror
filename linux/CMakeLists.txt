@@ -182,36 +182,38 @@ ENDIF(CMAKE_WORDS_BIGENDIAN)
 
 
 OPTION(BUILD_STATIC "build static library too" ON)
-OPTION(PROFILE "enable profile" OFF)
-OPTION(OPTIMIZATION "enable optimization" OFF)
-OPTION(DEBUG "enable debug" OFF)
-OPTION(WARNINGS "enable warnings" ON)
+OPTION(BUILD_TESTS  "build the test-suite"     OFF)
+OPTION(PROFILE      "enable profile"           OFF)
+OPTION(OPTIMIZATION "enable optimization"      OFF)
+OPTION(DEBUG        "enable debug"             OFF)
+OPTION(WARNINGS     "enable warnings"          ON)
 
 # no mutex locking for sync. driver
 OPTION(EMPTY_LOCKS "enable empty locks" OFF)
 
 # sound backends
 IF(CMAKE_SYSTEM MATCHES "Linux")
-  OPTION(ALSA "alsa backend" OFF)
-  OPTION(ALSA_DLOPEN "alsa dynamic loading" OFF)
+  OPTION(ALSA        "alsa back-end"         ON)
+  OPTION(ALSA_DLOPEN "alsa dynamic loading"  ON)
 ENDIF(CMAKE_SYSTEM MATCHES "Linux")
-OPTION(ARTS "arts backend" OFF)
-OPTION(ARTS_DLOPEN "arts dynamic loading" OFF)
-OPTION(ESD "esd backend" OFF)
-OPTION(ESD_DLOPEN " esd dynamic loading" OFF)
-OPTION(WAVEOUT "wave out backend" ON)
-OPTION(NULLOUT "null out backend" ON)
-OPTION(SDL "sdl backend" OFF)
+
 IF(WIN32)
-  OPTION(DSOUND "directsound backend" OFF)
+  OPTION(DSOUND      "directsound back-end"  OFF)
 ENDIF(WIN32)
 
-# additional codecs
-OPTION(VORBIS "vorbis support" OFF)
-OPTION(SMPEG "smpeg support" OFF)
+OPTION(ARTS        "arts back-end"        ON)
+OPTION(ARTS_DLOPEN "arts dynamic loading" ON)
+OPTION(ESD         "esd back-end"         ON)
+OPTION(ESD_DLOPEN  "esd dynamic loading"  ON)
+OPTION(SDL         "sdl back-end"         ON)
+OPTION(SDL_DLOPEN  "sdl dynamic loading"  ON)
+OPTION(WAVEOUT     "wave out back-end"    ON)
+OPTION(NULLOUT     "null out back-end"    ON)
 
-# want test-suit?
-OPTION(BUILD_TESTS "build the test-suite" OFF)
+# additional codecs
+OPTION(VORBIS         "vorbis support"          ON)
+OPTION(VORBIS_DLOPEN  "vorbis dynamic loading"  ON)
+OPTION(MP3            "smpeg support"           ON)
 
 IF(OPTIMIZATION)
   SET(EMPTY_LOCKS OFF)
@@ -418,77 +420,101 @@ ELSE(MOSTHREAD_AVAILABLE)
   ENDIF(CMAKE_USE_WIN32_THREADS_INIT)
 ENDIF(MOSTHREAD_AVAILABLE)
 
-
 # sound backends
-IF(ALSA)
-  CHECK_INCLUDE_FILE(alsa/asoundlib.h HAVE_ASOUNDLIB_H)
 
-  IF(HAVE_ASOUNDLIB_H)
-    IF(ALSA_DLOPEN)
-      ADD_DEFINE("OPENAL_DLOPEN_ALSA 1")
-    ELSE(ALSA_DLOPEN)
+FIND_PACKAGE(PkgConfig)
+MACRO(CHECK_BACKEND BACKEND_OPTION BACKEND_NAME BACKEND_LIB BACKEND_HEADER BACKEND_TEST_FUNC)
+#IF(NOT ${BACKEND_OPTION}_CHECKED)
+#  SET(${BACKEND_OPTION}_CHECKED ON CACHE INTERNAL "")
 
-      FIND_LIBRARY(ALSA_LIB NAMES asound PATHS /usr/lib /usr/local/lib)
-      IF(ALSA_LIB MATCHES "NOTFOUND")
-        MESSAGE("Alsa library not found - Alsa support disabled.")
-        SET(ALSA OFF)
-      ELSE(ALSA_LIB MATCHES "NOTFOUND")
-        SET(ADD_LIBS ${ADD_LIBS} ${ALSA_LIB})
-      ENDIF(ALSA_LIB MATCHES "NOTFOUND")
-    ENDIF(ALSA_DLOPEN)
+SET(BACKEND_FOUND OFF)
+IF(${BACKEND_OPTION})
+    IF(CMAKE_PKGCONFIG_EXECUTABLE)
+      PKGCONFIG(${BACKEND_NAME} HAVE_BACKEND BACKEND_INCLUDE_DIRS BACKEND_DEFINES BACKEND_LINK_DIRS BACKEND_LIBS)
+      #MESSAGE("have ${HAVE_BACKEND} inc ${BACKEND_INCLUDE_DIRS} def ${BACKEND_DEFINES} linkdirs ${BACKEND_LINK_DIRS} libs ${BACKEND_LIBS}")
+#    ELSE(CMAKE_PKGCONFIG_EXECUTABLE)
+#      MESSAGE("pkg-config not found.")
+    ENDIF(CMAKE_PKGCONFIG_EXECUTABLE)
 
-    IF(ALSA)
-      SET(OS_OBJS ${OS_OBJS} ${ALSA_OBJS})
-      ADD_DEFINE(USE_BACKEND_ALSA)
-    ENDIF(ALSA)
-  ELSE(HAVE_ASOUNDLIB_H)
+    # CHECK_INCLUDE_FILE() doesn't handle include dir, so check by hand
+    FILE(WRITE "${CMAKE_BINARY_DIR}/CMakeTmp/src.c"
+      "
+      #include <${BACKEND_HEADER}>
+      int main(){return 0;}
+      ")
+    # FIXME: What about defines?
+    TRY_COMPILE(HAVE_BACKEND_HEADER
+      ${CMAKE_BINARY_DIR}
+      ${CMAKE_BINARY_DIR}/CMakeTmp/src.c
+      CMAKE_FLAGS
+      "-DINCLUDE_DIRECTORIES:STRING=${BACKEND_INCLUDE_DIRS}")
 
-    MESSAGE("Alsa not found - Alsa support disabled.")
-    SET(ALSA OFF)
-  ENDIF(HAVE_ASOUNDLIB_H)
-ENDIF(ALSA)
+  IF(HAVE_BACKEND_HEADER)
+    IF(HAVE_LIB_DL AND ${BACKEND_OPTION}_DLOPEN)
+      ADD_DEFINE("OPENAL_DLOPEN_${BACKEND_OPTION} 1")
+      INCLUDE_DIRECTORIES(${BACKEND_INCLUDE_DIRS})
+      MESSAGE(STATUS "${BACKEND_OPTION} back-end support - dynamic")
+      SET(BACKEND_FOUND ON)
+    ELSE(HAVE_LIB_DL AND ${BACKEND_OPTION}_DLOPEN)
 
-IF(ARTS)
-  FIND_PROGRAM(ARTS_CONFIG NAMES arts-config)
-  IF(NOT ${ARTS_CONFIG} MATCHES "NOTFOUND")
-    EXEC_PROGRAM(${ARTS_CONFIG} ARGS "--cflags" OUTPUT_VARIABLE ARTS_CFLAGS)
-    SET(ADD_CFLAGS "${ADD_CFLAGS} ${ARTS_CFLAGS}")
-    SET(OS_OBJS ${OS_OBJS} ${ARTS_OBJS})
-    ADD_DEFINE(USE_BACKEND_ARTS)
+      IF(BACKEND_LIBS MATCHES "^$")
+        FIND_LIBRARY(BACKEND_LIBS NAMES ${BACKEND_LIB} PATHS /usr/lib /usr/local/lib)
+      ENDIF(BACKEND_LIBS MATCHES "^$")
 
-    IF(ARTS_DLOPEN)
-      ADD_DEFINE("OPENAL_DLOPEN_ARTS 1")
-    ELSE(ARTS_DLOPEN)
-      EXEC_PROGRAM(${ARTS_CONFIG} ARGS "--libs" OUTPUT_VARIABLE ARTS_LIBS)
-      SET(ADD_LIBS ${ADD_LIBS} ${ARTS_LIBS})
-    ENDIF(ARTS_DLOPEN)
+      IF(BACKEND_LIBS MATCHES "NOTFOUND")
+        MESSAGE("${BACKEND_OPTION} back-end library ${BACKEND_LIB} not found.")
+        SET(${BACKEND_OPTION} OFF)
+      ELSE(BACKEND_LIBS MATCHES "NOTFOUND")
 
-  ELSE(NOT ${ARTS_CONFIG} MATCHES "NOTFOUND")
-    MESSAGE("arts-config not found - aRts support disabled.")
-    SET(ARTS OFF)
-  ENDIF(NOT ${ARTS_CONFIG} MATCHES "NOTFOUND")
-ENDIF(ARTS)
+        # check whether back-end is link-able
+        FILE(WRITE "${CMAKE_BINARY_DIR}/CMakeTmp/src.c"
+          "
+          int main(){${BACKEND_TEST_FUNC}();return 0;}
+          ")
+        # FIXME: What about defines?
+        TRY_COMPILE(BACKEND_LINKS
+          ${CMAKE_BINARY_DIR}
+          ${CMAKE_BINARY_DIR}/CMakeTmp/src.c
+          CMAKE_FLAGS
+          "-DINCLUDE_DIRECTORIES:STRING=${BACKEND_INCLUDE_DIRS}"
+          "-DLINK_DIRECTORIES:STRING=${BACKEND_LINK_DIRS}"
+          "-DLINK_LIBRARIES:STRING=${BACKEND_LIBS}")
 
-IF(ESD)
-  FIND_PROGRAM(ESD_CONFIG NAMES esd-config)
-  IF(NOT ${ESD_CONFIG} MATCHES "NOTFOUND")
-    EXEC_PROGRAM(${ESD_CONFIG} ARGS "--cflags" OUTPUT_VARIABLE ESD_CFLAGS)
-    SET(ADD_CFLAGS "${ADD_CFLAGS} ${ESD_CFLAGS}")
-    SET(OS_OBJS ${OS_OBJS} ${ESD_OBJS})
-    ADD_DEFINE(USE_BACKEND_ESD)
+        IF(BACKEND_LINKS)
+          SET(OS_OBJS ${OS_OBJS} ${${BACKEND_OPTION}_OBJS})
+          ADD_DEFINE(USE_BACKEND_${BACKEND_OPTION})
+          SET(ADD_LIBS ${ADD_LIBS} ${BACKEND_LIBS})
+          INCLUDE_DIRECTORIES(${BACKEND_INCLUDE_DIRS})
+          LINK_DIRECTORIES(${BACKEND_LINK_DIRS})
+          MESSAGE(STATUS "${BACKEND_OPTION} back-end support - static")
+          SET(BACKEND_FOUND ON)
+        ELSE(BACKEND_LINKS)
+          MESSAGE("${BACKEND_OPTION} back-end doesn't link.")
+        ENDIF(BACKEND_LINKS)
+      ENDIF(BACKEND_LIBS MATCHES "NOTFOUND")
+    ENDIF(HAVE_LIB_DL AND ${BACKEND_OPTION}_DLOPEN)
+  ELSE(HAVE_BACKEND_HEADER)
+    MESSAGE("${BACKEND_OPTION} back-end header ${BACKEND_HEADER} not found.")
+  ENDIF(HAVE_BACKEND_HEADER)
+ENDIF(${BACKEND_OPTION})
 
-    IF(ESD_DLOPEN)
-      ADD_DEFINE("OPENAL_DLOPEN_ESD 1")
-    ELSE(ESD_DLOPEN)
-      EXEC_PROGRAM(${ESD_CONFIG} ARGS "--libs" OUTPUT_VARIABLE ESD_LIBS)
-      SET(ADD_LIBS ${ADD_LIBS} ${ESD_LIBS})
-    ENDIF(ESD_DLOPEN)
+IF(NOT BACKEND_FOUND)
+  MESSAGE(STATUS "${BACKEND_OPTION} back-end support - disabled.")
+  SET(${BACKEND_OPTION} OFF)
+ENDIF(NOT BACKEND_FOUND)
+#ENDIF(NOT ${BACKEND_OPTION}_CHECKED)
+ENDMACRO(CHECK_BACKEND)
 
-  ELSE(NOT ${ESD_CONFIG} MATCHES "NOTFOUND")
-    MESSAGE("esd-config not found - esound support disabled.")
-    SET(ESD OFF)
-  ENDIF(NOT ${ESD_CONFIG} MATCHES "NOTFOUND")
-ENDIF(ESD)
+#IF(NOT CHECKED_BACKENDS)
+  CHECK_BACKEND(ALSA   alsa       asound     alsa/asoundlib.h    snd_pcm_info_sizeof)
+  CHECK_BACKEND(ARTS   artsc      artsc      artsc.h             arts_free)
+  CHECK_BACKEND(ESD    esd        esd        esd.h               esd_audio_open)
+  CHECK_BACKEND(SDL    sdl        sdl        SDL.h               SDL_LockAudio)
+
+  CHECK_BACKEND(MP3    smpeg      smpeg      smpeg.h             SMPEG_play)
+  CHECK_BACKEND(VORBIS vorbisfile vorbisfile vorbis/vorbisfile.h ov_clear)
+  #SET(CHECKED_BACKENDS ON CACHE INTERNAL "")
+#ENDIF(NOT CHECKED_BACKENDS)
 
 IF(WAVEOUT)
   SET(OS_OBJS ${OS_OBJS} ${WAVEOUT_OBJS})
@@ -499,33 +525,6 @@ IF(NULLOUT)
   SET(OS_OBJS ${OS_OBJS} ${NULL_OBJS})
   ADD_DEFINE(USE_BACKEND_NULL)
 ENDIF(NULLOUT)
-
-IF(SMPEG)
-  SET(SDL ON)
-ENDIF(SMPEG)
-
-IF(SDL)
-  IF(CYGWIN)
-    # On cygwin targets, we don't rely on sdl-config.
-    SET(SDL_CONFIG "1")
-    SET(ADD_CFLAGS "${ADD_CFLAGS} -I/cygwin/usr/include/SDL")
-    SET(OS_OBJS ${OS_OBJS} ${SDL_OBJS})
-    ADD_DEFINE(USE_BACKEND_SDL)
-  ELSE(CYGWIN)
-  FIND_PROGRAM(SDL_CONFIG NAMES sdl-config)
-  IF(NOT ${SDL_CONFIG} MATCHES "NOTFOUND")
-    EXEC_PROGRAM(${SDL_CONFIG} ARGS "--cflags" OUTPUT_VARIABLE SDL_CFLAGS)
-    EXEC_PROGRAM(${SDL_CONFIG} ARGS "--libs" OUTPUT_VARIABLE SDL_LIBS)
-    SET(ADD_CFLAGS "${ADD_CFLAGS} ${SDL_CFLAGS} -I/usr/local/include/SDL -I/usr/local/include")
-    SET(ADD_LIBS ${ADD_LIBS} ${SDL_LIBS})
-    SET(OS_OBJS ${OS_OBJS} ${SDL_OBJS})
-    ADD_DEFINE(USE_BACKEND_SDL)
-  ELSE(NOT ${SDL_CONFIG} MATCHES "NOTFOUND")
-    MESSAGE("sdl-config not found - SDL support disabled.")
-    SET(SDL OFF)
-  ENDIF(NOT ${SDL_CONFIG} MATCHES "NOTFOUND")
-  ENDIF(CYGWIN)
-ENDIF(SDL)
 
 IF(DSOUND)
   IF(CMAKE_SYSTEM MATCHES "Windows")
@@ -539,44 +538,16 @@ IF(DSOUND)
   ENDIF(CMAKE_SYSTEM MATCHES "Windows")
 ENDIF(DSOUND)
 
-IF(VORBIS)
-  CHECK_LIBRARY_EXISTS("vorbisfile" "ov_info" "" HAVE_VORBISFILE)
-  IF(HAVE_VORBISFILE)
-    SET(ADD_LIBS ${ADD_LIBS} vorbis vorbisfile)
-  ELSE(HAVE_VORBISFILE)
-    MESSAGE("Vorbisfile not found - Vorbis support disabled.")
-    SET(VORBIS OFF)
-  ENDIF(HAVE_VORBISFILE)
-ENDIF(VORBIS)
-
-IF(SMPEG)
-  IF(SDL)
-    FIND_PROGRAM(SMPEG_CONFIG NAMES smpeg-config)
-    IF(NOT ${SMPEG_CONFIG} MATCHES "NOTFOUND")
-      EXEC_PROGRAM(${SMPEG_CONFIG} ARGS "--cflags" OUTPUT_VARIABLE SMPEG_CFLAGS)
-      EXEC_PROGRAM(${SMPEG_CONFIG} ARGS "--libs" OUTPUT_VARIABLE SMPEG_LIBS)
-      SET(ADD_CFLAGS "${ADD_CFLAGS} ${SMPEG_CFLAGS}")
-      SET(ADD_LIBS ${ADD_LIBS} ${SMPEG_LIBS})
-      ADD_DEFINE(ENABLE_EXTENSION_AL_EXT_MP3)
-    ELSE(NOT ${SMPEG_CONFIG} MATCHES "NOTFOUND")
-      MESSAGE("smpeg-config not found - smpg support disabled.")
-    ENDIF(NOT ${SMPEG_CONFIG} MATCHES "NOTFOUND")
-  ELSE(SDL)
-    MESSAGE("smpeg depends on SDL, but SDL wasn't found - smpg support disabled.")
-    SET(SDL OFF)
-  ENDIF(SDL)
-ENDIF(SMPEG)
-
 
 # Special objs for architectures
 IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
   INCLUDE_DIRECTORIES(${OpenAL_SOURCE_DIR}/src/arch/i386)
   SET(ARCH_OBJS ${x86_OBJS})
 
-  MACRO_TEST(__MMX__ MMX_ENABLED)
-  IF(MMX_ENABLED)
+  MACRO_TEST(__MMX__ HAVE_MMX)
+  IF(HAVE_MMX)
     SET(ARCH_OBJS ${ARCH_OBJS} ${x86_MMX_OBJS})
-  ENDIF(MMX_ENABLED)
+  ENDIF(HAVE_MMX)
 
   IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86")
     # nasm stuff
@@ -588,10 +559,10 @@ IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
       ADD_DEFINE(HAVE_CPU_CAPS_DETECTION)
       SET(ARCH_OBJS ${ARCH_OBJS} ${x86_NASM_OBJS})
 
-      IF(MMX_ENABLED)
+      IF(HAVE_MMX)
         SET(ARCH_OBJS ${ARCH_OBJS} ${x86_MMX_NASM_OBJS})
         ADD_DEFINE(HAVE_MMX_MEMCPY)
-      ENDIF(MMX_ENABLED)
+      ENDIF(HAVE_MMX)
     ELSE(NOT HAVE_NASM MATCHES "NOTFOUND")
       MESSAGE("Warning: MMX capability found, but NASM not found. Without NASM no SIMD detection (MMX enabled by default) and no MMX memcopy is built.")
     ENDIF(NOT HAVE_NASM MATCHES "NOTFOUND")
@@ -702,6 +673,10 @@ ADD_LIBRARY(openal SHARED ${OPENAL_OBJS})
 SET_TARGET_PROPERTIES(openal PROPERTIES LINKER_LANGUAGE C)
 SET_TARGET_PROPERTIES(openal PROPERTIES VERSION ${PACKAGE_VERSION} SOVERSION ${PACKAGE_MAJOR_VERSION})
 TARGET_LINK_LIBRARIES(openal ${ADD_LIBS})
+INSTALL_TARGETS(/lib openal)
+INSTALL_FILES(/include/AL FILES common/include/AL/al.h
+                                common/include/AL/alc.h
+                                include/AL/alext.h)
 
 # build test-suite
 IF(BUILD_TESTS)
@@ -804,6 +779,9 @@ SET(PTHREAD_LIBS ${CMAKE_THREAD_LIBS_INIT})
 
 CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/admin/pkgconfig/openal.pc.in ${CMAKE_BINARY_DIR}/admin/pkgconfig/openal.pc @ONLY)
 CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/admin/pkgconfig/openal-config.in ${CMAKE_BINARY_DIR}/admin/pkgconfig/openal-config @ONLY)
+INSTALL_PROGRAMS(/bin FILES admin/pkgconfig/openal-config)
+INSTALL_FILES(/lib/pkgconfig FILES admin/pkgconfig/openal.pc)
+
 
 # info file
 IF(UNIX)
@@ -824,9 +802,3 @@ IF(UNIX)
   ENDIF(NOT MAKEINFO_PRG MATCHES "NOTFOUND")
 ENDIF(UNIX)
 
-INSTALL_TARGETS(/lib openal)
-INSTALL_FILES(/include/AL FILES common/include/AL/al.h
-                                common/include/AL/alc.h
-                                include/AL/alext.h)
-INSTALL_PROGRAMS(/bin FILES admin/pkgconfig/openal-config)
-INSTALL_FILES(/lib/pkgconfig FILES admin/pkgconfig/openal.pc)
