@@ -3,7 +3,8 @@
 	* admin/CMakeModules/FindPkgConfig.cmake: added
 	
 	* CMakeLists.txt: most of back-ends autodetection like configure.ac
-	does is in - but w/o huge copy&paste ;-), fix for Windows backend typo
+	does is in - but w/o huge copy&paste ;-), fix for Windows backend typo,
+	quick hack to make native back-end selectable - needs some detection
 	
 2005-12-28  Sven Panne  <sven.panne@aedion.de>
 
