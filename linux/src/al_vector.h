@@ -9,10 +9,21 @@
 #ifndef AL_VECTOR_H_
 #define AL_VECTOR_H_
 
+#include <math.h>
 /*
  * Returns magnitude of v2 with origin at (0,0,0).
  */
-ALfloat _alVectorMagnitudeAtZero( const ALfloat *v2 );
+static __inline ALfloat _alVectorMagnitudeAtZero( const ALfloat *v2 ) {
+	ALfloat retval;
+
+	retval = sqrt( v2[0] * v2[0] +
+		       v2[1] * v2[1] +
+		       v2[2] * v2[2] );
+
+	retval = fabs( retval );
+
+	return retval;
+}
 
 /*
  * Return magnitude of v with origin at origin.
@@ -20,9 +31,17 @@ ALfloat _alVectorMagnitudeAtZero( const ALfloat *v2 );
 ALfloat _alVectorMagnitude( const ALfloat *origin, const ALfloat *v );
 
 /*
- * Return distance between s1 and s2, placing result in d.
+ * Places distance between two vectors in retref.
  */
-void _alVectorDistance( ALfloat *d, const ALfloat *s1, const ALfloat *s2 );
+static __inline void _alVectorDistance( ALfloat *retref, const ALfloat *v1,
+			const ALfloat *v2 ) {
+
+	retref[0] = fabs( v1[0] - v2[0] );
+	retref[1] = fabs( v1[1] - v2[1] );
+	retref[2] = fabs( v1[2] - v2[2] );
+	
+	return;
+}
 
 /*
  * Rotate point about axis by angle.
@@ -47,12 +66,25 @@ ALfloat _alVectorDotp( const ALfloat *origin, const ALfloat *v1,
 /*
  * Translate s by delta, populating d.
  */
-void _alVectorTranslate( ALfloat *d, const ALfloat *s, const ALfloat *delta );
+static __inline void _alVectorTranslate( ALfloat *d, const ALfloat *s,
+			 const ALfloat *delta ) {
+	d[0] = s[0] + delta[0];
+	d[1] = s[1] + delta[1];
+	d[2] = s[2] + delta[2];
+
+	return;
+}
 
 /*
  * Populates d with vector inverse of s.
  */
-void _alVectorInverse( ALfloat *d, const ALfloat *s );
+static __inline void _alVectorInverse( ALfloat *d, const ALfloat *s ) {
+	d[0] = -s[0];
+	d[1] = -s[1];
+	d[2] = -s[2];
+
+	return;
+}
 
 /*
  * Normalizes s, places result in d.
@@ -62,7 +94,13 @@ void _alVectorNormalize( ALfloat *d, const ALfloat *s );
 /*
  * Returns cross product between v1 and v2, result in d.
  */
-void _alVectorCrossProduct( ALfloat *d, const ALfloat *v1,
-			      const ALfloat *v2 );
+static __inline void _alVectorCrossProduct( ALfloat *d, const ALfloat *v1,
+			      const ALfloat *v2 ) {
+	d[0] = v1[1] * v2[2] - v1[2] * v2[1];
+	d[1] = v1[2] * v2[0] - v1[0] * v2[2];
+	d[2] = v1[0] * v2[1] - v1[1] * v2[0];
+
+	return;
+}
 
 #endif /* AL_VECTOR_H */

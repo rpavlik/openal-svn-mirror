@@ -1,3 +1,8 @@
+2006-01-02  Prakash Punnoor <prakash@punnoor.de>
+
+	* src/al_vector.c, src/al_vector.h: move some micro-functions into
+	header as static __inline
+
 2006-01-01  Prakash Punnoor <prakash@punnoor.de>
 
 	* admin/CMakeModules/FindPkgConfig.cmake: added
