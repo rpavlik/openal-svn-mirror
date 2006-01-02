@@ -8,23 +8,16 @@
 #include "al_siteconfig.h"
 
 #include <AL/al.h>
-#include <fcntl.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
 #include <SDL.h>
 #include <SDL_audio.h>
 
-#include "al_main.h"
 #include "al_debug.h"
-
-#include "arch/sdl/sdl.h"
-#include "arch/interface/interface_sound.h"
+#include "al_main.h"
 #include "alc/alc_context.h"
+#include "arch/interface/interface_sound.h"
+#include "arch/sdl/sdl.h"
 
 #define DEF_SPEED	_ALC_CANON_SPEED
 #define DEF_SIZE	_ALC_DEF_BUFSIZ
@@ -32,11 +25,9 @@
 #define DEF_CHANNELS	2
 #define SDL_DEF_FMT	AUDIO_S16
 
-struct {
+static struct {
 	SDL_AudioSpec spec;
-	Uint8   *sound;			/* Pointer to wave data */
-	Uint32   soundlen;		/* Length of wave data */
-	int      soundpos;		/* Current play position */
+	ALboolean firstTime;
 } sdl_info;
 
 static void *ringbuffer;
@@ -44,10 +35,9 @@ static Uint32 ringbuffersize;
 static Uint32 readOffset;
 static Uint32 writeOffset;
 
-static void dummy(void *unused, Uint8 *stream, int len);
-
-/* sdl stuff */
-static void dummy(UNUSED(void *unused), Uint8 *stream, int len) {
+static void
+dummy(UNUSED(void *unused), Uint8 *stream, int len)
+{
 	memcpy_offset(stream, ringbuffer, readOffset, (size_t)len);
 	readOffset += len;
 
@@ -55,17 +45,18 @@ static void dummy(UNUSED(void *unused), Uint8 *stream, int len) {
 		readOffset  = 0;
 		writeOffset = 0;
 	}
-
-	return;
 }
 
-void *grab_write_sdl(void) {
+void *
+grab_write_sdl(void)
+{
         sdl_info.spec.freq     = DEF_SPEED;
         sdl_info.spec.channels = DEF_CHANNELS;
         sdl_info.spec.samples  = DEF_SAMPLES;
         sdl_info.spec.size     = DEF_SIZE;
         sdl_info.spec.format   = SDL_DEF_FMT;
         sdl_info.spec.callback = dummy;
+	sdl_info.firstTime     = AL_TRUE;
 
         if(SDL_OpenAudio(&sdl_info.spec, NULL) < 0) {
 		/* maybe we need SDL_Init? */
@@ -87,57 +78,51 @@ void *grab_write_sdl(void) {
 	readOffset      = 0;
 	writeOffset     = 0;
 
-	_alBlitBuffer = firsttime_sdl_blitbuffer;
-
-	_alDebug(ALD_CONTEXT, __FILE__, __LINE__,
-		"SDL grab audio ok");
+	_alDebug(ALD_CONTEXT, __FILE__, __LINE__, "SDL grab audio ok");
 
         return &sdl_info.spec;
 }
 
-void *grab_read_sdl(void) {
+void *
+grab_read_sdl(void)
+{
 	return NULL;
 }
 
-void firsttime_sdl_blitbuffer(UNUSED(void *handle), void *data, int bytes)  {
-	offset_memcpy(ringbuffer, writeOffset, data, (size_t)bytes);
-	writeOffset = bytes;
 
-	/* next time, skip pause audio */
-	_alBlitBuffer = sdl_blitbuffer;
-
-	/* start SDL callback mojo */
-        SDL_PauseAudio(0);
-
-        return;
-}
-
-void sdl_blitbuffer(UNUSED(void *handle), void *data, int bytes)  {
-	SDL_LockAudio();
-	while(writeOffset >= ringbuffersize) {
-		SDL_UnlockAudio();
-		SDL_Delay(1);
+void
+sdl_blitbuffer(UNUSED(void *handle), void *data, int bytes)
+{
+	if (sdl_info.firstTime == AL_TRUE) {
+		sdl_info.firstTime = AL_FALSE;
+		offset_memcpy(ringbuffer, writeOffset, data, (size_t)bytes);
+		writeOffset = bytes;
+		/* start SDL callback mojo */
+		SDL_PauseAudio(0);
+	} else {
 		SDL_LockAudio();
+		while(writeOffset >= ringbuffersize) {
+			SDL_UnlockAudio();
+			SDL_Delay(1);
+			SDL_LockAudio();
+		}
+
+		offset_memcpy(ringbuffer, writeOffset, data, (size_t)bytes);
+		writeOffset += bytes;
+
+		SDL_UnlockAudio();
 	}
-
-	offset_memcpy(ringbuffer, writeOffset, data, (size_t)bytes);
-	writeOffset += bytes;
-
-	SDL_UnlockAudio();
-
-        return;
 }
 
-void release_sdl(UNUSED(void *handle)) {
+void
+release_sdl(UNUSED(void *handle))
+{
 	SDL_CloseAudio();
-
-	return;
 }
 
-ALboolean set_write_sdl(UNUSED(void *handle),
-		ALuint *bufsiz,
-		ALenum *fmt,
-		ALuint *speed) {
+ALboolean
+set_write_sdl(UNUSED(void *handle), ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+{
 	ALuint bytesPerSample   = _alGetBitsFromFormat(*fmt) >> 3;
 	ALuint channels = _alGetChannelsFromFormat(*fmt);
 
@@ -147,6 +132,7 @@ ALboolean set_write_sdl(UNUSED(void *handle),
         sdl_info.spec.samples  = *bufsiz / bytesPerSample;
         sdl_info.spec.format   = _al_AL2ACFMT(*fmt);
         sdl_info.spec.callback = dummy;
+	sdl_info.firstTime     = AL_TRUE;
 
         SDL_CloseAudio();
 
@@ -170,26 +156,18 @@ ALboolean set_write_sdl(UNUSED(void *handle),
 
 	memset(ringbuffer, 0, ringbuffersize);
 
-	_alBlitBuffer = firsttime_sdl_blitbuffer;
-
-#ifdef DEBUG
-	fprintf(stderr, "[%s:%d] SDL set audio ok\n",
-		__FILE__, __LINE__);
-#endif
-
-	/*
-
-	FIXME: should remove extraneous *channels and rely only on format
-         */
+	/* FIXME: should remove extraneous *channels and rely only on format */
 	*fmt      = _al_AC2ALFMT(sdl_info.spec.format, sdl_info.spec.channels);
 	*speed    = sdl_info.spec.freq;
+
+	_alDebug(ALD_CONTEXT, __FILE__, __LINE__, "set_write_sdl ok");
 
         return AL_TRUE;
 }
 
-ALboolean set_read_sdl(UNUSED(void *handle),
-		UNUSED(ALuint *bufsiz),
-		UNUSED(ALenum *fmt),
-		UNUSED(ALuint *speed)) {
+ALboolean
+set_read_sdl(UNUSED(void *handle), UNUSED(ALuint *bufsiz), UNUSED(ALenum *fmt),
+	     UNUSED(ALuint *speed))
+{
 	return AL_FALSE;
 }

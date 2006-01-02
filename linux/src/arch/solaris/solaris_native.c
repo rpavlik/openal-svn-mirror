@@ -92,8 +92,6 @@ void *grab_write_native(void) {
   saudio -> fd = fd ;
   AUDIO_INITINFO( &(saudio->ainfo) ) ;
 
-  _alBlitBuffer = native_blitbuffer;
-
   return saudio ;
 }
 

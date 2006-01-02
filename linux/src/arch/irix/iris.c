@@ -148,8 +148,6 @@ void *grab_write_native(void)
     ALpv params[2];
     int i, res;
 
-    _alBlitBuffer = native_blitbuffer;
-
     alh = (_ALhandle *)calloc(1, sizeof(_ALhandle));
     if (alh == NULL)
     {

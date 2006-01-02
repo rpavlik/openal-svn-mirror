@@ -40,15 +40,39 @@ typedef enum {
 /* represents which backend we are using */
 static lin_audio hardware_type = LA_NONE;
 
-/*
- * Function pointer to a function that writes bytes_to_write worth of data
- * from dataptr to the device specified by handle.  dataptr is an interleaved
- * array.
- */
-void (*_alBlitBuffer)( void *handle,
-			      void *dataptr,
-			      int bytes_to_write );
-
+void
+_alBlitBuffer(void *handle, void *dataptr, int bytes_to_write)
+{
+	switch(hardware_type) {
+	case LA_NATIVE:
+		native_blitbuffer(handle, dataptr, bytes_to_write);
+		break;
+	case LA_ALSA:
+		alsa_blitbuffer(handle, dataptr, bytes_to_write);
+		break;
+	case LA_SDL:
+		sdl_blitbuffer(handle, dataptr, bytes_to_write);
+		break;
+	case LA_ARTS:
+		arts_blitbuffer(handle, dataptr, bytes_to_write);
+		break;
+	case LA_ESD:
+		esd_blitbuffer(handle, dataptr, bytes_to_write);
+		break;
+	case LA_WAVEOUT:
+		waveout_blitbuffer(handle, dataptr, bytes_to_write);
+		break;
+	case LA_NULL:
+		null_blitbuffer(handle, dataptr, bytes_to_write);
+		break;
+	case LA_NONE:
+	default:
+		fprintf(stderr,
+			"openal: _alBlitBuffer failed "
+			"because no audio device has been opened.\n");
+		break;
+	}
+}
 
 void *grab_write_audiodevice(void) {
 	Rcvar device_params;

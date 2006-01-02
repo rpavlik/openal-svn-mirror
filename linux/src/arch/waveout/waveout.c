@@ -102,8 +102,6 @@ void *grab_write_waveout(void) {
 	retval->fh = fh;
 	strncpy(retval->name, template, WAVEOUT_NAMELEN);
 
-	_alBlitBuffer = waveout_blitbuffer;
-
 	retval->length = 0;
 
 	fprintf(stderr, "waveout grab audio %s\n", template);

@@ -19,6 +19,5 @@ ALboolean set_read_sdl(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 void release_sdl(void *handle);
 
 void sdl_blitbuffer(void *handle, void *data, int bytes);
-void firsttime_sdl_blitbuffer(void *handle, void *data, int bytes);
 
 #endif /* SDL_H_ */

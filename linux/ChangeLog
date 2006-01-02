@@ -1,3 +1,17 @@
+2006-01-02  Sven Panne  <sven.panne@aedion.de>
+
+	* src/arch/alsa/alsa.c, src/arch/arts/arts.c, src/arch/bsd/bsd_dsp.c,
+	src/arch/darwin/darwin_native.c, src/arch/esd/esd.c,
+	src/arch/interface/interface_sound.c,
+	src/arch/interface/interface_sound.h, src/arch/irix/iris.c,
+	src/arch/linux/lin_dsp.c, src/arch/morphos/morphos_native.c,
+	src/arch/null/null.c, src/arch/sdl/sdl.c, src/arch/sdl/sdl.h,
+	src/arch/solaris/solaris_native.c, src/arch/waveout/waveout.c,
+	src/arch/windows/windows_native.c: Started to refactor backends. The
+	first step was to make _alBlitBuffer a normal function, not a function
+	pointer. The reason for the latter was the SDL backend, which has been
+	modified accordingly.
+
 2006-01-02  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/al_vector.c, src/al_vector.h: move some micro-functions into

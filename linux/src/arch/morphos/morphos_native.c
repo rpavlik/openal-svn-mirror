@@ -170,7 +170,6 @@ static BOOL start_sound_thread(struct MOSWriteHandle* h, ALuint *bufsiz, ALuint 
 			if (bufsiz)	*bufsiz = init_report->dir_RealBufSize;
 			if (speed)	*speed  = init_report->dir_RealFrequency;
 			ReplyMsg((struct Message*) init_report);
-			_alBlitBuffer = native_blitbuffer;
 			return AL_TRUE;
 		}
 

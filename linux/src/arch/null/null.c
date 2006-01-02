@@ -29,8 +29,6 @@ static ALuint sleep_usec(ALuint speed, ALuint chunk);
 static ALint nullspeed;
 
 void *grab_write_null(void) {
-	_alBlitBuffer = null_blitbuffer;
-
 	return bogus_handle;
 }
 

@@ -152,8 +152,6 @@ void *grab_write_esd(void) {
 		return NULL;
 	}
 
-	_alBlitBuffer = esd_blitbuffer;
-
 	fprintf(stderr, "esd grab audio ok\n");
 
 	_alDebug(ALD_CONTEXT, __FILE__, __LINE__,

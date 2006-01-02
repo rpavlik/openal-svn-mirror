@@ -328,8 +328,6 @@ void *grab_write_alsa( void )
 	retval->setup_read	= 0;
 	retval->setup_write	= 0;
 
-	_alBlitBuffer = alsa_blitbuffer;
-
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
 		 "grab_alsa: init ok, using %s", card_name);
 

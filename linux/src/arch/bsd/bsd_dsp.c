@@ -131,8 +131,6 @@ void *grab_write_native(void) {
 		perror("ioctl SETFRAGMENT");
 	}
 
-	_alBlitBuffer = native_blitbuffer;
-
 	FD_ZERO(&dsp_fd_set);
 	FD_SET(dsp_fd, &dsp_fd_set);
 

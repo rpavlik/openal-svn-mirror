@@ -221,8 +221,6 @@ void *grab_write_native(void)
     error = AudioDeviceGetProperty(libGlobals.deviceW, 0, 0, kAudioDevicePropertyStreamFormat, &count, &libGlobals.deviceFormat);
     if (error != 0) goto Crash;
 
-    _alBlitBuffer = native_blitbuffer; /* Defines the blitbuffer function */
-
     error = AudioDeviceAddIOProc(libGlobals.deviceW, deviceFillingProc, (void *) &libGlobals);	/* Creates the callback proc */
     if (error != 0) goto Crash;
 

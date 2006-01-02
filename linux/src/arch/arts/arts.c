@@ -137,8 +137,6 @@ void *grab_write_arts(void) {
 
         openal_arts_ref_count++;
         
-	_alBlitBuffer = arts_blitbuffer;
-
 #if 1
         ahandle->stream = NULL;
 #else

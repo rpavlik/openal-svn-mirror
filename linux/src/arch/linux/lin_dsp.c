@@ -191,8 +191,6 @@ void *grab_write_native(void)
 
 	toggle_nonblock(write_fd, 0);
 
-	_alBlitBuffer = native_blitbuffer;
-
 	/* now get mixer_fd */
 	mixer_fd = grab_mixerfd();
 

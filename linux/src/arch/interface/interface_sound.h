@@ -72,13 +72,10 @@ ALboolean set_write_audiodevice( void *handle, ALuint *bufsiz,
 				 ALenum *fmt, ALuint *speed );
 
 /*
- * Function pointer to a function that writes bytes_to_write worth of data
- * from dataptr to the device specified by handle.  dataptr is an interleaved
- * array.
+ * Write bytes_to_write worth of data from dataptr to the device specified by
+ * handle.  dataptr is an interleaved array.
  */
-extern void (*_alBlitBuffer)( void *handle,
-			      void *dataptr,
-			      int bytes_to_write );
+void _alBlitBuffer(void *handle, void *dataptr, int bytes_to_write);
 
 /*
  * get_audiochannel( void *handle, ALuint channel )

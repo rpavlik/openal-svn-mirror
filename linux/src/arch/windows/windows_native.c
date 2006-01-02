@@ -95,8 +95,6 @@ void *grab_write_native(void) {
 		audiobufs.whdrs[i].dwFlags = WHDR_DONE;
 	}
 
-	_alBlitBuffer = native_blitbuffer;
-
 	memset(pwfx, 0, sizeof *pwfx);
 
 	pwfx->wFormatTag      = DEF_FORMAT;
