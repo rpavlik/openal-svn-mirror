@@ -1,3 +1,7 @@
+2006-01-03  Sven Panne  <sven.panne@aedion.de>
+
+	* configure.ac: Fixed typo in currently unused #define.
+
 2006-01-02  Sven Panne  <sven.panne@aedion.de>
 
 	* src/arch/alsa/alsa.c, src/arch/arts/arts.c, src/arch/bsd/bsd_dsp.c,

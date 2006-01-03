@@ -988,7 +988,7 @@ else
     [if test "x$enable_vorbis_dlopen" != xno; then
        openal_extension_vorbis_support=dynamic
        FEATURECFLAGS="$FEATURECFLAGS $openal_cflags_vorbis"
-       AC_DEFINE([OPENAL_DLOPEN_Vorbis], [1], [dynamically load Vorbis libs])
+       AC_DEFINE([OPENAL_DLOPEN_VORBIS], [1], [dynamically load Vorbis libs])
      else
        AC_CACHE_CHECK([for Vorbis linker flags], [openal_cv_libs_vorbis],
          [if test "x$PKG_CONFIG" != xnone && "$PKG_CONFIG" --exists vorbis; then
