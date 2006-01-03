@@ -168,7 +168,7 @@ ALCdevice *alcOpenDevice( const ALchar *deviceSpecifier ) {
 	if( strncmp(dirstr, "read", 64 ) == 0 ) {
 		/* capture */
 
-		retval->handle = grab_read_audiodevice( );
+		retval->handle = _alcBackendOpenInput( );
 		if( retval->handle == NULL ) {
 			free( retval );
 			_alcSetError(ALC_INVALID_DEVICE);
@@ -179,7 +179,7 @@ ALCdevice *alcOpenDevice( const ALchar *deviceSpecifier ) {
 	} else {
 		/* write (default) */
 
-		retval->handle = grab_write_audiodevice( );
+		retval->handle = _alcBackendOpenOutput( );
 		if( retval->handle == NULL ) {
 			free( retval );
 			_alcSetError(ALC_INVALID_DEVICE);
@@ -199,8 +199,14 @@ ALCdevice *alcOpenDevice( const ALchar *deviceSpecifier ) {
  *
  * Closes the device referred to by dev.
  */
-ALCboolean alcCloseDevice( ALCdevice *dev ) {
-	release_audiodevice( dev->handle );
+ALCboolean
+alcCloseDevice( ALCdevice *dev )
+{
+	/* ToDo: Is this test really necessary? */
+	if ( dev->handle != NULL) {
+		/* ToDo: Use return value */
+		_alcBackendClose( dev->handle );
+	}
 
 	free( dev->specifier );
 	free( dev );
@@ -225,10 +231,10 @@ ALboolean _alcDeviceSet( AL_device *dev ) {
 	ALboolean retval = AL_FALSE;
 
 	if( dev->flags & ALCD_WRITE ) {
-		retval = set_write_audiodevice( dev->handle,
+		retval = _alcBackendSetWrite( dev->handle,
 			&dev->bufsiz, &dev->format, &dev->speed);
 	} else {
-		retval = set_read_audiodevice( dev->handle,
+		retval = _alcBackendSetRead( dev->handle,
 			&dev->bufsiz, &dev->format, &dev->speed);
 	}
 
@@ -248,7 +254,7 @@ ALboolean _alcDeviceSet( AL_device *dev ) {
  */
 void _alcDevicePause( AL_device *dev  ) {
         if ( dev )
-		pause_audiodevice( dev->handle );
+		_alcBackendPause( dev->handle );
 	return;
 }
 
@@ -259,6 +265,6 @@ void _alcDevicePause( AL_device *dev  ) {
  */
 void _alcDeviceResume( AL_device *dev  ) {
         if ( dev )
-		resume_audiodevice( dev->handle );
+		_alcBackendResume( dev->handle );
 	return;
 }

@@ -10,71 +10,32 @@
 #include "al_siteconfig.h"
 
 #include <AL/al.h>
-#include <time.h>
-#include <fcntl.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 #include "al_config.h"
+#include "al_debug.h"
 #include "al_main.h"
-
 #include "arch/interface/interface_sound.h"
 #include "arch/interface/platform.h"
 
 typedef enum {
 	LA_NONE,
 	LA_NATIVE,  /* native audio for platform */
-	LA_SDL,     /* SDL backend */
 	LA_ALSA,    /* ALSA backend */
-	LA_ARTS,    /* aRTs backend */
-	LA_ESD,     /* esd backend */
-	LA_WAVEOUT, /* wavefile output backend */
-	LA_NULL,    /* no output backend */
+	LA_ARTS,    /* aRts backend */
+	LA_ESD,     /* ESD backend */
+	LA_SDL,     /* SDL backend */
+	LA_NULL,    /* null backend */
+	LA_WAVEOUT /* WAVE backend */
 } lin_audio;
 
 /* represents which backend we are using */
 static lin_audio hardware_type = LA_NONE;
 
-void
-_alBlitBuffer(void *handle, void *dataptr, int bytes_to_write)
+void *
+_alcBackendOpenOutput(void)
 {
-	switch(hardware_type) {
-	case LA_NATIVE:
-		native_blitbuffer(handle, dataptr, bytes_to_write);
-		break;
-	case LA_ALSA:
-		alsa_blitbuffer(handle, dataptr, bytes_to_write);
-		break;
-	case LA_SDL:
-		sdl_blitbuffer(handle, dataptr, bytes_to_write);
-		break;
-	case LA_ARTS:
-		arts_blitbuffer(handle, dataptr, bytes_to_write);
-		break;
-	case LA_ESD:
-		esd_blitbuffer(handle, dataptr, bytes_to_write);
-		break;
-	case LA_WAVEOUT:
-		waveout_blitbuffer(handle, dataptr, bytes_to_write);
-		break;
-	case LA_NULL:
-		null_blitbuffer(handle, dataptr, bytes_to_write);
-		break;
-	case LA_NONE:
-	default:
-		fprintf(stderr,
-			"openal: _alBlitBuffer failed "
-			"because no audio device has been opened.\n");
-		break;
-	}
-}
-
-void *grab_write_audiodevice(void) {
 	Rcvar device_params;
 	Rcvar device_list;
 	Rcvar device;
@@ -87,30 +48,30 @@ void *grab_write_audiodevice(void) {
 		device_list = rc_cdr( device_list );
 
 		switch(rc_type(device)) {
-			case ALRC_STRING:
-				rc_tostr0(device, adevname, 64);
-				break;
-			case ALRC_SYMBOL:
-				rc_symtostr0(device, adevname, 64);
-				break;
-			case ALRC_CONSCELL:
-				device_params = rc_cdr( device );
-				if(device_params == NULL) {
-					continue;
-				}
-
-				rc_define("device-params", device_params);
-				rc_symtostr0(rc_car(device), adevname, 64);
-				break;
-			default:
-				fprintf(stderr, "bad type %s for device\n",
-					rc_typestr( rc_type( device ) ));
+		case ALRC_STRING:
+			rc_tostr0(device, adevname, 64);
+			break;
+		case ALRC_SYMBOL:
+			rc_symtostr0(device, adevname, 64);
+			break;
+		case ALRC_CONSCELL:
+			device_params = rc_cdr( device );
+			if(device_params == NULL) {
 				continue;
+			}
+			rc_define("device-params", device_params);
+			rc_symtostr0(rc_car(device), adevname, 64);
+			break;
+		default:
+			_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
+				  "_alcBackendOpenOutput: bad type %s for device",
+				  rc_typestr( rc_type( device ) ));
+			continue;
 		}
 
 		if(strcmp(adevname, "dsp") == 0) {
-			fprintf(stderr,
-				"dsp is a deprecated device name.  Use native instead.\n");
+			_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
+				  "_alcBackendOpenOutput: 'dsp' is a deprecated device name. Use 'native' instead.");
 			retval = grab_write_native();
 			if(retval != NULL) {
 				hardware_type = LA_NATIVE;
@@ -125,26 +86,18 @@ void *grab_write_audiodevice(void) {
 			}
 		}
 
-		if(strcmp(adevname, "arts") == 0) {
-			retval = grab_write_arts();
-			if(retval != NULL) {
-				hardware_type = LA_ARTS;
-				return retval;
-			}
-		}
-
-		if(strcmp(adevname, "sdl") == 0) {
-			retval = grab_write_sdl();
-			if(retval != NULL) {
-				hardware_type = LA_SDL;
-				return retval;
-			}
-		}
-
 		if(strcmp(adevname, "alsa") == 0) {
 			retval = grab_write_alsa();
 			if(retval != NULL) {
 				hardware_type = LA_ALSA;
+				return retval;
+			}
+		}
+
+		if(strcmp(adevname, "arts") == 0) {
+			retval = grab_write_arts();
+			if(retval != NULL) {
+				hardware_type = LA_ARTS;
 				return retval;
 			}
 		}
@@ -157,10 +110,10 @@ void *grab_write_audiodevice(void) {
 			}
 		}
 
-		if(strcmp(adevname, "waveout") == 0) {
-			retval = grab_write_waveout();
+		if(strcmp(adevname, "sdl") == 0) {
+			retval = grab_write_sdl();
 			if(retval != NULL) {
-				hardware_type = LA_WAVEOUT;
+				hardware_type = LA_SDL;
 				return retval;
 			}
 		}
@@ -169,6 +122,14 @@ void *grab_write_audiodevice(void) {
 			retval = grab_write_null();
 			if(retval != NULL) {
 				hardware_type = LA_NULL;
+				return retval;
+			}
+		}
+
+		if(strcmp(adevname, "waveout") == 0) {
+			retval = grab_write_waveout();
+			if(retval != NULL) {
+				hardware_type = LA_WAVEOUT;
 				return retval;
 			}
 		}
@@ -184,7 +145,9 @@ void *grab_write_audiodevice(void) {
 	return NULL;
 }
 
-void *grab_read_audiodevice(void) {
+void *
+_alcBackendOpenInput(void)
+{
 	Rcvar device_params;
 	Rcvar device_list;
 	Rcvar device;
@@ -193,34 +156,34 @@ void *grab_read_audiodevice(void) {
 
 	device_list = rc_lookup("devices");
 	while(device_list != NULL) {
-		device      = rc_car(device_list);
-		device_list = rc_cdr(device_list);
+		device      = rc_car( device_list );
+		device_list = rc_cdr( device_list );
 
 		switch(rc_type(device)) {
-			case ALRC_STRING:
-				rc_tostr0(device, adevname, 64);
-				break;
-			case ALRC_SYMBOL:
-				rc_symtostr0(device, adevname, 64);
-				break;
-			case ALRC_CONSCELL:
-				device_params = rc_cdr(device);
-				if(device_params == NULL) {
-					continue;
-				}
-
-				rc_define("device-params", device_params);
-				rc_symtostr0(rc_car(device), adevname, 64);
-				break;
-			default:
-				fprintf(stderr, "bad type %s for device\n",
-					rc_typestr( rc_type( device ) ));
+		case ALRC_STRING:
+			rc_tostr0(device, adevname, 64);
+			break;
+		case ALRC_SYMBOL:
+			rc_symtostr0(device, adevname, 64);
+			break;
+		case ALRC_CONSCELL:
+			device_params = rc_cdr( device );
+			if(device_params == NULL) {
 				continue;
+			}
+			rc_define("device-params", device_params);
+			rc_symtostr0(rc_car(device), adevname, 64);
+			break;
+		default:
+			_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
+				  "_alcBackendOpenInput: bad type %s for device",
+				  rc_typestr( rc_type( device ) ));
+			continue;
 		}
 
 		if(strcmp(adevname, "dsp") == 0) {
-			fprintf(stderr,
-				"dsp is a deprecated device name.  Use native instead.\n");
+			_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
+				  "_alcBackendOpenInput: 'dsp' is a deprecated device name. Use 'native' instead.");
 			retval = grab_read_native();
 			if(retval != NULL) {
 				hardware_type = LA_NATIVE;
@@ -235,26 +198,18 @@ void *grab_read_audiodevice(void) {
 			}
 		}
 
-		if(strcmp(adevname, "arts") == 0) {
-			retval = grab_read_arts();
-			if(retval != NULL) {
-				hardware_type = LA_ARTS;
-				return retval;
-			}
-		}
-
-		if(strcmp(adevname, "sdl") == 0) {
-			retval = grab_read_sdl();
-			if(retval != NULL) {
-				hardware_type = LA_SDL;
-				return retval;
-			}
-		}
-
 		if(strcmp(adevname, "alsa") == 0) {
 			retval = grab_read_alsa();
 			if(retval != NULL) {
 				hardware_type = LA_ALSA;
+				return retval;
+			}
+		}
+
+		if(strcmp(adevname, "arts") == 0) {
+			retval = grab_read_arts();
+			if(retval != NULL) {
+				hardware_type = LA_ARTS;
 				return retval;
 			}
 		}
@@ -267,10 +222,10 @@ void *grab_read_audiodevice(void) {
 			}
 		}
 
-		if(strcmp(adevname, "waveout") == 0) {
-			retval = grab_read_waveout();
+		if(strcmp(adevname, "sdl") == 0) {
+			retval = grab_read_sdl();
 			if(retval != NULL) {
-				hardware_type = LA_WAVEOUT;
+				hardware_type = LA_SDL;
 				return retval;
 			}
 		}
@@ -279,6 +234,14 @@ void *grab_read_audiodevice(void) {
 			retval = grab_read_null();
 			if(retval != NULL) {
 				hardware_type = LA_NULL;
+				return retval;
+			}
+		}
+
+		if(strcmp(adevname, "waveout") == 0) {
+			retval = grab_read_waveout();
+			if(retval != NULL) {
+				hardware_type = LA_WAVEOUT;
 				return retval;
 			}
 		}
@@ -294,217 +257,270 @@ void *grab_read_audiodevice(void) {
 	return NULL;
 }
 
-ALboolean release_audiodevice(void *handle)
+ALboolean
+_alcBackendClose(void *handle)
 {
-	ALboolean retval = AL_TRUE;
-
-	if(handle == NULL)
-	{
+	switch(hardware_type) {
+	case LA_NATIVE:
+		release_native(handle);
+		return AL_TRUE;
+	case LA_ALSA:
+		release_alsa(handle);
+		return AL_TRUE;
+	case LA_ARTS:
+		release_arts(handle);
+		return AL_TRUE;
+	case LA_ESD:
+		release_esd(handle);
+		return AL_TRUE;
+	case LA_SDL:
+		release_sdl(handle);
+		return AL_TRUE;
+	case LA_NULL:
+		release_null(handle);
+		return AL_TRUE;
+	case LA_WAVEOUT:
+		release_waveout(handle);
+		return AL_TRUE;
+	default:
+		_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
+			  "_alcBackendClose: unknown backend %d\n", hardware_type );
 		return AL_FALSE;
 	}
 
-	switch(hardware_type) {
-		case LA_NATIVE:
-		  release_native(handle);
-		  break;
-		case LA_ALSA:
-		  release_alsa(handle);
-		  break;
-		case LA_ARTS:
-		  release_arts(handle);
-		  break;
-		case LA_ESD:
-		  release_esd(handle);
-		  break;
-		case LA_WAVEOUT:
-		  release_waveout(handle);
-		  break;
-		case LA_NULL:
-		  release_null(handle);
-		  break;
-		case LA_SDL:
-		  release_sdl(handle);
-		  break;
-		default:
-		  fprintf(stderr,
-		  	"release_audiodevices stubbed for 0x%x\n",
-			hardware_type);
-		  break;
-	}
-
-	return retval;
 }
 
-float get_audiochannel(void *handle, ALuint channel) {
-	float lr_vol = 0;
-
+void
+_alcBackendPause(void *handle)
+{
 	switch(hardware_type) {
-	    case LA_NATIVE:
-	    	lr_vol = get_nativechannel(handle, channel);
+	case LA_NATIVE:
+		pause_nativedevice(handle);
 		break;
-	    default:
-	        fprintf(stderr,
-			"get_audiochannel not implemented for type 0x%x\n",
-			hardware_type);
+	case LA_ALSA:
+		/* pause_alsa(handle); */
+		break;
+	case LA_ARTS:
+		/* pause_arts(handle); */
+		break;
+	case LA_ESD:
+		pause_esd(handle);
+		break;
+	case LA_SDL:
+		/* pause_sdl(handle); */
+		break;
+	case LA_NULL:
+		/* pause_null(handle); */
+		break;
+	case LA_WAVEOUT:
+		/* pause_waveout(handle); */
+		break;
+	default:
+		_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
+			  "_alcBackendPause: unknown backend %d\n", hardware_type );
 		break;
 	}
-
-	return lr_vol;
 }
 
-/* this is a kludge and should be removed or changed */
-void set_audiochannel(void *handle, ALuint channel, float volume) {
+void
+_alcBackendResume(void *handle)
+{
 	switch(hardware_type) {
-	    case LA_NATIVE:
-	        set_nativechannel(handle, channel, volume);
+	case LA_NATIVE:
+		resume_nativedevice(handle);
 		break;
-	    default:
-	        fprintf(stderr,
-			"set_audiochannel not implemented for type 0x%x\n",
-			hardware_type);
+	case LA_ALSA:
+		/* resume_alsa(handle); */
+		break;
+	case LA_ARTS:
+		/* resume_arts(handle); */
+		break;
+	case LA_ESD:
+		resume_esd(handle);
+		break;
+	case LA_SDL:
+		/* resume_sdl(handle); */
+		break;
+	case LA_NULL:
+		/* resume_null(handle); */
+		break;
+	case LA_WAVEOUT:
+		/* resume_waveout(handle); */
+		break;
+	default:
+		_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
+			  "_alcBackendResume: unknown backend %d\n", hardware_type );
 		break;
 	}
-
-	return;
 }
 
-/* inform device specified by handle that it's about to get paused */
-void pause_audiodevice(void *handle) {
+ALboolean
+_alcBackendSetWrite(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+{
 	switch(hardware_type) {
-	    case LA_NATIVE:
-	        pause_nativedevice(handle);
+	case LA_NATIVE:
+		return set_write_native(handle, bufsiz, fmt, speed);
+	case LA_ALSA:
+		return set_write_alsa(handle, bufsiz, fmt, speed);
+	case LA_ARTS:
+		return set_write_arts(handle, bufsiz, fmt, speed);
+	case LA_ESD:
+		return set_write_esd(handle, bufsiz, fmt, speed);
+	case LA_SDL:
+		return set_write_sdl(handle, bufsiz, fmt, speed);
+	case LA_NULL:
+		return set_write_null(handle, bufsiz, fmt, speed);
+	case LA_WAVEOUT:
+		return set_write_waveout(handle, bufsiz, fmt, speed);
+	default:
+		_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
+			  "_alcBackendSetWrite: unknown backend %d\n", hardware_type );
+		return AL_FALSE;
+	}
+}
+
+ALboolean
+_alcBackendSetRead(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+{
+	switch(hardware_type) {
+	case LA_NATIVE:
+		return set_read_native(handle, bufsiz, fmt, speed);
+	case LA_ALSA:
+		return set_read_alsa(handle, bufsiz, fmt, speed);
+	case LA_ARTS:
+		return set_read_arts(handle, bufsiz, fmt, speed);
+	case LA_ESD:
+		return set_read_esd(handle, bufsiz, fmt, speed);
+	case LA_SDL:
+		return set_read_sdl(handle, bufsiz, fmt, speed);
+	case LA_NULL:
+		return set_read_null(handle, bufsiz, fmt, speed);
+	case LA_WAVEOUT:
+		return set_read_waveout(handle, bufsiz, fmt, speed);
+	default:
+		_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
+			  "_alcBackendSetRead: unknown backend %d\n", hardware_type );
+		return AL_FALSE;
+	}
+}
+
+void
+_alcBackendWrite(void *handle, void *dataptr, int bytes_to_write)
+{
+	switch(hardware_type) {
+	case LA_NATIVE:
+		native_blitbuffer(handle, dataptr, bytes_to_write);
 		break;
-	    case LA_ESD:
-	        pause_esd(handle);
-	  	break;
-	    default:
-	        /* fprintf(stderr, "pause_audiodevice stubbed for 0x%x\n", hardware_type); */
+	case LA_ALSA:
+		alsa_blitbuffer(handle, dataptr, bytes_to_write);
+		break;
+	case LA_ARTS:
+		arts_blitbuffer(handle, dataptr, bytes_to_write);
+		break;
+	case LA_ESD:
+		esd_blitbuffer(handle, dataptr, bytes_to_write);
+		break;
+	case LA_SDL:
+		sdl_blitbuffer(handle, dataptr, bytes_to_write);
+		break;
+	case LA_NULL:
+		null_blitbuffer(handle, dataptr, bytes_to_write);
+		break;
+	case LA_WAVEOUT:
+		waveout_blitbuffer(handle, dataptr, bytes_to_write);
+		break;
+	default:
+		_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
+			  "_alcBackendWrite: unknown backend %d\n", hardware_type );
 		break;
 	}
-
-	return;
 }
 
-/* inform device specified by handle that it's about to get paused */
-void resume_audiodevice(void *handle) {
-	switch(hardware_type) {
-	    case LA_NATIVE:
-	        resume_nativedevice(handle);
-		break;
-	    case LA_ESD:
-	        resume_esd(handle);
-	  	break;
-	    default:
-		/* fprintf(stderr, "resume_audiodevice stubbed for 0x%x\n", hardware_type); */
-		break;
-	}
-
-	return;
-}
 
 /* capture data from the audio device */
-ALsizei capture_audiodevice(void *handle, void *capture_buffer, int bufsiz) {
-	ALsizei bytes = 0;
+ALsizei
+_alcBackendRead(void *handle, void *capture_buffer, int bufsiz)
+{
 	switch(hardware_type) {
-		case LA_NATIVE:
-		  bytes = capture_nativedevice(handle, capture_buffer, bufsiz);
-		  break;
-		case LA_ALSA:
-		  bytes = capture_alsa(handle, capture_buffer, bufsiz);
-		  break;
-		case LA_SDL:
-		case LA_ARTS:
-		case LA_ESD:
-		case LA_WAVEOUT:
-		case LA_NULL:
-		case LA_NONE:
-		default:
-		  memset(capture_buffer, 0, bufsiz);
-
-		  fprintf(stderr,
-			"openal: capture_audiodevice unimplemented for 0x%x\n",
-			hardware_type);
-		  break;
+	case LA_NATIVE:
+		return capture_nativedevice(handle, capture_buffer, bufsiz);
+	case LA_ALSA:
+		return capture_alsa(handle, capture_buffer, bufsiz);
+	case LA_ARTS:
+		/* return capture_arts(handle, capture_buffer, bufsiz); */
+		return 0;
+	case LA_ESD:
+		/* return capture_esd(handle, capture_buffer, bufsiz); */
+		return 0;
+	case LA_SDL:
+		/* return capture_sdl(handle, capture_buffer, bufsiz); */
+		return 0;
+	case LA_NULL:
+		/* return capture_null(handle, capture_buffer, bufsiz); */
+		return 0;
+	case LA_WAVEOUT:
+		/* return capture_waveout(handle, capture_buffer, bufsiz); */
+		return 0;
+	default:
+		_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
+			  "_alcBackendRead: unknown backend %d\n", hardware_type );
+		return 0;
 	}
-
-	return bytes;
 }
 
-/*
- *  Returns smallest power of two that will meet or excees spotee.
- */
-ALuint _alSpot( ALuint spotee ) {
-	unsigned int retval = 0;
-
-	spotee >>= 1;
-
-	while(spotee) {
-		retval++;
-
-		spotee >>= 1;
+ALfloat
+_alcBackendGetAudioChannel(void *handle, ALuint channel)
+{
+	switch(hardware_type) {
+	case LA_NATIVE:
+		return get_nativechannel(handle, channel);
+	case LA_ALSA:
+		/* return get_alsachannel(handle, channel); */
+	case LA_ARTS:
+		/* return get_artschannel(handle, channel); */
+	case LA_ESD:
+		/* return get_esdchannel(handle, channel); */
+	case LA_SDL:
+		/* return get_sdlchannel(handle, channel); */
+	case LA_NULL:
+		/* return get_nullchannel(handle, channel); */
+	case LA_WAVEOUT:
+		/* return get_waveoutchannel(handle, channel); */
+	default:
+		_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
+			  "_alcBackendGetAudioChannel: unknown backend %d\n", hardware_type );
+		return 0;
 	}
-
-	return retval;
 }
 
-ALboolean set_write_audiodevice(void *handle,
-			  ALuint *bufsiz,
-			  ALenum *fmt,
-			  ALuint *speed) {
+void
+_alcBackendSetAudioChannel(void *handle, ALuint channel, ALfloat volume)
+{
 	switch(hardware_type) {
-		case LA_NATIVE:
-		  return set_write_native(handle, bufsiz, fmt, speed);
-		case LA_ALSA:
-		  return set_write_alsa(handle, bufsiz, fmt, speed);
-		case LA_SDL:
-		  return set_write_sdl(handle, bufsiz, fmt, speed);
-		case LA_ARTS:
-		  return set_write_arts(handle, bufsiz, fmt, speed);
-		case LA_ESD:
-		  return set_write_esd(handle, bufsiz, fmt, speed);
-		case LA_WAVEOUT:
-		  return set_write_waveout(handle, bufsiz, fmt, speed);
-		case LA_NULL:
-		  return set_write_null(handle, bufsiz, fmt, speed);
-		case LA_NONE:
-		default:
-		  fprintf(stderr,
-			"openal: set_audiodevice failed "
-			"because no audio device has been opened.\n");
-		  return AL_FALSE;
-		  break;
+	case LA_NATIVE:
+		set_nativechannel(handle, channel, volume);
+		break;
+	case LA_ALSA:
+		/* set_alsachannel(handle, channel, volume); */
+		break;
+	case LA_ARTS:
+		/* set_artschannel(handle, channel, volume); */
+		break;
+	case LA_ESD:
+		/* set_esdchannel(handle, channel, volume); */
+		break;
+	case LA_SDL:
+		/* set_sdlchannel(handle, channel, volume); */
+		break;
+	case LA_NULL:
+		/* set_nullchannel(handle, channel, volume); */
+		break;
+	case LA_WAVEOUT:
+		/* set_waveoutchannel(handle, channel, volume); */
+		break;
+	default:
+		_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
+			  "_alcBackendSetAudioChannel: unknown backend %d\n", hardware_type );
+		break;
 	}
-
-	return AL_FALSE;
-}
-
-ALboolean set_read_audiodevice(void *handle,
-			  ALuint *bufsiz,
-			  ALenum *fmt,
-			  ALuint *speed) {
-	switch(hardware_type) {
-		case LA_NATIVE:
-		  return set_read_native(handle, bufsiz, fmt, speed);
-		case LA_ALSA:
-		  return set_read_alsa(handle, bufsiz, fmt, speed);
-		case LA_SDL:
-		  return set_read_sdl(handle, bufsiz, fmt, speed);
-		case LA_ARTS:
-		  return set_read_arts(handle, bufsiz, fmt, speed);
-		case LA_ESD:
-		  return set_read_esd(handle, bufsiz, fmt, speed);
-		case LA_WAVEOUT:
-		  return set_read_waveout(handle, bufsiz, fmt, speed);
-		case LA_NULL:
-		  return set_read_null(handle, bufsiz, fmt, speed);
-		case LA_NONE:
-		default:
-		  fprintf(stderr,
-			"openal: set_audiodevice failed "
-			"because no audio device has been opened.\n");
-		  return AL_FALSE;
-		  break;
-	}
-
-	return AL_FALSE;
 }

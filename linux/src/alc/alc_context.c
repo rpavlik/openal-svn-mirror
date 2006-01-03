@@ -1326,7 +1326,7 @@ ALsizei _alcDeviceRead( ALuint cid, ALvoid *dataptr, ALuint bytes_to_read )
 		return 0;
 	}
 
-	return capture_audiodevice(cc->read_device->handle, dataptr, bytes_to_read);
+	return _alcBackendRead(cc->read_device->handle, dataptr, bytes_to_read);
 }
 
 /*
@@ -1349,7 +1349,7 @@ void _alcDeviceWrite( ALuint cid, ALvoid *dataptr, ALuint bytes_to_write ) {
 		return;
 	}
 
-	_alBlitBuffer( cc->write_device->handle, dataptr, bytes_to_write );
+	_alcBackendWrite( cc->write_device->handle, dataptr, bytes_to_write );
 
 	return;
 }

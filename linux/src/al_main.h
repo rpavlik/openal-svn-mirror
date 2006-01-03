@@ -215,4 +215,10 @@ ALuint _alSmallestPowerOfTwo( ALuint num );
  */
 ALboolean _alIsFinite( ALfloat v );
 
+
+/*
+ * Returns smallest power of two that meets or exceeds num.
+ */
+ALuint _alSpot( ALuint num );
+
 #endif

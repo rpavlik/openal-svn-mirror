@@ -1,5 +1,10 @@
 2006-01-03  Sven Panne  <sven.panne@aedion.de>
 
+	* src/al_main.c, src/al_main.h, src/alc/alc_context.c,
+	src/alc/alc_device.c, src/arch/interface/interface_sound.c,
+	src/arch/interface/interface_sound.h, src/extensions/al_ext_loki.c: More
+	backend refactoring.
+
 	* configure.ac: Fixed typo in currently unused #define.
 
 2006-01-02  Sven Panne  <sven.panne@aedion.de>

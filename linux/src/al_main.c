@@ -777,3 +777,19 @@ ALboolean _alIsFinite( ALfloat v )
 
 	return AL_FALSE;
 }
+
+
+/*
+ * Returns smallest power of two that meets or exceeds num.
+ */
+ALuint
+_alSpot( ALuint num )
+{
+	ALuint retval = 0;
+	num >>= 1;
+	while(num) {
+		retval++;
+		num >>= 1;
+	}
+	return retval;
+}

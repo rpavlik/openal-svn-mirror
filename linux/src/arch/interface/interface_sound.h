@@ -12,105 +12,78 @@
 #include <AL/al.h>
 
 /*
- * _alSpot( ALuint num )
- *
- * Returns smallest power of two that meets or exceeds num.
+ * Returns a handle to a backend suitable for writing data to, or NULL if no
+ * such backend is available. This function is used to implement alcOpenDevice.
  */
-ALuint _alSpot( ALuint num );
+void *_alcBackendOpenOutput( void );
 
 /*
- * grab_write_audiodevice( void )
- *
- * Returns handle to an audio device suitable for writing data to, or NULL if
- * no such device is available.
+ * Returns a handle to a backend suitable for reading data from, or NULL if no
+ * such backend is available. This function is used to implement alcOpenDevice.
  */
-void *grab_write_audiodevice( void );
+void *_alcBackendOpenInput( void );
 
 /*
- * grab_read_audiodevice( void )
- *
- * Returns handle to an audio device suitable for reading data from, or NULL if
- * no such device is available.
+ * Closes an (output or input) backend. Returns AL_TRUE if closing was
+ * successful, AL_FALSE if the handle was invalid or the backend could not be
+ * closed for some reason. This function is used to implement alcCloseDevice.
  */
-void *grab_read_audiodevice( void );
+ALboolean _alcBackendClose( void *handle );
 
 /*
- * release_audiodevice( void *handle )
- *
- * Releases an audio device aquired using grab_foo_audiodevice.  Returns
- * AL_TRUE if release was successful, AL_FALSE if handle was invalid or the
- * device could not be released for some reason.
+ * Informs an output backend that it is about to get paused. This function is
+ * used to implement alcMakeContextCurrent(NULL).
  */
-ALboolean release_audiodevice( void *handle );
+void _alcBackendPause( void *handle );
 
 /*
- * set_read_audiodevice( void *handle, ALuint *bufsiz,
- *                       ALenum *fmt, ALuint *speed )
- *
- * Sets the parameters associated with the device specified by handle.
- * Because we follow a meet-or-exceed policty, *bufsiz, *fmt, and *speed might be
- * different from the parameters initially passed, so the caller should check
- * these after a succesfull call.
- *
- * Returns AL_FALSE if the parameters could not be matched or exceeded.
+ * Informs an output backend that it is about to get resumed. This function is
+ * used to implement alcMakeContextCurrent(NON_NULL).
  */
-ALboolean set_read_audiodevice( void *handle, ALuint *bufsiz,
-				ALenum *fmt, ALuint *speed );
+void _alcBackendResume( void *handle );
 
 /*
- * set_write_audiodevice( void *handle, ALuint *bufsiz,
- *                        ALenum *fmt, ALuint *speed )
- *
- * Sets the parameters associated with the device specified by handle.
- * Because we follow a meet-or-exceed policty, *bufsiz, *fmt, and *speed might be
- * different from the parameters initially passed, so the caller should check
- * these after a succesfull call.
- *
- * Returns AL_FALSE if the parameters could not be matched or exceeded.
+ * Sets the parameters for an output backend. Because we follow a meet-or-exceed
+ * policty, *bufsiz, *fmt, and *speed might be different from the parameters
+ * initially passed, so the caller should check these after a succesful
+ * call. Returns AL_TRUE if setting was successful, AL_FALSE if the parameters
+ * could not be matched or exceeded. This function is used to implement
+ * alcMakeContextCurrent(NON_NULL).
  */
-ALboolean set_write_audiodevice( void *handle, ALuint *bufsiz,
-				 ALenum *fmt, ALuint *speed );
+ALboolean _alcBackendSetWrite( void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed );
 
 /*
- * Write bytes_to_write worth of data from dataptr to the device specified by
- * handle.  dataptr is an interleaved array.
+ * Sets the parameters for an input backend. Because we follow a meet-or-exceed
+ * policty, *bufsiz, *fmt, and *speed might be different from the parameters
+ * initially passed, so the caller should check these after a succesfull
+ * call. Returns AL_TRUE if setting was succesful, AL_FALSE if the parameters
+ * could not be matched or exceeded. This function is used to implement
+ * alcMakeContextCurrent(NON_NULL) and alCaptureInit_EXT.
  */
-void _alBlitBuffer(void *handle, void *dataptr, int bytes_to_write);
+ALboolean _alcBackendSetRead( void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed );
 
 /*
- * get_audiochannel( void *handle, ALuint channel )
- *
- * Returns normalized audio setting for handle at channel.
+ * Writes a given interleaved array of sound data to an output backend. This
+ * function is used to implement (a)sync_mixer_iterate.
  */
-float get_audiochannel( void *handle, ALuint channel );
+void _alcBackendWrite( void *handle, void *data, int size );
 
 /*
- * set_audiochannel( void *handle, ALuint channel, float volume )
- *
- * Sets normalized audio setting for handle at channel.
+ * Captures data from an input backend into the given buffer. This function is
+ * used to implement alCaptureGetData_EXT.
  */
-void set_audiochannel( void *handle, ALuint channel, float volume );
+ALsizei _alcBackendRead( void *handle, void *data, int size );
 
 /*
- * pause_audiodevice( void *handle )
- *
- * Informs device specified by handle that it's about to get paused.
+ * Returns the normalized volume for the given channel (main/PCM/CD) on an
+ * output backend. This function is used to implement alcGetAudioChannel_LOKI.
  */
-void pause_audiodevice( void *handle );
+ALfloat _alcBackendGetAudioChannel( void *handle, ALuint channel );
 
 /*
- * resume_audiodevice( void *handle )
- *
- * Informs device specified by handle that it's about to get unpaused.
+ * Sets the normalized volume for the given channel (main/PCM/CD) on an output
+ * backend. This function is used to implement alcSetAudioChannel_LOKI.
  */
-void resume_audiodevice( void *handle );
-
-/*
- * capture_audiodevice( void *handle, void *capture_buffer, int bufsiz )
- *
- * capture data from the audio device specified by handle, into
- * capture_buffer, which is bufsiz long.
- */
-ALsizei capture_audiodevice( void *handle, void *capture_buffer, int bufsiz );
+void _alcBackendSetAudioChannel( void *handle, ALuint channel, ALfloat volume );
 
 #endif /* INTERFACE_SOUND_H_ */
