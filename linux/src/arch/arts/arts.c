@@ -26,7 +26,6 @@
 #include "al_main.h"
 #include "al_debug.h"
 
-#include "arch/arts/arts.h"
 #include "arch/interface/interface_sound.h"
 
 #define DEF_SPEED	_ALC_CANON_SPEED
@@ -238,4 +237,33 @@ ALboolean set_read_arts(UNUSED(void *handle),
 		   UNUSED(ALenum *fmt),
 		   UNUSED(ALuint *speed)) {
 	return AL_FALSE;
+}
+
+void
+pause_arts( UNUSED(void *handle) )
+{
+}
+
+void
+resume_arts( UNUSED(void *handle) )
+{
+}
+
+
+ALsizei
+capture_arts( UNUSED(void *handle), UNUSED(void *capture_buffer), UNUSED(int bufsiz) )
+{
+	return 0;
+}
+
+ALfloat
+get_artschannel( UNUSED(void *handle), UNUSED(ALuint channel) )
+{
+	return 0.0;
+}
+
+int
+set_artschannel( UNUSED(void *handle), UNUSED(ALuint channel), UNUSED(ALfloat volume) )
+{
+	return 0;
 }

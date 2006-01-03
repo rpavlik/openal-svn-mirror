@@ -17,7 +17,6 @@
 #include "al_debug.h"
 #include "al_main.h"
 #include "arch/interface/interface_sound.h"
-#include "arch/interface/platform.h"
 
 typedef enum {
 	LA_NONE,
@@ -27,7 +26,7 @@ typedef enum {
 	LA_ESD,     /* ESD backend */
 	LA_SDL,     /* SDL backend */
 	LA_NULL,    /* null backend */
-	LA_WAVEOUT /* WAVE backend */
+	LA_WAVEOUT  /* WAVE backend */
 } lin_audio;
 
 /* represents which backend we are using */
@@ -298,22 +297,22 @@ _alcBackendPause(void *handle)
 		pause_nativedevice(handle);
 		break;
 	case LA_ALSA:
-		/* pause_alsa(handle); */
+		pause_alsa(handle);
 		break;
 	case LA_ARTS:
-		/* pause_arts(handle); */
+		pause_arts(handle);
 		break;
 	case LA_ESD:
 		pause_esd(handle);
 		break;
 	case LA_SDL:
-		/* pause_sdl(handle); */
+		pause_sdl(handle);
 		break;
 	case LA_NULL:
-		/* pause_null(handle); */
+		pause_null(handle);
 		break;
 	case LA_WAVEOUT:
-		/* pause_waveout(handle); */
+		pause_waveout(handle);
 		break;
 	default:
 		_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
@@ -330,22 +329,22 @@ _alcBackendResume(void *handle)
 		resume_nativedevice(handle);
 		break;
 	case LA_ALSA:
-		/* resume_alsa(handle); */
+		resume_alsa(handle);
 		break;
 	case LA_ARTS:
-		/* resume_arts(handle); */
+		resume_arts(handle);
 		break;
 	case LA_ESD:
 		resume_esd(handle);
 		break;
 	case LA_SDL:
-		/* resume_sdl(handle); */
+		resume_sdl(handle);
 		break;
 	case LA_NULL:
-		/* resume_null(handle); */
+		resume_null(handle);
 		break;
 	case LA_WAVEOUT:
-		/* resume_waveout(handle); */
+		resume_waveout(handle);
 		break;
 	default:
 		_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
@@ -437,7 +436,6 @@ _alcBackendWrite(void *handle, void *dataptr, int bytes_to_write)
 }
 
 
-/* capture data from the audio device */
 ALsizei
 _alcBackendRead(void *handle, void *capture_buffer, int bufsiz)
 {
@@ -447,20 +445,15 @@ _alcBackendRead(void *handle, void *capture_buffer, int bufsiz)
 	case LA_ALSA:
 		return capture_alsa(handle, capture_buffer, bufsiz);
 	case LA_ARTS:
-		/* return capture_arts(handle, capture_buffer, bufsiz); */
-		return 0;
+		return capture_arts(handle, capture_buffer, bufsiz);
 	case LA_ESD:
-		/* return capture_esd(handle, capture_buffer, bufsiz); */
-		return 0;
+		return capture_esd(handle, capture_buffer, bufsiz);
 	case LA_SDL:
-		/* return capture_sdl(handle, capture_buffer, bufsiz); */
-		return 0;
+		return capture_sdl(handle, capture_buffer, bufsiz);
 	case LA_NULL:
-		/* return capture_null(handle, capture_buffer, bufsiz); */
-		return 0;
+		return capture_null(handle, capture_buffer, bufsiz);
 	case LA_WAVEOUT:
-		/* return capture_waveout(handle, capture_buffer, bufsiz); */
-		return 0;
+		return capture_waveout(handle, capture_buffer, bufsiz);
 	default:
 		_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
 			  "_alcBackendRead: unknown backend %d\n", hardware_type );
@@ -475,17 +468,17 @@ _alcBackendGetAudioChannel(void *handle, ALuint channel)
 	case LA_NATIVE:
 		return get_nativechannel(handle, channel);
 	case LA_ALSA:
-		/* return get_alsachannel(handle, channel); */
+		return get_alsachannel(handle, channel);
 	case LA_ARTS:
-		/* return get_artschannel(handle, channel); */
+		return get_artschannel(handle, channel);
 	case LA_ESD:
-		/* return get_esdchannel(handle, channel); */
+		return get_esdchannel(handle, channel);
 	case LA_SDL:
-		/* return get_sdlchannel(handle, channel); */
+		return get_sdlchannel(handle, channel);
 	case LA_NULL:
-		/* return get_nullchannel(handle, channel); */
+		return get_nullchannel(handle, channel);
 	case LA_WAVEOUT:
-		/* return get_waveoutchannel(handle, channel); */
+		return get_waveoutchannel(handle, channel);
 	default:
 		_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
 			  "_alcBackendGetAudioChannel: unknown backend %d\n", hardware_type );
@@ -501,22 +494,22 @@ _alcBackendSetAudioChannel(void *handle, ALuint channel, ALfloat volume)
 		set_nativechannel(handle, channel, volume);
 		break;
 	case LA_ALSA:
-		/* set_alsachannel(handle, channel, volume); */
+		set_alsachannel(handle, channel, volume);
 		break;
 	case LA_ARTS:
-		/* set_artschannel(handle, channel, volume); */
+		set_artschannel(handle, channel, volume);
 		break;
 	case LA_ESD:
-		/* set_esdchannel(handle, channel, volume); */
+		set_esdchannel(handle, channel, volume);
 		break;
 	case LA_SDL:
-		/* set_sdlchannel(handle, channel, volume); */
+		set_sdlchannel(handle, channel, volume);
 		break;
 	case LA_NULL:
-		/* set_nullchannel(handle, channel, volume); */
+		set_nullchannel(handle, channel, volume);
 		break;
 	case LA_WAVEOUT:
-		/* set_waveoutchannel(handle, channel, volume); */
+		set_waveoutchannel(handle, channel, volume);
 		break;
 	default:
 		_alDebug( ALD_CONTEXT, __FILE__, __LINE__,

@@ -17,7 +17,6 @@
 #include "al_main.h"
 #include "alc/alc_context.h"
 #include "arch/interface/interface_sound.h"
-#include "arch/sdl/sdl.h"
 
 #define DEF_SPEED	_ALC_CANON_SPEED
 #define DEF_SIZE	_ALC_DEF_BUFSIZ
@@ -170,4 +169,32 @@ set_read_sdl(UNUSED(void *handle), UNUSED(ALuint *bufsiz), UNUSED(ALenum *fmt),
 	     UNUSED(ALuint *speed))
 {
 	return AL_FALSE;
+}
+
+void
+pause_sdl( UNUSED(void *handle) )
+{
+}
+
+void
+resume_sdl( UNUSED(void *handle) )
+{
+}
+
+ALsizei
+capture_sdl( UNUSED(void *handle), UNUSED(void *capture_buffer), UNUSED(int bufsiz) )
+{
+	return 0;
+}
+
+ALfloat
+get_sdlchannel( UNUSED(void *handle), UNUSED(ALuint channel) )
+{
+	return 0.0;
+}
+
+int
+set_sdlchannel( UNUSED(void *handle), UNUSED(ALuint channel), UNUSED(ALfloat volume) )
+{
+	return 0;
 }

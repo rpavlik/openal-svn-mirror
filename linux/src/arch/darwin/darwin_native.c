@@ -13,7 +13,6 @@
 #include <CoreAudio/CoreAudio.h>
 
 #include "arch/interface/interface_sound.h"
-#include "arch/interface/platform.h"
 
 #include <fcntl.h>
 #include <stdlib.h>
@@ -397,13 +396,13 @@ void  release_native(void *handle)
     }
 }
 
-float get_nativechannel(UNUSED(void *handle), UNUSED(ALCenum channel))
+ALfloat get_nativechannel(UNUSED(void *handle), UNUSED(ALuint channel))
 {
     implement_me("float get_nativechannel()");
     return 0;
 }
 
-int   set_nativechannel(UNUSED(void *handle),UNUSED( ALCenum channel),UNUSED( float volume))
+int set_nativechannel(UNUSED(void *handle),UNUSED(ALuint channel),UNUSED(ALfloat volume))
 {
     implement_me("int set_nativechannel()");
     return 0;

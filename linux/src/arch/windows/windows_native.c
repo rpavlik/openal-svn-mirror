@@ -16,7 +16,6 @@
 #include <mmsystem.h>
 
 #include "arch/interface/interface_sound.h"
-#include "arch/interface/platform.h"
 
 #include "al_main.h"
 #include "al_debug.h"
@@ -188,8 +187,8 @@ void release_native(void *handle) {
 }
 
 int set_nativechannel(UNUSED(void *handle),
-		   UNUSED(ALCenum channel),
-		   UNUSED(float volume)) {
+		      UNUSED(ALuint channel),
+		      UNUSED(ALfloat volume)) {
 	fprintf(stderr,  implement_me("set_nativechannel"));
 
 	return 0;
@@ -207,7 +206,7 @@ void resume_nativedevice(UNUSED(void *handle)) {
 	return;
 }
 
-float get_nativechannel(UNUSED(void *handle), UNUSED(ALCenum channel)) {
+ALfloat get_nativechannel(UNUSED(void *handle), UNUSED(ALuint channel)) {
 	fprintf(stderr,  implement_me("get_nativechannel"));
 
 	return 0.0;

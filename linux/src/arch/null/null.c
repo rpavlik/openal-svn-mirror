@@ -21,7 +21,6 @@
 #include "al_main.h"
 #include "al_debug.h"
 
-#include "arch/null/null.h"
 #include "arch/interface/interface_sound.h"
 
 static void *bogus_handle = (void *) 0x4ABAD1;
@@ -75,4 +74,32 @@ static ALuint sleep_usec(ALuint speed, ALuint chunk) {
 	retval = 1000000.0 * chunk / speed;
 
 	return retval;
+}
+
+void
+pause_null( UNUSED(void *handle) )
+{
+}
+
+void
+resume_null( UNUSED(void *handle) )
+{
+}
+
+ALsizei
+capture_null( UNUSED(void *handle), UNUSED(void *capture_buffer), UNUSED(int bufsiz) )
+{
+	return 0;
+}
+
+ALfloat
+get_nullchannel( UNUSED(void *handle), UNUSED(ALuint channel) )
+{
+	return 0.0;
+}
+
+int
+set_nullchannel( UNUSED(void *handle), UNUSED(ALuint channel), UNUSED(ALfloat volume) )
+{
+	return 0;
 }

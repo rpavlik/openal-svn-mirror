@@ -24,7 +24,6 @@
 #include <unistd.h>
 
 #include "arch/interface/interface_sound.h"
-#include "arch/interface/platform.h"
 
 /* is this right? */
 #define _AL_DEF_BUFSIZ _ALC_DEF_BUFSIZ
@@ -228,7 +227,7 @@ void release_native(void *handle) {
 	return;
 }
 
-float get_nativechannel(UNUSED(void *handle), ALuint channel) {
+ALfloat get_nativechannel(UNUSED(void *handle), ALuint channel) {
 	int retval = 0;
 
 	channel = alcChannel_to_dsp_channel(channel);
@@ -251,7 +250,7 @@ float get_nativechannel(UNUSED(void *handle), ALuint channel) {
  *
  * Kludgey, and obviously not the right way to do this
  */
-int set_nativechannel(UNUSED(void *handle), ALuint channel, float volume) {
+int set_nativechannel(UNUSED(void *handle), ALuint channel, ALfloat volume) {
 	int unnormalizedvolume;
 
 	unnormalizedvolume = volume * 100;

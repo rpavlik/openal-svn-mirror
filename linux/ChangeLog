@@ -1,5 +1,37 @@
 2006-01-03  Sven Panne  <sven.panne@aedion.de>
 
+	* Makefile.am, src/arch/alsa/alsa.c, src/arch/arts/arts.c,
+	src/arch/bsd/bsd_dsp.c, src/arch/darwin/darwin_native.c,
+	src/arch/esd/esd.c, src/arch/interface/interface_sound.c,
+	src/arch/interface/interface_sound.h, src/arch/irix/iris.c,
+	src/arch/linux/lin_dsp.c, src/arch/morphos/morphos_native.c,
+	src/arch/null/null.c, src/arch/sdl/sdl.c,
+	src/arch/solaris/solaris_native.c, src/arch/waveout/waveout.c,
+	src/arch/windows/windows_native.c, src/Makefile.am: Even more backend
+	refactoring to make all kinds of backends similar, enabling further
+	refactoring into something more OO-like.
+
+	* src/arch/morphos/morphos_dispatcher.c,
+	src/arch/morphos/morphos_dispatcher.h: Removed, the contents live in
+	src/arch/morphos/morphos_native.c now. Simple rule: One backend, one
+	file.
+
+	* PLATFORM: Removed, all the information is in
+	src/arch/interface/interface_sound.h already.
+
+	* README: Added some backend info.
+
+	* src/arch/darwin/Changes.rtf, src/arch/darwin/changes.txt,
+	src/arch/darwin/CVS_Update.txt, src/arch/darwin/FAQ,
+	src/arch/darwin/Tests_Results.rtf, src/arch/darwin/TODO,
+	src/arch/irix/README, src/arch/solaris/README: Removed, all the info is
+	in the toplevel README now.
+
+	* src/arch/alsa/alsa.h, src/arch/arts/arts.h, src/arch/esd/esd.h,
+	src/arch/interface/platform.h, src/arch/null/null.h, src/arch/sdl/sdl.h,
+	src/arch/waveout/waveout.h: Removed, all the backend prototypes are in
+	src/arch/interface/interface_sound.h now.
+	
 	* src/al_main.c, src/al_main.h, src/alc/alc_context.c,
 	src/alc/alc_device.c, src/arch/interface/interface_sound.c,
 	src/arch/interface/interface_sound.h, src/extensions/al_ext_loki.c: More

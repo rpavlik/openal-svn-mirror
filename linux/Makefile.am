@@ -15,7 +15,6 @@ ACLOCAL_AMFLAGS = -I admin/autotools/m4
 EXTRA_DIST =							\
 	CMakeLists.txt						\
 	NOTES							\
-	PLATFORM						\
 	admin/CMakeModules/CMakeASMCompiler.cmake.in		\
 	admin/CMakeModules/CMakeASMInformation.cmake		\
 	admin/CMakeModules/CMakeDetermineASMCompiler.cmake	\
@@ -25,15 +24,7 @@ EXTRA_DIST =							\
 	autogen.sh						\
 	common/specification/OpenAL1-1Spec.pdf			\
 	common/specification/OpenAL1-1Spec.sxw			\
-	config-osx.h						\
-	src/arch/darwin/CVS_Update.txt				\
-	src/arch/darwin/Changes.rtf				\
-	src/arch/darwin/FAQ					\
-	src/arch/darwin/TODO					\
-	src/arch/darwin/Tests_Results.rtf			\
-	src/arch/darwin/changes.txt				\
-	src/arch/irix/README					\
-	src/arch/solaris/README
+	config-osx.h
 
 # Automatically rebuild libtool if it becomes out-of-date.
 libtool: $(LIBTOOL_DEPS)

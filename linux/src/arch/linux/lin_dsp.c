@@ -29,7 +29,6 @@
 #include "al_debug.h"
 #include "alc/alc_context.h"
 #include "arch/interface/interface_sound.h"
-#include "arch/interface/platform.h"
 
 #ifdef WORDS_BIGENDIAN
 #define AFMT_S16 AFMT_S16_BE
@@ -287,8 +286,8 @@ void release_native(void *handle) {
 	return;
 }
 
-float
-get_nativechannel(UNUSED(void *handle), ALCenum channel)
+ALfloat
+get_nativechannel(UNUSED(void *handle), ALuint channel)
 {
 	int request = alcChannel_to_dsp_channel(channel);
 	int retval;
@@ -309,7 +308,7 @@ get_nativechannel(UNUSED(void *handle), ALCenum channel)
  *
  * Kludgey, and obviously not the right way to do this
  */
-int set_nativechannel(UNUSED(void *handle), ALCenum channel, float volume) {
+int set_nativechannel(UNUSED(void *handle), ALuint channel, ALfloat volume) {
 	int request = alcChannel_to_dsp_channel(channel);
 	int unnormalizedvolume;
 

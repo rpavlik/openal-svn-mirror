@@ -23,7 +23,6 @@
 #include "al_main.h"
 #include "al_debug.h"
 
-#include "arch/esd/esd.h"
 #include "arch/interface/interface_sound.h"
 
 #include "alc/alc_context.h"
@@ -333,4 +332,22 @@ ALboolean set_read_esd(UNUSED(void *handle),
 		  UNUSED(ALenum *fmt),
 		  UNUSED(ALuint *speed)) {
 	return AL_FALSE;
+}
+
+ALsizei
+capture_esd( UNUSED(void *handle), UNUSED(void *capture_buffer), UNUSED(int bufsiz) )
+{
+	return 0;
+}
+
+ALfloat
+get_esdchannel( UNUSED(void *handle), UNUSED(ALuint channel) )
+{
+	return 0.0;
+}
+
+int
+set_esdchannel( UNUSED(void *handle), UNUSED(ALuint channel), UNUSED(ALfloat volume) )
+{
+	return 0;
 }

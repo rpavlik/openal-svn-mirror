@@ -20,7 +20,6 @@
 
 #include "al_main.h"
 #include "al_debug.h"
-#include "arch/waveout/waveout.h"
 #include "arch/interface/interface_sound.h"
 #include "audioconvert/ac_endian.h"
 
@@ -351,4 +350,32 @@ static void convert_to_little_endian( ALuint bps, void *data, int nbytes )
 	}
 
 	return;
+}
+
+void
+pause_waveout( UNUSED(void *handle) )
+{
+}
+
+void
+resume_waveout( UNUSED(void *handle) )
+{
+}
+
+ALsizei
+capture_waveout( UNUSED(void *handle), UNUSED(void *capture_buffer), UNUSED(int bufsiz) )
+{
+	return 0;
+}
+
+ALfloat
+get_waveoutchannel( UNUSED(void *handle), UNUSED(ALuint channel) )
+{
+	return 0.0;
+}
+
+int
+set_waveoutchannel( UNUSED(void *handle), UNUSED(ALuint channel), UNUSED(ALfloat volume) )
+{
+	return 0;
 }

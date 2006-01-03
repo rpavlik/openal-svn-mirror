@@ -66,14 +66,12 @@ libopenal_la_SOURCES =			\
 
 if USEBACKENDALSA
 libopenal_la_SOURCES +=			\
-	arch/alsa/alsa.c		\
-	arch/alsa/alsa.h
+	arch/alsa/alsa.c
 endif
 
 if USEBACKENDARTS
 libopenal_la_SOURCES +=			\
-	arch/arts/arts.c		\
-	arch/arts/arts.h
+	arch/arts/arts.c
 endif
 
 if USEBACKENDNATIVEBSD
@@ -88,8 +86,7 @@ endif
 
 if USEBACKENDESD
 libopenal_la_SOURCES +=			\
-	arch/esd/esd.c			\
-	arch/esd/esd.h
+	arch/esd/esd.c
 endif
 
 if USEBACKENDNATIVEIRIX
@@ -104,21 +101,17 @@ endif
 
 if USEBACKENDNATIVEMORPHOS
 libopenal_la_SOURCES +=			\
-	arch/morphos/morphos_dispatcher.c \
-	arch/morphos/morphos_dispatcher.h \
 	arch/morphos/morphos_native.c
 endif
 
 if USEBACKENDNULL
 libopenal_la_SOURCES +=			\
-	arch/null/null.c		\
-	arch/null/null.h
+	arch/null/null.c
 endif
 
 if USEBACKENDSDL
 libopenal_la_SOURCES +=			\
-	arch/sdl/sdl.c			\
-	arch/sdl/sdl.h
+	arch/sdl/sdl.c
 endif
 
 if USEBACKENDNATIVESOLARIS
@@ -128,8 +121,7 @@ endif
 
 if USEBACKENDWAVEOUT
 libopenal_la_SOURCES +=			\
-	arch/waveout/waveout.c		\
-	arch/waveout/waveout.h
+	arch/waveout/waveout.c
 endif
 
 if USEBACKENDNATIVEWINDOWS
@@ -139,8 +131,7 @@ endif
 
 libopenal_la_SOURCES +=			\
 	arch/interface/interface_sound.c \
-	arch/interface/interface_sound.h \
-	arch/interface/platform.h
+	arch/interface/interface_sound.h
 
 # processor-specific sources
 

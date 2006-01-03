@@ -32,7 +32,6 @@
 #include <unistd.h>
 
 #include "arch/interface/interface_sound.h"
-#include "arch/alsa/alsa.h"
 
 #include "al_config.h"
 #include "al_debug.h"
@@ -799,3 +798,26 @@ static int FRAMESIZE(snd_pcm_format_t fmt, unsigned int chans) {
 
 	return(retval*chans);
 }
+
+void
+pause_alsa( UNUSED(void *handle) )
+{
+}
+
+void
+resume_alsa( UNUSED(void *handle) )
+{
+}
+
+ALfloat
+get_alsachannel( UNUSED(void *handle), UNUSED(ALuint channel) )
+{
+	return 0.0;
+}
+
+int
+set_alsachannel( UNUSED(void *handle), UNUSED(ALuint channel), UNUSED(ALfloat volume) )
+{
+	return 0;
+}
+
