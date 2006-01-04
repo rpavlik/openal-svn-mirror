@@ -134,13 +134,13 @@ OSStatus GetAudioDevices (void **devices /*Dev IDs*/, short	*devicesAvailable /*
 
 /************************************** INTERFACE *********************************/
 
-void *grab_read_native(void)
+static void *grab_read_native(void)
 {
     implement_me("void *grab_read_native()");
     return NULL;
 }
 
-void *grab_write_native(void)
+static void *grab_write_native(void)
 {
     OSStatus	error = 0;
     UInt32	count;
@@ -231,6 +231,11 @@ Crash :
     return NULL;
 }
 
+void *
+_alcBackendOpenNative( _ALCOpenMode mode )
+{
+	return mode == _ALC_OPEN_INPUT ? grab_read_native() : grab_write_native();
+}
 
 ALboolean set_write_native(UNUSED(void *handle),
 			   unsigned int *bufsiz,
@@ -425,5 +430,3 @@ ALsizei capture_nativedevice(UNUSED(void *handle), UNUSED(void *capture_buffer),
     implement_me("void capture_nativedevice()");
     return NULL;
 }
-
-

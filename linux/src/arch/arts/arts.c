@@ -108,11 +108,11 @@ static int openal_load_arts_library(void)
 	return 1;
 }
 
-void *grab_read_arts(void) {
+static void *grab_read_arts(void) {
 	return NULL;
 }
 
-void *grab_write_arts(void) {
+static void *grab_write_arts(void) {
         int err;
         t_arts_handle * ahandle;
 
@@ -152,6 +152,14 @@ void *grab_write_arts(void) {
 
         return ahandle;
 }
+
+void *
+_alcBackendOpenARts( _ALCOpenMode mode )
+{
+	return mode == _ALC_OPEN_INPUT ? grab_read_arts() : grab_write_arts();
+}
+
+
 
 void arts_blitbuffer(void *handle, void *data, int bytes)  {
 	t_arts_handle * ahandle = (t_arts_handle *) handle;

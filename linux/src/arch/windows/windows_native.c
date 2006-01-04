@@ -76,11 +76,11 @@ static const char *implement_me(const char *fn) {
 	return retval;
 }
 
-void *grab_read_native(void) {
+static void *grab_read_native(void) {
 	return NULL;
 }
 
-void *grab_write_native(void) {
+static void *grab_write_native(void) {
 	MMRESULT err;
 	LPWAVEFORMATEX pwfx = &WinAudioHandle.pwfx;
 	int i;
@@ -119,6 +119,12 @@ void *grab_write_native(void) {
 		err);
 
 	return NULL;
+}
+
+void *
+_alcBackendOpenNative( _ALCOpenMode mode )
+{
+	return mode == _ALC_OPEN_INPUT ? grab_read_native() : grab_write_native();
 }
 
 void native_blitbuffer(void *handle, void *dataptr, int bytes_to_write) {

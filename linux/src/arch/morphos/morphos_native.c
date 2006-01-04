@@ -107,13 +107,13 @@ static void do_command(struct MOSWriteHandle* h, ULONG cmd)
 	}
 }
 
-void *grab_read_native(void)
+static void *grab_read_native(void)
 {
 	/* Not implemented yet */
 	return NULL;
 }
 
-void *grab_write_native(void)
+static void *grab_write_native(void)
 {
 	struct MOSWriteHandle* h;
 
@@ -151,6 +151,11 @@ void *grab_write_native(void)
 	return NULL;
 }
 
+void *
+_alcBackendOpenNative( _ALCOpenMode mode )
+{
+	return mode == _ALC_OPEN_INPUT ? grab_read_native() : grab_write_native();
+}
 
 ALboolean set_write_native(void *h,
 			    ALuint *bufsiz,

@@ -11,17 +11,17 @@
 
 #include <AL/al.h>
 
-/*
- * Returns a handle to a backend suitable for writing data to, or NULL if no
- * such backend is available. This function is used to implement alcOpenDevice.
- */
-void *_alcBackendOpenOutput( void );
+typedef enum {
+	_ALC_OPEN_INPUT,
+	_ALC_OPEN_OUTPUT
+} _ALCOpenMode;
 
 /*
- * Returns a handle to a backend suitable for reading data from, or NULL if no
- * such backend is available. This function is used to implement alcOpenDevice.
+ * Returns a handle to a backend suitable for reading or writing sound data, or
+ * NULL if no such backend is available. This function is used to implement
+ * alcOpenDevice.
  */
-void *_alcBackendOpenInput( void );
+void *_alcBackendOpen( _ALCOpenMode mode );
 
 /*
  * Closes an (output or input) backend. Returns AL_TRUE if closing was
@@ -88,8 +88,7 @@ void _alcBackendSetAudioChannel( void *handle, ALuint channel, ALfloat volume );
 
 /******************************************************************************/
 
-void *grab_write_native( void );
-void *grab_read_native( void );
+void *_alcBackendOpenNative( _ALCOpenMode mode );
 void release_native( void *handle );
 void pause_nativedevice( void *handle );
 void resume_nativedevice( void *handle );
@@ -103,8 +102,7 @@ int set_nativechannel( void *handle, ALuint channel, ALfloat volume );
 #include "al_siteconfig.h"
 
 #ifdef USE_BACKEND_ALSA
-void *grab_write_alsa( void );
-void *grab_read_alsa( void );
+void *_alcBackendOpenALSA( _ALCOpenMode mode );
 void *release_alsa( void *handle );
 void pause_alsa( void *handle );
 void resume_alsa( void *handle );
@@ -115,8 +113,7 @@ ALsizei capture_alsa(void *handle, void *capture_buffer, int bufsiz);
 ALfloat get_alsachannel( void *handle, ALuint channel );
 int set_alsachannel( void *handle, ALuint channel, ALfloat volume );
 #else
-#define grab_write_alsa()             NULL
-#define grab_read_alsa()              NULL
+#define _alcBackendOpenALSA(m)        NULL
 #define release_alsa(h)
 #define pause_alsa(h)
 #define resume_alsa(h)
@@ -129,8 +126,7 @@ int set_alsachannel( void *handle, ALuint channel, ALfloat volume );
 #endif /* USE_BACKEND_ALSA */
 
 #ifdef USE_BACKEND_ARTS
-void *grab_write_arts(void);
-void *grab_read_arts(void);
+void *_alcBackendOpenARts( _ALCOpenMode mode );
 void release_arts(void *handle);
 void pause_arts( void *handle );
 void resume_arts( void *handle );
@@ -141,8 +137,7 @@ ALsizei capture_arts( void *handle, void *capture_buffer, int bufsiz );
 ALfloat get_artschannel( void *handle, ALuint channel );
 int set_artschannel( void *handle, ALuint channel, ALfloat volume );
 #else
-#define grab_write_arts()             NULL
-#define grab_read_arts()              NULL
+#define _alcBackendOpenARts(m)        NULL
 #define release_arts(h)
 #define pause_arts(h)
 #define resume_arts(h)
@@ -155,8 +150,7 @@ int set_artschannel( void *handle, ALuint channel, ALfloat volume );
 #endif /* USE_BACKEND_ARTS */
 
 #ifdef USE_BACKEND_ESD
-void *grab_write_esd(void);
-void *grab_read_esd(void);
+void *_alcBackendOpenESD( _ALCOpenMode mode );
 void release_esd(void *handle);
 void pause_esd(void *handle);
 void resume_esd(void *handle);
@@ -167,8 +161,7 @@ ALsizei capture_esd(void *handle, void *capture_buffer, int bufsiz);
 ALfloat get_esdchannel( void *handle, ALuint channel );
 int set_esdchannel( void *handle, ALuint channel, ALfloat volume );
 #else
-#define grab_write_esd()              NULL
-#define grab_read_esd()               NULL
+#define _alcBackendOpenESD(m)         NULL
 #define pause_esd(h)
 #define release_esd(h)
 #define resume_esd(h)
@@ -181,8 +174,7 @@ int set_esdchannel( void *handle, ALuint channel, ALfloat volume );
 #endif /* USE_BACKEND_ESD */
 
 #ifdef USE_BACKEND_SDL
-void *grab_write_sdl(void);
-void *grab_read_sdl(void);
+void *_alcBackendOpenSDL( _ALCOpenMode mode );
 void release_sdl(void *handle);
 void pause_sdl( void *handle );
 void resume_sdl( void *handle );
@@ -193,8 +185,7 @@ ALsizei capture_sdl(void *handle, void *capture_buffer, int bufsiz);
 ALfloat get_sdlchannel( void *handle, ALuint channel );
 int set_sdlchannel( void *handle, ALuint channel, ALfloat volume );
 #else
-#define grab_write_sdl()              NULL
-#define grab_read_sdl()               NULL
+#define _alcBackendOpenSDL(m)         NULL
 #define release_sdl(h)
 #define pause_sdl(h)
 #define resume_sdl(h)
@@ -207,8 +198,7 @@ int set_sdlchannel( void *handle, ALuint channel, ALfloat volume );
 #endif /* USE_BACKEND_SDL */
 
 #ifdef USE_BACKEND_NULL
-void *grab_write_null(void);
-void *grab_read_null(void);
+void *_alcBackendOpenNull( _ALCOpenMode mode );
 void release_null(void *handle);
 void pause_null( void *handle );
 void resume_null(void *handle);
@@ -219,8 +209,7 @@ ALsizei capture_null(void *handle, void *capture_buffer, int bufsiz);
 ALfloat get_nullchannel( void *handle, ALuint channel );
 int set_nullchannel( void *handle, ALuint channel, ALfloat volume );
 #else
-#define grab_write_null()             NULL
-#define grab_read_null()              NULL
+#define _alcBackendOpenNull(m)        NULL
 #define release_null(h)
 #define pause_null(h)
 #define resume_null(h)
@@ -233,8 +222,7 @@ int set_nullchannel( void *handle, ALuint channel, ALfloat volume );
 #endif /* USE_BACKEND_NULL */
 
 #ifdef USE_BACKEND_WAVEOUT
-void *grab_write_waveout(void);
-void *grab_read_waveout(void);
+void *_alcBackendOpenWAVE( _ALCOpenMode mode );
 void release_waveout(void *handle);
 void pause_waveout( void *handle );
 void resume_waveout( void *handle );
@@ -245,8 +233,7 @@ ALsizei capture_waveout(void *handle, void *capture_buffer, int bufsiz);
 ALfloat get_waveoutchannel( void *handle, ALuint channel );
 int set_waveoutchannel( void *handle, ALuint channel, ALfloat volume );
 #else
-#define grab_write_waveout()          NULL
-#define grab_read_waveout()           NULL
+#define _alcBackendOpenWAVE(m)        NULL
 #define release_waveout(h)
 #define pause_waveout(h)
 #define resume_waveout(h)

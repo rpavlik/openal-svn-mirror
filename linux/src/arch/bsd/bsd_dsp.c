@@ -111,7 +111,7 @@ static int AL2BSDFMT(int fmt)
  *  dma buffer size.
  *
  */
-void *grab_write_native(void) {
+static void *grab_write_native(void) {
 	const char *dsppath = "/dev/dsp";
 	int divisor = _alSpot(_AL_DEF_BUFSIZ) | (2<<16);
 
@@ -374,8 +374,14 @@ ALboolean set_read_native(UNUSED(void *handle),
 	return AL_FALSE;
 }
 
-void *grab_read_native(void)
+static void *grab_read_native(void)
 {
 	fprintf(stderr,"grab_read_native Not implemented! (%s:%d)\n",__FILE__,__LINE__);
 	return;
+}
+
+void *
+_alcBackendOpenNative( _ALCOpenMode mode )
+{
+	return mode == _ALC_OPEN_INPUT ? grab_read_native() : grab_write_native();
 }

@@ -27,12 +27,18 @@ static void *bogus_handle = (void *) 0x4ABAD1;
 static ALuint sleep_usec(ALuint speed, ALuint chunk);
 static ALint nullspeed;
 
-void *grab_write_null(void) {
+static void *grab_write_null(void) {
 	return bogus_handle;
 }
 
-void *grab_read_null(void) {
+static void *grab_read_null(void) {
 	return NULL;
+}
+
+void *
+_alcBackendOpenNull( _ALCOpenMode mode )
+{
+	return mode == _ALC_OPEN_INPUT ? grab_read_null() : grab_write_null();
 }
 
 ALboolean set_write_null(UNUSED(void *handle),

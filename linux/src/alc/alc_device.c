@@ -36,7 +36,8 @@ ALCdevice *alcOpenDevice( const ALchar *deviceSpecifier ) {
 	Rcvar direction = NULL;
 	Rcvar freq_sym = NULL;
 	Rcvar speakers = NULL;
-	UNUSED(Rcvar devices) = NULL;
+	Rcvar devices = NULL;
+	int openForInput;
 
 	if( num_devices == 0 ) {
 		/* first initialization */
@@ -165,29 +166,14 @@ ALCdevice *alcOpenDevice( const ALchar *deviceSpecifier ) {
 		}
 	}
 
-	if( strncmp(dirstr, "read", 64 ) == 0 ) {
-		/* capture */
-
-		retval->handle = _alcBackendOpenInput( );
-		if( retval->handle == NULL ) {
-			free( retval );
-			_alcSetError(ALC_INVALID_DEVICE);
-			return NULL;
-		}
-
-		retval->flags |= ALCD_READ;
-	} else {
-		/* write (default) */
-
-		retval->handle = _alcBackendOpenOutput( );
-		if( retval->handle == NULL ) {
-			free( retval );
-			_alcSetError(ALC_INVALID_DEVICE);
-			return NULL;
-		}
-
-		retval->flags |= ALCD_WRITE;
+	openForInput = (strncmp( dirstr, "read", 64 ) == 0);
+	retval->handle = _alcBackendOpen( openForInput ? _ALC_OPEN_INPUT : _ALC_OPEN_OUTPUT );
+	if( retval->handle == NULL ) {
+		free( retval );
+		_alcSetError(ALC_INVALID_DEVICE);
+		return NULL;
 	}
+	retval->flags |= ( openForInput ? ALCD_READ : ALCD_WRITE );
 
 	num_devices++;
 

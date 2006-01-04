@@ -166,7 +166,7 @@ static int toggle_nonblock(int fd, int state)
  *  dma buffer size.
  *
  */
-void *grab_write_native(void)
+static void *grab_write_native(void)
 {
 	static int write_fd;
 	Rcvar rc_use_select;
@@ -231,7 +231,7 @@ void *grab_write_native(void)
  *  dma buffer size.
  *
  */
-void *grab_read_native(void)
+static void *grab_read_native(void)
 {
 	static int read_fd;
 
@@ -241,6 +241,12 @@ void *grab_read_native(void)
 	}
 
 	return &read_fd;
+}
+
+void *
+_alcBackendOpenNative( _ALCOpenMode mode )
+{
+	return mode == _ALC_OPEN_INPUT ? grab_read_native() : grab_write_native();
 }
 
 static int grab_mixerfd(void) {

@@ -113,7 +113,7 @@ static int grab_device_byname(const char *name);
  * Driver functions
  */
 
-void *grab_read_native(void)
+static void *grab_read_native(void)
 {
     _ALhandle *alh;
 
@@ -141,7 +141,7 @@ void *grab_read_native(void)
     return NULL; /* (void *)alh; */
 }
 
-void *grab_write_native(void)
+static void *grab_write_native(void)
 {
     _ALhandle *alh;
     ALpv params[2];
@@ -226,6 +226,12 @@ void *grab_write_native(void)
     }
 
     return (void *)alh;
+}
+
+void *
+_alcBackendOpenNative( _ALCOpenMode mode )
+{
+	return mode == _ALC_OPEN_INPUT ? grab_read_native() : grab_write_native();
 }
 
 void native_blitbuffer(void *handle,

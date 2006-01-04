@@ -46,7 +46,7 @@ dummy(UNUSED(void *unused), Uint8 *stream, int len)
 	}
 }
 
-void *
+static void *
 grab_write_sdl(void)
 {
         sdl_info.spec.freq     = DEF_SPEED;
@@ -82,12 +82,17 @@ grab_write_sdl(void)
         return &sdl_info.spec;
 }
 
-void *
+static void *
 grab_read_sdl(void)
 {
 	return NULL;
 }
 
+void *
+_alcBackendOpenSDL( _ALCOpenMode mode )
+{
+	return mode == _ALC_OPEN_INPUT ? grab_read_sdl() : grab_write_sdl();
+}
 
 void
 sdl_blitbuffer(UNUSED(void *handle), void *data, int bytes)

@@ -33,7 +33,7 @@ typedef enum {
 static lin_audio hardware_type = LA_NONE;
 
 void *
-_alcBackendOpenOutput(void)
+_alcBackendOpen( _ALCOpenMode mode )
 {
 	Rcvar device_params;
 	Rcvar device_list;
@@ -63,22 +63,22 @@ _alcBackendOpenOutput(void)
 			break;
 		default:
 			_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
-				  "_alcBackendOpenOutput: bad type %s for device",
+				  "_alcBackendOpen: bad type %s for device",
 				  rc_typestr( rc_type( device ) ));
 			continue;
 		}
 
 		if(strcmp(adevname, "dsp") == 0) {
 			_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
-				  "_alcBackendOpenOutput: 'dsp' is a deprecated device name. Use 'native' instead.");
-			retval = grab_write_native();
+				  "_alcBackendOpen: 'dsp' is a deprecated device name. Use 'native' instead.");
+			retval = _alcBackendOpenNative( mode );
 			if(retval != NULL) {
 				hardware_type = LA_NATIVE;
 				return retval;
 			}
 		}
 		if(strcmp(adevname, "native") == 0) {
-			retval = grab_write_native();
+			retval = _alcBackendOpenNative( mode );
 			if(retval != NULL) {
 				hardware_type = LA_NATIVE;
 				return retval;
@@ -86,7 +86,7 @@ _alcBackendOpenOutput(void)
 		}
 
 		if(strcmp(adevname, "alsa") == 0) {
-			retval = grab_write_alsa();
+			retval = _alcBackendOpenALSA( mode );
 			if(retval != NULL) {
 				hardware_type = LA_ALSA;
 				return retval;
@@ -94,7 +94,7 @@ _alcBackendOpenOutput(void)
 		}
 
 		if(strcmp(adevname, "arts") == 0) {
-			retval = grab_write_arts();
+			retval = _alcBackendOpenARts( mode );
 			if(retval != NULL) {
 				hardware_type = LA_ARTS;
 				return retval;
@@ -102,7 +102,7 @@ _alcBackendOpenOutput(void)
 		}
 
 		if(strcmp(adevname, "esd") == 0) {
-			retval = grab_write_esd();
+			retval = _alcBackendOpenESD( mode );
 			if(retval != NULL) {
 				hardware_type = LA_ESD;
 				return retval;
@@ -110,7 +110,7 @@ _alcBackendOpenOutput(void)
 		}
 
 		if(strcmp(adevname, "sdl") == 0) {
-			retval = grab_write_sdl();
+			retval = _alcBackendOpenSDL( mode );
 			if(retval != NULL) {
 				hardware_type = LA_SDL;
 				return retval;
@@ -118,7 +118,7 @@ _alcBackendOpenOutput(void)
 		}
 
 		if(strcmp(adevname, "null") == 0) {
-			retval = grab_write_null();
+			retval = _alcBackendOpenNull( mode );
 			if(retval != NULL) {
 				hardware_type = LA_NULL;
 				return retval;
@@ -126,7 +126,7 @@ _alcBackendOpenOutput(void)
 		}
 
 		if(strcmp(adevname, "waveout") == 0) {
-			retval = grab_write_waveout();
+			retval = _alcBackendOpenWAVE( mode );
 			if(retval != NULL) {
 				hardware_type = LA_WAVEOUT;
 				return retval;
@@ -135,119 +135,7 @@ _alcBackendOpenOutput(void)
 	}
 
 	/* no device list specified, try native or fail */
-	retval = grab_write_native();
-	if(retval != NULL) {
-		hardware_type = LA_NATIVE;
-		return retval;
-	}
-
-	return NULL;
-}
-
-void *
-_alcBackendOpenInput(void)
-{
-	Rcvar device_params;
-	Rcvar device_list;
-	Rcvar device;
-	void *retval = NULL;
-	char adevname[64]; /* FIXME: magic number */
-
-	device_list = rc_lookup("devices");
-	while(device_list != NULL) {
-		device      = rc_car( device_list );
-		device_list = rc_cdr( device_list );
-
-		switch(rc_type(device)) {
-		case ALRC_STRING:
-			rc_tostr0(device, adevname, 64);
-			break;
-		case ALRC_SYMBOL:
-			rc_symtostr0(device, adevname, 64);
-			break;
-		case ALRC_CONSCELL:
-			device_params = rc_cdr( device );
-			if(device_params == NULL) {
-				continue;
-			}
-			rc_define("device-params", device_params);
-			rc_symtostr0(rc_car(device), adevname, 64);
-			break;
-		default:
-			_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
-				  "_alcBackendOpenInput: bad type %s for device",
-				  rc_typestr( rc_type( device ) ));
-			continue;
-		}
-
-		if(strcmp(adevname, "dsp") == 0) {
-			_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
-				  "_alcBackendOpenInput: 'dsp' is a deprecated device name. Use 'native' instead.");
-			retval = grab_read_native();
-			if(retval != NULL) {
-				hardware_type = LA_NATIVE;
-				return retval;
-			}
-		}
-		if(strcmp(adevname, "native") == 0) {
-			retval = grab_read_native();
-			if(retval != NULL) {
-				hardware_type = LA_NATIVE;
-				return retval;
-			}
-		}
-
-		if(strcmp(adevname, "alsa") == 0) {
-			retval = grab_read_alsa();
-			if(retval != NULL) {
-				hardware_type = LA_ALSA;
-				return retval;
-			}
-		}
-
-		if(strcmp(adevname, "arts") == 0) {
-			retval = grab_read_arts();
-			if(retval != NULL) {
-				hardware_type = LA_ARTS;
-				return retval;
-			}
-		}
-
-		if(strcmp(adevname, "esd") == 0) {
-			retval = grab_read_esd();
-			if(retval != NULL) {
-				hardware_type = LA_ESD;
-				return retval;
-			}
-		}
-
-		if(strcmp(adevname, "sdl") == 0) {
-			retval = grab_read_sdl();
-			if(retval != NULL) {
-				hardware_type = LA_SDL;
-				return retval;
-			}
-		}
-
-		if(strcmp(adevname, "null") == 0) {
-			retval = grab_read_null();
-			if(retval != NULL) {
-				hardware_type = LA_NULL;
-				return retval;
-			}
-		}
-
-		if(strcmp(adevname, "waveout") == 0) {
-			retval = grab_read_waveout();
-			if(retval != NULL) {
-				hardware_type = LA_WAVEOUT;
-				return retval;
-			}
-		}
-	}
-
-	/* no device list specified, try native or fail */
-	retval = grab_read_native();
+	retval = _alcBackendOpenNative( mode );
 	if(retval != NULL) {
 		hardware_type = LA_NATIVE;
 		return retval;

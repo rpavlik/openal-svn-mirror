@@ -194,7 +194,7 @@ void *release_alsa(void *handle)
 	return NULL;
 }
 
-void *grab_read_alsa( void )
+static void *grab_read_alsa( void )
 {
 	struct alsa_info *retval;
 	snd_pcm_t *handle;
@@ -278,7 +278,7 @@ static void get_in_device_name(char *retref, size_t retsize)
 	retref[retsize - 1] = '\0';
 }
 
-void *grab_write_alsa( void )
+static void *grab_write_alsa( void )
 {
 	struct alsa_info *retval;
 	snd_pcm_t *handle;
@@ -331,6 +331,12 @@ void *grab_write_alsa( void )
 		 "grab_alsa: init ok, using %s", card_name);
 
 	return retval;
+}
+
+void *
+_alcBackendOpenALSA( _ALCOpenMode mode )
+{
+	return mode == _ALC_OPEN_INPUT ? grab_read_alsa() : grab_write_alsa();
 }
 
 ALboolean set_read_alsa( void *handle,

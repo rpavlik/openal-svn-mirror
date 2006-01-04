@@ -113,7 +113,7 @@ typedef struct esd_info_s {
 
 static esd_openal_info_t esd_info;
 
-void *grab_write_esd(void) {
+static void *grab_write_esd(void) {
 	esd_format_t fmt;
 	int socket;
 	const char *esdkey = genesdkey();
@@ -168,8 +168,14 @@ void *grab_write_esd(void) {
         return &esd_info;
 }
 
-void *grab_read_esd(void) {
+static void *grab_read_esd(void) {
 	return NULL;
+}
+
+void *
+_alcBackendOpenESD( _ALCOpenMode mode )
+{
+	return mode == _ALC_OPEN_INPUT ? grab_read_esd() : grab_write_esd();
 }
 
 void esd_blitbuffer(void *handle, void *dataptr, int bytes_to_write)  {

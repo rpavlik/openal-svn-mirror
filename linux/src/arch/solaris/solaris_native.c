@@ -60,12 +60,11 @@ static const char *implement_me(const char *fn) {
 	return retval;
 }
 
-void *grab_read_native(void) {
+static void *grab_read_native(void) {
   return NULL ;
 }
 
-/*void *grab_native(void) {*/
-void *grab_write_native(void) {
+static void *grab_write_native(void) {
   int fd ;
   solaris_audio* saudio ;
   fprintf(stderr, "solaris_native: opening /dev/audio\n");
@@ -92,6 +91,12 @@ void *grab_write_native(void) {
   AUDIO_INITINFO( &(saudio->ainfo) ) ;
 
   return saudio ;
+}
+
+void *
+_alcBackendOpenNative( _ALCOpenMode mode )
+{
+	return mode == _ALC_OPEN_INPUT ? grab_read_native() : grab_write_native();
 }
 
 void native_blitbuffer(void *handle,

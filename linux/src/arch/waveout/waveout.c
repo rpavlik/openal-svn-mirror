@@ -73,7 +73,7 @@ static const char *waveout_unique_name(char *template);
  */
 static void convert_to_little_endian( ALuint bps, void *data, int nbytes );
 
-void *grab_write_waveout(void) {
+static void *grab_write_waveout(void) {
 	FILE *fh;
 	waveout_t *retval = NULL;
 	char template[MAXNAMELEN] = "openal-";
@@ -112,8 +112,14 @@ void *grab_write_waveout(void) {
         return retval;
 }
 
-void *grab_read_waveout(void) {
+static void *grab_read_waveout(void) {
 	return NULL;
+}
+
+void *
+_alcBackendOpenWAVE( _ALCOpenMode mode )
+{
+	return mode == _ALC_OPEN_INPUT ? grab_read_waveout() : grab_write_waveout();
 }
 
 void waveout_blitbuffer(void *handle, void *dataptr, int bytes_to_write) {
