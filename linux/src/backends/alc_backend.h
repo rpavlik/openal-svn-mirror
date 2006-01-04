@@ -31,14 +31,14 @@ void *_alcBackendOpen( _ALCOpenMode mode );
 ALboolean _alcBackendClose( void *handle );
 
 /*
- * Informs an output backend that it is about to get paused. This function is
- * used to implement alcMakeContextCurrent(NULL).
+ * Informs a backend that it is about to get paused. This function is used to
+ * implement alcMakeContextCurrent(NULL).
  */
 void _alcBackendPause( void *handle );
 
 /*
- * Informs an output backend that it is about to get resumed. This function is
- * used to implement alcMakeContextCurrent(NON_NULL).
+ * Informs a backend that it is about to get resumed. This function is used to
+ * implement alcMakeContextCurrent(NON_NULL).
  */
 void _alcBackendResume( void *handle );
 

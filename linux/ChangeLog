@@ -1,5 +1,7 @@
 2006-01-04  Sven Panne  <sven.panne@aedion.de>
 
+	* src/backends/alc_backend.h: Fixed comment.
+
 	* src/Makefile.am, src/al_mixer.c, src/alc/alc_context.c,
 	src/alc/alc_device.c, src/extensions/al_ext_capture.c,
 	src/extensions/al_ext_loki.c: Previously the "arch" subdirectory
