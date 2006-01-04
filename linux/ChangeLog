@@ -1,3 +1,9 @@
+2006-01-04  Sven Panne  <sven.panne@aedion.de>
+
+	* configure.ac: Removed -Wconversion. As mentioned on several mailing
+	lists, it is only intended to port prototype-free pre-ANSI C to ANSI and
+	causes a lot of warnings for perfectly good ANSI C.
+
 2006-01-03  Sven Panne  <sven.panne@aedion.de>
 
 	* Makefile.am, src/arch/alsa/alsa.c, src/arch/arts/arts.c,

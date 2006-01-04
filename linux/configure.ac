@@ -80,7 +80,7 @@ if test "x$enable_more_warnings" = xyes; then
     # There are some warnings which are note enabled (yet):
     #    -Wpadded: Perhaps good for optimizing our data layout, but not in general
     #    -Wfloat-equal: Often we should use an epsilon, but there are some correct uses, too
-    WARNINGCFLAGS="$WARNINGCFLAGS -W -Waggregate-return -Wbad-function-cast -Wcast-align -Wcast-qual -Wconversion -Wdisabled-optimization -Wendif-labels -Winline -Wlong-long -Wmissing-declarations -Wmissing-noreturn -Wmissing-prototypes -Wnested-externs -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wsign-compare -Wstrict-prototypes -Wwrite-strings"
+    WARNINGCFLAGS="$WARNINGCFLAGS -W -Waggregate-return -Wbad-function-cast -Wcast-align -Wcast-qual -Wdisabled-optimization -Wendif-labels -Winline -Wlong-long -Wmissing-declarations -Wmissing-noreturn -Wmissing-prototypes -Wnested-externs -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wsign-compare -Wstrict-prototypes -Wwrite-strings"
   fi
 fi
 
