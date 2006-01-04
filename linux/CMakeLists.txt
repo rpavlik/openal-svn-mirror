@@ -116,8 +116,8 @@ SET(AC_OBJS              src/audioconvert/ac_misc.c
 SET(EXT_OBJS             src/extensions/al_ext_loki.c
                          src/extensions/al_ext_capture.c)
 
-SET(MP3_OBJS            src/extensions/al_ext_mp3.c)
-SET(VORBIS_OBJS         src/extensions/al_ext_vorbis.c)
+SET(MP3_OBJS             src/extensions/al_ext_mp3.c)
+SET(VORBIS_OBJS          src/extensions/al_ext_vorbis.c)
 
 SET(BSD_OBJS             src/backends/alc_backend_bsd.c)
 SET(DARWIN_OBJS          src/backends/alc_backend_darwin.c)
@@ -204,7 +204,7 @@ OPTION(NULLOUT     "null out back-end"    ON)
 # additional codecs
 OPTION(VORBIS         "vorbis support"          ON)
 OPTION(VORBIS_DLOPEN  "vorbis dynamic loading"  ON)
-OPTION(MP3            "smpeg support"           ON)
+OPTION(MP3            "mp3 support"             ON)
 
 IF(OPTIMIZATION)
   SET(EMPTY_LOCKS OFF)
@@ -217,9 +217,10 @@ ENDIF(EMPTY_LOCKS)
 IF(DEBUG)
   ADD_DEFINE(DEBUG)
   IF(WARNINGS)
-    OPTION(MORE_WARNINGS   "enable more warnings"         OFF)
-    OPTION(USE_WERROR      "enable fail on all warning"   OFF)
+    OPTION(MORE_WARNINGS "enable more warnings"         OFF)
+    OPTION(USE_WERROR    "enable fail on all warning"   OFF)
   ENDIF(WARNINGS)
+
   OPTION(EFENCE          "enable efence support"        OFF)
   OPTION(DEBUG_MAXIMUS   "enable all debugging"         OFF)
   OPTION(DEBUG_STUB      "enable stub debugging"        OFF)
@@ -244,6 +245,7 @@ IF(DEBUG)
       MESSAGE("Electric Fence not installed - disabled.")
       SET(EFENCE OFF)
     ELSE(EFENCE_LIB MATCHES "NOTFOUND")
+
       SET(ADD_LIBS ${ADD_LIBS} ${EFENCE_LIB})
     ENDIF(EFENCE_LIB MATCHES "NOTFOUND")
   ENDIF(EFENCE)
@@ -324,12 +326,14 @@ IF(NOT CMAKE_SYSTEM MATCHES "Darwin")
   IF(NOT HAVE_LIB_M)
     MESSAGE(FATAL_ERROR "libm not found.")
   ENDIF(NOT HAVE_LIB_M)
+
   CHECK_LIBRARY_EXISTS("dl" "dlopen" "" HAVE_LIB_DL)
 ENDIF(NOT CMAKE_SYSTEM MATCHES "Darwin")
 
 IF(HAVE_LIB_DL)
   SET(ADD_LIBS ${ADD_LIBS} dl)
 ELSE(HAVE_LIB_DL)
+
   ADD_DEFINE(NODLOPEN)
 ENDIF(HAVE_LIB_DL)
 
@@ -428,8 +432,6 @@ IF(${BACKEND_OPTION})
     IF(CMAKE_PKGCONFIG_EXECUTABLE)
       PKGCONFIG(${BACKEND_NAME} HAVE_BACKEND BACKEND_INCLUDE_DIRS BACKEND_DEFINES BACKEND_LINK_DIRS BACKEND_LIBS)
       #MESSAGE("have ${HAVE_BACKEND} inc ${BACKEND_INCLUDE_DIRS} def ${BACKEND_DEFINES} linkdirs ${BACKEND_LINK_DIRS} libs ${BACKEND_LIBS}")
-#    ELSE(CMAKE_PKGCONFIG_EXECUTABLE)
-#      MESSAGE("pkg-config not found.")
     ENDIF(CMAKE_PKGCONFIG_EXECUTABLE)
 
     # CHECK_INCLUDE_FILE() doesn't handle include dir, so check by hand
@@ -487,11 +489,13 @@ IF(${BACKEND_OPTION})
           MESSAGE(STATUS "${BACKEND_OPTION} back-end support - static")
           SET(BACKEND_FOUND ON)
         ELSE(BACKEND_LINKS)
+
           MESSAGE(STATUS "${BACKEND_OPTION} back-end doesn't link.")
         ENDIF(BACKEND_LINKS)
       ENDIF(BACKEND_LIBS MATCHES "NOTFOUND")
     ENDIF(HAVE_LIB_DL AND ${BACKEND_OPTION}_DLOPEN)
   ELSE(HAVE_BACKEND_HEADER)
+
     MESSAGE(STATUS "${BACKEND_OPTION} back-end header ${BACKEND_HEADER} not found.")
   ENDIF(HAVE_BACKEND_HEADER)
 ENDIF(${BACKEND_OPTION})
@@ -530,6 +534,7 @@ IF(DSOUND)
     IF(FOUND_DSOUND)
       SET(ADD_LIBS ${ADD_LIBS} dsound)
     ELSE(FOUND_DSOUND)
+
       MESSAGE("dsound.h not found - DirectSound support disabled.")
       SET(DSOUND OFF)
     ENDIF(FOUND_DSOUND)
@@ -562,6 +567,7 @@ IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
         ADD_DEFINE(HAVE_MMX_MEMCPY)
       ENDIF(HAVE_MMX)
     ELSE(NOT HAVE_NASM MATCHES "NOTFOUND")
+
       MESSAGE("Warning: MMX capability found, but NASM not found. Without NASM no SIMD detection (MMX enabled by default) and no MMX memcopy is built.")
     ENDIF(NOT HAVE_NASM MATCHES "NOTFOUND")
   ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "i.86")
@@ -569,14 +575,15 @@ IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
   IF(CMAKE_SYSTEM_MACHINE MATCHES "i686" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
     OPTION(OPTIM_GENERIC "enable full generic mixing despite MMX optimized routines" OFF)
   ELSE(CMAKE_SYSTEM_MACHINE MATCHES "i686" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
+
     OPTION(OPTIM_GENERIC "enable full generic mixing" ON)
   ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "i686" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
 
   IF(NOT OPTIM_GENERIC)
     ADD_DEFINE(USE_LIGHT_GEN_MIXING)
   ENDIF(NOT OPTIM_GENERIC)
-
 ELSE(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
+
   SET(ARCH_OBJS ${PORTABLE_OBJS})
 ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
 
@@ -683,6 +690,7 @@ IF(BUILD_TESTS)
   IF(ALUT_LIB MATCHES "NOTFOUND")
     MESSAGE("alut not installed, cannot build tests")
   ELSE(ALUT_LIB MATCHES "NOTFOUND")
+
     ADD_LIBRARY(testlib test/testlib.c)
     TARGET_LINK_LIBRARIES(testlib ${ADD_LIBS} openal ${ALUT_LIB})
 
