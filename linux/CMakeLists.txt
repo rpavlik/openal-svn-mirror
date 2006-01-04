@@ -97,7 +97,8 @@ SET(AL_OBJS              src/al_bpool.c
                          src/al_threadlib.c
                          src/al_vector.c
                          src/al_matrix.c
-                         src/mixaudio16.c)
+                         src/mixaudio16.c
+                         src/backends/alc_backend.c)
 
 SET(ALC_OBJS             src/alc/alc_context.c
                          src/alc/alc_speaker.c
@@ -113,18 +114,24 @@ SET(AC_OBJS              src/audioconvert/ac_misc.c
                          src/audioconvert/ac_endian.c)
 
 SET(EXT_OBJS             src/extensions/al_ext_loki.c
-                         src/extensions/al_ext_mp3.c
-                         src/extensions/al_ext_vorbis.c
                          src/extensions/al_ext_capture.c)
 
-SET(BSD_OBJS             src/arch/bsd/bsd_dsp.c)
-SET(IRIS_OBJS            src/arch/irix/iris.c)
-SET(LINUX_OBJS           src/arch/linux/lin_dsp.c)
-SET(SOLARIS_OBJS         src/arch/solaris/solaris_native.c)
-SET(DARWIN_OBJS          src/arch/darwin/darwin_native.c)
-SET(MORPHOS_OBJS         src/arch/morphos/morphos_native.c
-                         src/arch/morphos/morphos_dispatcher.c)
-SET(WINDOWS_OBJS         src/arch/windows/windows_native.c)
+SET(MP3_OBJS            src/extensions/al_ext_mp3.c)
+SET(VORBIS_OBJS         src/extensions/al_ext_vorbis.c)
+
+SET(BSD_OBJS             src/backends/alc_backend_bsd.c)
+SET(DARWIN_OBJS          src/backends/alc_backend_darwin.c)
+SET(IRIS_OBJS            src/backends/alc_backend_irix.c)
+SET(LINUX_OBJS           src/backends/alc_backend_linux.c)
+SET(MORPHOS_OBJS         src/backends/alc_backend_morphos.c)
+SET(SOLARIS_OBJS         src/backends/alc_backend_solaris.c)
+SET(WINDOWS_OBJS         src/backends/alc_backend_windows.c)
+SET(ALSA_OBJS            src/backends/alc_backend_alsa.c)
+SET(ARTS_OBJS            src/backends/alc_backend_arts.c)
+SET(ESD_OBJS             src/backends/alc_backend_esd.c)
+SET(NULL_OBJS            src/backends/alc_backend_null.c)
+SET(SDL_OBJS             src/backends/alc_backend_sdl.c)
+SET(WAVEOUT_OBJS         src/backends/alc_backend_wave.c)
 
 SET(x86_OBJS             src/arch/i386/x86_floatmul.c
                          src/arch/i386/x86_cpu_caps_prk.c)
@@ -134,23 +141,6 @@ SET(x86_MMX_NASM_OBJS    src/arch/i386/memcpy_mmx_prk.nasm)
 
 SET(PORTABLE_OBJS        src/arch/portable/floatmul.c
                          src/arch/portable/cpu_caps.c)
-
-SET(INTERFACE_OBJS       src/arch/interface/interface_sound.c)
-SET(ARTS_OBJS            src/arch/arts/arts.c)
-SET(ALSA_OBJS            src/arch/alsa/alsa.c)
-SET(ESD_OBJS             src/arch/esd/esd.c)
-SET(SDL_OBJS             src/arch/sdl/sdl.c)
-SET(WAVEOUT_OBJS         src/arch/waveout/waveout.c)
-SET(NULL_OBJS            src/arch/null/null.c)
-
-SET(BSD_OBJS             src/arch/bsd/bsd_dsp.c)
-SET(IRIS_OBJS            src/arch/irix/iris.c)
-SET(LIN_OBJS             src/arch/linux/lin_dsp.c)
-SET(SOLARIS_OBJS         src/arch/solaris/solaris_native.c)
-SET(DARWIN_OBJS          src/arch/darwin/darwin_native.c)
-SET(MORPHOS_OBJS         src/arch/morphos/morphos_native.c
-                         src/arch/morphos/morphos_dispatcher.c)
-SET(WINDOWS_OBJS         src/arch/windows/windows_native.c)
 
 
 SET(ADD_CFLAGS "")
@@ -457,6 +447,8 @@ IF(${BACKEND_OPTION})
 
   IF(HAVE_BACKEND_HEADER)
     IF(HAVE_LIB_DL AND ${BACKEND_OPTION}_DLOPEN)
+      SET(OS_OBJS ${OS_OBJS} ${${BACKEND_OPTION}_OBJS})
+      ADD_DEFINE(USE_BACKEND_${BACKEND_OPTION})
       ADD_DEFINE("OPENAL_DLOPEN_${BACKEND_OPTION} 1")
       INCLUDE_DIRECTORIES(${BACKEND_INCLUDE_DIRS})
       MESSAGE(STATUS "${BACKEND_OPTION} back-end support - dynamic")
@@ -599,7 +591,7 @@ IF(CMAKE_COMPILER_IS_GNUCC)
     SET(ADD_WFLAGS "${ADD_WFLAGS} -Wall -ansi -pedantic -W")
 
     IF(MORE_WARNINGS)
-      SET(ADD_WFLAGS "${ADD_WFLAGS} -Waggregate-return -Wbad-function-cast -Wcast-align -Wcast-qual -Wconversion -Wdisabled-optimization -Wendif-labels -Winline -Wlong-long -Wmissing-declarations -Wmissing-noreturn -Wmissing-prototypes -Wnested-externs -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wsign-compare -Wstrict-prototypes -Wwrite-strings")
+      SET(ADD_WFLAGS "${ADD_WFLAGS} -Waggregate-return -Wbad-function-cast -Wcast-align -Wcast-qual -Wdisabled-optimization -Wendif-labels -Winline -Wlong-long -Wmissing-declarations -Wmissing-noreturn -Wmissing-prototypes -Wnested-externs -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wsign-compare -Wstrict-prototypes -Wwrite-strings")
     ENDIF(MORE_WARNINGS)
 
     # Should we use turn warnings into errors?
@@ -651,7 +643,6 @@ SET(CMAKE_SHARED_LINKER_FLAGS "${ADD_LDFLAGS} ${CMAKE_SHARED_LINKER_FLAGS}")
 SET(CMAKE_MODULE_LINKER_FLAGS "${ADD_LDFLAGS} ${CMAKE_MODULE_LINKER_FLAGS}")
 
 SET(OPENAL_OBJS ${AL_OBJS}
-                ${INTERFACE_OBJS}
                 ${OS_OBJS}
                 ${ARCH_OBJS}
                 ${ALC_OBJS}
