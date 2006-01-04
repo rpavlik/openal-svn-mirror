@@ -39,7 +39,7 @@
 #include "al_threadlib.h"
 #include "al_mutexlib.h"
 
-#include "arch/interface/interface_sound.h"
+#include "backends/alc_backend.h"
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))

@@ -20,7 +20,7 @@
 
 #include "al_main.h"
 #include "al_debug.h"
-#include "arch/interface/interface_sound.h"
+#include "backends/alc_backend.h"
 #include "audioconvert/ac_endian.h"
 
 #define WAVEOUT_NAMELEN 16

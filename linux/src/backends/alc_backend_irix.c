@@ -63,7 +63,7 @@
 #include <AL/al.h>
 #include <AL/alext.h>
 
-#include "arch/interface/interface_sound.h"
+#include "backends/alc_backend.h"
 
 #include "al_config.h"
 #include "al_main.h"

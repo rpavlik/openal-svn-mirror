@@ -23,7 +23,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "arch/interface/interface_sound.h"
+#include "backends/alc_backend.h"
 
 /* is this right? */
 #define _AL_DEF_BUFSIZ _ALC_DEF_BUFSIZ

@@ -1,5 +1,29 @@
 2006-01-04  Sven Panne  <sven.panne@aedion.de>
 
+	* src/Makefile.am, src/al_mixer.c, src/alc/alc_context.c,
+	src/alc/alc_device.c, src/extensions/al_ext_capture.c,
+	src/extensions/al_ext_loki.c: Previously the "arch" subdirectory
+	contained highly unrelated things, now all backends are cleanly
+	separated into a "backends" subdirectory.
+
+	* src/backends/alc_backend.c, src/backends/alc_backend.h,
+	src/backends/alc_backend_alsa.c, src/backends/alc_backend_arts.c,
+	src/backends/alc_backend_bsd.c, src/backends/alc_backend_darwin.c,
+	src/backends/alc_backend_esd.c, src/backends/alc_backend_irix.c,
+	src/backends/alc_backend_linux.c, src/backends/alc_backend_morphos.c,
+	src/backends/alc_backend_null.c, src/backends/alc_backend_sdl.c,
+	src/backends/alc_backend_solaris.c, src/backends/alc_backend_wave.c,
+	src/backends/alc_backend_windows.c: Added.
+
+	* src/arch/alsa/alsa.c, src/arch/arts/arts.c, src/arch/bsd/bsd_dsp.c,
+	src/arch/darwin/darwin_native.c, src/arch/esd/esd.c,
+	src/arch/interface/interface_sound.c,
+	src/arch/interface/interface_sound.h, src/arch/irix/iris.c,
+	src/arch/linux/lin_dsp.c, src/arch/morphos/morphos_native.c,
+	src/arch/null/null.c, src/arch/sdl/sdl.c,
+	src/arch/solaris/solaris_native.c, src/arch/waveout/waveout.c,
+	src/arch/windows/windows_native.c: Removed.
+	
 	* src/alc/alc_context.c, src/alc/alc_device.c, src/alc/alc_device.h,
 	src/arch/alsa/alsa.c, src/arch/arts/arts.c, src/arch/bsd/bsd_dsp.c,
 	src/arch/darwin/darwin_native.c, src/arch/esd/esd.c,
@@ -30,8 +54,8 @@
 	Warning police.
 
 	* configure.ac: Removed -Wconversion. As mentioned on several mailing
-	lists, it is only intended to port prototype-free pre-ANSI C to ANSI and
-	causes a lot of warnings for perfectly good ANSI C.
+	lists, it is only intended to port prototype-free pre-ANSI C to ANSI C
+	and causes a lot of warnings for perfectly good code.
 
 2006-01-03  Sven Panne  <sven.panne@aedion.de>
 

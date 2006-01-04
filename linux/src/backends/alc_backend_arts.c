@@ -26,7 +26,7 @@
 #include "al_main.h"
 #include "al_debug.h"
 
-#include "arch/interface/interface_sound.h"
+#include "backends/alc_backend.h"
 
 #define DEF_SPEED	_ALC_CANON_SPEED
 #define DEF_SIZE	_AL_DEF_BUFSIZ

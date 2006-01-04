@@ -18,7 +18,7 @@
 #include "alc/alc_device.h"
 #include "alc/alc_error.h"
 
-#include "arch/interface/interface_sound.h"
+#include "backends/alc_backend.h"
 
 static int num_devices = 0;
 

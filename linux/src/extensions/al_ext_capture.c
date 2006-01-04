@@ -28,7 +28,7 @@
 
 #include "audioconvert/audioconvert.h"
 
-#include "arch/interface/interface_sound.h"
+#include "backends/alc_backend.h"
 #include "al_mutexlib.h"
 
 #ifdef OPENAL_EXTENSION

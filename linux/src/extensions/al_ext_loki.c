@@ -27,7 +27,7 @@
 
 #include "audioconvert/audioconvert.h"
 
-#include "arch/interface/interface_sound.h"
+#include "backends/alc_backend.h"
 
 #ifndef elementsof
 #define elementsof(a) ((sizeof(a)) / (sizeof *(a)))

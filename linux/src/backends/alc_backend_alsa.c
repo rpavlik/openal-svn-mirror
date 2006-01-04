@@ -31,7 +31,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "arch/interface/interface_sound.h"
+#include "backends/alc_backend.h"
 
 #include "al_config.h"
 #include "al_debug.h"

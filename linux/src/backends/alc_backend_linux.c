@@ -28,7 +28,7 @@
 #include "al_main.h"
 #include "al_debug.h"
 #include "alc/alc_context.h"
-#include "arch/interface/interface_sound.h"
+#include "backends/alc_backend.h"
 
 #ifdef WORDS_BIGENDIAN
 #define AFMT_S16 AFMT_S16_BE

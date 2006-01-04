@@ -21,7 +21,7 @@
 #include "al_main.h"
 #include "al_debug.h"
 
-#include "arch/interface/interface_sound.h"
+#include "backends/alc_backend.h"
 
 static void *bogus_handle = (void *) 0x4ABAD1;
 static ALuint sleep_usec(ALuint speed, ALuint chunk);

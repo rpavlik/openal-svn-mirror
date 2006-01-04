@@ -6,7 +6,7 @@
  */
 
 #include "al_siteconfig.h"
-#include "arch/interface/interface_sound.h"
+#include "backends/alc_backend.h"
 
 #include <fcntl.h>
 #include <stdlib.h>

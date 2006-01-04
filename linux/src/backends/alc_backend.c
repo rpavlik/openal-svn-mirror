@@ -16,7 +16,7 @@
 #include "al_config.h"
 #include "al_debug.h"
 #include "al_main.h"
-#include "arch/interface/interface_sound.h"
+#include "backends/alc_backend.h"
 
 typedef enum {
 	LA_NONE,

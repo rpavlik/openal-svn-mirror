@@ -66,72 +66,72 @@ libopenal_la_SOURCES =			\
 
 if USEBACKENDALSA
 libopenal_la_SOURCES +=			\
-	arch/alsa/alsa.c
+	backends/alc_backend_alsa.c
 endif
 
 if USEBACKENDARTS
 libopenal_la_SOURCES +=			\
-	arch/arts/arts.c
+	backends/alc_backend_arts.c
 endif
 
 if USEBACKENDNATIVEBSD
 libopenal_la_SOURCES +=			\
-	arch/bsd/bsd_dsp.c
+	backends/alc_backend_bsd.c
 endif
 
 if USEBACKENDNATIVEDARWIN
 libopenal_la_SOURCES +=			\
-	arch/darwin/darwin_native.c
+	backends/alc_backend_darwin.c
 endif
 
 if USEBACKENDESD
 libopenal_la_SOURCES +=			\
-	arch/esd/esd.c
+	backends/alc_backend_esd.c
 endif
 
 if USEBACKENDNATIVEIRIX
 libopenal_la_SOURCES +=			\
-	arch/irix/iris.c
+	backends/alc_backend_irix.c
 endif
 
 if USEBACKENDNATIVELINUX
 libopenal_la_SOURCES +=			\
-	arch/linux/lin_dsp.c
+	backends/alc_backend_linux.c
 endif
 
 if USEBACKENDNATIVEMORPHOS
 libopenal_la_SOURCES +=			\
-	arch/morphos/morphos_native.c
+	backends/alc_backend_morphos.c
 endif
 
 if USEBACKENDNULL
 libopenal_la_SOURCES +=			\
-	arch/null/null.c
+	backends/alc_backend_null.c
 endif
 
 if USEBACKENDSDL
 libopenal_la_SOURCES +=			\
-	arch/sdl/sdl.c
+	backends/alc_backend_sdl.c
 endif
 
 if USEBACKENDNATIVESOLARIS
 libopenal_la_SOURCES +=			\
-	arch/solaris/solaris_native.c
+	backends/alc_backend_solaris.c
 endif
 
 if USEBACKENDWAVEOUT
 libopenal_la_SOURCES +=			\
-	arch/waveout/waveout.c
+	backends/alc_backend_wave.c
 endif
 
 if USEBACKENDNATIVEWINDOWS
 libopenal_la_SOURCES +=			\
-	arch/windows/windows_native.c
+	backends/alc_backend_windows.c
 endif
 
 libopenal_la_SOURCES +=			\
-	arch/interface/interface_sound.c \
-	arch/interface/interface_sound.h
+	backends/alc_backend.c \
+	backends/alc_backend.h
 
 # processor-specific sources
 
