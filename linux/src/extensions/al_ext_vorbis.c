@@ -122,16 +122,16 @@ static void vorbmap_remove(ALuint sid);
 ALboolean alutLoadVorbis_LOKI(ALuint bid,
 			      const ALvoid *data,
 			      ALint size) {
-	static void (*alBufferi)(ALuint, ALenum, ALint) = NULL;
+	static void (*palBufferi_LOKI)(ALuint, ALenum, ALint) = NULL;
 	VorbHandle *vorb;
 	int err;
 	vorbis_info *vi;
 
-	if(alBufferi == NULL) {
-		alBufferi = (void (*)(ALuint, ALenum, ALint))
-			    alGetProcAddress((ALubyte *) "alBufferi_LOKI");
+	if(palBufferi_LOKI == NULL) {
+		palBufferi_LOKI = (void (*)(ALuint, ALenum, ALint))
+			alGetProcAddress((const ALchar *) "alBufferi_LOKI");
 
-		if(alBufferi == NULL) {
+		if(palBufferi_LOKI == NULL) {
 			fprintf(stderr, "Need alBufferi_LOKI\n");
 			return AL_FALSE;
 		}
@@ -168,7 +168,7 @@ ALboolean alutLoadVorbis_LOKI(ALuint bid,
 	/* set multi channel stuff */
 	vi = ov_info(&vorb->of, 0);
 	if(vi != NULL) {
-		alBufferi(bid, AL_CHANNELS, vi->channels);
+		palBufferi_LOKI(bid, AL_CHANNELS, vi->channels);
 	}
 
 	/* insert new bid */

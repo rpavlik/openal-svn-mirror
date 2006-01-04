@@ -14,6 +14,7 @@
 #define _LAL_TYPES_H_
 
 #include <AL/al.h>
+#include <AL/alc.h>
 
 #include "al_mutexlib.h"
 
@@ -295,7 +296,7 @@ typedef struct ALCdevice_struct {
 	ALuint bufsiz;
 
 	DeviceEnum flags;
-	ALubyte *specifier;
+	ALCchar *specifier;
 } AL_device;
 
 typedef struct _AL_context {
