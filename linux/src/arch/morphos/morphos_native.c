@@ -157,10 +157,10 @@ _alcBackendOpenNative( _ALCOpenMode mode )
 	return mode == _ALC_OPEN_INPUT ? grab_read_native() : grab_write_native();
 }
 
-ALboolean set_write_native(void *h,
-			    ALuint *bufsiz,
-			    ALenum *fmt,
-				 ALuint *speed)
+static ALboolean set_write_native(void *h,
+				  ALuint *bufsiz,
+				  ALenum *fmt,
+				  ALuint *speed)
 {
 	ULONG sample_type;
 	ULONG channels;
@@ -291,13 +291,21 @@ void release_native(void *h)
 	}
 }
 
-ALboolean set_read_native(UNUSED(void *handle),
-			  UNUSED(ALuint *bufsiz),
-			  UNUSED(ALenum *fmt),
-			  UNUSED(ALuint *speed))
+static ALboolean set_read_native(UNUSED(void *handle),
+				 UNUSED(ALuint *bufsiz),
+				 UNUSED(ALenum *fmt),
+				 UNUSED(ALuint *speed))
 {
 	/* Not yet implemented */
 	return AL_FALSE;
+}
+
+ALboolean
+_alcBackendSetAttributesNative(_ALCOpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+{
+	return mode == _ALC_OPEN_INPUT ?
+		set_read_native(handle, bufsiz, fmt, speed) :
+		set_write_native(handle, bufsiz, fmt, speed);
 }
 
 void native_blitbuffer(void *h, void *data, int bytes)

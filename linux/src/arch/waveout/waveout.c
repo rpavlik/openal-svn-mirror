@@ -288,10 +288,10 @@ static const char *waveout_unique_name(char *template) {
 	return retval;
 }
 
-ALboolean set_write_waveout(void *handle,
-		  UNUSED(ALuint *bufsiz),
-		  ALenum *fmt,
-		  ALuint *speed) {
+static ALboolean set_write_waveout(void *handle,
+				   UNUSED(ALuint *bufsiz),
+				   ALenum *fmt,
+				   ALuint *speed) {
 	waveout_t *whandle;
 	ALuint chans = _alGetChannelsFromFormat( *fmt );
 
@@ -309,12 +309,20 @@ ALboolean set_write_waveout(void *handle,
         return AL_TRUE;
 }
 
-ALboolean set_read_waveout(UNUSED(void *handle),
-		  UNUSED(ALuint *bufsiz),
-		  UNUSED(ALenum *fmt),
-		  UNUSED(ALuint *speed)) {
+static ALboolean set_read_waveout(UNUSED(void *handle),
+				  UNUSED(ALuint *bufsiz),
+				  UNUSED(ALenum *fmt),
+				  UNUSED(ALuint *speed)) {
 
 	return AL_FALSE;
+}
+
+ALboolean
+_alcBackendSetAttributesWAVE(_ALCOpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+{
+	return mode == _ALC_OPEN_INPUT ?
+		set_read_waveout(handle, bufsiz, fmt, speed) :
+		set_write_waveout(handle, bufsiz, fmt, speed);
 }
 
 /*

@@ -23,8 +23,6 @@
 static int num_devices = 0;
 
 /*
- * alcOpenDevice( const ALubyte *deviceSpecifier )
- *
  * Opens a device, using the alrc expression deviceSpecifier to specify
  * attributes for the device.  Returns the device if successful, NULL
  * otherwise.
@@ -181,8 +179,6 @@ ALCdevice *alcOpenDevice( const ALchar *deviceSpecifier ) {
 }
 
 /*
- * alcCloseDevice( ALCdevice *dev )
- *
  * Closes the device referred to by dev.
  */
 ALCboolean
@@ -203,54 +199,43 @@ alcCloseDevice( ALCdevice *dev )
 }
 
 /*
- * _alcDeviceSet( AL_device *dev )
- *
- * Sets the attributes for the device from the settings in the device.  The
+ * Sets the attributes for the device from the settings in the device. The
  * library is free to change the parameters associated with the device, but
  * until _alcDeviceSet is called, none of the changes are important.
  *
- * Returns AL_TRUE if the setting operation was possible, AL_FALSE otherwise.
- * After a call to this function, the caller should check the members in dev
- * is see what the actual values set where.
+ * Sets ALC_INVALID_DEVICE if the setting operation failed.  After a call to
+ * this function, the caller should check the members in dev is see what the
+ * actual values set where.
  */
-ALboolean _alcDeviceSet( AL_device *dev ) {
-	ALboolean retval = AL_FALSE;
-
-	if( dev->flags & ALCD_WRITE ) {
-		retval = _alcBackendSetWrite( dev->handle,
-			&dev->bufsiz, &dev->format, &dev->speed);
-	} else {
-		retval = _alcBackendSetRead( dev->handle,
-			&dev->bufsiz, &dev->format, &dev->speed);
+void
+_alcDeviceSet( AL_device *dev )
+{
+	if( _alcBackendSetAttributes( ( dev->flags & ALCD_READ ) ? _ALC_OPEN_INPUT : _ALC_OPEN_OUTPUT,
+				      dev->handle, &dev->bufsiz, &dev->format, &dev->speed) != AL_TRUE ) {
+		_alDebug(ALD_CONTEXT, __FILE__, __LINE__, "_alcDeviceSet failed.");
+		_alcSetError( ALC_INVALID_DEVICE );
 	}
-
 	_alDebug( ALD_CONVERT, __FILE__, __LINE__,
 		  "after set_audiodevice, f|s|b 0x%x|%d|%d",
 		  dev->format,
 		  dev->speed,
 		  dev->bufsiz );
-
-	return retval;
 }
 
 /*
- * _alcDevicePause( AL_device *dev )
- *
  * Pauses a device.
  */
-void _alcDevicePause( AL_device *dev  ) {
-        if ( dev )
-		_alcBackendPause( dev->handle );
-	return;
+void
+_alcDevicePause( AL_device *dev  )
+{
+	_alcBackendPause( dev->handle );
 }
 
 /*
- * _alcDeviceResume( AL_device *dev );
- *
  * Resumes a device.
  */
-void _alcDeviceResume( AL_device *dev  ) {
-        if ( dev )
-		_alcBackendResume( dev->handle );
-	return;
+void
+_alcDeviceResume( AL_device *dev  )
+{
+	_alcBackendResume( dev->handle );
 }

@@ -470,10 +470,10 @@ static int aquire_read(void) {
 	return read_fd;
 }
 
-ALboolean set_write_native(UNUSED(void *handle),
-			   ALuint *bufsiz,
-			   ALenum *fmt,
-			   ALuint *speed) {
+static ALboolean set_write_native(UNUSED(void *handle),
+				  ALuint *bufsiz,
+				  ALenum *fmt,
+				  ALuint *speed) {
 	int write_fd = *(int *)handle;
 	ALuint linformat;
 	ALuint channels = _alGetChannelsFromFormat(*fmt);
@@ -499,10 +499,10 @@ ALboolean set_write_native(UNUSED(void *handle),
 	return AL_TRUE;
 }
 
-ALboolean set_read_native(UNUSED(void *handle),
-			  ALuint *bufsiz,
-			  ALenum *fmt,
-			  ALuint *speed) {
+static ALboolean set_read_native(UNUSED(void *handle),
+				 ALuint *bufsiz,
+				 ALenum *fmt,
+				 ALuint *speed) {
 	int read_fd = *(int *)handle;
 	ALuint linformat;
 	ALuint channels = 1;
@@ -517,6 +517,14 @@ ALboolean set_read_native(UNUSED(void *handle),
 	}
 
 	return AL_FALSE;
+}
+
+ALboolean
+_alcBackendSetAttributesNative(_ALCOpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+{
+	return mode == _ALC_OPEN_INPUT ?
+		set_read_native(handle, bufsiz, fmt, speed) :
+		set_write_native(handle, bufsiz, fmt, speed);
 }
 
 void native_blitbuffer(void *handle, void *dataptr, int bytes_to_write) {

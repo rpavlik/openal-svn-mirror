@@ -399,10 +399,10 @@ ALsizei capture_nativedevice(UNUSED(void *handle),
     return 0;
 }
 
-ALboolean set_write_native(void *handle,
-                           unsigned int *bufsiz,
-                           ALenum *fmt,
-                           unsigned int *speed)
+static ALboolean set_write_native(void *handle,
+				  unsigned int *bufsiz,
+				  ALenum *fmt,
+				  unsigned int *speed)
 {
     _ALhandle *alh = (_ALhandle *)handle;
     ALuint channels = _alGetChannelsFromFormat(*fmt);
@@ -526,14 +526,21 @@ ALboolean set_write_native(void *handle,
     return AL_TRUE;
 }
 
-ALboolean set_read_native(UNUSED(void *handle),
-             UNUSED(unsigned int *bufsiz),
-             UNUSED(ALenum *fmt),
-             UNUSED(unsigned int *speed))
+static ALboolean set_read_native(UNUSED(void *handle),
+				 UNUSED(unsigned int *bufsiz),
+				 UNUSED(ALenum *fmt),
+				 UNUSED(unsigned int *speed))
 {
     return AL_FALSE;
 }
 
+ALboolean
+_alcBackendSetAttributesNative(_ALCOpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+{
+	return mode == _ALC_OPEN_INPUT ?
+		set_read_native(handle, bufsiz, fmt, speed) :
+		set_write_native(handle, bufsiz, fmt, speed);
+}
 
 /*
  * Local function definitions

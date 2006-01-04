@@ -242,51 +242,26 @@ _alcBackendResume(void *handle)
 }
 
 ALboolean
-_alcBackendSetWrite(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+_alcBackendSetAttributes(_ALCOpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
 	switch(hardware_type) {
 	case LA_NATIVE:
-		return set_write_native(handle, bufsiz, fmt, speed);
+		return _alcBackendSetAttributesNative(mode, handle, bufsiz, fmt, speed);
 	case LA_ALSA:
-		return set_write_alsa(handle, bufsiz, fmt, speed);
+		return _alcBackendSetAttributesALSA(mode, handle, bufsiz, fmt, speed);
 	case LA_ARTS:
-		return set_write_arts(handle, bufsiz, fmt, speed);
+		return _alcBackendSetAttributesARts(mode, handle, bufsiz, fmt, speed);
 	case LA_ESD:
-		return set_write_esd(handle, bufsiz, fmt, speed);
+		return _alcBackendSetAttributesESD(mode, handle, bufsiz, fmt, speed);
 	case LA_SDL:
-		return set_write_sdl(handle, bufsiz, fmt, speed);
+		return _alcBackendSetAttributesSDL(mode, handle, bufsiz, fmt, speed);
 	case LA_NULL:
-		return set_write_null(handle, bufsiz, fmt, speed);
+		return _alcBackendSetAttributesNull(mode, handle, bufsiz, fmt, speed);
 	case LA_WAVEOUT:
-		return set_write_waveout(handle, bufsiz, fmt, speed);
+		return _alcBackendSetAttributesWAVE(mode, handle, bufsiz, fmt, speed);
 	default:
 		_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
 			  "_alcBackendSetWrite: unknown backend %d\n", hardware_type );
-		return AL_FALSE;
-	}
-}
-
-ALboolean
-_alcBackendSetRead(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
-{
-	switch(hardware_type) {
-	case LA_NATIVE:
-		return set_read_native(handle, bufsiz, fmt, speed);
-	case LA_ALSA:
-		return set_read_alsa(handle, bufsiz, fmt, speed);
-	case LA_ARTS:
-		return set_read_arts(handle, bufsiz, fmt, speed);
-	case LA_ESD:
-		return set_read_esd(handle, bufsiz, fmt, speed);
-	case LA_SDL:
-		return set_read_sdl(handle, bufsiz, fmt, speed);
-	case LA_NULL:
-		return set_read_null(handle, bufsiz, fmt, speed);
-	case LA_WAVEOUT:
-		return set_read_waveout(handle, bufsiz, fmt, speed);
-	default:
-		_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
-			  "_alcBackendSetRead: unknown backend %d\n", hardware_type );
 		return AL_FALSE;
 	}
 }

@@ -339,10 +339,10 @@ _alcBackendOpenALSA( _ALCOpenMode mode )
 	return mode == _ALC_OPEN_INPUT ? grab_read_alsa() : grab_write_alsa();
 }
 
-ALboolean set_read_alsa( void *handle,
-			 ALuint *bufsiz,
-			 ALenum *fmt,
-			 ALuint *speed)
+static ALboolean set_read_alsa( void *handle,
+				ALuint *bufsiz,
+				ALenum *fmt,
+				ALuint *speed)
 {
 	struct alsa_info *ai = handle;
 	snd_pcm_hw_params_t *setup;
@@ -504,10 +504,10 @@ ALboolean set_read_alsa( void *handle,
 	return AL_TRUE;
 }
 
-ALboolean set_write_alsa(void *handle,
-			 ALuint *bufsiz,
-			 ALenum *fmt,
-			 ALuint *speed)
+static ALboolean set_write_alsa(void *handle,
+				ALuint *bufsiz,
+				ALenum *fmt,
+				ALuint *speed)
 {
 	struct alsa_info *ai = handle;
 	snd_pcm_hw_params_t *setup;
@@ -668,6 +668,14 @@ ALboolean set_write_alsa(void *handle,
 
 	psnd_pcm_hw_params_free(setup);
 	return AL_TRUE;
+}
+
+ALboolean
+_alcBackendSetAttributesALSA( _ALCOpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+{
+	return mode == _ALC_OPEN_INPUT ?
+		set_read_alsa(handle, bufsiz, fmt, speed) :
+		set_write_alsa(handle, bufsiz, fmt, speed);
 }
 
 void alsa_blitbuffer(void *handle, void *data, int bytes)

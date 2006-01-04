@@ -199,10 +199,10 @@ static const char *genartskey(void) {
 	return retval;
 }
 
-ALboolean set_write_arts(void *handle,
-		   ALuint *bufsiz,
-		   ALenum *fmt,
-		   ALuint *speed) {
+static ALboolean set_write_arts(void *handle,
+				ALuint *bufsiz,
+				ALenum *fmt,
+				ALuint *speed) {
 	t_arts_handle * ahandle = (t_arts_handle *) handle;
 
 	if (ahandle == NULL) {
@@ -240,11 +240,19 @@ ALboolean set_write_arts(void *handle,
         return AL_TRUE;
 }
 
-ALboolean set_read_arts(UNUSED(void *handle),
-		   UNUSED(ALuint *bufsiz),
-		   UNUSED(ALenum *fmt),
-		   UNUSED(ALuint *speed)) {
+static ALboolean set_read_arts(UNUSED(void *handle),
+			       UNUSED(ALuint *bufsiz),
+			       UNUSED(ALenum *fmt),
+			       UNUSED(ALuint *speed)) {
 	return AL_FALSE;
+}
+
+ALboolean
+_alcBackendSetAttributesARts(_ALCOpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+{
+	return mode == _ALC_OPEN_INPUT ?
+		set_read_arts(handle, bufsiz, fmt, speed) :
+		set_write_arts(handle, bufsiz, fmt, speed);
 }
 
 void

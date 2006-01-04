@@ -124,7 +124,7 @@ release_sdl(UNUSED(void *handle))
 	SDL_CloseAudio();
 }
 
-ALboolean
+static ALboolean
 set_write_sdl(UNUSED(void *handle), ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
 	ALuint bytesPerSample   = _alGetBitsFromFormat(*fmt) >> 3;
@@ -169,11 +169,19 @@ set_write_sdl(UNUSED(void *handle), ALuint *bufsiz, ALenum *fmt, ALuint *speed)
         return AL_TRUE;
 }
 
-ALboolean
+static ALboolean
 set_read_sdl(UNUSED(void *handle), UNUSED(ALuint *bufsiz), UNUSED(ALenum *fmt),
 	     UNUSED(ALuint *speed))
 {
 	return AL_FALSE;
+}
+
+ALboolean
+_alcBackendSetAttributesSDL(_ALCOpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+{
+	return mode == _ALC_OPEN_INPUT ?
+		set_read_sdl(handle, bufsiz, fmt, speed) :
+		set_write_sdl(handle, bufsiz, fmt, speed);
 }
 
 void

@@ -287,10 +287,10 @@ void resume_esd(void *handle) {
 	return;
 }
 
-ALboolean set_write_esd(UNUSED(void *handle),
-		  UNUSED(ALuint *bufsiz),
-		  ALenum *fmt,
-		  ALuint *speed) {
+static ALboolean set_write_esd(UNUSED(void *handle),
+			       UNUSED(ALuint *bufsiz),
+			       ALenum *fmt,
+			       ALuint *speed) {
 	esd_openal_info_t *eh;
 	int socket;
 	ALuint chans = _alGetChannelsFromFormat(*fmt);
@@ -333,11 +333,19 @@ ALboolean set_write_esd(UNUSED(void *handle),
         return AL_TRUE;
 }
 
-ALboolean set_read_esd(UNUSED(void *handle),
-		  UNUSED(ALuint *bufsiz),
-		  UNUSED(ALenum *fmt),
-		  UNUSED(ALuint *speed)) {
+static ALboolean set_read_esd(UNUSED(void *handle),
+			      UNUSED(ALuint *bufsiz),
+			      UNUSED(ALenum *fmt),
+			      UNUSED(ALuint *speed)) {
 	return AL_FALSE;
+}
+
+ALboolean
+_alcBackendSetAttributesESD(_ALCOpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+{
+	return mode == _ALC_OPEN_INPUT ?
+		set_read_esd(handle, bufsiz, fmt, speed) :
+		set_write_esd(handle, bufsiz, fmt, speed);
 }
 
 ALsizei

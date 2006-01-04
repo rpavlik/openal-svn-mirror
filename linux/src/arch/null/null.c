@@ -41,22 +41,30 @@ _alcBackendOpenNull( _ALCOpenMode mode )
 	return mode == _ALC_OPEN_INPUT ? grab_read_null() : grab_write_null();
 }
 
-ALboolean set_write_null(UNUSED(void *handle),
-		  UNUSED(ALuint *bufsiz),
-		  UNUSED(ALenum *fmt),
-		  ALuint *speed) {
+static ALboolean set_write_null(UNUSED(void *handle),
+				UNUSED(ALuint *bufsiz),
+				UNUSED(ALenum *fmt),
+				ALuint *speed) {
 
 	nullspeed = *speed;
 
         return AL_TRUE;
 }
 
-ALboolean set_read_null(UNUSED(void *handle),
-		  UNUSED(ALuint *bufsiz),
-		  UNUSED(ALenum *fmt),
-		  UNUSED(ALuint *speed)) {
+static ALboolean set_read_null(UNUSED(void *handle),
+			       UNUSED(ALuint *bufsiz),
+			       UNUSED(ALenum *fmt),
+			       UNUSED(ALuint *speed)) {
 
         return AL_TRUE;
+}
+
+ALboolean
+_alcBackendSetAttributesNull(_ALCOpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+{
+	return mode == _ALC_OPEN_INPUT ?
+		set_read_null(handle, bufsiz, fmt, speed) :
+		set_write_null(handle, bufsiz, fmt, speed);
 }
 
 void null_blitbuffer(UNUSED(void *handle),

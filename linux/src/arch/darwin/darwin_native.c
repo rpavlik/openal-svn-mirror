@@ -237,10 +237,10 @@ _alcBackendOpenNative( _ALCOpenMode mode )
 	return mode == _ALC_OPEN_INPUT ? grab_read_native() : grab_write_native();
 }
 
-ALboolean set_write_native(UNUSED(void *handle),
-			   unsigned int *bufsiz,
-			   unsigned int *fmt,
-			   unsigned int *speed)
+static ALboolean set_write_native(UNUSED(void *handle),
+				  unsigned int *bufsiz,
+				  unsigned int *fmt,
+				  unsigned int *speed)
 {
     OSStatus		error = 0;
 
@@ -285,12 +285,19 @@ ALboolean set_write_native(UNUSED(void *handle),
 }
 
 
-ALboolean set_read_native(UNUSED(void *handle), UNUSED(unsigned int *bufsiz), UNUSED(unsigned int *fmt), UNUSED(unsigned int *speed))
+static ALboolean set_read_native(UNUSED(void *handle), UNUSED(unsigned int *bufsiz), UNUSED(unsigned int *fmt), UNUSED(unsigned int *speed))
 {
     implement_me("ALboolean set_read_native()");
     return AL_FALSE;
 }
 
+ALboolean
+_alcBackendSetAttributesNative(_ALCOpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+{
+	return mode == _ALC_OPEN_INPUT ?
+		set_read_native(handle, bufsiz, fmt, speed) :
+		set_write_native(handle, bufsiz, fmt, speed);
+}
 
 void  native_blitbuffer(void *handle, void *data, int bytes)
 {

@@ -119,22 +119,6 @@ static ALuint _alcCidToIndex( ALuint cid );
 static ALuint _alcIndexToCid( int cindex );
 
 /*
- * _alcDeviceReadSet( ALuint cid )
- *
- * Apply parameters for the read device associated with the context named by
- * cid.
- */
-static void _alcDeviceReadSet( ALuint cid );
-
-/*
- * _alcDeviceWriteSet( ALuint cid )
- *
- * Apply parameters for the write device associated with the context named by
- * cid.
- */
-static void _alcDeviceWriteSet( ALuint cid );
-
-/*
  * ALCCONTEXTP_TO_ALUINT and ALUINT_TO_ALCCONTEXTP are macros to ease the
  * conversion of ALCcontext* to ALuint and visa versa.
  *
@@ -190,8 +174,12 @@ ALCboolean alcMakeContextCurrent( ALCcontext *handle )
 				 * inform current audio device about
 				 * impending stall.
 				 */
-				_alcDevicePause( cc->write_device );
-				_alcDevicePause( cc->read_device );
+				if( cc->write_device ) {
+					_alcDevicePause( cc->write_device );
+				}
+				if( cc->read_device ) {
+					_alcDevicePause( cc->read_device );
+				}
 
 				_alcCCId = (ALuint) -1;
 				_alcUnlockAllContexts();
@@ -231,19 +219,18 @@ ALCboolean alcMakeContextCurrent( ALCcontext *handle )
 	}
 
 	/* set device's current context */
-	if(cc->write_device)
-	{
+	if(cc->write_device) {
 		cc->write_device->cc = cc;
+		_alcDeviceSet( cc->write_device );
 	}
 
-	if(cc->read_device)
-	{
+	_alSetMixer( cc->should_sync ); /* set mixing stats */
+
+	if(cc->read_device) {
 		cc->read_device->cc = cc;
+		_alcDeviceSet( cc->read_device );
 	}
 
-	/* set mixer */
-	_alcDeviceWriteSet( cid );
-	_alcDeviceReadSet( cid );
 
 	if(ispaused == AL_TRUE) {
 		/* someone unpaused us */
@@ -1106,73 +1093,6 @@ ALCcontext *alcGetCurrentContext( void )
 	}
 
 	return ALUINT_TO_ALCCONTEXTP( _alcCCId );
-}
-
-/*
- * _alcDeviceReadSet( ALuint cid )
- *
- * Apply parameters for the read device associated with the context named by
- * cid.
- *
- * assumes locked context
- * FIXME: handle read?
- */
-static void _alcDeviceReadSet( ALuint cid ) {
-	AL_context *cc;
-	ALboolean err;
-
-	cc = _alcGetContext( cid );
-	if( cc == NULL ) {
-		_alcSetError( ALC_INVALID_CONTEXT );
-		return;
-	}
-
-	if ( cc->read_device != NULL ) {
-		err = _alcDeviceSet( cc->read_device );
-
-		if( err != AL_TRUE) {
-			_alDebug(ALD_CONTEXT, __FILE__, __LINE__, "set_audiodevice failed.");
-
-			_alcSetError( ALC_INVALID_DEVICE );
-		}
-	}
-
-	return;
-}
-
-/*
- * _alcDeviceWriteSet( ALuint cid )
- *
- * Apply parameters for the write device associated with the context named by
- * cid.
- *
- * assumes locked context
- * FIXME: handle read?
- */
-static void _alcDeviceWriteSet( ALuint cid ) {
-	AL_context *cc;
-	ALboolean err;
-
-	cc = _alcGetContext( cid );
-	if( cc == NULL ) {
-		_alcSetError( ALC_INVALID_CONTEXT );
-		return;
-	}
-
-	if ( cc->write_device != NULL ) {
-		err = _alcDeviceSet( cc->write_device );
-
-		if( err != AL_TRUE) {
-			_alDebug(ALD_CONTEXT, __FILE__, __LINE__, "set_audiodevice failed.");
-
-			_alcSetError( ALC_INVALID_DEVICE );
-                        return;
-		}
-	}
-
-	_alSetMixer( cc->should_sync ); /* set mixing stats */
-
-	return;
 }
 
 /*
