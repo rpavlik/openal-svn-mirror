@@ -1,177 +1,177 @@
-= Contents =
+Contents
+========
 
-- Building OpenAL with autotools
-- Building OpenAL with CMake
+   * Building OpenAL with autotools
+   * Building OpenAL with CMake
+   * Notes about the Darwin backend
+      + FAQ for the Darwin backend
+      + Darwin backend mini-release-notes
+      + Darwin backend ToDos
+      + Darwin backend test results
+   * Notes about the IRIX backend
+   * Coding guidelines
 
 
-= Building OpenAL with autotools =
+Building OpenAL with autotools
+==============================
+
+For impatient people the story is:
+
+   ./autogen.sh && ./configure && make install
+
+For more details, have a look at INSTALL or simply read on a bit.
 
 If this is your first time retrieving CVS, you will need to build the
-configure script and config.h.in dependency.  Just run
+configure script and a few more configuration-related files. To achieve
+this, just run:
 
-	sh ./autogen.sh
+   ./autogen.sh
 
-and you should be okay.
+You might see quite a few warnings, but they are harmless and are caused
+by minor bugs outside OpenAL. If you don't want to see them anymore,
+contact your favourite distribution vendor. :-)
 
-Compilation / installation goes something like this:
+After that initial step, configuration and compilation work like this:
 
-	./configure --prefix=/usr/local
-	make
-	cd test
-	[run tests]
-	make install
+   ./configure && make
+
+This assumes that you want to install OpenAL into /usr/local. If you
+want something different, give configure a "--prefix=/wherever/you/want"
+option.
 
 If you are on x86(_64) if may be wise to send your CFLAGS along to
-configure, as dependening on them, SIMD code will be activated, ie:
+configure, as dependening on them, SIMD code will be activated, i.e.:
 
-	CFLAGS="-march=athlon-xp" ./configure --prefix=/usr/local
+   CFLAGS="-march=athlon-xp" ./configure
 
 configure will detect that "-march=athlon-xp" activates MMX, SSE,
 3dNOW!, SSE-MMX and 3dNOW! extended. You can also explicitly enable a
-specific SIMD instruction set via CFLAGS, ie -mmmx activates MMX on the
-GCC compiler. Refer to its manual. Currently OpenAL only features some
-MMX code though, so other SIMD instruction set are ignored.
-On x86 (32 bit) it is advised to have nasm installed. Then it is safe
-to activate all SIMD instruction sets at compile time, as at runtime the
-detection will only activate supported SIMD routines.
-(Above example shouldn't be used as such though, as it doesn't do any
-optimization, so send more flags and/or use the optimization configure
-option.)
+specific SIMD instruction set via CFLAGS, i.e. "-mmmx" activates MMX on
+the GCC compiler (see its manual). Currently OpenAL only features some
+MMX code though, so other SIMD instruction set are ignored.  On x86 (32
+bit) it is advised to have nasm installed. Then it is safe to activate
+all SIMD instruction sets at compile time, as at runtime the detection
+will only activate supported SIMD routines. (Above example shouldn't be
+used as such though, as it doesn't do any optimization, so send more
+flags and/or use the optimization configure option.)
+
+Possible configure options (use --help to determine the rest):
+
+   --enable-more-warnings  enable even more compiler warnings
+   --enable-werror         enable failure on all warnings
+   --enable-debug          enable debug code and assertions
+   ...
+
+Note that the "test" subdirectory has bitrotted, in the future you
+should be able to test the build via:
+
+   cd test && make
+   [run some tests]
+
+To install OpenAL, just issue:
+
+   make install
+
+If this is your first time installing openal, you'll need to run
+ldconfig on some *nices.
 
 
-configure options:
-	--enable-debug        Enable debugging info.
-	--enable-optimization Enables optimization.
+Building OpenAL with CMake
+==========================
 
-etc...  Use --help to determine the rest.  Most people will be fine with
---enable-optimization.
+The CMake build files are maintained by prakash@punnoor.de, so if you
+have troubles building OpenAL using CMake, please contact me and not the
+OpenAL developers, as the official build system is still the one using
+autotools. The CMake build files are currenty meant as an additional
+possibility to build OpenAL.
 
-Debugging options are now in the form:
+The aim of using CMake is making portable development easier, as CMake
+containg generators for various build systems. On e.g. *nix Makefiles
+will be built, and on Windows MS VC++ project files, if you wish. You
+can get CMake at http://cmake.org/.
 
-	--enable-debug-blah
+Current status: The build system is feature complete, so it (should)
+build everything as the (old) default one has done.
 
-in general, this will give you too much information to be useful on a
-particular topic.  Use --enable-debug-maximus to get all debugging
-messages possible.
+(+,o,- indicates feature more/same/less then default OpenAL build
+system.)
 
-If this is your first time installing openal, you'll probably need to
-run ldconfig.
+   o builds shared OpenAL lib
+   o builds static OpenAL lib; can be deactivated
+   o builds the test-suite, if specified
+   o all backends and vorbis/mp3/SDL support should be handled by CMake
 
-ATTENTION:
+   + out of tree builds are supported
+   + correct dependency tracking of source files
+   + prepared for adding support for non GNU compiler
+   (setting link libraries probably needs cleaning up)
 
-The following changes have taken place that may alter the manner in
-which an installation works on your machine.  Please be advised:
+   - only native and ALSA backends and Vorbis support have been tested
+     yet (so please report back if it works for you! :-)
 
-	- SDL is no longer required to build --- the conversion code
-	  has been copied into the audioconvert directory.
+This document explains briefly how to build with CMake on Linux via an
+out-of-tree build:
 
-If you experience any problems building or with the test code, please
-email me: jvalenzu@linuxgames.com.  Thanks.
+   - Change to the toplevel directory containing the OpenAL sources.
+   - Create a directory, e.g. "default", and change into it.
+   - Now run something like:
 
-jv.
+        cmake .. -DCMAKE_INSTALL_PREFIX:STRING="/usr" -DCMAKE_C_FLAGS:STRING="-march=athlon-xp -O2"
+        make
+        make install
 
+     If you exported your CFLAGS, there is no need to specify them
+     explicitly, as CMake will pick them up.
 
-= Building OpenAL with CMake =
+   - OpenAL should get installed as you got used to it.
 
-The CMake build files are maintained by prakash@punnoor.de, so
-if you have troubles building OpenAL using CMake, please contact
-me and not the OpenAL devs, as the official build system is still
-the one using autoconf/make. The CMake build files are currenty
-meant as an additional possibility to build OpenAL.
+I really would like to get CMake building OpenAL on every supported
+platform. So please contact me if it doesn't build on yours. I'll try to
+fix this with your help.
 
-The aim of using CMake is making portable development easier, as
-CMake containg generators for various build systems. On eg. Unix
-Makefiles will be built, and on Windows MS VC++ project files, if
-you wish. You can get CMake at cmake.org.
+Some tips:
 
-Current status:
-The build system is feature complete, so it (should) build every-
-thing as the (old) default one has done.
+   - You can use a console GUI named ccmake for configuring cmake. This
+     also comes in handy, to find out about available options. You can
+     also set options via command-line:
 
-(+,o,- indicates feature more/same/less then default OpenAL
-build system.)
+        ccmake .. -DCMAKE_INSTALL_PREFIX:STRING="/usr" -DCMAKE_C_FLAGS:STRING="-march=athlon-xp -O2"
 
-o builds shared OpenAL lib
-o builds static OpenAL lib; can be deactivated
-o builds the test-suite, if specified
-o all backends and vorbis/mp3/SDL support should be handled by CMake
+     sets the two variables defined on command line and then starts the
+     GUI. Press 'c' the first time and every time you want to commit
+     changes in the config. Finally press 'g' to run the generator. Btw,
+     to set boolean vars from the command line, use -DVAR:BOOL=X, where
+     X is eg. ON or OFF.
 
-+ out of tree builds are supported
-+ correct dependency tracking of source files
-+ prepared for adding support for non GNU compiler
-  (setting link libraries probably needs cleaning up)
+   - If you want more output at compile time, use
 
-- only native, alsa backends and vorbis support compile tested yet
-  (so please report back if it works for you! :-)
+        make VERBOSE=1
 
+   - If you want to install to a different directory (using same
+     prefix), use
 
-This document explains briefly how to build with CMake on Linux via out-
-of-tree build:
+        make install DESTDIR=/foo/bar
 
-- Change to the linux dir.
-- Create a dir, eg "default", and change into it.
-- Now (eg.) run:
+   - CMake doesn't has a distclean target by default, so you better
+     really do an out-of-tree build, then you can simply delete its
+     content when you want a distclean... Furthermore it is easier to
+     have different builds using different parameters via out-of-tree
+     builds.
 
-cmake .. -DCMAKE_INSTALL_PREFIX:STRING="/usr" -DCMAKE_C_FLAGS:STRING="-march=athlon-xp -O2"
-make
-make install
+   - If you are interested in variables to set, take a look into
+     CMakeCache.txt after having run the configuring stage.
 
-  If you exported your CFLAGS, there is no need to specify them
-  explicitly, as CMake will pick them up.
-
-- OpenAL should get installed as you got used to it.
-
-
-I really would like to get CMake building OpenAL on every
-supported platform. So please contact me if it doesn't build
-on yours. I'll try to fix this with your help.
-
-
-Some Tips:
-
-- You can use a console GUI named ccmake for configuring cmake.
-  This also comes in handy, to find out about available options.
-  You can also set options via command-line:
-
-ccmake .. -DCMAKE_INSTALL_PREFIX:STRING="/usr" -DCMAKE_C_FLAGS:STRING="-march=athlon-xp -O2"
-
-  sets the two variables defined on command line and then starts
-  the GUI. Press 'c' the first time and every time you want to commit
-  changes in the config. Finally press 'g' to run the generator.
-  Btw, to set boolean vars from the command line, use -DVAR:BOOL=X,
-  where X is eg. ON or OFF.
-
-- If you want more output at compile time, use
-
-make VERBOSE=1
-
-- If you want to install to a different directory (using same prefix),
-  use
-
-make install DESTDIR=/foo/bar
-
-- CMake doesn't has a distclean target by default, so you better
-  really do an out-of-tree build, then you can simply delete its
-  content when you want a distclean... Furthermore it is easier to
-  have different builds using different parameters via out-of-tree
-  builds.
-
-- If you are interested in variables to set, take a look into
-  CMakeCache.txt after having run the configuring stage.
-
-- If you update your source tree via cvs and want to rebuild an pre-
-  viously built lib without cleaning, you better at least clear the 
-  CMake cache (remove CMakeCache.txt) otherwise a modified CMake project
-  file could result to unwanted behaviour.
+   - If you update your source tree via cvs and want to rebuild an
+     previously built lib without cleaning, you better at least clear
+     the CMake cache (remove CMakeCache.txt) otherwise a modified CMake
+     project file could result to unwanted behaviour.
 
 
-Cheers,
+Notes about the Darwin backend
+==============================
 
-Prakash
-
-================================================================================
-
-Some notes about the "darwin" backend:
+FAQ for the Darwin backend
+--------------------------
 
 Q : How can I choose the sound card I want for rendering?
 A : You can't. The first found is the first used.
@@ -195,7 +195,9 @@ A : Change your CPU or write a better MOSX implementation than mine !
 Q : Why my question is not listed here?
 A : Because I can't guess ALL questions ! Ask me directly : gborios@free.fr
 
-----------
+
+Darwin backend mini-release-notes
+---------------------------------
 
 Version : Alpha 6
 Better bridge between CoreAudio and OpenAL :
@@ -228,22 +230,28 @@ Implemented :
     * ALboolean set_write_native(),
     * void  native_blitbuffer().
 
-----------
 
-ToDo:
+Darwin backend ToDos
+--------------------
 
-Implements what's not !
-Add a preference file to determine which is the default Audio Controller (by now, it is the first found).
-Optimize for Altivec.
-Clean up everything.
-Try to make all test programs work.
+   * Implements what's not !
+
+   * Add a preference file to determine which is the default Audio
+     Controller (by now, it is the first found).
+
+   * Optimize for Altivec.
+
+   * Clean up everything.
+
+   * Try to make all test programs work.
 
 
-----------
+Darwin backend test results
+---------------------------
 
-This is the results of the test programs compiled with alpha 5 version of the
-MOSX Backend and the default branch of the OpenAL CVS. I didn't have time to
-check deeply each example, but I did it for some.
+This is the results of the test programs compiled with alpha 5 version
+of the MOSX Backend and the default branch of the OpenAL CVS. I didn't
+have time to check deeply each example, but I did it for some.
 
 OK : 31
 OK but... : 5
@@ -310,47 +318,97 @@ Problems :
 
 #1 : It seems something goes wrong with AL_LOOPING. in testloop : after
 alSourceStop() AL_LOOPING is set to false even before we explicitely set
-it. then we set it to false in the test app, and asking for the loop state is OK
-(returns false). then we call alSourcePlay() and ask again for the looping state
-: it has been now strangely reseted to true. The solution is to change the
-looping value whiel the source is still playing, but is this a normal behaviour? 
-I guess no.
+it. then we set it to false in the test app, and asking for the loop
+state is OK (returns false). then we call alSourcePlay() and ask again
+for the looping state : it has been now strangely reseted to true. The
+solution is to change the looping value whiel the source is still
+playing, but is this a normal behaviour? I guess no.
 
-#2 : when a mixer source is destroyed, the bid_queue.read_index of the attached
-source is set to the size of the bid_queue. So when reallocating a new mix
-source for the same source, the bid is invalid because bid queue read index is
-out of range (1buffer too far). See modif #1 for a solution.
+#2 : when a mixer source is destroyed, the bid_queue.read_index of the
+attached source is set to the size of the bid_queue. So when
+reallocating a new mix source for the same source, the bid is invalid
+because bid queue read index is out of range (1buffer too far). See
+modif #1 for a solution.
 
 Modifications :
 
-#1 : al_mixer.c, line 719 : mixer modif when reallocating for a stopped source
--> I guess this is the modif Joe made Monday.
+#1 : al_mixer.c, line 719 : mixer modif when reallocating for a stopped
+source -> I guess this is the modif Joe made Monday.
 
-================================================================================
 
-Some notes about the "native" backend on IRIX:
+Notes about the IRIX backend
+============================
 
-Maintainer: Erik Hofman <erik@ehofman.com>
+Only Indy, Indogo2 and Onyx Audio/Serial Option (ASO) can natively
+handle 4 channel (surround sound) audio.
 
-The following configuration options could be specified
-in the ~/.openalrc file:
+Adding 4 channel audio support is possible by adding the following
+definition to your ~/.openalrc file:
 
-1. You can now define up to four output channels.
-2. You can specify which output port or interface to use.
-3. For systems that don't support 4 channel audio natively
-   you can specify a second device that is used for the rear
-   channels.
+   (define speaker-num 4) 
 
-A typical O2 configuration file would look like this:
+It is also possible to specify the default output port by adding the
+following definition:
 
-(define speaker-num 4)
-(define native-out-device "Analog Out")
-(define native-rear-out-device "Analog Out 2")
+   (define native-out-device "Analog Out")
 
-or alternatively:
+When your system doesn't support four channel audio by default, but it
+does contain (at least) two different output ports you could enable four
+channel audio by defining two separate ports:
 
-(define speaker-num 4)
-(define native-out-device "A3.Speaker")
-(define native-rear-out-device "A3.LineOut2")
+   (define native-out-device "Analog Out")
+   (define native-rear-out-device "Analog Out 2")
 
-================================================================================
+or alternatively by selecting two different interfaces:
+
+   (define native-out-device "A3.Speaker")
+   (define native-rear-out-device "A3.LineOut2")
+
+See "man 3dm alResources" for more information.
+
+
+Coding guidelines
+=================
+
+Coding guidelines are a very sensitive topic and can easily lead to
+almost religious discussions. Always remember that they are not invented
+to torment developers, but to ease collaboration by avoiding useless
+creativity. The following items are not a complete list, they are only a
+few things to bear in mind. Furthermore, note that most of the current
+code does not yet adhere to these rules, so at least try to follow these
+guidelines when writing new code.
+
+   * To avoid endless formatting discussions and guarantee consistency,
+     use GNU indent with the configuration file located at
+     admin/autotools/.indent.pro. There is even a make target "indent"
+     which does this automatically for the whole source tree.
+
+   * The code should be kept as warning-free as possible, but don't
+     simply silence the compiler by e.g. casting without thinking first.
+
+   * C has only very poor namespace support, so to avoid accidental
+     name clashes we need some naming conventions. Something to bear in
+     mind is that macros and symbols starting with an underscore are
+     reserved for the C compiler, so we should not use this. The
+     following is a list of conventions for the AL part only, the ALC
+     part should be handled accordingly:
+
+      + Quite obviously, globally visible functions from the OpenAL spec
+        have the form "alFooBar" and official macros have the form
+        "AL_FOO_BAR".
+
+      + Globally visible functions and variables not in the OpenAL spec
+        must have the form "alFooBar_" to keep the global namespace
+        clean.
+
+      + Internal types must have the form "AL_FooBar".
+
+      + Internal macros and enum values "AL_FOO_BAR_"
+
+      + C structs have their own namespaces, so we need no funny
+        prefixes or suffixes here and can simply use "fooBar".
+
+   * A header file named "foo/bar.h" should be protected against
+     multiple inclusion via an "AL_FOO_BAR_H_" macro.
+
+Please feel free to add some more items to the guidelines above...
