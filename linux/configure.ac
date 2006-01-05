@@ -275,9 +275,9 @@ fi
 
 AC_ARG_ENABLE([optimization],
 [AS_HELP_STRING([--enable-optimization],
-                [enable optimization @<:@default=no@:>@])])
+                [enable optimization @<:@default=yes@:>@])])
 
-if test "x$enable_optimization" = xyes; then
+if test "x$enable_optimization" != xno; then
   enable_empty_locks=no
   OPTIMIZATIONCFLAGS="-fexpensive-optimizations -funroll-all-loops -funroll-loops -finline-functions -ffast-math"
 
