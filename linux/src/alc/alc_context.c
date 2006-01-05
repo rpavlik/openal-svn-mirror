@@ -1246,7 +1246,7 @@ ALsizei _alcDeviceRead( ALuint cid, ALvoid *dataptr, ALuint bytes_to_read )
 		return 0;
 	}
 
-	return _alcBackendRead(cc->read_device->handle, dataptr, bytes_to_read);
+	return alcBackendRead_(cc->read_device->handle, dataptr, bytes_to_read);
 }
 
 /*
@@ -1269,7 +1269,7 @@ void _alcDeviceWrite( ALuint cid, ALvoid *dataptr, ALuint bytes_to_write ) {
 		return;
 	}
 
-	_alcBackendWrite( cc->write_device->handle, dataptr, bytes_to_write );
+	alcBackendWrite_( cc->write_device->handle, dataptr, bytes_to_write );
 
 	return;
 }

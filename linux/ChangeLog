@@ -1,5 +1,16 @@
 2006-01-05  Sven Panne  <sven.panne@aedion.de>
 
+	* src/alc/alc_context.c, src/alc/alc_device.c,
+	src/backends/alc_backend.c, src/backends/alc_backend.h,
+	src/backends/alc_backend_alsa.c, src/backends/alc_backend_arts.c,
+	src/backends/alc_backend_bsd.c, src/backends/alc_backend_darwin.c,
+	src/backends/alc_backend_esd.c, src/backends/alc_backend_irix.c,
+	src/backends/alc_backend_linux.c, src/backends/alc_backend_morphos.c,
+	src/backends/alc_backend_null.c, src/backends/alc_backend_sdl.c,
+	src/backends/alc_backend_solaris.c, src/backends/alc_backend_wave.c,
+	src/backends/alc_backend_windows.c, src/extensions/al_ext_loki.c:
+	Started to use our own coding guidelines.
+
 	* admin/autotools/.indent.pro: Use TAB-free GNU style. The previous
 	8-column tabbed indentation was eating far too much space when long
 	symbol names are used. Let's slowly move towards this style when

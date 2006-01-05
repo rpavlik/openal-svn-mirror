@@ -334,9 +334,9 @@ static void *grab_write_alsa( void )
 }
 
 void *
-_alcBackendOpenALSA( _ALCOpenMode mode )
+alcBackendOpenALSA_( ALC_OpenMode mode )
 {
-	return mode == _ALC_OPEN_INPUT ? grab_read_alsa() : grab_write_alsa();
+	return mode == ALC_OPEN_INPUT_ ? grab_read_alsa() : grab_write_alsa();
 }
 
 static ALboolean set_read_alsa( void *handle,
@@ -671,9 +671,9 @@ static ALboolean set_write_alsa(void *handle,
 }
 
 ALboolean
-_alcBackendSetAttributesALSA( _ALCOpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesALSA_( ALC_OpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
-	return mode == _ALC_OPEN_INPUT ?
+	return mode == ALC_OPEN_INPUT_ ?
 		set_read_alsa(handle, bufsiz, fmt, speed) :
 		set_write_alsa(handle, bufsiz, fmt, speed);
 }

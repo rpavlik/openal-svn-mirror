@@ -232,9 +232,9 @@ Crash :
 }
 
 void *
-_alcBackendOpenNative( _ALCOpenMode mode )
+alcBackendOpenNative_( ALC_OpenMode mode )
 {
-	return mode == _ALC_OPEN_INPUT ? grab_read_native() : grab_write_native();
+	return mode == ALC_OPEN_INPUT_ ? grab_read_native() : grab_write_native();
 }
 
 static ALboolean set_write_native(UNUSED(void *handle),
@@ -292,9 +292,9 @@ static ALboolean set_read_native(UNUSED(void *handle), UNUSED(unsigned int *bufs
 }
 
 ALboolean
-_alcBackendSetAttributesNative(_ALCOpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesNative_(ALC_OpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
-	return mode == _ALC_OPEN_INPUT ?
+	return mode == ALC_OPEN_INPUT_ ?
 		set_read_native(handle, bufsiz, fmt, speed) :
 		set_write_native(handle, bufsiz, fmt, speed);
 }

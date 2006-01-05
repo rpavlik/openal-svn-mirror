@@ -89,9 +89,9 @@ grab_read_sdl(void)
 }
 
 void *
-_alcBackendOpenSDL( _ALCOpenMode mode )
+alcBackendOpenSDL_( ALC_OpenMode mode )
 {
-	return mode == _ALC_OPEN_INPUT ? grab_read_sdl() : grab_write_sdl();
+	return mode == ALC_OPEN_INPUT_ ? grab_read_sdl() : grab_write_sdl();
 }
 
 void
@@ -177,9 +177,9 @@ set_read_sdl(UNUSED(void *handle), UNUSED(ALuint *bufsiz), UNUSED(ALenum *fmt),
 }
 
 ALboolean
-_alcBackendSetAttributesSDL(_ALCOpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesSDL_(ALC_OpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
-	return mode == _ALC_OPEN_INPUT ?
+	return mode == ALC_OPEN_INPUT_ ?
 		set_read_sdl(handle, bufsiz, fmt, speed) :
 		set_write_sdl(handle, bufsiz, fmt, speed);
 }

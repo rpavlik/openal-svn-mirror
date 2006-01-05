@@ -117,9 +117,9 @@ static void *grab_read_waveout(void) {
 }
 
 void *
-_alcBackendOpenWAVE( _ALCOpenMode mode )
+alcBackendOpenWAVE_( ALC_OpenMode mode )
 {
-	return mode == _ALC_OPEN_INPUT ? grab_read_waveout() : grab_write_waveout();
+	return mode == ALC_OPEN_INPUT_ ? grab_read_waveout() : grab_write_waveout();
 }
 
 void waveout_blitbuffer(void *handle, void *dataptr, int bytes_to_write) {
@@ -318,9 +318,9 @@ static ALboolean set_read_waveout(UNUSED(void *handle),
 }
 
 ALboolean
-_alcBackendSetAttributesWAVE(_ALCOpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesWAVE_(ALC_OpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
-	return mode == _ALC_OPEN_INPUT ?
+	return mode == ALC_OPEN_INPUT_ ?
 		set_read_waveout(handle, bufsiz, fmt, speed) :
 		set_write_waveout(handle, bufsiz, fmt, speed);
 }

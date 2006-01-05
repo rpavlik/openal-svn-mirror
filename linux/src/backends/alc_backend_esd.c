@@ -173,9 +173,9 @@ static void *grab_read_esd(void) {
 }
 
 void *
-_alcBackendOpenESD( _ALCOpenMode mode )
+alcBackendOpenESD_( ALC_OpenMode mode )
 {
-	return mode == _ALC_OPEN_INPUT ? grab_read_esd() : grab_write_esd();
+	return mode == ALC_OPEN_INPUT_ ? grab_read_esd() : grab_write_esd();
 }
 
 void esd_blitbuffer(void *handle, void *dataptr, int bytes_to_write)  {
@@ -341,9 +341,9 @@ static ALboolean set_read_esd(UNUSED(void *handle),
 }
 
 ALboolean
-_alcBackendSetAttributesESD(_ALCOpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesESD_(ALC_OpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
-	return mode == _ALC_OPEN_INPUT ?
+	return mode == ALC_OPEN_INPUT_ ?
 		set_read_esd(handle, bufsiz, fmt, speed) :
 		set_write_esd(handle, bufsiz, fmt, speed);
 }

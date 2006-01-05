@@ -154,9 +154,9 @@ static void *grab_write_arts(void) {
 }
 
 void *
-_alcBackendOpenARts( _ALCOpenMode mode )
+alcBackendOpenARts_( ALC_OpenMode mode )
 {
-	return mode == _ALC_OPEN_INPUT ? grab_read_arts() : grab_write_arts();
+	return mode == ALC_OPEN_INPUT_ ? grab_read_arts() : grab_write_arts();
 }
 
 
@@ -248,9 +248,9 @@ static ALboolean set_read_arts(UNUSED(void *handle),
 }
 
 ALboolean
-_alcBackendSetAttributesARts(_ALCOpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesARts_(ALC_OpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
-	return mode == _ALC_OPEN_INPUT ?
+	return mode == ALC_OPEN_INPUT_ ?
 		set_read_arts(handle, bufsiz, fmt, speed) :
 		set_write_arts(handle, bufsiz, fmt, speed);
 }
