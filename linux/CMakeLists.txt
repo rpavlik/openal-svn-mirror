@@ -174,7 +174,7 @@ ENDIF(CMAKE_WORDS_BIGENDIAN)
 OPTION(BUILD_STATIC "build static library too" ON)
 OPTION(BUILD_TESTS  "build the test-suite"     OFF)
 OPTION(PROFILE      "enable profile"           OFF)
-OPTION(OPTIMIZATION "enable optimization"      OFF)
+OPTION(OPTIMIZATION "enable optimization"      ON)
 OPTION(DEBUG        "enable debug"             OFF)
 OPTION(WARNINGS     "enable warnings"          ON)
 
