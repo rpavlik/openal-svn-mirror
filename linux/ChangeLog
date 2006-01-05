@@ -1,5 +1,10 @@
 2006-01-05  Sven Panne  <sven.panne@aedion.de>
 
+	* admin/autotools/.indent.pro: Use TAB-free GNU style. The previous
+	8-column tabbed indentation was eating far too much space when long
+	symbol names are used. Let's slowly move towards this style when
+	reworking files, the rest of the world seems to live quite well with it.
+
 	* README: Added coding guidelines. Reformatted a bit.
 
 2006-01-05  Prakash Punnoor <prakash@punnoor.de>
@@ -8,8 +13,8 @@
 
 2006-01-04  Prakash Punnoor <prakash@punnoor.de>
 
-	* CMakeLists.txt: sync to configure.ac regarding back-ends and
-	fix missing compilation of objects in dlopen case
+	* CMakeLists.txt: sync to configure.ac regarding back-ends and fix
+	missing compilation of objects in dlopen case
 
 2006-01-04  Sven Panne  <sven.panne@aedion.de>
 
