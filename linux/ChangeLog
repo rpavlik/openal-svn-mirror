@@ -2,6 +2,8 @@
 
 	* CMakeLists.txt: Sync CFLAGS to configure.ac, but keeping -O2, as *no*
 	optimization level makes no sense...
+	
+	* README: update CMake featurelist
 
 2006-01-05  Sven Panne  <sven.panne@aedion.de>
 

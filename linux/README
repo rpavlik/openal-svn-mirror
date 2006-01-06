@@ -91,7 +91,7 @@ will be built, and on Windows MS VC++ project files, if you wish. You
 can get CMake at http://cmake.org/.
 
 Current status: The build system is feature complete, so it (should)
-build everything as the (old) default one has done.
+build everything as the default one has done.
 
 (+,o,- indicates feature more/same/less then default OpenAL build
 system.)
@@ -99,15 +99,14 @@ system.)
    o builds shared OpenAL lib
    o builds static OpenAL lib; can be deactivated
    o builds the test-suite, if specified
-   o all backends and vorbis/mp3/SDL support should be handled by CMake
-
-   + out of tree builds are supported
-   + correct dependency tracking of source files
+   o all back-ends and vorbis/mp3 extensions should be handled by CMake
+   o out of tree builds are supported
+   o correct dependency tracking of source files
    + prepared for adding support for non GNU compiler
    (setting link libraries probably needs cleaning up)
-
-   - only native and ALSA backends and Vorbis support have been tested
-     yet (so please report back if it works for you! :-)
+   + support for IDE project files generation
+   + much less time overhead till compilation starts
+   + less hassle for user (GUI) and developer (one Syntax)
 
 This document explains briefly how to build with CMake on Linux via an
 out-of-tree build:
