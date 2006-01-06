@@ -1,3 +1,8 @@
+2006-01-06  Prakash Punnoor <prakash@punnoor.de>
+
+	* CMakeLists.txt: Sync CFLAGS to configure.ac, but keeping -O2, as *no*
+	optimization level makes no sense...
+
 2006-01-05  Sven Panne  <sven.panne@aedion.de>
 
 	* src/alc/alc_context.c, src/alc/alc_device.c,

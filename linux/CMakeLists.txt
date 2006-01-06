@@ -607,13 +607,9 @@ IF(CMAKE_COMPILER_IS_GNUCC)
     ENDIF(USE_WERROR)
   ENDIF(WARNINGS)
 
-  IF(PROFILE)
-    SET(ADD_CFLAGS "${ADD_CFLAGS} -O2 -fexpensive-optimizations -ffast-math -funroll-loops -funroll-all-loops -g -pg")
-    SET(ADD_LDFLAGS "-g -pg")
-  ENDIF(PROFILE)
-
   IF(OPTIMIZATION)
-    SET(ADD_CFLAGS "${ADD_CFLAGS} -O6 -fexpensive-optimizations -funroll-all-loops -funroll-loops -fomit-frame-pointer -finline-functions -ffast-math")
+    # FIXME: Have those flags been benched and proven to be stable?
+    SET(ADD_CFLAGS "${ADD_CFLAGS} -O2 -fexpensive-optimizations -funroll-all-loops -funroll-loops -finline-functions -ffast-math")
 
     IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86")
       SET(ADD_CFLAGS "${ADD_CFLAGS} -march=${CMAKE_SYSTEM_MACHINE}")
@@ -624,9 +620,18 @@ IF(CMAKE_COMPILER_IS_GNUCC)
     ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "mips")
   ENDIF(OPTIMIZATION)
 
+  IF(PROFILE)
+    SET(ADD_CFLAGS "${ADD_CFLAGS} -pg")
+    SET(ADD_LDFLAGS "-pg")
+  ELSE(PROFILE)
+
+   # -pg and -fomit-frame-pointer are incompatible
+   SET(ADD_CFLAGS "${ADD_CFLAGS} -fomit-frame-pointer")
+  ENDIF(PROFILE)
+
   IF(${CMAKE_C_FLAGS} MATCHES "^ $")
     IF(NOT ${ADD_CFLAGS} MATCHES "O")
-      SET(ADD_CFLAGS "-g -O2 ${ADD_CFLAGS}")
+      SET(ADD_CFLAGS "-g -O2 -fomit-frame-pointer ${ADD_CFLAGS}")
       MESSAGE("No CFLAGS found; setting default ones.")
     ENDIF(NOT ${ADD_CFLAGS} MATCHES "O")
   ENDIF(${CMAKE_C_FLAGS} MATCHES "^ $")
