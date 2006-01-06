@@ -3706,6 +3706,15 @@ void SetNonEAXSourceLevels(ALCcontext *pContext, ALsource *pSource, ALuint ulFla
 			switch (pContext->DistanceModel)
 			{
 			case AL_INVERSE_DISTANCE:
+				if (pSource->flRefDistance > 0.0f)
+				{
+					if ((((flDistance - pSource->flRefDistance) / pSource->flRefDistance) * pSource->flRollOffFactor) > -1.0f)
+						pSource->lAttenuationVolume = (ALint)(-2000 * log10(1.0f + (((flDistance - pSource->flRefDistance) / pSource->flRefDistance) * pSource->flRollOffFactor)));
+					else
+						pSource->lAttenuationVolume = 10000;
+				}
+				break;
+
 			case AL_INVERSE_DISTANCE_CLAMPED:
 				if ((pSource->flMaxDistance >= pSource->flRefDistance) && (pSource->flRefDistance > 0.0f))
 				{
@@ -3717,14 +3726,24 @@ void SetNonEAXSourceLevels(ALCcontext *pContext, ALsource *pSource, ALuint ulFla
 				break;
 
 			case AL_LINEAR_DISTANCE:
+				if (pSource->flMaxDistance != pSource->flRefDistance)
+					pSource->lAttenuationVolume = LinearGainToMB(1.0f - (pSource->flRollOffFactor * (flDistance - pSource->flRefDistance) / (pSource->flMaxDistance - pSource->flRefDistance)));
+				break;
+
 			case AL_LINEAR_DISTANCE_CLAMPED:
-				if ((pSource->flMaxDistance - pSource->flRefDistance) > 0.0f)
+				// NOTE : For clamped models, Max Distance must be greater than or equal to Ref Distance, but in this case
+				//        the values cannot be equal (otherwise a divide by zero will occur)
+				if (pSource->flMaxDistance > pSource->flRefDistance)
 					pSource->lAttenuationVolume = LinearGainToMB(1.0f - (pSource->flRollOffFactor * (flDistance - pSource->flRefDistance) / (pSource->flMaxDistance - pSource->flRefDistance)));
 				break;
 
 			case AL_EXPONENT_DISTANCE:
+				if ((flDistance > 0.0f) && (pSource->flRefDistance > 0.0f))
+					pSource->lAttenuationVolume = LinearGainToMB((ALfloat)pow(flDistance / pSource->flRefDistance, -pSource->flRollOffFactor));
+				break;
+
 			case AL_EXPONENT_DISTANCE_CLAMPED:
-				if ((flDistance > 0.0f) && (pSource->flRefDistance > 0.0f) && (pSource->flMaxDistance >= pSource->flRefDistance))
+				if ((pSource->flMaxDistance >= pSource->flRefDistance) && (flDistance > 0.0f) && (pSource->flRefDistance > 0.0f))
 					pSource->lAttenuationVolume = LinearGainToMB((ALfloat)pow(flDistance / pSource->flRefDistance, -pSource->flRollOffFactor));
 				break;
 
@@ -3740,8 +3759,8 @@ void SetNonEAXSourceLevels(ALCcontext *pContext, ALsource *pSource, ALuint ulFla
 		}
 	}
 
-	// Add Source's Volume
-	lVolume = pSource->lVolume + pSource->lAttenuationVolume;
+	// Add Source's Volume (preserving a silent source)
+	lVolume = (pSource->lVolume == -10000) ? -10000 : pSource->lVolume + pSource->lAttenuationVolume;
 
 	// Clamp to Min/Max Volume
 	lVolume = min(lVolume, pSource->lMaxVolume);

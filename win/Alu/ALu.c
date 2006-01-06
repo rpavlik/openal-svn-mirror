@@ -163,6 +163,15 @@ ALUAPI ALvoid ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint freq
 			switch (DistanceModel)
 			{
 			case AL_INVERSE_DISTANCE:
+				if (MinDist > 0.0f)
+				{
+					if ((MinDist + (Rolloff * (Distance - MinDist))) > 0.0f)
+						flAttenuation = MinDist / (MinDist + (Rolloff * (Distance - MinDist)));
+					else
+						flAttenuation = 1000000;
+				}
+				break;
+
 			case AL_INVERSE_DISTANCE_CLAMPED:
 				if ((MaxDist >= MinDist) && (MinDist > 0.0f))
 				{
@@ -174,14 +183,22 @@ ALUAPI ALvoid ALUAPIENTRY aluCalculateSourceParameters(ALuint source,ALuint freq
 				break;
 
 			case AL_LINEAR_DISTANCE:
+				if (MaxDist != MinDist)
+					flAttenuation = 1.0f - (Rolloff*(Distance-MinDist)/(MaxDist - MinDist));
+				break;
+
 			case AL_LINEAR_DISTANCE_CLAMPED:
-				if ((MaxDist - MinDist) > 0.0f)
+				if (MaxDist > MinDist)
 					flAttenuation = 1.0f - (Rolloff*(Distance-MinDist)/(MaxDist - MinDist));
 				break;
 
 			case AL_EXPONENT_DISTANCE:
+				if ((Distance > 0.0f) && (MinDist > 0.0f))
+					flAttenuation = (ALfloat)pow(Distance/MinDist, -Rolloff);
+				break;
+
 			case AL_EXPONENT_DISTANCE_CLAMPED:
-				if ((Distance > 0.0f) && (MinDist > 0.0f) && (MaxDist >= MinDist))
+				if ((MaxDist >= MinDist) && (Distance > 0.0f) && (MinDist > 0.0f))
 					flAttenuation = (ALfloat)pow(Distance/MinDist, -Rolloff);
 				break;
 
