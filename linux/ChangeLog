@@ -1,7 +1,7 @@
 2006-01-07  Prakash Punnoor <prakash@punnoor.de>
 
 	* CMakeLists.txt: Cache back-ends detection results; use macro for debug
-	options checking
+	options checking; remove word "back-end" from output
 	
 	* configure.ac: added gcc symbol visibility support detection
 
