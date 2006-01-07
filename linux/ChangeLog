@@ -1,7 +1,9 @@
 2006-01-07  Prakash Punnoor <prakash@punnoor.de>
 
-	* CMakeLists.txt: Cache back-ends detection results; use macro for debugging
+	* CMakeLists.txt: Cache back-ends detection results; use macro for debug
 	options checking
+	
+	* configure.ac: added gcc symbol visibility support detection
 
 2006-01-06  Prakash Punnoor <prakash@punnoor.de>
 

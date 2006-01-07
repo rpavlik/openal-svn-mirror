@@ -410,6 +410,16 @@ AM_CONDITIONAL([X86MMXENABLED], [test "x$openal_x86_mmx_support_yn" = xyes])
 AM_CONDITIONAL([X86NASMENABLED], [test "x$openal_x86_nasm_support_yn" = xyes])
 AM_CONDITIONAL([X86NASMMMXENABLED], [test "x$openal_x86_nasm_mmx_support_yn" = xyes])
 
+
+AC_MSG_CHECKING([for symbol visibility support])
+AC_TRY_COMPILE([void __attribute__((visibility("default"))) test() {}],,
+               [openal_symbol_visbility_yn=yes], [openal_symbol_visbility_yn=no])
+AC_MSG_RESULT([$openal_symbol_visbility_yn])
+
+if test "x$openal_symbol_visbility_yn" = xyes; then
+  OPTIMIZATIONCFLAGS="$OPTIMIZATIONCFLAGS -fvisibility=hidden -DHAVE_GCC_VISIBILITY"
+fi
+
 ################################################################################
 # Checks for backends.
 ################################################################################
