@@ -1,3 +1,12 @@
+2006-01-09  Sven Panne  <sven.panne@aedion.de>
+
+	* configure.ac: Fixed symbol visibility support detection. Note that GCC
+	3.3.x and GCC 3.4.x support '__attribute__((visibility(...)))', but not
+	'-fvisibility=...'. Furthermore, don't bother testing for that if we are
+	not even using GCC. Put the HAVE_GCC_VISIBILITY #define into config.h,
+	we always have to #include that before the AL headers in our code,
+	anyway.
+
 2006-01-07  Prakash Punnoor <prakash@punnoor.de>
 
 	* CMakeLists.txt: Cache back-ends detection results; use macro for debug
