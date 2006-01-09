@@ -2,17 +2,10 @@
 #define _AL_ALEXT_H
 
 #include <AL/al.h>
+#include <AL/alc.h>
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-#ifndef ALAPI
-#define ALAPI extern
-#endif
-
-#ifndef ALAPIENTRY
-#define ALAPIENTRY
 #endif
 
 /* format base 0x10000 */
@@ -101,57 +94,68 @@ typedef struct IMA_ADPCM_decoder {
 
 /* loki */
 
-ALAPI ALfloat   ALAPIENTRY alcGetAudioChannel_LOKI( ALuint channel );
-ALAPI void      ALAPIENTRY alcSetAudioChannel_LOKI( ALuint channel, ALfloat volume );
-ALAPI void      ALAPIENTRY alBombOnError_LOKI( void );
-ALAPI void      ALAPIENTRY alBufferi_LOKI( ALuint bid, ALenum param, ALint value );
-ALAPI void      ALAPIENTRY alBufferDataWithCallback_LOKI( ALuint bid, int ( *Callback ) ( ALuint, ALuint, ALshort *, ALenum, ALint, ALint ) );
-ALAPI void      ALAPIENTRY alBufferWriteData_LOKI( ALuint buffer, ALenum format, ALvoid *data, ALsizei size, ALsizei freq, ALenum internalFormat );
-ALAPI void      ALAPIENTRY alGenStreamingBuffers_LOKI( ALsizei n, ALuint *samples );
-ALAPI ALsizei   ALAPIENTRY alBufferAppendData_LOKI( ALuint buffer, ALenum format, ALvoid *data, ALsizei size, ALsizei freq );
-ALAPI ALsizei   ALAPIENTRY alBufferAppendWriteData_LOKI( ALuint buffer, ALenum format, ALvoid *data, ALsizei size, ALsizei freq, ALenum internalFormat );
+ALC_API ALfloat  ALC_APIENTRY alcGetAudioChannel_LOKI( ALuint channel );
+ALC_API void     ALC_APIENTRY alcSetAudioChannel_LOKI( ALuint channel, ALfloat volume );
+AL_API  void     AL_APIENTRY  alBombOnError_LOKI( void );
+AL_API  void     AL_APIENTRY  alBufferi_LOKI( ALuint bid, ALenum param, ALint value );
+AL_API  void     AL_APIENTRY  alBufferDataWithCallback_LOKI( ALuint bid, int ( *Callback ) ( ALuint, ALuint, ALshort *, ALenum, ALint, ALint ) );
+AL_API  void     AL_APIENTRY  alBufferWriteData_LOKI( ALuint buffer, ALenum format, ALvoid *data, ALsizei size, ALsizei freq, ALenum internalFormat );
+AL_API  void     AL_APIENTRY  alGenStreamingBuffers_LOKI( ALsizei n, ALuint *samples );
+AL_API  ALsizei  AL_APIENTRY  alBufferAppendData_LOKI( ALuint buffer, ALenum format, ALvoid *data, ALsizei size, ALsizei freq );
+AL_API  ALsizei  AL_APIENTRY  alBufferAppendWriteData_LOKI( ALuint buffer, ALenum format, ALvoid *data, ALsizei size, ALsizei freq, ALenum internalFormat );
+
+/* binary compatibility */
+AL_API  ALsizei  AL_APIENTRY alBufferAppendData( ALuint buffer, ALenum format, ALvoid *data, ALsizei size, ALsizei freq );
+
+/*
+ * Don't use these.  If you're reading this, you should remove these functions
+ * and all other reverb functions.  Now.
+ */
+AL_API void AL_APIENTRY alReverbScale_LOKI(ALuint sid, ALfloat param);
+AL_API void AL_APIENTRY alReverbDelay_LOKI(ALuint sid, ALfloat param);
 
 /* Capture api */
 
-ALAPI ALboolean ALAPIENTRY alCaptureInit_EXT( ALenum format, ALuint rate, ALsizei bufferSize );
-ALAPI ALboolean ALAPIENTRY alCaptureDestroy_EXT( void );
-ALAPI ALboolean ALAPIENTRY alCaptureStart_EXT( void );
-ALAPI ALboolean ALAPIENTRY alCaptureStop_EXT( void );
+ALC_API ALboolean ALC_APIENTRY alCaptureInit_EXT( ALenum format, ALuint rate, ALsizei bufferSize );
+ALC_API ALboolean ALC_APIENTRY alCaptureDestroy_EXT( void );
+ALC_API ALboolean ALC_APIENTRY alCaptureStart_EXT( void );
+ALC_API ALboolean ALC_APIENTRY alCaptureStop_EXT( void );
 
 /* Non-blocking device read */
 
-ALAPI ALsizei   ALAPIENTRY alCaptureGetData_EXT( ALvoid *data, ALsizei n, ALenum format, ALuint rate );
+ALC_API ALsizei   ALC_APIENTRY alCaptureGetData_EXT( ALvoid *data, ALsizei n, ALenum format, ALuint rate );
 
 /* custom loaders */
 
-ALAPI ALboolean ALAPIENTRY alutLoadVorbis_LOKI( ALuint bid, const ALvoid *data, ALint size );
+AL_API ALboolean AL_APIENTRY alutLoadVorbis_LOKI( ALuint bid, const ALvoid *data, ALint size );
+AL_API ALboolean AL_APIENTRY alutLoadMP3_LOKI( ALuint bid, ALvoid *data, ALint size );
 
 /* function pointers */
 
-typedef ALfloat   ( ALAPIENTRY *PFNALCGETAUDIOCHANNELPROC ) ( ALuint channel );
-typedef void      ( ALAPIENTRY *PFNALCSETAUDIOCHANNELPROC ) ( ALuint channel, ALfloat volume );
-typedef void      ( ALAPIENTRY *PFNALBOMBONERRORPROC ) ( void );
-typedef void      ( ALAPIENTRY *PFNALBUFFERIPROC ) ( ALuint bid, ALenum param, ALint value );
-typedef void      ( ALAPIENTRY *PFNALBUFFERDATAWITHCALLBACKPROC ) ( ALuint bid, int ( *Callback ) ( ALuint, ALuint, ALshort *, ALenum, ALint, ALint ) );
-typedef void      ( ALAPIENTRY *PFNALBUFFERWRITEDATAPROC ) ( ALuint buffer, ALenum format, ALvoid *data, ALsizei size, ALsizei freq, ALenum internalFormat );
-typedef void      ( ALAPIENTRY *PFNALGENSTREAMINGBUFFERSPROC ) ( ALsizei n, ALuint *samples );
-typedef ALsizei   ( ALAPIENTRY *PFNALBUFFERAPPENDDATAPROC ) ( ALuint buffer, ALenum format, ALvoid *data, ALsizei size, ALsizei freq );
-typedef ALsizei   ( ALAPIENTRY *PFNALBUFFERAPPENDWRITEDATAPROC ) ( ALuint buffer, ALenum format, ALvoid *data, ALsizei size, ALsizei freq, ALenum internalFormat );
+typedef ALfloat   ( ALC_APIENTRY *PFNALCGETAUDIOCHANNELPROC ) ( ALuint channel );
+typedef void      ( ALC_APIENTRY *PFNALCSETAUDIOCHANNELPROC ) ( ALuint channel, ALfloat volume );
+typedef void      ( AL_APIENTRY *PFNALBOMBONERRORPROC ) ( void );
+typedef void      ( AL_APIENTRY *PFNALBUFFERIPROC ) ( ALuint bid, ALenum param, ALint value );
+typedef void      ( AL_APIENTRY *PFNALBUFFERDATAWITHCALLBACKPROC ) ( ALuint bid, int ( *Callback ) ( ALuint, ALuint, ALshort *, ALenum, ALint, ALint ) );
+typedef void      ( AL_APIENTRY *PFNALBUFFERWRITEDATAPROC ) ( ALuint buffer, ALenum format, ALvoid *data, ALsizei size, ALsizei freq, ALenum internalFormat );
+typedef void      ( AL_APIENTRY *PFNALGENSTREAMINGBUFFERSPROC ) ( ALsizei n, ALuint *samples );
+typedef ALsizei   ( AL_APIENTRY *PFNALBUFFERAPPENDDATAPROC ) ( ALuint buffer, ALenum format, ALvoid *data, ALsizei size, ALsizei freq );
+typedef ALsizei   ( AL_APIENTRY *PFNALBUFFERAPPENDWRITEDATAPROC ) ( ALuint buffer, ALenum format, ALvoid *data, ALsizei size, ALsizei freq, ALenum internalFormat );
 
-typedef ALboolean ( ALAPIENTRY *PFNALCAPTUREINITPROC ) ( ALenum format, ALuint rate, ALsizei bufferSize );
-typedef ALboolean ( ALAPIENTRY *PFNALCAPTUREDESTROYPROC ) ( void );
-typedef ALboolean ( ALAPIENTRY *PFNALCAPTURESTARTPROC ) ( void );
-typedef ALboolean ( ALAPIENTRY *PFNALCAPTURESTOPPROC ) ( void );
+typedef ALboolean ( ALC_APIENTRY *PFNALCAPTUREINITPROC ) ( ALenum format, ALuint rate, ALsizei bufferSize );
+typedef ALboolean ( ALC_APIENTRY *PFNALCAPTUREDESTROYPROC ) ( void );
+typedef ALboolean ( ALC_APIENTRY *PFNALCAPTURESTARTPROC ) ( void );
+typedef ALboolean ( ALC_APIENTRY *PFNALCAPTURESTOPPROC ) ( void );
 
-typedef ALsizei   ( ALAPIENTRY *PFNALCAPTUREGETDATAPROC ) ( ALvoid *data, ALsizei n, ALenum format, ALuint rate );
+typedef ALsizei   ( ALC_APIENTRY *PFNALCAPTUREGETDATAPROC ) ( ALvoid *data, ALsizei n, ALenum format, ALuint rate );
 
-typedef ALboolean ( ALAPIENTRY *PFNALUTLOADVORBISPROC ) ( ALuint bid, ALvoid *data, ALint size );
-typedef ALboolean ( ALAPIENTRY *PFNALUTLOADRAW_ADPCMDATAPROC ) ( ALuint bid, ALvoid *data, ALuint size, ALuint freq, ALenum format );
-typedef ALboolean ( ALAPIENTRY *ALUTLOADIMA_ADPCMDATAPROC ) ( ALuint bid, ALvoid *data, ALuint size, alIMAADPCM_state_LOKI *ias );
-typedef ALboolean ( ALAPIENTRY *ALUTLOADMS_ADPCMDATAPROC ) ( ALuint bid, void *data, int size, alMSADPCM_state_LOKI *mss );
+typedef ALboolean ( AL_APIENTRY *PFNALUTLOADVORBISPROC ) ( ALuint bid, ALvoid *data, ALint size );
+typedef ALboolean ( AL_APIENTRY *PFNALUTLOADRAW_ADPCMDATAPROC ) ( ALuint bid, ALvoid *data, ALuint size, ALuint freq, ALenum format );
+typedef ALboolean ( AL_APIENTRY *ALUTLOADIMA_ADPCMDATAPROC ) ( ALuint bid, ALvoid *data, ALuint size, alIMAADPCM_state_LOKI *ias );
+typedef ALboolean ( AL_APIENTRY *ALUTLOADMS_ADPCMDATAPROC ) ( ALuint bid, void *data, int size, alMSADPCM_state_LOKI *mss );
 
-typedef void      ( ALAPIENTRY *PFNALREVERBSCALEPROC ) ( ALuint sid, ALfloat param );
-typedef void      ( ALAPIENTRY *PFNALREVERBDELAYPROC ) ( ALuint sid, ALfloat param );
+typedef void      ( AL_APIENTRY *PFNALREVERBSCALEPROC ) ( ALuint sid, ALfloat param );
+typedef void      ( AL_APIENTRY *PFNALREVERBDELAYPROC ) ( ALuint sid, ALfloat param );
 
 #ifdef __cplusplus
 }

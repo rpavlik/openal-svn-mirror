@@ -12,13 +12,6 @@
 #include <AL/alext.h>
 
 /*
- * Don't use these.  If you're reading this, you should remove these functions
- * and all other reverb functions.  Now.
- */
-void alReverbScale_LOKI(ALuint sid, ALfloat param);
-void alReverbDelay_LOKI(ALuint sid, ALfloat param);
-
-/*
  * alInitLoki( void )
  *
  * Initializes data structures needed by the loki extensions.

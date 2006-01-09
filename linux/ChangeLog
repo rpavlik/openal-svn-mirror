@@ -1,5 +1,8 @@
 2006-01-09  Sven Panne  <sven.panne@aedion.de>
 
+	* include/AL/alext.h, src/al_buffer.c, src/extensions/al_ext_loki.h,
+	src/extensions/al_ext_mp3.h: Make some LOKI extensions visible again.
+
 	* configure.ac: Fixed symbol visibility support detection. Note that GCC
 	3.3.x and GCC 3.4.x support '__attribute__((visibility(...)))', but not
 	'-fvisibility=...'. Furthermore, don't bother testing for that if we are

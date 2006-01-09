@@ -1468,13 +1468,7 @@ void _alBufferFreeOrigBuffers(AL_buffer *buf)
 	}
 }
 
-/* binary compatibility functions */
-ALsizei alBufferAppendData( ALuint   buffer,
-                            ALenum   format,
-                            void*    data,
-		            ALsizei  osamps,
-                            ALsizei  freq);
-
+/* binary compatibility function */
 ALsizei alBufferAppendData( ALuint   buffer,
                             ALenum   format,
                             void*    data,

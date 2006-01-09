@@ -8,15 +8,7 @@
 #ifndef AL_EXT_MP3
 #define AL_EXT_MP3
 
-#include <AL/al.h>
-
-/*
- * alutLoadMP3_LOKI( ALuint bid, ALvoid *data, ALint size )
- *
- * Associates bid with the mp3 data stream data, of size size in bytes.
- * Returns AL_TRUE if this was possible, AL_FALSE otherwise.
- */
-ALboolean alutLoadMP3_LOKI( ALuint bid, ALvoid *data, ALint size );
+#include <AL/alext.h>
 
 /*
  *  MP3_Callback( ALuint sid, ALuint bid,
