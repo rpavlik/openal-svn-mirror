@@ -178,9 +178,6 @@ OPTION(OPTIMIZATION "enable optimization"      ON)
 OPTION(DEBUG        "enable debug"             OFF)
 OPTION(WARNINGS     "enable warnings"          ON)
 
-# no mutex locking for sync. driver
-OPTION(EMPTY_LOCKS "enable empty locks" OFF)
-
 # sound backends
 IF(CMAKE_SYSTEM MATCHES "Linux")
   OPTION(ALSA        "alsa back-end"         ON)
@@ -206,14 +203,6 @@ OPTION(VORBIS         "vorbis support"          ON)
 #OPTION(VORBIS_DLOPEN  "vorbis dynamic loading"  ON)
 OPTION(MP3            "mp3 support"             ON)
 #OPTION(MP3_DLOPEN     "mp3 dynamic loading"     ON)
-
-IF(OPTIMIZATION)
-  SET(EMPTY_LOCKS OFF)
-ENDIF(OPTIMIZATION)
-
-IF(EMPTY_LOCKS)
-  ADD_DEFINE(EMPTY_LOCKS)
-ENDIF(EMPTY_LOCKS)
 
 IF(DEBUG)
   ADD_DEFINE(DEBUG)

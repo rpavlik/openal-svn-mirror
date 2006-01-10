@@ -19,8 +19,6 @@
 
 #define PIC 1
 
-/* #undef EMPTY_LOCKS */
-
 #define USE_POSIXTHREADING 1
 
 #define NODLOPEN 1

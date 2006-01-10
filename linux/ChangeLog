@@ -1,5 +1,7 @@
 2006-01-10  Sven Panne  <sven.panne@aedion.de>
 
+	* : Removed EMPTY_LOCKS remainders.
+
 	* configure.ac: Synched --enable-more-warnings handling with ALUT. Use
 	ALUT_CHECK_FLAG for symbol visibility support detection.
 

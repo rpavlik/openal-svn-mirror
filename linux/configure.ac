@@ -300,7 +300,6 @@ AC_ARG_ENABLE([optimization],
                 [enable optimization @<:@default=yes@:>@])])
 
 if test "x$enable_optimization" != xno; then
-  enable_empty_locks=no
   OPTIMIZATIONCFLAGS="-fexpensive-optimizations -funroll-all-loops -funroll-loops -finline-functions -ffast-math"
 
   # -pg and -fomit-frame-pointer are incompatible
@@ -326,15 +325,6 @@ AC_ARG_ENABLE([profile],
 if test "x$enable_profile" = xyes; then
   OPTIMIZATIONCFLAGS="$OPTIMIZATIONCFLAGS -pg"
   PROFILINGLDFLAGS="$LDFLAGS -pg"
-fi
-
-# no mutex locking for sync. driver
-AC_ARG_ENABLE([empty-locks],
-[AS_HELP_STRING([--enable-empty-locks],
-                [enable empty locks @<:@default=no@:>@])])
-
-if test "x$enable_empty_locks" = xyes; then
-  AC_DEFINE([EMPTY_LOCKS], [1], [undocumented])
 fi
 
 AC_C_BIGENDIAN
