@@ -28,7 +28,8 @@
 	dlopen; add pkg-config defines to compiler command line; sync optimization
 	flags to configure.ac; remove adding of -march option; forcefully disable
 	symbol visibility for ICC due to linker trouble; disable NASM and SIMD
-	specific stuff if no MMX is found, as we don't use other SIMD instructions
+	specific stuff if no MMX is found, as we don't use other SIMD instructions;
+	enable dlopening vorbis
 	
 	* src/extensions/al_ext_vorbis.c: enable dlopening (ripped from arts backend;
 	testvorbis seems to indicate working code...)
