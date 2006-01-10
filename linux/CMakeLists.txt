@@ -44,6 +44,9 @@ SET(CMAKE_REQUIRED_FLAGS_BACK "${CMAKE_REQUIRED_FLAGS}")
 SET(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -fvisibility=hidden")
 CHECK_C_SOURCE_COMPILES(
 "void __attribute__((visibility(\"default\"))) test() {}
+#ifdef __INTEL_COMPILER
+#error ICC breaks with binutils and visibility
+#endif
 int main(){}
 " ${VAR})
 SET(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS_BACK}")
@@ -552,7 +555,6 @@ ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_6
 
 
 # compiler specific settings
-# FIXME: ICC doesn't play nice with binutils and visibility
 CHECK_COMPILER_VISIBILITY(HAVE_VISIBILITY)
 IF(CMAKE_COMPILER_IS_GNUCC)
   ADD_DEFINITIONS(-std=c99)
