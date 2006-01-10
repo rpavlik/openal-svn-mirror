@@ -27,7 +27,8 @@
 	* CMakeLists.txt: fix missing defines for extensions; disable vorbis
 	dlopen; add pkg-config defines to compiler command line; sync optimization
 	flags to configure.ac; remove adding of -march option; forcefully disable
-	symbol visibility for ICC due to linker trouble
+	symbol visibility for ICC due to linker trouble; disable NASM and SIMD
+	specific stuff if no MMX is found, as we don't use other SIMD instructions
 
 2006-01-09  Sven Panne  <sven.panne@aedion.de>
 
