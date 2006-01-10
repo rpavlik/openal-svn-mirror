@@ -300,21 +300,15 @@ AC_ARG_ENABLE([optimization],
                 [enable optimization @<:@default=yes@:>@])])
 
 if test "x$enable_optimization" != xno; then
-  OPTIMIZATIONCFLAGS="-fexpensive-optimizations -funroll-all-loops -funroll-loops -finline-functions -ffast-math"
-
-  # -pg and -fomit-frame-pointer are incompatible
+  ALUT_CHECK_FLAG([-finline-functions],
+                  [OPTIMIZATIONCFLAGS="$OPTIMIZATIONCFLAGS -finline-functions"])
+  ALUT_CHECK_FLAG([-ffast-math],
+                  [OPTIMIZATIONCFLAGS="$OPTIMIZATIONCFLAGS -ffast-math"])
+  # -pg and -fomit-frame-pointer are incompatible. ToDo: Test for this!
   if test "x$enable_profile" != xyes; then
-    OPTIMIZATIONCFLAGS="$OPTIMIZATIONCFLAGS -fomit-frame-pointer"
+    ALUT_CHECK_FLAG([-fomit-frame-pointer],
+                    [OPTIMIZATIONCFLAGS="$OPTIMIZATIONCFLAGS -fomit-frame-pointer"])
   fi
-
-  # add architecture-specific optimization flags
-  case "$target" in
-    *i386*) OPTIMIZATIONCFLAGS="-march=i386 $OPTIMIZATIONCFLAGS" ;;
-    *i486*) OPTIMIZATIONCFLAGS="-march=i486 $OPTIMIZATIONCFLAGS" ;;
-    *i586*) OPTIMIZATIONCFLAGS="-march=i586 $OPTIMIZATIONCFLAGS" ;;
-    *i686*) OPTIMIZATIONCFLAGS="-march=i686 $OPTIMIZATIONCFLAGS" ;;
-    mips*)  OPTIMIZATIONCFLAGS="-march=mips $OPTIMIZATIONCFLAGS" ;;
-  esac
 fi
 
 # profiling stuff
@@ -323,8 +317,10 @@ AC_ARG_ENABLE([profile],
                 [enable profile @<:@default=no@:>@])])
 
 if test "x$enable_profile" = xyes; then
-  OPTIMIZATIONCFLAGS="$OPTIMIZATIONCFLAGS -pg"
-  PROFILINGLDFLAGS="$LDFLAGS -pg"
+  ALUT_CHECK_FLAG([-pg],
+                  [OPTIMIZATIONCFLAGS="$OPTIMIZATIONCFLAGS -pg"
+                   PROFILINGLDFLAGS="$LDFLAGS -pg"],
+                  [AC_MSG_WARN([--enable-profile ignored because $CC does not support -pg.])])
 fi
 
 AC_C_BIGENDIAN

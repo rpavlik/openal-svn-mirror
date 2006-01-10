@@ -1,5 +1,9 @@
 2006-01-10  Sven Panne  <sven.panne@aedion.de>
 
+	* configure.ac: Only use -finline-functions, -ffast-math and
+	-fomit-frame-pointer for optimized build. Test the availability of these
+	options with ALUT_CHECK_FLAG. Note that -O2 is used by default for GCC.
+
 	* CMakeLists.txt, config-osx.h, configure.ac: Removed EMPTY_LOCKS
 	remainders.
 
