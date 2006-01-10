@@ -29,6 +29,11 @@
 #ifdef ENABLE_EXTENSION_AL_EXT_VORBIS
 #include <vorbis/vorbisfile.h>
 
+#if OPENAL_DLOPEN_VORBIS
+#include <dlfcn.h>
+#endif
+
+
 static size_t ovfd_read(void *ptr, size_t size, size_t nmemb, void *datasource);
 static int ovfd_seek(void *datasource, int64_t offset, int whence);
 static int ovfd_close(void *datasource);
@@ -119,6 +124,61 @@ static int  vorbmap_insert(ALuint sid);
 static void vorbmap_update(int i, ALuint offset, ALint current_section);
 static void vorbmap_remove(ALuint sid);
 
+
+static int openal_load_vorbisfile_library(void);
+
+/*
+ * vorbisfile library functions.
+ */
+static int (*pov_clear)(OggVorbis_File *vf);
+static int (*pov_open_callbacks)(void *datasource, OggVorbis_File *vf,
+		char *initial, long ibytes, ov_callbacks callbacks);
+static vorbis_info* (*pov_info)(OggVorbis_File *vf,int link);
+static long (*pov_read)(OggVorbis_File *vf,char *buffer,int length,
+		    int bigendianp,int word,int sgned,int *bitstream);
+
+/*
+ * vorbisfile library handle.
+ */
+static void * vorbisfile_lib_handle = NULL;
+
+static int openal_load_vorbisfile_library(void)
+{
+#if OPENAL_DLOPEN_VORBIS
+        char * error = NULL;
+#endif
+    
+	if (vorbisfile_lib_handle != NULL)
+		return 1;  /* already loaded. */
+
+	#if OPENAL_DLOPEN_VORBIS
+		#define OPENAL_LOAD_VORBISFILE_SYMBOL(x) p##x = dlsym(vorbisfile_lib_handle, #x); \
+                                                   error = dlerror(); \
+                                                   if (p##x == NULL) { \
+                                                           fprintf(stderr,"Could not resolve vorbisfile symbol %s: %s\n", #x, ((error!=NULL)?(error):("(null)"))); \
+                                                           dlclose(vorbisfile_lib_handle); vorbisfile_lib_handle = NULL; \
+                                                           return 0; }
+                dlerror(); /* clear error state */
+		vorbisfile_lib_handle = dlopen("libvorbisfile.so", RTLD_LAZY | RTLD_GLOBAL);
+                error = dlerror();
+		if (vorbisfile_lib_handle == NULL) {
+                        fprintf(stderr,"Could not open vorbisfile library: %s\n",((error!=NULL)?(error):("(null)")));
+			return 0;
+                }
+	#else
+		#define OPENAL_LOAD_VORBISFILE_SYMBOL(x) p##x = x;
+		vorbisfile_lib_handle = (void *) 0xF00DF00D;
+	#endif
+
+        OPENAL_LOAD_VORBISFILE_SYMBOL(ov_clear);
+        OPENAL_LOAD_VORBISFILE_SYMBOL(ov_open_callbacks);
+        OPENAL_LOAD_VORBISFILE_SYMBOL(ov_info);
+        OPENAL_LOAD_VORBISFILE_SYMBOL(ov_read);
+
+	return 1;
+}
+
+
 ALboolean alutLoadVorbis_LOKI(ALuint bid,
 			      const ALvoid *data,
 			      ALint size) {
@@ -135,6 +195,9 @@ ALboolean alutLoadVorbis_LOKI(ALuint bid,
 			fprintf(stderr, "Need alBufferi_LOKI\n");
 			return AL_FALSE;
 		}
+		
+		if (!openal_load_vorbisfile_library())
+			return AL_FALSE;
 	}
 
 	vorb = malloc(sizeof *vorb);
@@ -157,7 +220,7 @@ ALboolean alutLoadVorbis_LOKI(ALuint bid,
 	vorb->fh.size   = size;
 
 	/* NOTE: Ogg Vorbis' header are not const-correct, so we get a warning for "data" below! */
-	err = ov_open_callbacks(vorb, &vorb->of, data, size, ov_fromdata);
+	err = pov_open_callbacks(vorb, &vorb->of, data, size, ov_fromdata);
 	if(err < 0) {
 		fprintf(stderr, "vorbis problems\n");
 		free(vorb->data);
@@ -166,7 +229,7 @@ ALboolean alutLoadVorbis_LOKI(ALuint bid,
 	}
 
 	/* set multi channel stuff */
-	vi = ov_info(&vorb->of, 0);
+	vi = pov_info(&vorb->of, 0);
 	if(vi != NULL) {
 		palBufferi_LOKI(bid, AL_CHANNELS, vi->channels);
 	}
@@ -223,7 +286,7 @@ ALint Vorbis_Callback(UNUSED(ALuint sid),
 			/* FIXME: handle format differences etc
 			 *
 			 * should be below VDRATB now */
-			ret = ov_read(&vorb->of,
+			ret = pov_read(&vorb->of,
 				      datap,
 				      bytesToRead,
 #ifdef WORDS_BIGENDIAN
@@ -380,7 +443,7 @@ static void vorbmap_remove(ALuint sid) {
 }
 
 static void VorbHandle_delete(VorbHandle *vorb) {
-	ov_clear(&vorb->of);
+	pov_clear(&vorb->of);
 	free(vorb->data);
 	free(vorb);
 
