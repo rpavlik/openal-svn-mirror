@@ -1,7 +1,13 @@
+2006-01-10  Sven Panne  <sven.panne@aedion.de>
+
+	* src/al_ext.c, src/alc/alc_context.c: Warning police. GCC is not
+	cunning enough to see the relation between the return value and the
+	pointer argument, so make things obvious even for a compiler.
+
 2006-01-10  Prakash Punnoor <prakash@punnoor.de>
 
-	* CMakeLists.txt: fix missing defines for extensions, disable vorbis
-	dlopen
+	* CMakeLists.txt: Fix missing defines for extensions, disable vorbis
+	dlopen.
 
 2006-01-09  Sven Panne  <sven.panne@aedion.de>
 
@@ -18,9 +24,9 @@
 2006-01-07  Prakash Punnoor <prakash@punnoor.de>
 
 	* CMakeLists.txt: Cache back-ends detection results; use macro for debug
-	options checking; remove word "back-end" from output
+	options checking. Remove word "back-end" from output.
 	
-	* configure.ac: added gcc symbol visibility support detection
+	* configure.ac: Added gcc symbol visibility support detection.
 
 2006-01-06  Prakash Punnoor <prakash@punnoor.de>
 
@@ -55,8 +61,8 @@
 
 2006-01-04  Prakash Punnoor <prakash@punnoor.de>
 
-	* CMakeLists.txt: sync to configure.ac regarding back-ends and fix
-	missing compilation of objects in dlopen case
+	* CMakeLists.txt: Sync to configure.ac regarding back-ends and fix
+	missing compilation of objects in dlopen case.
 
 2006-01-04  Sven Panne  <sven.panne@aedion.de>
 

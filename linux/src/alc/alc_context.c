@@ -1483,7 +1483,7 @@ getExtensionEnumValue( UNUSED(ALCenum *value), UNUSED(ALCdevice *device), UNUSED
 ALCenum
 alcGetEnumValue( ALCdevice *device, const ALCchar *enumName )
 {
-	ALCenum value;
+	ALCenum value = 0;
 	if (getStandardEnumValue(&value, enumName) == ALC_TRUE) {
 		return value;
 	}
@@ -1491,7 +1491,7 @@ alcGetEnumValue( ALCdevice *device, const ALCchar *enumName )
 		return value;
 	}
 	_alcSetError( ALC_INVALID_VALUE );
-	return 0;
+	return value;
 }
 
 ALCdevice *alcGetContextsDevice(ALCcontext *handle)

@@ -385,7 +385,7 @@ _alGetExtensionProcAddress( AL_funcPtr *procAddress, const ALchar *funcName )
 void *
 alGetProcAddress( const ALchar *funcName )
 {
-	AL_funcPtr value;
+	AL_funcPtr value = NULL;
 	if (getStandardProcAddress(&value, funcName) == AL_TRUE) {
 		return (void *)value; /* NOTE: The cast is not valid ISO C! */
 	}
@@ -393,7 +393,7 @@ alGetProcAddress( const ALchar *funcName )
 		return (void *)value; /* NOTE: The cast is not valid ISO C! */
 	}
 	_alDCSetError( AL_INVALID_VALUE );
-	return NULL;
+	return value;
 }
 
 
@@ -889,7 +889,7 @@ getExtensionEnumValue( ALenum *value, const ALchar *enumName )
 ALenum
 alGetEnumValue( const ALchar *enumName )
 {
-	ALenum value;
+	ALenum value = 0;
 	if (getStandardEnumValue(&value, enumName) == AL_TRUE) {
 		return value;
 	}
@@ -897,5 +897,5 @@ alGetEnumValue( const ALchar *enumName )
 		return value;
 	}
 	_alDCSetError( AL_INVALID_VALUE );
-	return 0;
+	return value;
 }
