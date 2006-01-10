@@ -1,6 +1,7 @@
 2006-01-10  Sven Panne  <sven.panne@aedion.de>
 
-	* configure.ac: Synched --enable-more-warnings handling with ALUT.
+	* configure.ac: Synched --enable-more-warnings handling with ALUT. Use
+	ALUT_CHECK_FLAG for symbol visibility support detection.
 
 	* admin/autotools/m4/alut_check_flag.m4,
 	admin/autotools/m4/alut_eval_stderr.m4: Added.

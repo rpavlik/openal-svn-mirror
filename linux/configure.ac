@@ -432,22 +432,12 @@ AM_CONDITIONAL([X86MMXENABLED], [test "x$openal_x86_mmx_support_yn" = xyes])
 AM_CONDITIONAL([X86NASMENABLED], [test "x$openal_x86_nasm_support_yn" = xyes])
 AM_CONDITIONAL([X86NASMMMXENABLED], [test "x$openal_x86_nasm_mmx_support_yn" = xyes])
 
-
-AC_MSG_CHECKING([if we are using a GCC with symbol visibility support])
-openal_have_gcc_visibility=no
-if test "x$GCC" = xyes; then
-  openal_saved_CFLAGS=$CFLAGS
-  CFLAGS="$CFLAGS -fvisibility=hidden"
-  AC_COMPILE_IFELSE([AC_LANG_SOURCE([[__attribute__((visibility("default"))) void test() {}]], [])],
-                    [openal_have_gcc_visibility=yes])
-  CFLAGS=$openal_saved_CFLAGS
-fi
-AC_MSG_RESULT([$openal_have_gcc_visibility])
-
-if test "x$openal_have_gcc_visibility" = xyes; then
-  OPTIMIZATIONCFLAGS="$OPTIMIZATIONCFLAGS -fvisibility=hidden"
-  AC_DEFINE([HAVE_GCC_VISIBILITY], [1], [Define to 1 if we are using a GCC with symbol visibility support.])
-fi
+# Note that -fvisibility=... support implies __attribute__((visibility(...))) 
+# support.
+ALUT_CHECK_FLAG([-fvisibility=hidden],
+                [OPTIMIZATIONCFLAGS="$OPTIMIZATIONCFLAGS -fvisibility=hidden"
+                 AC_DEFINE([HAVE_GCC_VISIBILITY], [1],
+                           [Define to 1 if we are using a GCC with symbol visibility support.])])
 
 ################################################################################
 # Checks for backends.
