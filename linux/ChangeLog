@@ -1,5 +1,7 @@
 2006-01-10  Sven Panne  <sven.panne@aedion.de>
 
+	* common/include/AL/al.h, common/include/AL/alc.h: Warning police.
+
 	* src/al_ext.c, src/alc/alc_context.c: Warning police. GCC is not
 	cunning enough to see the relation between the return value and the
 	pointer argument, so make things obvious even for a compiler.

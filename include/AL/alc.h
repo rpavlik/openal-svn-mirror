@@ -26,7 +26,7 @@ extern "C" {
  #define ALC_APIENTRY
 #endif
 
-#if TARGET_OS_MAC
+#if defined(TARGET_OS_MAC) && TARGET_OS_MAC
  #pragma export on
 #endif
 
@@ -264,7 +264,7 @@ typedef void           (ALC_APIENTRY *LPALCCAPTURESTART)( ALCdevice *device );
 typedef void           (ALC_APIENTRY *LPALCCAPTURESTOP)( ALCdevice *device );
 typedef void           (ALC_APIENTRY *LPALCCAPTURESAMPLES)( ALCdevice *device, ALCvoid *buffer, ALCsizei samples );
 
-#if TARGET_OS_MAC
+#if defined(TARGET_OS_MAC) && TARGET_OS_MAC
  #pragma export off
 #endif
 

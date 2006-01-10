@@ -46,7 +46,7 @@ extern "C" {
  #define AL_APIENTRY
 #endif
 
-#if TARGET_OS_MAC
+#if defined(TARGET_OS_MAC) && TARGET_OS_MAC
  #pragma export on
 #endif
 
@@ -733,7 +733,7 @@ typedef void           (AL_APIENTRY *LPALDOPPLERVELOCITY)( ALfloat value );
 typedef void           (AL_APIENTRY *LPALSPEEDOFSOUND)( ALfloat value );
 typedef void           (AL_APIENTRY *LPALDISTANCEMODEL)( ALenum distanceModel );
 
-#if TARGET_OS_MAC
+#if defined(TARGET_OS_MAC) && TARGET_OS_MAC
  #pragma export off
 #endif
 
