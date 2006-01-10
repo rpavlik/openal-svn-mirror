@@ -35,6 +35,8 @@
 	testvorbis seems to indicate working code...)
 	
 	* src/backends/alc_backend_sdl.c: enable dlopening
+	
+	* src/extensions/al_ext_mp3.c: enable dlopening
 
 2006-01-09  Sven Panne  <sven.panne@aedion.de>
 

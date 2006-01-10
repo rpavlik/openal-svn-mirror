@@ -26,6 +26,11 @@
 #include <SDL/SDL.h>
 #include <smpeg.h>
 
+#if OPENAL_DLOPEN_MP3
+#include <dlfcn.h>
+#endif
+
+
 /* maximum MAX_MP3 simultaneous sid/offset */
 static struct {
 	ALuint bid;
@@ -36,6 +41,73 @@ static struct {
 	ALuint sid;
 	ALuint offset;
 } mp3map[MAX_MP3];
+
+
+static int openal_load_smpeg_library(void);
+
+/*
+ * smpeg library functions.
+ */
+static void (*pSMPEG_enablevideo)( SMPEG* mpeg, int enable );
+static SMPEGstatus (*pSMPEG_status)( SMPEG* mpeg );
+static int (*pSMPEG_wantedSpec)( SMPEG *mpeg, SDL_AudioSpec *wanted );
+static void (*pSMPEG_enableaudio)( SMPEG* mpeg, int enable );
+static void (*pSMPEG_actualSpec)( SMPEG *mpeg, SDL_AudioSpec *spec );
+static void (*pSMPEG_rewind)( SMPEG* mpeg );
+static int (*pSMPEG_playAudio)( SMPEG *mpeg, Uint8 *stream, int len );
+static void (*pSMPEG_stop)( SMPEG* mpeg );
+static SMPEG* (*pSMPEG_new_data)(void *data, int size, SMPEG_Info* info, int sdl_audio);
+static void (*pSMPEG_play)( SMPEG* mpeg );
+static void (*pSMPEG_delete)( SMPEG* mpeg );
+
+/*
+ * smpeg library handle.
+ */
+static void * smpeg_lib_handle = NULL;
+
+static int openal_load_smpeg_library(void)
+{
+#if OPENAL_DLOPEN_MP3
+        char * error = NULL;
+#endif
+    
+	if (smpeg_lib_handle != NULL)
+		return 1;  /* already loaded. */
+
+	#if OPENAL_DLOPEN_MP3
+		#define OPENAL_LOAD_SMPEG_SYMBOL(x) p##x = dlsym(smpeg_lib_handle, #x); \
+                                                   error = dlerror(); \
+                                                   if (p##x == NULL) { \
+                                                           fprintf(stderr,"Could not resolve smpeg symbol %s: %s\n", #x, ((error!=NULL)?(error):("(null)"))); \
+                                                           dlclose(smpeg_lib_handle); smpeg_lib_handle = NULL; \
+                                                           return 0; }
+                dlerror(); /* clear error state */
+		smpeg_lib_handle = dlopen("libsmpeg.so", RTLD_LAZY | RTLD_GLOBAL);
+                error = dlerror();
+		if (smpeg_lib_handle == NULL) {
+                        fprintf(stderr,"Could not open smpeg library: %s\n",((error!=NULL)?(error):("(null)")));
+			return 0;
+                }
+	#else
+		#define OPENAL_LOAD_SMPEG_SYMBOL(x) p##x = x;
+		smpeg_lib_handle = (void *) 0xF00DF00D;
+	#endif
+
+        OPENAL_LOAD_SMPEG_SYMBOL(SMPEG_enablevideo);
+        OPENAL_LOAD_SMPEG_SYMBOL(SMPEG_status);
+        OPENAL_LOAD_SMPEG_SYMBOL(SMPEG_wantedSpec);
+        OPENAL_LOAD_SMPEG_SYMBOL(SMPEG_enableaudio);
+        OPENAL_LOAD_SMPEG_SYMBOL(SMPEG_actualSpec);
+        OPENAL_LOAD_SMPEG_SYMBOL(SMPEG_rewind);
+        OPENAL_LOAD_SMPEG_SYMBOL(SMPEG_playAudio);
+        OPENAL_LOAD_SMPEG_SYMBOL(SMPEG_stop);
+        OPENAL_LOAD_SMPEG_SYMBOL(SMPEG_new_data);
+        OPENAL_LOAD_SMPEG_SYMBOL(SMPEG_play);
+        OPENAL_LOAD_SMPEG_SYMBOL(SMPEG_delete);
+
+	return 1;
+}
+
 
 #ifdef OPENAL_EXTENSION
 
@@ -104,11 +176,15 @@ ALboolean alutLoadMP3_LOKI(ALuint bid, ALvoid *data, ALint size) {
 			fprintf(stderr, "Need alBufferi_LOKI\n");
 			return AL_FALSE;
 		}
+		
+		if (!openal_load_smpeg_library())
+			return AL_FALSE;
+
 	}
 
-	newMpeg = SMPEG_new_data( data, size, NULL, 0 );
+	newMpeg = pSMPEG_new_data( data, size, NULL, 0 );
 
-	SMPEG_wantedSpec( newMpeg, &spec );
+	pSMPEG_wantedSpec( newMpeg, &spec );
 
 	_alcDCLockContext();
 
@@ -120,7 +196,7 @@ ALboolean alutLoadMP3_LOKI(ALuint bid, ALvoid *data, ALint size) {
 	/* implicitly multichannel */
 	palBufferi_LOKI( bid, AL_CHANNELS, spec.channels );
 
-	SMPEG_actualSpec( newMpeg, &spec );
+	pSMPEG_actualSpec( newMpeg, &spec );
 
 	/* insert new bid */
 	mp3bid_insert( bid, newMpeg );
@@ -173,22 +249,22 @@ ALint MP3_Callback(ALuint sid,
 
 		offset = AL_FALSE;
 
-		SMPEG_enableaudio( mpeg, 1 );
-		SMPEG_enablevideo( mpeg, 0 ); /* sanity check */
+		pSMPEG_enableaudio( mpeg, 1 );
+		pSMPEG_enablevideo( mpeg, 0 ); /* sanity check */
 	}
 
-	if( SMPEG_status(mpeg) != SMPEG_PLAYING ) {
-		SMPEG_play( mpeg );
+	if( pSMPEG_status(mpeg) != SMPEG_PLAYING ) {
+		pSMPEG_play( mpeg );
 	}
 
 	memset( outdata, 0, (size_t)bytesRequested );
 
-	bytesPlayed = SMPEG_playAudio( mpeg, (ALubyte *) outdata, bytesRequested );
+	bytesPlayed = pSMPEG_playAudio( mpeg, (ALubyte *) outdata, bytesRequested );
 	bytesPlayed /= 2;
 
 	if(bytesPlayed < samples) {
-		SMPEG_stop( mpeg );
-		SMPEG_rewind( mpeg );
+		pSMPEG_stop( mpeg );
+		pSMPEG_rewind( mpeg );
 
 		return bytesPlayed;
 	}
@@ -218,8 +294,8 @@ static int mp3bid_insert(ALuint bid, SMPEG *mpeg) {
 	for(i = 0; i < MAX_MP3; i++) {
 		if(mp3bid[i].bid == bid) {
 			if(mp3bid[i].mpeg != NULL) {
-				SMPEG_stop( mp3bid[i].mpeg );
-				SMPEG_delete( mp3bid[i].mpeg );
+				pSMPEG_stop( mp3bid[i].mpeg );
+				pSMPEG_delete( mp3bid[i].mpeg );
 				mp3bid[i].mpeg = NULL;
 			}
 
@@ -243,8 +319,8 @@ static void mp3bid_remove( ALuint bid ) {
 	for(i = 0; i < MAX_MP3; i++) {
 		if(mp3bid[i].bid == (ALuint) bid) {
 			if(mp3bid[i].mpeg != NULL) {
-				SMPEG_stop( mp3bid[i].mpeg );
-				SMPEG_delete(mp3bid[i].mpeg);
+				pSMPEG_stop( mp3bid[i].mpeg );
+				pSMPEG_delete(mp3bid[i].mpeg);
 				mp3bid[i].mpeg = NULL;
 			}
 

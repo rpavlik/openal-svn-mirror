@@ -205,7 +205,7 @@ OPTION(NULLOUT     "null out back-end"    ON)
 OPTION(VORBIS         "vorbis support"          ON)
 OPTION(VORBIS_DLOPEN  "vorbis dynamic loading"  ON)
 OPTION(MP3            "mp3 support"             ON)
-#OPTION(MP3_DLOPEN     "mp3 dynamic loading"     ON)
+OPTION(MP3_DLOPEN     "mp3 dynamic loading"     ON)
 
 IF(DEBUG)
   ADD_DEFINE(DEBUG)
