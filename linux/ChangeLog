@@ -33,6 +33,8 @@
 	
 	* src/extensions/al_ext_vorbis.c: enable dlopening (ripped from arts backend;
 	testvorbis seems to indicate working code...)
+	
+	* src/backends/alc_backend_sdl.c: enable dlopening
 
 2006-01-09  Sven Panne  <sven.panne@aedion.de>
 
