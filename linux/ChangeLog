@@ -1,5 +1,10 @@
 2006-01-10  Sven Panne  <sven.panne@aedion.de>
 
+	* configure.ac: Synched --enable-more-warnings handling with ALUT.
+
+	* admin/autotools/m4/alut_check_flag.m4,
+	admin/autotools/m4/alut_eval_stderr.m4: Added.
+
 	* src/arch/i386/x86_cpu_caps_prk.c, src/arch/i386/x86_cpu_caps_prk.h:
 	Don't use old-style function definitions.
 
