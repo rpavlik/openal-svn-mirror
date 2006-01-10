@@ -360,6 +360,7 @@ case "$target" in
     ;;
 esac
 
+if test "x$openal_x86_mmx_support_yn" = xyes; then
 case "$target" in
     *i386* | *i486* | *i586* | *i686*)
         AC_PATH_PROG([NASM], [nasm], [no])
@@ -411,6 +412,7 @@ if test "x$openal_x86_mmx_support_yn" = xyes; then
     if test "x$enable_optim_generic" = xno; then
         AC_DEFINE([USE_LIGHT_GEN_MIXING], [1], [build light generic mixing routines])
     fi
+fi
 fi
 
 AM_CONDITIONAL([X86ENABLED], [test "x$openal_x86_support_yn" = xyes])
