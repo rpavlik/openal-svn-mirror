@@ -24,8 +24,9 @@
 
 2006-01-10  Prakash Punnoor <prakash@punnoor.de>
 
-	* CMakeLists.txt: fix missing defines for extensions, disable vorbis
-	dlopen; add pkg-config defines to compiler command line
+	* CMakeLists.txt: fix missing defines for extensions; disable vorbis
+	dlopen; add pkg-config defines to compiler command line; sync optimization
+	flags to configure.ac; remove adding of -march option
 
 2006-01-09  Sven Panne  <sven.panne@aedion.de>
 

@@ -552,6 +552,7 @@ ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_6
 
 
 # compiler specific settings
+# FIXME: ICC doesn't play nice with binutils and visibility
 CHECK_COMPILER_VISIBILITY(HAVE_VISIBILITY)
 IF(CMAKE_COMPILER_IS_GNUCC)
   ADD_DEFINITIONS(-std=c99)
@@ -570,16 +571,7 @@ IF(CMAKE_COMPILER_IS_GNUCC)
   ENDIF(WARNINGS)
 
   IF(OPTIMIZATION)
-    # FIXME: Have those flags been benched and proven to be stable?
-    SET(ADD_CFLAGS "${ADD_CFLAGS} -O2 -fexpensive-optimizations -funroll-all-loops -funroll-loops -finline-functions -ffast-math")
-
-    IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86")
-      SET(ADD_CFLAGS "${ADD_CFLAGS} -march=${CMAKE_SYSTEM_MACHINE}")
-    ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "i.86")
-
-    IF(CMAKE_SYSTEM_MACHINE MATCHES "mips")
-      SET(ADD_CFLAGS "${ADD_CFLAGS} -march=mips")
-    ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "mips")
+    SET(ADD_CFLAGS "${ADD_CFLAGS} -O2 -finline-functions -ffast-math")
   ENDIF(OPTIMIZATION)
 
   IF(PROFILE)
