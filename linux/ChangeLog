@@ -1,5 +1,8 @@
 2006-01-10  Sven Panne  <sven.panne@aedion.de>
 
+	* src/arch/i386/x86_cpu_caps_prk.c, src/arch/i386/x86_cpu_caps_prk.h:
+	Don't use old-style function definitions.
+
 	* common/include/AL/al.h, common/include/AL/alc.h: Warning police.
 
 	* src/al_ext.c, src/alc/alc_context.c: Warning police. GCC is not

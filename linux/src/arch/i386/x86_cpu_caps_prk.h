@@ -43,37 +43,37 @@ static __inline int _alHave3DNOWEXT(void);
 static __inline int _alHaveSSEMMX(void);
 
 
-static __inline int _alHaveMMX()
+static __inline int _alHaveMMX(void)
 {
 	return x86cpu_caps.mmx & x86cpu_caps_use.mmx;
 }
 
-static __inline int _alHaveSSE()
+static __inline int _alHaveSSE(void)
 {
 	return x86cpu_caps.sse & x86cpu_caps_use.sse;
 }
 
-static __inline int _alHaveSSE2()
+static __inline int _alHaveSSE2(void)
 {
 	return x86cpu_caps.sse2 & x86cpu_caps_use.sse2;
 }
 
-static __inline int _alHaveSSE3()
+static __inline int _alHaveSSE3(void)
 {
 	return x86cpu_caps.sse3 & x86cpu_caps_use.sse3;
 }
 
-static __inline int _alHave3DNOW()
+static __inline int _alHave3DNOW(void)
 {
 	return x86cpu_caps.amd_3dnow & x86cpu_caps_use.amd_3dnow;
 }
 
-static __inline int _alHave3DNOWEXT()
+static __inline int _alHave3DNOWEXT(void)
 {
 	return x86cpu_caps.amd_3dnowext & x86cpu_caps_use.amd_3dnowext;
 }
 
-static __inline int _alHaveSSEMMX()
+static __inline int _alHaveSSEMMX(void)
 {
 	return x86cpu_caps.amd_sse_mmx & x86cpu_caps_use.amd_sse_mmx;
 }

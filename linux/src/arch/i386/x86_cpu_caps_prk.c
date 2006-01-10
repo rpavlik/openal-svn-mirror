@@ -44,7 +44,7 @@ int _alDetectx86CPUCaps(uint* caps1, uint* caps2, uint* caps3);
 struct x86cpu_caps_s x86cpu_caps = { 0, 0, 0, 0, 0, 0, 0, 0};
 struct x86cpu_caps_s x86cpu_caps_use = { 1, 1, 1, 1, 1, 1, 1, 1};
 
-void _alDetectCPUCaps()
+void _alDetectCPUCaps(void)
 {
 	/* compile time detection */
 #ifdef __MMX__
