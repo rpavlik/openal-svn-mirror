@@ -36,3 +36,7 @@
 -T ALCvoid
 -T ALCdevice
 -T ALCcontext
+
+/* Our own internal types */
+-T ALC_Backend
+-T ALC_BackendPrivateData

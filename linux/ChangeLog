@@ -1,5 +1,9 @@
 2006-01-11  Sven Panne  <sven.panne@aedion.de>
 
+	* admin/autotools/.indent.pro, src/alc/alc_device.c,
+	src/backends/alc_backend.c, src/backends/alc_backend.h,
+	src/backends/alc_backend_alsa.c: More steps towards a sane backend API.
+
 	* configure.ac, src/al_buffer.c, src/al_config.c, src/al_debug.c,
 	src/al_debug.h, src/al_error.c, src/al_ext.c, src/al_filter.c,
 	src/al_main.h, src/al_mixer.c, src/al_mspool.c, src/al_rcvar.c,

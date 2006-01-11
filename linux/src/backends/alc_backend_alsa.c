@@ -180,18 +180,13 @@ struct alsa_info
 	int setup_read, setup_write;
 };
 
-void *release_alsa(void *handle)
+void release_alsa(void *handle)
 {
 	struct alsa_info *ai = handle;
-
 	if(handle == NULL)
-	  return NULL;
-
+	  return;
 	psnd_pcm_close(ai->handle);
-
 	free(ai);
-
-	return NULL;
 }
 
 static void *grab_read_alsa( void )

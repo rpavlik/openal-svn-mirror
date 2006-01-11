@@ -9,7 +9,14 @@
 #ifndef AL_BACKENDS_ALC_BACKEND_H_
 #define AL_BACKENDS_ALC_BACKEND_H_
 
+#include "al_siteconfig.h"
+
 #include <AL/al.h>
+
+/*
+ * An opaque backend structure, only used via pointers from outside.
+ */
+typedef struct ALC_BackendStruct ALC_Backend;
 
 typedef enum
 {
@@ -22,36 +29,36 @@ typedef enum
  * NULL if no such backend is available. This function is used to implement
  * alcOpenDevice.
  */
-void *alcBackendOpen_ (ALC_OpenMode mode);
+ALC_Backend *alcBackendOpen_ (ALC_OpenMode mode);
 
 /*
  * Closes an (output or input) backend. Returns AL_TRUE if closing was
  * successful, AL_FALSE if the handle was invalid or the backend could not be
  * closed for some reason. This function is used to implement alcCloseDevice.
  */
-ALboolean alcBackendClose_ (void *handle);
+ALboolean alcBackendClose_ (ALC_Backend *backend);
 
 /*
  * Informs a backend that it is about to get paused. This function is used to
  * implement alcMakeContextCurrent(NULL).
  */
-void alcBackendPause_ (void *handle);
+void alcBackendPause_ (ALC_Backend *backend);
 
 /*
  * Informs a backend that it is about to get resumed. This function is used to
  * implement alcMakeContextCurrent(NON_NULL).
  */
-void alcBackendResume_ (void *handle);
+void alcBackendResume_ (ALC_Backend *backend);
 
 /*
- * Sets the parameters for an input/output backend (depending on mode). Because
- * we follow a meet-or-exceed policty, *bufsiz, *fmt, and *speed might be
- * different from the parameters initially passed, so the caller should check
- * these after a succesful call. Returns AL_TRUE if setting was successful,
- * AL_FALSE if the parameters could not be matched or exceeded. This function is
- * used to implement alcMakeContextCurrent(NON_NULL).
+ * Sets the parameters for a backend. Because we follow a meet-or-exceed
+ * policty, *bufsiz, *fmt, and *speed might be different from the parameters
+ * initially passed, so the caller should check these after a succesful
+ * call. Returns AL_TRUE if setting was successful, AL_FALSE if the parameters
+ * could not be matched or exceeded. This function is used to implement
+ * alcMakeContextCurrent(NON_NULL).
  */
-ALboolean alcBackendSetAttributes_ (ALC_OpenMode mode, void *handle,
+ALboolean alcBackendSetAttributes_ (ALC_Backend *backend,
                                     ALuint *bufsiz, ALenum *fmt,
                                     ALuint *speed);
 
@@ -59,55 +66,67 @@ ALboolean alcBackendSetAttributes_ (ALC_OpenMode mode, void *handle,
  * Writes a given interleaved array of sound data to an output backend. This
  * function is used to implement (a)sync_mixer_iterate.
  */
-void alcBackendWrite_ (void *handle, void *data, int size);
+void alcBackendWrite_ (ALC_Backend *backend, void *data, int size);
 
 /*
  * Captures data from an input backend into the given buffer. This function is
  * used to implement alCaptureGetData_EXT.
  */
-ALsizei alcBackendRead_ (void *handle, void *data, int size);
+ALsizei alcBackendRead_ (ALC_Backend *backend, void *data, int size);
 
 /*
  * Returns the normalized volume for the given channel (main/PCM/CD) on an
  * output backend. This function is used to implement alcGetAudioChannel_LOKI.
  */
-ALfloat alcBackendGetAudioChannel_ (void *handle, ALuint channel);
+ALfloat alcBackendGetAudioChannel_ (ALC_Backend *backend, ALuint channel);
 
 /*
  * Sets the normalized volume for the given channel (main/PCM/CD) on an output
  * backend. This function is used to implement alcSetAudioChannel_LOKI.
  */
-void alcBackendSetAudioChannel_ (void *handle, ALuint channel,
+void alcBackendSetAudioChannel_ (ALC_Backend *backend, ALuint channel,
                                  ALfloat volume);
 
 /******************************************************************************/
 
-void *alcBackendOpenNative_ (ALC_OpenMode mode);
-void release_native (void *handle);
-void pause_nativedevice (void *handle);
-void resume_nativedevice (void *handle);
-ALboolean alcBackendSetAttributesNative_ (ALC_OpenMode mode, void *handle,
+/*
+ * Various data, the details depend on the backend in question.
+ */
+typedef void ALC_BackendPrivateData;
+
+ALC_BackendPrivateData *alcBackendOpenNative_ (ALC_OpenMode mode);
+void release_native (ALC_BackendPrivateData *privateData);
+void pause_nativedevice (ALC_BackendPrivateData *privateData);
+void resume_nativedevice (ALC_BackendPrivateData *privateData);
+ALboolean alcBackendSetAttributesNative_ (ALC_OpenMode mode,
+                                          ALC_BackendPrivateData *privateData,
                                           ALuint *bufsiz, ALenum *fmt,
                                           ALuint *speed);
-void native_blitbuffer (void *handle, void *data, int bytes);
-ALsizei capture_nativedevice (void *handle, void *capture_buffer, int bufsiz);
-ALfloat get_nativechannel (void *handle, ALuint channel);
-int set_nativechannel (void *handle, ALuint channel, ALfloat volume);
-
-#include "al_siteconfig.h"
+void native_blitbuffer (ALC_BackendPrivateData *privateData, void *data,
+                        int bytes);
+ALsizei capture_nativedevice (ALC_BackendPrivateData *privateData,
+                              void *capture_buffer, int bufsiz);
+ALfloat get_nativechannel (ALC_BackendPrivateData *privateData,
+                           ALuint channel);
+int set_nativechannel (ALC_BackendPrivateData *privateData, ALuint channel,
+                       ALfloat volume);
 
 #ifdef USE_BACKEND_ALSA
-void *alcBackendOpenALSA_ (ALC_OpenMode mode);
-void *release_alsa (void *handle);
-void pause_alsa (void *handle);
-void resume_alsa (void *handle);
-ALboolean alcBackendSetAttributesALSA_ (ALC_OpenMode mode, void *handle,
+ALC_BackendPrivateData *alcBackendOpenALSA_ (ALC_OpenMode mode);
+void release_alsa (ALC_BackendPrivateData *privateData);
+void pause_alsa (ALC_BackendPrivateData *privateData);
+void resume_alsa (ALC_BackendPrivateData *privateData);
+ALboolean alcBackendSetAttributesALSA_ (ALC_OpenMode mode,
+                                        ALC_BackendPrivateData *privateData,
                                         ALuint *bufsiz, ALenum *fmt,
                                         ALuint *speed);
-void alsa_blitbuffer (void *handle, void *data, int bytes);
-ALsizei capture_alsa (void *handle, void *capture_buffer, int bufsiz);
-ALfloat get_alsachannel (void *handle, ALuint channel);
-int set_alsachannel (void *handle, ALuint channel, ALfloat volume);
+void alsa_blitbuffer (ALC_BackendPrivateData *privateData, void *data,
+                      int bytes);
+ALsizei capture_alsa (ALC_BackendPrivateData *privateData,
+                      void *capture_buffer, int bufsiz);
+ALfloat get_alsachannel (ALC_BackendPrivateData *privateData, ALuint channel);
+int set_alsachannel (ALC_BackendPrivateData *privateData, ALuint channel,
+                     ALfloat volume);
 #else
 #define alcBackendOpenALSA_(m)        NULL
 #define release_alsa(h)
@@ -121,17 +140,21 @@ int set_alsachannel (void *handle, ALuint channel, ALfloat volume);
 #endif /* USE_BACKEND_ALSA */
 
 #ifdef USE_BACKEND_ARTS
-void *alcBackendOpenARts_ (ALC_OpenMode mode);
-void release_arts (void *handle);
-void pause_arts (void *handle);
-void resume_arts (void *handle);
-ALboolean alcBackendSetAttributesARts_ (ALC_OpenMode mode, void *handle,
+ALC_BackendPrivateData *alcBackendOpenARts_ (ALC_OpenMode mode);
+void release_arts (ALC_BackendPrivateData *privateData);
+void pause_arts (ALC_BackendPrivateData *privateData);
+void resume_arts (ALC_BackendPrivateData *privateData);
+ALboolean alcBackendSetAttributesARts_ (ALC_OpenMode mode,
+                                        ALC_BackendPrivateData *privateData,
                                         ALuint *bufsiz, ALenum *fmt,
                                         ALuint *speed);
-void arts_blitbuffer (void *handle, void *data, int bytes);
-ALsizei capture_arts (void *handle, void *capture_buffer, int bufsiz);
-ALfloat get_artschannel (void *handle, ALuint channel);
-int set_artschannel (void *handle, ALuint channel, ALfloat volume);
+void arts_blitbuffer (ALC_BackendPrivateData *privateData, void *data,
+                      int bytes);
+ALsizei capture_arts (ALC_BackendPrivateData *privateData,
+                      void *capture_buffer, int bufsiz);
+ALfloat get_artschannel (ALC_BackendPrivateData *privateData, ALuint channel);
+int set_artschannel (ALC_BackendPrivateData *privateData, ALuint channel,
+                     ALfloat volume);
 #else
 #define alcBackendOpenARts_(m)        NULL
 #define release_arts(h)
@@ -146,16 +169,20 @@ int set_artschannel (void *handle, ALuint channel, ALfloat volume);
 
 #ifdef USE_BACKEND_ESD
 void *alcBackendOpenESD_ (ALC_OpenMode mode);
-void release_esd (void *handle);
-void pause_esd (void *handle);
-void resume_esd (void *handle);
-ALboolean alcBackendSetAttributesESD_ (ALC_OpenMode mode, void *handle,
+void release_esd (ALC_BackendPrivateData *privateData);
+void pause_esd (ALC_BackendPrivateData *privateData);
+void resume_esd (ALC_BackendPrivateData *privateData);
+ALboolean alcBackendSetAttributesESD_ (ALC_OpenMode mode,
+                                       ALC_BackendPrivateData *privateData,
                                        ALuint *bufsiz, ALenum *fmt,
                                        ALuint *speed);
-void esd_blitbuffer (void *handle, void *data, int bytes);
-ALsizei capture_esd (void *handle, void *capture_buffer, int bufsiz);
-ALfloat get_esdchannel (void *handle, ALuint channel);
-int set_esdchannel (void *handle, ALuint channel, ALfloat volume);
+void esd_blitbuffer (ALC_BackendPrivateData *privateData, void *data,
+                     int bytes);
+ALsizei capture_esd (ALC_BackendPrivateData *privateData,
+                     void *capture_buffer, int bufsiz);
+ALfloat get_esdchannel (ALC_BackendPrivateData *privateData, ALuint channel);
+int set_esdchannel (ALC_BackendPrivateData *privateData, ALuint channel,
+                    ALfloat volume);
 #else
 #define alcBackendOpenESD_(m)         NULL
 #define pause_esd(h)
@@ -169,17 +196,21 @@ int set_esdchannel (void *handle, ALuint channel, ALfloat volume);
 #endif /* USE_BACKEND_ESD */
 
 #ifdef USE_BACKEND_SDL
-void *alcBackendOpenSDL_ (ALC_OpenMode mode);
-void release_sdl (void *handle);
-void pause_sdl (void *handle);
-void resume_sdl (void *handle);
-ALboolean alcBackendSetAttributesSDL_ (ALC_OpenMode mode, void *handle,
+ALC_BackendPrivateData *alcBackendOpenSDL_ (ALC_OpenMode mode);
+void release_sdl (ALC_BackendPrivateData *privateData);
+void pause_sdl (ALC_BackendPrivateData *privateData);
+void resume_sdl (ALC_BackendPrivateData *privateData);
+ALboolean alcBackendSetAttributesSDL_ (ALC_OpenMode mode,
+                                       ALC_BackendPrivateData *privateData,
                                        ALuint *bufsiz, ALenum *fmt,
                                        ALuint *speed);
-void sdl_blitbuffer (void *handle, void *data, int bytes);
-ALsizei capture_sdl (void *handle, void *capture_buffer, int bufsiz);
-ALfloat get_sdlchannel (void *handle, ALuint channel);
-int set_sdlchannel (void *handle, ALuint channel, ALfloat volume);
+void sdl_blitbuffer (ALC_BackendPrivateData *privateData, void *data,
+                     int bytes);
+ALsizei capture_sdl (ALC_BackendPrivateData *privateData,
+                     void *capture_buffer, int bufsiz);
+ALfloat get_sdlchannel (ALC_BackendPrivateData *privateData, ALuint channel);
+int set_sdlchannel (ALC_BackendPrivateData *privateData, ALuint channel,
+                    ALfloat volume);
 #else
 #define alcBackendOpenSDL_(m)         NULL
 #define release_sdl(h)
@@ -193,17 +224,21 @@ int set_sdlchannel (void *handle, ALuint channel, ALfloat volume);
 #endif /* USE_BACKEND_SDL */
 
 #ifdef USE_BACKEND_NULL
-void *alcBackendOpenNull_ (ALC_OpenMode mode);
-void release_null (void *handle);
-void pause_null (void *handle);
-void resume_null (void *handle);
-ALboolean alcBackendSetAttributesNull_ (ALC_OpenMode mode, void *handle,
+ALC_BackendPrivateData *alcBackendOpenNull_ (ALC_OpenMode mode);
+void release_null (ALC_BackendPrivateData *privateData);
+void pause_null (ALC_BackendPrivateData *privateData);
+void resume_null (ALC_BackendPrivateData *privateData);
+ALboolean alcBackendSetAttributesNull_ (ALC_OpenMode mode,
+                                        ALC_BackendPrivateData *privateData,
                                         ALuint *bufsiz, ALenum *fmt,
                                         ALuint *speed);
-void null_blitbuffer (void *handle, void *data, int bytes);
-ALsizei capture_null (void *handle, void *capture_buffer, int bufsiz);
-ALfloat get_nullchannel (void *handle, ALuint channel);
-int set_nullchannel (void *handle, ALuint channel, ALfloat volume);
+void null_blitbuffer (ALC_BackendPrivateData *privateData, void *data,
+                      int bytes);
+ALsizei capture_null (ALC_BackendPrivateData *privateData,
+                      void *capture_buffer, int bufsiz);
+ALfloat get_nullchannel (ALC_BackendPrivateData *privateData, ALuint channel);
+int set_nullchannel (ALC_BackendPrivateData *privateData, ALuint channel,
+                     ALfloat volume);
 #else
 #define alcBackendOpenNull_(m)        NULL
 #define release_null(h)
@@ -217,17 +252,22 @@ int set_nullchannel (void *handle, ALuint channel, ALfloat volume);
 #endif /* USE_BACKEND_NULL */
 
 #ifdef USE_BACKEND_WAVEOUT
-void *alcBackendOpenWAVE_ (ALC_OpenMode mode);
-void release_waveout (void *handle);
-void pause_waveout (void *handle);
-void resume_waveout (void *handle);
-ALboolean alcBackendSetAttributesWAVE_ (ALC_OpenMode mode, void *handle,
+ALC_BackendPrivateData *alcBackendOpenWAVE_ (ALC_OpenMode mode);
+void release_waveout (ALC_BackendPrivateData *privateData);
+void pause_waveout (ALC_BackendPrivateData *privateData);
+void resume_waveout (ALC_BackendPrivateData *privateData);
+ALboolean alcBackendSetAttributesWAVE_ (ALC_OpenMode mode,
+                                        ALC_BackendPrivateData *privateData,
                                         ALuint *bufsiz, ALenum *fmt,
                                         ALuint *speed);
-void waveout_blitbuffer (void *handle, void *data, int bytes);
-ALsizei capture_waveout (void *handle, void *capture_buffer, int bufsiz);
-ALfloat get_waveoutchannel (void *handle, ALuint channel);
-int set_waveoutchannel (void *handle, ALuint channel, ALfloat volume);
+void waveout_blitbuffer (ALC_BackendPrivateData *privateData, void *data,
+                         int bytes);
+ALsizei capture_waveout (ALC_BackendPrivateData *privateData,
+                         void *capture_buffer, int bufsiz);
+ALfloat get_waveoutchannel (ALC_BackendPrivateData *privateData,
+                            ALuint channel);
+int set_waveoutchannel (ALC_BackendPrivateData *privateData, ALuint channel,
+                        ALfloat volume);
 #else
 #define alcBackendOpenWAVE_(m)        NULL
 #define release_waveout(h)

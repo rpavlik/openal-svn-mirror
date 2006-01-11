@@ -210,8 +210,7 @@ alcCloseDevice( ALCdevice *dev )
 void
 _alcDeviceSet( AL_device *dev )
 {
-	if( alcBackendSetAttributes_( ( dev->flags & ALCD_READ ) ? ALC_OPEN_INPUT_ : ALC_OPEN_OUTPUT_,
-				      dev->handle, &dev->bufsiz, &dev->format, &dev->speed) != AL_TRUE ) {
+	if( alcBackendSetAttributes_(dev->handle, &dev->bufsiz, &dev->format, &dev->speed) != AL_TRUE ) {
 		_alDebug(ALD_CONTEXT, __FILE__, __LINE__, "_alcDeviceSet failed.");
 		_alcSetError( ALC_INVALID_DEVICE );
 	}
