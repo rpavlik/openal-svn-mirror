@@ -1,3 +1,9 @@
+2006-01-11  Prakash Punnoor <prakash@punnoor.de>
+
+	* src/al_siteconfig.h: #if -> #ifdef
+	
+	* CMakeLists.txt: test for __attribute__(...)
+
 2006-01-11  Sven Panne  <sven.panne@aedion.de>
 
 	* admin/autotools/.indent.pro, src/alc/alc_device.c,
