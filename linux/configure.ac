@@ -102,7 +102,7 @@ if test "x$enable_more_warnings" = xyes; then
     # warning with -Wold-style-definition, so we assume that this flag is
     # supported whenever -Wvariadic-macros is.
     ALUT_CHECK_FLAG([-Wvariadic-macros],
-                    [WARNINGCFLAGS="$AM_CFLAGS -Wvariadic-macros -Wold-style-definition"])
+                    [WARNINGCFLAGS="$WARNINGCFLAGS -Wvariadic-macros -Wold-style-definition"])
   fi
 fi
 
@@ -835,8 +835,9 @@ AC_ARG_ENABLE([sdl],
 [AS_HELP_STRING([--enable-sdl],
                 [enable SDL backend @<:@default=auto@:>@])])
 
-# The SDL backend code is not ready for this yet, but we are... :-)
-enable_sdl_dlopen=no
+AC_ARG_ENABLE([sdl-dlopen],
+[AS_HELP_STRING([--enable-sdl-dlopen],
+                [dynamically load SDL libs @<:@default=yes@:>@])])
 
 if test "x$enable_sdl" = xno; then
   openal_backend_sdl_support=disabled
@@ -985,8 +986,9 @@ AC_ARG_ENABLE([vorbis],
 [AS_HELP_STRING([--enable-vorbis],
                 [enable AL_EXT_vorbis extension @<:@default=auto@:>@])])
 
-# The Vorbis code is not ready for this yet, but we are... :-)
-enable_vorbis_dlopen=no
+AC_ARG_ENABLE([vorbis-dlopen],
+[AS_HELP_STRING([--enable-vorbis-dlopen],
+                [dynamically load Vorbis libs @<:@default=yes@:>@])])
 
 if test "x$enable_vorbis" = xno; then
   openal_extension_vorbis_support=disabled
@@ -1056,8 +1058,9 @@ AC_ARG_ENABLE([mp3],
 [AS_HELP_STRING([--enable-mp3],
                 [enable AL_EXT_mp3 support @<:@default=auto@:>@])])
 
-# The smpeg code is not ready for this yet, but we are... :-)
-enable_mp3_dlopen=no
+AC_ARG_ENABLE([mp3-dlopen],
+[AS_HELP_STRING([--enable-mp3-dlopen],
+                [dynamically load MP3 libs @<:@default=yes@:>@])])
 
 # For legacy reasons only, this misnomer will be nuked some day.
 AC_ARG_ENABLE([smpeg],

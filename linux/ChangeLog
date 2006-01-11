@@ -1,3 +1,9 @@
+2006-01-11  Sven Panne  <sven.panne@aedion.de>
+
+	* configure.ac: Added flags to dynamically load SDL, Vorbis and MP3 libs
+	(enabled by default). Fixed a cut-n-paste typo in the handling of
+	--enable-more-warnings.
+
 2006-01-10  Sven Panne  <sven.panne@aedion.de>
 
 	* configure.ac: Only use -finline-functions, -ffast-math and
@@ -25,21 +31,21 @@
 2006-01-10  Prakash Punnoor <prakash@punnoor.de>
 
 	* CMakeLists.txt: fix missing defines for extensions; disable vorbis
-	dlopen; add pkg-config defines to compiler command line; sync optimization
-	flags to configure.ac; remove adding of -march option; forcefully disable
-	symbol visibility for ICC due to linker trouble; disable NASM and SIMD
-	specific stuff if no MMX is found, as we don't use other SIMD instructions;
-	enable dlopening vorbis, SDL and smpeg
+	dlopen; add pkg-config defines to compiler command line; sync
+	optimization flags to configure.ac; remove adding of -march option;
+	forcefully disable symbol visibility for ICC due to linker trouble;
+	disable NASM and SIMD specific stuff if no MMX is found, as we don't use
+	other SIMD instructions; enable dlopening vorbis, SDL and smpeg
 	
-	* src/extensions/al_ext_vorbis.c: enable dlopening (ripped from arts backend;
-	testvorbis seems to indicate working code...)
+	* src/extensions/al_ext_vorbis.c: enable dlopening (ripped from arts
+	backend; testvorbis seems to indicate working code...)
 	
 	* src/backends/alc_backend_sdl.c: enable dlopening
 	
 	* src/extensions/al_ext_mp3.c: enable dlopening
 	
-	* configure.ac: disable NASM and SIMD specific stuff if no MMX is found for
-	the time-being
+	* configure.ac: disable NASM and SIMD specific stuff if no MMX is found
+	for the time-being
 
 2006-01-09  Sven Panne  <sven.panne@aedion.de>
 
