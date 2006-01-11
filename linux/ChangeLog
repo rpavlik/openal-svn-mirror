@@ -1,5 +1,17 @@
 2006-01-11  Sven Panne  <sven.panne@aedion.de>
 
+	* configure.ac, src/al_buffer.c, src/al_config.c, src/al_debug.c,
+	src/al_debug.h, src/al_error.c, src/al_ext.c, src/al_filter.c,
+	src/al_main.h, src/al_mixer.c, src/al_mspool.c, src/al_rcvar.c,
+	src/al_siteconfig.h, src/al_source.c, src/al_threadlib.c,
+	src/al_threadlib.h, src/alc/alc_context.c, src/alc/alc_error.c,
+	src/audioconvert/ac_misc.c, src/backends/alc_backend_alsa.c,
+	src/backends/alc_backend_darwin.c, src/backends/alc_backend_linux.c,
+	src/backends/alc_backend_wave.c, src/extensions/al_ext_mp3.c: Fixed tons
+	of warnings. Fixed a bug in _alGetGlobalScalar on the way.
+
+	* admin/autotools/m4/alut_c__attribute.m4: Added.
+
 	* configure.ac: Added flags to dynamically load SDL, Vorbis and MP3 libs
 	(enabled by default). Fixed a cut-n-paste typo in the handling of
 	--enable-more-warnings.
@@ -685,8 +697,8 @@
 	linux/test/teststartstop.c: Do not use AL_INVALID and ALC_INVALID, they
 	are not in the 1.1 spec.
 
-	* ChangeLog, include/AL/alext.h, src/al_ext.c, src/al_filter.c,
-	src/al_listen.c, src/al_source.c, test/testchannel.c, test/testgain.c,
+	* include/AL/alext.h, src/al_ext.c, src/al_filter.c, src/al_listen.c,
+	src/al_source.c, test/testchannel.c, test/testgain.c,
 	test/testgainlinear.c, test/testmultinothread.c, test/testpitch.c,
 	test/testpitch2.c, test/testpitch3.c, test/testpitch4.c,
 	test/testpitchnothread.c, test/testpitchnothread2.c, test/testqueue.c,
@@ -2675,9 +2687,6 @@
 	* openal/linux/src/arch/irix/iris.c
 	Added undefs for dmedia stuff
 
-	* openal/linux/ChangeLog
-	Updates
-
 	* openal/linux/src/al_buffer.c
 	Redid buffer ref counting stuff stuff
 
@@ -3394,8 +3403,6 @@
 	Fixed memory leak.
 
 2000-08-31  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames-lan.com>
-	* ChangeLog
-	Noted changes
 
 	* src/al_ext.c
 	Fix for segfault caused by plugins missing alExtFini
@@ -3581,8 +3588,6 @@
 	Changed sign of IMA decodestate member
 
 2000-08-22  Joseph I. Valenzuela  <tsaotsao@TOROFO>
-	* ChangeLog
-	notes changes
 
 	* src/Makefile.in
 	remove erroneous extra line
@@ -3605,9 +3610,6 @@
 
 2000-08-21  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames-lan.com>
 
-	* ChangeLog
-	Noted changes
-
 	* al_mixer.c
 	Cleaned up delayed buffer deletions
 
@@ -3619,8 +3621,6 @@
 	deletions.
 
 2000-08-20  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames-lan.com>
-	* ChangeLog
-	Noted changes
 
 	* acconfig.h
 	Added define for VORBIS_SUPPORT
@@ -3737,8 +3737,6 @@
 	updated new test to test looping multichannel sounds.
 
 2000-08-07  Joseph I. Valenzuela  <tsaotsao@xanadu.lokigames-lan.com>
-	* ChangeLog
-	Noted changes
 
 	* src/al_main.c:
 	updated vector_angle_between to correctly handle sign (so that the
@@ -3904,8 +3902,6 @@
 
 	* linux/src/al_buffer.c: changed buffer initializer to set buffer
 	freq to canon_speed.
-
-	* linux/ChangeLog: Noted changes
 
 	* lots of files: Changed AL_ACTIVE to AL_PLAYING, per Bernd's
 	request

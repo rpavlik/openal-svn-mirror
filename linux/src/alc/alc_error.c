@@ -61,27 +61,19 @@ static int ErrorNo2index( ALenum error_number ) {
 	switch( error_number ) {
 		case ALC_NO_ERROR:
 			return 0;
-			break;
 		case ALC_INVALID_DEVICE:
 			return 1;
-			break;
 		case ALC_INVALID_CONTEXT:
 			return 2;
-			break;
 		case ALC_INVALID_ENUM:
 			return 3;
-			break;
 		case ALC_INVALID_VALUE:
 			return 4;
-			break;
 		default:
 			_alDebug( ALD_ERROR, __FILE__, __LINE__,
 				  "Unknown error condition: 0x%x", error_number );
 			return -1;
-			break;
 	}
-
-	return -1;
 }
 
 /*

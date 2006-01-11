@@ -999,7 +999,7 @@ static ALvoid *_alConvert( ALvoid *data,
 
 		if( should_use_passed_data == AL_TRUE ) {
 			_alDebug(ALD_CONVERT, __FILE__, __LINE__,
-				"_alConvert: no conversion needed: %p");
+				 "_alConvert: no conversion needed: %p", data);
 
 			return data;
 		}

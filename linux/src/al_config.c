@@ -796,7 +796,7 @@ static AL_rctree *load_ext_prim(UNUSED(AL_rctree *env), AL_rctree *args) {
 	if(_alLoadDL(fname) == AL_FALSE)
 	{
 		_alDebug(ALD_CONFIG, __FILE__, __LINE__,
-			"Couldn't load %s");
+			 "Couldn't load %s", fname);
 
 		retval->data.i = AL_FALSE;
 	}
@@ -849,28 +849,28 @@ ALboolean _alGetGlobalScalar( const char *str, ALRcEnum type, ALvoid *retref ) {
 				case ALRC_INTEGER:
 				case ALRC_BOOL:
 					*ivp = sym->data.i;
+					return AL_TRUE;
 				case ALRC_FLOAT:
 					*fvp = sym->data.i;
+					return AL_TRUE;
 				default:
 					return AL_FALSE;
 			}
-			break;
 		case ALRC_FLOAT:
 			switch(type) {
 				case ALRC_INTEGER:
 				case ALRC_BOOL:
 					*ivp = sym->data.f;
+					return AL_TRUE;
 				case ALRC_FLOAT:
 					*fvp = sym->data.f;
+					return AL_TRUE;
 				default:
 					return AL_FALSE;
 			}
-			break;
 		default:
-			return AL_FALSE; break;
+			return AL_FALSE;
 	}
-
-	return AL_TRUE;
 }
 
 /*
@@ -1024,18 +1024,12 @@ AL_rctree *apply( AL_rctree *procobj, AL_rctree *args ) {
  *
  * Returns length of list ls, or 0 if ls is not a cons cell.
  */
-static ALuint length( AL_rctree *ls ) {
-	assert( ls->type != ALRC_CONSCELL );
-
-	if( ls->type != ALRC_CONSCELL ) {
-		return 0;
-	}
-
-	if( ls == NULL ) {
-		return 0;
-	}
-
-	return 1 + length( alrc_cdr( ls ) );
+static ALuint
+length( AL_rctree *ls )
+{
+	return ( ls == NULL || ls->type != ALRC_CONSCELL ) ?
+		0 :
+		( 1 + length( alrc_cdr( ls ) ));
 }
 
 /*
@@ -1314,8 +1308,6 @@ static AL_rctree *_alEval( AL_rctree *head ) {
 
 		return retval;
 	}
-
-	return NULL;
 }
 
 /*

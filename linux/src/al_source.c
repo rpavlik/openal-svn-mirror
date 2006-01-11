@@ -1190,7 +1190,7 @@ void alGetSourcefv( ALuint sid, ALenum param, ALfloat *values ) {
 		/* silently ignore */
 
 		_alDebug( ALD_SOURCE, __FILE__, __LINE__,
-			"alGetSourcefv: values passed is NULL", values );
+			"alGetSourcefv: values passed is NULL" );
 
 		SOURCEUNLOCK();
 
@@ -1611,17 +1611,15 @@ static void _alSplitSourceLooping( ALuint cid,
 		}
 
 		return;
-
-		_alDebug(ALD_LOOP, __FILE__, __LINE__, "handle size");
 	}
-
+#if 0
+	/* ToDo: This is never reached?! */
 	for(i = 0; i < nc; i++) {
 		bufptr = _alSourceGetBufptr(src, samp, i);
 
 		memcpy(buffers[i], bufptr, len);
 	}
-
-	return;
+#endif
 }
 
 /*
@@ -1743,7 +1741,7 @@ static void _alSplitSourceQueue( ALuint cid,
 	 */
 	if( samp->size + nextsamp->size >= len + src->srcParams.soundpos )
 	{
-#if DEBUG_QUEUE
+#ifdef DEBUG_QUEUE
 		_alDebug(ALD_QUEUE, __FILE__, __LINE__,
 			 "Queue filling from two buffers ( size + nextsize (%d) vs soundpos + len %d",
 			samp->size + nextsamp->size,
@@ -1762,7 +1760,7 @@ static void _alSplitSourceQueue( ALuint cid,
 		 */
 		remaining = len - mixable;
 
-#if DEBUG_QUEUE
+#ifdef DEBUG_QUEUE
 		_alDebug(ALD_QUEUE, __FILE__, __LINE__,
 			 "first buffer %d, second buffer %d",
 			 mixable, remaining);
@@ -1786,7 +1784,7 @@ static void _alSplitSourceQueue( ALuint cid,
 			src->srcParams.new_readindex++;
 		}
 
-#if DEBUG_QUEUE
+#ifdef DEBUG_QUEUE
 		_alDebug(ALD_QUEUE, __FILE__, __LINE__,
 			 "SplitSourceQueue, read_index is now %d",
 			 src->srcParams.new_readindex);
@@ -1795,7 +1793,7 @@ static void _alSplitSourceQueue( ALuint cid,
 		return;
 	}
 
-#if DEBUG_QUEUE
+#ifdef DEBUG_QUEUE
 	fprintf(stderr, "Splitting from multiple needed %d left %d\n",
 		len,
 		samp->size - src->srcParams.soundpos);
@@ -1810,7 +1808,7 @@ static void _alSplitSourceQueue( ALuint cid,
 
 		if( src->bid_queue.read_index >= src->bid_queue.size )
 		{
-#if DEBUG_QUEUE
+#ifdef DEBUG_QUEUE
 			fprintf(stderr, "end of buffer queue\n" );
 #endif
 
@@ -2220,15 +2218,6 @@ void alDeleteSources( ALsizei n, const ALuint *sources ) {
 		 * No current context with which to evaluate the
 		 * validity of the sources
 		 */
-		_alcDCUnlockContext();
-		return;
-	}
-
-	if(n < 0) {
-		_alDebug(ALD_SOURCE, __FILE__, __LINE__,
-		      "alDeleteSources: illegal n value %d", n);
-
-		_alDCSetError(AL_INVALID_VALUE);
 		_alcDCUnlockContext();
 		return;
 	}
@@ -3289,68 +3278,46 @@ ALboolean _alSourceIsParamSet( AL_source *source, ALenum param ) {
 		case AL_BUFFER:
 		case AL_SOURCE_STATE:
 			return AL_TRUE;
-			break;
 		case AL_CONE_INNER_ANGLE:
 			return source->cone_inner_angle.isset;
-			break;
 		case AL_CONE_OUTER_ANGLE:
 			return source->cone_outer_angle.isset;
-			break;
 		case AL_CONE_OUTER_GAIN:
 			return source->cone_outer_gain.isset;
-			break;
 		case AL_DIRECTION:
 			return source->direction.isset;
-			break;
 		case AL_GAIN:
 		case AL_GAIN_LINEAR_LOKI:
 			return source->gain.isset;
-			break;
 		case AL_LOOPING:
 			return source->looping.isset;
-			break;
 		case AL_PITCH:
 			return source->pitch.isset;
-			break;
 		case AL_POSITION:
 			return source->position.isset;
-			break;
 		case AL_SOURCE_RELATIVE:
 			return source->relative.isset;
-			break;
 #ifdef LINUX_AL
 		case AL_STREAMING:
 			return source->isstreaming.isset;
-			break;
 #endif
 		case AL_VELOCITY:
 			return source->velocity.isset;
-			break;
 		case AL_MIN_GAIN:
 			return source->min_gain.isset;
-			break;
 		case AL_MAX_GAIN:
 			return source->max_gain.isset;
-			break;
 		case AL_REFERENCE_DISTANCE:
 			return source->reference_distance.isset;
-			break;
 		case AL_MAX_DISTANCE:
 			return source->max_distance.isset;
-			break;
 		case AL_ROLLOFF_FACTOR:
 			return source->rolloff_factor.isset;
-			break;
 		default:
-			break;
 			_alDebug(ALD_SOURCE, __FILE__, __LINE__,
 				"unknown source param 0x%x", param);
-
-			/* assert( 0 ); */
-			break;
+			return AL_FALSE;
 	}
-
-	return AL_FALSE;
 }
 
 /*

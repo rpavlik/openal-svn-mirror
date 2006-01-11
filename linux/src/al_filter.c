@@ -1003,7 +1003,9 @@ void alf_tdoppler( ALuint cid,
 	ALfloat lv[3]; /* listener velocity */
 	ALfloat lp[3]; /* listener position */
 	ALfloat relative_velocity;  /* speed of source wrt listener */
+#if 0
 	ALfloat zeros[] = { 0.0, 0.0, 0.0 };
+#endif
 	AL_sourcestate *srcstate;
 	ALfloat doppler_factor;
 	ALfloat doppler_velocity;
@@ -1050,11 +1052,13 @@ void alf_tdoppler( ALuint cid,
 		return;
 	}
 
-        if (fabs(doppler_factor - 1.0E-6) < 0) {
+        if (fabs(doppler_factor) < 1.0E-6f) {
                 /* doppler factor set to zero, no doppler effect */
                 return;
         }
 
+#if 0
+	/* ToDo: duplicate test */
 	if(sv == NULL) {
 		/*
 		 * if unset, set to the velocity to the
@@ -1062,6 +1066,7 @@ void alf_tdoppler( ALuint cid,
 		 */
 		sv = zeros;
 	}
+#endif
 
 	relative_velocity = _alVectorMagnitude(sv, lv);
 	if(relative_velocity == 0.0) {
@@ -1328,7 +1333,7 @@ void alf_tpitch( UNUSED(ALuint cid),
 	 */
 	offsets = tpitch_lookup.offsets[ l_index ];
 
-#if DEBUG_MEM
+#ifdef DEBUG_MEM
 	assert(l_index < TPITCH_MAX);
 #endif
 
@@ -1352,7 +1357,7 @@ void alf_tpitch( UNUSED(ALuint cid),
 		obufptr  = samp->orig_buffers[i];
 		obufptr += src->srcParams.soundpos / sizeof *obufptr;
 
-#if DEBUG_MEM
+#ifdef DEBUG_MEM
 		assert(samp->orig_buffers[i]);
 		assert(src->srcParams.soundpos < samp->size);
 #endif
@@ -1598,7 +1603,7 @@ void alf_tpitch( UNUSED(ALuint cid),
 		for(j = 0; j < clen; j++)
 		{
 			/* make sure we don't go past end of last source */
-#if DEBUG_FILTER
+#ifdef DEBUG_FILTER
 			assert(((j+1)*pitch)*2 <
 				samp->size - src->srcParams.soundpos);
 #endif

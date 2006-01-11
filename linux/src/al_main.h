@@ -15,18 +15,6 @@
 #include "alc/alc_context.h"
 
 /*
- * If compiling with gcc, then we can use attributes.
- *
- * UNUNSED(x) flags a parameter or variable as (potentially) being unused, so
- * that gcc doesn't complain about it with -Wunused.
- */
-#if defined(__GNUC__) &&  (__GNUC__ >= 3)
-#define UNUSED(x) x __attribute((unused))
-#else
-#define UNUSED(x) x
-#endif
-
-/*
  * _alLockPrintf is used for debugging purposes.  If DEBUG_LOCK is defined,
  * calls to _alLockPrintf generate a print to stderr.  If not, these calls are
  * optimized away.

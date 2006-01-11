@@ -152,14 +152,6 @@ ALboolean _alMixPoolDealloc( _alMixPool *spool, int msindex,
 		return AL_FALSE;
 	}
 
-	if(spool->pool[msindex].inuse == AL_FALSE) {
-		_alDebug(ALD_MIXER, __FILE__, __LINE__,
-			"index %d is not in use", msindex);
-
-		/* already deleted */
-		return AL_FALSE;
-	}
-
 	spool->pool[msindex].inuse = AL_FALSE;
 
 	freer_func(src);

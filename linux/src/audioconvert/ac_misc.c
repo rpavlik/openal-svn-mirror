@@ -24,12 +24,6 @@
 #include "audioconvert/ac_endian.h"
 #include "audioconvert/ac_wave.h"
 
-#if defined(__GNUC__) &&  (__GNUC__ >= 3)
-#define UNUSED(x) x __attribute((unused))
-#else
-#define UNUSED(x) x
-#endif
-
 #define PCM_CODE        0x0001
 #define MS_ADPCM_CODE   0x0002
 #define IMA_ADPCM_CODE  0x0011
@@ -655,15 +649,11 @@ void *ac_getWAVEadpcm_info(void *data, ALuint *size, void *spec) {
 		  InitIMA_ADPCM(ias, format);
 
 		  return retval;
-		  break;
 		case PCM_CODE:
 		default:
 		  fprintf(stderr, "returning NULL\n");
 		  return NULL;
-		  break;
 	}
-
-	return NULL;
 }
 
 int ac_isWAVE_IMA_adpcm(void *data, ALuint size) {
@@ -693,6 +683,7 @@ int RiffOffset(ALubyte *rawdata, ALint magic) {
 		ALint magic;
 		ALint len;
 	} chunk;
+	int retval;
 
 	rawp = rawdata + 12;
 
@@ -719,11 +710,12 @@ int RiffOffset(ALubyte *rawdata, ALint magic) {
 #endif
 
 		if(chunk.magic == magic) {
-			return rawp - rawdata;
+			retval = rawp - rawdata;
+			break;
 		}
 
 		rawp += chunk.len;
 	} while(1);
 
-	return -1;
+	return retval;
 }

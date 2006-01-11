@@ -80,7 +80,6 @@ static int LIN2ALFMT(int fmt, int channels)
 				case 4: return AL_FORMAT_QUAD8_LOKI;
 				default: return -1;
 			}
-			break;
 		case AFMT_S16:
 			switch(channels)
 			{
@@ -89,16 +88,12 @@ static int LIN2ALFMT(int fmt, int channels)
 				case 4: return AL_FORMAT_QUAD16_LOKI;
 				default: return -1;
 			}
-			break;
 		default:
 #ifdef DEBUG_MAXIMUS
 			fprintf(stderr, "unsupported dsp format\n");
 #endif
 			return -1;
-			break;
 	}
-
-	return -1;
 }
 
 /* convert the format channel from openal to /dev/dsp format */
@@ -337,8 +332,6 @@ static int alcChannel_to_dsp_channel(ALCenum alcc) {
 		case ALC_CHAN_PCM_LOKI:  return SOUND_MIXER_PCM;
 		default: return -1;
 	}
-
-	return -1;
 }
 
 void pause_nativedevice(void *handle) {

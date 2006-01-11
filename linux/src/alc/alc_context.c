@@ -664,7 +664,6 @@ void _alcSetContext(const ALCint *attrlist, ALuint cid, AL_device *dev ) {
 				break;
 			default:
 				reading_keys = AL_FALSE;
-				break;
 				_alDebug(ALD_CONTEXT,
 					__FILE__, __LINE__,
 					"unsupported context attr %d",

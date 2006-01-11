@@ -23,6 +23,7 @@ FEATURECFLAGS="-D_ISOC99_SOURCE -D_POSIX_C_SOURCE=199309"
 
 AC_PROG_CC
 AC_C_CONST
+ALUT_C__ATTRIBUTE__
 AC_EXEEXT
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
@@ -87,9 +88,18 @@ if test "x$enable_more_warnings" = xyes; then
     #    -Wconversion:
     #      Passing e.g. float as an argument is fine, we always have prototypes.
     #
+    #    -Wfloat-equal:
+    #       Often we should use an epsilon, but there are some correct uses,
+    #       too, so we leave it out for now. ToDo: Fix those warnings, anyway!
+    #
     # Note that some older GCC versions give false positives about unreachable
-    # code.
-    WARNINGCFLAGS="$WARNINGCFLAGS -W -Waggregate-return -Wbad-function-cast -Wcast-align -Wcast-qual -Wdisabled-optimization -Wendif-labels -Wfloat-equal -Winline -Wlong-long -Wmissing-declarations -Wmissing-format-attribute -Wmissing-noreturn -Wmissing-prototypes -Wnested-externs -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wsign-compare -Wstrict-prototypes -Wundef -Wunreachable-code -Wwrite-strings"
+    # code. Furthermore, using GNU's <string.h> header normally results in lots
+    # of string functions like strcmp being macros which result in such false
+    # positives, too. To disable those, one can use -D__NO_STRING_INLINES for
+    # testing. And another source for false positives is inlining, so leaving
+    # out -finline-functions or using -fno-inline-functions explicitly might
+    # help, too.
+    WARNINGCFLAGS="$WARNINGCFLAGS -W -Waggregate-return -Wbad-function-cast -Wcast-align -Wcast-qual -Wdisabled-optimization -Wendif-labels -Winline -Wlong-long -Wmissing-declarations -Wmissing-format-attribute -Wmissing-noreturn -Wmissing-prototypes -Wnested-externs -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wsign-compare -Wstrict-prototypes -Wundef -Wunreachable-code -Wwrite-strings"
 
     # Check for GCC 4.x-only warning options.
     ALUT_CHECK_FLAG([-Wdeclaration-after-statement],

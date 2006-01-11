@@ -115,7 +115,7 @@ int sync_mixer_iterate( void *dummy );
  *
  * Threaded top level mixing logic.
  */
-int async_mixer_iterate( void *dummy );
+int async_mixer_iterate( void *dummy )AL_ATTRIBUTE_NORETURN_;
 
 /*
  * Pointer to either sync or async_mixer_iterate.
@@ -309,7 +309,7 @@ static void _alMixSources( void )
  			 * of the next buffer in the queue.
  			 */
 
-#if DEBUG_QUEUE
+#ifdef DEBUG_QUEUE
 			if(src->bid_queue.read_index < src->bid_queue.size)
 			{
 				ALint ri = src->bid_queue.read_index;
@@ -836,7 +836,7 @@ static ALboolean _alAllocMixSource( ALuint sid )
 
 		_alDebug(ALD_MIXER, __FILE__, __LINE__,
 			"_alAllocMixSource: source %d has invalid BUFFER %d:%d",
-			sid, src->bid_queue.read_index, bid);
+			sid, src->bid_queue.read_index, *bid);
 
 		_alSetError(context_id, AL_INVALID_NAME);
 
@@ -1120,8 +1120,9 @@ int async_mixer_iterate(UNUSED(void *dummy)) {
 	time_for_mixer_to_die = AL_FALSE;
 
 	_alExitThread();
-
+#ifndef HAVE___ATTRIBUTE__
 	return 0;
+#endif
 }
 
 /*

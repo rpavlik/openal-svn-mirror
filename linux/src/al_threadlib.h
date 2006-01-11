@@ -56,6 +56,6 @@ extern unsigned int _alSelfThread( void );
 /*
  * Forces the callee to terminate.
  */
-extern void _alExitThread( void );
+extern void _alExitThread( void ) AL_ATTRIBUTE_NORETURN_;
 
 #endif				/* THREADLIB_H_ */

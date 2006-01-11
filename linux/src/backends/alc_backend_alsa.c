@@ -367,7 +367,7 @@ static ALboolean set_read_alsa( void *handle,
 	ai->periods     = 2;
 
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-			"alsa info (read): channels: %u, format: %u, speed: %u, framesize: %u, bufframesize: %u,periods: %u",
+			"alsa info (read): channels: %u, format: %u, speed: %u, framesize: %u, bufframesize: %lu,periods: %u",
 			ai->channels, ai->format, ai->speed, ai->framesize, ai->bufframesize, ai->periods);
 
 	phandle = ai->handle;
@@ -458,7 +458,7 @@ static ALboolean set_read_alsa( void *handle,
 	err = psnd_pcm_hw_params_set_buffer_size_near(phandle, setup, &ai->bufframesize);
 	if (err < 0) {
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-				"set_read_alsa: %s, size: %d, speed: %d",
+				"set_read_alsa: %s, size: %lu, speed: %d",
 				psnd_strerror(err), ai->bufframesize, ai->speed);
 		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
@@ -473,9 +473,9 @@ static ALboolean set_read_alsa( void *handle,
 #endif
 
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-			"set_read_alsa (info): Buffersize = %i (%i)",buffer_size, *bufsiz);
+			"set_read_alsa (info): Buffersize = %lu (%u)",buffer_size, *bufsiz);
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-			"set_read_alsa (info): Periodsize = %i", period_size);
+			"set_read_alsa (info): Periodsize = %lu", period_size);
 	*bufsiz = buffer_size * ai->framesize;
 
 	err = psnd_pcm_hw_params(phandle, setup);
@@ -497,7 +497,7 @@ static ALboolean set_read_alsa( void *handle,
 	}
 
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-			"set_read_alsa: handle: %p, phandle: %p", handle, phandle);
+		 "set_read_alsa: handle: %p, phandle: %p", handle, (void*)phandle);
 	ai->setup_read = 1;
 
 	psnd_pcm_hw_params_free(setup);
@@ -526,7 +526,7 @@ static ALboolean set_write_alsa(void *handle,
 	ai->periods     = 2;
 
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-			"alsa info (write): channels: %u, format: %u, speed: %u, framesize: %u, bufframesize: %u, periods: %u",
+			"alsa info (write): channels: %u, format: %u, speed: %u, framesize: %u, bufframesize: %lu, periods: %u",
 			ai->channels, ai->format, ai->speed, ai->framesize, ai->bufframesize, ai->periods);
 
 	phandle = ai->handle;
@@ -625,7 +625,7 @@ static ALboolean set_write_alsa(void *handle,
 	err = psnd_pcm_hw_params_set_buffer_size_near(phandle, setup, &ai->bufframesize);
 	if (err < 0) {
 		_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-				"set_write_alsa: %s, size: %d, speed: %d",
+				"set_write_alsa: %s, size: %lu, speed: %d",
 				psnd_strerror(err), ai->bufframesize, ai->speed);
 		psnd_pcm_hw_params_free(setup);
 		return AL_FALSE;
@@ -640,9 +640,9 @@ static ALboolean set_write_alsa(void *handle,
 #endif
 
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-			"set_write_alsa (info): Buffersize = %i (%i)",buffer_size, *bufsiz);
+			"set_write_alsa (info): Buffersize = %lu (%u)",buffer_size, *bufsiz);
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-			"set_write_alsa (info): Periodsize = %i", period_size);
+			"set_write_alsa (info): Periodsize = %lu", period_size);
 
 	err = psnd_pcm_hw_params(phandle, setup);
 	if(err < 0)
@@ -663,7 +663,7 @@ static ALboolean set_write_alsa(void *handle,
 	}
 
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-			"set_write_alsa: handle: %p, phandle: %p", handle, phandle);
+		 "set_write_alsa: handle: %p, phandle: %p", handle, (void*)phandle);
 	ai->setup_write = 1;
 
 	psnd_pcm_hw_params_free(setup);

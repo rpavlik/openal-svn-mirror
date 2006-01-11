@@ -14,6 +14,7 @@
 
 #include "al_debug.h"
 
+#ifdef NEED_DEBUG
 /*
  * ald2str( aldEnum type )
  *
@@ -21,7 +22,31 @@
  * type, or NULL if type is not a valid debug message type.  This string does
  * not need to be free'd.
  */
-static const char *ald2str( aldEnum type );
+static const char *ald2str( aldEnum l ) {
+	switch( l ) {
+		case ALD_INVALID:   return "INVALID";
+		case ALD_CONVERT:   return "CONVERT";
+		case ALD_CONFIG:    return "CONFIG";
+		case ALD_SOURCE:    return "SOURCE";
+		case ALD_LOOP:      return "LOOP";
+		case ALD_STUB:      return "STUB";
+		case ALD_CONTEXT:   return "CONTEXT";
+		case ALD_MATH:      return "MATH";
+		case ALD_MIXER:     return "MIXER";
+		case ALD_ERROR:     return "ERROR";
+		case ALD_EXT:       return "EXT";
+		case ALD_LOCK:      return "LOCK";
+		case ALD_MAXIMUS:   return "MAXIMUS";
+		case ALD_STREAMING: return "STREAM";
+		case ALD_MEM:       return "MEM";
+		case ALD_QUEUE:     return "QUEUE";
+		case ALD_FILTER:     return "FILTER";
+		default: break;
+	}
+
+	return NULL;
+}
+#endif
 
 /*
  * _alDebug( aldEnum level, const char *fn, int ln, const char *format, ... )
@@ -32,15 +57,13 @@ static const char *ald2str( aldEnum type );
  */
 int _alDebug( aldEnum level, const char *fn, int ln, const char *format, ... )
 {
+#ifndef NEED_DEBUG
+	(void)level; (void)fn; (void)ln; (void)format;
+	return 0;
+#else
 	static char formatbuf[256];
 	int count;
-
 	va_list ap;
-
-#ifndef NEED_DEBUG
-	return 0;
-#endif
-
 #ifndef DEBUG_MAXIMUS /* DEBUG_MAXIMUS enables all debugging */
 
 #ifndef DEBUG_LOOP
@@ -109,48 +132,5 @@ int _alDebug( aldEnum level, const char *fn, int ln, const char *format, ... )
 
 	return fprintf(stderr, "%s\t[%s:%d] %s\n",
 		       ald2str(level), fn, ln, formatbuf );
-}
-
-/*
- * ald2str( aldEnum type )
- *
- * Returns a const char * string giving a readable representation of the debug
- * type, or NULL if type is not a valid debug message type.  This string does
- * not need to be free'd.
- */
-const char *ald2str( aldEnum l ) {
-	switch( l ) {
-		case ALD_INVALID:   return "INVALID";
-		case ALD_CONVERT:   return "CONVERT";
-		case ALD_CONFIG:    return "CONFIG";
-		case ALD_SOURCE:    return "SOURCE";
-		case ALD_LOOP:      return "LOOP";
-		case ALD_STUB:      return "STUB";
-		case ALD_CONTEXT:   return "CONTEXT";
-		case ALD_MATH:      return "MATH";
-		case ALD_MIXER:     return "MIXER";
-		case ALD_ERROR:     return "ERROR";
-		case ALD_EXT:       return "EXT";
-		case ALD_LOCK:      return "LOCK";
-		case ALD_MAXIMUS:   return "MAXIMUS";
-		case ALD_STREAMING: return "STREAM";
-		case ALD_MEM:       return "MEM";
-		case ALD_QUEUE:     return "QUEUE";
-		case ALD_FILTER:     return "FILTER";
-		default: break;
-	}
-
-	return NULL;
-}
-
-int _alDebugPrintf( const char *format, ... )
-{
-	static char formatbuf[256];
-
-	va_list ap;
-	va_start(ap, format);
-	vsnprintf(formatbuf, sizeof formatbuf, format, ap);
-	va_end(ap);
-
-	return fprintf(stderr, "%s", formatbuf);
+#endif /* NEED_DEBUG */
 }

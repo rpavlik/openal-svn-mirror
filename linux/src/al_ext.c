@@ -393,7 +393,7 @@ alGetProcAddress( const ALchar *funcName )
 		return (void *)value; /* NOTE: The cast is not valid ISO C! */
 	}
 	_alDCSetError( AL_INVALID_VALUE );
-	return value;
+	return (void *)value; /* NOTE: The cast is not valid ISO C! */
 }
 
 
@@ -420,7 +420,7 @@ ALboolean _alRegisterExtension( const ALubyte *name, AL_funcPtr addr ) {
 	etree = temp;
 
 	_alDebug(ALD_EXT, __FILE__, __LINE__,
-		"registered %s at %p", name, addr);
+		 "registered %s at %p", name, (void*)addr);
 
 	return AL_TRUE;
 }

@@ -292,12 +292,8 @@ ALint rc_toint( Rcvar sym ) {
 		case ALRC_FLOAT:
 			return (ALint) r->data.f;
 		default:
-			break;
+			return 0;
 	}
-
-	assert(0);
-
-	return 0;
 }
 
 /*
@@ -513,4 +509,3 @@ Rcvar alrc_quote( Rcvar val) {
 
 	return retval;
 }
-

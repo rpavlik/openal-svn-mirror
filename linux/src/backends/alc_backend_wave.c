@@ -337,9 +337,6 @@ alcBackendSetAttributesWAVE_(ALC_OpenMode mode, void *handle, ALuint *bufsiz, AL
  */
 static void convert_to_little_endian( ALuint bps, void *data, int nbytes )
 {
-	ALshort *outp = data;
-	ALuint i;
-
 	assert( data );
 	assert( nbytes > 0 );
 
@@ -348,22 +345,20 @@ static void convert_to_little_endian( ALuint bps, void *data, int nbytes )
 		return;
 	}
 
-#ifndef WORDS_BIGENDIAN
-	/*
-	 * We're on a little endian machine.  The data is already in
-	 * little endian format.
-	 */
-	return;
-#endif /* WORDS_BIG_ENDIAN */
-
 	assert( bps == 16 );
 
+#ifdef WORDS_BIGENDIAN
 	/* do the conversion */
-	for( i = 0; i < nbytes/sizeof(ALshort); i++ ) {
-		outp[i] = swap16le( outp[i] );
+	{
+		ALshort *outp = data;
+		ALuint i;
+		for( i = 0; i < nbytes/sizeof(ALshort); i++ ) {
+			outp[i] = swap16le( outp[i] );
+		}
 	}
-
-	return;
+#else
+	(void)data; (void)nbytes;
+#endif /* WORDS_BIG_ENDIAN */
 }
 
 void

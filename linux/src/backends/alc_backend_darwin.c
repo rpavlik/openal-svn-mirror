@@ -65,6 +65,19 @@ static int NoPrintf( UNUSED(const char *format), ... )
 	return 0;
 }
 
+/* ToDo: Use vfprintf and nuke buffer */
+static int _alDebugPrintf( const char *format, ... )
+{
+	static char formatbuf[256];
+
+	va_list ap;
+	va_start(ap, format);
+	vsnprintf(formatbuf, sizeof formatbuf, format, ap);
+	va_end(ap);
+
+	return fprintf(stderr, "%s", formatbuf);
+}
+
 static int (*DebugPrintf)( const char *format, ... ) = NoPrintf;
 
 

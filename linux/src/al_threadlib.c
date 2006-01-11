@@ -11,12 +11,16 @@
 
 typedef int ( *ptfunc ) ( void * );
 
+static void *runThread( void *data ) AL_ATTRIBUTE_NORETURN_;
+
 static void *runThread( void *data )
 {
 	ptfunc fn = ( ptfunc ) data;
 	fn( NULL );
 	pthread_exit( NULL );
-	return NULL;		/* Prevent compiler warning */
+#ifndef HAVE___ATTRIBUTE__
+	return NULL;
+#endif
 }
 
 ThreadID _alCreateThread( int ( *fn ) ( void * ) )
@@ -63,8 +67,6 @@ void _alExitThread( void )
 
 /* for _alMicroSleep */
 #include "al_main.h"
-
-typedef int ( *ptfunc ) ( void * );
 
 ThreadID _alCreateThread( int ( *fn ) ( void * ) )
 {

@@ -84,30 +84,21 @@ static int ErrorNo2index( ALenum error_number ) {
 	switch( error_number ) {
 		case AL_NO_ERROR:
 			return 0;
-			break;
 		case AL_INVALID_NAME:
 			return 1;
-			break;
 		case AL_INVALID_ENUM:
 			return 2;
-			break;
 		case AL_INVALID_VALUE:
 			return 3;
-			break;
 		case AL_INVALID_OPERATION:
 			return 4;
-			break;
 		case AL_OUT_OF_MEMORY:
 			return 5;
-			break;
 		default:
 			_alDebug( ALD_ERROR, __FILE__, __LINE__,
 				"Unknown error condition: 0x%x", error_number );
 			return -1;
-			break;
 	}
-
-	return -1;
 }
 
 /*
@@ -119,29 +110,21 @@ static ALenum index2ErrorNo( int index ) {
 	switch( index ) {
  		case 0:
 			return AL_NO_ERROR;
-			break;
 		case 1:
 			return AL_INVALID_NAME;
-			break;
 		case 2:
 			return AL_INVALID_ENUM;
-			break;
 		case 3:
 			return AL_INVALID_VALUE;
-			break;
 		case 4:
 			return AL_INVALID_OPERATION;
-			break;
 		case 5:
 			return AL_OUT_OF_MEMORY;
-			break;
 		default:
 			_alDebug( ALD_ERROR, __FILE__, __LINE__,
 				"Unknown index : %d", index );
-			break;
+			return -1;
 	}
-
-	return -1;
 }
 
 /*
