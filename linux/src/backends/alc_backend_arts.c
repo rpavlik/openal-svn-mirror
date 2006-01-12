@@ -19,7 +19,7 @@
 #include <unistd.h>
 #include <artsc.h>
 
-#if OPENAL_DLOPEN_ARTS
+#ifdef OPENAL_DLOPEN_ARTS
 #include <dlfcn.h>
 #endif
 
@@ -66,14 +66,14 @@ static void * arts_lib_handle = NULL;
 
 static int openal_load_arts_library(void)
 {
-#if OPENAL_DLOPEN_ARTS
+#ifdef OPENAL_DLOPEN_ARTS
         char * error = NULL;
 #endif
     
 	if (arts_lib_handle != NULL)
 		return 1;  /* already loaded. */
 
-	#if OPENAL_DLOPEN_ARTS
+	#ifdef OPENAL_DLOPEN_ARTS
 		#define OPENAL_LOAD_ARTS_SYMBOL(x) p##x = dlsym(arts_lib_handle, #x); \
                                                    error = dlerror(); \
                                                    if (p##x == NULL) { \

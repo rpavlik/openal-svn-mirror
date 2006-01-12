@@ -29,7 +29,7 @@
 #ifdef ENABLE_EXTENSION_AL_EXT_VORBIS
 #include <vorbis/vorbisfile.h>
 
-#if OPENAL_DLOPEN_VORBIS
+#ifdef OPENAL_DLOPEN_VORBIS
 #include <dlfcn.h>
 #endif
 
@@ -144,14 +144,14 @@ static void * vorbisfile_lib_handle = NULL;
 
 static int openal_load_vorbisfile_library(void)
 {
-#if OPENAL_DLOPEN_VORBIS
+#ifdef OPENAL_DLOPEN_VORBIS
         char * error = NULL;
 #endif
     
 	if (vorbisfile_lib_handle != NULL)
 		return 1;  /* already loaded. */
 
-	#if OPENAL_DLOPEN_VORBIS
+	#ifdef OPENAL_DLOPEN_VORBIS
 		#define OPENAL_LOAD_VORBISFILE_SYMBOL(x) p##x = dlsym(vorbisfile_lib_handle, #x); \
                                                    error = dlerror(); \
                                                    if (p##x == NULL) { \

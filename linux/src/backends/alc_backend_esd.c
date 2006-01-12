@@ -27,7 +27,7 @@
 
 #include "alc/alc_context.h"
 
-#if OPENAL_DLOPEN_ESD
+#ifdef OPENAL_DLOPEN_ESD
 #include <dlfcn.h>
 #endif
 
@@ -63,14 +63,14 @@ static void * esd_lib_handle = NULL;
 
 static int openal_load_esd_library(void)
 {
-#if OPENAL_DLOPEN_ESD
+#ifdef OPENAL_DLOPEN_ESD
         char * error = NULL;
 #endif
     
 	if (esd_lib_handle != NULL)
 		return 1;  /* already loaded. */
 
-	#if OPENAL_DLOPEN_ESD
+	#ifdef OPENAL_DLOPEN_ESD
 		#define OPENAL_LOAD_ESD_SYMBOL(x) p##x = dlsym(esd_lib_handle, #x); \
                                                    error = dlerror(); \
                                                    if (p##x == NULL) { \

@@ -37,7 +37,7 @@
 #include "al_debug.h"
 #include "al_main.h"
 
-#if OPENAL_DLOPEN_ALSA
+#ifdef OPENAL_DLOPEN_ALSA
 #include <dlfcn.h>
 #endif
 
@@ -81,7 +81,7 @@ static int (*psnd_pcm_hw_params_get_period_size)(const snd_pcm_hw_params_t *para
 
 static int openal_load_alsa_library(void)
 {
-#if OPENAL_DLOPEN_ALSA
+#ifdef OPENAL_DLOPEN_ALSA
         char * error = NULL;
 #endif
     
@@ -100,7 +100,7 @@ static int openal_load_alsa_library(void)
            symbol versions first before falling back to unversioned symbols. */
         /* this is our current preferred symbol versioning order:
            ALSA_0.9.0rc4 > (generic) */
-	#if OPENAL_DLOPEN_ALSA
+	#ifdef OPENAL_DLOPEN_ALSA
 		#define OPENAL_LOAD_ALSA_SYMBOL(x) p##x = AL_DLVSYM(alsa_lib_handle, #x, "ALSA_0.9.0rc4"); \
                                                    error = dlerror(); \
                                                    if ((error != NULL)||(p##x == NULL)) { \

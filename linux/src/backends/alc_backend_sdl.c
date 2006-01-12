@@ -18,7 +18,7 @@
 #include "alc/alc_context.h"
 #include "backends/alc_backend.h"
 
-#if OPENAL_DLOPEN_SDL
+#ifdef OPENAL_DLOPEN_SDL
 #include <dlfcn.h>
 #endif
 
@@ -60,14 +60,14 @@ static void * sdl_lib_handle = NULL;
 
 static int openal_load_sdl_library(void)
 {
-#if OPENAL_DLOPEN_SDL
+#ifdef OPENAL_DLOPEN_SDL
         char * error = NULL;
 #endif
     
 	if (sdl_lib_handle != NULL)
 		return 1;  /* already loaded. */
 
-	#if OPENAL_DLOPEN_SDL
+	#ifdef OPENAL_DLOPEN_SDL
 		#define OPENAL_LOAD_SDL_SYMBOL(x) p##x = dlsym(sdl_lib_handle, #x); \
                                                    error = dlerror(); \
                                                    if (p##x == NULL) { \
