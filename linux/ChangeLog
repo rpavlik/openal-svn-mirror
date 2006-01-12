@@ -1,3 +1,9 @@
+2006-01-13  Prakash Punnoor <prakash@punnoor.de>
+
+	* src/arch/Makefile.am: added	
+
+	* configure.ac, src/Makefile.am: kludge for nasm vs. automake-1.8
+
 2006-01-12  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/extensions/al_ext_vorbis.c, src/backends/alc_backend_alsa.c,

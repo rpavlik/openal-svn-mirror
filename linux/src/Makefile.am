@@ -153,7 +153,7 @@ endif
 
 if X86NASMENABLED
 # autotools suck hard; this is the only way I got it working
-X86_SUBDIR = arch/i386
+X86_SUBDIR = arch
 asm_ldadd = $(top_builddir)/src/arch/i386/libx86_asm_routines.la
 endif
 

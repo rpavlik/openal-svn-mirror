@@ -1171,6 +1171,7 @@ AC_CONFIG_FILES([Makefile
                  common/include/Makefile
                  include/Makefile
                  src/Makefile
+                 src/arch/Makefile
                  src/arch/i386/Makefile])
 
 AC_CONFIG_COMMANDS([default], [chmod +x admin/pkgconfig/openal-config])
