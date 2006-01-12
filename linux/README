@@ -45,7 +45,7 @@ configure, as dependening on them, SIMD code will be activated, i.e.:
    CFLAGS="-march=athlon-xp" ./configure
 
 configure will detect that "-march=athlon-xp" activates MMX, SSE,
-3dNOW!, SSE-MMX and 3dNOW! extended. You can also explicitly enable a
+3DNow!, SSE-MMX and 3DNow! extended. You can also explicitly enable a
 specific SIMD instruction set via CFLAGS, i.e. "-mmmx" activates MMX on
 the GCC compiler (see its manual). Currently OpenAL only features some
 MMX code though, so other SIMD instruction set are ignored.  On x86 (32
@@ -105,8 +105,8 @@ system.)
    + prepared for adding support for non GNU compiler
    (setting link libraries probably needs cleaning up)
    + support for IDE project files generation
-   + much less time overhead till compilation starts
-   + less hassle for user (GUI) and developer (one Syntax)
+   + less time overhead till compilation starts
+   + less hassle for user (GUI) and developer (one syntax)
 
 This document explains briefly how to build with CMake on Linux via an
 out-of-tree build:

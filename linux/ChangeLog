@@ -1,8 +1,10 @@
 2006-01-13  Prakash Punnoor <prakash@punnoor.de>
 
-	* src/arch/Makefile.am: added	
+	* src/arch/Makefile.am, src/arch/.cvsignore: added
 
 	* configure.ac, src/Makefile.am: kludge for nasm vs. automake-1.8
+	
+	* README: cmake related corrections
 
 2006-01-12  Prakash Punnoor <prakash@punnoor.de>
 
