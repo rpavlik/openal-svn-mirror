@@ -153,7 +153,7 @@ endif
 
 if X86NASMENABLED
 # autotools suck hard; this is the only way I got it working
-SUBDIRS = arch/i386
+X86_SUBDIR = arch/i386
 asm_ldadd = $(top_builddir)/src/arch/i386/libx86_asm_routines.la
 endif
 
@@ -218,3 +218,5 @@ libopenal_la_LDFLAGS = -no-undefined $(PROFILINGLDFLAGS)
 
 # We use sin and friends, so we might need -lm, autoconf takes care of this.
 libopenal_la_LIBADD = $(LIBM) $(asm_ldadd)
+
+SUBDIRS = $(X86_SUBDIR)
