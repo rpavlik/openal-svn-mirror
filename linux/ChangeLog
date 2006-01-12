@@ -5,6 +5,8 @@
 	src/backends/alc_backend_sdl.c: #if -> #ifdef
 	
 	* CMakeLists.txt: improve defines handling
+	
+	* Makefile.am: fix (I hope) for SUBDIRS problem (with older automake?)
 
 2006-01-11  Prakash Punnoor <prakash@punnoor.de>
 
