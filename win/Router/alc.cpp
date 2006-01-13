@@ -213,6 +213,45 @@ ALboolean NewSpecifierCheck(const ALCchar* specifier)
 	return AL_TRUE;
 }
 
+ALboolean notOldNVIDIALib(const ALCchar* fileName)
+{
+	DWORD handle;
+	DWORD size;
+	void *data;
+	VS_FIXEDFILEINFO *versionInfoPtr;
+	unsigned int versionInfoLen;
+	DWORD ms, ls;
+	WORD V0 = 6;
+	WORD V1 = 14;
+	WORD V2 = 365;
+	WORD V3 = 2;
+
+	if (strstr(fileName, "NVOPENAL.DLL") != 0) {
+		ms = V3 * 65536 + V2;
+		ls = V1 * 65536 + V0;
+
+		size = GetFileVersionInfoSize(fileName, &handle);
+		if (size > 0) {
+			data = malloc(size);
+			if (data != NULL) {
+				if (GetFileVersionInfo(fileName, NULL, size, data)) {
+					if (VerQueryValue(data, "\\", (void **)&versionInfoPtr, &versionInfoLen)) {
+						if ((versionInfoPtr->dwFileVersionMS < ms) ||
+							(versionInfoPtr->dwFileVersionMS == ms) && (versionInfoPtr->dwProductVersionLS <= ls)) {
+							return false;
+						}
+					}
+				}
+				free(data);
+			}
+		} else {
+			return true;
+		}
+	}
+
+	return true;
+}
+
 //*****************************************************************************
 // BuildDeviceSpecifierList
 //*****************************************************************************
@@ -294,7 +333,7 @@ ALvoid BuildDeviceSpecifierList()
 					TCHAR cmpName[MAX_PATH];
 					_tcscpy(cmpName, searchName);
 					_tcsupr(cmpName);
-					if (strstr(cmpName, "OPENAL32.DLL") == 0)
+					if ((strstr(cmpName, "OPENAL32.DLL") == 0) && notOldNVIDIALib(cmpName))
 					{
 						//
 						// Its not, so load it and see if the name matches.
@@ -361,40 +400,6 @@ ALvoid BuildDeviceSpecifierList()
 											alcCloseDeviceFxn(device);
 										}
 									}
-								}
-							} else {
-								// handle legacy Creative DLLs which don't have alcIsExtensionPresentFxn exported (original Audigy, Live)
-								if ((alcOpenDeviceFxn != 0) &&
-									(alcCreateContextFxn != 0) &&
-									(alcMakeContextCurrentFxn != 0) &&
-									(alcGetStringFxn != 0) &&
-									(alcDestroyContextFxn != 0) &&
-									(alcCloseDeviceFxn != 0)) {
-
-									device = alcOpenDeviceFxn(NULL);
-									if (device != NULL) {
-										context = alcCreateContextFxn(device, NULL);
-										alcMakeContextCurrentFxn((ALCcontext *)context);
-										if (context != NULL) {
-											specifier = alcGetStringFxn(device, ALC_DEVICE_SPECIFIER);
-											if ((specifier) && strlen(specifier))
-											{
-												specifierSize = strlen((char*)specifier);
-
-												if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
-													if(specifierSize + listSize + 1 < MAX_PATH - 1)
-													{
-														strcpy((char*)list, (char*)specifier);
-														list += specifierSize + 1;
-													}
-												}
-											}
-											alcMakeContextCurrentFxn((ALCcontext *)NULL);
-											alcDestroyContextFxn((ALCcontext *)context);
-											alcCloseDeviceFxn(device);
-										}
-									}
-
 								}
 							}
 
@@ -504,40 +509,6 @@ ALvoid BuildDeviceSpecifierList()
 											alcCloseDeviceFxn(device);
 										}
 									}
-								}
-							} else {
-								// handle legacy Creative DLLs which don't have alcIsExtensionPresentFxn exported (original Audigy, Live)
-								if ((alcOpenDeviceFxn != 0) &&
-									(alcCreateContextFxn != 0) &&
-									(alcMakeContextCurrentFxn != 0) &&
-									(alcGetStringFxn != 0) &&
-									(alcDestroyContextFxn != 0) &&
-									(alcCloseDeviceFxn != 0)) {
-
-									device = alcOpenDeviceFxn(NULL);
-									if (device != NULL) {
-										context = alcCreateContextFxn(device, NULL);
-										alcMakeContextCurrentFxn((ALCcontext *)context);
-										if (context != NULL) {
-											specifier = alcGetStringFxn(device, ALC_DEVICE_SPECIFIER);
-											if ((specifier) && strlen(specifier))
-											{
-												specifierSize = strlen((char*)specifier);
-
-												if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
-													if(specifierSize + listSize + 1 < MAX_PATH - 1)
-													{
-														strcpy((char*)list, (char*)specifier);
-														list += specifierSize + 1;
-													}
-												}
-											}
-											alcMakeContextCurrentFxn((ALCcontext *)NULL);
-											alcDestroyContextFxn((ALCcontext *)context);
-											alcCloseDeviceFxn(device);
-										}
-									}
-
 								}
 							}
 
@@ -948,7 +919,7 @@ HINSTANCE FindDllWithMatchingSpecifier(TCHAR* dllSearchPattern, char* specifier,
 				TCHAR cmpName[MAX_PATH];
 				_tcscpy(cmpName, searchName);
 				_tcsupr(cmpName);
-				if (strstr(cmpName, "OPENAL32.DLL") == 0)
+				if ((strstr(cmpName, "OPENAL32.DLL") == 0) && notOldNVIDIALib(cmpName))
                 {
                     //
                     // Its not, so load it and see if the name matches.
@@ -1018,30 +989,6 @@ HINSTANCE FindDllWithMatchingSpecifier(TCHAR* dllSearchPattern, char* specifier,
 											alcCloseDeviceFxn(device);
 										}
 									}
-								}
-							}
-						} else {
-							// handle legacy Creative DLLs which don't have alcIsExtensionPresentFxn exported (original Audigy, Live)
-							device = alcOpenDeviceFxn(NULL);
-							if (device != NULL) {
-								context = alcCreateContextFxn(device, NULL);
-								alcMakeContextCurrentFxn((ALCcontext *)context);
-								if (context != NULL) {
-									deviceSpecifier = alcGetStringFxn(device, ALC_DEFAULT_DEVICE_SPECIFIER);
-									if (deviceSpecifier != NULL) {
-										if (partialName == false) {
-											found = strcmp((char*)deviceSpecifier, specifier) == 0;
-										} else {
-											found = strstr((char*)deviceSpecifier, specifier) != 0;
-											strcpy(actualName, (char *)deviceSpecifier);
-										}
-									} else {
-										found = false;
-									}
-
-									alcMakeContextCurrentFxn((ALCcontext *)NULL);
-									alcDestroyContextFxn((ALCcontext *)context);
-									alcCloseDeviceFxn(device);
 								}
 							}
 						}
