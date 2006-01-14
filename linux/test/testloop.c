@@ -13,7 +13,6 @@
 
 #define WAVEFILE "fire2.wav"
 
-static void *wave = NULL;
 static ALCcontext *context = NULL;
 static ALuint movingSource = 0;
 
@@ -22,25 +21,11 @@ static void init( const ALbyte *fname )
 	ALfloat weirdpos[] = { 300.0f, 0.0f, 0.0f };
 	ALfloat position[] = { 0.0f, 0.0f, 4.0f };
 	ALuint boom;
-	ALsizei size;
-	ALsizei freq;
-	ALsizei format;
-	ALboolean loop;
 
 	alListenerfv( AL_POSITION, weirdpos );
 
-	alGenBuffers( 1, &boom );
-
-	alutLoadWAVFile( fname, &format, &wave, &size, &freq, &loop );
-	if( wave == NULL ) {
-		fprintf( stderr, "Could not include %s\n",
-			 ( const char * ) fname );
-		exit( EXIT_FAILURE );
-	}
-
-	alBufferData( boom, format, wave, size, freq );
-	free( wave );		/* openal makes a local copy of wave data */
-
+	boom = CreateBufferFromFile( fname );
+	
 	alGenSources( 1, &movingSource );
 
 	alSourcei( movingSource, AL_BUFFER, boom );
@@ -73,6 +58,8 @@ int main( int argc, char *argv[] )
 	}
 
 	alcMakeContextCurrent( context );
+
+	testInitWithoutContext( &argc, argv );
 
 	getExtensionEntries(  );
 
@@ -110,6 +97,8 @@ int main( int argc, char *argv[] )
 		microSleep( 1000000 );
 	}
 	while( sourceIsPlaying( movingSource ) );
+
+	testExit();
 
 	alcDestroyContext( context );
 	alcCloseDevice( device );

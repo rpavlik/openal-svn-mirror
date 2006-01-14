@@ -35,6 +35,10 @@ void getExtensionEntries( void );
 ALboolean sourceIsPlaying( ALuint sid );
 void _RotatePointAboutAxis( const ALfloat angle, ALfloat *point,
                               const ALfloat *axis );
+ALuint CreateBufferFromFile( const char *fileName );
+void testInit( int *argcp, char **argv );
+void testInitWithoutContext( int *argcp, char **argv );
+void testExit( void );
 
 #ifdef __cplusplus
 }

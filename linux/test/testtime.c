@@ -18,7 +18,6 @@ static ALuint multis;
 
 static ALCdevice *device = NULL;
 static ALCcontext *context;
-static void *wave = NULL;
 
 static void iterate( void )
 {
@@ -36,26 +35,12 @@ static void init( const ALbyte *fname )
 	ALfloat back[] = { 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f };
 	ALfloat position[] = { 2.0f, 0.0f, -4.0f };
 	ALuint boom;
-	ALsizei size;
-	ALsizei freq;
-	ALsizei format;
-	ALboolean loop;
 
 	alListenerfv( AL_POSITION, zeroes );
 	alListenerfv( AL_VELOCITY, zeroes );
 	/* alListenerfv(AL_ORIENTATION, front ); */
 
-	alGenBuffers( 1, &boom );
-
-	alutLoadWAVFile( fname, &format, &wave, &size, &freq, &loop );
-	if( wave == NULL ) {
-		fprintf( stderr, "Could not include %s\n",
-			 ( const char * ) fname );
-		exit( EXIT_FAILURE );
-	}
-
-	alBufferData( boom, format, wave, size, freq );
-	free( wave );		/* openal makes a local copy of wave data */
+	boom = CreateBufferFromFile( fname );
 
 	alGenSources( NUMSOURCES, &multis );
 
@@ -92,6 +77,8 @@ int main( int argc, char *argv[] )
 
 	alcMakeContextCurrent( context );
 
+	testInitWithoutContext( &argc, argv );
+
 	init( ( const ALbyte * ) ( ( argc == 1 ) ? WAVEFILE : argv[1] ) );
 
 	iterate(  );
@@ -99,6 +86,8 @@ int main( int argc, char *argv[] )
 	while( sourceIsPlaying( multis ) == AL_TRUE ) {
 		microSleep( 1000000 );
 	}
+
+	testExit();
 
 	alcDestroyContext( context );
 	alcCloseDevice( device );

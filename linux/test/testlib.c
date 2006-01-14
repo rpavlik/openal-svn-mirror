@@ -1,6 +1,7 @@
 #include "testlib.h"
 
 #include <AL/al.h>
+#include <AL/alut.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -107,8 +108,8 @@ void getExtensionEntries( void )
 
 	GP( PFNALGENSTREAMINGBUFFERSPROC, palGenStreamingBuffers,
 	    "alGenStreamingBuffers_LOKI" );
-	GP( PFNALUTLOADRAW_ADPCMDATAPROC, palutLoadRAW_ADPCMData,
-	    "alutLoadRAW_ADPCMData_LOKI" );
+	/*GP( PFNALUTLOADRAW_ADPCMDATAPROC, palutLoadRAW_ADPCMData,
+	    "alutLoadRAW_ADPCMData_LOKI" );*/
 }
 
 ALboolean sourceIsPlaying( ALuint sid )
@@ -164,4 +165,45 @@ void _RotatePointAboutAxis( const ALfloat angle, ALfloat *point,
 	point[2] = pm0 * m[0][2] + pm1 * m[1][2] + pm2 * m[2][2];
 
 	return;
+}
+
+ALuint CreateBufferFromFile( const char *fileName )
+{
+	ALuint buffer = alutCreateBufferFromFile( fileName );
+	if (buffer == AL_NONE) {
+		ALenum error = alutGetError();
+		fprintf( stderr, "Error loading file: '%s'\n",
+			alutGetErrorString( error ) );
+		alutExit();
+		exit( EXIT_FAILURE );
+	}
+
+	return buffer;
+}
+
+void testInit( int *argcp, char **argv )
+{
+	if (!alutInit( argcp, argv )) {
+		ALenum error = alutGetError();
+		fprintf( stderr, "%s\n", alutGetErrorString( error ) );
+		exit( EXIT_FAILURE );
+	}
+}
+
+void testInitWithoutContext( int *argcp, char **argv )
+{
+	if (!alutInitWithoutContext( argcp, argv )) {
+		ALenum error = alutGetError();
+		fprintf( stderr, "%s\n", alutGetErrorString( error ) );
+		exit( EXIT_FAILURE );
+	}
+}
+
+void testExit( void )
+{
+	if (!alutExit()) {
+		ALenum error = alutGetError();
+		fprintf( stderr, "%s\n", alutGetErrorString( error ) );
+		exit( EXIT_FAILURE );
+	}
 }

@@ -1,3 +1,5 @@
+#include "testlib.h"
+
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alut.h>
@@ -15,7 +17,6 @@ static void iterate( void );
 
 static ALuint movingSource = 0;
 
-static void *wave = NULL;
 static time_t start;
 static ALCcontext *context = NULL;
 
@@ -31,10 +32,6 @@ static void init( const ALbyte *fname )
 	ALfloat front[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f };
 	ALfloat position[] = { 0.0f, 0.0f, -4.0f };
 	ALuint sample;
-	ALsizei size;
-	ALsizei freq;
-	ALsizei format;
-	ALboolean loop;
 
 	start = time( NULL );
 
@@ -42,17 +39,7 @@ static void init( const ALbyte *fname )
 	alListenerfv( AL_VELOCITY, zeroes );
 	alListenerfv( AL_ORIENTATION, front );
 
-	alGenBuffers( 1, &sample );
-
-	alutLoadWAVFile( fname, &format, &wave, &size, &freq, &loop );
-	if( wave == NULL ) {
-		fprintf( stderr, "Could not load %s\n",
-			 ( const char * ) fname );
-		exit( EXIT_FAILURE );
-	}
-
-	alBufferData( sample, format, wave, size, freq );
-	free( wave );		/* openal makes a local copy of wave data */
+	sample = CreateBufferFromFile( fname );
 
 	alGenSources( 1, &movingSource );
 
@@ -82,6 +69,8 @@ int main( int argc, char *argv[] )
 	}
 
 	alcMakeContextCurrent( context );
+
+	testInitWithoutContext( &argc, argv );
 
 	init( ( const ALbyte * ) ( ( argc == 1 ) ? WAVEFILE : argv[1] ) );
 
@@ -119,6 +108,8 @@ int main( int argc, char *argv[] )
 
 		iterate(  );
 	}
+
+	testExit();
 
 	alcDestroyContext( context );
 	alcCloseDevice( device );

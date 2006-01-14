@@ -24,8 +24,6 @@ static ALuint mp3source = ( ALuint ) -1;
 
 static time_t start;
 
-static ALCcontext *context;
-
 /* our mp3 extension */
 typedef ALboolean ( mp3Loader ) ( ALuint, ALvoid *, ALint );
 mp3Loader *alutLoadMP3p = NULL;
@@ -42,46 +40,18 @@ static void initmp3( void )
 
 static void initwav( const ALbyte *fname )
 {
-	ALsizei size;
-	ALsizei freq;
-	ALsizei format;
-	ALboolean loop;
-	ALvoid *wave = NULL;
-
-	alutLoadWAVFile( fname, &format, &wave, &size, &freq, &loop );
-	if( wave == NULL ) {
-		fprintf( stderr, "Could not include %s\n",
-			 ( const char * ) fname );
-		exit( EXIT_FAILURE );
-	}
-
-	alBufferData( mp3buf, format, wave, size, freq );
-
-	free( wave );		/* openal makes a local copy of wave data */
+	mp3buf = CreateBufferFromFile( fname );
 }
 
 int main( int argc, char *argv[] )
 {
-	ALCdevice *device;
 	FILE *fh;
 	struct stat sbuf;
 	void *data;
 	int size;
 	char *fname;
 
-	device = alcOpenDevice( NULL );
-	if( device == NULL ) {
-		return EXIT_FAILURE;
-	}
-
-	/* Initialize context */
-	context = alcCreateContext( device, NULL );
-	if( context == NULL ) {
-		alcCloseDevice( device );
-		return EXIT_FAILURE;
-	}
-
-	alcMakeContextCurrent( context );
+	testInit( &argc, argv );
 
 	initmp3(  );
 
@@ -148,8 +118,7 @@ int main( int argc, char *argv[] )
 
 	sleep( 1 );
 
-	alcDestroyContext( context );
-	alcCloseDevice( device );
+	testExit();
 
 	return EXIT_SUCCESS;
 }

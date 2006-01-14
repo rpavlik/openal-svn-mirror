@@ -20,9 +20,7 @@ static void iterate( void );
 
 static ALuint movingSource = 0;
 
-static void *wave = NULL;
 static time_t start;
-static void *cc;		/* al context */
 
 static ALfloat srcposition[] = { 0.1f, 0.0f, -4.0f };
 
@@ -47,10 +45,6 @@ static void init( const ALbyte *fname )
 	ALfloat back[] = { 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f };
 	ALfloat front[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f };
 	ALuint boom;
-	ALsizei size;
-	ALsizei freq;
-	ALsizei format;
-	ALboolean loop;
 
 	start = time( NULL );
 
@@ -58,19 +52,8 @@ static void init( const ALbyte *fname )
 	alListenerfv( AL_VELOCITY, zeroes );
 	alListenerfv( AL_ORIENTATION, front );
 
-	alGenBuffers( 1, &boom );
-
-	alutLoadWAVFile( fname, &format, &wave, &size, &freq, &loop );
-	if( wave == NULL ) {
-		fprintf( stderr, "Could not load %s\n",
-			 ( const char * ) fname );
-
-		exit( EXIT_FAILURE );
-	}
-
-	alBufferData( boom, format, wave, size, freq );
-	free( wave );		/* openal makes a local copy of wave data */
-
+	boom = CreateBufferFromFile( fname );
+	
 	alGenSources( 1, &movingSource );
 
 	alSourcefv( movingSource, AL_POSITION, srcposition );
@@ -82,22 +65,9 @@ static void init( const ALbyte *fname )
 
 int main( int argc, char *argv[] )
 {
-	ALCdevice *device;
 	time_t shouldend;
 
-	device = alcOpenDevice( NULL );
-	if( device == NULL ) {
-		return EXIT_FAILURE;
-	}
-
-	cc = alcCreateContext( device, NULL );
-	if( cc == NULL ) {
-		alcCloseDevice( device );
-
-		return EXIT_FAILURE;
-	}
-
-	alcMakeContextCurrent( cc );
+	testInit( &argc, argv );
 
 	getExtensionEntries(  );
 
@@ -117,8 +87,7 @@ int main( int argc, char *argv[] )
 		}
 	}
 
-	alcDestroyContext( cc );
-	alcCloseDevice( device );
+	testExit();
 
 	return EXIT_SUCCESS;
 }
