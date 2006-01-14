@@ -596,8 +596,10 @@ IF(CMAKE_COMPILER_IS_GNUCC)
     SET(ADD_LDFLAGS "-pg")
   ELSE(PROFILE)
 
-   # -pg and -fomit-frame-pointer are incompatible
-   SET(ADD_CFLAGS "${ADD_CFLAGS} -fomit-frame-pointer")
+    IF(OPTIMIZATION)
+      # -pg and -fomit-frame-pointer are incompatible
+      SET(ADD_CFLAGS "${ADD_CFLAGS} -fomit-frame-pointer")
+    ENDIF(OPTIMIZATION)
   ENDIF(PROFILE)
 
   IF(${CMAKE_C_FLAGS} MATCHES "^ $")
@@ -673,6 +675,7 @@ IF(BUILD_TESTS)
     SET(TESTS reverb
               da
               multi
+              multinothread
               alut
               time
               multialut

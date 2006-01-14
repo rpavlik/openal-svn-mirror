@@ -1,5 +1,22 @@
 2006-01-13  Prakash Punnoor <prakash@punnoor.de>
 
+	* test/testda.c, test/testdoppler.c, test/testgain.c, test/testlib.c,
+	test/testlib.h, test/testlistener.c, test/testlistener2.c,
+	test/testlistener3.c, test/testlistener4.c, test/testloop.c,
+	test/testmp32.c, test/testmulti.c, test/testmultinothread.c,
+	test/testnothread.c, test/testpause.c, test/testpitch.c,
+	test/testpitchnothread.c, test/testpitchnothread2.c,
+	test/testqueue.c, test/testqueue2.c, test/testqueue3.c,
+	test/testrelative.c, test/testreverb.c, test/testsingle.c,
+	test/testsourcestop.c, test/testtime.c: use current alut wave loader
+	instead of obsolete one, and as we use alut anyway, use its init/exit,
+	as well
+	
+	* CMakeLists.txt: forgot testmulitnothread; add -fomit-frame-pointer
+	only when doing optimization
+	
+2006-01-13  Prakash Punnoor <prakash@punnoor.de>
+
 	* src/arch/Makefile.am, src/arch/.cvsignore: added
 
 	* configure.ac, src/Makefile.am: kludge for nasm vs. automake-1.8
