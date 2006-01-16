@@ -1085,10 +1085,9 @@ ALvoid SemiAutoTests(ALvoid)
 /** used by gendocs.py
 $SECTION Fully Automatic Tests
 $SUBTITLE Request Object Names
-This test checks that OpenAL responds correctly to the creation of either
-zero or -1 objects.  The two object types are Buffers and Sources.  When
+This test checks that OpenAL responds correctly to the creation of
+zero objects.  The two object types are Buffers and Sources.  When
 zero objects are requested, the call should be the equivalent of a NOP.
-when -1 objects are requested, an AL_INVALID_VALUE error should be generated.
 */
 ALvoid FA_RequestObjectNames(ALvoid)
 {
@@ -1108,18 +1107,6 @@ ALvoid FA_RequestObjectNames(ALvoid)
 	alGenSources(0, testSources); // should be equivalent to NOP
 	error = alGetError();
 	if (error != AL_NO_ERROR)
-	{
-		localResultOK = false;
-	}
-	alGenBuffers((ALuint)-1, testBuffers); // invalid -- make sure error code comes back
-	error = alGetError();
-	if (error == AL_NO_ERROR)
-	{
-		localResultOK = false;
-	}
-	alGenSources((ALuint)-1, testSources); // invalid -- make sure error code comes back
-	error = alGetError();
-	if (error == AL_NO_ERROR)
 	{
 		localResultOK = false;
 	}
