@@ -17,7 +17,8 @@
 	
 	* CMakeLists.txt: work around CMake bug for visibility test and
 	add testrotatesound to tests; add DMedia detection; remove stray ENDIF
-	and deactivate DirectSound support (as it doesn't exist)
+	and deactivate DirectSound support (as it doesn't exist); factor out
+	some detection routines
 	
 	* src/backends/alc_backend.c, src/backends/alc_backend.h,
 	src/backends/alc_backend_irix.c, configure.ac: make an independent
@@ -26,6 +27,9 @@
 	* configure.ac, src/extensions/al_ext_mp3.c: Use OPENAL_DLOPEN_MP3
 	instead of OPENAL_DLOPEN_SMPEG. This more macro friendly (currently
 	in CMake project, only)
+	
+	* admin/CMakeModules/FindCompilerAttribute.cmake,
+	admin/CMakeModules/FindCompilerVisibility.cmake: added
 	
 2006-01-17  Sven Panne  <sven.panne@aedion.de>
 
