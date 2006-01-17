@@ -60,7 +60,7 @@ static MutexID buf_mutex;
 static void _alDestroyBuffer( void *buf );
 
 /*
- * ALvoid *_alConvert( ALvoid *data,
+ * ALvoid *_alConvert( const ALvoid *data,
  *			ALenum f_format, ALuint f_size, ALuint f_freq,
  *			ALenum t_format, ALuint t_freq, ALuint *retsize,
  *			ALenum should_use_passed_data);
@@ -77,7 +77,7 @@ static void _alDestroyBuffer( void *buf );
  *
  * Returns NULL on error.
  */
-static ALvoid *_alConvert(ALvoid *data,
+static ALvoid *_alConvert(const ALvoid *data,
 			ALenum f_format, ALuint f_size, ALuint f_freq,
 			ALenum t_format, ALuint t_freq, ALuint *retsize,
 			ALenum should_use_passed_data);
@@ -647,7 +647,7 @@ AL_buffer *_alGetBufferFromSid( ALuint cid, ALuint sid ) {
 
 /*
  * ALvoid *_alBufferCanonizeData( ALenum format,
- *                              ALvoid *data, ALuint size, ALuint freq,
+ *                              const ALvoid *data, ALuint size, ALuint freq,
  *                              ALenum t_format, ALuint t_freq,
  *                              ALuint *retsize,
  *                              ALenum should_use_passed_data )
@@ -663,7 +663,7 @@ AL_buffer *_alGetBufferFromSid( ALuint cid, ALuint sid ) {
  * assumes locked buffers.
  */
 ALvoid *_alBufferCanonizeData( ALenum format,
-			     ALvoid *data, ALuint size, ALuint freq,
+			     const ALvoid *data, ALuint size, ALuint freq,
 			     ALenum t_format, ALuint t_freq,
 			     ALuint *retsize,
 			     ALenum should_use_passed_data ) {
@@ -964,7 +964,7 @@ void _alBidCallDestroyCallbackSource( ALuint sid ) {
 }
 
 /*
- * ALvoid *_alConvert( ALvoid *data,
+ * ALvoid *_alConvert( const ALvoid *data,
  *			ALenum f_format, ALuint f_size, ALuint f_freq,
  *			ALenum t_format, ALuint t_freq, ALuint *retsize,
  *			ALenum should_use_passed_data);
@@ -983,7 +983,7 @@ void _alBidCallDestroyCallbackSource( ALuint sid ) {
  *
  * assumes locked buffers
  */
-static ALvoid *_alConvert( ALvoid *data,
+static ALvoid *_alConvert( const ALvoid *data,
 			 ALenum f_format, ALuint f_size, ALuint f_freq,
 			 ALenum t_format, ALuint t_freq, ALuint *retsize,
 			 ALenum should_use_passed_data ) {
@@ -1001,7 +1001,7 @@ static ALvoid *_alConvert( ALvoid *data,
 			_alDebug(ALD_CONVERT, __FILE__, __LINE__,
 				 "_alConvert: no conversion needed: %p", data);
 
-			return data;
+			return (ALvoid *)data;
 		}
 
 		retval = malloc( f_size );
@@ -1040,7 +1040,7 @@ static ALvoid *_alConvert( ALvoid *data,
 			break;
 		}
 
-		compressed = data = retval;
+		data = compressed = retval;
 	}
 
 	_alDebug(ALD_CONVERT, __FILE__, __LINE__,
@@ -1107,7 +1107,7 @@ static ALvoid *_alConvert( ALvoid *data,
 		_alDebug(ALD_CONVERT, __FILE__, __LINE__,
 			"len_multi = %d", s16le.len_mult);
 
-		s16le.buf = retval = data;
+		s16le.buf = retval = (ALvoid *)data;
 	} else {
 		/* alloc space for buffer if we aren't using the original */
 

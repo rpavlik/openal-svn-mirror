@@ -178,7 +178,7 @@ ALsizei alCaptureGetData_EXT( UNUSED(ALvoid* data),
 		if ( size > 0 ) {
 			size = _alcDeviceRead(cid, temp, size);
 
-			temp = _alBufferCanonizeData(dev->format,
+			temp = (void *)_alBufferCanonizeData(dev->format,
 						     temp,
 						     size,
 						     dev->speed,

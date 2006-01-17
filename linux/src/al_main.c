@@ -608,6 +608,13 @@ void _alMicroSleep(unsigned int n) {
 	return;
 }
 
+#elif defined(__sgi)
+
+void _alMicroSleep(unsigned int n) {
+	usleep (n);
+	return;
+}
+
 #else
 
 /* sleep for n microseconds */

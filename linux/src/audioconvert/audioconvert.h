@@ -68,7 +68,7 @@ void *ac_guess_info(void *data, ALuint *size,
 		ALushort *fmt, ALushort *channels, ALushort *freq);
 void *ac_guess_wave_info(void *data, ALuint *size,
 		ALushort *fmt, ALushort *channels, ALushort *freq);
-void *ac_wave_to_pcm(void *data, ALuint *size,
+void *ac_wave_to_pcm(const void *data, ALuint *size,
 		ALushort *fmt, ALushort *channels, ALushort *freq);
 
 int ac_isWAVE_ANY_adpcm(void *datap, ALuint size);
@@ -82,7 +82,7 @@ int acBuildAudioCVT(acAudioCVT *cvt,
 	ALushort dst_format, ALubyte dst_channels, ALuint dst_rate);
 
 int acConvertAudio(acAudioCVT *);
-void *acLoadWAV(void *data, ALuint *size, void **udata,
+void *acLoadWAV(const void *data, ALuint *size, void **udata,
 		ALushort *format,
 		ALushort *channels,
 		ALushort *freq);

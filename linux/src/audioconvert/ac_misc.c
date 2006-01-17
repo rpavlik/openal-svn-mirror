@@ -68,9 +68,9 @@ static int InitMS_ADPCM(alWaveFMT_LOKI *format);
 static int ac_isWAVEadpcm(void *data, ALuint size, int encoding);
 
 /* read riff chunk */
-static void ReadChunk(void *srcp, int *offset, Chunk *chunk) {
+static void ReadChunk(const void *srcp, int *offset, Chunk *chunk) {
 	ALuint reader;
-	ALubyte *src = srcp;
+	const ALubyte *src = srcp;
 
 	src += *offset;
 
@@ -127,7 +127,7 @@ int ac_is_wave(void *data) {
 	return 1;
 }
 
-void *acLoadWAV(void *data, ALuint *size, void **udata,
+void *acLoadWAV(const void *data, ALuint *size, void **udata,
 		ALushort *fmt, ALushort *chan, ALushort *freq) {
 	acAudioCVT endianConverter;
 
@@ -183,7 +183,7 @@ void *acLoadWAV(void *data, ALuint *size, void **udata,
  *
  * usually just a memcpy, but for MS_ADPCM does that too.
  */
-void *ac_wave_to_pcm(void *data, ALuint *size,
+void *ac_wave_to_pcm(const void *data, ALuint *size,
 		ALushort *fmt, ALushort *chan, ALushort *freq) {
 	ALubyte *retval;
 	alWaveFMT_LOKI *format;
