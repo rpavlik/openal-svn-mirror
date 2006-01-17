@@ -31,7 +31,8 @@
 	
 	* CMakeLists.txt: improve defines handling
 	
-	* Makefile.am: fix (I hope) for SUBDIRS problem (with older automake?)
+	* src/Makefile.am: Fix (I hope) for SUBDIRS problem (with older
+	automake?).
 
 2006-01-11  Prakash Punnoor <prakash@punnoor.de>
 
