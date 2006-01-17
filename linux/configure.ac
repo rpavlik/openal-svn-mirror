@@ -1098,7 +1098,7 @@ else
     [if test "x$enable_mp3_dlopen" != xno; then
        openal_extension_smpeg_support=dynamic
        FEATURECFLAGS="$FEATURECFLAGS $openal_cflags_smpeg"
-       AC_DEFINE([OPENAL_DLOPEN_SMPEG], [1], [dynamically load SMPEG libs])
+       AC_DEFINE([OPENAL_DLOPEN_MP3], [1], [dynamically load SMPEG libs])
      else
        AC_CACHE_CHECK([for SMPEG linker flags], [openal_cv_libs_smpeg],
          [if test "x$SMPEG_CONFIG" != xnone; then

@@ -22,6 +22,10 @@
 	src/backends/alc_backend_irix.c, configure.ac: make an independent
 	"dmedia" back-end of IRIX native
 	
+	* configure.ac, src/extensions/al_ext_mp3.c: Use OPENAL_DLOPEN_MP3
+	instead of OPENAL_DLOPEN_SMPEG. This more macro friendly (currently
+	in CMake project, only)
+	
 2006-01-17  Sven Panne  <sven.panne@aedion.de>
 
 	* src/alc/alc_context.c: Make sure that the speakers are moved to their
