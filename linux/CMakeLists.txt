@@ -212,9 +212,9 @@ IF(CMAKE_SYSTEM MATCHES "Linux")
   OPTION(ALSA_DLOPEN "alsa dynamic loading"  ON)
 ENDIF(CMAKE_SYSTEM MATCHES "Linux")
 
-IF(WIN32)
-  OPTION(DSOUND      "directsound back-end"  OFF)
-ENDIF(WIN32)
+#IF(WIN32)
+#  OPTION(DSOUND      "directsound back-end"  OFF)
+#ENDIF(WIN32)
 
 OPTION(NATIVE      "native/oss back-end"  ON)
 OPTION(ARTS        "arts back-end"        ON)
