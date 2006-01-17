@@ -39,7 +39,7 @@ static void init( void )
 	alGenSources( 1, &vorbsource );
 
 	alSourcei( vorbsource, AL_BUFFER, vorbbuf );
-	alSourcei( vorbsource, AL_LOOPING, AL_TRUE );
+	alSourcei( vorbsource, AL_LOOPING, AL_FALSE );
 }
 
 int main( int argc, char *argv[] )
