@@ -15,8 +15,12 @@
 	* src/extensions/al_ext_vorbis.c: fix vorbis not flushing samples and
 	bug in seek routine
 	
-	* CMakeLists: work around CMake bug for visibility test and
-	add testrotatesound to tests
+	* CMakeLists.txt: work around CMake bug for visibility test and
+	add testrotatesound to tests; add DMedia detection
+	
+	* src/backends/alc_backend.c, src/backends/alc_backend.h,
+	src/backends/alc_backend_irix.c, configure.ac: make an independent
+	"dmedia" back-end of IRIX native
 	
 2006-01-17  Sven Panne  <sven.panne@aedion.de>
 

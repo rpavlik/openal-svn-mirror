@@ -149,7 +149,7 @@ SET(VORBIS_OBJS          src/extensions/al_ext_vorbis.c)
 
 SET(BSD_OBJS             src/backends/alc_backend_bsd.c)
 SET(DARWIN_OBJS          src/backends/alc_backend_darwin.c)
-SET(IRIS_OBJS            src/backends/alc_backend_irix.c)
+SET(DMEDIA_OBJS          src/backends/alc_backend_irix.c)
 SET(LINUX_OBJS           src/backends/alc_backend_linux.c)
 SET(MORPHOS_OBJS         src/backends/alc_backend_morphos.c)
 SET(SOLARIS_OBJS         src/backends/alc_backend_solaris.c)
@@ -219,6 +219,7 @@ ENDIF(WIN32)
 OPTION(NATIVE      "native/oss back-end"  ON)
 OPTION(ARTS        "arts back-end"        ON)
 OPTION(ARTS_DLOPEN "arts dynamic loading" ON)
+OPTION(DMEDIA      "DMedia/Irix back-end" ON)
 OPTION(ESD         "esd back-end"         ON)
 OPTION(ESD_DLOPEN  "esd dynamic loading"  ON)
 OPTION(SDL         "sdl back-end"         ON)
@@ -336,12 +337,6 @@ IF(CMAKE_SYSTEM MATCHES "SunOS")
   SET(OS_OBJS ${SOLARIS_OBJS})
 ELSE(CMAKE_SYSTEM MATCHES "SunOS")
 
-IF(CMAKE_SYSTEM MATCHES "IRIX")
-  ADD_DEFINE(USE_BACKEND_NATIVE_IRIX)
-  SET(OS_OBJS ${IRIX_OBJS})
-  SET(ADD_LIBS ${ADD_LIBS} audio)
-ELSE(CMAKE_SYSTEM MATCHES "IRIX")
-
 IF(CMAKE_SYSTEM MATCHES "Windows")
   ADD_DEFINE(USE_BACKEND_NATIVE_WINDOWS)
   ADD_DEFINE(AL_BUILD_LIBRARY)
@@ -402,7 +397,7 @@ FIND_PACKAGE(PkgConfig)
 
 MACRO(CHECK_BACKEND BACKEND_OPTION BACKEND_NAME BACKEND_LIB BACKEND_HEADER BACKEND_TEST_FUNC)
 IF(${BACKEND_OPTION} AND NOT ${BACKEND_OPTION}_FOUND)
-  IF(CMAKE_PKGCONFIG_EXECUTABLE)
+  IF(CMAKE_PKGCONFIG_EXECUTABLE AND NOT ${BACKEND_NAME} MATCHES "^$")
     PKGCONFIG(${BACKEND_NAME}
               BACKEND_HAVE
               BACKEND_INCLUDE_DIRS
@@ -416,7 +411,7 @@ IF(${BACKEND_OPTION} AND NOT ${BACKEND_OPTION}_FOUND)
   SET(${BACKEND_OPTION}_LIBS         "${BACKEND_LIBS}"         CACHE INTERNAL "")
 
   #MESSAGE("have ${${BACKEND_OPTION}_HAVE} inc ${${BACKEND_OPTION}_INCLUDE_DIRS} def ${${BACKEND_OPTION}_DEFINES} linkdirs ${${BACKEND_OPTION}_LINK_DIRS} libs ${${BACKEND_OPTION}_LIBS}")
-  ENDIF(CMAKE_PKGCONFIG_EXECUTABLE)
+  ENDIF(CMAKE_PKGCONFIG_EXECUTABLE AND NOT ${BACKEND_NAME} MATCHES "^$")
 
   # CHECK_INCLUDE_FILE() doesn't handle include dir, so check by hand
   FILE(WRITE "${CMAKE_BINARY_DIR}/CMakeTmp/src.c"
@@ -503,6 +498,7 @@ ENDMACRO(CHECK_BACKEND)
 
 CHECK_BACKEND(ALSA   alsa       asound     alsa/asoundlib.h    snd_pcm_info_sizeof)
 CHECK_BACKEND(ARTS   artsc      artsc      artsc.h             arts_free)
+CHECK_BACKEND(DMEDIA ""         audio      dmedia/audio.h      alGetResourceByName)
 CHECK_BACKEND(ESD    esd        esd        esd.h               esd_audio_open)
 CHECK_BACKEND(SDL    sdl        sdl        SDL.h               SDL_LockAudio)
 
