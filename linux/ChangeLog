@@ -1,3 +1,11 @@
+2006-01-17  Erik Hofman <erik@ehofman.com>
+
+	* src/al_buffer.c, src/al_buffer.h, src/al_main.c,
+	  src/audioconvert/ac_misc.c, src/audioconvert/audioconvert.h,
+	  src/extensions/al_ext_capture.c: Finish what someone else started,
+	convert void* to const void* to get it compiling for IRIX' MIPSpro
+	compiler, add the usleep functio n for IRIX.
+
 2006-01-17  Prakash Punnoor <prakash@punnoor.de>
 
 	* test/testrotatesound.c: added
