@@ -40,16 +40,30 @@ int main(){}
 ENDMACRO(MACRO_TEST ARG VAR)
 
 MACRO(CHECK_COMPILER_VISIBILITY VAR)
-SET(CMAKE_REQUIRED_FLAGS_BACK "${CMAKE_REQUIRED_FLAGS}")
-SET(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -fvisibility=hidden")
-CHECK_C_SOURCE_COMPILES(
-"void __attribute__((visibility(\"default\"))) test() {}
-#ifdef __INTEL_COMPILER
-#error ICC breaks with binutils and visibility
-#endif
-int main(){}
-" ${VAR})
-SET(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS_BACK}")
+IF(NOT DEFINED ${VAR})
+  FILE(WRITE "${CMAKE_BINARY_DIR}/CMakeTmp/src.c"
+  "void __attribute__((visibility(\"default\"))) test() {}
+  #ifdef __INTEL_COMPILER
+  #error ICC breaks with binutils and visibility
+  #endif
+  int main(){}
+  ")
+
+  MESSAGE(STATUS "Performing Test ${VAR}")
+  TRY_COMPILE(${VAR}
+              ${CMAKE_BINARY_DIR}
+              ${CMAKE_BINARY_DIR}/CMakeTmp/src.c
+              CMAKE_FLAGS
+              "-DCOMPILE_DEFINITIONS:STRING=-fvisibility=hidden")
+
+  SET(${VAR} 1 CACHE INTERNAL "Test ${FUNCTION}")
+  IF(${VAR})
+    MESSAGE(STATUS "Performing Test ${VAR} - Success")
+  ELSE(${VAR})
+    MESSAGE(STATUS "Performing Test ${VAR} - Failed")
+  ENDIF(${VAR})
+ENDIF(NOT DEFINED ${VAR})
+
 IF(${VAR})
   ADD_DEFINITIONS(-fvisibility=hidden)
   ADD_DEFINITIONS(-DHAVE_GCC_VISIBILITY)
@@ -672,7 +686,8 @@ IF(BUILD_TESTS)
     ADD_LIBRARY(testlib test/testlib.c)
     TARGET_LINK_LIBRARIES(testlib ${ADD_LIBS} openal ${ALUT_LIB})
 
-    SET(TESTS reverb
+    SET(TESTS rotatesound
+              reverb
               da
               multi
               multinothread

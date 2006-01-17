@@ -4,7 +4,11 @@
 	
 	* test/testvorbis.c: don't loop
 	
-	* src/extensions/al_ext_vorbis.c: fix vorbis not flushing samples and bug in seek routine
+	* src/extensions/al_ext_vorbis.c: fix vorbis not flushing samples and
+	bug in seek routine
+	
+	* CMakeLists: work around CMake bug for visibility test and
+	add testrotatesound to tests
 	
 2006-01-17  Sven Panne  <sven.panne@aedion.de>
 
