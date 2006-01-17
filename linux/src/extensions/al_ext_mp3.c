@@ -26,7 +26,7 @@
 #include <SDL/SDL.h>
 #include <smpeg.h>
 
-#ifdef OPENAL_DLOPEN_MP3
+#ifdef OPENAL_DLOPEN_SMPEG
 #include <dlfcn.h>
 #endif
 
@@ -67,14 +67,14 @@ static void * smpeg_lib_handle = NULL;
 
 static int openal_load_smpeg_library(void)
 {
-#ifdef OPENAL_DLOPEN_MP3
+#ifdef OPENAL_DLOPEN_SMPEG
         char * error = NULL;
 #endif
     
 	if (smpeg_lib_handle != NULL)
 		return 1;  /* already loaded. */
 
-	#ifdef OPENAL_DLOPEN_MP3
+	#ifdef OPENAL_DLOPEN_SMPEG
 		#define OPENAL_LOAD_SMPEG_SYMBOL(x) p##x = dlsym(smpeg_lib_handle, #x); \
                                                    error = dlerror(); \
                                                    if (p##x == NULL) { \
