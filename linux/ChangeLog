@@ -16,7 +16,8 @@
 	bug in seek routine
 	
 	* CMakeLists.txt: work around CMake bug for visibility test and
-	add testrotatesound to tests; add DMedia detection
+	add testrotatesound to tests; add DMedia detection; remove stray ENDIF
+	and deactivate DirectSound support (as it doesn't exist)
 	
 	* src/backends/alc_backend.c, src/backends/alc_backend.h,
 	src/backends/alc_backend_irix.c, configure.ac: make an independent
