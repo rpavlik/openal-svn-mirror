@@ -732,7 +732,8 @@ _alcInitContext( ALuint cid )
 	cc->read_device = NULL;
 	cc->write_device = NULL;
 
-	_alcSpeakerInit( cid );
+	/* This implicitly calls _alcSpeakerInit. The logic behind this is fascinating... */
+	_alcSpeakerMove( cid );
 
 	/*
 	 * should_sync:
