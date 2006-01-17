@@ -1,3 +1,11 @@
+2006-01-17  Prakash Punnoor <prakash@punnoor.de>
+
+	* test/testrotatesound.c: added
+	
+	* test/testvorbis.c: don't loop
+	
+	* src/extensions/al_ext_vorbis.c: fix vorbis not flushing samples and bug in seek routine
+	
 2006-01-17  Sven Panne  <sven.panne@aedion.de>
 
 	* src/alc/alc_context.c: Make sure that the speakers are moved to their
@@ -7,7 +15,7 @@
 
 	* src/extensions/al_ext_mp3.c: Synched dlopen #ifdef with configure.ac.
 
-2006-01-13  Prakash Punnoor <prakash@punnoor.de>
+2006-01-14  Prakash Punnoor <prakash@punnoor.de>
 
 	* test/testda.c, test/testdoppler.c, test/testgain.c, test/testlib.c,
 	test/testlib.h, test/testlistener.c, test/testlistener2.c,

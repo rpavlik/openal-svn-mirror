@@ -281,41 +281,34 @@ ALint Vorbis_Callback(UNUSED(ALuint sid),
 
 	vorb->fh.offset = offset; /* set per sid offset */
 
-	if(vorb->fh.offset < vorb->fh.size) {
-		while(bytesToRead > 0) {
-			/* FIXME: handle format differences etc
-			 *
-			 * should be below VDRATB now */
-			ret = pov_read(&vorb->of,
-				      datap,
-				      bytesToRead,
+	while(bytesToRead > 0) {
+		/* FIXME: handle format differences etc
+		 *
+		 * should be below VDRATB now */
+		ret = pov_read(&vorb->of,
+			      datap,
+			      bytesToRead,
 #ifdef WORDS_BIGENDIAN
-				      1,
+			      1,
 #else
-				      0,
+			      0,
 #endif
-				      bps,
-				      signed_format(format),
-				      &current_section);
+			      bps,
+			      signed_format(format),
+			      &current_section);
 
-			if(ret == OV_HOLE)
-				continue;
+		if(ret == OV_HOLE)
+			continue;
 
-			if(ret <= 0) {
-				/* eof or error */
-				vorbmap_update(index, 0, 0);
-				return 0;
-			}
-
-			bytesToRead -= ret;
-			retval      += ret;
-			datap       += ret;
+		if(ret <= 0) {
+			/* eof or error */
+			vorbmap_update(index, 0, 0);
+			return 0;
 		}
-	} else {
-		/* over */
-		vorbmap_update(index, vorb->fh.offset - vorb->fh.size, 0);
 
-		return 0;
+		bytesToRead -= ret;
+		retval      += ret;
+		datap       += ret;
 	}
 
 	vorbmap_update(index, vorb->fh.offset, current_section);
@@ -494,7 +487,11 @@ static int ovfd_seek(void *datasource, int64_t offset, int whence) {
 			vb->fh.offset += offset;
 			break;
 		case SEEK_END:
-			vb->fh.offset = vb->fh.size - offset;
+			if(vb->fh.size < vb->fh.size + offset) {
+				return -1;
+			}
+
+			vb->fh.offset = vb->fh.size + offset;
 			break;
 	}
 
