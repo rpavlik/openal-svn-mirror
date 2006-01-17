@@ -20,6 +20,7 @@ typedef enum
   AL_BACKEND_NATIVE_,           /* native audio for platform */
   AL_BACKEND_ALSA_,             /* ALSA backend */
   AL_BACKEND_ARTS_,             /* aRts backend */
+  AL_BACKEND_DMEDIA_,           /* Irix/DMedia back-end */
   AL_BACKEND_ESD_,              /* ESD backend */
   AL_BACKEND_SDL_,              /* SDL backend */
   AL_BACKEND_NULL_,             /* null backend */
@@ -115,6 +116,16 @@ alcBackendOpen_ (ALC_OpenMode mode)
             }
         }
 
+      if (strcmp (adevname, "dmedia") == 0)
+        {
+          privateData = alcBackendOpenDMedia_ (mode);
+          if (privateData != NULL)
+            {
+              type = AL_BACKEND_DMEDIA_;
+              break;
+            }
+        }
+
       if (strcmp (adevname, "esd") == 0)
         {
           privateData = alcBackendOpenESD_ (mode);
@@ -199,6 +210,9 @@ alcBackendClose_ (ALC_Backend *backend)
     case AL_BACKEND_ARTS_:
       release_arts (backend->privateData);
       break;
+    case AL_BACKEND_DMEDIA_:
+      release_dmedia (backend->privateData);
+      break;
     case AL_BACKEND_ESD_:
       release_esd (backend->privateData);
       break;
@@ -234,6 +248,9 @@ alcBackendPause_ (ALC_Backend *backend)
     case AL_BACKEND_ARTS_:
       pause_arts (backend->privateData);
       break;
+    case AL_BACKEND_DMEDIA_:
+      pause_dmedia (backend->privateData);
+      break;
     case AL_BACKEND_ESD_:
       pause_esd (backend->privateData);
       break;
@@ -266,6 +283,9 @@ alcBackendResume_ (ALC_Backend *backend)
       break;
     case AL_BACKEND_ARTS_:
       resume_arts (backend->privateData);
+      break;
+    case AL_BACKEND_DMEDIA_:
+      resume_dmedia (backend->privateData);
       break;
     case AL_BACKEND_ESD_:
       resume_esd (backend->privateData);
@@ -304,6 +324,10 @@ alcBackendSetAttributes_ (ALC_Backend *backend, ALuint *bufsiz,
       return alcBackendSetAttributesARts_ (backend->mode,
                                            backend->privateData, bufsiz, fmt,
                                            speed);
+    case AL_BACKEND_DMEDIA_:
+      return alcBackendSetAttributesDMedia_ (backend->mode,
+                                             backend->privateData, bufsiz,
+                                             fmt, speed);
     case AL_BACKEND_ESD_:
       return alcBackendSetAttributesESD_ (backend->mode, backend->privateData,
                                           bufsiz, fmt, speed);
@@ -339,6 +363,9 @@ alcBackendWrite_ (ALC_Backend *backend, void *dataptr, int bytes_to_write)
     case AL_BACKEND_ARTS_:
       arts_blitbuffer (backend->privateData, dataptr, bytes_to_write);
       break;
+    case AL_BACKEND_DMEDIA_:
+      dmedia_blitbuffer (backend->privateData, dataptr, bytes_to_write);
+      break;
     case AL_BACKEND_ESD_:
       esd_blitbuffer (backend->privateData, dataptr, bytes_to_write);
       break;
@@ -370,6 +397,8 @@ alcBackendRead_ (ALC_Backend *backend, void *capture_buffer, int bufsiz)
       return capture_alsa (backend->privateData, capture_buffer, bufsiz);
     case AL_BACKEND_ARTS_:
       return capture_arts (backend->privateData, capture_buffer, bufsiz);
+    case AL_BACKEND_DMEDIA_:
+      return capture_dmedia (backend->privateData, capture_buffer, bufsiz);
     case AL_BACKEND_ESD_:
       return capture_esd (backend->privateData, capture_buffer, bufsiz);
     case AL_BACKEND_SDL_:
@@ -396,6 +425,8 @@ alcBackendGetAudioChannel_ (ALC_Backend *backend, ALuint channel)
       return get_alsachannel (backend->privateData, channel);
     case AL_BACKEND_ARTS_:
       return get_artschannel (backend->privateData, channel);
+    case AL_BACKEND_DMEDIA_:
+      return get_dmediachannel (backend->privateData, channel);
     case AL_BACKEND_ESD_:
       return get_esdchannel (backend->privateData, channel);
     case AL_BACKEND_SDL_:
@@ -426,6 +457,9 @@ alcBackendSetAudioChannel_ (ALC_Backend *backend, ALuint channel,
       break;
     case AL_BACKEND_ARTS_:
       set_artschannel (backend->privateData, channel, volume);
+      break;
+    case AL_BACKEND_DMEDIA_:
+      set_dmediachannel (backend->privateData, channel, volume);
       break;
     case AL_BACKEND_ESD_:
       set_esdchannel (backend->privateData, channel, volume);

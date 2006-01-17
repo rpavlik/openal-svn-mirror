@@ -781,7 +781,7 @@ else
 fi
 
 OPENAL_ENABLE([native IRIX backend], [openal_backend_irix_support],
-              [USE_BACKEND_NATIVE_IRIX], [USEBACKENDNATIVEIRIX])
+              [USE_BACKEND_DMEDIA], [USEBACKENDNATIVEIRIX])
 
 # check for native Linux backend ###############################################
 

@@ -3,7 +3,7 @@
  *
  * iris.c
  *
- * functions related to the aquisition and management of the native
+ * functions related to the aquisition and management of the DMedia
  * audio on IRIX.
  *
  * This file is in the Public Domain and comes with no warranty.
@@ -24,17 +24,17 @@
  *
  * It is also possible to specify the default output port by adding
  * the following definition:
- *     (define native-out-device "Analog Out")
+ *     (define dmedia-out-device "Analog Out")
  *
  * When your system doesn't support four channel audio by default, but
  * it does contain (at least) two different output ports you could
  * enable four channel audio by difining two separate ports:
- *     (define native-out-device "Analog Out")
- *     (define native-rear-out-device "Analog Out 2")
+ *     (define dmedia-out-device "Analog Out")
+ *     (define dmedia-rear-out-device "Analog Out 2")
  *
  * or alternatively by selecting two different interfaces:
- *     (define native-out-device "A3.Speaker")
- *     (define native-rear-out-device "A3.LineOut2")
+ *     (define dmedia-out-device "A3.Speaker")
+ *     (define dmedia-rear-out-device "A3.LineOut2")
  *
  * see "man 3dm alResources" for more information.
  */
@@ -113,7 +113,7 @@ static int grab_device_byname(const char *name);
  * Driver functions
  */
 
-static void *grab_read_native(void)
+static void *grab_read_dmedia(void)
 {
     _ALhandle *alh;
 
@@ -125,7 +125,7 @@ static void *grab_read_native(void)
     }
 
 
-    alh->input.name = "native-in-device";
+    alh->input.name = "dmedia-in-device";
     alh->input.device = AL_DEFAULT_INPUT;
     alh->input.sampleWidth = 16;
     alh->input._numChannels_avail = 2;
@@ -134,14 +134,14 @@ static void *grab_read_native(void)
     alh->input.device = grab_device_byname(alh->input.name);
     if (alh->input.device <= 0)
     {
-        release_native(alh);
+        release_dmedia(alh);
         return NULL;
     }
 
     return NULL; /* (void *)alh; */
 }
 
-static void *grab_write_native(void)
+static void *grab_write_dmedia(void)
 {
     _ALhandle *alh;
     ALpv params[2];
@@ -161,7 +161,7 @@ static void *grab_write_native(void)
      */
     alh->numOutputPorts = 1;
     alh->output = (_ALdevice *)calloc(MAX_DEVICES, sizeof(_ALdevice));
-    alh->output[0].name = "native-out-device";
+    alh->output[0].name = "dmedia-out-device";
     alh->output[0].sampleWidth = 16;
     alh->output[0]._numChannels_avail = 2;
     alh->output[0].numChannels = 2;
@@ -171,7 +171,7 @@ static void *grab_write_native(void)
     {
        if (alh->output[0].device < 0)
        {
-           release_native(alh);
+           release_dmedia(alh);
            return NULL;
        }
 
@@ -179,7 +179,7 @@ static void *grab_write_native(void)
     }
 
 #if MAX_DEVICES >= 2
-    alh->output[1].name = "native-rear-out-device";
+    alh->output[1].name = "dmedia-rear-out-device";
     alh->output[1].device = grab_device_byname(alh->output[1].name);
     if (alh->output[1].device < 0)
     {
@@ -229,12 +229,12 @@ static void *grab_write_native(void)
 }
 
 void *
-alcBackendOpenNative_( ALC_OpenMode mode )
+alcBackendOpenDMedia_( ALC_OpenMode mode )
 {
-	return mode == ALC_OPEN_INPUT_ ? grab_read_native() : grab_write_native();
+	return mode == ALC_OPEN_INPUT_ ? grab_read_dmedia() : grab_write_dmedia();
 }
 
-void native_blitbuffer(void *handle,
+void dmedia_blitbuffer(void *handle,
                       void *dataptr,
                       int bytes_to_write)
 {
@@ -294,7 +294,7 @@ void native_blitbuffer(void *handle,
 #endif
 }
 
-void release_native(void *handle)
+void release_dmedia(void *handle)
 {
     _ALhandle *alh = (_ALhandle *)handle;
     ALpv params;
@@ -339,14 +339,14 @@ void release_native(void *handle)
     }
 }
 
-int set_nativechannel(UNUSED(void *handle),
+int set_dmediachannel(UNUSED(void *handle),
                       UNUSED(ALuint channel),
                       UNUSED(ALfloat volume))
 {
     return 0;
 }
 
-void pause_nativedevice(void *handle)
+void pause_dmediadevice(void *handle)
 {
     _ALhandle *alh = (_ALhandle *)handle;
     ALpv params;
@@ -365,7 +365,7 @@ void pause_nativedevice(void *handle)
     return;
 }
 
-void resume_nativedevice(void *handle)
+void resume_dmediadevice(void *handle)
 {
     _ALhandle *alh = (_ALhandle *)handle;
     ALpv params;
@@ -386,20 +386,20 @@ void resume_nativedevice(void *handle)
     return;
 }
 
-ALfloat get_nativechannel(UNUSED(void *handle), UNUSED(ALuint channel))
+ALfloat get_dmediachannel(UNUSED(void *handle), UNUSED(ALuint channel))
 {
     return 0.0;
 }
 
 /* capture data from the audio device */
-ALsizei capture_nativedevice(UNUSED(void *handle),
+ALsizei capture_dmediadevice(UNUSED(void *handle),
                              UNUSED(void *capture_buffer),
                              UNUSED(int bufsiz))
 {
     return 0;
 }
 
-static ALboolean set_write_native(void *handle,
+static ALboolean set_write_dmedia(void *handle,
 				  unsigned int *bufsiz,
 				  ALenum *fmt,
 				  unsigned int *speed)
@@ -526,7 +526,7 @@ static ALboolean set_write_native(void *handle,
     return AL_TRUE;
 }
 
-static ALboolean set_read_native(UNUSED(void *handle),
+static ALboolean set_read_dmedia(UNUSED(void *handle),
 				 UNUSED(unsigned int *bufsiz),
 				 UNUSED(ALenum *fmt),
 				 UNUSED(unsigned int *speed))
@@ -535,11 +535,11 @@ static ALboolean set_read_native(UNUSED(void *handle),
 }
 
 ALboolean
-alcBackendSetAttributesNative_(ALC_OpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesDMedia_(ALC_OpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
 	return mode == ALC_OPEN_INPUT_ ?
-		set_read_native(handle, bufsiz, fmt, speed) :
-		set_write_native(handle, bufsiz, fmt, speed);
+		set_read_dmedia(handle, bufsiz, fmt, speed) :
+		set_write_dmedia(handle, bufsiz, fmt, speed);
 }
 
 /*

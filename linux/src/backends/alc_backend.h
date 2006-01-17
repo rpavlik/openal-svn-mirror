@@ -167,6 +167,34 @@ int set_artschannel (ALC_BackendPrivateData *privateData, ALuint channel,
 #define set_artschannel(h,c,v)        0
 #endif /* USE_BACKEND_ARTS */
 
+#ifdef USE_BACKEND_DMEDIA
+ALC_BackendPrivateData *alcBackendOpenDMedia (ALC_OpenMode mode);
+void release_dmedia (ALC_BackendPrivateData *privateData);
+void pause_dmedia (ALC_BackendPrivateData *privateData);
+void resume_dmedia (ALC_BackendPrivateData *privateData);
+ALboolean alcBackendSetAttributesDMedia_ (ALC_OpenMode mode,
+                                        ALC_BackendPrivateData *privateData,
+                                        ALuint *bufsiz, ALenum *fmt,
+                                        ALuint *speed);
+void dmedia_blitbuffer (ALC_BackendPrivateData *privateData, void *data,
+                      int bytes);
+ALsizei capture_dmedia (ALC_BackendPrivateData *privateData,
+                      void *capture_buffer, int bufsiz);
+ALfloat get_dmediachannel (ALC_BackendPrivateData *privateData, ALuint channel);
+int set_dmediachannel (ALC_BackendPrivateData *privateData, ALuint channel,
+                     ALfloat volume);
+#else
+#define alcBackendOpenDMedia_(m)        NULL
+#define release_dmedia(h)
+#define pause_dmedia(h)
+#define resume_dmedia(h)
+#define alcBackendSetAttributesDMedia_(m,h,b,f,s) AL_FALSE
+#define dmedia_blitbuffer(h,d,b)
+#define capture_dmedia(h,d,b)           0
+#define get_dmediachannel(h,c)          0.0
+#define set_dmediachannel(h,c,v)        0
+#endif /* USE_BACKEND_DMEDIA */
+
 #ifdef USE_BACKEND_ESD
 void *alcBackendOpenESD_ (ALC_OpenMode mode);
 void release_esd (ALC_BackendPrivateData *privateData);
