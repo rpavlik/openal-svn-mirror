@@ -289,7 +289,24 @@ ALAPI ALvoid ALAPIENTRY alDopplerVelocity(ALfloat value)
 //
 ALAPI ALvoid ALAPIENTRY alSpeedOfSound(ALfloat value)
 {
-    AL_VOID_FXN(alSpeedOfSound(value));
+    ALCcontext* context;
+
+    alListAcquireLock(alContextList);
+    if(!alCurrentContext)
+    {
+        alListReleaseLock(alContextList);
+        return;
+    }
+
+    context = alCurrentContext;
+    EnterCriticalSection(&context->Lock);
+    alListReleaseLock(alContextList);
+
+	if (context->AlApi.alSpeedOfSound) { // protect against talking to a 1.0 lib
+		context->AlApi.alSpeedOfSound(value);
+	}
+    LeaveCriticalSection(&context->Lock);
+    return;
 }
 
 
