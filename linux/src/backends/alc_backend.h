@@ -168,7 +168,7 @@ int set_artschannel (ALC_BackendPrivateData *privateData, ALuint channel,
 #endif /* USE_BACKEND_ARTS */
 
 #ifdef USE_BACKEND_DMEDIA
-ALC_BackendPrivateData *alcBackendOpenDMedia (ALC_OpenMode mode);
+ALC_BackendPrivateData *alcBackendOpenDMedia_ (ALC_OpenMode mode);
 void release_dmedia (ALC_BackendPrivateData *privateData);
 void pause_dmedia (ALC_BackendPrivateData *privateData);
 void resume_dmedia (ALC_BackendPrivateData *privateData);

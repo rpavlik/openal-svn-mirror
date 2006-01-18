@@ -6,6 +6,9 @@
 	convert void* to const void* to get it compiling for IRIX' MIPSpro
 	compiler, add the usleep functio n for IRIX.
 
+	* src/backends/alc_backend.h: Fix a typo: alcBackendOpenDMedia instead
+	of alcBackendOpenDMedia_
+
 2006-01-17  Prakash Punnoor <prakash@punnoor.de>
 
 	* test/testrotatesound.c: added
