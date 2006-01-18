@@ -110,6 +110,15 @@ static int grab_device_byname(const char *name);
 
 
 /*
+ * Fallback function
+ */
+ALC_BackendPrivateData *alcBackendOpenNative_ (ALC_OpenMode mode)
+{
+   return NULL;
+}
+
+
+/*
  * Driver functions
  */
 
@@ -346,7 +355,7 @@ int set_dmediachannel(UNUSED(void *handle),
     return 0;
 }
 
-void pause_dmediadevice(void *handle)
+void pause_dmedia(void *handle)
 {
     _ALhandle *alh = (_ALhandle *)handle;
     ALpv params;
@@ -365,7 +374,7 @@ void pause_dmediadevice(void *handle)
     return;
 }
 
-void resume_dmediadevice(void *handle)
+void resume_dmedia(void *handle)
 {
     _ALhandle *alh = (_ALhandle *)handle;
     ALpv params;
@@ -392,7 +401,7 @@ ALfloat get_dmediachannel(UNUSED(void *handle), UNUSED(ALuint channel))
 }
 
 /* capture data from the audio device */
-ALsizei capture_dmediadevice(UNUSED(void *handle),
+ALsizei capture_dmedia(UNUSED(void *handle),
                              UNUSED(void *capture_buffer),
                              UNUSED(int bufsiz))
 {
