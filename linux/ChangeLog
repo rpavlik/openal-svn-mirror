@@ -1,3 +1,8 @@
+2006-01-18 Erik Hofman <erik@ehofman.com>
+
+	* src/backends/alc_backend_irix.c: Rename a few instances of
+	dmediadevice to dmedia instead. IRIX is working again.
+
 2006-01-17  Erik Hofman <erik@ehofman.com>
 
 	* src/al_buffer.c, src/al_buffer.h, src/al_main.c,
