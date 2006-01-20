@@ -1,3 +1,5 @@
 2006-01-20  Sven Panne  <sven.panne@aedion.de>
 
+	* tests/altest/altest.c(I_SetSourceOffsetTest): Fixed ambiguity.
+
 	* Initial version. Very incomplete, just to get "contrib" started.
