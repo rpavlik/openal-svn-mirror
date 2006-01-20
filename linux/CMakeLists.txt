@@ -15,20 +15,7 @@ SET(PACKAGE_STRING "openal")
 SET(PACKAGE_BUGREPORT "openal-devel@opensource.creative.com")
 SET(OPERATING_SYSTEM "${CMAKE_SYSTEM_NAME}")
 
-# config.h magic
-SET(CONFIG_H_VALS_OLD "${CONFIG_H_VALS}")
-SET(CONFIG_H_VALS "" CACHE INTERNAL "")
-SET(CONFIG_H_FILE ${CMAKE_BINARY_DIR}/config.h)
-INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
-
-
-MACRO(ADD_DEFINE ARG)
-SET(CONFIG_H_CONTENT "${CONFIG_H_CONTENT}#define ${ARG}
-
-")
-# can't cache mulitline values
-SET(CONFIG_H_VALS "${CONFIG_H_VALS}${ARG}" CACHE INTERNAL "")
-ENDMACRO(ADD_DEFINE ARG)
+FIND_PACKAGE(ConfigHelper)
 
 MACRO(MACRO_TEST ARG VAR)
 CHECK_C_SOURCE_COMPILES(
@@ -540,56 +527,11 @@ ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_6
 # compiler specific settings
 FIND_PACKAGE(CompilerAttribute)
 FIND_PACKAGE(CompilerVisibility)
-IF(CMAKE_COMPILER_IS_GNUCC)
-  ADD_DEFINITIONS(-std=c99)
-
-  IF(WARNINGS)
-    SET(ADD_WFLAGS "${ADD_WFLAGS} -Wall -ansi -pedantic -W")
-
-    IF(MORE_WARNINGS)
-      SET(ADD_WFLAGS "${ADD_WFLAGS} -Waggregate-return -Wbad-function-cast -Wcast-align -Wcast-qual -Wdisabled-optimization -Wendif-labels -Winline -Wlong-long -Wmissing-declarations -Wmissing-noreturn -Wmissing-prototypes -Wnested-externs -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wsign-compare -Wstrict-prototypes -Wwrite-strings")
-    ENDIF(MORE_WARNINGS)
-
-    # Should we use turn warnings into errors?
-    IF(USE_WERROR)
-      SET(ADD_WFLAGS "${ADD_WFLAGS} -Werror -pedantic-errors")
-    ENDIF(USE_WERROR)
-  ENDIF(WARNINGS)
-
-  IF(OPTIMIZATION)
-    SET(ADD_CFLAGS "${ADD_CFLAGS} -O2 -finline-functions -ffast-math")
-  ENDIF(OPTIMIZATION)
-
-  IF(PROFILE)
-    SET(ADD_CFLAGS "${ADD_CFLAGS} -pg")
-    SET(ADD_LDFLAGS "-pg")
-  ELSE(PROFILE)
-
-    IF(OPTIMIZATION)
-      # -pg and -fomit-frame-pointer are incompatible
-      SET(ADD_CFLAGS "${ADD_CFLAGS} -fomit-frame-pointer")
-    ENDIF(OPTIMIZATION)
-  ENDIF(PROFILE)
-
-  IF(${CMAKE_C_FLAGS} MATCHES "^ $")
-    IF(NOT ${ADD_CFLAGS} MATCHES "O")
-      SET(ADD_CFLAGS "-g -O2 -fomit-frame-pointer ${ADD_CFLAGS}")
-      MESSAGE("No CFLAGS found; setting default ones.")
-    ENDIF(NOT ${ADD_CFLAGS} MATCHES "O")
-  ENDIF(${CMAKE_C_FLAGS} MATCHES "^ $")
-ELSE(CMAKE_COMPILER_IS_GNUCC)
-
-  MESSAGE("Your compiler isn't fully supported yet - no flags set.")
-ENDIF(CMAKE_COMPILER_IS_GNUCC)
+FIND_PACKAGE(CompilerFlagsSet)
 
 ADD_DEFINE(LINUX_AL)
 
-# Generate config.h only if values differ
-IF(NOT CONFIG_H_VALS_OLD STREQUAL CONFIG_H_VALS OR NOT EXISTS ${CONFIG_H_FILE})
-  MESSAGE(STATUS "Writing config.h")
-  FILE(WRITE ${CONFIG_H_FILE} "${CONFIG_H_CONTENT}")
-ENDIF(NOT CONFIG_H_VALS_OLD STREQUAL CONFIG_H_VALS OR NOT EXISTS ${CONFIG_H_FILE})
-
+GENERATE_CONFIG_H()
 
 SET(CMAKE_C_FLAGS "${ADD_WFLAGS} ${ADD_CFLAGS} ${CMAKE_C_FLAGS}")
 SET(CMAKE_CXX_FLAGS "${ADD_CFLAGS} ${CMAKE_CXX_FLAGS}")
