@@ -1840,7 +1840,7 @@ ALvoid SA_ListenerOrientation (ALvoid)
 		alGetSourcef(testSources[0], AL_GAIN, &f);
 		if (f != 1.0) { printf("ERROR: alGetSourcef(..., AL_GAIN, ...).\n"); }
 		alListener3f(AL_POSITION, 1.0, 0.0, 0.0);
-		listenerOri[0]=-1.0;
+		listenerOri[0]= -1.0;
 		listenerOri[1]=0.0;
 		listenerOri[2]=0.0;
 		listenerOri[3]=0.0;
@@ -1856,7 +1856,7 @@ ALvoid SA_ListenerOrientation (ALvoid)
 		CRToContinue();
 		listenerOri[0]=0.0;
 		listenerOri[1]=0.0;
-		listenerOri[2]=-1.0;
+		listenerOri[2]= -1.0;
 		listenerOri[3]=0.0;
 		listenerOri[4]=1.0;
 		listenerOri[5]=0.0;
@@ -1869,9 +1869,9 @@ ALvoid SA_ListenerOrientation (ALvoid)
 		CRToContinue();
 		listenerOri[0]=0.0;
 		listenerOri[1]=0.0;
-		listenerOri[2]=-1.0;
+		listenerOri[2]= -1.0;
 		listenerOri[3]=0.0;
-		listenerOri[4]=-1.0;
+		listenerOri[4]= -1.0;
 		listenerOri[5]=0.0;
 		alListenerfv(AL_ORIENTATION, listenerOri);
 		alSourcePlay(testSources[0]);
@@ -1907,7 +1907,7 @@ ALvoid SA_ListenerOrientation (ALvoid)
 	        printf("The listener will now be oriented down the -Y axis and with a +Z 'up' vector.  The sound should be to the right. (Press Return):\n");
 		CRToContinue();
 		listenerOri[0]=0.0;
-		listenerOri[1]=-1.0;
+		listenerOri[1]= -1.0;
 		listenerOri[2]=0.0;
 		listenerOri[3]=0.0;
 		listenerOri[4]=0.0;
@@ -1922,7 +1922,7 @@ ALvoid SA_ListenerOrientation (ALvoid)
 		alListener3f(AL_POSITION, 0.0, 0.0, 0.0);
 		listenerOri[0]=0.0;
 		listenerOri[1]=0.0;
-		listenerOri[2]=-1.0;
+		listenerOri[2]= -1.0;
 		listenerOri[3]=0.0;
 		listenerOri[4]=1.0;
 		listenerOri[5]=0.0;

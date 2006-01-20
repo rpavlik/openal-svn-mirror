@@ -1,5 +1,8 @@
 2006-01-20  Sven Panne  <sven.panne@aedion.de>
 
+	* tests/altest/altest.c(SA_ListenerOrientation): Don't use the ambiguous
+	"foo=-1".
+
 	* tests/altest/altest.c(FA_EnumerationValue): Distinguish between ALC
 	enums and AL enums.
 
