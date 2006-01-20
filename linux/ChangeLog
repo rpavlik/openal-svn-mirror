@@ -1,3 +1,12 @@
+2006-01-20  Prakash Punnoor <prakash@punnoor.de>
+
+	* admin/CMakeModules/FindCompilerVisibility.cmake: fix result always
+	set to true and include debugging output; minor indenting
+	
+	* admin/CMakeModules/FindPkgConfig.cmake: filter out ENTER lines
+	
+	* CMakeLists.txt: better defines handling and more debugging output
+
 2006-01-18 Erik Hofman <erik@ehofman.com>
 
 	* src/backends/alc_backend_irix.c: Rename a few instances of

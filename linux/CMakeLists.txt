@@ -361,29 +361,35 @@ IF(${BACKEND_OPTION} AND NOT ${BACKEND_OPTION}_FOUND)
               BACKEND_DEFINES
               BACKEND_LINK_DIRS
               BACKEND_LIBS)
-  SET(${BACKEND_OPTION}_HAVE          ${BACKEND_HAVE}          CACHE INTERNAL "")
-  SET(${BACKEND_OPTION}_INCLUDE_DIRS "${BACKEND_INCLUDE_DIRS}" CACHE INTERNAL "")
-  SET(${BACKEND_OPTION}_DEFINES      "${BACKEND_DEFINES}"      CACHE INTERNAL "")
-  SET(${BACKEND_OPTION}_LINK_DIRS    "${BACKEND_LINK_DIRS}"    CACHE INTERNAL "")
-  SET(${BACKEND_OPTION}_LIBS         "${BACKEND_LIBS}"         CACHE INTERNAL "")
 
-  #MESSAGE("have ${${BACKEND_OPTION}_HAVE} inc ${${BACKEND_OPTION}_INCLUDE_DIRS} def ${${BACKEND_OPTION}_DEFINES} linkdirs ${${BACKEND_OPTION}_LINK_DIRS} libs ${${BACKEND_OPTION}_LIBS}")
+    SET(${BACKEND_OPTION}_HAVE          ${BACKEND_HAVE}          CACHE INTERNAL "")
+    SET(${BACKEND_OPTION}_INCLUDE_DIRS "${BACKEND_INCLUDE_DIRS}" CACHE INTERNAL "")
+    SET(${BACKEND_OPTION}_DEFINES      "${BACKEND_DEFINES}"      CACHE INTERNAL "")
+    SET(${BACKEND_OPTION}_LINK_DIRS    "${BACKEND_LINK_DIRS}"    CACHE INTERNAL "")
+    SET(${BACKEND_OPTION}_LIBS         "${BACKEND_LIBS}"         CACHE INTERNAL "")
+
+    #MESSAGE("have ${${BACKEND_OPTION}_HAVE} inc ${${BACKEND_OPTION}_INCLUDE_DIRS} def ${${BACKEND_OPTION}_DEFINES} linkdirs ${${BACKEND_OPTION}_LINK_DIRS} libs ${${BACKEND_OPTION}_LIBS}")
   ENDIF(CMAKE_PKGCONFIG_EXECUTABLE AND NOT ${BACKEND_NAME} MATCHES "^$")
 
+  SET(SOURCE
+"#include <${BACKEND_HEADER}>
+int main(){return 0;}
+")
   # CHECK_INCLUDE_FILE() doesn't handle include dir, so check by hand
-  FILE(WRITE "${CMAKE_BINARY_DIR}/CMakeTmp/src.c"
-       "
-       #include <${BACKEND_HEADER}>
-       int main(){return 0;}
-       ")
+  FILE(WRITE "${CMAKE_BINARY_DIR}/CMakeTmp/src.c" "${SOURCE}")
 
-  ADD_DEFINITIONS(${${BACKEND_OPTION}_DEFINES})
   TRY_COMPILE(HAVE_BACKEND_HEADER
               ${CMAKE_BINARY_DIR}
               ${CMAKE_BINARY_DIR}/CMakeTmp/src.c
               CMAKE_FLAGS
-              "-DINCLUDE_DIRECTORIES:STRING=${${BACKEND_OPTION}_INCLUDE_DIRS}")
-  REMOVE_DEFINITIONS(${${BACKEND_OPTION}_DEFINES})
+              "-DINCLUDE_DIRECTORIES:STRING=${${BACKEND_OPTION}_INCLUDE_DIRS}"
+              "-DCOMPILE_DEFINITIONS:STRING=${${BACKEND_OPTION}_DEFINES}"
+              OUTPUT_VARIABLE OUTPUT)
+
+   WRITE_FILE(${CMAKE_BINARY_DIR}/CMakeOutput.log
+              "Performing manual C SOURCE FILE Test HAVE_BACKEND_HEADER for ${BACKEND_OPTION} with the following output:\n"
+              "${OUTPUT}\n"
+              "Source file was:\n${SOURCE}\n" APPEND)
 
   IF(HAVE_BACKEND_HEADER)
     IF(HAVE_LIB_DL AND ${BACKEND_OPTION}_DLOPEN)
@@ -399,20 +405,25 @@ IF(${BACKEND_OPTION} AND NOT ${BACKEND_OPTION}_FOUND)
       ELSE(${BACKEND_OPTION}_LIBS MATCHES "NOTFOUND")
 
         # check whether back-end is link-able
-        FILE(WRITE "${CMAKE_BINARY_DIR}/CMakeTmp/src.c"
-          "
-          int main(){${BACKEND_TEST_FUNC}();return 0;}
-          ")
+        SET(SOURCE
+"int main(){${BACKEND_TEST_FUNC}();return 0;}
+")
+        FILE(WRITE "${CMAKE_BINARY_DIR}/CMakeTmp/src.c" "${SOURCE}")
 
-        ADD_DEFINITIONS(${${BACKEND_OPTION}_DEFINES})
         TRY_COMPILE(BACKEND_LINKS
           ${CMAKE_BINARY_DIR}
           ${CMAKE_BINARY_DIR}/CMakeTmp/src.c
           CMAKE_FLAGS
           "-DINCLUDE_DIRECTORIES:STRING=${${BACKEND_OPTION}_INCLUDE_DIRS}"
           "-DLINK_DIRECTORIES:STRING=${${BACKEND_OPTION}_LINK_DIRS}"
-          "-DLINK_LIBRARIES:STRING=${${BACKEND_OPTION}_LIBS}")
-        REMOVE_DEFINITIONS(${${BACKEND_OPTION}_DEFINES})
+          "-DLINK_LIBRARIES:STRING=${${BACKEND_OPTION}_LIBS}"
+          "-DCOMPILE_DEFINITIONS:STRING=${${BACKEND_OPTION}_DEFINES}"
+          OUTPUT_VARIABLE OUTPUT)
+
+        WRITE_FILE(${CMAKE_BINARY_DIR}/CMakeOutput.log
+                   "Performing manual C SOURCE FILE Test BACKEND_LINKS for ${BACKEND_OPTION} with the following output:\n"
+                   "${OUTPUT}\n"
+                   "Source file was:\n${SOURCE}\n" APPEND)
 
         IF(BACKEND_LINKS)
           SET(${BACKEND_OPTION}_FOUND ON CACHE INTERNAL "")
@@ -453,6 +464,7 @@ ELSE(${BACKEND_OPTION} AND ${BACKEND_OPTION}_FOUND)
 ENDIF(${BACKEND_OPTION} AND ${BACKEND_OPTION}_FOUND)
 ENDMACRO(CHECK_BACKEND)
 
+#             OPT    PKG-NAME   LIB        HEADER              TEST-FUNCTION
 CHECK_BACKEND(ALSA   alsa       asound     alsa/asoundlib.h    snd_pcm_info_sizeof)
 CHECK_BACKEND(ARTS   artsc      artsc      artsc.h             arts_free)
 CHECK_BACKEND(DMEDIA ""         audio      dmedia/audio.h      alGetResourceByName)
