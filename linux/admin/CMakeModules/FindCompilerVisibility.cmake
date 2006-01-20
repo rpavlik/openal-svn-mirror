@@ -19,9 +19,9 @@ int main(){}
               OUTPUT_VARIABLE OUTPUT)
 
   WRITE_FILE(${CMAKE_BINARY_DIR}/CMakeOutput.log
-        "Performing manual C SOURCE FILE Test ${VAR} with the following output:\n"
-        "${OUTPUT}\n"
-        "Source file was:\n${SOURCE}\n" APPEND)
+             "Performing manual C SOURCE FILE Test ${VAR} with the following output:\n"
+             "${OUTPUT}\n"
+             "Source file was:\n${SOURCE}\n" APPEND)
 
   SET(${VAR} ${${VAR}} CACHE INTERNAL "Test Visibility")
   IF(${VAR})
