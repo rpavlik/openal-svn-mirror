@@ -5,7 +5,8 @@
 	
 	* admin/CMakeModules/FindPkgConfig.cmake: filter out ENTER lines
 	
-	* CMakeLists.txt: better defines handling and more debugging output
+	* CMakeLists.txt: better defines handling and more debugging output;
+	re-check backends if DLOPEN state changed
 
 2006-01-18 Erik Hofman <erik@ehofman.com>
 
