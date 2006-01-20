@@ -194,6 +194,12 @@ typedef struct
 #define QUEUEBUFFERSIZE		2048
 #define QUEUEBUFFERCOUNT	4
 
+typedef struct ALCenum_struct
+{
+	ALCchar		*enumName;
+	ALCenum		value;
+} ALCenums;
+
 typedef struct ALenum_struct
 {
 	ALchar		*enumName;
@@ -219,123 +225,131 @@ ALboolean g_bEAX;					/* Boolean variable to indicate presence of EAX Extension 
 unsigned int g_ovSize;
 #endif
 
-static ALenums enumeration[]={
-	/* Types */
-	{ (ALchar *)"AL_NONE",							    AL_NONE								},
-	{ (ALchar *)"AL_FALSE",							    AL_FALSE							},
-	{ (ALchar *)"ALC_FALSE",						    ALC_FALSE							},
-	{ (ALchar *)"AL_TRUE",							    AL_TRUE								},
-	{ (ALchar *)"ALC_TRUE",							    ALC_TRUE							},
-	
-	/* Source and Listener Properties */
-	{ (ALchar *)"AL_SOURCE_RELATIVE",				    AL_SOURCE_RELATIVE					},
-	{ (ALchar *)"AL_CONE_INNER_ANGLE",				    AL_CONE_INNER_ANGLE					},
-	{ (ALchar *)"AL_CONE_OUTER_ANGLE",				    AL_CONE_OUTER_ANGLE					},
-	{ (ALchar *)"AL_PITCH",							    AL_PITCH							},
-	{ (ALchar *)"AL_POSITION",						    AL_POSITION							},
-	{ (ALchar *)"AL_DIRECTION",						    AL_DIRECTION						},
-	{ (ALchar *)"AL_VELOCITY",						    AL_VELOCITY							},
-	{ (ALchar *)"AL_LOOPING",						    AL_LOOPING							},
-	{ (ALchar *)"AL_BUFFER",						    AL_BUFFER							},
-	{ (ALchar *)"AL_GAIN",							    AL_GAIN								},
-	{ (ALchar *)"AL_MIN_GAIN",						    AL_MIN_GAIN							},
-	{ (ALchar *)"AL_MAX_GAIN",						    AL_MAX_GAIN							},
-	{ (ALchar *)"AL_ORIENTATION",					    AL_ORIENTATION						},
-	{ (ALchar *)"AL_REFERENCE_DISTANCE",			    AL_REFERENCE_DISTANCE				},
-	{ (ALchar *)"AL_ROLLOFF_FACTOR",				    AL_ROLLOFF_FACTOR					},
-	{ (ALchar *)"AL_CONE_OUTER_GAIN",				    AL_CONE_OUTER_GAIN					},
-	{ (ALchar *)"AL_MAX_DISTANCE",					    AL_MAX_DISTANCE						},
-	{ (ALchar *)"AL_SEC_OFFSET",                        AL_SEC_OFFSET                       },
-	{ (ALchar *)"AL_SAMPLE_OFFSET",                     AL_SAMPLE_OFFSET                    },
-	{ (ALchar *)"AL_BYTE_OFFSET",                       AL_BYTE_OFFSET                      },
-	{ (ALchar *)"AL_SOURCE_TYPE",                       AL_SOURCE_TYPE                      },
-	{ (ALchar *)"AL_STATIC",                            AL_STATIC                           },
-	{ (ALchar *)"AL_STREAMING",                         AL_STREAMING                        },
-	{ (ALchar *)"AL_UNDETERMINED",                      AL_UNDETERMINED                     },
+static ALCenums enumerationALC[] = {
+  /* Types */
+  {(ALCchar *) "ALC_FALSE", ALC_FALSE},
+  {(ALCchar *) "ALC_TRUE", ALC_TRUE},
 
-	/* Source State information */
-	{ (ALchar *)"AL_SOURCE_STATE",					    AL_SOURCE_STATE						},
-	{ (ALchar *)"AL_INITIAL",						    AL_INITIAL							},
-	{ (ALchar *)"AL_PLAYING",						    AL_PLAYING							},
-	{ (ALchar *)"AL_PAUSED",						    AL_PAUSED							},
-	{ (ALchar *)"AL_STOPPED",						    AL_STOPPED							},
+  /* ALC Properties */
+  {(ALCchar *) "ALC_MAJOR_VERSION", ALC_MAJOR_VERSION},
+  {(ALCchar *) "ALC_MINOR_VERSION", ALC_MINOR_VERSION},
+  {(ALCchar *) "ALC_ATTRIBUTES_SIZE", ALC_ATTRIBUTES_SIZE},
+  {(ALCchar *) "ALC_ALL_ATTRIBUTES", ALC_ALL_ATTRIBUTES},
+  {(ALCchar *) "ALC_DEFAULT_DEVICE_SPECIFIER", ALC_DEFAULT_DEVICE_SPECIFIER},
+  {(ALCchar *) "ALC_DEVICE_SPECIFIER", ALC_DEVICE_SPECIFIER},
+  {(ALCchar *) "ALC_EXTENSIONS", ALC_EXTENSIONS},
+  {(ALCchar *) "ALC_FREQUENCY", ALC_FREQUENCY},
+  {(ALCchar *) "ALC_REFRESH", ALC_REFRESH},
+  {(ALCchar *) "ALC_SYNC", ALC_SYNC},
+  {(ALCchar *) "ALC_MONO_SOURCES", ALC_MONO_SOURCES},
+  {(ALCchar *) "ALC_STEREO_SOURCES", ALC_STEREO_SOURCES},
+  {(ALCchar *) "ALC_CAPTURE_DEVICE_SPECIFIER", ALC_CAPTURE_DEVICE_SPECIFIER},
+  {(ALCchar *) "ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER", ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER},
+  {(ALCchar *) "ALC_CAPTURE_SAMPLES", ALC_CAPTURE_SAMPLES},
 
-	/* Queue information */
-	{ (ALchar *)"AL_BUFFERS_QUEUED",				    AL_BUFFERS_QUEUED					},
-	{ (ALchar *)"AL_BUFFERS_PROCESSED",				    AL_BUFFERS_PROCESSED				},
-	
-	/* Buffer Formats */
-	{ (ALchar *)"AL_FORMAT_MONO8",					    AL_FORMAT_MONO8						},
-	{ (ALchar *)"AL_FORMAT_MONO16",					    AL_FORMAT_MONO16					},
-	{ (ALchar *)"AL_FORMAT_STEREO8",				    AL_FORMAT_STEREO8					},
-	{ (ALchar *)"AL_FORMAT_STEREO16",				    AL_FORMAT_STEREO16					},
+  /* ALC Error Message */
+  {(ALCchar *) "ALC_NO_ERROR", ALC_NO_ERROR},
+  {(ALCchar *) "ALC_INVALID_DEVICE", ALC_INVALID_DEVICE},
+  {(ALCchar *) "ALC_INVALID_CONTEXT", ALC_INVALID_CONTEXT},
+  {(ALCchar *) "ALC_INVALID_ENUM", ALC_INVALID_ENUM},
+  {(ALCchar *) "ALC_INVALID_VALUE", ALC_INVALID_VALUE},
+  {(ALCchar *) "ALC_OUT_OF_MEMORY", ALC_OUT_OF_MEMORY},
 
-	/* Buffer attributes */
-	{ (ALchar *)"AL_FREQUENCY",						    AL_FREQUENCY						},
-	{ (ALchar *)"AL_BITS",						        AL_BITS								},
-	{ (ALchar *)"AL_CHANNELS",					        AL_CHANNELS							},
-	{ (ALchar *)"AL_SIZE",							    AL_SIZE								},
+  /* Default */
+  {(ALCchar *) NULL, (ALenum) 0}
+};
 
-	/* Buffer States (not supported yet) */
-	{ (ALchar *)"AL_UNUSED",						    AL_UNUSED							},
-	{ (ALchar *)"AL_PENDING",						    AL_PENDING							},
-	{ (ALchar *)"AL_PROCESSED",						    AL_PROCESSED						},
+static ALenums enumerationAL[] = {
+  /* Types */
+  {(ALchar *) "AL_NONE", AL_NONE},
+  {(ALchar *) "AL_FALSE", AL_FALSE},
+  {(ALchar *) "AL_TRUE", AL_TRUE},
 
-	/* ALC Properties */
-	{ (ALchar *)"ALC_MAJOR_VERSION",				    ALC_MAJOR_VERSION					},
-	{ (ALchar *)"ALC_MINOR_VERSION",				    ALC_MINOR_VERSION					},
-	{ (ALchar *)"ALC_ATTRIBUTES_SIZE",				    ALC_ATTRIBUTES_SIZE					},
-	{ (ALchar *)"ALC_ALL_ATTRIBUTES",				    ALC_ALL_ATTRIBUTES					},
-	{ (ALchar *)"ALC_DEFAULT_DEVICE_SPECIFIER",		    ALC_DEFAULT_DEVICE_SPECIFIER		},
-	{ (ALchar *)"ALC_DEVICE_SPECIFIER",				    ALC_DEVICE_SPECIFIER				},
-	{ (ALchar *)"ALC_EXTENSIONS",					    ALC_EXTENSIONS						},
-	{ (ALchar *)"ALC_FREQUENCY",					    ALC_FREQUENCY						},
-	{ (ALchar *)"ALC_REFRESH",						    ALC_REFRESH							},
-	{ (ALchar *)"ALC_SYNC",							    ALC_SYNC							},
-	{ (ALchar *)"ALC_MONO_SOURCES",                     ALC_MONO_SOURCES                    },
-	{ (ALchar *)"ALC_STEREO_SOURCES",                   ALC_STEREO_SOURCES                  },
-	{ (ALchar *)"ALC_CAPTURE_DEVICE_SPECIFIER",         ALC_CAPTURE_DEVICE_SPECIFIER        },
-	{ (ALchar *)"ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER", ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER },
-    { (ALchar *)"ALC_CAPTURE_SAMPLES",                  ALC_CAPTURE_SAMPLES                 },
+  /* Source and Listener Properties */
+  {(ALchar *) "AL_SOURCE_RELATIVE", AL_SOURCE_RELATIVE},
+  {(ALchar *) "AL_CONE_INNER_ANGLE", AL_CONE_INNER_ANGLE},
+  {(ALchar *) "AL_CONE_OUTER_ANGLE", AL_CONE_OUTER_ANGLE},
+  {(ALchar *) "AL_PITCH", AL_PITCH},
+  {(ALchar *) "AL_POSITION", AL_POSITION},
+  {(ALchar *) "AL_DIRECTION", AL_DIRECTION},
+  {(ALchar *) "AL_VELOCITY", AL_VELOCITY},
+  {(ALchar *) "AL_LOOPING", AL_LOOPING},
+  {(ALchar *) "AL_BUFFER", AL_BUFFER},
+  {(ALchar *) "AL_GAIN", AL_GAIN},
+  {(ALchar *) "AL_MIN_GAIN", AL_MIN_GAIN},
+  {(ALchar *) "AL_MAX_GAIN", AL_MAX_GAIN},
+  {(ALchar *) "AL_ORIENTATION", AL_ORIENTATION},
+  {(ALchar *) "AL_REFERENCE_DISTANCE", AL_REFERENCE_DISTANCE},
+  {(ALchar *) "AL_ROLLOFF_FACTOR", AL_ROLLOFF_FACTOR},
+  {(ALchar *) "AL_CONE_OUTER_GAIN", AL_CONE_OUTER_GAIN},
+  {(ALchar *) "AL_MAX_DISTANCE", AL_MAX_DISTANCE},
+  {(ALchar *) "AL_SEC_OFFSET", AL_SEC_OFFSET},
+  {(ALchar *) "AL_SAMPLE_OFFSET", AL_SAMPLE_OFFSET},
+  {(ALchar *) "AL_BYTE_OFFSET", AL_BYTE_OFFSET},
+  {(ALchar *) "AL_SOURCE_TYPE", AL_SOURCE_TYPE},
+  {(ALchar *) "AL_STATIC", AL_STATIC},
+  {(ALchar *) "AL_STREAMING", AL_STREAMING},
+  {(ALchar *) "AL_UNDETERMINED", AL_UNDETERMINED},
 
-	/* AL Error Messages */
-	{ (ALchar *)"AL_NO_ERROR",						    AL_NO_ERROR							},
-	{ (ALchar *)"AL_INVALID_NAME",					    AL_INVALID_NAME						},
-	{ (ALchar *)"AL_INVALID_ENUM",					    AL_INVALID_ENUM						},
-	{ (ALchar *)"AL_INVALID_VALUE",					    AL_INVALID_VALUE					},
-	{ (ALchar *)"AL_INVALID_OPERATION",				    AL_INVALID_OPERATION				},
-	{ (ALchar *)"AL_OUT_OF_MEMORY",					    AL_OUT_OF_MEMORY					},
-	
-	/* ALC Error Message */
-	{ (ALchar *)"ALC_NO_ERROR",						    ALC_NO_ERROR						},
-	{ (ALchar *)"ALC_INVALID_DEVICE",				    ALC_INVALID_DEVICE					},
-	{ (ALchar *)"ALC_INVALID_CONTEXT",				    ALC_INVALID_CONTEXT					},
-	{ (ALchar *)"ALC_INVALID_ENUM",					    ALC_INVALID_ENUM					},
-	{ (ALchar *)"ALC_INVALID_VALUE",				    ALC_INVALID_VALUE					},
-	{ (ALchar *)"ALC_OUT_OF_MEMORY",				    ALC_OUT_OF_MEMORY					},
+  /* Source State information */
+  {(ALchar *) "AL_SOURCE_STATE", AL_SOURCE_STATE},
+  {(ALchar *) "AL_INITIAL", AL_INITIAL},
+  {(ALchar *) "AL_PLAYING", AL_PLAYING},
+  {(ALchar *) "AL_PAUSED", AL_PAUSED},
+  {(ALchar *) "AL_STOPPED", AL_STOPPED},
 
-	/* Context strings */
-	{ (ALchar *)"AL_VENDOR",						    AL_VENDOR							},
-	{ (ALchar *)"AL_VERSION",						    AL_VERSION							},
-	{ (ALchar *)"AL_RENDERER",						    AL_RENDERER							},
-	{ (ALchar *)"AL_EXTENSIONS",					    AL_EXTENSIONS						},
-	
-	/* Global states */
-	{ (ALchar *)"AL_DOPPLER_FACTOR",				    AL_DOPPLER_FACTOR					},
-	{ (ALchar *)"AL_DOPPLER_VELOCITY",				    AL_DOPPLER_VELOCITY					},
-	{ (ALchar *)"AL_DISTANCE_MODEL",				    AL_DISTANCE_MODEL					},
-	{ (ALchar *)"AL_SPEED_OF_SOUND",                    AL_SPEED_OF_SOUND                   },
-	
-	/* Distance Models */
-	{ (ALchar *)"AL_INVERSE_DISTANCE",				    AL_INVERSE_DISTANCE					},
-	{ (ALchar *)"AL_INVERSE_DISTANCE_CLAMPED",		    AL_INVERSE_DISTANCE_CLAMPED			},
-	{ (ALchar *)"AL_LINEAR_DISTANCE",				    AL_LINEAR_DISTANCE					},
-	{ (ALchar *)"AL_LINEAR_DISTANCE_CLAMPED",		    AL_LINEAR_DISTANCE_CLAMPED			},
-	{ (ALchar *)"AL_EXPONENT_DISTANCE",				    AL_EXPONENT_DISTANCE			    },
-	{ (ALchar *)"AL_EXPONENT_DISTANCE_CLAMPED",		    AL_EXPONENT_DISTANCE_CLAMPED	    },
+  /* Queue information */
+  {(ALchar *) "AL_BUFFERS_QUEUED", AL_BUFFERS_QUEUED},
+  {(ALchar *) "AL_BUFFERS_PROCESSED", AL_BUFFERS_PROCESSED},
 
-	/* Default */
-	{ (ALchar *)NULL,								(ALenum  ) 0 						} };
+  /* Buffer Formats */
+  {(ALchar *) "AL_FORMAT_MONO8", AL_FORMAT_MONO8},
+  {(ALchar *) "AL_FORMAT_MONO16", AL_FORMAT_MONO16},
+  {(ALchar *) "AL_FORMAT_STEREO8", AL_FORMAT_STEREO8},
+  {(ALchar *) "AL_FORMAT_STEREO16", AL_FORMAT_STEREO16},
+
+  /* Buffer attributes */
+  {(ALchar *) "AL_FREQUENCY", AL_FREQUENCY},
+  {(ALchar *) "AL_BITS", AL_BITS},
+  {(ALchar *) "AL_CHANNELS", AL_CHANNELS},
+  {(ALchar *) "AL_SIZE", AL_SIZE},
+
+  /* Buffer States (not supported yet) */
+  {(ALchar *) "AL_UNUSED", AL_UNUSED},
+  {(ALchar *) "AL_PENDING", AL_PENDING},
+  {(ALchar *) "AL_PROCESSED", AL_PROCESSED},
+
+  /* AL Error Messages */
+  {(ALchar *) "AL_NO_ERROR", AL_NO_ERROR},
+  {(ALchar *) "AL_INVALID_NAME", AL_INVALID_NAME},
+  {(ALchar *) "AL_INVALID_ENUM", AL_INVALID_ENUM},
+  {(ALchar *) "AL_INVALID_VALUE", AL_INVALID_VALUE},
+  {(ALchar *) "AL_INVALID_OPERATION", AL_INVALID_OPERATION},
+  {(ALchar *) "AL_OUT_OF_MEMORY", AL_OUT_OF_MEMORY},
+
+  /* Context strings */
+  {(ALchar *) "AL_VENDOR", AL_VENDOR},
+  {(ALchar *) "AL_VERSION", AL_VERSION},
+  {(ALchar *) "AL_RENDERER", AL_RENDERER},
+  {(ALchar *) "AL_EXTENSIONS", AL_EXTENSIONS},
+
+  /* Global states */
+  {(ALchar *) "AL_DOPPLER_FACTOR", AL_DOPPLER_FACTOR},
+  {(ALchar *) "AL_DOPPLER_VELOCITY", AL_DOPPLER_VELOCITY},
+  {(ALchar *) "AL_DISTANCE_MODEL", AL_DISTANCE_MODEL},
+  {(ALchar *) "AL_SPEED_OF_SOUND", AL_SPEED_OF_SOUND},
+
+  /* Distance Models */
+  {(ALchar *) "AL_INVERSE_DISTANCE", AL_INVERSE_DISTANCE},
+  {(ALchar *) "AL_INVERSE_DISTANCE_CLAMPED", AL_INVERSE_DISTANCE_CLAMPED},
+  {(ALchar *) "AL_LINEAR_DISTANCE", AL_LINEAR_DISTANCE},
+  {(ALchar *) "AL_LINEAR_DISTANCE_CLAMPED", AL_LINEAR_DISTANCE_CLAMPED},
+  {(ALchar *) "AL_EXPONENT_DISTANCE", AL_EXPONENT_DISTANCE},
+  {(ALchar *) "AL_EXPONENT_DISTANCE_CLAMPED", AL_EXPONENT_DISTANCE_CLAMPED},
+
+  /* Default */
+  {(ALchar *) NULL, (ALenum) 0}
+};
 
 /* Function prototypes */
 void delay_ms(unsigned int ms);
@@ -1429,32 +1443,46 @@ $SECTION Fully Automatic Tests
 $SUBTITLE Enumeration Value Test
 This test checks that the implementation's enumeration values are correct.
 */
-ALvoid FA_EnumerationValue(ALvoid)
+ALvoid
+FA_EnumerationValue (ALvoid)
 {
-	bool result = true;
-	int i = 0;
-	int getVal;
+  int i;
+  ALboolean result = AL_TRUE;
+  ALCcontext *context;
+  ALCdevice *device;
+  ALCenum valALC;
+  ALenum valAL;
 
-	printf("\nEnumeration Value Test. ");
+  printf ("\nEnumeration Value Test. ");
 
-	while (enumeration[i].enumName)
-	{
-		getVal = alGetEnumValue(enumeration[i].enumName);
-		if (getVal != enumeration[i].value)
-		{
-			printf("\n%s has an invalid enum value.", enumeration[i].enumName);
-			result = false;
-		}
-		i++;
-	}
-	
-	if (result == true)
-	{
-		printf("PASSED.");
-	} else
-	{
-		printf("FAILED.");
-	}
+  context = alcGetCurrentContext ();
+  device = alcGetContextsDevice (context);
+
+  for (i = 0; enumerationALC[i].enumName; i++)
+    {
+      valALC = alcGetEnumValue (device, enumerationALC[i].enumName);
+      if (valALC != enumerationALC[i].value)
+        {
+          printf ("\n%s has an invalid enum value: expected %d, got %d",
+                  (char *) enumerationALC[i].enumName,
+                  (int) enumerationALC[i].value, (int) valALC);
+          result = AL_FALSE;
+        }
+    }
+
+  for (i = 0; enumerationAL[i].enumName; i++)
+    {
+      valAL = alGetEnumValue (enumerationAL[i].enumName);
+      if (valAL != enumerationAL[i].value)
+        {
+          printf ("\n%s has an invalid enum value: expected %d, got %d",
+                  (char *) enumerationALC[i].enumName,
+                  (int) enumerationAL[i].value, (int) valAL);
+          result = AL_FALSE;
+        }
+    }
+
+  printf (result == AL_TRUE ? "PASSED." : "FAILED.");
 }
 
 
