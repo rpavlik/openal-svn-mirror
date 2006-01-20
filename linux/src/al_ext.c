@@ -866,13 +866,13 @@ getExtensionEnumValue( ALenum *value, const ALchar *enumName )
 {
 	/* ToDo: Hook in our extension loader somehow */
 	const char *name = (const char*)enumName;
-	if (strcmp(name, "AL_BYTE_LOKI")) {
+	if (strcmp(name, "AL_BYTE_LOKI") == 0) {
 		*value = AL_BYTE_LOKI;
 		return AL_TRUE;
-	} else if (strcmp(name, "AL_FORMAT_QUAD16_LOKI")) {
+	} else if (strcmp(name, "AL_FORMAT_QUAD16_LOKI") == 0) {
 		*value = AL_FORMAT_QUAD16_LOKI;
 		return AL_TRUE;
-	} else if (strcmp(name, "AL_FORMAT_QUAD8_LOKI")) {
+	} else if (strcmp(name, "AL_FORMAT_QUAD8_LOKI") == 0) {
 		*value = AL_FORMAT_QUAD8_LOKI;
 		return AL_TRUE;
 	} else {

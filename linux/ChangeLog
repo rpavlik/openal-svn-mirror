@@ -1,3 +1,7 @@
+2006-01-20  Sven Panne  <sven.panne@aedion.de>
+
+	* src/al_ext.c: Fixed braino in alGetEnumValue.
+
 2006-01-20  Prakash Punnoor <prakash@punnoor.de>
 
 	* admin/CMakeModules/FindCompilerVisibility.cmake: fix result always
