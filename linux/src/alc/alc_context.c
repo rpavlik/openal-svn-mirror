@@ -605,6 +605,8 @@ void _alcSetContext(const ALCint *attrlist, ALuint cid, AL_device *dev ) {
         if (dev->flags & ALCD_WRITE)
 	{
 		cc->write_device = dev;
+		/* At this point we know the listener position and the number of speakers. */
+		_alcSpeakerMove( cid );
 	}
         if (dev->flags & ALCD_READ)
 	{
@@ -732,8 +734,10 @@ _alcInitContext( ALuint cid )
 	cc->read_device = NULL;
 	cc->write_device = NULL;
 
-	/* This implicitly calls _alcSpeakerInit. The logic behind this is fascinating... */
-	_alcSpeakerMove( cid );
+	/*
+	 *_speaker_pos is initialized later when we know the output device and
+	 * therefore the number of speakers
+	 */
 
 	/*
 	 * should_sync:
