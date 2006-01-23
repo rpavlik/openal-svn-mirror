@@ -690,7 +690,7 @@ void _alcSetContext(const ALCint *attrlist, ALuint cid, AL_device *dev ) {
 		cc->read_device->bufsiz = bufsiz;
 
 	_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
-		"new bufsiz = %d", rdr.val);
+		"new bufsiz = %d", bufsiz);
 
 	return;
 }

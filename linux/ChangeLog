@@ -1,5 +1,7 @@
 2006-01-23  Sven Panne  <sven.panne@aedion.de>
 
+	* src/alc/alc_context.c(_alcSetContext): Fixed debug message.
+
 	* src/al_rcvar.c(rc_lookup): Don't complain a second time,
 	_alGlobalBinding already did it.
 
