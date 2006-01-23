@@ -32,16 +32,7 @@ static void print_prim( Rcvar obj );
  * it doesn't.
  */
 Rcvar rc_lookup( const char *name ) {
-	AL_rctree *sym = _alGlobalBinding( name );
-
-	if(sym == NULL) {
-		_alDebug(ALD_CONFIG, __FILE__, __LINE__,
-		      "No such symbol %s", name);
-
-		return NULL;
-	}
-
-	return sym;
+	return _alGlobalBinding( name );
 }
 
 /*

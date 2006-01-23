@@ -1,3 +1,8 @@
+2006-01-23  Sven Panne  <sven.panne@aedion.de>
+
+	* src/al_rcvar.c(rc_lookup): Don't complain a second time,
+	_alGlobalBinding already did it.
+
 2006-01-20  Sven Panne  <sven.panne@aedion.de>
 
 	* src/al_ext.c: Fixed braino in alGetEnumValue.
