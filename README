@@ -1,8 +1,8 @@
 OpenAL: A portable audio API.
 
-Please visit http://www.openal.org/snapshots for API documentation.  For
+Please visit http://www.openal.org/documentation.html for API documentation.  For
 documentation specific to the Linux implementation of OpenAL please see
 linux/doc.  For questions and comments about the API or any implementation
 please use the mailing list.
 
-Contact information is available at http://www.openal.org/about/contact.php3 .
+Contact information is available at http://www.openal.org.
