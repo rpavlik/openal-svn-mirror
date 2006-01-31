@@ -967,7 +967,6 @@ else
           [openal_cv_func_waveoutclose=no])])
      if test "x$openal_cv_func_waveoutclose" = xyes; then
        openal_backend_windows_support=static
-       FEATURECFLAGS="$FEATURECFLAGS -DAL_BUILD_LIBRARY"
        LIBS="$openal_libs_windows $LIBS"
      else
        openal_backend_windows_support=none
@@ -1150,6 +1149,7 @@ OPENAL_ENABLE([AL_EXT_mp3 extension], [openal_extension_smpeg_support],
 AC_CHECK_SIZEOF([void *])
 
 AC_DEFINE([LINUX_AL], [1], [undocumented])
+FEATURECFLAGS="$FEATURECFLAGS -DAL_BUILD_LIBRARY"
 
 AC_SUBST([FEATURECFLAGS])
 AC_SUBST([LIBS])

@@ -13,7 +13,7 @@ extern "C" {
   #define ALC_API __declspec(dllimport)
  #endif
 #else
- #if defined(HAVE_GCC_VISIBILITY)
+ #if defined(AL_BUILD_LIBRARY) && defined(HAVE_GCC_VISIBILITY)
   #define ALC_API __attribute__((visibility("default")))
  #else
   #define ALC_API extern

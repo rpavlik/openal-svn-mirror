@@ -1,3 +1,12 @@
+2006-01-31  Prakash Punnoor <prakash@punnoor.de>
+
+	* admin/pkgconfig/Makefile.am: use more portable way of defining
+	pkgconfdir (by Andreas Bierfert)
+	
+	* common/include/AL/al.h, common/include/AL/alc.h,
+	CMakeLists.txt, configure.ac:
+	use visibility attribute only when building OpenAL lib
+	
 2006-01-23  Sven Panne  <sven.panne@aedion.de>
 
 	* src/alc/alc_context.c (_alcSetContext, _alcInitContext): Initialize
