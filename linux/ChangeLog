@@ -1,5 +1,8 @@
 2006-02-03  Sven Panne  <sven.panne@aedion.de>
 
+	* CMakeLists.txt, configure.ac src/al_source.c: Renamed LINUX_AL
+	to AL_SUPPORT_BYTE_LOKI_SOURCE_ATTR_, which is a bit clearer.
+
 	* src/al_source.c, src/al_types.h, test/testloop.c: Removed the
 	AL_STREAMING source attribute. It was non-standard, undocumented and
 	didn't do anything.

@@ -1151,7 +1151,7 @@ OPENAL_ENABLE([AL_EXT_mp3 extension], [openal_extension_smpeg_support],
 
 AC_CHECK_SIZEOF([void *])
 
-AC_DEFINE([LINUX_AL], [1], [undocumented])
+AC_DEFINE([AL_SUPPORT_BYTE_LOKI_SOURCE_ATTR_], [1], [Define to 1 if the AL_BYTE_LOKI source attribute shall be supported.])
 
 AC_SUBST([FEATURECFLAGS])
 AC_SUBST([LIBS])

@@ -948,7 +948,7 @@ void alGetSourceiv( ALuint sid, ALenum param, ALint *retref )
 		  	*retref = src->bid_queue.read_index;
 		  }
 		  break;
-#ifdef LINUX_AL
+#ifdef AL_SUPPORT_BYTE_LOKI_SOURCE_ATTR_
 		case AL_BYTE_LOKI:
 		  /* AL_BYTE_LOKI is not setable, and has no default. */
 		  switch(src->state) {
@@ -1107,7 +1107,7 @@ void alGetSourcefv( ALuint sid, ALenum param, ALfloat *values ) {
 		case AL_SOURCE_RELATIVE:
 		case AL_BUFFERS_QUEUED:
 		case AL_BUFFERS_PROCESSED:
-#ifdef LINUX_AL
+#ifdef AL_SUPPORT_BYTE_LOKI_SOURCE_ATTR_
 		case AL_BYTE_LOKI:
 #endif
 		case AL_SOURCE_STATE:
