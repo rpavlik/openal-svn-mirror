@@ -307,9 +307,6 @@ void alSourcei( ALuint sid, ALenum param, ALint i1 )
 		case AL_BUFFER:
 		case AL_LOOPING:
 		case AL_SOURCE_RELATIVE:
-#ifdef LINUX_AL
-		case AL_STREAMING:
-#endif
 			/*
 			 * We handle these natively.
 			 */
@@ -367,9 +364,6 @@ void alSourcei( ALuint sid, ALenum param, ALint i1 )
 	 */
 	switch( param ) {
 		case AL_LOOPING:
-#ifdef LINUX_AL
-		case AL_STREAMING:
-#endif
 		case AL_SOURCE_RELATIVE:
 			inrange = _alCheckRangeb( i1 );
 			break;
@@ -440,12 +434,6 @@ void alSourcei( ALuint sid, ALenum param, ALint i1 )
 				_alSource2D(src);
 			}
 			break;
-#ifdef LINUX_AL
-		case AL_STREAMING:
-			src->isstreaming.isset = AL_TRUE;
-			src->isstreaming.data = i1;
-			break;
-#endif
 		default:
 			_alDebug(ALD_SOURCE, __FILE__, __LINE__,
 				"alSourcei: invalid or stubbed source param 0x%x",
@@ -483,12 +471,8 @@ void alSourcef( ALuint sid, ALenum param, ALfloat f1 ) {
 		case AL_BUFFER:
 		case AL_LOOPING:
 		case AL_SOURCE_RELATIVE:
-#ifdef LINUX_AL
-		case AL_STREAMING:
 			alSourcei( sid, param, (ALint) f1 );
 			return;
-			break;
-#endif
 		case AL_PITCH:
 		case AL_MIN_GAIN:
 		case AL_MAX_GAIN:
@@ -501,9 +485,7 @@ void alSourcef( ALuint sid, ALenum param, ALfloat f1 ) {
 		case AL_ROLLOFF_FACTOR:
 		case AL_MAX_DISTANCE:
 			alSourcefv( sid, param, &f1 );
-
 			return;
-			break;
 		case AL_POSITION:
 		case AL_VELOCITY:
 		case AL_DIRECTION:
@@ -511,12 +493,8 @@ void alSourcef( ALuint sid, ALenum param, ALfloat f1 ) {
 			_alcDCLockContext();
 			_alDCSetError( AL_INVALID_ENUM );
 			_alcDCUnlockContext();
-
 			return;
-			break;
 	}
-
-	return;
 }
 
 /*
@@ -565,12 +543,8 @@ void alSourcefv( ALuint sid, ALenum param, const ALfloat *fv1 )
 		case AL_BUFFER:
 		case AL_LOOPING:
 		case AL_SOURCE_RELATIVE:
-#ifdef LINUX_AL
-		case AL_STREAMING:
 			alSourcei( sid, param, (ALint) fv1[0] );
 			return;
-			break;
-#endif
 		case AL_PITCH:
 		case AL_MIN_GAIN:
 		case AL_MAX_GAIN:
@@ -591,7 +565,6 @@ void alSourcefv( ALuint sid, ALenum param, const ALfloat *fv1 )
 			_alDCSetError( AL_INVALID_ENUM );
 			_alcDCUnlockContext();
 			return;
-			break;
 	}
 
 
@@ -906,9 +879,6 @@ void alGetSourceiv( ALuint sid, ALenum param, ALint *retref )
 
 		switch( param ) {
 			case AL_LOOPING:
-#ifdef LINUX_AL
-			case AL_STREAMING:
-#endif
 			case AL_SOURCE_RELATIVE:
 				*retref = * (ALboolean *) temp;
 				break;
@@ -996,9 +966,6 @@ void alGetSourceiv( ALuint sid, ALenum param, ALint *retref )
 		  *retref = src->state;
 		  break;
 		case AL_LOOPING:
-#ifdef LINUX_AL
-		case AL_STREAMING:
-#endif
 		case AL_SOURCE_RELATIVE:
 			/*
 			 * These all have default states, but must be handled
@@ -1137,9 +1104,6 @@ void alGetSourcefv( ALuint sid, ALenum param, ALfloat *values ) {
 			numvalues = 1;
 			break;
 		case AL_LOOPING:
-#ifdef LINUX_AL
-		case AL_STREAMING:
-#endif
 		case AL_SOURCE_RELATIVE:
 		case AL_BUFFERS_QUEUED:
 		case AL_BUFFERS_PROCESSED:
@@ -2825,13 +2789,8 @@ static void _alInitSource( ALuint sid ) {
 				  &src->cone_outer_gain.data );
 
 	/*
-	 * initialize streaming, source relative, looping, pitch
+	 * initialize source relative, looping, pitch
 	 */
-
-	src->isstreaming.isset = AL_FALSE;
-#ifdef LINUX_AL
-	_alSourceGetParamDefault( AL_STREAMING, &src->isstreaming.data );
-#endif
 
 	src->relative.isset = AL_FALSE;
 	_alSourceGetParamDefault( AL_SOURCE_RELATIVE, &src->relative.data );
@@ -3228,11 +3187,6 @@ void *_alGetSourceParam(AL_source *source, ALenum param )
 		case AL_SOURCE_RELATIVE:
 			return &source->relative.data;
 			break;
-#ifdef LINUX_AL
-		case AL_STREAMING:
-			return &source->isstreaming.data;
-			break;
-#endif
 		case AL_VELOCITY:
 			return &source->velocity.data;
 			break;
@@ -3297,10 +3251,6 @@ ALboolean _alSourceIsParamSet( AL_source *source, ALenum param ) {
 			return source->position.isset;
 		case AL_SOURCE_RELATIVE:
 			return source->relative.isset;
-#ifdef LINUX_AL
-		case AL_STREAMING:
-			return source->isstreaming.isset;
-#endif
 		case AL_VELOCITY:
 			return source->velocity.isset;
 		case AL_MIN_GAIN:
@@ -3373,11 +3323,8 @@ void _alSourceGetParamDefault( ALenum param, ALvoid *retref ) {
 			break;
 		case AL_LOOPING:
 		case AL_SOURCE_RELATIVE:
-#ifdef LINUX_AL
-		case AL_STREAMING:
 			*bp = AL_FALSE;
 			break;
-#endif
 		case AL_MAX_DISTANCE:
 			*fp = FLT_MAX;
 			break;
@@ -3386,8 +3333,6 @@ void _alSourceGetParamDefault( ALenum param, ALvoid *retref ) {
 			assert( 0 );
 			break;
 	}
-
-	return;
 }
 
 /*

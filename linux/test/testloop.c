@@ -30,7 +30,6 @@ static void init( const ALbyte *fname )
 
 	alSourcei( movingSource, AL_BUFFER, boom );
 	alSourcei( movingSource, AL_LOOPING, AL_TRUE );
-	alSourcei( movingSource, AL_STREAMING, AL_TRUE );
 	alSourcei( movingSource, AL_SOURCE_RELATIVE, AL_TRUE );
 	alSourcefv( movingSource, AL_POSITION, position );
 	alSourcef( movingSource, AL_PITCH, 1.00 );

@@ -179,7 +179,7 @@ typedef struct _AL_source {
 	AL_float3vparam velocity;
 	AL_floatparam gain;
 	AL_boolparam relative;
-	AL_intparam source_type; /* TODO: Currently unused. We should probably use this instead of isstreaming. */
+	AL_intparam source_type; /* TODO: Currently unused. */
 	AL_boolparam looping;
 	AL_floatparam min_gain;
 	AL_floatparam max_gain;
@@ -191,8 +191,6 @@ typedef struct _AL_source {
 	AL_floatparam cone_inner_angle;
 	AL_floatparam cone_outer_angle;
 	AL_floatparam cone_outer_gain;
-
-	AL_boolparam isstreaming;
 
 	struct {
 		AL_sourcestate *queuestate;
