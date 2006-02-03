@@ -235,12 +235,12 @@ ALAPI ALboolean ALAPIENTRY alIsExtensionPresent(const ALchar *extName)
 
 	if (extName)
 	{
-		if (!stricmp(extName, "EAX") || !stricmp(extName, "EAX2.0"))
+		if (!_stricmp(extName, "EAX") || !_stricmp(extName, "EAX2.0"))
 		{
 			bSupported = CheckEAXSupport(extName);
 		}
-		else if (!stricmp(extName, "AL_EXT_OFFSET") || !stricmp(extName, "AL_EXT_LINEAR_DISTANCE") ||
-			     !stricmp(extName, "AL_EXT_EXPONENT_DISTANCE"))
+		else if (!_stricmp(extName, "AL_EXT_OFFSET") || !_stricmp(extName, "AL_EXT_LINEAR_DISTANCE") ||
+			     !_stricmp(extName, "AL_EXT_EXPONENT_DISTANCE"))
 		{
 			bSupported = AL_TRUE;
 		}

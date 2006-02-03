@@ -18,6 +18,7 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
 
+#define _CRT_SECURE_NO_DEPRECATE // get rid of sprintf security warnings on VS2005
 #pragma comment(lib, "winmm.lib")
 
 #include <math.h>
@@ -1063,7 +1064,7 @@ ALCAPI ALCboolean ALCAPIENTRY alcIsExtensionPresent(ALCdevice *device, const ALC
 
 	if (extName)
 	{
-		while ((alcExtensions[i].extName)&&(stricmp(alcExtensions[i].extName,extName)))
+		while ((alcExtensions[i].extName)&&(_stricmp(alcExtensions[i].extName,extName)))
 			i++;
 
 		if (alcExtensions[i].extName)

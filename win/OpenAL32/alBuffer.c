@@ -18,6 +18,8 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
 
+#define _CRT_SECURE_NO_DEPRECATE // get rid of sprintf security warnings on VS2005
+
 #include <stdlib.h>
 #include <stdio.h>
 #include "alMain.h"

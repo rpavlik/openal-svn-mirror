@@ -99,7 +99,7 @@ ALboolean CheckEAXSupport(const ALchar *szEAXName)
 		// If Property Set Interface hasn't been obtained, EAX support is not available
 		if (lpPropertySet)
 		{
-			if ( (stricmp(szEAXName, "EAX") == 0) || (stricmp(szEAXName, "EAX2.0") == 0) )
+			if ( (_stricmp(szEAXName, "EAX") == 0) || (_stricmp(szEAXName, "EAX2.0") == 0) )
 			{
 				ListenerGuid = DSPROPSETID_EAX20_ListenerProperties;
 				BufferGuid = DSPROPSETID_EAX20_BufferProperties;
