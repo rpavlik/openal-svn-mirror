@@ -3277,9 +3277,7 @@ ALboolean _alSourceIsParamSet( AL_source *source, ALenum param ) {
  */
 void _alSourceGetParamDefault( ALenum param, ALvoid *retref ) {
 	ALint *ip     = retref;
-#ifdef LINUX_AL
 	ALboolean *bp = retref;
-#endif
 	ALfloat *fp   = retref;
 	Rcvar pref    = NULL;
 
