@@ -19,7 +19,10 @@ m4_ifdef([AS_HELP_STRING], [], [AC_DEFUN([AS_HELP_STRING], [AC_HELP_STRING($][@)
 
 # We need ISO C99 features (e.g. snprintf) and POSIX IEEE Std 1003.1b-1993
 # features (e.g. struct timespec, used in <alsa/asoundlib.h>)
-FEATURECFLAGS="-D_ISOC99_SOURCE -D_POSIX_C_SOURCE=199309"
+AC_DEFINE([_ISOC99_SOURCE], [1], [Define to 1 if extensions to ISO C89 from ISO C99 are needed.])
+AC_DEFINE([_POSIX_C_SOURCE], [199309], [Define to the POSIX version that should be used.])
+
+AC_DEFINE([AL_BUILD_LIBRARY], [1], [Define to 1 if we are building the OpenAL library.])
 
 AC_PROG_CC
 AC_C_CONST
@@ -1149,7 +1152,6 @@ OPENAL_ENABLE([AL_EXT_mp3 extension], [openal_extension_smpeg_support],
 AC_CHECK_SIZEOF([void *])
 
 AC_DEFINE([LINUX_AL], [1], [undocumented])
-FEATURECFLAGS="$FEATURECFLAGS -DAL_BUILD_LIBRARY"
 
 AC_SUBST([FEATURECFLAGS])
 AC_SUBST([LIBS])

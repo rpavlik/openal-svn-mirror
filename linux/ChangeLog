@@ -1,3 +1,8 @@
+2006-02-03  Sven Panne  <sven.panne@aedion.de>
+
+	* configure.ac: Use AC_DEFINE instead of specifying preprocessor defines
+	by hand.
+
 2006-01-31  Prakash Punnoor <prakash@punnoor.de>
 
 	* admin/pkgconfig/Makefile.am: use more portable way of defining
