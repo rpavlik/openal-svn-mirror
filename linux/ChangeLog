@@ -1,3 +1,7 @@
+2006-02-04  Prakash Punnoor <prakash@punnoor.de>
+
+	* CMakeLists.txt: handle dl as configure.ac
+
 2006-02-04  Sven Panne  <sven.panne@aedion.de>
 
 	* configure.ac: Fixes for Cygwin. Look for dlfcn.h and an option -ldl to
