@@ -1,7 +1,14 @@
+2006-02-04  Sven Panne  <sven.panne@aedion.de>
+
+	* configure.ac: Fixes for Cygwin. Look for dlfcn.h and an option -ldl to
+	decide whether dynamic loading of libraries is possible, as Cygwin
+	doesn't need and doesn't support -ldl. Fixed test for native Windows
+	backend. Fixed CR/LF vs. LF issue in configure.
+
 2006-02-03  Sven Panne  <sven.panne@aedion.de>
 
-	* CMakeLists.txt, configure.ac src/al_source.c: Renamed LINUX_AL
-	to AL_SUPPORT_BYTE_LOKI_SOURCE_ATTR_, which is a bit clearer.
+	* CMakeLists.txt, configure.ac src/al_source.c: Renamed LINUX_AL to
+	AL_SUPPORT_BYTE_LOKI_SOURCE_ATTR_, which is a bit clearer.
 
 	* src/al_source.c, src/al_types.h, test/testloop.c: Removed the
 	AL_STREAMING source attribute. It was non-standard, undocumented and
@@ -15,9 +22,8 @@
 	* admin/pkgconfig/Makefile.am: use more portable way of defining
 	pkgconfdir (by Andreas Bierfert)
 	
-	* common/include/AL/al.h, common/include/AL/alc.h,
-	CMakeLists.txt, configure.ac:
-	use visibility attribute only when building OpenAL lib
+	* common/include/AL/al.h, common/include/AL/alc.h, CMakeLists.txt,
+	configure.ac: use visibility attribute only when building OpenAL lib
 	
 2006-01-23  Sven Panne  <sven.panne@aedion.de>
 
@@ -35,8 +41,8 @@
 
 2006-01-20  Prakash Punnoor <prakash@punnoor.de>
 
-	* admin/CMakeModules/FindCompilerVisibility.cmake: fix result always
-	set to true and include debugging output; minor indenting
+	* admin/CMakeModules/FindCompilerVisibility.cmake: fix result always set
+	to true and include debugging output; minor indenting
 	
 	* admin/CMakeModules/FindPkgConfig.cmake: filter out ENTER lines
 	
@@ -55,8 +61,8 @@
 2006-01-17  Erik Hofman <erik@ehofman.com>
 
 	* src/al_buffer.c, src/al_buffer.h, src/al_main.c,
-	  src/audioconvert/ac_misc.c, src/audioconvert/audioconvert.h,
-	  src/extensions/al_ext_capture.c: Finish what someone else started,
+	src/audioconvert/ac_misc.c, src/audioconvert/audioconvert.h,
+	src/extensions/al_ext_capture.c: Finish what someone else started,
 	convert void* to const void* to get it compiling for IRIX' MIPSpro
 	compiler, add the usleep functio n for IRIX.
 
@@ -72,18 +78,18 @@
 	* src/extensions/al_ext_vorbis.c: fix vorbis not flushing samples and
 	bug in seek routine
 	
-	* CMakeLists.txt: work around CMake bug for visibility test and
-	add testrotatesound to tests; add DMedia detection; remove stray ENDIF
-	and deactivate DirectSound support (as it doesn't exist); factor out
-	some detection routines
+	* CMakeLists.txt: work around CMake bug for visibility test and add
+	testrotatesound to tests; add DMedia detection; remove stray ENDIF and
+	deactivate DirectSound support (as it doesn't exist); factor out some
+	detection routines
 	
 	* src/backends/alc_backend.c, src/backends/alc_backend.h,
 	src/backends/alc_backend_irix.c, configure.ac: make an independent
 	"dmedia" back-end of IRIX native
 	
 	* configure.ac, src/extensions/al_ext_mp3.c: Use OPENAL_DLOPEN_MP3
-	instead of OPENAL_DLOPEN_SMPEG. This more macro friendly (currently
-	in CMake project, only)
+	instead of OPENAL_DLOPEN_SMPEG. This more macro friendly (currently in
+	CMake project, only)
 	
 	* admin/CMakeModules/FindCompilerAttribute.cmake,
 	admin/CMakeModules/FindCompilerVisibility.cmake: added
@@ -104,12 +110,11 @@
 	test/testlistener3.c, test/testlistener4.c, test/testloop.c,
 	test/testmp32.c, test/testmulti.c, test/testmultinothread.c,
 	test/testnothread.c, test/testpause.c, test/testpitch.c,
-	test/testpitchnothread.c, test/testpitchnothread2.c,
-	test/testqueue.c, test/testqueue2.c, test/testqueue3.c,
-	test/testrelative.c, test/testreverb.c, test/testsingle.c,
-	test/testsourcestop.c, test/testtime.c: use current alut wave loader
-	instead of obsolete one, and as we use alut anyway, use its init/exit,
-	as well
+	test/testpitchnothread.c, test/testpitchnothread2.c, test/testqueue.c,
+	test/testqueue2.c, test/testqueue3.c, test/testrelative.c,
+	test/testreverb.c, test/testsingle.c, test/testsourcestop.c,
+	test/testtime.c: use current alut wave loader instead of obsolete one,
+	and as we use alut anyway, use its init/exit, as well
 	
 	* CMakeLists.txt: forgot testmulitnothread; add -fomit-frame-pointer
 	only when doing optimization

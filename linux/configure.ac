@@ -338,23 +338,28 @@ fi
 
 AC_C_BIGENDIAN
 
-dnl library stuff
+# A few notes about dynamic loading of libraries: We should really use libtool's
+# mechanisms for this, but for now we have to get our hands dirty with dlopen
+# and friends and hope for the best. These calls are available on a lot of
+# *nices and Cygwin and according to Apple's developer pages, they are available
+# on Mac OS X 10.3 and later, too. In former Mac OS X versions one has to use
+# the dlcompat library to emulate this facility. Furthermore, adding "-ldl"
+# might be required, but not always (e.g. Cygwin).
+
+AC_CHECK_HEADERS([dlfcn.h],
+  [AC_CHECK_LIB([dl], [dlopen], [LIBS="-ldl $LIBS"])],
+  [AC_MSG_WARN([Dynamic loading of libraries is not available.])
+   AC_DEFINE([NODLOPEN], [1], [Define to 1 if dynamic loading of libraries is not available.])])
+
+# ranlib stuff
 case "$target" in
-    *darwin*)
-    RANLIB=ranlib
-    ;;
-    *)
-    RANLIB=echo
-    dnl Should be allow dlopen of extensions?
-    AC_CHECK_LIB([dl], [dlopen], [LIBS="-ldl $LIBS"], [AC_DEFINE([NODLOPEN], [1], [undocumented]) echo "Can't dlopen extensions."])
-    ;;
+    *darwin*) RANLIB=ranlib ;;
+    *) RANLIB=echo ;;
 esac
 
 dnl Special OS objs for target systems
 case "$target" in
-  *darwin*) # I think darwin can use dlopen with fink, but I don't want to require fink
-            AC_DEFINE([NODLOPEN], [1], [undocumented])
-            LIBS="$LIBS -I/System/Library/Frameworks/CoreAudio.framework/Headers/ -framework CoreAudio"
+  *darwin*) LIBS="$LIBS -I/System/Library/Frameworks/CoreAudio.framework/Headers/ -framework CoreAudio"
             AC_DEFINE([USE_BACKEND_NATIVE_DARWIN], [1], [undocumented]) ;;
 esac
 
@@ -964,11 +969,13 @@ else
     [openal_libs_windows="-lwinmm"
      openal_saved_LIBS=$LIBS
      LIBS="$openal_libs_windows $LIBS"
-     AC_CACHE_CHECK([for waveOutClose], [openal_cv_func_waveoutclose],
-       [AC_LINK_IFELSE([AC_LANG_CALL([], [waveOutClose])],
-          [openal_cv_func_waveoutclose=yes],
-          [openal_cv_func_waveoutclose=no])])
-     if test "x$openal_cv_func_waveoutclose" = xyes; then
+     AC_CACHE_CHECK([for waveOutOpen], [openal_cv_func_waveoutopen],
+       [AC_LINK_IFELSE(
+         [AC_LANG_PROGRAM([[@%:@include <windows.h>]],
+                          [[waveOutOpen(NULL, WAVE_MAPPER, NULL, 0, 0, CALLBACK_FUNCTION);]])],
+          [openal_cv_func_waveoutopen=yes],
+          [openal_cv_func_waveoutopen=no])])
+     if test "x$openal_cv_func_waveoutopen" = xyes; then
        openal_backend_windows_support=static
        LIBS="$openal_libs_windows $LIBS"
      else
@@ -1164,17 +1171,9 @@ AC_SUBST([SIZEOF_VOID_P])
 AC_SUBST([WARNINGCFLAGS])
 
 # Generate output.
-AC_CONFIG_FILES([Makefile
-                 admin/Makefile
-                 admin/pkgconfig/Makefile
-                 admin/pkgconfig/openal-config
-                 admin/pkgconfig/openal.pc
-                 common/Makefile
-                 common/include/Makefile
-                 include/Makefile
-                 src/Makefile
-                 src/arch/Makefile
-                 src/arch/i386/Makefile])
+# NOTE: Do not break the following line, otherwise we are into CR/LF vs. LF
+# trouble! This is a buglet in autoconf IMHO, but easy to work around.
+AC_CONFIG_FILES([Makefile admin/Makefile admin/pkgconfig/Makefile admin/pkgconfig/openal-config admin/pkgconfig/openal.pc common/Makefile common/include/Makefile include/Makefile src/Makefile src/arch/Makefile src/arch/i386/Makefile])
 
 AC_CONFIG_COMMANDS([default], [chmod +x admin/pkgconfig/openal-config])
 AC_OUTPUT
