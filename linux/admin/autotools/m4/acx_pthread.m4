@@ -126,7 +126,7 @@ case "${host_cpu}-${host_os}" in
 
         # On Linux we want to actually link to pthread library, so test lib first
 
-        acx_pthread_flags="pthread -pthread --thread-safe -mt pthread-config"
+        acx_pthread_flags="pthread -pthread --thread-safe pthread-config"
         ;;
 esac
 

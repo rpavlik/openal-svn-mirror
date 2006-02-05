@@ -1,8 +1,18 @@
 2006-02-05  Prakash Punnoor <prakash@punnoor.de>
 
-	* admin/pkgconfig/openal.pc: also include pthread related flags -
+	* admin/pkgconfig/openal.pc.in: also include pthread related flags -
 	the lib flags shouldn't be needed though and the acx_pthread.m4 macro
-	should be fixed though, so that openal itself gets linked to pthread
+	should be fixed though, so that openal itself gets linked to pthread;
+	reverting last this patch, as acx_pthread hopefully got a work-around
+	for Linux
+	
+	* admin/pkgconfig/openal-config.in: commenting out pthread related flags,
+	as openal should be built that way that apps linking to openal shouldn't
+	know anything about it (unless in static case)
+	
+	* admin/autotools/m4/acx_pthread.m4: check for pthread first on Linux
+	thus making openal actually link to pthread; this probably needs more
+	fixing
 
 2006-02-04  Prakash Punnoor <prakash@punnoor.de>
 
