@@ -1,3 +1,9 @@
+2006-02-05  Prakash Punnoor <prakash@punnoor.de>
+
+	* admin/pkgconfig/openal.pc: also include pthread related flags -
+	the lib flags shouldn't be needed though and the acx_pthread.m4 macro
+	should be fixed though, so that openal itself gets linked to pthread
+
 2006-02-04  Prakash Punnoor <prakash@punnoor.de>
 
 	* CMakeLists.txt: handle dl as configure.ac
