@@ -120,6 +120,14 @@ case "${host_cpu}-${host_os}" in
 
         acx_pthread_flags="-pthreads pthread -mt -pthread $acx_pthread_flags"
         ;;
+
+
+        *linux*)
+
+        # On Linux we want to actually link to pthread library, so test lib first
+
+        acx_pthread_flags="pthread -pthread --thread-safe -mt pthread-config"
+        ;;
 esac
 
 if test x"$acx_pthread_ok" = xno; then
