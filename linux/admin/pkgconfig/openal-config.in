@@ -6,8 +6,8 @@ bindir="@bindir@"
 includedir="@includedir@"
 libdir="@libdir@"
 PACKAGE_VERSION="@PACKAGE_VERSION@"
-PTHREAD_CFLAGS="@PTHREAD_CFLAGS@"
-PTHREAD_LIBS="@PTHREAD_LIBS@"
+# PTHREAD_CFLAGS="@PTHREAD_CFLAGS@"
+# PTHREAD_LIBS="@PTHREAD_LIBS@"
 
 openal_dynamic_ldflags="-lopenal"
 # TODO: configure should provide the following...
