@@ -41,6 +41,8 @@
  "*** Main Menu ***".
   */
 
+#define _CRT_SECURE_NO_DEPRECATE // get rid of sprintf security warnings on VS2005
+
 #define INITGUID
 #define OPENAL
 
@@ -707,7 +709,7 @@ int main(int argc, char* argv[])
 		Device = alcOpenDevice((ALchar*)deviceName); // have a name from enumeration process above, so use it...
 	}
 	//Create context(s)
-	Context=alcCreateContext(Device,NULL);
+	Context=alcCreateContext(Device, NULL);
 	//Set active context
 	alcMakeContextCurrent(Context);
 
@@ -1408,17 +1410,33 @@ ALvoid FA_EnumerationValue(ALvoid)
 	int i = 0;
 	int getVal;
 
+	ALCcontext *context;
+	ALCdevice *device;
+
 	printf("\nEnumeration Value Test. ");
+
+	context = alcGetCurrentContext();
+	device = alcGetContextsDevice(context);
 
 	while (enumeration[i].enumName)
 	{
-		getVal = alGetEnumValue(enumeration[i].enumName);
-		if (getVal != enumeration[i].value)
-		{
-			printf("\n%s has an invalid enum value.", enumeration[i].enumName);
-			result = false;
+		if (strstr(enumeration[i].enumName, "ALC_")) {
+			getVal = alcGetEnumValue(device, enumeration[i].enumName);
+			if (getVal != enumeration[i].value)
+			{
+				printf("\n%s has an invalid enum value.", enumeration[i].enumName);
+				result = false;
+			}
+			i++;
+		} else {
+			getVal = alGetEnumValue(enumeration[i].enumName);
+			if (getVal != enumeration[i].value)
+			{
+				printf("\n%s has an invalid enum value.", enumeration[i].enumName);
+				result = false;
+			}
+			i++;
 		}
-		i++;
 	}
 	
 	if (result == true)
