@@ -1,3 +1,11 @@
+2006-02-08  Sven Panne  <sven.panne@aedion.de>
+
+	* tests/altest/altest.c(FA_GetBufferProperties): Emit a warning when
+	alIsBuffer does not return AL_FALSE for AL_NONE.
+
+	* tests/altest/altest.c(FA_EnumerationValue): Test that alcGetEnumValue
+	and alGetEnumValue are really disjunct.
+
 2006-01-20  Sven Panne  <sven.panne@aedion.de>
 
 	* tests/altest/altest.c(SA_ListenerOrientation): Don't use the ambiguous

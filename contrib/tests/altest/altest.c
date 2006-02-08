@@ -197,13 +197,13 @@ typedef struct
 typedef struct ALCenum_struct
 {
 	ALCchar		*enumName;
-	ALCenum		value;
+	ALCenum		expectedValue;
 } ALCenums;
 
 typedef struct ALenum_struct
 {
 	ALchar		*enumName;
-	ALenum		value;
+	ALenum		expectedValue;
 } ALenums;
 
 #ifndef LINUX
@@ -1417,26 +1417,30 @@ $SECTION Fully Automatic Tests
 $SUBTITLE Get Buffer Properties Test
 This test checks that OpenAL can retrieve buffer properties properly.
 */
-ALvoid FA_GetBufferProperties(ALvoid)
+ALvoid
+FA_GetBufferProperties (ALvoid)
 {
-	ALint freq, size;
-	ALboolean passNULL;
+  ALint freq, size;
 
-	printf("\nGet Buffer Properties Test. ");
-	alGetBufferi(g_Buffers[0], AL_FREQUENCY, &freq);
-	alGetBufferi(g_Buffers[0], AL_SIZE, &size);
-	
-	passNULL = alIsBuffer(0);  /* the NULL buffer should cause alIsBuffer to be TRUE (non-annotated 1.0 spec, pg 26) */
+  printf ("\nGet Buffer Properties Test. ");
+  alGetBufferi (g_Buffers[0], AL_FREQUENCY, &freq);
+  alGetBufferi (g_Buffers[0], AL_SIZE, &size);
 
-	if ((freq == 44100) && (size == 282626) && (passNULL == AL_TRUE))
-	{
-		printf("PASSED.");
-	} else
-	{
-		printf("FAILED.");
-	}
+  /* The behaviour of the following call is a bit under dispute: Although the
+     OpenAL 1.1 clearly states that buffer names are only valid from the point
+     on they are allocated up to the point where they are released, the
+     documentation for the AL_BUFFER source attribute says that AL_NONE is
+     allowed in that special case. The latter might be considered a hack,
+     though... */
+
+  if (alIsBuffer (AL_NONE) != AL_FALSE)
+    {
+      printf
+        ("\nalIsBuffer does not return AL_FALSE for AL_NONE (dubious behaviour)");
+    }
+
+  printf (((freq == 44100) && (size == 282626)) ? "PASSED." : "FAILED.");
 }
-
 
 /** used by gendocs.py
 $SECTION Fully Automatic Tests
@@ -1450,41 +1454,104 @@ FA_EnumerationValue (ALvoid)
   ALboolean result = AL_TRUE;
   ALCcontext *context;
   ALCdevice *device;
-  ALCenum valALC;
-  ALenum valAL;
+  ALCenum actualValueALC;
+  ALenum actualValueAL;
 
   printf ("\nEnumeration Value Test. ");
 
   context = alcGetCurrentContext ();
   device = alcGetContextsDevice (context);
 
+  /* Check ALC enums. */
   for (i = 0; enumerationALC[i].enumName; i++)
     {
-      valALC = alcGetEnumValue (device, enumerationALC[i].enumName);
-      if (valALC != enumerationALC[i].value)
+      ALCchar *enumName = enumerationALC[i].enumName;
+      ALCenum expectedValue = enumerationALC[i].expectedValue;
+
+      /* Check if the ALC enum can be retrieved at all. */
+      alcGetError (device);
+      actualValueALC = alcGetEnumValue (device, enumName);
+      if (alcGetError (device) != ALC_NO_ERROR)
         {
-          printf ("\n%s has an invalid enum value: expected %d, got %d",
-                  (char *) enumerationALC[i].enumName,
-                  (int) enumerationALC[i].value, (int) valALC);
+          printf ("\ngetting %s vial alcGetEnumValue failed",
+                  (char *) enumName);
           result = AL_FALSE;
         }
-    }
 
-  for (i = 0; enumerationAL[i].enumName; i++)
-    {
-      valAL = alGetEnumValue (enumerationAL[i].enumName);
-      if (valAL != enumerationAL[i].value)
+      /* Check if the ALC enum has the expected value. */
+      if (expectedValue != actualValueALC)
         {
           printf ("\n%s has an invalid enum value: expected %d, got %d",
-                  (char *) enumerationALC[i].enumName,
-                  (int) enumerationAL[i].value, (int) valAL);
+                  (char *) enumName, (int) expectedValue,
+                  (int) actualValueALC);
+          result = AL_FALSE;
+        }
+
+      /* Check that the ALC enum can not be retrieved via alGetEnumValue. Note
+         that the OpenAL 1.1 spec is a bit strange here: For alGetEnumValue it
+         doesn't specify an error code, but for a similar call of
+         alcGetEnumValue it does. Hmmm... */
+      alGetError ();
+      actualValueAL = alGetEnumValue (enumName);
+      if (actualValueAL != 0)
+        {
+          printf
+            ("\n%s could be retrieved vial alGetEnumValue (dubious behaviour)",
+             (char *) enumName);
+          result = AL_FALSE;
+        }
+      alGetError ();
+    }
+
+  /* Check AL enums */
+  for (i = 0; enumerationAL[i].enumName; i++)
+    {
+      ALchar *enumName = enumerationAL[i].enumName;
+      ALenum expectedValue = enumerationAL[i].expectedValue;
+
+      /* Check if the AL enum can be retrieved at all. */
+      alGetError ();
+      actualValueAL = alGetEnumValue (enumName);
+      if (alGetError () != AL_NO_ERROR)
+        {
+          printf ("\ngetting %s vial alGetEnumValue failed",
+                  (char *) enumName);
+          result = AL_FALSE;
+        }
+
+      /* Check if the AL enum has the expected value. */
+      if (expectedValue != actualValueAL)
+        {
+          printf ("\n%s has an invalid enum value: expected %d, got %d",
+                  (char *) enumName, (int) expectedValue,
+                  (int) actualValueAL);
+          result = AL_FALSE;
+        }
+
+      /* Check that retrieving an AL enum via alcGetEnumValue yields an
+         error. */
+      alcGetError (device);
+      actualValueALC = alcGetEnumValue (device, enumName);
+      if (alcGetError (device) != ALC_INVALID_VALUE)
+        {
+          printf
+            ("\nwhen retrieving %s via alcGetEnumValue, no ALC_INVALID_VALUE error was reported (dubious behaviour)",
+             (char *) enumName);
+          result = AL_FALSE;
+        }
+
+      /* Check that retrieving an AL enum via alcGetEnumValue returns 0. */
+      if (actualValueALC != 0)
+        {
+          printf
+            ("\nwhen retrieving %s via alcGetEnumValue: expected 0, got %d (dubious behaviour)",
+             (char *) enumName, (int) actualValueALC);
           result = AL_FALSE;
         }
     }
 
   printf (result == AL_TRUE ? "PASSED." : "FAILED.");
 }
-
 
 /** used by gendocs.py
 $SECTION Fully Automatic Tests
