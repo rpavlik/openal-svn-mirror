@@ -36,3 +36,5 @@
 -T ALCvoid
 -T ALCdevice
 -T ALCcontext
+
+-T GLfloat

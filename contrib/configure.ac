@@ -20,6 +20,8 @@ m4_ifdef([AS_HELP_STRING], [], [AC_DEFUN([AS_HELP_STRING], [AC_HELP_STRING($][@)
 AC_PROG_CC
 AC_C_CONST
 AC_EXEEXT
+ALUT_C__ATTRIBUTE__
+
 AC_ARG_VAR([PKG_CONFIG], [package configuration utility])
 AC_CHECK_PROGS([PKG_CONFIG], [pkg-config], [none])
 
@@ -176,13 +178,10 @@ fi
 AC_SUBST([AM_CFLAGS])
 AC_SUBST([AM_LDFLAGS])
 AC_SUBST([LIBS])
-AC_SUBST([PROFILINGLDFLAGS])
 
 # Generate output.
-AC_CONFIG_FILES([Makefile
-                 demos/Makefile
-                 examples/Makefile
-                 tests/altest/Makefile
-                 tests/Makefile])
+# NOTE: Do not break the following line, otherwise we are into CR/LF vs. LF
+# trouble! This is a buglet in autoconf IMHO, but easy to work around.
+AC_CONFIG_FILES([Makefile demos/Makefile demos/panning2d/Makefile examples/Makefile tests/Makefile tests/altest/Makefile])
 
 AC_OUTPUT

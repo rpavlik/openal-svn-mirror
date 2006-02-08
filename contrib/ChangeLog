@@ -1,5 +1,14 @@
 2006-02-08  Sven Panne  <sven.panne@aedion.de>
 
+	* admin/autotools/.indent.pro, configure.ac, demos/Makefile.am: Hooked
+	in a slightly overhauled version of the panning2d demo. The OpenAL and
+	GLUT flags are currently hardwired, which is obviously wrong and only a
+	temporary measure.
+
+	* admin/autotools/m4/alut_c__attribute.m4, demos/panning2d/.cvsignore,
+	demos/panning2d/Makefile.am, demos/panning2d/panning2d.c,
+	demos/panning2d/sounds/boom.wav: Added.
+
 	* tests/altest/altest.c(FA_GetBufferProperties): Emit a warning when
 	alIsBuffer does not return AL_FALSE for AL_NONE.
 
