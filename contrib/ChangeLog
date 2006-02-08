@@ -1,5 +1,7 @@
 2006-02-08  Sven Panne  <sven.panne@aedion.de>
 
+	* tests/altest/altest.c: Warning police.
+
 	* admin/autotools/.indent.pro, configure.ac, demos/Makefile.am: Hooked
 	in a slightly overhauled version of the panning2d demo. The OpenAL and
 	GLUT flags are currently hardwired, which is obviously wrong and only a
