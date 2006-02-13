@@ -23,6 +23,17 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#if HAVE_NANOSLEEP && HAVE_TIME_H
+#include <time.h>
+#include <errno.h>
+#elif HAVE_USLEEP && HAVE_UNISTD_H
+#include <unistd.h>
+#elif HAVE_SLEEP && HAVE_WINDOWS_H
+#include <windows.h>
+#else
+#error No way to sleep on this platform
+#endif
+
 #include "al_debug.h"
 #include "al_types.h"
 #include "al_main.h"
@@ -586,50 +597,48 @@ ALenum _al_AL2FMT(ALuint channels, ALuint bits) {
 	return -1;
 }
 
-#ifdef _WIN32
-/* sleep for n microseconds
- *
- * Well, not really.  For Windows, we divide
- * by 10 and sleep for milliseconds
- */
-void _alMicroSleep(unsigned int n) {
-	Sleep(n / 1000);
+/* Code adapted from freealut's src/alutUtil.c */
+void
+_alMicroSleep(unsigned int microSeconds)
+{
+	unsigned int seconds = microSeconds / 1000000;
+	unsigned int microSecondsRest = microSeconds - (seconds * 1000000);
 
-	return;
+#if HAVE_NANOSLEEP && HAVE_TIME_H
+
+	struct timespec t, remainingTime;
+	t.tv_sec = (time_t) seconds;
+	t.tv_nsec = ((long) microSecondsRest) * 1000;
+
+	/* At least the interaction of nanosleep and signals is specified! */
+	while (nanosleep (&t, &remainingTime) < 0) {
+		if (errno != EINTR) {
+			return;
+		}
+		/* If we received a signal, let's try again with the remaining time. */
+		t.tv_sec = remainingTime.tv_sec;
+		t.tv_nsec = remainingTime.tv_nsec;
+	}
+
+#elif HAVE_USLEEP && HAVE_UNISTD_H
+
+	while (seconds > 0) {
+		usleep (1000000);
+		seconds--;
+	}
+	usleep (microSecondsRest);
+
+#elif HAVE_SLEEP && HAVE_WINDOWS_H
+
+	while (seconds > 0) {
+		Sleep (1000);
+		seconds--;
+	}
+	Sleep ((DWORD) (microSecondsRest / 1000));
+
+#endif
+
 }
-
-#elif defined(__MORPHOS__)
-
-#include <clib/amiga_protos.h>
-
-void _alMicroSleep(unsigned int n) {
-	TimeDelay(UNIT_MICROHZ, n / 1000000, n % 1000000);
-
-	return;
-}
-
-#elif defined(__sgi)
-
-void _alMicroSleep(unsigned int n) {
-	usleep (n);
-	return;
-}
-
-#else
-
-/* sleep for n microseconds */
-void _alMicroSleep(unsigned int n) {
-	struct timeval tv;
-
-	tv.tv_sec = 0;
-	tv.tv_usec = n;
-
-	select(0, NULL, NULL, NULL, &tv);
-
-	return;
-}
-
-#endif /* _WIN32 */
 
 /*
  * _alDegreeToRadian( ALfloat degree )

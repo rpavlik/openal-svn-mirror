@@ -18,7 +18,7 @@ m4_ifdef([AS_HELP_STRING], [], [AC_DEFUN([AS_HELP_STRING], [AC_HELP_STRING($][@)
 ################################################################################
 
 # We need ISO C99 features (e.g. snprintf) and POSIX IEEE Std 1003.1b-1993
-# features (e.g. struct timespec, used in <alsa/asoundlib.h>)
+# features (e.g. struct timespec, used in <alsa/asoundlib.h>, and nanosleep)
 AC_DEFINE([_ISOC99_SOURCE], [1], [Define to 1 if extensions to ISO C89 from ISO C99 are needed.])
 AC_DEFINE([_POSIX_C_SOURCE], [199309], [Define to the POSIX version that should be used.])
 
@@ -38,6 +38,18 @@ AC_CHECK_PROGS([PKG_CONFIG], [pkg-config], [none])
 ################################################################################
 # Checks for library functions.
 ################################################################################
+
+AC_CHECK_HEADERS([time.h windows.h])
+
+# Checks for library functions.
+ALUT_CHECK_FUNC([[@%:@include <time.h>]],
+                [nanosleep], [[((struct timespec*)0, (struct timespec*)0)]])
+
+ALUT_CHECK_FUNC([[@%:@include <unistd.h>]],
+                [usleep], [[(0)]])
+
+ALUT_CHECK_FUNC([[@%:@include <windows.h>]],
+                [Sleep], [[(0)]])
 
 AC_CHECK_LIBM
 AC_SUBST([LIBM])

@@ -1,3 +1,11 @@
+2006-02-13  Sven Panne  <sven.panne@aedion.de>
+
+	* configure.ac, src/al_main.c: Use code to from freealut to implement
+	_alMicroSleep in a nicer way. Dropped MorphOS support here, as nobody
+	seems to be able to maintain it anymore.
+
+	* admin/autotools/m4/alut_check_func.m4: Added.
+
 2006-02-13  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/al_matrix.c, src/al_matrix.c: add _alVecMatrixMulA3; deactivate
