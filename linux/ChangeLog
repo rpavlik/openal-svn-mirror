@@ -8,11 +8,15 @@
 
 2006-02-13  Prakash Punnoor <prakash@punnoor.de>
 
-	* src/al_matrix.c, src/al_matrix.c: add _alVecMatrixMulA3; deactivate
+	* src/al_matrix.c, src/al_matrix.h: add _alVecMatrixMulA3; deactivate
 	remaining code, as it is unused
 	
 	* src/alc/alc_speaker.c: use arrays and _alVecMatrixMulA3 instead of
 	ALmatrix and co.
+	
+	* CMakeLists.txt: support new _alMicroSleep code
+	
+	* admin/CMakeModules/FindSleepFunction.cmake: added
 
 2006-02-05  Prakash Punnoor <prakash@punnoor.de>
 
