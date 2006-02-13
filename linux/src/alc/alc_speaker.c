@@ -48,9 +48,9 @@ void _alcSpeakerMove( ALuint cid ) {
 	ALfloat *ori;    /* listener orientation */
 	ALfloat ipos[3]; /* inverse listener position */
 	ALuint i;
-	ALmatrix *m;
-	ALmatrix *pm;
-	ALmatrix *rm;
+	ALfloat m[3][3];
+	ALfloat pm[3];
+	ALfloat rm[3];
 
 	cc = _alcGetContext( cid );
 	if(cc == NULL) {
@@ -65,17 +65,13 @@ void _alcSpeakerMove( ALuint cid ) {
 	pos = cc->listener.position;
 	ori = cc->listener.orientation;
 
-	m  = _alMatrixAlloc(3, 3);
-	pm = _alMatrixAlloc(1, 3);
-	rm = _alMatrixAlloc(1, 3);
-
 	_alVectorCrossProduct(vec, ori + 0, ori + 3);
-	_alVectorNormalize(m->data[0], vec);
+	_alVectorNormalize(m[0], vec);
 
-	_alVectorCrossProduct(vec, m->data[0], ori + 0);
-	_alVectorNormalize(m->data[1], vec);
+	_alVectorCrossProduct(vec, m[0], ori + 0);
+	_alVectorNormalize(m[1], vec);
 
-	_alVectorNormalize(m->data[2], ori + 0);
+	_alVectorNormalize(m[2], ori + 0);
 
 	/* reset speaker position */
 	_alcSpeakerInit(cid);
@@ -84,13 +80,13 @@ void _alcSpeakerMove( ALuint cid ) {
 
 	/* rotate about at and up vectors */
 	for(i = 0; i < _alcGetNumSpeakers(cid); i++) {
-		_alVectorTranslate(pm->data[0],
+		_alVectorTranslate(pm,
 				   cc->_speaker_pos[i].pos, ipos);
 
-		_alMatrixMul(rm, pm, m);
+		_alVecMatrixMulA3(rm, pm, m);
 
 		_alVectorTranslate(cc->_speaker_pos[i].pos,
-				   rm->data[0], pos);
+				   rm, pos);
 	}
 
 	_alDebug(ALD_MATH, __FILE__, __LINE__,
@@ -102,10 +98,6 @@ void _alcSpeakerMove( ALuint cid ) {
 		cc->_speaker_pos[1].pos[0],
 		cc->_speaker_pos[1].pos[1],
 		cc->_speaker_pos[1].pos[2]);
-
-	_alMatrixFree(m);
-	_alMatrixFree(pm);
-	_alMatrixFree(rm);
 
 	return;
 }
