@@ -10,6 +10,20 @@
 #include "al_matrix.h"
 
 /*
+ * Multiplies transposed vector v by matrix provided as 3x3 array,
+ * populating result.
+ */
+void _alVecMatrixMulA3( ALfloat result[3], ALfloat v[3], ALfloat m[3][3] ) {
+
+	result[0] = v[0] * m[0][0] + v[1] * m[1][0] + v[2] * m[2][0];
+	result[1] = v[0] * m[0][1] + v[1] * m[1][1] + v[2] * m[2][1];
+	result[2] = v[0] * m[0][2] + v[1] * m[1][2] + v[2] * m[2][2];
+
+	return;
+}
+
+#if 0
+/*
  * _alMatrixMul( ALmatrix *result, ALmatrix *m1, ALmatrix *m2 )
  *
  * Multiplies m1 by m2, populating result.
@@ -93,4 +107,4 @@ void _alMatrixFree(ALmatrix *m) {
 
 	return;
 }
-
+#endif /* 0 */
