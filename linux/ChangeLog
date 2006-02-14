@@ -1,5 +1,12 @@
 2006-02-14  Sven Panne  <sven.panne@aedion.de>
 
+	* src/al_source.c: Removed the obscure "2D sound hack", which set the
+	direction and cone source attributes back to their default values when
+	AL_SOURCE_RELATIVE was set to AL_TRUE and the source's position was at
+	the origin. This is against the OpenAL spec and if some old games are
+	buggy (Tribes 2?), then they should be fixed or they should ship with a
+	special OpenAL version.
+
 	* configure.ac: Removed -Wunreachable-code from the set of warning
 	options in effect when --enable-more-warnings is given. It leads to more
 	trouble than it's worth and hides more critical warnings in tons of

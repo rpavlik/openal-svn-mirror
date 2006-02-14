@@ -43,13 +43,6 @@
 static void _alInitSource( ALuint sid );
 
 /*
- * _alSource2D( AL_source *src )
- *
- * Turns off 3D attributes of a source
- */
-static void _alSource2D( AL_source *src );
-
-/*
  * Monoify functions copy an interleaved array of PCM data, usually in LRLR
  * format into seperate dst buffers.
  */
@@ -250,31 +243,6 @@ void alGenSources( ALsizei n, ALuint *buffer ) {
 	return;
 }
 
-/*
- * _alSource2D( AL_source *src )
- *
- * Turns off 3D attributes of a source
- *
- * Assumes locked source
- */
-void _alSource2D( AL_source *src ) {
-	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-			"_alSource2D: source turned 2D");
-
-	src->position.isset = AL_FALSE;
-	_alSourceGetParamDefault( AL_POSITION, src->position.data );
-
-	src->direction.isset = AL_FALSE;
-	_alSourceGetParamDefault( AL_DIRECTION, src->direction.data );
-
-	src->cone_inner_angle.isset = AL_FALSE;
-	_alSourceGetParamDefault( AL_CONE_INNER_ANGLE, &src->cone_inner_angle.data );
-
-	src->cone_outer_angle.isset = AL_FALSE;
-	_alSourceGetParamDefault( AL_CONE_OUTER_ANGLE, &src->cone_outer_angle.data );
-
-	src->cone_outer_gain.isset = AL_FALSE;
-}
 
 /*
  * alSourcei( ALuint sid, ALenum param, ALint i1 )
@@ -423,16 +391,6 @@ void alSourcei( ALuint sid, ALenum param, ALint i1 )
 		case AL_SOURCE_RELATIVE:
 			src->relative.isset = AL_TRUE;
 			src->relative.data = i1;
-			/* If this is a relative source with zero position,
-			   perform the 2D sound hack...
-			   (Tribes 2 reuses 3D sources as 2D sources)
-			*/
-		  	if ( i1 && src->position.isset &&
-			     ! src->position.data[0] &&
-			     ! src->position.data[1] &&
-			     ! src->position.data[2] ) {
-				_alSource2D(src);
-			}
 			break;
 		default:
 			_alDebug(ALD_SOURCE, __FILE__, __LINE__,
@@ -647,15 +605,6 @@ void alSourcefv( ALuint sid, ALenum param, const ALfloat *fv1 )
 		case AL_POSITION:
 		  source->position.isset = AL_TRUE;
 		  memcpy( &source->position.data, fv1, SIZEOFVECTOR );
-		  /* If this is a relative source with zero position,
-		     perform the 2D sound hack...
-		     (Tribes 2 reuses 3D sources as 2D sources)
-		   */
-		  if ( !fv1[0] && !fv1[1] && !fv1[2] &&
-		       source->relative.isset &&
-		       source->relative.data ) {
-			_alSource2D(source);
-		  }
 		  break;
 		case AL_DIRECTION:
 		  /*
