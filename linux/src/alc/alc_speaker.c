@@ -29,6 +29,11 @@
 #endif
 
 /*
+ * Initializes the speaker setup for the context named by cid.
+ */
+static void _alcSpeakerInit( ALuint cid );
+
+/*
  * _alcSpeakerMove( ALuint cid )
  *
  * Moves speakers for context named by cid, using listener orientation and
@@ -109,7 +114,7 @@ void _alcSpeakerMove( ALuint cid ) {
  *
  * assumes locked context
  */
-void _alcSpeakerInit( ALuint cid ) {
+static void _alcSpeakerInit( ALuint cid ) {
 	AL_context  *cc;
 	AL_listener *lis;
 	ALfloat *lpos;

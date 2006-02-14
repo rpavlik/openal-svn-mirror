@@ -31,12 +31,6 @@ AL_source *_alGetSource( ALuint cid, ALuint sid );
 void *_alGetSourceParam( AL_source *source, ALenum param );
 
 /*
- * Returns AL_TRUE if param is a valid source attribute and has been set in
- * source, AL_FALSE otherwise.
- */
-ALboolean _alSourceIsParamSet( AL_source *source, ALenum param );
-
-/*
  * Populates *retref with the default value for source attribute param.  If
  * param is not a valid source attribute, no action is taken.
  */

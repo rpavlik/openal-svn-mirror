@@ -22,11 +22,6 @@ typedef enum {
 } _alcSpeakerEnum;
 
 /*
- * Initializes the speaker setup for the context named by cid.
- */
-void _alcSpeakerInit( ALuint cid );
-
-/*
  *  Updates the speaker setup for the context named by cid for changes in
  *  listener position and orientation.
  */
@@ -46,7 +41,6 @@ ALuint _alcGetNumSpeakers( ALuint cid );
 
 /* default context macros */
 #define _alcDCSpeakerMove()     _alcSpeakerMove(_alcCCId)
-#define _alcDCSpeakerInit()     _alcSpeakerInit(_alcCCId)
 #define _alcDCGetNumSpeakers()  _alcGetNumSpeakers(_alcCCId)
 
 #endif /* _ALC_SPEAKERS_H_ */

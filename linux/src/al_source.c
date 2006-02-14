@@ -36,6 +36,12 @@
 #include "al_ext.h"
 
 /*
+ * Returns AL_TRUE if param is a valid source attribute and has been set in
+ * source, AL_FALSE otherwise.
+ */
+static ALboolean _alSourceIsParamSet( AL_source *source, ALenum param );
+
+/*
  * _alInitSource( ALuint sid )
  *
  * Initialize an already allocated source.
@@ -3176,7 +3182,7 @@ void *_alGetSourceParam(AL_source *source, ALenum param )
  *
  * Returns AL_TRUE if param is set for source, AL_FALSE otherwise.
  */
-ALboolean _alSourceIsParamSet( AL_source *source, ALenum param ) {
+static ALboolean _alSourceIsParamSet( AL_source *source, ALenum param ) {
 	switch( param ) {
 		case AL_BUFFER:
 		case AL_SOURCE_STATE:
