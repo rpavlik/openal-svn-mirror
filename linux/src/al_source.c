@@ -2967,9 +2967,9 @@ ALint _alSourceBytesLeftByChannel(AL_source *src, AL_buffer *samp) {
  * Returns AL_TRUE if source (src) has its queue set to AL_TRUE, AL_FALSE otherwise.
  */
 ALboolean _alSourceIsQueue( AL_source * src ) {
-
-	if ( src->looping.isset == AL_TRUE &&
-	     src->looping.data == AL_TRUE &&
+	ALboolean *boo = _alGetSourceParam( src, AL_LOOPING );
+	if ( boo != NULL &&
+	     *boo == AL_TRUE &&
 	     src->bid_queue.size > 1 ) return AL_TRUE;
 
 	return AL_FALSE;

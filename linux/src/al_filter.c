@@ -1012,9 +1012,9 @@ void alf_tdoppler( ALuint cid,
 	ALfloat doppler_pitch;
 
 	/* initialize the mixrate */
-	if(src->pitch.isset == AL_TRUE)
-	{
-		src->mixrate = src->pitch.data;
+	ALfloat *pitch = _alGetSourceParam(src, AL_PITCH);
+	if (pitch != NULL) {
+		src->mixrate = *pitch;
 	}
 	else
 	{

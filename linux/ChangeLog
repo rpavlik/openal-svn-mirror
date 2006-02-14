@@ -1,5 +1,8 @@
 2006-02-14  Sven Panne  <sven.panne@aedion.de>
 
+	* src/al_filter.c, src/al_source.c: Don't access the "isset" fields
+	directly.
+
 	* src/al_source.c, src/al_source.h, src/alc/alc_speaker.c,
 	src/alc/alc_speaker.h: Made _alSourceIsParamSet and _alcSpeakerInit
 	static.
