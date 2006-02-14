@@ -107,14 +107,16 @@ if test "x$enable_more_warnings" = xyes; then
     #       Often we should use an epsilon, but there are some correct uses,
     #       too, so we leave it out for now. ToDo: Fix those warnings, anyway!
     #
-    # Note that some older GCC versions give false positives about unreachable
-    # code. Furthermore, using GNU's <string.h> header normally results in lots
-    # of string functions like strcmp being macros which result in such false
-    # positives, too. To disable those, one can use -D__NO_STRING_INLINES for
-    # testing. And another source for false positives is inlining, so leaving
-    # out -finline-functions or using -fno-inline-functions explicitly might
-    # help, too.
-    WARNINGCFLAGS="$WARNINGCFLAGS -W -Waggregate-return -Wbad-function-cast -Wcast-align -Wcast-qual -Wdisabled-optimization -Wendif-labels -Winline -Wlong-long -Wmissing-declarations -Wmissing-format-attribute -Wmissing-noreturn -Wmissing-prototypes -Wnested-externs -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wsign-compare -Wstrict-prototypes -Wundef -Wunreachable-code -Wwrite-strings"
+    #    -Wunreachable-code:
+    #       Some older GCC versions give false positives about unreachable code.
+    #       Furthermore, using GNU's <string.h> header normally results in lots
+    #       of string functions like strcmp being macros which result in such
+    #       false positives, too. To disable those, one can use
+    #       -D__NO_STRING_INLINES for testing. And another source for false
+    #       positives is inlining, so leaving out -finline-functions or using
+    #       -fno-inline-functions explicitly might help, too. All in all, using
+    #       this warning option is too troublesome to really help.
+    WARNINGCFLAGS="$WARNINGCFLAGS -W -Waggregate-return -Wbad-function-cast -Wcast-align -Wcast-qual -Wdisabled-optimization -Wendif-labels -Winline -Wlong-long -Wmissing-declarations -Wmissing-format-attribute -Wmissing-noreturn -Wmissing-prototypes -Wnested-externs -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wsign-compare -Wstrict-prototypes -Wundef -Wwrite-strings"
 
     # Check for GCC 4.x-only warning options.
     ALUT_CHECK_FLAG([-Wdeclaration-after-statement],

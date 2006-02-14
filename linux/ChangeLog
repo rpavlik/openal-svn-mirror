@@ -1,3 +1,10 @@
+2006-02-14  Sven Panne  <sven.panne@aedion.de>
+
+	* configure.ac: Removed -Wunreachable-code from the set of warning
+	options in effect when --enable-more-warnings is given. It leads to more
+	trouble than it's worth and hides more critical warnings in tons of
+	useless false positives.
+
 2006-02-13  Sven Panne  <sven.panne@aedion.de>
 
 	* configure.ac, src/al_main.c: Use code to from freealut to implement
