@@ -98,8 +98,7 @@ ALC_BackendPrivateData *alcBackendOpenNative_ (ALC_OpenMode mode);
 void release_native (ALC_BackendPrivateData *privateData);
 void pause_nativedevice (ALC_BackendPrivateData *privateData);
 void resume_nativedevice (ALC_BackendPrivateData *privateData);
-ALboolean alcBackendSetAttributesNative_ (ALC_OpenMode mode,
-                                          ALC_BackendPrivateData *privateData,
+ALboolean alcBackendSetAttributesNative_ (ALC_BackendPrivateData *privateData,
                                           ALuint *bufsiz, ALenum *fmt,
                                           ALuint *speed);
 void native_blitbuffer (ALC_BackendPrivateData *privateData, void *data,
@@ -116,8 +115,7 @@ ALC_BackendPrivateData *alcBackendOpenALSA_ (ALC_OpenMode mode);
 void release_alsa (ALC_BackendPrivateData *privateData);
 void pause_alsa (ALC_BackendPrivateData *privateData);
 void resume_alsa (ALC_BackendPrivateData *privateData);
-ALboolean alcBackendSetAttributesALSA_ (ALC_OpenMode mode,
-                                        ALC_BackendPrivateData *privateData,
+ALboolean alcBackendSetAttributesALSA_ (ALC_BackendPrivateData *privateData,
                                         ALuint *bufsiz, ALenum *fmt,
                                         ALuint *speed);
 void alsa_blitbuffer (ALC_BackendPrivateData *privateData, void *data,
@@ -132,7 +130,7 @@ int set_alsachannel (ALC_BackendPrivateData *privateData, ALuint channel,
 #define release_alsa(h)
 #define pause_alsa(h)
 #define resume_alsa(h)
-#define alcBackendSetAttributesALSA_(m,h,b,f,s) AL_FALSE
+#define alcBackendSetAttributesALSA_(h,b,f,s) AL_FALSE
 #define alsa_blitbuffer(h,d,b)
 #define capture_alsa(h,d,b)           0
 #define get_alsachannel(h,c)          0.0
@@ -144,8 +142,7 @@ ALC_BackendPrivateData *alcBackendOpenARts_ (ALC_OpenMode mode);
 void release_arts (ALC_BackendPrivateData *privateData);
 void pause_arts (ALC_BackendPrivateData *privateData);
 void resume_arts (ALC_BackendPrivateData *privateData);
-ALboolean alcBackendSetAttributesARts_ (ALC_OpenMode mode,
-                                        ALC_BackendPrivateData *privateData,
+ALboolean alcBackendSetAttributesARts_ (ALC_BackendPrivateData *privateData,
                                         ALuint *bufsiz, ALenum *fmt,
                                         ALuint *speed);
 void arts_blitbuffer (ALC_BackendPrivateData *privateData, void *data,
@@ -160,7 +157,7 @@ int set_artschannel (ALC_BackendPrivateData *privateData, ALuint channel,
 #define release_arts(h)
 #define pause_arts(h)
 #define resume_arts(h)
-#define alcBackendSetAttributesARts_(m,h,b,f,s) AL_FALSE
+#define alcBackendSetAttributesARts_(h,b,f,s) AL_FALSE
 #define arts_blitbuffer(h,d,b)
 #define capture_arts(h,d,b)           0
 #define get_artschannel(h,c)          0.0
@@ -172,23 +169,23 @@ ALC_BackendPrivateData *alcBackendOpenDMedia_ (ALC_OpenMode mode);
 void release_dmedia (ALC_BackendPrivateData *privateData);
 void pause_dmedia (ALC_BackendPrivateData *privateData);
 void resume_dmedia (ALC_BackendPrivateData *privateData);
-ALboolean alcBackendSetAttributesDMedia_ (ALC_OpenMode mode,
-                                        ALC_BackendPrivateData *privateData,
-                                        ALuint *bufsiz, ALenum *fmt,
-                                        ALuint *speed);
+ALboolean alcBackendSetAttributesDMedia_ (ALC_BackendPrivateData *privateData,
+                                          ALuint *bufsiz, ALenum *fmt,
+                                          ALuint *speed);
 void dmedia_blitbuffer (ALC_BackendPrivateData *privateData, void *data,
-                      int bytes);
+                        int bytes);
 ALsizei capture_dmedia (ALC_BackendPrivateData *privateData,
-                      void *capture_buffer, int bufsiz);
-ALfloat get_dmediachannel (ALC_BackendPrivateData *privateData, ALuint channel);
+                        void *capture_buffer, int bufsiz);
+ALfloat get_dmediachannel (ALC_BackendPrivateData *privateData,
+                           ALuint channel);
 int set_dmediachannel (ALC_BackendPrivateData *privateData, ALuint channel,
-                     ALfloat volume);
+                       ALfloat volume);
 #else
 #define alcBackendOpenDMedia_(m)        NULL
 #define release_dmedia(h)
 #define pause_dmedia(h)
 #define resume_dmedia(h)
-#define alcBackendSetAttributesDMedia_(m,h,b,f,s) AL_FALSE
+#define alcBackendSetAttributesDMedia_(h,b,f,s) AL_FALSE
 #define dmedia_blitbuffer(h,d,b)
 #define capture_dmedia(h,d,b)           0
 #define get_dmediachannel(h,c)          0.0
@@ -200,8 +197,7 @@ void *alcBackendOpenESD_ (ALC_OpenMode mode);
 void release_esd (ALC_BackendPrivateData *privateData);
 void pause_esd (ALC_BackendPrivateData *privateData);
 void resume_esd (ALC_BackendPrivateData *privateData);
-ALboolean alcBackendSetAttributesESD_ (ALC_OpenMode mode,
-                                       ALC_BackendPrivateData *privateData,
+ALboolean alcBackendSetAttributesESD_ (ALC_BackendPrivateData *privateData,
                                        ALuint *bufsiz, ALenum *fmt,
                                        ALuint *speed);
 void esd_blitbuffer (ALC_BackendPrivateData *privateData, void *data,
@@ -216,7 +212,7 @@ int set_esdchannel (ALC_BackendPrivateData *privateData, ALuint channel,
 #define pause_esd(h)
 #define release_esd(h)
 #define resume_esd(h)
-#define alcBackendSetAttributesESD_(m,h,b,f,s) AL_FALSE
+#define alcBackendSetAttributesESD_(h,b,f,s) AL_FALSE
 #define esd_blitbuffer(h,d,b)
 #define capture_esd(h,d,b)            0
 #define get_esdchannel(h,c)           0.0
@@ -228,8 +224,7 @@ ALC_BackendPrivateData *alcBackendOpenSDL_ (ALC_OpenMode mode);
 void release_sdl (ALC_BackendPrivateData *privateData);
 void pause_sdl (ALC_BackendPrivateData *privateData);
 void resume_sdl (ALC_BackendPrivateData *privateData);
-ALboolean alcBackendSetAttributesSDL_ (ALC_OpenMode mode,
-                                       ALC_BackendPrivateData *privateData,
+ALboolean alcBackendSetAttributesSDL_ (ALC_BackendPrivateData *privateData,
                                        ALuint *bufsiz, ALenum *fmt,
                                        ALuint *speed);
 void sdl_blitbuffer (ALC_BackendPrivateData *privateData, void *data,
@@ -244,7 +239,7 @@ int set_sdlchannel (ALC_BackendPrivateData *privateData, ALuint channel,
 #define release_sdl(h)
 #define pause_sdl(h)
 #define resume_sdl(h)
-#define alcBackendSetAttributesSDL_(m,h,b,f,s) AL_FALSE
+#define alcBackendSetAttributesSDL_(h,b,f,s) AL_FALSE
 #define sdl_blitbuffer(h,d,b)
 #define capture_sdl(h,d,b)            0
 #define get_sdlchannel(h,c)           0.0
@@ -256,8 +251,7 @@ ALC_BackendPrivateData *alcBackendOpenNull_ (ALC_OpenMode mode);
 void release_null (ALC_BackendPrivateData *privateData);
 void pause_null (ALC_BackendPrivateData *privateData);
 void resume_null (ALC_BackendPrivateData *privateData);
-ALboolean alcBackendSetAttributesNull_ (ALC_OpenMode mode,
-                                        ALC_BackendPrivateData *privateData,
+ALboolean alcBackendSetAttributesNull_ (ALC_BackendPrivateData *privateData,
                                         ALuint *bufsiz, ALenum *fmt,
                                         ALuint *speed);
 void null_blitbuffer (ALC_BackendPrivateData *privateData, void *data,
@@ -272,7 +266,7 @@ int set_nullchannel (ALC_BackendPrivateData *privateData, ALuint channel,
 #define release_null(h)
 #define pause_null(h)
 #define resume_null(h)
-#define alcBackendSetAttributesNull_(m,h,b,f,s) AL_FALSE
+#define alcBackendSetAttributesNull_(h,b,f,s) AL_FALSE
 #define null_blitbuffer(h,d,b)
 #define capture_null(h,d,b)           0
 #define get_nullchannel(h,c)          0.0
@@ -284,8 +278,7 @@ ALC_BackendPrivateData *alcBackendOpenWAVE_ (ALC_OpenMode mode);
 void release_waveout (ALC_BackendPrivateData *privateData);
 void pause_waveout (ALC_BackendPrivateData *privateData);
 void resume_waveout (ALC_BackendPrivateData *privateData);
-ALboolean alcBackendSetAttributesWAVE_ (ALC_OpenMode mode,
-                                        ALC_BackendPrivateData *privateData,
+ALboolean alcBackendSetAttributesWAVE_ (ALC_BackendPrivateData *privateData,
                                         ALuint *bufsiz, ALenum *fmt,
                                         ALuint *speed);
 void waveout_blitbuffer (ALC_BackendPrivateData *privateData, void *data,
@@ -301,7 +294,7 @@ int set_waveoutchannel (ALC_BackendPrivateData *privateData, ALuint channel,
 #define release_waveout(h)
 #define pause_waveout(h)
 #define resume_waveout(h)
-#define alcBackendSetAttributesWAVE_(m,h,b,f,s) AL_FALSE
+#define alcBackendSetAttributesWAVE_(h,b,f,s) AL_FALSE
 #define waveout_blitbuffer(h,d,b)
 #define capture_waveout(h,d,b)        0
 #define get_waveoutchannel(h,c)       0.0

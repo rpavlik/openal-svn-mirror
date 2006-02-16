@@ -30,7 +30,6 @@ typedef enum
 struct ALC_BackendStruct
 {
   ALC_BackendType type;
-  ALC_OpenMode mode;
   ALC_BackendPrivateData *privateData;
 };
 
@@ -190,7 +189,6 @@ alcBackendOpen_ (ALC_OpenMode mode)
     }
 
   backend->type = type;
-  backend->mode = mode;
   backend->privateData = privateData;
   return backend;
 
@@ -313,34 +311,28 @@ alcBackendSetAttributes_ (ALC_Backend *backend, ALuint *bufsiz,
   switch (backend->type)
     {
     case AL_BACKEND_NATIVE_:
-      return alcBackendSetAttributesNative_ (backend->mode,
-                                             backend->privateData, bufsiz,
+      return alcBackendSetAttributesNative_ (backend->privateData, bufsiz,
                                              fmt, speed);
     case AL_BACKEND_ALSA_:
-      return alcBackendSetAttributesALSA_ (backend->mode,
-                                           backend->privateData, bufsiz, fmt,
+      return alcBackendSetAttributesALSA_ (backend->privateData, bufsiz, fmt,
                                            speed);
     case AL_BACKEND_ARTS_:
-      return alcBackendSetAttributesARts_ (backend->mode,
-                                           backend->privateData, bufsiz, fmt,
+      return alcBackendSetAttributesARts_ (backend->privateData, bufsiz, fmt,
                                            speed);
     case AL_BACKEND_DMEDIA_:
-      return alcBackendSetAttributesDMedia_ (backend->mode,
-                                             backend->privateData, bufsiz,
+      return alcBackendSetAttributesDMedia_ (backend->privateData, bufsiz,
                                              fmt, speed);
     case AL_BACKEND_ESD_:
-      return alcBackendSetAttributesESD_ (backend->mode, backend->privateData,
-                                          bufsiz, fmt, speed);
+      return alcBackendSetAttributesESD_ (backend->privateData, bufsiz, fmt,
+                                          speed);
     case AL_BACKEND_SDL_:
-      return alcBackendSetAttributesSDL_ (backend->mode, backend->privateData,
-                                          bufsiz, fmt, speed);
+      return alcBackendSetAttributesSDL_ (backend->privateData, bufsiz, fmt,
+                                          speed);
     case AL_BACKEND_NULL_:
-      return alcBackendSetAttributesNull_ (backend->mode,
-                                           backend->privateData, bufsiz, fmt,
+      return alcBackendSetAttributesNull_ (backend->privateData, bufsiz, fmt,
                                            speed);
     case AL_BACKEND_WAVEOUT_:
-      return alcBackendSetAttributesWAVE_ (backend->mode,
-                                           backend->privateData, bufsiz, fmt,
+      return alcBackendSetAttributesWAVE_ (backend->privateData, bufsiz, fmt,
                                            speed);
     default:
       _alDebug (ALD_CONTEXT, __FILE__, __LINE__,

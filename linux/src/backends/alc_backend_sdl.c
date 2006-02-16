@@ -32,6 +32,7 @@
 static struct {
 	SDL_AudioSpec spec;
 	ALboolean firstTime;
+	ALC_OpenMode mode;
 } sdl_info;
 
 static void *ringbuffer;
@@ -124,6 +125,7 @@ grab_write_sdl(void)
         sdl_info.spec.format   = SDL_DEF_FMT;
         sdl_info.spec.callback = dummy;
 	sdl_info.firstTime     = AL_TRUE;
+	sdl_info.mode          = ALC_OPEN_OUTPUT_;
 
         if(pSDL_OpenAudio(&sdl_info.spec, NULL) < 0) {
 		/* maybe we need SDL_Init? */
@@ -245,9 +247,9 @@ set_read_sdl(UNUSED(void *handle), UNUSED(ALuint *bufsiz), UNUSED(ALenum *fmt),
 }
 
 ALboolean
-alcBackendSetAttributesSDL_(ALC_OpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesSDL_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
-	return mode == ALC_OPEN_INPUT_ ?
+	return sdl_info.mode == ALC_OPEN_INPUT_ ?
 		set_read_sdl(handle, bufsiz, fmt, speed) :
 		set_write_sdl(handle, bufsiz, fmt, speed);
 }

@@ -109,6 +109,7 @@ typedef struct esd_info_s {
 
 	ALboolean paused;
 	int esdhandle; /* esd handle */
+	ALC_OpenMode mode;
 } esd_openal_info_t;
 
 static esd_openal_info_t esd_info;
@@ -164,6 +165,7 @@ static void *grab_write_esd(void) {
 	esd_info.esdhandle = esd;
 
 	strncpy(esd_info.name, esdkey, ESD_NAMELEN);
+	esd_info.mode = ALC_OPEN_OUTPUT_;
 
         return &esd_info;
 }
@@ -341,9 +343,9 @@ static ALboolean set_read_esd(UNUSED(void *handle),
 }
 
 ALboolean
-alcBackendSetAttributesESD_(ALC_OpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesESD_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
-	return mode == ALC_OPEN_INPUT_ ?
+	return ((esd_openal_info_t *)handle)->mode == ALC_OPEN_INPUT_ ?
 		set_read_esd(handle, bufsiz, fmt, speed) :
 		set_write_esd(handle, bufsiz, fmt, speed);
 }

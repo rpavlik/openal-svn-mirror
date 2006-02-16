@@ -60,6 +60,7 @@ struct MOSWriteHandle
 	struct Process *wh_DispatcherThread;
 	struct MsgPort *wh_DispatcherPort;
 	ULONG				 wh_SwitchSignal;
+        ALC_OpenMode mode;
 };
 
 #define Handle(h)		((struct MOSWriteHandle*) h)
@@ -136,6 +137,7 @@ static void *grab_write_native(void)
 	h->wh_FirstBufSent = FALSE;
 	h->wh_StartupMsg = (struct DispatcherStartupMsg *) AllocVec(sizeof (struct DispatcherStartupMsg), MEMF_PUBLIC | MEMF_CLEAR);
 	h->wh_StartupPort = CreateMsgPort();
+	h->mode = ALC_OPEN_OUTPUT_;
 
 	if (h->wh_Buffers == NULL || h->wh_StartupMsg == NULL || h->wh_StartupPort == NULL)
 	{
@@ -301,9 +303,9 @@ static ALboolean set_read_native(UNUSED(void *handle),
 }
 
 ALboolean
-alcBackendSetAttributesNative_(ALC_OpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesNative_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
-	return mode == ALC_OPEN_INPUT_ ?
+  return ((MOSWriteHandle *)handle)->mode == ALC_OPEN_INPUT_ ?
 		set_read_native(handle, bufsiz, fmt, speed) :
 		set_write_native(handle, bufsiz, fmt, speed);
 }

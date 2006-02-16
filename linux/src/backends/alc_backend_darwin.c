@@ -34,6 +34,7 @@ typedef struct {
     UInt32		deviceWBufferSize;	/* Buffer size of the audio device */
     AudioBufferList*	deviceWBufferList;
     AudioStreamBasicDescription	deviceFormat;	/* format of the default device */
+    ALC_OpenMode mode;
 } globalVars, *globalPtr;
 
 /************************************** GLOBALS *********************************/
@@ -236,6 +237,7 @@ static void *grab_write_native(void)
     error = AudioDeviceAddIOProc(libGlobals.deviceW, deviceFillingProc, (void *) &libGlobals);	/* Creates the callback proc */
     if (error != 0) goto Crash;
 
+    libGlobals.mode = ALC_OPEN_OUTPUT_;
     return &libGlobals.deviceW;
 
 Crash :
@@ -305,9 +307,9 @@ static ALboolean set_read_native(UNUSED(void *handle), UNUSED(unsigned int *bufs
 }
 
 ALboolean
-alcBackendSetAttributesNative_(ALC_OpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesNative_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
-	return mode == ALC_OPEN_INPUT_ ?
+	return libGlobals.mode == ALC_OPEN_INPUT_ ?
 		set_read_native(handle, bufsiz, fmt, speed) :
 		set_write_native(handle, bufsiz, fmt, speed);
 }

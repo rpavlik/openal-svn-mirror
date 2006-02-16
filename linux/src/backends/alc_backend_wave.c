@@ -59,6 +59,7 @@ typedef struct waveout_s {
 	ALushort bitspersample;
 
 	char name[WAVEOUT_NAMELEN];
+	ALC_OpenMode mode;
 } waveout_t;
 
 static ALuint sleep_usec(ALuint speed, ALuint chunk);
@@ -102,6 +103,7 @@ static void *grab_write_waveout(void) {
 	strncpy(retval->name, template, WAVEOUT_NAMELEN);
 
 	retval->length = 0;
+	retval->mode = ALC_OPEN_OUTPUT_;
 
 	fprintf(stderr, "waveout grab audio %s\n", template);
 
@@ -318,9 +320,9 @@ static ALboolean set_read_waveout(UNUSED(void *handle),
 }
 
 ALboolean
-alcBackendSetAttributesWAVE_(ALC_OpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesWAVE_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
-	return mode == ALC_OPEN_INPUT_ ?
+	return ((waveout_t *)handle)->mode == ALC_OPEN_INPUT_ ?
 		set_read_waveout(handle, bufsiz, fmt, speed) :
 		set_write_waveout(handle, bufsiz, fmt, speed);
 }

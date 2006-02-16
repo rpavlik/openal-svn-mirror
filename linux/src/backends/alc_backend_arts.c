@@ -38,6 +38,7 @@ static int openal_arts_ref_count = 0;
 
 typedef struct {
 	arts_stream_t stream;
+	ALC_OpenMode mode;
 } t_arts_handle;
 
 static const char *genartskey(void);
@@ -144,7 +145,7 @@ static void *grab_write_arts(void) {
                                             DEF_CHANNELS,
 				 	    genartskey());
 #endif
-        
+        ahandle->mode = ALC_OPEN_OUTPUT_;
 	fprintf(stderr, "arts grab audio ok\n");
 
 	_alDebug(ALD_CONTEXT, __FILE__, __LINE__,
@@ -248,9 +249,9 @@ static ALboolean set_read_arts(UNUSED(void *handle),
 }
 
 ALboolean
-alcBackendSetAttributesARts_(ALC_OpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesARts_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
-	return mode == ALC_OPEN_INPUT_ ?
+	return ((t_arts_handle *)handle)->mode == ALC_OPEN_INPUT_ ?
 		set_read_arts(handle, bufsiz, fmt, speed) :
 		set_write_arts(handle, bufsiz, fmt, speed);
 }

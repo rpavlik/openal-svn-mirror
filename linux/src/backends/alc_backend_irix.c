@@ -93,6 +93,7 @@ typedef struct {
     _ALdevice input;
     _ALdevice *output;
     unsigned int numOutputPorts;
+	ALC_OpenMode mode;
 } _ALhandle;
 
 /* Temporary storage buffer size */
@@ -147,6 +148,7 @@ static void *grab_read_dmedia(void)
         return NULL;
     }
 
+    alh->mode = ALC_OPEN_INPUT_;
     return NULL; /* (void *)alh; */
 }
 
@@ -192,7 +194,7 @@ static void *grab_write_dmedia(void)
     alh->output[1].device = grab_device_byname(alh->output[1].name);
     if (alh->output[1].device < 0)
     {
-       return AL_FALSE;
+       return NULL;
     }
     if (alh->output[1].device > 0)
         alh->numOutputPorts++;
@@ -231,8 +233,9 @@ static void *grab_write_dmedia(void)
     if (alh->output[0].config == NULL)
     {
         _alDebug(ALD_MAXIMUS, __FILE__, __LINE__, alGetErrorString(oserror()));
-        return AL_FALSE;
+        return NULL;
     }
+    alh->mode = ALC_OPEN_OUTPUT_;
 
     return (void *)alh;
 }
@@ -544,9 +547,9 @@ static ALboolean set_read_dmedia(UNUSED(void *handle),
 }
 
 ALboolean
-alcBackendSetAttributesDMedia_(ALC_OpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesDMedia_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
-	return mode == ALC_OPEN_INPUT_ ?
+	return ((_ALhandle*)handle)->mode == ALC_OPEN_INPUT_ ?
 		set_read_dmedia(handle, bufsiz, fmt, speed) :
 		set_write_dmedia(handle, bufsiz, fmt, speed);
 }

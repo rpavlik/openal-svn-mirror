@@ -1,3 +1,18 @@
+2006-02-16  Sven Panne  <sven.panne@aedion.de>
+
+	* src/backends/alc_backend.c, src/backends/alc_backend.h,
+	src/backends/alc_backend_alsa.c, src/backends/alc_backend_arts.c,
+	src/backends/alc_backend_bsd.c, src/backends/alc_backend_darwin.c,
+	src/backends/alc_backend_esd.c, src/backends/alc_backend_irix.c,
+	src/backends/alc_backend_linux.c, src/backends/alc_backend_morphos.c,
+	src/backends/alc_backend_null.c, src/backends/alc_backend_sdl.c,
+	src/backends/alc_backend_solaris.c, src/backends/alc_backend_wave.c,
+	src/backends/alc_backend_windows.c: Move the ALC_OpenMode into the
+	backends themselves, making the already simple dispatching code in
+	src/backends/alc_backend.c even simpler, opening up more opportunities
+	for refactoring. This involved the introduction of a global variable in
+	some backends, but this is only a temporary measurement.
+
 2006-02-14  Sven Panne  <sven.panne@aedion.de>
 
 	* src/al_filter.c, src/al_source.c: Don't access the "isset" fields

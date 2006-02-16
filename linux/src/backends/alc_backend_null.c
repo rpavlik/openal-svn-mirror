@@ -21,16 +21,19 @@
 static void *bogus_handle = (void *) 0x4ABAD1;
 static ALuint sleep_usec (ALuint speed, ALuint chunk);
 static ALint nullspeed;
+static ALC_OpenMode nullMode;
 
 static void *
 grab_write_null (void)
 {
+  nullMode = ALC_OPEN_OUTPUT_;
   return bogus_handle;
 }
 
 static void *
 grab_read_null (void)
 {
+  nullMode = ALC_OPEN_INPUT_;
   return NULL;
 }
 
@@ -57,10 +60,10 @@ set_read_null (UNUSED (void *handle), UNUSED (ALuint *bufsiz),
 }
 
 ALboolean
-alcBackendSetAttributesNull_ (ALC_OpenMode mode, void *handle, ALuint *bufsiz,
+alcBackendSetAttributesNull_ (void *handle, ALuint *bufsiz,
                               ALenum *fmt, ALuint *speed)
 {
-  return mode == ALC_OPEN_INPUT_ ?
+  return nullMode == ALC_OPEN_INPUT_ ?
     set_read_null (handle, bufsiz, fmt, speed) :
     set_write_null (handle, bufsiz, fmt, speed);
 }

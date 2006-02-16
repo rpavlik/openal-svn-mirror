@@ -178,6 +178,7 @@ struct alsa_info
 	snd_pcm_uframes_t bufframesize;
 	fd_set fd_set;
 	int setup_read, setup_write;
+	ALC_OpenMode mode;
 };
 
 void release_alsa(void *handle)
@@ -222,6 +223,7 @@ static void *grab_read_alsa( void )
 	retval->periods     = 0;
 	retval->setup_read	= 0;
 	retval->setup_write	= 0;
+	retval->mode = ALC_OPEN_INPUT_;
 
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
 			"grab_alsa: init ok, using %s", card_name);
@@ -321,6 +323,7 @@ static void *grab_write_alsa( void )
 	retval->periods     = 0;
 	retval->setup_read	= 0;
 	retval->setup_write	= 0;
+	retval->mode = ALC_OPEN_OUTPUT_;
 
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
 		 "grab_alsa: init ok, using %s", card_name);
@@ -666,9 +669,9 @@ static ALboolean set_write_alsa(void *handle,
 }
 
 ALboolean
-alcBackendSetAttributesALSA_( ALC_OpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesALSA_( void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
-	return mode == ALC_OPEN_INPUT_ ?
+	return ((struct alsa_info *)handle)->mode == ALC_OPEN_INPUT_ ?
 		set_read_alsa(handle, bufsiz, fmt, speed) :
 		set_write_alsa(handle, bufsiz, fmt, speed);
 }

@@ -42,6 +42,7 @@
 typedef struct {
   int fd;                /* file descriptor of audio device          */
   audio_info_t ainfo;    /* audio info structure used in ioctl calls */
+  ALC_OpenMode mode;
 } solaris_audio;
 
 
@@ -89,6 +90,7 @@ static void *grab_write_native(void) {
   }
   saudio -> fd = fd ;
   AUDIO_INITINFO( &(saudio->ainfo) ) ;
+  saudio->mode = ALC_OPEN_OUTPUT_;
 
   return saudio ;
 }
@@ -271,9 +273,9 @@ static ALboolean set_read_native(UNUSED(void *handle),
 }
 
 ALboolean
-alcBackendSetAttributesNative_(ALC_OpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesNative_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
-	return mode == ALC_OPEN_INPUT_ ?
+	return ((solaris_audio *)handle)->mode == ALC_OPEN_INPUT_ ?
 		set_read_native(handle, bufsiz, fmt, speed) :
 		set_write_native(handle, bufsiz, fmt, speed);
 }

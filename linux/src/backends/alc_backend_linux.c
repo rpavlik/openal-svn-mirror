@@ -51,6 +51,7 @@ static int alcChannel_to_dsp_channel(ALCenum alcc);
 static fd_set dsp_fd_set;
 static int mixer_fd    = -1; /* /dev/mixer file read/write descriptor */
 static ALboolean use_select = AL_TRUE;
+static ALC_OpenMode linuxMode;
 
 /* gets user prefered path */
 static const char *lin_getwritepath(void);
@@ -210,7 +211,7 @@ static void *grab_write_native(void)
 #ifdef DEBUG
 	fprintf(stderr, "grab_native: (path %s fd %d)\n", writepath, write_fd);
 #endif
-
+	linuxMode = ALC_OPEN_OUTPUT_;
 	return &write_fd;
 }
 
@@ -235,6 +236,7 @@ static void *grab_read_native(void)
 		return NULL;
 	}
 
+	linuxMode = ALC_OPEN_INPUT_;
 	return &read_fd;
 }
 
@@ -513,9 +515,9 @@ static ALboolean set_read_native(UNUSED(void *handle),
 }
 
 ALboolean
-alcBackendSetAttributesNative_(ALC_OpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesNative_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
-	return mode == ALC_OPEN_INPUT_ ?
+	return linuxMode == ALC_OPEN_INPUT_ ?
 		set_read_native(handle, bufsiz, fmt, speed) :
 		set_write_native(handle, bufsiz, fmt, speed);
 }

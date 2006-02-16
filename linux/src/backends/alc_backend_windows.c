@@ -44,6 +44,7 @@ static struct {
 static struct {
         HWAVEOUT hwo;
 	WAVEFORMATEX pwfx;
+        ALC_OpenMode mode;
 } WinAudioHandle;
 
 static char pcmdata[MAX_PCMDATA];
@@ -111,7 +112,7 @@ static void *grab_write_native(void) {
 
 	if(err == MMSYSERR_NOERROR) {
 		fprintf(stderr, "got Windows native audio\n");
-
+		WinAudioHandle.mode = ALC_OPEN_OUTPUT_;
 		return &WinAudioHandle.hwo;
 	}
 
@@ -302,9 +303,9 @@ static ALboolean set_read_native(UNUSED(void *handle),
 }
 
 ALboolean
-alcBackendSetAttributesNative_(ALC_OpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesNative_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
-	return mode == ALC_OPEN_INPUT_ ?
+	return WinAudioHandle.mode == ALC_OPEN_INPUT_ ?
 		set_read_native(handle, bufsiz, fmt, speed) :
 		set_write_native(handle, bufsiz, fmt, speed);
 }

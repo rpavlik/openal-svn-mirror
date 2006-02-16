@@ -45,6 +45,7 @@ static int alcChannel_to_dsp_channel(ALuint alcc);
 static fd_set dsp_fd_set;
 static int dsp_fd      = -1; /* /dev/dsp file descriptor */
 static int mixer_fd    = -1; /* /dev/mixer file descriptor */
+static ALC_OpenMode bsdMode;
 
 /* convert the format channel from /dev/dsp to openal format */
 static int BSD2ALFMT(int fmt, int channels) {
@@ -139,6 +140,7 @@ static void *grab_write_native(void) {
 #ifdef DEBUG
 	fprintf(stderr, "Got /dev/dsp\n");
 #endif
+	bsdMode = ALC_OPEN_OUTPUT_;
 	return &dsp_fd;
 }
 
@@ -375,9 +377,9 @@ static ALboolean set_read_native(UNUSED(void *handle),
 }
 
 ALboolean
-alcBackendSetAttributesNative_(ALC_OpenMode mode, void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesNative_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
-	return mode == ALC_OPEN_INPUT_ ?
+	return bsdMode == ALC_OPEN_INPUT_ ?
 		set_read_native(handle, bufsiz, fmt, speed) :
 		set_write_native(handle, bufsiz, fmt, speed);
 }
@@ -385,7 +387,7 @@ alcBackendSetAttributesNative_(ALC_OpenMode mode, void *handle, ALuint *bufsiz, 
 static void *grab_read_native(void)
 {
 	fprintf(stderr,"grab_read_native Not implemented! (%s:%d)\n",__FILE__,__LINE__);
-	return;
+	return NULL;
 }
 
 void *
