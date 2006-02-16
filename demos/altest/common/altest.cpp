@@ -191,6 +191,9 @@ typedef struct ALenum_struct
 
 // Global variables
 ALuint	g_Buffers[NUM_BUFFERS];		// Array of Buffers
+ALboolean g_bNewDistModels = AL_TRUE;
+ALboolean g_bOffsetExt = AL_TRUE;
+ALboolean g_bCaptureExt = AL_TRUE;
 
 #if TEST_EAX
 EAXSet	eaxSet;						// EAXSet function, retrieved if EAX Extension is supported
@@ -724,18 +727,17 @@ int main(int argc, char* argv[])
 	printf("\nOpen AL Version %d.%d\n", major, minor);
 
 	// Check for all the AL 1.1 Extensions (they may be present on AL 1.0 implementations too)
-	ALboolean bOffsetExt = alIsExtensionPresent("al_ext_offset");
-	if (bOffsetExt)
+	g_bOffsetExt = alIsExtensionPresent("al_ext_offset");
+	if (g_bOffsetExt)
 		printf("AL_EXT_OFFSET support found !\n");
 
-	ALboolean bNewDistModels = AL_TRUE;
-	bNewDistModels &= alIsExtensionPresent("AL_EXT_LINEAR_DISTANCE");
-	bNewDistModels &= alIsExtensionPresent("AL_EXT_EXPONENT_DISTANCE");
-	if (bNewDistModels)
+	g_bNewDistModels &= alIsExtensionPresent("AL_EXT_LINEAR_DISTANCE");
+	g_bNewDistModels &= alIsExtensionPresent("AL_EXT_EXPONENT_DISTANCE");
+	if (g_bNewDistModels)
 		printf("AL_EXT_LINEAR_DISTANCE and AL_EXT_EXPONENT_DISTANCE support found !\n");
 	
-	ALboolean bCaptureExt = alcIsExtensionPresent(Device, "alc_EXT_capTure");
-	if (bCaptureExt)
+	ALboolean g_bCaptureExt = alcIsExtensionPresent(Device, "alc_EXT_capTure");
+	if (g_bCaptureExt)
 		printf("ALC_EXT_CAPTURE support found !\n");
 
 	// Set Listener attributes
@@ -923,19 +925,35 @@ int main(int argc, char* argv[])
 	    		I_VelocityTest();
 		    	break;
     		case 'G':
-	    		I_GetSourceOffsetTest();
+				if (g_bOffsetExt) {
+	    			I_GetSourceOffsetTest();
+				} else {
+					printf("Offset Extension not supported.\n\n"); 
+				}
 		    	break;
     		case 'H':
-	    		I_SetSourceOffsetTest();
+				if (g_bOffsetExt) {
+					I_SetSourceOffsetTest();
+				} else {
+					printf("Offset Extension not supported.\n\n"); 
+				}
 		    	break;
     		case 'I':
 	    		I_DistanceModelTest();
 		    	break;
     		case 'J':
-	    		I_CaptureTest();
+				if (g_bCaptureExt) {
+	    			I_CaptureTest();
+				} else {
+					printf("Capture Extension not supported.\n\n");
+				}
 		    	break;
     		case 'K':
-	    		I_CaptureAndPlayTest();
+				if (g_bCaptureExt) {
+	    			I_CaptureAndPlayTest();
+				} else {
+					printf("Capture Extension not supported.\n\n");
+				}
 		    	break;
 #if TEST_EAX
 			case 'L':
@@ -4528,7 +4546,7 @@ $SUBTITLE Get Source Offset Test
 ALvoid I_GetSourceOffsetTest()
 {
 	ALuint Source;
-	char ch, oldch;
+	char ch, state;
 	ALint lOffset;
 	ALfloat flOffset;
 
@@ -4544,6 +4562,10 @@ ALvoid I_GetSourceOffsetTest()
 	printf("Press 6 to Use AL_SAMPLE_OFFSET (float) to track progress\n");
 	printf("Press 7 to Use AL_SEC_OFFSET (float) to track progress\n");
 	printf("Press Q to quit\n");
+
+	ch = '1';
+	state = '2';
+
 	while (1)
 	{
 #ifdef _WIN32
@@ -4552,26 +4574,26 @@ ALvoid I_GetSourceOffsetTest()
 		if (1)
 #endif // _WIN32
 		{
-			ch = getUpperCh();   
+			ch = getUpperCh(); 
 
 			if (ch == '1')
 			{
 				alSourcePlay(Source);
-				ch = oldch;
 			}
 			else if (ch == 'Q')
 			{
 				break;
 			}
 
-			oldch = ch;
+			if ((ch >= '2') && (ch <= '7')) {
+				state = ch;
+			}
 		}
 		else
 		{
-			switch (ch)
+			switch (state)
 			{
 			case '2':
-			default:
 				alGetSourcei(Source, AL_BYTE_OFFSET, &lOffset);
 				printf("ByteOffset is %d                   \r", lOffset);
 				break;
@@ -4825,7 +4847,7 @@ ALvoid I_DistanceModelTest()
 {
 	ALuint	source[1];
 	ALint	error;
-	ALint	lLoop;
+	ALint	lLoop, endLoop;
 
 	alGenSources(1,source);
 	if ((error = alGetError()) != AL_NO_ERROR)
@@ -4834,13 +4856,19 @@ ALvoid I_DistanceModelTest()
 		return;
 	}
 
+	if (g_bNewDistModels) {
+		endLoop = 6;
+	} else {
+		endLoop = 2;
+	}
+
 	alSourcei(source[0], AL_BUFFER, g_Buffers[0]);
 	alSourcei(source[0], AL_LOOPING, AL_TRUE);
 	alSourcePlay(source[0]);
 
 	printf("Distance Model Test\n");
 
-	for (lLoop = 0; lLoop < 7; lLoop++)
+	for (lLoop = 0; lLoop <= endLoop; lLoop++)
 	{
 		switch (lLoop)
 		{
