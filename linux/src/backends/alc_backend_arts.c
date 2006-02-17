@@ -162,7 +162,7 @@ alcBackendOpenARts_( ALC_OpenMode mode )
 
 
 
-void arts_blitbuffer(void *handle, void *data, int bytes)  {
+void arts_blitbuffer(void *handle, const void *data, int bytes)  {
 	t_arts_handle * ahandle = (t_arts_handle *) handle;
 
 	if ((ahandle == NULL)||(ahandle->stream == NULL)) {

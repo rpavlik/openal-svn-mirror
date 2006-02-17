@@ -522,7 +522,7 @@ alcBackendSetAttributesNative_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint
 		set_write_native(handle, bufsiz, fmt, speed);
 }
 
-void native_blitbuffer(void *handle, void *dataptr, int bytes_to_write) {
+void native_blitbuffer(void *handle, const void *dataptr, int bytes_to_write) {
 	struct timeval tv = { 0, 800000 }; /* at most .8 secs */
 	int iterator = 0;
 	int err;
@@ -557,7 +557,7 @@ void native_blitbuffer(void *handle, void *dataptr, int bytes_to_write) {
 		assert(iterator <= bytes_to_write);
 
 		err = write(fd,
-			    (char *) dataptr + bytes_to_write - iterator,
+			    (const char *) dataptr + bytes_to_write - iterator,
 			    iterator);
 
 		if(err < 0) {

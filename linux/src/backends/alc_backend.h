@@ -59,14 +59,14 @@ void alcBackendResume_ (ALC_Backend *backend);
  * alcMakeContextCurrent(NON_NULL).
  */
 ALboolean alcBackendSetAttributes_ (ALC_Backend *backend,
-                                    ALuint *bufsiz, ALenum *fmt,
+                                    ALuint *bufferSize, ALenum *format,
                                     ALuint *speed);
 
 /*
  * Writes a given interleaved array of sound data to an output backend. This
  * function is used to implement (a)sync_mixer_iterate.
  */
-void alcBackendWrite_ (ALC_Backend *backend, void *data, int size);
+void alcBackendWrite_ (ALC_Backend *backend, const void *data, int size);
 
 /*
  * Captures data from an input backend into the given buffer. This function is
@@ -94,6 +94,24 @@ void alcBackendSetAudioChannel_ (ALC_Backend *backend, ALuint channel,
  */
 typedef void ALC_BackendPrivateData;
 
+typedef struct ALC_BackendOpsStruct
+{
+  ALC_BackendPrivateData *(*open) (ALC_OpenMode mode);
+  void (*close) (ALC_BackendPrivateData *privateData);
+  void (*pause) (ALC_BackendPrivateData *privateData);
+  void (*resume) (ALC_BackendPrivateData *privateData);
+  ALboolean (*setAttributes) (ALC_BackendPrivateData *privateData,
+                              ALuint *bufferSize, ALenum *format,
+                              ALuint *speed);
+  void (*write) (ALC_BackendPrivateData *privateData, const void *data,
+                 int size);
+  ALsizei (*read) (ALC_BackendPrivateData *privateData, void *data, int size);
+  ALfloat (*getAudioChannel) (ALC_BackendPrivateData *privateData,
+                              ALuint channel);
+  int (*setAudioChannel) (ALC_BackendPrivateData *privateData, ALuint channel,
+                          ALfloat volume);
+} ALC_BackendOps;
+
 ALC_BackendPrivateData *alcBackendOpenNative_ (ALC_OpenMode mode);
 void release_native (ALC_BackendPrivateData *privateData);
 void pause_nativedevice (ALC_BackendPrivateData *privateData);
@@ -101,7 +119,7 @@ void resume_nativedevice (ALC_BackendPrivateData *privateData);
 ALboolean alcBackendSetAttributesNative_ (ALC_BackendPrivateData *privateData,
                                           ALuint *bufsiz, ALenum *fmt,
                                           ALuint *speed);
-void native_blitbuffer (ALC_BackendPrivateData *privateData, void *data,
+void native_blitbuffer (ALC_BackendPrivateData *privateData, const void *data,
                         int bytes);
 ALsizei capture_nativedevice (ALC_BackendPrivateData *privateData,
                               void *capture_buffer, int bufsiz);
@@ -118,7 +136,7 @@ void resume_alsa (ALC_BackendPrivateData *privateData);
 ALboolean alcBackendSetAttributesALSA_ (ALC_BackendPrivateData *privateData,
                                         ALuint *bufsiz, ALenum *fmt,
                                         ALuint *speed);
-void alsa_blitbuffer (ALC_BackendPrivateData *privateData, void *data,
+void alsa_blitbuffer (ALC_BackendPrivateData *privateData, const void *data,
                       int bytes);
 ALsizei capture_alsa (ALC_BackendPrivateData *privateData,
                       void *capture_buffer, int bufsiz);
@@ -145,7 +163,7 @@ void resume_arts (ALC_BackendPrivateData *privateData);
 ALboolean alcBackendSetAttributesARts_ (ALC_BackendPrivateData *privateData,
                                         ALuint *bufsiz, ALenum *fmt,
                                         ALuint *speed);
-void arts_blitbuffer (ALC_BackendPrivateData *privateData, void *data,
+void arts_blitbuffer (ALC_BackendPrivateData *privateData, const void *data,
                       int bytes);
 ALsizei capture_arts (ALC_BackendPrivateData *privateData,
                       void *capture_buffer, int bufsiz);
@@ -172,7 +190,7 @@ void resume_dmedia (ALC_BackendPrivateData *privateData);
 ALboolean alcBackendSetAttributesDMedia_ (ALC_BackendPrivateData *privateData,
                                           ALuint *bufsiz, ALenum *fmt,
                                           ALuint *speed);
-void dmedia_blitbuffer (ALC_BackendPrivateData *privateData, void *data,
+void dmedia_blitbuffer (ALC_BackendPrivateData *privateData, const void *data,
                         int bytes);
 ALsizei capture_dmedia (ALC_BackendPrivateData *privateData,
                         void *capture_buffer, int bufsiz);
@@ -193,14 +211,14 @@ int set_dmediachannel (ALC_BackendPrivateData *privateData, ALuint channel,
 #endif /* USE_BACKEND_DMEDIA */
 
 #ifdef USE_BACKEND_ESD
-void *alcBackendOpenESD_ (ALC_OpenMode mode);
+ALC_BackendPrivateData *alcBackendOpenESD_ (ALC_OpenMode mode);
 void release_esd (ALC_BackendPrivateData *privateData);
 void pause_esd (ALC_BackendPrivateData *privateData);
 void resume_esd (ALC_BackendPrivateData *privateData);
 ALboolean alcBackendSetAttributesESD_ (ALC_BackendPrivateData *privateData,
                                        ALuint *bufsiz, ALenum *fmt,
                                        ALuint *speed);
-void esd_blitbuffer (ALC_BackendPrivateData *privateData, void *data,
+void esd_blitbuffer (ALC_BackendPrivateData *privateData, const void *data,
                      int bytes);
 ALsizei capture_esd (ALC_BackendPrivateData *privateData,
                      void *capture_buffer, int bufsiz);
@@ -227,7 +245,7 @@ void resume_sdl (ALC_BackendPrivateData *privateData);
 ALboolean alcBackendSetAttributesSDL_ (ALC_BackendPrivateData *privateData,
                                        ALuint *bufsiz, ALenum *fmt,
                                        ALuint *speed);
-void sdl_blitbuffer (ALC_BackendPrivateData *privateData, void *data,
+void sdl_blitbuffer (ALC_BackendPrivateData *privateData, const void *data,
                      int bytes);
 ALsizei capture_sdl (ALC_BackendPrivateData *privateData,
                      void *capture_buffer, int bufsiz);
@@ -254,7 +272,7 @@ void resume_null (ALC_BackendPrivateData *privateData);
 ALboolean alcBackendSetAttributesNull_ (ALC_BackendPrivateData *privateData,
                                         ALuint *bufsiz, ALenum *fmt,
                                         ALuint *speed);
-void null_blitbuffer (ALC_BackendPrivateData *privateData, void *data,
+void null_blitbuffer (ALC_BackendPrivateData *privateData, const void *data,
                       int bytes);
 ALsizei capture_null (ALC_BackendPrivateData *privateData,
                       void *capture_buffer, int bufsiz);
@@ -281,8 +299,8 @@ void resume_waveout (ALC_BackendPrivateData *privateData);
 ALboolean alcBackendSetAttributesWAVE_ (ALC_BackendPrivateData *privateData,
                                         ALuint *bufsiz, ALenum *fmt,
                                         ALuint *speed);
-void waveout_blitbuffer (ALC_BackendPrivateData *privateData, void *data,
-                         int bytes);
+void waveout_blitbuffer (ALC_BackendPrivateData *privateData,
+                         const void *data, int bytes);
 ALsizei capture_waveout (ALC_BackendPrivateData *privateData,
                          void *capture_buffer, int bufsiz);
 ALfloat get_waveoutchannel (ALC_BackendPrivateData *privateData,

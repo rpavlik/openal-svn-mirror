@@ -70,7 +70,7 @@ alcBackendSetAttributesNull_ (void *handle, ALuint *bufsiz,
 
 void
 null_blitbuffer (UNUSED (void *handle),
-                 UNUSED (void *dataptr), int bytes_to_write)
+                 UNUSED (const void *dataptr), int bytes_to_write)
 {
   _alMicroSleep (sleep_usec (nullspeed, bytes_to_write));
 }

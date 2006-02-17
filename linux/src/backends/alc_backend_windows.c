@@ -128,7 +128,7 @@ alcBackendOpenNative_( ALC_OpenMode mode )
 	return mode == ALC_OPEN_INPUT_ ? grab_read_native() : grab_write_native();
 }
 
-void native_blitbuffer(void *handle, void *dataptr, int bytes_to_write) {
+void native_blitbuffer(void *handle, const void *dataptr, int bytes_to_write) {
 	WAVEHDR *whdr;
 	MMRESULT err;
         HWAVEOUT hwo;

@@ -676,11 +676,11 @@ alcBackendSetAttributesALSA_( void *handle, ALuint *bufsiz, ALenum *fmt, ALuint 
 		set_write_alsa(handle, bufsiz, fmt, speed);
 }
 
-void alsa_blitbuffer(void *handle, void *data, int bytes)
+void alsa_blitbuffer(void *handle, const void *data, int bytes)
 {
 	struct alsa_info *ai = handle;
 	snd_pcm_t *phandle = 0;
-	char *pdata = data;
+	const char *pdata = data;
 	int data_len = bytes;
 	int channels = 0;
 	int err;

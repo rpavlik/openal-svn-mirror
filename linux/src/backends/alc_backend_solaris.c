@@ -102,7 +102,7 @@ alcBackendOpenNative_( ALC_OpenMode mode )
 }
 
 void native_blitbuffer(void *handle,
-		       void *dataptr,
+		       const void *dataptr,
 		       int bytes_to_write) {
 	solaris_audio* sa ;
 

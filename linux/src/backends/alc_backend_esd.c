@@ -180,7 +180,7 @@ alcBackendOpenESD_( ALC_OpenMode mode )
 	return mode == ALC_OPEN_INPUT_ ? grab_read_esd() : grab_write_esd();
 }
 
-void esd_blitbuffer(void *handle, void *dataptr, int bytes_to_write)  {
+void esd_blitbuffer(void *handle, const void *dataptr, int bytes_to_write)  {
 	esd_openal_info_t *eh;
 	struct timeval tv = { 0, 9000000 };
 	int iterator = 0;
@@ -221,7 +221,7 @@ void esd_blitbuffer(void *handle, void *dataptr, int bytes_to_write)  {
 		assert(iterator <= bytes_to_write);
 
 		err = write(fd,
-			    (char *) dataptr + bytes_to_write - iterator,
+			    (const char *) dataptr + bytes_to_write - iterator,
 			    iterator);
 		if(err < 0) {
 			assert(0);

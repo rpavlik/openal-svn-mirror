@@ -160,7 +160,7 @@ int grab_mixerfd(void) {
 	return -1;
 }
 
-void native_blitbuffer(void *handle, void *dataptr, int bytes_to_write) {
+void native_blitbuffer(void *handle, const void *dataptr, int bytes_to_write) {
 	struct timeval tv = { 1, 0 }; /* wait 1 sec max */
 	int iterator = 0;
 	int err;

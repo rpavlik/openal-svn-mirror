@@ -124,7 +124,7 @@ alcBackendOpenWAVE_( ALC_OpenMode mode )
 	return mode == ALC_OPEN_INPUT_ ? grab_read_waveout() : grab_write_waveout();
 }
 
-void waveout_blitbuffer(void *handle, void *dataptr, int bytes_to_write) {
+void waveout_blitbuffer(void *handle, const void *dataptr, int bytes_to_write) {
 	waveout_t *whandle = NULL;
 
 	if(handle == NULL) {
@@ -142,6 +142,7 @@ void waveout_blitbuffer(void *handle, void *dataptr, int bytes_to_write) {
 	/*
 	 * WAV files expect their PCM data in LE format.  If we are on
 	 * big endian host, we need to convert the data in place.
+	 * TODO: THIS BREAKS THE CONST CORRECTNESS!!!!!!!!!!!!!!!
 	 *
 	 */
 	convert_to_little_endian( whandle->bitspersample,

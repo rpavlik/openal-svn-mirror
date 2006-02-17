@@ -247,7 +247,7 @@ alcBackendOpenDMedia_( ALC_OpenMode mode )
 }
 
 void dmedia_blitbuffer(void *handle,
-                      void *dataptr,
+                      const void *dataptr,
                       int bytes_to_write)
 {
     static int check_ = CHECK_FRAMES;

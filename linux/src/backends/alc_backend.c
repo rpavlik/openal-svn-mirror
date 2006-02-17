@@ -336,13 +336,13 @@ alcBackendSetAttributes_ (ALC_Backend *backend, ALuint *bufsiz,
                                            speed);
     default:
       _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
-                "alcBackendSetWrite_: unknown backend %d\n", backend->type);
+                "alcBackendSetAttributes_: unknown backend %d\n", backend->type);
       return AL_FALSE;
     }
 }
 
 void
-alcBackendWrite_ (ALC_Backend *backend, void *dataptr, int bytes_to_write)
+alcBackendWrite_ (ALC_Backend *backend, const void *dataptr, int bytes_to_write)
 {
   switch (backend->type)
     {

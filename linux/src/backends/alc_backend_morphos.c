@@ -310,7 +310,7 @@ alcBackendSetAttributesNative_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint
 		set_write_native(handle, bufsiz, fmt, speed);
 }
 
-void native_blitbuffer(void *h, void *data, int bytes)
+void native_blitbuffer(void *h, const void *data, int bytes)
 {
 	UWORD next_buf;
 

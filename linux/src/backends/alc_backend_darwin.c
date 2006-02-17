@@ -314,7 +314,7 @@ alcBackendSetAttributesNative_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint
 		set_write_native(handle, bufsiz, fmt, speed);
 }
 
-void  native_blitbuffer(void *handle, void *data, int bytes)
+void  native_blitbuffer(void *handle, const void *data, int bytes)
 {
     stillToPlay = bytes / nativePreferedBuffSize;
 

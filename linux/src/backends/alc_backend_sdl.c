@@ -165,7 +165,7 @@ alcBackendOpenSDL_( ALC_OpenMode mode )
 }
 
 void
-sdl_blitbuffer(UNUSED(void *handle), void *data, int bytes)
+sdl_blitbuffer(UNUSED(void *handle), const void *data, int bytes)
 {
 	if (sdl_info.firstTime == AL_TRUE) {
 		sdl_info.firstTime = AL_FALSE;
