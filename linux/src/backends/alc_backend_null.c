@@ -37,7 +37,7 @@ grab_read_null (void)
   return NULL;
 }
 
-void *
+static void *
 alcBackendOpenNull_ (ALC_OpenMode mode)
 {
   return mode == ALC_OPEN_INPUT_ ? grab_read_null () : grab_write_null ();
@@ -59,7 +59,7 @@ set_read_null (UNUSED (void *handle), UNUSED (ALuint *bufsiz),
   return AL_TRUE;
 }
 
-ALboolean
+static ALboolean
 alcBackendSetAttributesNull_ (void *handle, ALuint *bufsiz,
                               ALenum *fmt, ALuint *speed)
 {
@@ -68,14 +68,14 @@ alcBackendSetAttributesNull_ (void *handle, ALuint *bufsiz,
     set_write_null (handle, bufsiz, fmt, speed);
 }
 
-void
+static void
 null_blitbuffer (UNUSED (void *handle),
                  UNUSED (const void *dataptr), int bytes_to_write)
 {
   _alMicroSleep (sleep_usec (nullspeed, bytes_to_write));
 }
 
-void
+static void
 release_null (UNUSED (void *handle))
 {
 }
@@ -86,32 +86,50 @@ sleep_usec (ALuint speed, ALuint chunk)
   return 1000000.0 * chunk / speed;
 }
 
-void
+static void
 pause_null (UNUSED (void *handle))
 {
 }
 
-void
+static void
 resume_null (UNUSED (void *handle))
 {
 }
 
-ALsizei
+static ALsizei
 capture_null (UNUSED (void *handle), UNUSED (void *capture_buffer),
               UNUSED (int bufsiz))
 {
   return 0;
 }
 
-ALfloat
+static ALfloat
 get_nullchannel (UNUSED (void *handle), UNUSED (ALuint channel))
 {
   return 0.0;
 }
 
-int
+static int
 set_nullchannel (UNUSED (void *handle), UNUSED (ALuint channel),
                  UNUSED (ALfloat volume))
 {
   return 0;
+}
+
+static ALC_BackendOps nullOps = {
+	alcBackendOpenNull_,
+	release_null,
+	pause_null,
+	resume_null,
+	alcBackendSetAttributesNull_,
+	null_blitbuffer,
+	capture_null,
+	get_nullchannel,
+	set_nullchannel
+};
+
+ALC_BackendOps *
+alcGetBackendOpsNull_ (void)
+{
+	return &nullOps;
 }

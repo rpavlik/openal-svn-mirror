@@ -112,211 +112,48 @@ typedef struct ALC_BackendOpsStruct
                           ALfloat volume);
 } ALC_BackendOps;
 
-ALC_BackendPrivateData *alcBackendOpenNative_ (ALC_OpenMode mode);
-void release_native (ALC_BackendPrivateData *privateData);
-void pause_nativedevice (ALC_BackendPrivateData *privateData);
-void resume_nativedevice (ALC_BackendPrivateData *privateData);
-ALboolean alcBackendSetAttributesNative_ (ALC_BackendPrivateData *privateData,
-                                          ALuint *bufsiz, ALenum *fmt,
-                                          ALuint *speed);
-void native_blitbuffer (ALC_BackendPrivateData *privateData, const void *data,
-                        int bytes);
-ALsizei capture_nativedevice (ALC_BackendPrivateData *privateData,
-                              void *capture_buffer, int bufsiz);
-ALfloat get_nativechannel (ALC_BackendPrivateData *privateData,
-                           ALuint channel);
-int set_nativechannel (ALC_BackendPrivateData *privateData, ALuint channel,
-                       ALfloat volume);
+ALC_BackendOps *alcGetBackendOpsNative_ (void);
 
 #ifdef USE_BACKEND_ALSA
-ALC_BackendPrivateData *alcBackendOpenALSA_ (ALC_OpenMode mode);
-void release_alsa (ALC_BackendPrivateData *privateData);
-void pause_alsa (ALC_BackendPrivateData *privateData);
-void resume_alsa (ALC_BackendPrivateData *privateData);
-ALboolean alcBackendSetAttributesALSA_ (ALC_BackendPrivateData *privateData,
-                                        ALuint *bufsiz, ALenum *fmt,
-                                        ALuint *speed);
-void alsa_blitbuffer (ALC_BackendPrivateData *privateData, const void *data,
-                      int bytes);
-ALsizei capture_alsa (ALC_BackendPrivateData *privateData,
-                      void *capture_buffer, int bufsiz);
-ALfloat get_alsachannel (ALC_BackendPrivateData *privateData, ALuint channel);
-int set_alsachannel (ALC_BackendPrivateData *privateData, ALuint channel,
-                     ALfloat volume);
+ALC_BackendOps *alcGetBackendOpsALSA_ (void);
 #else
-#define alcBackendOpenALSA_(m)        NULL
-#define release_alsa(h)
-#define pause_alsa(h)
-#define resume_alsa(h)
-#define alcBackendSetAttributesALSA_(h,b,f,s) AL_FALSE
-#define alsa_blitbuffer(h,d,b)
-#define capture_alsa(h,d,b)           0
-#define get_alsachannel(h,c)          0.0
-#define set_alsachannel(h,c,v)        0
+#define alcGetBackendOpsALSA_() NULL
 #endif /* USE_BACKEND_ALSA */
 
 #ifdef USE_BACKEND_ARTS
-ALC_BackendPrivateData *alcBackendOpenARts_ (ALC_OpenMode mode);
-void release_arts (ALC_BackendPrivateData *privateData);
-void pause_arts (ALC_BackendPrivateData *privateData);
-void resume_arts (ALC_BackendPrivateData *privateData);
-ALboolean alcBackendSetAttributesARts_ (ALC_BackendPrivateData *privateData,
-                                        ALuint *bufsiz, ALenum *fmt,
-                                        ALuint *speed);
-void arts_blitbuffer (ALC_BackendPrivateData *privateData, const void *data,
-                      int bytes);
-ALsizei capture_arts (ALC_BackendPrivateData *privateData,
-                      void *capture_buffer, int bufsiz);
-ALfloat get_artschannel (ALC_BackendPrivateData *privateData, ALuint channel);
-int set_artschannel (ALC_BackendPrivateData *privateData, ALuint channel,
-                     ALfloat volume);
+ALC_BackendOps *alcGetBackendOpsARts_ (void);
 #else
-#define alcBackendOpenARts_(m)        NULL
-#define release_arts(h)
-#define pause_arts(h)
-#define resume_arts(h)
-#define alcBackendSetAttributesARts_(h,b,f,s) AL_FALSE
-#define arts_blitbuffer(h,d,b)
-#define capture_arts(h,d,b)           0
-#define get_artschannel(h,c)          0.0
-#define set_artschannel(h,c,v)        0
+#define alcGetBackendOpsARts_() NULL
 #endif /* USE_BACKEND_ARTS */
 
 #ifdef USE_BACKEND_DMEDIA
-ALC_BackendPrivateData *alcBackendOpenDMedia_ (ALC_OpenMode mode);
-void release_dmedia (ALC_BackendPrivateData *privateData);
-void pause_dmedia (ALC_BackendPrivateData *privateData);
-void resume_dmedia (ALC_BackendPrivateData *privateData);
-ALboolean alcBackendSetAttributesDMedia_ (ALC_BackendPrivateData *privateData,
-                                          ALuint *bufsiz, ALenum *fmt,
-                                          ALuint *speed);
-void dmedia_blitbuffer (ALC_BackendPrivateData *privateData, const void *data,
-                        int bytes);
-ALsizei capture_dmedia (ALC_BackendPrivateData *privateData,
-                        void *capture_buffer, int bufsiz);
-ALfloat get_dmediachannel (ALC_BackendPrivateData *privateData,
-                           ALuint channel);
-int set_dmediachannel (ALC_BackendPrivateData *privateData, ALuint channel,
-                       ALfloat volume);
+ALC_BackendOps *alcGetBackendOpsDMedia_ (void);
 #else
-#define alcBackendOpenDMedia_(m)        NULL
-#define release_dmedia(h)
-#define pause_dmedia(h)
-#define resume_dmedia(h)
-#define alcBackendSetAttributesDMedia_(h,b,f,s) AL_FALSE
-#define dmedia_blitbuffer(h,d,b)
-#define capture_dmedia(h,d,b)           0
-#define get_dmediachannel(h,c)          0.0
-#define set_dmediachannel(h,c,v)        0
+#define alcGetBackendOpsDMedia_() NULL
 #endif /* USE_BACKEND_DMEDIA */
 
 #ifdef USE_BACKEND_ESD
-ALC_BackendPrivateData *alcBackendOpenESD_ (ALC_OpenMode mode);
-void release_esd (ALC_BackendPrivateData *privateData);
-void pause_esd (ALC_BackendPrivateData *privateData);
-void resume_esd (ALC_BackendPrivateData *privateData);
-ALboolean alcBackendSetAttributesESD_ (ALC_BackendPrivateData *privateData,
-                                       ALuint *bufsiz, ALenum *fmt,
-                                       ALuint *speed);
-void esd_blitbuffer (ALC_BackendPrivateData *privateData, const void *data,
-                     int bytes);
-ALsizei capture_esd (ALC_BackendPrivateData *privateData,
-                     void *capture_buffer, int bufsiz);
-ALfloat get_esdchannel (ALC_BackendPrivateData *privateData, ALuint channel);
-int set_esdchannel (ALC_BackendPrivateData *privateData, ALuint channel,
-                    ALfloat volume);
+ALC_BackendOps *alcGetBackendOpsESD_ (void);
 #else
-#define alcBackendOpenESD_(m)         NULL
-#define pause_esd(h)
-#define release_esd(h)
-#define resume_esd(h)
-#define alcBackendSetAttributesESD_(h,b,f,s) AL_FALSE
-#define esd_blitbuffer(h,d,b)
-#define capture_esd(h,d,b)            0
-#define get_esdchannel(h,c)           0.0
-#define set_esdchannel(h,c,v)         0
+#define alcGetBackendOpsESD_() NULL
 #endif /* USE_BACKEND_ESD */
 
 #ifdef USE_BACKEND_SDL
-ALC_BackendPrivateData *alcBackendOpenSDL_ (ALC_OpenMode mode);
-void release_sdl (ALC_BackendPrivateData *privateData);
-void pause_sdl (ALC_BackendPrivateData *privateData);
-void resume_sdl (ALC_BackendPrivateData *privateData);
-ALboolean alcBackendSetAttributesSDL_ (ALC_BackendPrivateData *privateData,
-                                       ALuint *bufsiz, ALenum *fmt,
-                                       ALuint *speed);
-void sdl_blitbuffer (ALC_BackendPrivateData *privateData, const void *data,
-                     int bytes);
-ALsizei capture_sdl (ALC_BackendPrivateData *privateData,
-                     void *capture_buffer, int bufsiz);
-ALfloat get_sdlchannel (ALC_BackendPrivateData *privateData, ALuint channel);
-int set_sdlchannel (ALC_BackendPrivateData *privateData, ALuint channel,
-                    ALfloat volume);
+ALC_BackendOps *alcGetBackendOpsSDL_ (void);
 #else
-#define alcBackendOpenSDL_(m)         NULL
-#define release_sdl(h)
-#define pause_sdl(h)
-#define resume_sdl(h)
-#define alcBackendSetAttributesSDL_(h,b,f,s) AL_FALSE
-#define sdl_blitbuffer(h,d,b)
-#define capture_sdl(h,d,b)            0
-#define get_sdlchannel(h,c)           0.0
-#define set_sdlchannel(h,c,v)         0
+#define alcGetBackendOpsSDL_() NULL
 #endif /* USE_BACKEND_SDL */
 
 #ifdef USE_BACKEND_NULL
-ALC_BackendPrivateData *alcBackendOpenNull_ (ALC_OpenMode mode);
-void release_null (ALC_BackendPrivateData *privateData);
-void pause_null (ALC_BackendPrivateData *privateData);
-void resume_null (ALC_BackendPrivateData *privateData);
-ALboolean alcBackendSetAttributesNull_ (ALC_BackendPrivateData *privateData,
-                                        ALuint *bufsiz, ALenum *fmt,
-                                        ALuint *speed);
-void null_blitbuffer (ALC_BackendPrivateData *privateData, const void *data,
-                      int bytes);
-ALsizei capture_null (ALC_BackendPrivateData *privateData,
-                      void *capture_buffer, int bufsiz);
-ALfloat get_nullchannel (ALC_BackendPrivateData *privateData, ALuint channel);
-int set_nullchannel (ALC_BackendPrivateData *privateData, ALuint channel,
-                     ALfloat volume);
+ALC_BackendOps *alcGetBackendOpsNull_ (void);
 #else
-#define alcBackendOpenNull_(m)        NULL
-#define release_null(h)
-#define pause_null(h)
-#define resume_null(h)
-#define alcBackendSetAttributesNull_(h,b,f,s) AL_FALSE
-#define null_blitbuffer(h,d,b)
-#define capture_null(h,d,b)           0
-#define get_nullchannel(h,c)          0.0
-#define set_nullchannel(h,c,v)        0
+#define alcGetBackendOpsNull_() NULL
 #endif /* USE_BACKEND_NULL */
 
 #ifdef USE_BACKEND_WAVEOUT
-ALC_BackendPrivateData *alcBackendOpenWAVE_ (ALC_OpenMode mode);
-void release_waveout (ALC_BackendPrivateData *privateData);
-void pause_waveout (ALC_BackendPrivateData *privateData);
-void resume_waveout (ALC_BackendPrivateData *privateData);
-ALboolean alcBackendSetAttributesWAVE_ (ALC_BackendPrivateData *privateData,
-                                        ALuint *bufsiz, ALenum *fmt,
-                                        ALuint *speed);
-void waveout_blitbuffer (ALC_BackendPrivateData *privateData,
-                         const void *data, int bytes);
-ALsizei capture_waveout (ALC_BackendPrivateData *privateData,
-                         void *capture_buffer, int bufsiz);
-ALfloat get_waveoutchannel (ALC_BackendPrivateData *privateData,
-                            ALuint channel);
-int set_waveoutchannel (ALC_BackendPrivateData *privateData, ALuint channel,
-                        ALfloat volume);
+ALC_BackendOps *alcGetBackendOpsWAVE_ (void);
 #else
-#define alcBackendOpenWAVE_(m)        NULL
-#define release_waveout(h)
-#define pause_waveout(h)
-#define resume_waveout(h)
-#define alcBackendSetAttributesWAVE_(h,b,f,s) AL_FALSE
-#define waveout_blitbuffer(h,d,b)
-#define capture_waveout(h,d,b)        0
-#define get_waveoutchannel(h,c)       0.0
-#define set_waveoutchannel(h,c,v)     0
+#define alcGetBackendOpsWAVE_() NULL
 #endif /* USE_BACKEND_WAVEOUT */
 
 #endif /* AL_BACKENDS_ALC_BACKEND_H_ */

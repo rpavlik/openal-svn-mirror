@@ -154,7 +154,7 @@ static void *grab_write_arts(void) {
         return ahandle;
 }
 
-void *
+static void *
 alcBackendOpenARts_( ALC_OpenMode mode )
 {
 	return mode == ALC_OPEN_INPUT_ ? grab_read_arts() : grab_write_arts();
@@ -162,7 +162,7 @@ alcBackendOpenARts_( ALC_OpenMode mode )
 
 
 
-void arts_blitbuffer(void *handle, const void *data, int bytes)  {
+static void arts_blitbuffer(void *handle, const void *data, int bytes)  {
 	t_arts_handle * ahandle = (t_arts_handle *) handle;
 
 	if ((ahandle == NULL)||(ahandle->stream == NULL)) {
@@ -174,7 +174,7 @@ void arts_blitbuffer(void *handle, const void *data, int bytes)  {
         return;
 }
 
-void release_arts(void *handle) {
+static void release_arts(void *handle) {
 	t_arts_handle * ahandle = (t_arts_handle *) handle;
 
 	if ((ahandle == NULL)||(ahandle->stream == NULL)) {
@@ -248,7 +248,7 @@ static ALboolean set_read_arts(UNUSED(void *handle),
 	return AL_FALSE;
 }
 
-ALboolean
+static ALboolean
 alcBackendSetAttributesARts_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
 	return ((t_arts_handle *)handle)->mode == ALC_OPEN_INPUT_ ?
@@ -256,31 +256,49 @@ alcBackendSetAttributesARts_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *
 		set_write_arts(handle, bufsiz, fmt, speed);
 }
 
-void
+static void
 pause_arts( UNUSED(void *handle) )
 {
 }
 
-void
+static void
 resume_arts( UNUSED(void *handle) )
 {
 }
 
 
-ALsizei
+static ALsizei
 capture_arts( UNUSED(void *handle), UNUSED(void *capture_buffer), UNUSED(int bufsiz) )
 {
 	return 0;
 }
 
-ALfloat
+static ALfloat
 get_artschannel( UNUSED(void *handle), UNUSED(ALuint channel) )
 {
 	return 0.0;
 }
 
-int
+static int
 set_artschannel( UNUSED(void *handle), UNUSED(ALuint channel), UNUSED(ALfloat volume) )
 {
 	return 0;
+}
+
+static ALC_BackendOps artsOps = {
+	alcBackendOpenARts_,
+	release_arts,
+	pause_arts,
+	resume_arts,
+	alcBackendSetAttributesARts_,
+	arts_blitbuffer,
+	capture_arts,
+	get_artschannel,
+	set_artschannel
+};
+
+ALC_BackendOps *
+alcGetBackendOpsARts_ (void)
+{
+	return &artsOps;
 }

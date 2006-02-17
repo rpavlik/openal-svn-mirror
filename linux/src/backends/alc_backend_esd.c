@@ -174,13 +174,13 @@ static void *grab_read_esd(void) {
 	return NULL;
 }
 
-void *
+static void *
 alcBackendOpenESD_( ALC_OpenMode mode )
 {
 	return mode == ALC_OPEN_INPUT_ ? grab_read_esd() : grab_write_esd();
 }
 
-void esd_blitbuffer(void *handle, const void *dataptr, int bytes_to_write)  {
+static void esd_blitbuffer(void *handle, const void *dataptr, int bytes_to_write)  {
 	esd_openal_info_t *eh;
 	struct timeval tv = { 0, 9000000 };
 	int iterator = 0;
@@ -237,7 +237,7 @@ void esd_blitbuffer(void *handle, const void *dataptr, int bytes_to_write)  {
         return;
 }
 
-void release_esd(void *handle) {
+static void release_esd(void *handle) {
 	esd_openal_info_t *eh;
 
 	if(handle == NULL) {
@@ -259,7 +259,7 @@ static const char *genesdkey(void) {
 	return retval;
 }
 
-void pause_esd(void *handle) {
+static void pause_esd(void *handle) {
 	esd_openal_info_t *eh;
 
 	if(handle == NULL) {
@@ -274,7 +274,7 @@ void pause_esd(void *handle) {
 	return;
 }
 
-void resume_esd(void *handle) {
+static void resume_esd(void *handle) {
 	esd_openal_info_t *eh;
 
 	if(handle == NULL) {
@@ -342,7 +342,7 @@ static ALboolean set_read_esd(UNUSED(void *handle),
 	return AL_FALSE;
 }
 
-ALboolean
+static ALboolean
 alcBackendSetAttributesESD_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
 	return ((esd_openal_info_t *)handle)->mode == ALC_OPEN_INPUT_ ?
@@ -350,20 +350,38 @@ alcBackendSetAttributesESD_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *s
 		set_write_esd(handle, bufsiz, fmt, speed);
 }
 
-ALsizei
+static ALsizei
 capture_esd( UNUSED(void *handle), UNUSED(void *capture_buffer), UNUSED(int bufsiz) )
 {
 	return 0;
 }
 
-ALfloat
+static ALfloat
 get_esdchannel( UNUSED(void *handle), UNUSED(ALuint channel) )
 {
 	return 0.0;
 }
 
-int
+static int
 set_esdchannel( UNUSED(void *handle), UNUSED(ALuint channel), UNUSED(ALfloat volume) )
 {
 	return 0;
+}
+
+static ALC_BackendOps esdOps = {
+	alcBackendOpenESD_,
+	release_esd,
+	pause_esd,
+	resume_esd,
+	alcBackendSetAttributesESD_,
+	esd_blitbuffer,
+	capture_esd,
+	get_esdchannel,
+	set_esdchannel
+};
+
+ALC_BackendOps *
+alcGetBackendOpsESD_ (void)
+{
+	return &esdOps;
 }

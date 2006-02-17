@@ -158,13 +158,13 @@ grab_read_sdl(void)
 	return NULL;
 }
 
-void *
+static void *
 alcBackendOpenSDL_( ALC_OpenMode mode )
 {
 	return mode == ALC_OPEN_INPUT_ ? grab_read_sdl() : grab_write_sdl();
 }
 
-void
+static void
 sdl_blitbuffer(UNUSED(void *handle), const void *data, int bytes)
 {
 	if (sdl_info.firstTime == AL_TRUE) {
@@ -188,7 +188,7 @@ sdl_blitbuffer(UNUSED(void *handle), const void *data, int bytes)
 	}
 }
 
-void
+static void
 release_sdl(UNUSED(void *handle))
 {
 	pSDL_CloseAudio();
@@ -246,7 +246,7 @@ set_read_sdl(UNUSED(void *handle), UNUSED(ALuint *bufsiz), UNUSED(ALenum *fmt),
 	return AL_FALSE;
 }
 
-ALboolean
+static ALboolean
 alcBackendSetAttributesSDL_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
 	return sdl_info.mode == ALC_OPEN_INPUT_ ?
@@ -254,30 +254,48 @@ alcBackendSetAttributesSDL_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *s
 		set_write_sdl(handle, bufsiz, fmt, speed);
 }
 
-void
+static void
 pause_sdl( UNUSED(void *handle) )
 {
 }
 
-void
+static void
 resume_sdl( UNUSED(void *handle) )
 {
 }
 
-ALsizei
+static ALsizei
 capture_sdl( UNUSED(void *handle), UNUSED(void *capture_buffer), UNUSED(int bufsiz) )
 {
 	return 0;
 }
 
-ALfloat
+static ALfloat
 get_sdlchannel( UNUSED(void *handle), UNUSED(ALuint channel) )
 {
 	return 0.0;
 }
 
-int
+static int
 set_sdlchannel( UNUSED(void *handle), UNUSED(ALuint channel), UNUSED(ALfloat volume) )
 {
 	return 0;
+}
+
+static ALC_BackendOps sdlOps = {
+	alcBackendOpenSDL_,
+	release_sdl,
+	pause_sdl,
+	resume_sdl,
+	alcBackendSetAttributesSDL_,
+	sdl_blitbuffer,
+	capture_sdl,
+	get_sdlchannel,
+	set_sdlchannel
+};
+
+ALC_BackendOps *
+alcGetBackendOpsSDL_ (void)
+{
+	return &sdlOps;
 }

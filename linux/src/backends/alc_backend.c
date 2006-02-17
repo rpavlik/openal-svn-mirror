@@ -14,22 +14,9 @@
 #include "al_main.h"
 #include "backends/alc_backend.h"
 
-typedef enum
-{
-  AL_BACKEND_NONE_,
-  AL_BACKEND_NATIVE_,           /* native audio for platform */
-  AL_BACKEND_ALSA_,             /* ALSA backend */
-  AL_BACKEND_ARTS_,             /* aRts backend */
-  AL_BACKEND_DMEDIA_,           /* Irix/DMedia back-end */
-  AL_BACKEND_ESD_,              /* ESD backend */
-  AL_BACKEND_SDL_,              /* SDL backend */
-  AL_BACKEND_NULL_,             /* null backend */
-  AL_BACKEND_WAVEOUT_           /* WAVE backend */
-} ALC_BackendType;
-
 struct ALC_BackendStruct
 {
-  ALC_BackendType type;
+  ALC_BackendOps *ops;
   ALC_BackendPrivateData *privateData;
 };
 
@@ -39,7 +26,7 @@ alcBackendOpen_ (ALC_OpenMode mode)
   Rcvar device_params;
   Rcvar device_list;
   Rcvar device;
-  ALC_BackendType type = AL_BACKEND_NONE_;
+  ALC_BackendOps *ops = NULL;
   ALC_BackendPrivateData *privateData = NULL;
   ALC_Backend *backend;
   char adevname[64];            /* FIXME: magic number */
@@ -78,107 +65,134 @@ alcBackendOpen_ (ALC_OpenMode mode)
         {
           _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
                     "alcBackendOpen_: 'dsp' is a deprecated device name. Use 'native' instead.");
-          privateData = alcBackendOpenNative_ (mode);
-          if (privateData != NULL)
+          ops = alcGetBackendOpsNative_ ();
+          if (ops != NULL)
             {
-              type = AL_BACKEND_NATIVE_;
-              break;
+              privateData = ops->open (mode);
+              if (privateData != NULL)
+                {
+                  break;
+                }
             }
         }
       if (strcmp (adevname, "native") == 0)
         {
-          privateData = alcBackendOpenNative_ (mode);
-          if (privateData != NULL)
+          ops = alcGetBackendOpsNative_ ();
+          if (ops != NULL)
             {
-              type = AL_BACKEND_NATIVE_;
-              break;
+              privateData = ops->open (mode);
+              if (privateData != NULL)
+                {
+                  break;
+                }
             }
         }
 
       if (strcmp (adevname, "alsa") == 0)
         {
-          privateData = alcBackendOpenALSA_ (mode);
-          if (privateData != NULL)
+          ops = alcGetBackendOpsALSA_ ();
+          if (ops != NULL)
             {
-              type = AL_BACKEND_ALSA_;
-              break;
+              privateData = ops->open (mode);
+              if (privateData != NULL)
+                {
+                  break;
+                }
             }
         }
 
       if (strcmp (adevname, "arts") == 0)
         {
-          privateData = alcBackendOpenARts_ (mode);
-          if (privateData != NULL)
+          ops = alcGetBackendOpsARts_ ();
+          if (ops != NULL)
             {
-              type = AL_BACKEND_ARTS_;
-              break;
+              privateData = ops->open (mode);
+              if (privateData != NULL)
+                {
+                  break;
+                }
             }
         }
 
       if (strcmp (adevname, "dmedia") == 0)
         {
-          privateData = alcBackendOpenDMedia_ (mode);
-          if (privateData != NULL)
+          ops = alcGetBackendOpsDMedia_ ();
+          if (ops != NULL)
             {
-              type = AL_BACKEND_DMEDIA_;
-              break;
+              privateData = ops->open (mode);
+              if (privateData != NULL)
+                {
+                  break;
+                }
             }
         }
 
       if (strcmp (adevname, "esd") == 0)
         {
-          privateData = alcBackendOpenESD_ (mode);
-          if (privateData != NULL)
+          ops = alcGetBackendOpsESD_ ();
+          if (ops != NULL)
             {
-              type = AL_BACKEND_ESD_;
-              break;
+              privateData = ops->open (mode);
+              if (privateData != NULL)
+                {
+                  break;
+                }
             }
         }
 
       if (strcmp (adevname, "sdl") == 0)
         {
-          privateData = alcBackendOpenSDL_ (mode);
-          if (privateData != NULL)
+          ops = alcGetBackendOpsSDL_ ();
+          if (ops != NULL)
             {
-              type = AL_BACKEND_SDL_;
-              break;
+              privateData = ops->open (mode);
+              if (privateData != NULL)
+                {
+                  break;
+                }
             }
         }
 
       if (strcmp (adevname, "null") == 0)
         {
-          privateData = alcBackendOpenNull_ (mode);
-          if (privateData != NULL)
+          ops = alcGetBackendOpsNull_ ();
+          if (ops != NULL)
             {
-              type = AL_BACKEND_NULL_;
-              break;
+              privateData = ops->open (mode);
+              if (privateData != NULL)
+                {
+                  break;
+                }
             }
         }
 
       if (strcmp (adevname, "waveout") == 0)
         {
-          privateData = alcBackendOpenWAVE_ (mode);
-          if (privateData != NULL)
+          ops = alcGetBackendOpsWAVE_ ();
+          if (ops != NULL)
             {
-              type = AL_BACKEND_WAVEOUT_;
-              break;
+              privateData = ops->open (mode);
+              if (privateData != NULL)
+                {
+                  break;
+                }
             }
         }
     }
 
   /* fallback: native */
-  if (type == AL_BACKEND_NONE_)
+  if (privateData == NULL)
     {
-      privateData = alcBackendOpenNative_ (mode);
-      if (privateData != NULL)
+      ops = alcGetBackendOpsNative_ ();
+      if (ops == NULL)
         {
-          type = AL_BACKEND_NATIVE_;
+          return NULL;
         }
-    }
-
-  if (type == AL_BACKEND_NONE_)
-    {
-      return NULL;
+      privateData = ops->open (mode);
+      if (privateData == NULL)
+        {
+          return NULL;
+        }
     }
 
   backend =
@@ -188,7 +202,7 @@ alcBackendOpen_ (ALC_OpenMode mode)
       return NULL;
     }
 
-  backend->type = type;
+  backend->ops = ops;
   backend->privateData = privateData;
   return backend;
 
@@ -197,37 +211,7 @@ alcBackendOpen_ (ALC_OpenMode mode)
 ALboolean
 alcBackendClose_ (ALC_Backend *backend)
 {
-  switch (backend->type)
-    {
-    case AL_BACKEND_NATIVE_:
-      release_native (backend->privateData);
-      break;
-    case AL_BACKEND_ALSA_:
-      release_alsa (backend->privateData);
-      break;
-    case AL_BACKEND_ARTS_:
-      release_arts (backend->privateData);
-      break;
-    case AL_BACKEND_DMEDIA_:
-      release_dmedia (backend->privateData);
-      break;
-    case AL_BACKEND_ESD_:
-      release_esd (backend->privateData);
-      break;
-    case AL_BACKEND_SDL_:
-      release_sdl (backend->privateData);
-      break;
-    case AL_BACKEND_NULL_:
-      release_null (backend->privateData);
-      break;
-    case AL_BACKEND_WAVEOUT_:
-      release_waveout (backend->privateData);
-      break;
-    default:
-      _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
-                "alcBackendClose_: unknown backend %d\n", backend->type);
-      return AL_FALSE;
-    }
+  backend->ops->close (backend->privateData);
   free (backend);
   return AL_TRUE;
 }
@@ -235,240 +219,44 @@ alcBackendClose_ (ALC_Backend *backend)
 void
 alcBackendPause_ (ALC_Backend *backend)
 {
-  switch (backend->type)
-    {
-    case AL_BACKEND_NATIVE_:
-      pause_nativedevice (backend->privateData);
-      break;
-    case AL_BACKEND_ALSA_:
-      pause_alsa (backend->privateData);
-      break;
-    case AL_BACKEND_ARTS_:
-      pause_arts (backend->privateData);
-      break;
-    case AL_BACKEND_DMEDIA_:
-      pause_dmedia (backend->privateData);
-      break;
-    case AL_BACKEND_ESD_:
-      pause_esd (backend->privateData);
-      break;
-    case AL_BACKEND_SDL_:
-      pause_sdl (backend->privateData);
-      break;
-    case AL_BACKEND_NULL_:
-      pause_null (backend->privateData);
-      break;
-    case AL_BACKEND_WAVEOUT_:
-      pause_waveout (backend->privateData);
-      break;
-    default:
-      _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
-                "alcBackendPause_: unknown backend %d\n", backend->type);
-      break;
-    }
+  backend->ops->pause (backend->privateData);
 }
 
 void
 alcBackendResume_ (ALC_Backend *backend)
 {
-  switch (backend->type)
-    {
-    case AL_BACKEND_NATIVE_:
-      resume_nativedevice (backend->privateData);
-      break;
-    case AL_BACKEND_ALSA_:
-      resume_alsa (backend->privateData);
-      break;
-    case AL_BACKEND_ARTS_:
-      resume_arts (backend->privateData);
-      break;
-    case AL_BACKEND_DMEDIA_:
-      resume_dmedia (backend->privateData);
-      break;
-    case AL_BACKEND_ESD_:
-      resume_esd (backend->privateData);
-      break;
-    case AL_BACKEND_SDL_:
-      resume_sdl (backend->privateData);
-      break;
-    case AL_BACKEND_NULL_:
-      resume_null (backend->privateData);
-      break;
-    case AL_BACKEND_WAVEOUT_:
-      resume_waveout (backend->privateData);
-      break;
-    default:
-      _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
-                "alcBackendResume_: unknown backend %d\n", backend->type);
-      break;
-    }
+  backend->ops->resume (backend->privateData);
 }
 
 ALboolean
-alcBackendSetAttributes_ (ALC_Backend *backend, ALuint *bufsiz,
-                          ALenum *fmt, ALuint *speed)
+alcBackendSetAttributes_ (ALC_Backend *backend, ALuint *bufferSize,
+                          ALenum *format, ALuint *speed)
 {
-  switch (backend->type)
-    {
-    case AL_BACKEND_NATIVE_:
-      return alcBackendSetAttributesNative_ (backend->privateData, bufsiz,
-                                             fmt, speed);
-    case AL_BACKEND_ALSA_:
-      return alcBackendSetAttributesALSA_ (backend->privateData, bufsiz, fmt,
-                                           speed);
-    case AL_BACKEND_ARTS_:
-      return alcBackendSetAttributesARts_ (backend->privateData, bufsiz, fmt,
-                                           speed);
-    case AL_BACKEND_DMEDIA_:
-      return alcBackendSetAttributesDMedia_ (backend->privateData, bufsiz,
-                                             fmt, speed);
-    case AL_BACKEND_ESD_:
-      return alcBackendSetAttributesESD_ (backend->privateData, bufsiz, fmt,
-                                          speed);
-    case AL_BACKEND_SDL_:
-      return alcBackendSetAttributesSDL_ (backend->privateData, bufsiz, fmt,
-                                          speed);
-    case AL_BACKEND_NULL_:
-      return alcBackendSetAttributesNull_ (backend->privateData, bufsiz, fmt,
-                                           speed);
-    case AL_BACKEND_WAVEOUT_:
-      return alcBackendSetAttributesWAVE_ (backend->privateData, bufsiz, fmt,
-                                           speed);
-    default:
-      _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
-                "alcBackendSetAttributes_: unknown backend %d\n", backend->type);
-      return AL_FALSE;
-    }
+  return backend->ops->setAttributes (backend->privateData, bufferSize,
+                                      format, speed);
 }
 
 void
-alcBackendWrite_ (ALC_Backend *backend, const void *dataptr, int bytes_to_write)
+alcBackendWrite_ (ALC_Backend *backend, const void *data, int size)
 {
-  switch (backend->type)
-    {
-    case AL_BACKEND_NATIVE_:
-      native_blitbuffer (backend->privateData, dataptr, bytes_to_write);
-      break;
-    case AL_BACKEND_ALSA_:
-      alsa_blitbuffer (backend->privateData, dataptr, bytes_to_write);
-      break;
-    case AL_BACKEND_ARTS_:
-      arts_blitbuffer (backend->privateData, dataptr, bytes_to_write);
-      break;
-    case AL_BACKEND_DMEDIA_:
-      dmedia_blitbuffer (backend->privateData, dataptr, bytes_to_write);
-      break;
-    case AL_BACKEND_ESD_:
-      esd_blitbuffer (backend->privateData, dataptr, bytes_to_write);
-      break;
-    case AL_BACKEND_SDL_:
-      sdl_blitbuffer (backend->privateData, dataptr, bytes_to_write);
-      break;
-    case AL_BACKEND_NULL_:
-      null_blitbuffer (backend->privateData, dataptr, bytes_to_write);
-      break;
-    case AL_BACKEND_WAVEOUT_:
-      waveout_blitbuffer (backend->privateData, dataptr, bytes_to_write);
-      break;
-    default:
-      _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
-                "alcBackendWrite_: unknown backend %d\n", backend->type);
-      break;
-    }
+  backend->ops->write (backend->privateData, data, size);
 }
 
 ALsizei
-alcBackendRead_ (ALC_Backend *backend, void *capture_buffer, int bufsiz)
+alcBackendRead_ (ALC_Backend *backend, void *data, int size)
 {
-  switch (backend->type)
-    {
-    case AL_BACKEND_NATIVE_:
-      return capture_nativedevice (backend->privateData, capture_buffer,
-                                   bufsiz);
-    case AL_BACKEND_ALSA_:
-      return capture_alsa (backend->privateData, capture_buffer, bufsiz);
-    case AL_BACKEND_ARTS_:
-      return capture_arts (backend->privateData, capture_buffer, bufsiz);
-    case AL_BACKEND_DMEDIA_:
-      return capture_dmedia (backend->privateData, capture_buffer, bufsiz);
-    case AL_BACKEND_ESD_:
-      return capture_esd (backend->privateData, capture_buffer, bufsiz);
-    case AL_BACKEND_SDL_:
-      return capture_sdl (backend->privateData, capture_buffer, bufsiz);
-    case AL_BACKEND_NULL_:
-      return capture_null (backend->privateData, capture_buffer, bufsiz);
-    case AL_BACKEND_WAVEOUT_:
-      return capture_waveout (backend->privateData, capture_buffer, bufsiz);
-    default:
-      _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
-                "alcBackendRead_: unknown backend %d\n", backend->type);
-      return 0;
-    }
+  return backend->ops->read (backend->privateData, data, size);
 }
 
 ALfloat
 alcBackendGetAudioChannel_ (ALC_Backend *backend, ALuint channel)
 {
-  switch (backend->type)
-    {
-    case AL_BACKEND_NATIVE_:
-      return get_nativechannel (backend->privateData, channel);
-    case AL_BACKEND_ALSA_:
-      return get_alsachannel (backend->privateData, channel);
-    case AL_BACKEND_ARTS_:
-      return get_artschannel (backend->privateData, channel);
-    case AL_BACKEND_DMEDIA_:
-      return get_dmediachannel (backend->privateData, channel);
-    case AL_BACKEND_ESD_:
-      return get_esdchannel (backend->privateData, channel);
-    case AL_BACKEND_SDL_:
-      return get_sdlchannel (backend->privateData, channel);
-    case AL_BACKEND_NULL_:
-      return get_nullchannel (backend->privateData, channel);
-    case AL_BACKEND_WAVEOUT_:
-      return get_waveoutchannel (backend->privateData, channel);
-    default:
-      _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
-                "alcBackendGetAudioChannel_: unknown backend %d\n",
-                backend->type);
-      return 0;
-    }
+  return backend->ops->getAudioChannel (backend->privateData, channel);
 }
 
 void
 alcBackendSetAudioChannel_ (ALC_Backend *backend, ALuint channel,
                             ALfloat volume)
 {
-  switch (backend->type)
-    {
-    case AL_BACKEND_NATIVE_:
-      set_nativechannel (backend->privateData, channel, volume);
-      break;
-    case AL_BACKEND_ALSA_:
-      set_alsachannel (backend->privateData, channel, volume);
-      break;
-    case AL_BACKEND_ARTS_:
-      set_artschannel (backend->privateData, channel, volume);
-      break;
-    case AL_BACKEND_DMEDIA_:
-      set_dmediachannel (backend->privateData, channel, volume);
-      break;
-    case AL_BACKEND_ESD_:
-      set_esdchannel (backend->privateData, channel, volume);
-      break;
-    case AL_BACKEND_SDL_:
-      set_sdlchannel (backend->privateData, channel, volume);
-      break;
-    case AL_BACKEND_NULL_:
-      set_nullchannel (backend->privateData, channel, volume);
-      break;
-    case AL_BACKEND_WAVEOUT_:
-      set_waveoutchannel (backend->privateData, channel, volume);
-      break;
-    default:
-      _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
-                "alcBackendSetAudioChannel_: unknown backend %d\n",
-                backend->type);
-      break;
-    }
+  backend->ops->setAudioChannel (backend->privateData, channel, volume);
 }

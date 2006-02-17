@@ -240,7 +240,7 @@ static void *grab_read_native(void)
 	return &read_fd;
 }
 
-void *
+static void *
 alcBackendOpenNative_( ALC_OpenMode mode )
 {
 	return mode == ALC_OPEN_INPUT_ ? grab_read_native() : grab_write_native();
@@ -263,7 +263,7 @@ static int grab_mixerfd(void) {
 	return -1;
 }
 
-void release_native(void *handle) {
+static void release_native(void *handle) {
 	int handle_fd;
 
 	if(handle == NULL) {
@@ -289,7 +289,7 @@ void release_native(void *handle) {
 	return;
 }
 
-ALfloat
+static ALfloat
 get_nativechannel(UNUSED(void *handle), ALuint channel)
 {
 	int request = alcChannel_to_dsp_channel(channel);
@@ -311,7 +311,7 @@ get_nativechannel(UNUSED(void *handle), ALuint channel)
  *
  * Kludgey, and obviously not the right way to do this
  */
-int set_nativechannel(UNUSED(void *handle), ALuint channel, ALfloat volume) {
+static int set_nativechannel(UNUSED(void *handle), ALuint channel, ALfloat volume) {
 	int request = alcChannel_to_dsp_channel(channel);
 	int unnormalizedvolume;
 
@@ -336,7 +336,7 @@ static int alcChannel_to_dsp_channel(ALCenum alcc) {
 	}
 }
 
-void pause_nativedevice(void *handle) {
+static void pause_nativedevice(void *handle) {
 	int fd;
 
 	if(handle == NULL) {
@@ -356,7 +356,7 @@ void pause_nativedevice(void *handle) {
 	return;
 }
 
-void resume_nativedevice(void *handle) {
+static void resume_nativedevice(void *handle) {
 	int fd;
 
 	if(handle == NULL) {
@@ -432,7 +432,7 @@ static const char *lin_getreadpath(void) {
 }
 
 /* capture data from the audio device */
-ALsizei capture_nativedevice(void *handle,
+static ALsizei capture_nativedevice(void *handle,
 			  void *capture_buffer,
 			  int bufsiz) {
 	int read_fd = *(int *)handle;
@@ -514,7 +514,7 @@ static ALboolean set_read_native(UNUSED(void *handle),
 	return AL_FALSE;
 }
 
-ALboolean
+static ALboolean
 alcBackendSetAttributesNative_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
 	return linuxMode == ALC_OPEN_INPUT_ ?
@@ -522,7 +522,7 @@ alcBackendSetAttributesNative_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint
 		set_write_native(handle, bufsiz, fmt, speed);
 }
 
-void native_blitbuffer(void *handle, const void *dataptr, int bytes_to_write) {
+static void native_blitbuffer(void *handle, const void *dataptr, int bytes_to_write) {
 	struct timeval tv = { 0, 800000 }; /* at most .8 secs */
 	int iterator = 0;
 	int err;
@@ -689,7 +689,7 @@ static int set_fd(int dsp_fd, ALboolean readable,
 	return 0;
 }
 
-int try_to_open(const char **paths, int n_paths, const char **used_path, int mode)
+static int try_to_open(const char **paths, int n_paths, const char **used_path, int mode)
 {
 	int i, fd = -1;
 	for(i = 0; i != n_paths; ++i)
@@ -704,3 +704,20 @@ int try_to_open(const char **paths, int n_paths, const char **used_path, int mod
 	return fd;
 }
 
+static ALC_BackendOps nativeOps = {
+	alcBackendOpenNative_,
+	release_native,
+	pause_nativedevice,
+	resume_nativedevice,
+	alcBackendSetAttributesNative_,
+	native_blitbuffer,
+	capture_nativedevice,
+	get_nativechannel,
+	set_nativechannel
+};
+
+ALC_BackendOps *
+alcGetBackendOpsNative_ (void)
+{
+	return &nativeOps;
+}

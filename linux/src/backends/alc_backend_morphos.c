@@ -153,7 +153,7 @@ static void *grab_write_native(void)
 	return NULL;
 }
 
-void *
+static void *
 alcBackendOpenNative_( ALC_OpenMode mode )
 {
 	return mode == ALC_OPEN_INPUT_ ? grab_read_native() : grab_write_native();
@@ -268,7 +268,7 @@ static void stop_sound_thread(struct MOSWriteHandle* h)
 	}
 }
 
-void release_native(void *h)
+static void release_native(void *h)
 {
 	if (h)
 	{
@@ -302,7 +302,7 @@ static ALboolean set_read_native(UNUSED(void *handle),
 	return AL_FALSE;
 }
 
-ALboolean
+static ALboolean
 alcBackendSetAttributesNative_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
   return ((MOSWriteHandle *)handle)->mode == ALC_OPEN_INPUT_ ?
@@ -310,7 +310,7 @@ alcBackendSetAttributesNative_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint
 		set_write_native(handle, bufsiz, fmt, speed);
 }
 
-void native_blitbuffer(void *h, const void *data, int bytes)
+static void native_blitbuffer(void *h, const void *data, int bytes)
 {
 	UWORD next_buf;
 
@@ -332,33 +332,33 @@ void native_blitbuffer(void *h, const void *data, int bytes)
 	Handle(h)->wh_WriteBuf = next_buf;
 }
 
-ALfloat get_nativechannel(UNUSED(void *h), UNUSED(ALuint channel))
+static ALfloat get_nativechannel(UNUSED(void *h), UNUSED(ALuint channel))
 {
 	/* Not yet implemented */
 	return 0.0;
 }
 
-int set_nativechannel(UNUSED(void *h),UNUSED(ALuint channel),UNUSED(ALfloat volume))
+static int set_nativechannel(UNUSED(void *h),UNUSED(ALuint channel),UNUSED(ALfloat volume))
 {
 	/* Not yet implemented */
 	return 0;
 }
 
-void pause_nativedevice(UNUSED(void *h))
+static void pause_nativedevice(UNUSED(void *h))
 {
 	/* Not tested */
 	dprintf("pause_nativedevice\n");
 //	  do_command(Handle(h), DISPATCHER_CMD_PAUSE);
 }
 
-void resume_nativedevice(UNUSED(void *h))
+static void resume_nativedevice(UNUSED(void *h))
 {
 	/* Not tested */
 	dprintf("resume_nativedevice\n");
 //	  do_command(Handle(h), DISPATCHER_CMD_RESUME);
 }
 
-ALsizei capture_nativedevice(UNUSED(void *h), UNUSED(void *capture_buffer), UNUSED(int bufsiz))
+static ALsizei capture_nativedevice(UNUSED(void *h), UNUSED(void *capture_buffer), UNUSED(int bufsiz))
 {
 	/* Not yet implemented */
 	return NULL;
@@ -640,4 +640,22 @@ static VOID DispatcherThread(struct MOSWriteHandle* h)
 		DeleteMsgPort(ahi_port);
 		ahi_port = NULL;
 	}
+}
+
+static ALC_BackendOps nativeOps = {
+	alcBackendOpenNative_,
+	release_native,
+	pause_nativedevice,
+	resume_nativedevice,
+	alcBackendSetAttributesNative_,
+	native_blitbuffer,
+	capture_nativedevice,
+	get_nativechannel,
+	set_nativechannel
+};
+
+ALC_BackendOps *
+alcGetBackendOpsNative_ (void)
+{
+	return &nativeOps;
 }

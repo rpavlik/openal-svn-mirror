@@ -95,13 +95,13 @@ static void *grab_write_native(void) {
   return saudio ;
 }
 
-void *
+static void *
 alcBackendOpenNative_( ALC_OpenMode mode )
 {
 	return mode == ALC_OPEN_INPUT_ ? grab_read_native() : grab_write_native();
 }
 
-void native_blitbuffer(void *handle,
+static void native_blitbuffer(void *handle,
 		       const void *dataptr,
 		       int bytes_to_write) {
 	solaris_audio* sa ;
@@ -159,7 +159,7 @@ void native_blitbuffer(void *handle,
 	return;
 }
 
-void release_native(void *handle) {
+static void release_native(void *handle) {
   solaris_audio* sa ;
 
   fprintf(stderr, "Closing audio device...\n");
@@ -185,25 +185,25 @@ int set_nativechannel(UNUSED(void *handle),
 	return 0;
 }
 
-void pause_nativedevice(UNUSED(void *handle)) {
+static void pause_nativedevice(UNUSED(void *handle)) {
 	fprintf(stderr,  implement_me("pause_nativedevice"));
 
 	return;
 }
 
-void resume_nativedevice(UNUSED(void *handle)) {
+static void resume_nativedevice(UNUSED(void *handle)) {
 	fprintf(stderr,  implement_me("resume_nativedevice"));
 
 	return;
 }
 
-ALfloat get_nativechannel(UNUSED(void *handle), UNUSED(ALuint channel)) {
+static ALfloat get_nativechannel(UNUSED(void *handle), UNUSED(ALuint channel)) {
 	fprintf(stderr,  implement_me("get_nativechannel"));
 
 	return 0.0;
 }
 
-ALsizei capture_nativedevice(UNUSED(void *handle),
+static ALsizei capture_nativedevice(UNUSED(void *handle),
 			  UNUSED(void *capture_buffer),
 			  UNUSED(int bufsiz)) {
 	return 0; /* unimplemented */
@@ -272,10 +272,28 @@ static ALboolean set_read_native(UNUSED(void *handle),
 	return AL_FALSE;
 }
 
-ALboolean
+static ALboolean
 alcBackendSetAttributesNative_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
 	return ((solaris_audio *)handle)->mode == ALC_OPEN_INPUT_ ?
 		set_read_native(handle, bufsiz, fmt, speed) :
 		set_write_native(handle, bufsiz, fmt, speed);
+}
+
+static ALC_BackendOps nativeOps = {
+	alcBackendOpenNative_,
+	release_native,
+	pause_nativedevice,
+	resume_nativedevice,
+	alcBackendSetAttributesNative_,
+	native_blitbuffer,
+	capture_nativedevice,
+	get_nativechannel,
+	set_nativechannel
+};
+
+ALC_BackendOps *
+alcGetBackendOpsNative_ (void)
+{
+	return &nativeOps;
 }

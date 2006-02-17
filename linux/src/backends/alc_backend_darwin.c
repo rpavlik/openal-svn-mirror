@@ -89,7 +89,7 @@ static void implement_me(const char *fn)
 
 /*********************************** OS callback proc *****************************/
 
-OSStatus deviceFillingProc (UNUSED(AudioDeviceID  inDevice), UNUSED(const AudioTimeStamp*  inNow), UNUSED(const AudioBufferList*  inInputData), UNUSED(const AudioTimeStamp*  inInputTime), AudioBufferList*  outOutputData, UNUSED(const AudioTimeStamp* inOutputTime), void* inClientData)
+static OSStatus deviceFillingProc (UNUSED(AudioDeviceID  inDevice), UNUSED(const AudioTimeStamp*  inNow), UNUSED(const AudioBufferList*  inInputData), UNUSED(const AudioTimeStamp*  inInputTime), AudioBufferList*  outOutputData, UNUSED(const AudioTimeStamp* inOutputTime), void* inClientData)
 {
     coreAudioDestination = (outOutputData->mBuffers[0]).mData;
 
@@ -101,7 +101,7 @@ OSStatus deviceFillingProc (UNUSED(AudioDeviceID  inDevice), UNUSED(const AudioT
 
 /************************************** HAL Routines *********************************/
 
-OSStatus GetAudioDevices (void **devices /*Dev IDs*/, short	*devicesAvailable /*Dev number*/)
+static OSStatus GetAudioDevices (void **devices /*Dev IDs*/, short	*devicesAvailable /*Dev number*/)
 {
 #ifdef DEBUG_MAXIMUS
     int i;
@@ -246,7 +246,7 @@ Crash :
     return NULL;
 }
 
-void *
+static void *
 alcBackendOpenNative_( ALC_OpenMode mode )
 {
 	return mode == ALC_OPEN_INPUT_ ? grab_read_native() : grab_write_native();
@@ -306,7 +306,7 @@ static ALboolean set_read_native(UNUSED(void *handle), UNUSED(unsigned int *bufs
     return AL_FALSE;
 }
 
-ALboolean
+static ALboolean
 alcBackendSetAttributesNative_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
 	return libGlobals.mode == ALC_OPEN_INPUT_ ?
@@ -314,7 +314,7 @@ alcBackendSetAttributesNative_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint
 		set_write_native(handle, bufsiz, fmt, speed);
 }
 
-void  native_blitbuffer(void *handle, const void *data, int bytes)
+static void  native_blitbuffer(void *handle, const void *data, int bytes)
 {
     stillToPlay = bytes / nativePreferedBuffSize;
 
@@ -332,7 +332,7 @@ void  native_blitbuffer(void *handle, const void *data, int bytes)
     playABuffer(data);
 }
 
-void playABuffer(void *realdata)
+static void playABuffer(void *realdata)
 {
     register unsigned int 	count;
     register Float32	*outDataPtr = coreAudioDestination;
@@ -423,32 +423,50 @@ void  release_native(void *handle)
     }
 }
 
-ALfloat get_nativechannel(UNUSED(void *handle), UNUSED(ALuint channel))
+static ALfloat get_nativechannel(UNUSED(void *handle), UNUSED(ALuint channel))
 {
     implement_me("float get_nativechannel()");
     return 0;
 }
 
-int set_nativechannel(UNUSED(void *handle),UNUSED(ALuint channel),UNUSED(ALfloat volume))
+static int set_nativechannel(UNUSED(void *handle),UNUSED(ALuint channel),UNUSED(ALfloat volume))
 {
     implement_me("int set_nativechannel()");
     return 0;
 }
 
-void pause_nativedevice(void *handle) /* Not tested :-( */
+static void pause_nativedevice(void *handle) /* Not tested :-( */
 {
     if (libGlobals.deviceW == *(AudioDeviceID*)handle)
 	AudioDeviceStop(libGlobals.deviceW, deviceFillingProc);
 }
 
-void resume_nativedevice(void *handle) /* Not tested :-( */
+static void resume_nativedevice(void *handle) /* Not tested :-( */
 {
     if (libGlobals.deviceW == *(AudioDeviceID*)handle)
 	AudioDeviceStart(libGlobals.deviceW, deviceFillingProc);
 }
 
-ALsizei capture_nativedevice(UNUSED(void *handle), UNUSED(void *capture_buffer), UNUSED(int bufsiz))
+static ALsizei capture_nativedevice(UNUSED(void *handle), UNUSED(void *capture_buffer), UNUSED(int bufsiz))
 {
     implement_me("void capture_nativedevice()");
     return NULL;
+}
+
+static ALC_BackendOps nativeOps = {
+	alcBackendOpenNative_,
+	release_native,
+	pause_nativedevice,
+	resume_nativedevice,
+	alcBackendSetAttributesNative_,
+	native_blitbuffer,
+	capture_nativedevice,
+	get_nativechannel,
+	set_nativechannel
+};
+
+ALC_BackendOps *
+alcGetBackendOpsNative_ (void)
+{
+	return &nativeOps;
 }

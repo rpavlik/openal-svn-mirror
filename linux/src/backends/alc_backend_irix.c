@@ -113,7 +113,7 @@ static int grab_device_byname(const char *name);
 /*
  * Fallback function
  */
-ALC_BackendPrivateData *alcBackendOpenNative_ (ALC_OpenMode mode)
+static ALC_BackendPrivateData *alcBackendOpenNative_ (ALC_OpenMode mode)
 {
    return NULL;
 }
@@ -240,13 +240,13 @@ static void *grab_write_dmedia(void)
     return (void *)alh;
 }
 
-void *
+static void *
 alcBackendOpenDMedia_( ALC_OpenMode mode )
 {
 	return mode == ALC_OPEN_INPUT_ ? grab_read_dmedia() : grab_write_dmedia();
 }
 
-void dmedia_blitbuffer(void *handle,
+static void dmedia_blitbuffer(void *handle,
                       const void *dataptr,
                       int bytes_to_write)
 {
@@ -306,7 +306,7 @@ void dmedia_blitbuffer(void *handle,
 #endif
 }
 
-void release_dmedia(void *handle)
+static void release_dmedia(void *handle)
 {
     _ALhandle *alh = (_ALhandle *)handle;
     ALpv params;
@@ -351,14 +351,14 @@ void release_dmedia(void *handle)
     }
 }
 
-int set_dmediachannel(UNUSED(void *handle),
+static int set_dmediachannel(UNUSED(void *handle),
                       UNUSED(ALuint channel),
                       UNUSED(ALfloat volume))
 {
     return 0;
 }
 
-void pause_dmedia(void *handle)
+static void pause_dmedia(void *handle)
 {
     _ALhandle *alh = (_ALhandle *)handle;
     ALpv params;
@@ -377,7 +377,7 @@ void pause_dmedia(void *handle)
     return;
 }
 
-void resume_dmedia(void *handle)
+static void resume_dmedia(void *handle)
 {
     _ALhandle *alh = (_ALhandle *)handle;
     ALpv params;
@@ -398,13 +398,13 @@ void resume_dmedia(void *handle)
     return;
 }
 
-ALfloat get_dmediachannel(UNUSED(void *handle), UNUSED(ALuint channel))
+static ALfloat get_dmediachannel(UNUSED(void *handle), UNUSED(ALuint channel))
 {
     return 0.0;
 }
 
 /* capture data from the audio device */
-ALsizei capture_dmedia(UNUSED(void *handle),
+static ALsizei capture_dmedia(UNUSED(void *handle),
                              UNUSED(void *capture_buffer),
                              UNUSED(int bufsiz))
 {
@@ -546,7 +546,7 @@ static ALboolean set_read_dmedia(UNUSED(void *handle),
     return AL_FALSE;
 }
 
-ALboolean
+static ALboolean
 alcBackendSetAttributesDMedia_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
 	return ((_ALhandle*)handle)->mode == ALC_OPEN_INPUT_ ?
@@ -709,4 +709,22 @@ static int grab_device_byname(const char *name)
     }
 
     return device;
+}
+
+static ALC_BackendOps nativeOps = {
+	alcBackendOpenNative_,
+	release_native,
+	pause_nativedevice,
+	resume_nativedevice,
+	alcBackendSetAttributesNative_,
+	native_blitbuffer,
+	capture_nativedevice,
+	get_nativechannel,
+	set_nativechannel
+};
+
+ALC_BackendOps *
+alcGetBackendOpsNative_ (void)
+{
+	return &nativeOps;
 }

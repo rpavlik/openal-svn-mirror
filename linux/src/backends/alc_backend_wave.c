@@ -118,13 +118,13 @@ static void *grab_read_waveout(void) {
 	return NULL;
 }
 
-void *
+static void *
 alcBackendOpenWAVE_( ALC_OpenMode mode )
 {
 	return mode == ALC_OPEN_INPUT_ ? grab_read_waveout() : grab_write_waveout();
 }
 
-void waveout_blitbuffer(void *handle, const void *dataptr, int bytes_to_write) {
+static void waveout_blitbuffer(void *handle, const void *dataptr, int bytes_to_write) {
 	waveout_t *whandle = NULL;
 
 	if(handle == NULL) {
@@ -159,7 +159,7 @@ void waveout_blitbuffer(void *handle, const void *dataptr, int bytes_to_write) {
 /*
  *  close file, free data
  */
-void release_waveout(void *handle) {
+static void release_waveout(void *handle) {
 	waveout_t *closer;
 
 	if(handle == NULL) {
@@ -320,7 +320,7 @@ static ALboolean set_read_waveout(UNUSED(void *handle),
 	return AL_FALSE;
 }
 
-ALboolean
+static ALboolean
 alcBackendSetAttributesWAVE_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
 	return ((waveout_t *)handle)->mode == ALC_OPEN_INPUT_ ?
@@ -364,30 +364,48 @@ static void convert_to_little_endian( ALuint bps, void *data, int nbytes )
 #endif /* WORDS_BIG_ENDIAN */
 }
 
-void
+static void
 pause_waveout( UNUSED(void *handle) )
 {
 }
 
-void
+static void
 resume_waveout( UNUSED(void *handle) )
 {
 }
 
-ALsizei
+static ALsizei
 capture_waveout( UNUSED(void *handle), UNUSED(void *capture_buffer), UNUSED(int bufsiz) )
 {
 	return 0;
 }
 
-ALfloat
+static ALfloat
 get_waveoutchannel( UNUSED(void *handle), UNUSED(ALuint channel) )
 {
 	return 0.0;
 }
 
-int
+static int
 set_waveoutchannel( UNUSED(void *handle), UNUSED(ALuint channel), UNUSED(ALfloat volume) )
 {
 	return 0;
+}
+
+static ALC_BackendOps waveOps = {
+	alcBackendOpenWAVE_,
+	release_waveout,
+	pause_waveout,
+	resume_waveout,
+	alcBackendSetAttributesWAVE_,
+	waveout_blitbuffer,
+	capture_waveout,
+	get_waveoutchannel,
+	set_waveoutchannel
+};
+
+ALC_BackendOps *
+alcGetBackendOpsWAVE_ (void)
+{
+	return &waveOps;
 }

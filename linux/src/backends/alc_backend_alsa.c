@@ -181,7 +181,7 @@ struct alsa_info
 	ALC_OpenMode mode;
 };
 
-void release_alsa(void *handle)
+static void release_alsa(void *handle)
 {
 	struct alsa_info *ai = handle;
 	if(handle == NULL)
@@ -331,7 +331,7 @@ static void *grab_write_alsa( void )
 	return retval;
 }
 
-void *
+static void *
 alcBackendOpenALSA_( ALC_OpenMode mode )
 {
 	return mode == ALC_OPEN_INPUT_ ? grab_read_alsa() : grab_write_alsa();
@@ -668,7 +668,7 @@ static ALboolean set_write_alsa(void *handle,
 	return AL_TRUE;
 }
 
-ALboolean
+static ALboolean
 alcBackendSetAttributesALSA_( void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 {
 	return ((struct alsa_info *)handle)->mode == ALC_OPEN_INPUT_ ?
@@ -676,7 +676,7 @@ alcBackendSetAttributesALSA_( void *handle, ALuint *bufsiz, ALenum *fmt, ALuint 
 		set_write_alsa(handle, bufsiz, fmt, speed);
 }
 
-void alsa_blitbuffer(void *handle, const void *data, int bytes)
+static void alsa_blitbuffer(void *handle, const void *data, int bytes)
 {
 	struct alsa_info *ai = handle;
 	snd_pcm_t *phandle = 0;
@@ -741,7 +741,7 @@ void alsa_blitbuffer(void *handle, const void *data, int bytes)
 }
 
 /* capture data from the audio device */
-ALsizei capture_alsa(void *handle,
+static ALsizei capture_alsa(void *handle,
 		void *capture_buffer,
 		int bufsize)
 {
@@ -811,25 +811,42 @@ static int FRAMESIZE(snd_pcm_format_t fmt, unsigned int chans) {
 	return(retval*chans);
 }
 
-void
+static void
 pause_alsa( UNUSED(void *handle) )
 {
 }
 
-void
+static void
 resume_alsa( UNUSED(void *handle) )
 {
 }
 
-ALfloat
+static ALfloat
 get_alsachannel( UNUSED(void *handle), UNUSED(ALuint channel) )
 {
 	return 0.0;
 }
 
-int
+static int
 set_alsachannel( UNUSED(void *handle), UNUSED(ALuint channel), UNUSED(ALfloat volume) )
 {
 	return 0;
 }
 
+static ALC_BackendOps alsaOps = {
+	alcBackendOpenALSA_,
+	release_alsa,
+	pause_alsa,
+	resume_alsa,
+	alcBackendSetAttributesALSA_,
+	alsa_blitbuffer,
+	capture_alsa,
+	get_alsachannel,
+	set_alsachannel
+};
+
+ALC_BackendOps *
+alcGetBackendOpsALSA_ (void)
+{
+	return &alsaOps;
+}
