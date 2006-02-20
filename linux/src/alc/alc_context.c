@@ -1240,17 +1240,19 @@ ALuint _alcGetWriteSpeed( ALuint cid ) {
 ALsizei _alcDeviceRead( ALuint cid, ALvoid *dataptr, ALuint bytes_to_read )
 {
 	AL_context *cc;
+	AL_device *dev;
 
 	cc = _alcGetContext( cid );
 	if( cc == NULL ) {
 		return 0;
 	}
 
-	if( cc->read_device == NULL ) {
+	dev = cc->read_device;
+	if( dev == NULL ) {
 		return 0;
 	}
 
-	return alcBackendRead_(cc->read_device->handle, dataptr, bytes_to_read);
+	return dev->ops->read(dev->privateData, dataptr, bytes_to_read);
 }
 
 /*
@@ -1263,17 +1265,19 @@ ALsizei _alcDeviceRead( ALuint cid, ALvoid *dataptr, ALuint bytes_to_read )
  */
 void _alcDeviceWrite( ALuint cid, ALvoid *dataptr, ALuint bytes_to_write ) {
 	AL_context *cc;
+	AL_device *dev;
 
 	cc = _alcGetContext( cid );
 	if( cc == NULL ) {
 		return;
 	}
 
-	if( cc->write_device == NULL ) {
+	dev = cc->write_device;
+	if( dev == NULL ) {
 		return;
 	}
 
-	alcBackendWrite_( cc->write_device->handle, dataptr, bytes_to_write );
+	dev->ops->write( dev->privateData, dataptr, bytes_to_write );
 
 	return;
 }

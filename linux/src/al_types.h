@@ -17,6 +17,7 @@
 #include <AL/alc.h>
 
 #include "al_mutexlib.h"
+#include "backends/alc_backend.h"
 
 #include <stddef.h>
 #include <sys/types.h>
@@ -283,10 +284,11 @@ struct _AL_context;
 typedef struct ALCdevice_struct {
 	struct _AL_context *cc;
 
-	void *handle;	     /*
-			      * pointer to something that is meaningful
-			      * to the OS's sound stuff
-			      */
+	/* a pointer to a function table for the backend in use for this device */
+	ALC_BackendOps *ops;
+
+	/* private data of the backend in use for this device */
+	ALC_BackendPrivateData *privateData;
 
 	/* device settings, not internal format */
 	ALenum format;

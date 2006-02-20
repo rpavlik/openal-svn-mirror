@@ -14,21 +14,15 @@
 #include "al_main.h"
 #include "backends/alc_backend.h"
 
-struct ALC_BackendStruct
-{
-  ALC_BackendOps *ops;
-  ALC_BackendPrivateData *privateData;
-};
-
-ALC_Backend *
-alcBackendOpen_ (ALC_OpenMode mode)
+void
+alcBackendOpen_ (ALC_OpenMode mode, ALC_BackendOps **theOps,
+                 ALC_BackendPrivateData **thePrivateData)
 {
   Rcvar device_params;
   Rcvar device_list;
   Rcvar device;
   ALC_BackendOps *ops = NULL;
   ALC_BackendPrivateData *privateData = NULL;
-  ALC_Backend *backend;
   char adevname[64];            /* FIXME: magic number */
 
   device_list = rc_lookup ("devices");
@@ -186,77 +180,17 @@ alcBackendOpen_ (ALC_OpenMode mode)
       ops = alcGetBackendOpsNative_ ();
       if (ops == NULL)
         {
-          return NULL;
+          *theOps = NULL;
+          return;
         }
       privateData = ops->open (mode);
       if (privateData == NULL)
         {
-          return NULL;
+          *theOps = NULL;
+          return;
         }
     }
 
-  backend =
-    (struct ALC_BackendStruct *) malloc (sizeof (struct ALC_BackendStruct));
-  if (backend == NULL)
-    {
-      return NULL;
-    }
-
-  backend->ops = ops;
-  backend->privateData = privateData;
-  return backend;
-
-}
-
-ALboolean
-alcBackendClose_ (ALC_Backend *backend)
-{
-  backend->ops->close (backend->privateData);
-  free (backend);
-  return AL_TRUE;
-}
-
-void
-alcBackendPause_ (ALC_Backend *backend)
-{
-  backend->ops->pause (backend->privateData);
-}
-
-void
-alcBackendResume_ (ALC_Backend *backend)
-{
-  backend->ops->resume (backend->privateData);
-}
-
-ALboolean
-alcBackendSetAttributes_ (ALC_Backend *backend, ALuint *bufferSize,
-                          ALenum *format, ALuint *speed)
-{
-  return backend->ops->setAttributes (backend->privateData, bufferSize,
-                                      format, speed);
-}
-
-void
-alcBackendWrite_ (ALC_Backend *backend, const void *data, int size)
-{
-  backend->ops->write (backend->privateData, data, size);
-}
-
-ALsizei
-alcBackendRead_ (ALC_Backend *backend, void *data, int size)
-{
-  return backend->ops->read (backend->privateData, data, size);
-}
-
-ALfloat
-alcBackendGetAudioChannel_ (ALC_Backend *backend, ALuint channel)
-{
-  return backend->ops->getAudioChannel (backend->privateData, channel);
-}
-
-void
-alcBackendSetAudioChannel_ (ALC_Backend *backend, ALuint channel,
-                            ALfloat volume)
-{
-  backend->ops->setAudioChannel (backend->privateData, channel, volume);
+  *theOps = ops;
+  *thePrivateData = privateData;
 }

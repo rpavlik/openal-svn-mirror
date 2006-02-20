@@ -122,25 +122,30 @@ void alcSetAudioChannel_LOKI(ALuint channel, ALfloat volume) {
 
 static void _alcSetAudioChannel_LOKI(ALuint channel, ALfloat volume) {
 	AL_context *cc;
+	AL_device *dev;
 
 	cc = _alcDCGetContext();
 	if(cc == NULL) {
 		return;
 	}
 
-	alcBackendSetAudioChannel_(cc->write_device->handle, channel, volume);
+	dev = cc->write_device;
+	dev->ops->setAudioChannel(dev->privateData, channel, volume);
 
 	return;
 }
 
 static ALfloat _alcGetAudioChannel_LOKI(ALuint channel) {
-	AL_context *cc = _alcDCGetContext();
+	AL_context *cc;
+	AL_device *dev;
 
+	cc = _alcDCGetContext();
 	if(cc == NULL) {
 		return 0;
 	}
 
-	return alcBackendGetAudioChannel_( cc->write_device->handle, channel);
+	dev = cc->write_device;
+	return dev->ops->getAudioChannel( dev->privateData, channel);
 }
 
 /* 0.0 - 1.0 */

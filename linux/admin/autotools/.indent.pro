@@ -39,4 +39,5 @@
 
 /* Our own internal types */
 -T ALC_Backend
+-T ALC_BackendOps
 -T ALC_BackendPrivateData

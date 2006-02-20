@@ -165,8 +165,8 @@ ALCdevice *alcOpenDevice( const ALchar *deviceSpecifier ) {
 	}
 
 	openForInput = (strncmp( dirstr, "read", 64 ) == 0);
-	retval->handle = alcBackendOpen_( openForInput ? ALC_OPEN_INPUT_ : ALC_OPEN_OUTPUT_ );
-	if( retval->handle == NULL ) {
+	alcBackendOpen_( (openForInput ? ALC_OPEN_INPUT_ : ALC_OPEN_OUTPUT_), &retval->ops, &retval->privateData );
+	if( retval->ops == NULL ) {
 		free( retval );
 		_alcSetError(ALC_INVALID_DEVICE);
 		return NULL;
@@ -185,9 +185,9 @@ ALCboolean
 alcCloseDevice( ALCdevice *dev )
 {
 	/* ToDo: Is this test really necessary? */
-	if ( dev->handle != NULL) {
+	if ( dev->ops != NULL) {
 		/* ToDo: Use return value */
-		alcBackendClose_( dev->handle );
+		dev->ops->close(dev->privateData);
 	}
 
 	free( dev->specifier );
@@ -210,7 +210,7 @@ alcCloseDevice( ALCdevice *dev )
 void
 _alcDeviceSet( AL_device *dev )
 {
-	if( alcBackendSetAttributes_(dev->handle, &dev->bufsiz, &dev->format, &dev->speed) != AL_TRUE ) {
+	if( dev->ops->setAttributes(dev->privateData, &dev->bufsiz, &dev->format, &dev->speed) != AL_TRUE ) {
 		_alDebug(ALD_CONTEXT, __FILE__, __LINE__, "_alcDeviceSet failed.");
 		_alcSetError( ALC_INVALID_DEVICE );
 	}
@@ -227,7 +227,7 @@ _alcDeviceSet( AL_device *dev )
 void
 _alcDevicePause( AL_device *dev  )
 {
-	alcBackendPause_( dev->handle );
+	dev->ops->pause( dev->privateData );
 }
 
 /*
@@ -236,5 +236,5 @@ _alcDevicePause( AL_device *dev  )
 void
 _alcDeviceResume( AL_device *dev  )
 {
-	alcBackendResume_( dev->handle );
+	dev->ops->resume( dev->privateData );
 }
