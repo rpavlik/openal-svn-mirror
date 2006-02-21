@@ -90,37 +90,38 @@ int main()
 
    b = s = strdup((char *)alcGetString(device, ALC_EXTENSIONS));
    printf("client alc extensions (ALC_):");
-   if (b && (strlen(b) > 4))
+   if (b && (strlen(b) > 3))
    {
-      char last = 0;
+      char newline = 1;
       s = b+strlen(b)-1;
       if (*s == ' ') *s = 0;
 
-      i = 4;
-      s = b+3;
-      printf("\n   ");
+      s = b + 3;
       p = strchr(s, ' ');
-      while (p || !last)
+      i = (p - s) + 4;
+      while (p != 0)
       {
-         if (p) *p = 0;
-         if (i > 4) printf(",");
-
-         i += strlen(s);
-         if (i > 76)
+         *p = 0;
+         if (newline)
          {
-            printf("\n   ");
-            i = 5;
+            printf("\n    %s,", s);
+            newline = 0;
          }
+         else printf(" %s,", s);
 
-         printf(" %s", s);
-         if (p)
+         s = p + 3;
+         p = strchr(s, ' ');
+         if (p) i += (p - s) + 2;
+         else i += strlen(s) + 2;
+
+         if (i > 75)
          {
-            s = p+5;
-            p = strchr(s, ' ');
-         } else
-            last = 1;
+            i = 4;
+            newline = 1;
+         }
       }
-      printf(".\n");
+      if (newline) printf("\n    %s.\n", s);
+      else printf(" %s.\n", s);
       free(b);
    } else
       printf(" none.\n");
@@ -145,37 +146,38 @@ int main()
 
    b = strdup((char *)alGetString(AL_EXTENSIONS));
    printf("OpenAL extensions (AL_):");
-   if (b && (strlen(b) > 4))
+   if (b && (strlen(b) > 3))
    {
-      char last = 0;
+      char newline = 1;
       s = b+strlen(b)-1;
       if (*s == ' ') *s = 0;
 
-      i = 3;
-      s = b+3;
-      printf("\n   ");
+      s = b + 4;
       p = strchr(s, ' ');
-      while (p || !last)
+      i = (p - s) + 5;
+      while (p != 0)
       {
-         if (p) *p = 0;
-         if (i > 3) printf(",");
-
-         i += strlen(s);
-         if (i > 76)
+         *p = 0;
+         if (newline)
          {
-            printf("\n   ");
-            i = 4;
+            printf("\n    %s,", s);
+            newline = 0;
          }
+         else printf(" %s,", s);
  
-         printf(" %s", s);
-         if (p)
+         s = p + 4;
+         p = strchr(s, ' ');
+         if (p) i += (p - s) + 2;
+         else i += strlen(s) + 2;
+
+         if (i > 75)
          {
-            s = p+4;
-            p = strchr(s, ' ');
-         } else
-            last = 1;
+            i = 5;
+            newline = 1;
+         }
       }
-      printf(".\n");
+      if (newline) printf("\n    %s.\n", s);
+      else printf(" %s.\n", s);
       free(b);
    } else
       printf(" none.\n");
