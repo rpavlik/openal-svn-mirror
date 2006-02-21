@@ -146,7 +146,7 @@ static void waveout_blitbuffer(void *handle, const void *dataptr, int bytes_to_w
 	 *
 	 */
 	convert_to_little_endian( whandle->bitspersample,
-				  dataptr,
+				  (void *)dataptr,
 				  bytes_to_write );
 
 	fwrite(dataptr, 1, bytes_to_write, whandle->fh);
