@@ -35,14 +35,57 @@
 
 #define MAX_DATA	16
 
+static void _printe(const char *t, const char *e, unsigned int sln)
+{
+   unsigned int i;
+   char *b, *p, *s;
+
+   b = strdup(e);
+   printf(t);
+   if (b && (strlen(b) > sln))
+   {
+      char newline = 1;
+      s = b+strlen(b)-1;
+      if (*s == ' ') *s = 0;
+
+      s = b + sln;
+      p = strchr(s, ' ');
+      i = (p - s) + sln + 1;
+      while (p != 0)
+      {
+         *p = 0;
+         if (newline)
+         {
+            printf("\n    %s,", s);
+            newline = 0;
+         }
+         else printf(" %s,", s);
+
+         s = p + sln + 1;
+         p = strchr(s, ' ');
+         if (p) i += (p - s) + 2;
+         else i += strlen(s) + 2;
+
+         if (i > 75)
+         {
+            i = sln+2;
+            newline = 1;
+         }
+      }
+      if (newline) printf("\n    %s.\n", s);
+      else printf(" %s.\n", s);
+      free(b);
+   } else
+      printf(" none.\n");
+}
+
 int main()
 {
    ALCint data[MAX_DATA];
    ALCdevice *device = NULL;
    ALCcontext *context = NULL;
-   unsigned int i;
    ALenum error;
-   char *b, *p, *s;
+   char *s;
 
    if (alcIsExtensionPresent(NULL, (unsigned char *)"ALC_EXT_enumeration") == AL_TRUE)
    {
@@ -88,43 +131,8 @@ int main()
    if ((error = alcGetError(device)) != ALC_NO_ERROR)
       printf("\nAn ALC Error occurred: #%x\n", error);
 
-   b = s = strdup((char *)alcGetString(device, ALC_EXTENSIONS));
-   printf("client alc extensions (ALC_):");
-   if (b && (strlen(b) > 3))
-   {
-      char newline = 1;
-      s = b+strlen(b)-1;
-      if (*s == ' ') *s = 0;
-
-      s = b + 3;
-      p = strchr(s, ' ');
-      i = (p - s) + 4;
-      while (p != 0)
-      {
-         *p = 0;
-         if (newline)
-         {
-            printf("\n    %s,", s);
-            newline = 0;
-         }
-         else printf(" %s,", s);
-
-         s = p + 3;
-         p = strchr(s, ' ');
-         if (p) i += (p - s) + 2;
-         else i += strlen(s) + 2;
-
-         if (i > 75)
-         {
-            i = 4;
-            newline = 1;
-         }
-      }
-      if (newline) printf("\n    %s.\n", s);
-      else printf(" %s.\n", s);
-      free(b);
-   } else
-      printf(" none.\n");
+   s = (char *)alcGetString(device, ALC_EXTENSIONS);
+   _printe("client alc extensions (ALC_):", s, strlen("ALC_"));
   
    if ((error = alcGetError(device)) != ALC_NO_ERROR)
       printf("\nAn ALC Error occurred: #%x\n", error);
@@ -144,43 +152,8 @@ int main()
    if ((error = alGetError()) != AL_NO_ERROR)
       printf("An OpenAL Error occurred: #%x\n", error);
 
-   b = strdup((char *)alGetString(AL_EXTENSIONS));
-   printf("OpenAL extensions (AL_):");
-   if (b && (strlen(b) > 3))
-   {
-      char newline = 1;
-      s = b+strlen(b)-1;
-      if (*s == ' ') *s = 0;
-
-      s = b + 4;
-      p = strchr(s, ' ');
-      i = (p - s) + 5;
-      while (p != 0)
-      {
-         *p = 0;
-         if (newline)
-         {
-            printf("\n    %s,", s);
-            newline = 0;
-         }
-         else printf(" %s,", s);
- 
-         s = p + 4;
-         p = strchr(s, ' ');
-         if (p) i += (p - s) + 2;
-         else i += strlen(s) + 2;
-
-         if (i > 75)
-         {
-            i = 5;
-            newline = 1;
-         }
-      }
-      if (newline) printf("\n    %s.\n", s);
-      else printf(" %s.\n", s);
-      free(b);
-   } else
-      printf(" none.\n");
+   s = (char *)alGetString(AL_EXTENSIONS);
+   _printe("OpenAL extensions (AL_):", s, strlen("AL_"));
 
    if ((error = alGetError()) != AL_NO_ERROR)
       printf("An OpenAL Error occurred: #%x\n", error);
