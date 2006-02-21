@@ -1,3 +1,7 @@
+2006-02-21  Prakash Punnoor <prakash@punnoor.de>
+
+	* CMakeLists.txt: bump version
+
 2006-02-21  Sven Panne  <sven.panne@aedion.de>
 
 	* configure.ac, src/Makefile.am: Added version info and bumped it
