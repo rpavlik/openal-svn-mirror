@@ -105,9 +105,7 @@ void alcBackendOpen_ (ALC_OpenMode mode, ALC_BackendOps **theOps,
 
 /******************************************************************************/
 
-#ifndef USE_BACKEND_DMEDIA
 ALC_BackendOps *alcGetBackendOpsNative_ (void);
-#endif
 
 #ifdef USE_BACKEND_ALSA
 ALC_BackendOps *alcGetBackendOpsALSA_ (void);

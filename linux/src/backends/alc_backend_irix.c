@@ -112,11 +112,16 @@ static void *grab_read_dmedia(void);
 static void *grab_write_dmedia(void);
 static void release_dmedia(void *handle);
 
+/* Fallback function, not a good sign that it's needed here */
+ALC_BackendOps *alcGetBackendOpsNative_ (void)
+{
+    return NULL;
+}
 
 static ALC_BackendPrivateData *
 alcBackendOpenDMedia_( ALC_OpenMode mode )
 {
-        return mode == ALC_OPEN_INPUT_ ? grab_read_dmedia() : grab_write_dmedia();
+    return mode == ALC_OPEN_INPUT_ ? grab_read_dmedia() : grab_write_dmedia();
 }
 
 
