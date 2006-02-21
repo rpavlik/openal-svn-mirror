@@ -108,14 +108,15 @@ typedef struct {
 static void check_sync(void *handle);
 static void sync_ports(void *handle);
 static int grab_device_byname(const char *name);
+static void *grab_read_dmedia(void);
+static void *grab_write_dmedia(void);
+static void release_dmedia(void *handle);
 
 
-/*
- * Fallback function
- */
-static ALC_BackendPrivateData *alcBackendOpenNative_ (ALC_OpenMode mode)
+static ALC_BackendPrivateData *
+alcBackendOpenDMedia_( ALC_OpenMode mode )
 {
-   return NULL;
+        return mode == ALC_OPEN_INPUT_ ? grab_read_dmedia() : grab_write_dmedia();
 }
 
 
@@ -240,12 +241,6 @@ static void *grab_write_dmedia(void)
     return (void *)alh;
 }
 
-static void *
-alcBackendOpenDMedia_( ALC_OpenMode mode )
-{
-	return mode == ALC_OPEN_INPUT_ ? grab_read_dmedia() : grab_write_dmedia();
-}
-
 static void dmedia_blitbuffer(void *handle,
                       const void *dataptr,
                       int bytes_to_write)
@@ -255,11 +250,11 @@ static void dmedia_blitbuffer(void *handle,
     int sample_width = (alh->output[0].sampleWidth / 8);
     int frame_size = sample_width * alh->output[0].numChannels;
     int frames_to_write, frame_no, i;
-    char **buf, *ptr;
+    char **buf, *ptr = (void *)dataptr;
 
     if (alh->numOutputPorts == 1)
     {
-        alWriteFrames(alh->output[0].port, dataptr, bytes_to_write/frame_size);
+        alWriteFrames(alh->output[0].port, ptr, bytes_to_write/frame_size);
         return;
     }
 
@@ -276,7 +271,6 @@ static void dmedia_blitbuffer(void *handle,
     /*
      * Fill the buffers in the appropriate format.
      */
-    ptr = dataptr;
     for(frame_no = 0; frame_no < frames_to_write; frame_no += frame_size)
     {
         for (i=0; i < alh->numOutputPorts; i++)
@@ -711,20 +705,20 @@ static int grab_device_byname(const char *name)
     return device;
 }
 
-static ALC_BackendOps nativeOps = {
-	alcBackendOpenNative_,
-	release_native,
-	pause_nativedevice,
-	resume_nativedevice,
-	alcBackendSetAttributesNative_,
-	native_blitbuffer,
-	capture_nativedevice,
-	get_nativechannel,
-	set_nativechannel
+static ALC_BackendOps dmediaOps = {
+	alcBackendOpenDMedia_,
+	release_dmedia,
+	pause_dmedia,
+	resume_dmedia,
+	alcBackendSetAttributesDMedia_,
+	dmedia_blitbuffer,
+	capture_dmedia,
+	get_dmediachannel,
+	set_dmediachannel
 };
 
 ALC_BackendOps *
-alcGetBackendOpsNative_ (void)
+alcGetBackendOpsDMedia_ (void)
 {
-	return &nativeOps;
+	return &dmediaOps;
 }
