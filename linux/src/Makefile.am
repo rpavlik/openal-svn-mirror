@@ -216,6 +216,9 @@ libopenal_la_CFLAGS = $(WARNINGCFLAGS) $(OPTIMIZATIONCFLAGS) $(FEATURECFLAGS)
 # The -no-undefined flag is neccessary for building DLLs on Windows.
 libopenal_la_LDFLAGS = -no-undefined $(PROFILINGLDFLAGS)
 
+# Append -version-info for correct library versioning with libtool.
+libopenal_la_LDFLAGS += -version-info @VERSIONINFO@
+
 # We use sin and friends, so we might need -lm, autoconf takes care of this.
 libopenal_la_LIBADD = $(LIBM) $(asm_ldadd)
 

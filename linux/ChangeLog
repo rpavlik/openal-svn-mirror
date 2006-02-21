@@ -1,3 +1,8 @@
+2006-02-21  Sven Panne  <sven.panne@aedion.de>
+
+	* configure.ac, src/Makefile.am: Added version info and bumped it
+	from the default 0:0:0 to 1:0:0, because ALUT has been removed.
+
 2006-02-20  Sven Panne  <sven.panne@aedion.de>
 
 	* admin/autotools/.indent.pro, src/al_types.h, src/alc/alc_context.c,
