@@ -87,7 +87,7 @@ int main()
    ALenum error;
    char *s;
 
-   if (alcIsExtensionPresent(NULL, (unsigned char *)"ALC_EXT_enumeration") == AL_TRUE)
+   if (alcIsExtensionPresent(NULL, (unsigned char *)"ALC_enumeration_EXT") == AL_TRUE)
    {
       ALCchar *ptr;
       s = (char *)alcGetString(NULL, ALC_DEVICE_SPECIFIER);
