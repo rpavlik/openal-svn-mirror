@@ -1,7 +1,10 @@
 2006-02-21  Erik Hofman <erik@ehofman.com>
 
-	* alc_backend_irix.c, Fix the IRIX backend again.
-	* alc_backend_wave.c, (const void *) to (void *) conversion.
+	* src/backends/alc_backend.h, src/backends/alc_backend_irix.c: Fix the
+	IRIX backend again.
+
+	* src/backends/alc_backend_wave.c: (const void *) to (void *)
+	conversion.
 
 2006-02-21  Prakash Punnoor <prakash@punnoor.de>
 
