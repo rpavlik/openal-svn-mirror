@@ -78,7 +78,7 @@ AC_CHECK_PROGS([PKG_CONFIG], [pkg-config], [none])
 # Checks for library functions.
 ################################################################################
 
-AC_CHECK_HEADERS([time.h windows.h])
+AC_CHECK_HEADERS([sys/time.h time.h windows.h])
 
 # Checks for library functions.
 ALUT_CHECK_FUNC([[@%:@include <time.h>]],
@@ -105,6 +105,8 @@ ACX_PTHREAD(
       [AC_DEFINE([NO_THREADING], [1], [undocumented])],
       [AC_INCLUDES_DEFAULT([])])],
     [AC_INCLUDES_DEFAULT([])])])
+
+AC_FUNC_SELECT_ARGTYPES
 
 ################################################################################
 # Handle warning-related options.

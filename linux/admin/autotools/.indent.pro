@@ -41,3 +41,6 @@
 -T ALC_Backend
 -T ALC_BackendOps
 -T ALC_BackendPrivateData
+-T SELECT_TYPE_ARG1
+-T SELECT_TYPE_ARG234
+-T SELECT_TYPE_ARG5
