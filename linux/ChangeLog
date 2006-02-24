@@ -1,5 +1,9 @@
 2006-02-24  Sven Panne  <sven.panne@aedion.de>
 
+	* src/al_filter.c: Previously, the source position used for attenuating
+	non-directional sources was the listener position. This is wrong, it
+	should be (0,0,0).
+
 	* src/backends/alc_backend_esd.c: Open connection to EsounD daemon only
 	once. More simplifications.
 

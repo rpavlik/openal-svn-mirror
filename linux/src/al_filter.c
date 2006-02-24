@@ -783,7 +783,7 @@ void alf_da( ALuint cid,
 	     ALuint nc,
 	     UNUSED(ALuint len)) {
 	AL_context *cc;
-	ALfloat *sp; /* source position */
+	ALfloat sp[3]; /* source position */
 	ALfloat sa;  /* speaker attenuation */
 	ALfloat listener_position[3];
 	ALfloat *temp;
@@ -793,6 +793,7 @@ void alf_da( ALuint cid,
 	ALfloat ref;  /* source specific ref distance */
 	ALfloat smax;        /* source specific max distance */
 	ALfloat rolloff; /* source specific rolloff factor */
+	ALboolean *isrel, isRelative;
 
 	/* get distance scale */
 	_alcLockContext( cid );
@@ -838,48 +839,11 @@ void alf_da( ALuint cid,
 	/* ambient near listener */
 	alGetListenerfv(AL_POSITION, listener_position);
 
-	sp = _alGetSourceParam( src, AL_POSITION );
-	if(sp == NULL) {
-		/*
-		 * As an optimization, don't do any attenuation if
-		 * the source is relative and there's no position.
-		 */
-		ALboolean *isrel;
-
-		isrel = _alGetSourceParam( src, AL_SOURCE_RELATIVE );
-		if ( isrel && *isrel ) {
-			ALfloat *gp = _alGetSourceParam(src, AL_GAIN);
-
-			if(gp)
-			{
-				for(i = 0; i < _ALC_MAX_CHANNELS; i++)
-				{
-					src->srcParams.gain[i] *= *gp;
-				}
-			}
-
-			return;
-		}
-
-		/*
-		 * no position set, so set it to the listener
-		 * postition.  We should probably set it to
-		 * 0.0, 0.0, 0.0 instead.
-		 *
-		 * We fall through to get the MIN/MAX
-		 */
-		sp = listener_position;
-
-		_alDebug(ALD_SOURCE, __FILE__, __LINE__,
-			"alf_da: setting to listener pos, probably not right");
-	}
-
-	/* set reference distance */
-	temp = _alGetSourceParam( src, AL_REFERENCE_DISTANCE );
-	if( temp != NULL ) {
-		ref = * (ALfloat *) temp;
+	isrel = _alGetSourceParam( src, AL_SOURCE_RELATIVE );
+	if( isrel != NULL ) {
+		isRelative = *isrel;
 	} else {
-		_alSourceGetParamDefault( AL_REFERENCE_DISTANCE, &ref );
+		_alSourceGetParamDefault( AL_SOURCE_RELATIVE, &isRelative );
 	}
 
 	/* set source specific gain */
@@ -888,6 +852,35 @@ void alf_da( ALuint cid,
 		gain = * (ALfloat *) temp;
 	} else {
 		_alSourceGetParamDefault( AL_GAIN, &gain );
+	}
+
+	temp = _alGetSourceParam( src, AL_POSITION );
+	if( temp != NULL ) {
+		sp[0] = temp[0];
+		sp[1] = temp[1];
+		sp[2] = temp[2];
+	} else {
+		_alSourceGetParamDefault( AL_POSITION, sp );
+	}
+
+	/*
+	 * As an optimization, don't do any attenuation if the source
+	 * is relative and located at the origin.
+	 */
+	if((isRelative == AL_TRUE) &&
+	   (sp[0] == 0.0) && (sp[1] == 0.0) && (sp[2] == 0.0)) {
+		for(i = 0; i < _ALC_MAX_CHANNELS; i++) {
+			src->srcParams.gain[i] *= gain;
+		}
+		return;
+	}
+
+	/* set reference distance */
+	temp = _alGetSourceParam( src, AL_REFERENCE_DISTANCE );
+	if( temp != NULL ) {
+		ref = * (ALfloat *) temp;
+	} else {
+		_alSourceGetParamDefault( AL_REFERENCE_DISTANCE, &ref );
 	}
 
 	/* set source specific max distance */
@@ -912,8 +905,6 @@ void alf_da( ALuint cid,
 	for(i = 0; i < nc; i++) {
 		src->srcParams.gain[i] *= sa;
 	}
-
-	return;
 }
 
 #if USE_TPITCH_LOOKUP
