@@ -3234,7 +3234,6 @@ void _alSourceGetParamDefault( ALenum param, ALvoid *retref ) {
 	ALint *ip     = retref;
 	ALboolean *bp = retref;
 	ALfloat *fp   = retref;
-	Rcvar pref    = NULL;
 
 	switch( param ) {
 		case AL_BUFFER:
@@ -3253,19 +3252,8 @@ void _alSourceGetParamDefault( ALenum param, ALvoid *retref ) {
 		case AL_MAX_GAIN:
 		case AL_PITCH:
 		case AL_REFERENCE_DISTANCE:
-			*fp = 1.0f;
-			break;
 		case AL_ROLLOFF_FACTOR:
-			/*
-			 * check user preference.  If set, use that.
-			 * Otherwise, use the default of 1.0f
-			 */
-			pref = rc_lookup( "source-rolloff-factor" );
-			if( pref != NULL ) {
-				*fp = rc_tofloat( pref );
-			}  else {
-				*fp = 1.0f;
-			}
+			*fp = 1.0f;
 			break;
 		case AL_DIRECTION:
 		case AL_POSITION:

@@ -1,5 +1,11 @@
 2006-02-24  Sven Panne  <sven.panne@aedion.de>
 
+	* src/al_source.c: Removed the rather obscure feature of being able to
+	initialise the source rolloff factor attributes via a configuration file
+	variable "source-rolloff-factor". If we want such a feature, it should
+	be handled via a more general way for all source/listener/...
+	attributes.
+
 	* src/al_filter.c: Previously, the source position used for attenuating
 	non-directional sources was the listener position. This is wrong, it
 	should be (0,0,0).
