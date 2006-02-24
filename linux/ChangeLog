@@ -1,5 +1,8 @@
 2006-02-24  Sven Panne  <sven.panne@aedion.de>
 
+	* configure.ac, src/Makefile.am, src/al_debug.c: Conditionally compile
+	debugging code.
+
 	* src/al_debug.h: When no debug output is needed, inline _alDebug
 	to a no-op, removing quite a lot of useless code from a production
 	build (about 24kB on my x86 Linux) and getting some small performance

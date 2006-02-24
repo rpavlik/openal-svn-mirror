@@ -192,12 +192,15 @@ fi
 # Handle debugging-related options.
 ################################################################################
 
+need_debug=no
+
 AC_ARG_ENABLE([debug],
 [AS_HELP_STRING([--enable-debug],
                 [enable debug code and assertions @<:@default=no@:>@])])
 
 if test "x$enable_debug" = xyes; then
   AC_DEFINE([DEBUG], [1], [Define to 1 if you want to include debugging code.])
+  need_debug=yes
 else
   AC_DEFINE([NDEBUG], [1], [Define to 1 if you want to disable the assert() macro.])
 fi
@@ -222,6 +225,7 @@ AC_ARG_ENABLE([debug-stub],
 
 if test "x$enable_debug_stub" = xyes; then
   AC_DEFINE([DEBUG_STUB], [1], [Define to 1 to enable stub debugging.])
+  need_debug=yes
 fi
 
 # looping debug notification
@@ -231,6 +235,7 @@ AC_ARG_ENABLE([debug-loop],
 
 if test "x$enable_debug_loop" = xyes; then
   AC_DEFINE([DEBUG_LOOP], [1], [Define to 1 to enable looping debugging.])
+  need_debug=yes
 fi
 
 # conversion debug notification
@@ -240,6 +245,7 @@ AC_ARG_ENABLE([debug-convert],
 
 if test "x$enable_debug_convert" = xyes; then
   AC_DEFINE([DEBUG_CONVERT], [1], [Define to 1 to enable conversion debugging.])
+  need_debug=yes
 fi
 
 # config file debug notification
@@ -249,6 +255,7 @@ AC_ARG_ENABLE([debug-config],
 
 if test "x$enable_debug_config" = xyes; then
   AC_DEFINE([DEBUG_CONFIG], [1], [Define to 1 to enable config file debugging.])
+  need_debug=yes
 fi
 
 # lock debug notification
@@ -258,6 +265,7 @@ AC_ARG_ENABLE([debug-lock],
 
 if test "x$enable_debug_lock" = xyes; then
   AC_DEFINE([DEBUG_LOCK], [1], [Define to 1 to enable lock debugging.])
+  need_debug=yes
 fi
 
 # extension debug notification
@@ -267,6 +275,7 @@ AC_ARG_ENABLE([debug-ext],
 
 if test "x$enable_debug_ext" = xyes; then
   AC_DEFINE([DEBUG_EXT], [1], [Define to 1 to enable extension debugging.])
+  need_debug=yes
 fi
 
 # buffer debug notification
@@ -276,6 +285,7 @@ AC_ARG_ENABLE([debug-buffer],
 
 if test "x$enable_debug_buffer" = xyes; then
   AC_DEFINE([DEBUG_BUFFER], [1], [Define to 1 to enable buffer debugging.])
+  need_debug=yes
 fi
 
 # source debug notification
@@ -285,6 +295,7 @@ AC_ARG_ENABLE([debug-source],
 
 if test "x$enable_debug_source" = xyes; then
   AC_DEFINE([DEBUG_SOURCE], [1], [Define to 1 to enable source debugging.])
+  need_debug=yes
 fi
 
 # mixer debug notification
@@ -294,6 +305,7 @@ AC_ARG_ENABLE([debug-mixer],
 
 if test "x$enable_debug_mixer" = xyes; then
   AC_DEFINE([DEBUG_MIXER], [1], [Define to 1 to enable mixer debugging.])
+  need_debug=yes
 fi
 
 # streaming debug notification
@@ -303,6 +315,7 @@ AC_ARG_ENABLE([debug-streaming],
 
 if test "x$enable_debug_streaming" = xyes; then
   AC_DEFINE([DEBUG_STREAMING], [1], [Define to 1 to enable streaming debugging.])
+  need_debug=yes
 fi
 
 # math debug notification
@@ -312,6 +325,7 @@ AC_ARG_ENABLE([debug-math],
 
 if test "x$enable_debug_math" = xyes; then
   AC_DEFINE([DEBUG_MATH], [1], [Define to 1 to enable math debugging.])
+  need_debug=yes
 fi
 
 # mem debug notification
@@ -321,6 +335,7 @@ AC_ARG_ENABLE([debug-mem],
 
 if test "x$enable_debug_mem" = xyes; then
   AC_DEFINE([DEBUG_MEM], [1], [Define to 1 to enable memory debugging.])
+  need_debug=yes
 fi
 
 # context debug notification
@@ -330,6 +345,7 @@ AC_ARG_ENABLE([debug-context],
 
 if test "x$enable_debug_context" = xyes; then
   AC_DEFINE([DEBUG_CONTEXT], [1], [Define to 1 to enable context debugging.])
+  need_debug=yes
 fi
 
 # debug queue structures/functions/etc
@@ -339,6 +355,7 @@ AC_ARG_ENABLE([debug-queue],
 
 if test "x$enable_debug_queue" = xyes; then
   AC_DEFINE([DEBUG_QUEUE], [1], [Define to 1 to enable queue debugging.])
+  need_debug=yes
 fi
 
 # debug filter
@@ -348,6 +365,7 @@ AC_ARG_ENABLE([debug-filter],
 
 if test "x$enable_debug_filter" = xyes; then
   AC_DEFINE([DEBUG_FILTER], [1], [Define to 1 to enable filter debugging.])
+  need_debug=yes
 fi
 
 # debug maximus
@@ -357,7 +375,10 @@ AC_ARG_ENABLE([debug-maximus],
 
 if test "x$enable_debug_maximus" = xyes; then
   AC_DEFINE([DEBUG_MAXIMUS], [1], [Define to 1 to enable all debugging.])
+  need_debug=yes
 fi
+
+AM_CONDITIONAL([NEEDDEBUG], [test "x$need_debug" = xyes])
 
 ################################################################################
 # Handle optimization-related options.

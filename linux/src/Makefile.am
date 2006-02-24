@@ -16,7 +16,6 @@ libopenal_la_SOURCES =			\
 	al_config.c			\
 	al_config.h			\
 	al_cpu_caps.h			\
-	al_debug.c			\
 	al_debug.h			\
 	al_distance.c			\
 	al_distance.h			\
@@ -61,6 +60,11 @@ libopenal_la_SOURCES =			\
 	al_matrix.h			\
 	mixaudio16.h			\
 	mixaudio16.c
+
+if NEEDDEBUG
+libopenal_la_SOURCES +=			\
+	al_debug.c
+endif
 
 # backend sources
 

@@ -14,7 +14,6 @@
 
 #include "al_debug.h"
 
-#ifdef NEED_DEBUG
 /*
  * ald2str( aldEnum type )
  *
@@ -46,7 +45,6 @@ static const char *ald2str( aldEnum l ) {
 
 	return NULL;
 }
-#endif
 
 /*
  * _alDebug( aldEnum level, const char *fn, int ln, const char *format, ... )
@@ -57,10 +55,6 @@ static const char *ald2str( aldEnum l ) {
  */
 int _alDebug( aldEnum level, const char *fn, int ln, const char *format, ... )
 {
-#ifndef NEED_DEBUG
-	(void)level; (void)fn; (void)ln; (void)format;
-	return 0;
-#else
 	static char formatbuf[256];
 	int count;
 	va_list ap;
@@ -132,5 +126,4 @@ int _alDebug( aldEnum level, const char *fn, int ln, const char *format, ... )
 
 	return fprintf(stderr, "%s\t[%s:%d] %s\n",
 		       ald2str(level), fn, ln, formatbuf );
-#endif /* NEED_DEBUG */
 }
