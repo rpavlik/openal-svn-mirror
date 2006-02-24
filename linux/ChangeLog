@@ -1,5 +1,10 @@
 2006-02-24  Sven Panne  <sven.panne@aedion.de>
 
+	* src/al_debug.h: When no debug output is needed, inline _alDebug
+	to a no-op, removing quite a lot of useless code from a production
+	build (about 24kB on my x86 Linux) and getting some small performance
+	gain. Using variadic macros is probably less portable.
+
 	* src/al_source.c: Removed the rather obscure feature of being able to
 	initialise the source rolloff factor attributes via a configuration file
 	variable "source-rolloff-factor". If we want such a feature, it should

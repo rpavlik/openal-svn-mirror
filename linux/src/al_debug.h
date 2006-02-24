@@ -66,6 +66,16 @@ typedef enum _aldEnum
  * If debugging messages for the type level are enabled, print the debugging
  * message specified by format, ... ( printf format ).  Otherwise, return.
  */
+#ifdef NEED_DEBUG
+AL_ATTRIBUTE_FORMAT_PRINTF_(4,5)
+int _alDebug( aldEnum level, const char *fn, int ln, const char *format, ... );
+#else
+AL_ATTRIBUTE_FORMAT_PRINTF_(4,5) static __inline
 int _alDebug( aldEnum level, const char *fn, int ln, const char *format, ... )
-	AL_ATTRIBUTE_FORMAT_PRINTF_(4,5);
+{
+	(void)level; (void)fn; (void)ln; (void)format;
+	return 0;
+}
+#endif
+
 #endif
