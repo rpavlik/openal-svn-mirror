@@ -1,3 +1,8 @@
+2006-02-24  Sven Panne  <sven.panne@aedion.de>
+
+	* src/backends/alc_backend_esd.c: Open connection to EsounD daemon only
+	once. More simplifications.
+
 2006-02-22  Sven Panne  <sven.panne@aedion.de>
 
 	* admin/autotools/.indent.pro, configure.ac,

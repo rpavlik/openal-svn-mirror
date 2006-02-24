@@ -1,9 +1,6 @@
-/* -*- mode: C; tab-width:8; c-basic-offset:8 -*-
- * vi:set ts=8:
- *
- * esd.c
- *
- * esd backend.
+/*
+ * EsounD backend. Note that apart from the actual sources of libesd itself
+ * there is very little documentation available, so let's hope for the best...
  */
 #include "al_siteconfig.h"
 
@@ -34,32 +31,24 @@
 #include <unistd.h>
 #endif
 
-#include "al_main.h"
 #include "al_debug.h"
+#include "al_main.h"
 #include "backends/alc_backend.h"
-#include "alc/alc_context.h"
 
 #include <esd.h>
 
-#define DEF_SPEED       _ALC_CANON_SPEED
-#define DEF_SIZE        _AL_DEF_BUFSIZ
-#define DEF_SAMPLES     (DEF_SIZE / 2)
-#define DEF_CHANNELS    2
-#define DEF_FORMAT      AL_FORMAT_STEREO16
-
-#define ESD_LIBRARY    "libesd.so"
-#define ESD_KEY        "openal"
-#define ESD_NAMELEN    1024
+#define ESD_LIBRARY "libesd.so"
 
 /*
  * ESD library functions.
  */
-static int (*pesd_open_sound) (const char *host);
 static int (*pesd_play_stream) (esd_format_t format, int rate,
                                 const char *host, const char *name);
+static int (*pesd_record_stream) (esd_format_t format, int rate,
+                                  const char *host, const char *name);
+static int (*pesd_close) (int esd);
 static int (*pesd_standby) (int esd);
 static int (*pesd_resume) (int esd);
-static int (*pesd_close) (int esd);
 
 #ifdef OPENAL_DLOPEN_ESD
 #include <dlfcn.h>
@@ -108,11 +97,11 @@ loadLibraryESD (void)
       return 0;
     }
 
-  OPENAL_LOAD_ESD_SYMBOL (handle, esd_open_sound);
+  OPENAL_LOAD_ESD_SYMBOL (handle, esd_play_stream);
+  OPENAL_LOAD_ESD_SYMBOL (handle, esd_record_stream);
+  OPENAL_LOAD_ESD_SYMBOL (handle, esd_close);
   OPENAL_LOAD_ESD_SYMBOL (handle, esd_standby);
   OPENAL_LOAD_ESD_SYMBOL (handle, esd_resume);
-  OPENAL_LOAD_ESD_SYMBOL (handle, esd_play_stream);
-  OPENAL_LOAD_ESD_SYMBOL (handle, esd_close);
 
   _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
             "%s successfully loaded", ESD_LIBRARY);
@@ -122,240 +111,217 @@ loadLibraryESD (void)
 
 typedef struct ALC_BackendDataESD_struct
 {
-  ALC_OpenMode mode;
-  const char *espeaker;
-  int esdhandle;
-  esd_format_t fmt;
-  ALuint speed;
-  char name[ESD_NAMELEN];
-  int socket;
-  ALboolean paused;
+  ALC_OpenMode mode;            /* Is the device in input mode or output mode? */
+  ALboolean paused;             /* Is the device paused? */
+  int esd;                      /* the socket connected to the EsounD daemon */
+  char name[ESD_NAME_MAX];      /* the name of the connection, openal-PID */
 } ALC_BackendDataESD;
 
+/*
+ * Note that we can use esd_play_stream only when we know the format and speed
+ * of the data to come, so we can't actually do much in openESD itself. The real
+ * work happens in setAttributesESD below.
+ */
 static ALC_BackendPrivateData *
 openESD (ALC_OpenMode mode)
 {
-  ALC_BackendDataESD *esd_info;
+  ALC_BackendDataESD *eh;
 
-  if (mode == ALC_OPEN_INPUT_)
-    {
-      /* input mode not supported */
-      _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
-                "esd backend does not support input");
-      return NULL;
-    }
+  _alDebug (ALD_CONTEXT, __FILE__, __LINE__, "opening ESD device");
 
   if (!loadLibraryESD ())
     {
       return NULL;
     }
 
-  esd_info = (ALC_BackendDataESD *) malloc (sizeof (ALC_BackendDataESD));
-  if (esd_info == NULL)
+  eh = (ALC_BackendDataESD *) malloc (sizeof (ALC_BackendDataESD));
+  if (eh == NULL)
     {
       return NULL;
     }
 
-  esd_info->paused = AL_FALSE;
-  esd_info->mode = mode;
-  esd_info->espeaker = getenv ("ESPEAKER");
-  esd_info->esdhandle = pesd_open_sound (esd_info->espeaker);
-  if (esd_info->esdhandle < 0)
-    {
-      _alDebug (ALD_CONTEXT, __FILE__, __LINE__, "esd_open_sound failed");
-      free (esd_info);
-      return NULL;
-    }
+  eh->mode = mode;
+  eh->paused = AL_FALSE;
 
-  esd_info->fmt = ESD_STREAM | ESD_PLAY;
-
-  switch (DEF_CHANNELS)
-    {
-    case 1:
-      esd_info->fmt |= ESD_MONO;
-      break;
-    case 2:
-      esd_info->fmt |= ESD_STEREO;
-      break;
-    default:
-      break;
-    }
-
-  switch (_alGetBitsFromFormat (DEF_FORMAT))
-    {
-    case 8:
-      esd_info->fmt |= ESD_BITS8;
-      break;
-    case 16:
-      esd_info->fmt |= ESD_BITS16;
-      break;
-    default:
-      break;
-    }
-
-  esd_info->speed = DEF_SPEED;
-  snprintf (esd_info->name, sizeof (esd_info->name), "openal-%d\n",
-            (int) getpid ());
-  esd_info->socket =
-    pesd_play_stream (esd_info->fmt, DEF_SPEED, esd_info->espeaker,
-                      esd_info->name);
-  if (esd_info->socket < 0)
-    {
-      _alDebug (ALD_CONTEXT, __FILE__, __LINE__, "esd_play_stream failed");
-      free (esd_info);
-      return NULL;
-    }
+  snprintf (eh->name, sizeof (eh->name), "openal-%d", (int) getpid ());
 
   _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
-            "ESD device successfully opened");
-  return esd_info;
+            "ESD device '%s' successfully opened", eh->name);
+  return eh;
 }
 
 static void
 closeESD (void *privateData)
 {
   ALC_BackendDataESD *eh = (ALC_BackendDataESD *) privateData;
-  pesd_close (eh->esdhandle);
+  _alDebug (ALD_CONTEXT, __FILE__, __LINE__, "closing ESD device '%s'",
+            eh->name);
+  pesd_close (eh->esd);
   free (privateData);
-  _alDebug (ALD_CONTEXT, __FILE__, __LINE__, "ESD device closed");
 }
 
 static void
 pauseESD (void *privateData)
 {
   ALC_BackendDataESD *eh = (ALC_BackendDataESD *) privateData;
+  _alDebug (ALD_CONTEXT, __FILE__, __LINE__, "pausing ESD device '%s'",
+            eh->name);
   eh->paused = AL_TRUE;
-  pesd_standby (eh->esdhandle);
+  /* pesd_standby (eh->esd); */
 }
 
 static void
 resumeESD (void *privateData)
 {
   ALC_BackendDataESD *eh = (ALC_BackendDataESD *) privateData;
+  _alDebug (ALD_CONTEXT, __FILE__, __LINE__, "resuming ESD device, '%s'",
+            eh->name);
   eh->paused = AL_FALSE;
-  pesd_resume (eh->esdhandle);
+  /* pesd_resume (eh->esd); */
 }
 
 static ALboolean
-setAttributesESD (void *privateData, UNUSED (ALuint *bufferSize),
-                  ALenum *format, ALuint *speed)
+setAttributesESD (void *privateData, ALuint *bufferSize, ALenum *format,
+                  ALuint *speed)
 {
   ALC_BackendDataESD *eh = (ALC_BackendDataESD *) privateData;
+  esd_format_t esd_format;
+  _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
+            "setting attributes for ESD device '%s': buffer size %u, format 0x%x, speed %d",
+            eh->name, (unsigned int) *bufferSize, (int) *format,
+            (unsigned int) *speed);
 
-  close (eh->socket);
-
-  eh->paused = AL_FALSE;
-
-  eh->fmt = ESD_STREAM | ESD_PLAY;
+  esd_format = ESD_STREAM;
 
   switch (_alGetChannelsFromFormat (*format))
     {
     case 1:
-      eh->fmt |= ESD_MONO;
+      esd_format |= ESD_MONO;
       break;
     case 2:
-      eh->fmt |= ESD_STEREO;
+      esd_format |= ESD_STEREO;
       break;
     default:
-      break;
+      return AL_FALSE;
     }
 
   switch (_alGetBitsFromFormat (*format))
     {
     case 8:
-      eh->fmt |= ESD_BITS8;
+      esd_format |= ESD_BITS8;
       break;
     case 16:
-      eh->fmt |= ESD_BITS16;
+      esd_format |= ESD_BITS16;
       break;
     default:
-      break;
-    }
-
-  eh->speed = *speed;
-
-  eh->socket = pesd_play_stream (eh->fmt, eh->speed, eh->espeaker, eh->name);
-  if (eh->socket < 0)
-    {
       return AL_FALSE;
     }
 
-  return AL_TRUE;
+  if (eh->mode == ALC_OPEN_INPUT_)
+    {
+      esd_format |= ESD_RECORD;
+      eh->esd = pesd_record_stream (esd_format, *speed, NULL, eh->name);
+    }
+  else
+    {
+      esd_format |= ESD_PLAY;
+      eh->esd = pesd_play_stream (esd_format, *speed, NULL, eh->name);
+    }
+  return (eh->esd < 0) ? AL_FALSE : AL_TRUE;
 }
 
 static void
 writeESD (void *privateData, const void *data, int size)
 {
   fd_set esd_fd_set;
-  ALC_BackendDataESD *eh;
-  struct timeval tv = { 0, 9000000 };
-  int iterator = 0;
-  int err;
+  ALC_BackendDataESD *eh = (ALC_BackendDataESD *) privateData;
+  struct timeval tv = { 0, 800000 };    /* at most .8 secs */
+  int bytesToWrite = size;
+  int bytesWritten;
   SELECT_TYPE_ARG1 fd;
 
-  if (privateData == NULL)
-    {
-      return;
-    }
-
-  eh = (ALC_BackendDataESD *) privateData;
+  _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
+            "writing %d bytes to ESD device '%s'", size, eh->name);
 
   if (eh->paused == AL_TRUE)
     {
-      /* don't write to paused audio devices, just sleep */
+      /*
+       * Don't write to paused audio devices, just sleep 10ms.
+       * ToDo: Why do we do this??
+       */
       tv.tv_usec = 10000;
-
       select (0, NULL, NULL, NULL, SELECT_TYPE_ARG5 &tv);
-
       return;
     }
 
-  fd = eh->socket;
-
-  for (iterator = size; iterator > 0;)
+  fd = eh->esd;
+  while (bytesToWrite > 0)
     {
       FD_ZERO (&esd_fd_set);
       FD_SET (fd, &esd_fd_set);
 
-      err =
-        select (fd + 1, NULL, SELECT_TYPE_ARG234 &esd_fd_set, NULL,
-                SELECT_TYPE_ARG5 &tv);
+      /* ToDo: Handle error */
+      select (fd + 1, NULL, SELECT_TYPE_ARG234 &esd_fd_set, NULL,
+              SELECT_TYPE_ARG5 &tv);
+
       if (FD_ISSET (fd, &esd_fd_set) == 0)
         {
           /* timeout occured, don't try and write */
           _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
-                    "writeESD: timeout occured");
+                    "writing timed out for ESD device '%s'", eh->name);
           return;
         }
 
-      err = write (fd, (const char *) data + size - iterator, iterator);
-      if (err < 0)
+      bytesWritten =
+        write (fd, (const char *) data + size - bytesToWrite, bytesToWrite);
+      if (bytesWritten < 0)
         {
-          _alDebug (ALD_CONTEXT, __FILE__, __LINE__, "writeESD: error %d\n",
+          _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
+                    "writing failed for ESD device '%s', error %d", eh->name,
                     errno);
           return;
         }
 
-      iterator -= err;
-    };
+      bytesToWrite -= bytesWritten;
+    }
 }
 
+/*
+ * ToDo: Implement!
+ */
 static ALsizei
-readESD (UNUSED (void *privateData), UNUSED (void *data), UNUSED (int size))
+readESD (void *privateData, UNUSED (void *data), int size)
 {
+  ALC_BackendDataESD *eh = (ALC_BackendDataESD *) privateData;
+  _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
+            "reading up to %d bytes from ESD device '%s', %d bytes actually read",
+            size, eh->name, 0);
   return 0;
 }
 
+/*
+ * ToDo: Can this be implemented at all?
+ */
 static ALfloat
-getAudioChannelESD (UNUSED (void *privateData), UNUSED (ALuint channel))
+getAudioChannelESD (void *privateData, ALuint channel)
 {
+  ALC_BackendDataESD *eh = (ALC_BackendDataESD *) privateData;
+  _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
+            "getting volume for ESD device '%s', channel %u: %f", eh->name,
+            (unsigned int) channel, 0.0);
   return 0.0f;
 }
 
+/*
+ * ToDo: Can this be implemented via esd_set_stream_pan?
+ */
 static int
-setAudioChannelESD (UNUSED (void *privateData), UNUSED (ALuint channel),
-                    UNUSED (ALfloat volume))
+setAudioChannelESD (void *privateData, ALuint channel, ALfloat volume)
 {
+  ALC_BackendDataESD *eh = (ALC_BackendDataESD *) privateData;
+  _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
+            "setting volume for ESD device '%s', channel %u to %f", eh->name,
+            (unsigned int) channel, (double) volume);
   return 0;
 }
 
