@@ -12,16 +12,8 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alext.h>
-#include <math.h>
-#include <fcntl.h>
-#include <signal.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
+#include <stdio.h>
 #include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 #if HAVE_NANOSLEEP && HAVE_TIME_H
 #include <time.h>
