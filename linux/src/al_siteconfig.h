@@ -11,6 +11,10 @@
 #include "config.h"
 #endif /* DARWIN_PBBUILDER */
 
+#if defined(_WIN32) || defined(__WIN32__)
+#define snprintf _snprintf
+#endif
+
 #ifdef HAVE___ATTRIBUTE__
 #define UNUSED(x) x __attribute__((unused))
 #define AL_ATTRIBUTE_FORMAT_PRINTF_(x,y) __attribute__((format(printf, x, y)))
