@@ -8,7 +8,8 @@
 	
 	* CMakeLists.txt: nmake doesn't like "-" in target name; Windows/VC++
 	doesn't need libm; define needed for TryEnterCriticalSection;conditionally
-	compile debugging code; more windows friendliness
+	compile debugging code; more windows friendliness; enable MMX in Windows
+	(needs real detection, though)
 	
 	* src/al_config.c, src/al_main.c, src/al_mixer.c,
 	src/backends/alc_backend_null.c, src/backends/alc_backend_wave.c,
@@ -20,10 +21,12 @@
 	* src/al_siteconfig.h: windows knows _snprintf
 	
 	* src/arch/i386/x86_simd_support_prk.h, src/arch/i386/mixaudio16_mmx_prk.c:
-	work-around cast issues with gcc and mscv++
+	work-around cast issues with gcc and mscv++; fix mscv++ casts
 	
 	* src/arch/i386/x86_cpu_caps_detect_prk.nasm,
 	src/arch/i386/memcpy_mmx_prk.nasm: nasm symbol visibility support
+	
+	* src/al_cpu_caps.h: respect msvc defines
 
 2006-02-24  Sven Panne  <sven.panne@aedion.de>
 
