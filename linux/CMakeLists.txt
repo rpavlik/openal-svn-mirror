@@ -294,6 +294,8 @@ IF(CMAKE_SYSTEM MATCHES "Windows")
   SET(OS_OBJS ${WINDOWS_OBJS})
   # need winmm library for waveOutOpen etc.
   SET(ADD_LIBS ${ADD_LIBS} winmm)
+  # needed for TryEnterCriticalSection
+  ADD_DEFINITIONS(-D_WIN32_WINNT=0x0400)
 ELSE(CMAKE_SYSTEM MATCHES "Windows")
 
 IF(CMAKE_SYSTEM MATCHES "Darwin")
