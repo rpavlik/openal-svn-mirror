@@ -4,14 +4,6 @@
 #include "al_siteconfig.h"
 
 #include <AL/al.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 #include "al_main.h"
 #include "al_debug.h"
