@@ -22,8 +22,14 @@
 ; pretty straight-forward implementation
 ; by design broken for n<8, so check that before calling
 ; x86 32 bit only!
+
+%ifdef NASM_VISIBILTY
+global __alMMXmemcpy:function hidden
+global _alMMXmemcpy:function hidden
+%else
 global __alMMXmemcpy
 global _alMMXmemcpy
+%endif
 
 __alMMXmemcpy:
 _alMMXmemcpy:

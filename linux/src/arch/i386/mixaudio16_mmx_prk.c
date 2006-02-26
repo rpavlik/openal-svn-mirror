@@ -28,25 +28,27 @@
 void _alMMXmemcpy(void* dst, void* src, unsigned int n);
 #endif /* HAVE_MMX_MEMCPY */
 
+/* GCC 3.4 doesn't perform well with static inlines and intrinsics
+   so we use some define magic */
 
 /* prepare sign-extension from 16bit to 32 bit for stream ST */
 #define GET_SIGNMASK(ST)							\
 	indata   = *(v4hi*)((ALshort*)entries[ST].data + offset);		\
-	signmask = (v4hi)(di)__builtin_ia32_pand((di)indata, (di)m.v);		\
+	signmask = to_v4hi(to_di(__builtin_ia32_pand(to_di(indata), to_di(m.v))));\
 	signmask = __builtin_ia32_pcmpeqw(signmask, m.v);
 
 /* mix stream 0 */
 #define MIX_ST0									\
 	GET_SIGNMASK (0);							\
-	loout = (v2si)__builtin_ia32_punpcklwd(indata, signmask);		\
-	hiout = (v2si)__builtin_ia32_punpckhwd(indata, signmask);
+	loout = to_v2si(__builtin_ia32_punpcklwd(indata, signmask));		\
+	hiout = to_v2si(__builtin_ia32_punpckhwd(indata, signmask));
 
 /* sign-extension and mix stream ST */
 #define MIX(ST)									\
 	GET_SIGNMASK(ST)							\
-	temp  = (v2si)__builtin_ia32_punpcklwd(indata, signmask);		\
+	temp  = to_v2si(__builtin_ia32_punpcklwd(indata, signmask));		\
 	loout = __builtin_ia32_paddd(loout, temp);				\
-	temp  = (v2si)__builtin_ia32_punpckhwd(indata, signmask);		\
+	temp  = to_v2si(__builtin_ia32_punpckhwd(indata, signmask));		\
 	hiout = __builtin_ia32_paddd(hiout, temp);
 
 /* manual saturation to dst */
@@ -135,11 +137,11 @@ void _alMMXmemcpy(void* dst, void* src, unsigned int n);
 /* sign-extension and mix stream; for generic function */
 #define MIX_N									\
 	indata   = *(v4hi*)((ALshort*)src->data + offset);			\
-	signmask = (v4hi)(di)__builtin_ia32_pand((di)indata, (di)m.v);		\
+	signmask = to_v4hi(to_di(__builtin_ia32_pand(to_di(indata), to_di(m.v))));\
 	signmask = __builtin_ia32_pcmpeqw(signmask, m.v);			\
-	temp  = (v2si)__builtin_ia32_punpcklwd(indata, signmask);		\
+	temp  = to_v2si(__builtin_ia32_punpcklwd(indata, signmask));		\
 	loout = __builtin_ia32_paddd(loout, temp);				\
-	temp  = (v2si)__builtin_ia32_punpckhwd(indata, signmask);		\
+	temp  = to_v2si(__builtin_ia32_punpckhwd(indata, signmask));		\
 	hiout = __builtin_ia32_paddd(hiout, temp);
 
 

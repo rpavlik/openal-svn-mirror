@@ -23,8 +23,14 @@
 ; using infos from sandpile.org
 
 ; returns 0 if no CPUID available
+
+%ifdef NASM_VISIBILTY
+global __alDetectx86CPUCaps:function hidden
+global _alDetectx86CPUCaps:function hidden
+%else
 global __alDetectx86CPUCaps
 global _alDetectx86CPUCaps
+%endif
 
 __alDetectx86CPUCaps:
 _alDetectx86CPUCaps:

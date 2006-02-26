@@ -36,6 +36,11 @@ typedef int   v2si __attribute__ ((vector_size (8)));
 typedef int   di   __attribute__ ((vector_size (8)));
 #endif
 
+/* GCC 3.4 needs some explicit casts */
+#define to_v4hi(X) (v4hi)X
+#define to_v2si(X) (v2si)X
+#define to_di(X)   (di)X
+
 #define ALIGN16(x) x __attribute__((aligned(16)))
 typedef unsigned long aint;
 
@@ -44,6 +49,11 @@ typedef unsigned long aint;
 typedef __m64 v4hi;
 typedef __m64 v2si;
 typedef __m64 di;
+
+/* MSVC++ forbids explicit casts */
+#define to_v4hi(X)
+#define to_v2si(X)
+#define to_di(X)
 
 #define __builtin_ia32_pand(X,Y)	_mm_and_si64(X,Y)
 #define __builtin_ia32_pcmpeqw(X,Y)	_mm_cmpeq_pi16(X,Y)
