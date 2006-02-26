@@ -54,7 +54,6 @@ INCLUDE_DIRECTORIES(${OpenAL_SOURCE_DIR}/src/arch)
 SET(AL_OBJS              src/al_bpool.c
                          src/al_buffer.c
                          src/al_config.c
-                         src/al_debug.c
                          src/al_distance.c
                          src/al_error.c
                          src/al_ext.c
@@ -77,6 +76,8 @@ SET(AL_OBJS              src/al_bpool.c
                          src/al_matrix.c
                          src/mixaudio16.c
                          src/backends/alc_backend.c)
+
+SET(AL_DEBUG_OBJS        src/al_debug.c)
 
 SET(ALC_OBJS             src/alc/alc_context.c
                          src/alc/alc_speaker.c
@@ -185,6 +186,7 @@ OPTION(MP3_DLOPEN     "mp3 dynamic loading"     ON)
 
 IF(DEBUG)
   ADD_DEFINE(DEBUG)
+  SET(AL_OBJS ${AL_OBJS} ${AL_DEBUG_OBJS})
   IF(WARNINGS)
     OPTION(MORE_WARNINGS "enable more warnings"         OFF)
     OPTION(USE_WERROR    "enable fail on all warning"   OFF)

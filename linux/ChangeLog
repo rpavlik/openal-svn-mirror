@@ -7,7 +7,8 @@
 	* admin/CMakeModules/FindSleepFunction.cmake: typo in windows check
 	
 	* CMakeLists.txt: nmake doesn't like "-" in target name; Windows/VC++
-	doesn't need libm; define needed for TryEnterCriticalSection
+	doesn't need libm; define needed for TryEnterCriticalSection;conditionally
+	compile debugging code
 
 2006-02-24  Sven Panne  <sven.panne@aedion.de>
 
