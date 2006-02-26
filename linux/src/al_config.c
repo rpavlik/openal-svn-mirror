@@ -15,11 +15,8 @@
 
 #include <AL/al.h>
 #include <ctype.h>
-#include <limits.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include <string.h>
 
 #include "al_main.h"
