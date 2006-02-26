@@ -51,9 +51,9 @@ typedef __m64 v2si;
 typedef __m64 di;
 
 /* MSVC++ forbids explicit casts */
-#define to_v4hi(X)
-#define to_v2si(X)
-#define to_di(X)
+#define to_v4hi(X) X
+#define to_v2si(X) X
+#define to_di(X)   X
 
 #define __builtin_ia32_pand(X,Y)	_mm_and_si64(X,Y)
 #define __builtin_ia32_pcmpeqw(X,Y)	_mm_cmpeq_pi16(X,Y)
