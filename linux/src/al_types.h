@@ -213,8 +213,8 @@ typedef struct _AL_source {
 		 * maintain soundpos, so set these.  If this works
 		 * out move everything over to use them.
 		 */
-		ssize_t new_soundpos;
-		ssize_t new_readindex;
+		long new_soundpos;
+		long new_readindex;
 
 		void *outbuf;           /* buffer where output data is stored */
 		ALuint delay[_ALC_MAX_CHANNELS];
