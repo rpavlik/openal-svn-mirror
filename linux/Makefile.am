@@ -18,6 +18,12 @@ EXTRA_DIST =							\
 	admin/CMakeModules/CMakeASMCompiler.cmake.in		\
 	admin/CMakeModules/CMakeASMInformation.cmake		\
 	admin/CMakeModules/CMakeDetermineASMCompiler.cmake	\
+	admin/CMakeModules/CMakeTestASMCompiler.cmake		\
+	admin/CMakeModules/FindCompilerAttribute.cmake		\
+	admin/CMakeModules/FindCompilerFlagsSet.cmake		\
+	admin/CMakeModules/FindCompilerVisibility.cmake		\
+	admin/CMakeModules/FindConfigHelper.cmake		\
+	admin/CMakeModules/FindSleepFunction.cmake		\
 	admin/RPM/openal.spec					\
 	admin/RPM/openal.xpm					\
 	admin/autotools/.indent.pro				\
