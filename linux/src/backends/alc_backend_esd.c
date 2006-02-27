@@ -109,6 +109,8 @@ loadLibraryESD (void)
   return 1;
 }
 
+#define INVALID_SOCKET (-1)
+
 typedef struct ALC_BackendDataESD_struct
 {
   ALC_OpenMode mode;            /* Is the device in input mode or output mode? */
@@ -142,7 +144,7 @@ openESD (ALC_OpenMode mode)
 
   eh->mode = mode;
   eh->paused = AL_FALSE;
-
+  eh->esd = INVALID_SOCKET;
   snprintf (eh->name, sizeof (eh->name), "openal-%d", (int) getpid ());
 
   _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
@@ -190,6 +192,15 @@ setAttributesESD (void *privateData, ALuint *bufferSize, ALenum *format,
             "setting attributes for ESD device '%s': buffer size %u, format 0x%x, speed %d",
             eh->name, (unsigned int) *bufferSize, (int) *format,
             (unsigned int) *speed);
+
+  /*
+   * Open the socket to the EsounD daemon only once, i.e. at the first time
+   * alcMakeContextCurrent(NON_NULL) is called.
+   */
+  if (eh->esd != INVALID_SOCKET)
+    {
+      return AL_TRUE;
+    }
 
   esd_format = ESD_STREAM;
 

@@ -1,3 +1,10 @@
+2006-02-27  Sven Panne  <sven.panne@aedion.de>
+
+	* src/backends/alc_backend_esd.c: Open the socket to the EsounD daemon
+	only once, i.e. at the first time alcMakeContextCurrent(NON_NULL) is
+	called. Note that we keep the connection open even when the context is
+	not current, closing it only when alcCloseDevice is called.
+
 2006-02-26  Prakash Punnoor <prakash@punnoor.de>
 
 	* admin/CMakeModules/CMakeTestASMCompiler.cmake: added
@@ -7,9 +14,9 @@
 	* admin/CMakeModules/FindSleepFunction.cmake: typo in windows check
 	
 	* CMakeLists.txt: nmake doesn't like "-" in target name; Windows/VC++
-	doesn't need libm; define needed for TryEnterCriticalSection;conditionally
-	compile debugging code; more windows friendliness; enable MMX in Windows
-	(needs real detection, though); some more windows fixes
+	doesn't need libm; define needed for TryEnterCriticalSection;
+	conditionally compile debugging code; more windows friendliness; enable
+	MMX in Windows (needs real detection, though); some more windows fixes
 	
 	* src/al_config.c, src/al_main.c, src/al_mixer.c,
 	src/backends/alc_backend_null.c, src/backends/alc_backend_wave.c,
@@ -20,8 +27,9 @@
 	
 	* src/al_siteconfig.h: windows knows _snprintf
 	
-	* src/arch/i386/x86_simd_support_prk.h, src/arch/i386/mixaudio16_mmx_prk.c:
-	work-around cast issues with gcc and mscv++; fix mscv++ casts
+	* src/arch/i386/x86_simd_support_prk.h,
+	src/arch/i386/mixaudio16_mmx_prk.c: work-around cast issues with gcc and
+	mscv++; fix mscv++ casts
 	
 	* src/arch/i386/x86_cpu_caps_detect_prk.nasm,
 	src/arch/i386/memcpy_mmx_prk.nasm: nasm symbol visibility support
