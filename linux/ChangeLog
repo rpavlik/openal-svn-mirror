@@ -1,7 +1,8 @@
 2006-02-27  Prakash Punnoor <prakash@punnoor.de>
 
 	* CMakeLists.txt: Variables ALUT_INCLUDE_DIR and ALUT_LIB_DIR introduced,
-	so tests can be built w/o globally installed alut
+	so tests can be built w/o globally installed alut more easily; remove
+	some debug message
 
 2006-02-27  Sven Panne  <sven.panne@aedion.de>
 
