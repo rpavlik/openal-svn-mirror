@@ -3,7 +3,8 @@
 	* CMakeLists.txt: Variables ALUT_INCLUDE_DIR and ALUT_LIB_DIR introduced,
 	so tests can be built w/o globally installed alut more easily; remove
 	some debug message; introduce *_INLCUDE_DIR and *_LIB_DIR for back-ends
-	and extenstion, and use fall-back if pkg-config fails
+	and extenstion, and use fall-back if pkg-config fails; hack to make ESD
+	back-end compile again
 
 2006-02-27  Sven Panne  <sven.panne@aedion.de>
 
