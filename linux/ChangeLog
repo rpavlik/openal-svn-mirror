@@ -7,6 +7,8 @@
 	back-end compile again; using real select arg types detection
 
 	* admin/CMakeModules/FindSelectArgtypes.cmake: added
+	
+	* admin/CMakeModules/FindSleepFunction.cmake: use 1 instead of ON
 
 2006-02-27  Sven Panne  <sven.panne@aedion.de>
 
