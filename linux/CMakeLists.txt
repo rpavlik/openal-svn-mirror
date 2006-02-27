@@ -22,6 +22,11 @@ SET(OPERATING_SYSTEM "${CMAKE_SYSTEM_NAME}")
 
 FIND_PACKAGE(ConfigHelper)
 
+INCLUDE(${CMAKE_ROOT}/Modules/CheckCSourceCompiles.cmake)
+INCLUDE(${CMAKE_ROOT}/Modules/CheckIncludeFile.cmake)
+INCLUDE(${CMAKE_ROOT}/Modules/CheckLibraryExists.cmake)
+INCLUDE(${CMAKE_ROOT}/Modules/TestBigEndian.cmake)
+
 MACRO(MACRO_TEST ARG VAR)
 CHECK_C_SOURCE_COMPILES(
 "#ifndef ${ARG}
@@ -32,6 +37,8 @@ int main(){}
 ENDMACRO(MACRO_TEST ARG VAR)
 
 
+
+
 ADD_DEFINE("PACKAGE_VERSION \"${PACKAGE_VERSION}\"")
 
 # We need ISO C99 features (e.g. snprintf) and POSIX IEEE Std 1003.1b-1993
@@ -40,10 +47,6 @@ ADD_DEFINITIONS(-D_ISOC99_SOURCE -D_POSIX_C_SOURCE=199309)
 
 ADD_DEFINE("SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P}")
 
-INCLUDE(${CMAKE_ROOT}/Modules/CheckCSourceCompiles.cmake)
-INCLUDE(${CMAKE_ROOT}/Modules/CheckIncludeFile.cmake)
-INCLUDE(${CMAKE_ROOT}/Modules/CheckLibraryExists.cmake)
-INCLUDE(${CMAKE_ROOT}/Modules/TestBigEndian.cmake)
 
 INCLUDE_DIRECTORIES(${OpenAL_SOURCE_DIR}/common/include)
 INCLUDE_DIRECTORIES(${OpenAL_SOURCE_DIR}/include)
@@ -346,20 +349,7 @@ ELSE(MOSTHREAD_AVAILABLE)
 ENDIF(MOSTHREAD_AVAILABLE)
 
 FIND_PACKAGE(SleepFunction)
-# FindSleepFunction will check for unistd.h if time.h wasn't found
-IF(HAVE_TIME_H)
-  CHECK_INCLUDE_FILE_DEFINE(unistd.h HAVE_UNISTD_H)
-ENDIF(HAVE_TIME_H)
-
-CHECK_INCLUDE_FILE_DEFINE(sys/select.h HAVE_SYS_SELECT_H)
-CHECK_INCLUDE_FILE_DEFINE(sys/socket.h HAVE_SYS_SOCKET_H)
-CHECK_INCLUDE_FILE_DEFINE(sys/time.h HAVE_SYS_TIME_H)
-CHECK_INCLUDE_FILE_DEFINE(sys/types.h HAVE_SYS_TYPES_H)
-
-# FIXME: implement AC_FUNC_SELECT_ARGTYPES macro
-ADD_DEFINE("SELECT_TYPE_ARG1 int")
-ADD_DEFINE("SELECT_TYPE_ARG234 (fd_set *)")
-ADD_DEFINE("SELECT_TYPE_ARG5 (struct timeval *)")
+FIND_PACKAGE(SelectArgtypes)
 
 # sound backends
 FIND_PACKAGE(PkgConfig)

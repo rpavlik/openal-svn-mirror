@@ -4,7 +4,9 @@
 	so tests can be built w/o globally installed alut more easily; remove
 	some debug message; introduce *_INLCUDE_DIR and *_LIB_DIR for back-ends
 	and extenstion, and use fall-back if pkg-config fails; hack to make ESD
-	back-end compile again
+	back-end compile again; using real select arg types detection
+
+	* admin/CMakeModules/FindSelectArgtypes.cmake: added
 
 2006-02-27  Sven Panne  <sven.panne@aedion.de>
 
