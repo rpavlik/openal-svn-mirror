@@ -526,6 +526,44 @@ IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
     IF(NOT HAVE_NASM MATCHES "NOTFOUND")
       PROJECT(OpenAL ASM)
       MESSAGE(STATUS "Using NASM")
+
+      # check nasm visibility support
+      IF(CMAKE_SYSTEM MATCHES "Linux")
+        IF(NOT DEFINED NASM_HAS_NO_VISIBILITY)
+          MESSAGE(STATUS "Checking nasm symbol visibility support")
+          SET(SOURCE "global _foo:function hidden\n_foo:")
+          FILE(WRITE "${CMAKE_BINARY_DIR}/CMakeTmp/src.nasm" "${SOURCE}")
+          # cmake broken, so work-around
+#        TRY_COMPILE(NASM_HAS_VISIBILITY
+ #                 ${CMAKE_BINARY_DIR}
+  #                ${CMAKE_BINARY_DIR}/CMakeTmp/src.nasm
+   #               OUTPUT_VARIABLE OUTPUT)
+
+          EXEC_PROGRAM(${HAVE_NASM} ${CMAKE_BINARY_DIR}/CMakeTmp/
+            ARGS "-f elf src.nasm >/dev/null"
+            OUTPUT_VARIABLE OUTPUT
+            RETURN_VALUE NASM_HAS_NO_VISIBILITY)
+
+          SET(NASM_HAS_NO_VISIBILITY
+            "${NASM_HAS_NO_VISIBILITY}" CACHE INTERNAL "")
+
+          WRITE_FILE(${CMAKE_BINARY_DIR}/CMakeOutput.log
+            "Performing nasm visibility test with the following output:\n"
+            "${OUTPUT}\n"
+            "Source file was:\n${SOURCE}\n" APPEND)
+
+          IF(NASM_HAS_NO_VISIBILITY)
+            MESSAGE(STATUS "Testing nasm symbol visibility support -- Failure")
+          ELSE(NASM_HAS_NO_VISIBILITY)
+            MESSAGE(STATUS "Testing nasm symbol visibility support -- Success")
+          ENDIF(NASM_HAS_NO_VISIBILITY)
+        ENDIF(NOT DEFINED NASM_HAS_NO_VISIBILITY)
+
+        IF(NOT NASM_HAS_NO_VISIBILITY)
+          SET(CMAKE_ASM_FLAGS "-DHAVE_NASM_VISIBILITY")
+        ENDIF(NOT NASM_HAS_NO_VISIBILITY)
+      ENDIF(CMAKE_SYSTEM MATCHES "Linux")
+
       ADD_DEFINE(HAVE_CPU_CAPS_DETECTION)
       SET(ARCH_OBJS ${ARCH_OBJS} ${x86_NASM_OBJS})
 

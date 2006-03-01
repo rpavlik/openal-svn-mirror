@@ -1,3 +1,22 @@
+2006-03-01  Prakash Punnoor <prakash@punnoor.de>
+
+	* CMakeLists.txt: detect (currently a work-around) and enable nasm
+	symbol visibility support in Linux
+
+	* admin/CMakeModules/CMakeASMCompiler.cmake.in,
+	admin/CMakeModules/CMakeDetermineASMCompiler.cmake: change a bit more
+	to CMake supplied modules' style
+
+	* admin/CMakeModules/CMakeASMInformation.cmake: respect global compiler
+	flags
+
+	* admin/CMakeModules/FindCompilerVisibility.cmake: don't pollute globally
+	visible compiler flags with gcc specific stuff
+
+	* src/arch/i386/memcpy_mmx_prk.nasm,
+	src/arch/i386/x86_cpu_caps_detect_prk.nasm: rename visibility enabling
+	definition
+
 2006-02-27  Prakash Punnoor <prakash@punnoor.de>
 
 	* CMakeLists.txt: Variables ALUT_INCLUDE_DIR and ALUT_LIB_DIR introduced,
