@@ -24,7 +24,7 @@
 
 ; returns 0 if no CPUID available
 
-%ifdef NASM_VISIBILTY
+%ifdef HAVE_NASM_VISIBILITY
 global __alDetectx86CPUCaps:function hidden
 global _alDetectx86CPUCaps:function hidden
 %else

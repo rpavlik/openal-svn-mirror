@@ -23,7 +23,7 @@
 ; by design broken for n<8, so check that before calling
 ; x86 32 bit only!
 
-%ifdef NASM_VISIBILTY
+%ifdef HAVE_NASM_VISIBILITY
 global __alMMXmemcpy:function hidden
 global _alMMXmemcpy:function hidden
 %else
