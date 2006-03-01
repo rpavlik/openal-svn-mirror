@@ -32,6 +32,6 @@ int main(){}
 ENDIF(NOT DEFINED ${VAR})
 
 IF(${VAR})
-  ADD_DEFINITIONS(-fvisibility=hidden)
+  SET(ADD_CFLAGS "${ADD_CFLAGS} -fvisibility=hidden")
   ADD_DEFINITIONS(-DHAVE_GCC_VISIBILITY)
 ENDIF(${VAR})
