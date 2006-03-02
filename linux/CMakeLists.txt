@@ -95,8 +95,7 @@ SET(AC_OBJS              src/audioconvert/ac_misc.c
                          src/audioconvert/ac_adpcm.c
                          src/audioconvert/ac_endian.c)
 
-SET(EXT_OBJS             src/extensions/al_ext_loki.c
-                         src/extensions/al_ext_capture.c)
+SET(EXT_OBJS             src/extensions/al_ext_loki.c)
 
 SET(MP3_OBJS             src/extensions/al_ext_mp3.c)
 SET(VORBIS_OBJS          src/extensions/al_ext_vorbis.c)
