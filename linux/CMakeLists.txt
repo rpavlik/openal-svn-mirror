@@ -37,13 +37,15 @@ int main(){}
 ENDMACRO(MACRO_TEST ARG VAR)
 
 
-
-
 ADD_DEFINE("PACKAGE_VERSION \"${PACKAGE_VERSION}\"")
 
 # We need ISO C99 features (e.g. snprintf) and POSIX IEEE Std 1003.1b-1993
 # features (e.g. struct timespec, used in <alsa/asoundlib.h>)
 ADD_DEFINITIONS(-D_ISOC99_SOURCE -D_POSIX_C_SOURCE=199309)
+
+# Without __NO_CTYPE tolower and friends are macros which introduce a GLIBC 2.3
+# dependency.
+ADD_DEFINITIONS(-D__NO_CTYPE)
 
 ADD_DEFINE("SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P}")
 
@@ -532,7 +534,7 @@ IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
           MESSAGE(STATUS "Checking nasm symbol visibility support")
           SET(SOURCE "global _foo:function hidden\n_foo:")
           FILE(WRITE "${CMAKE_BINARY_DIR}/CMakeTmp/src.nasm" "${SOURCE}")
-          # cmake broken, so work-around
+          # cmake broken, fixed in cvs, so work-around for the time-being
 #        TRY_COMPILE(NASM_HAS_VISIBILITY
  #                 ${CMAKE_BINARY_DIR}
   #                ${CMAKE_BINARY_DIR}/CMakeTmp/src.nasm

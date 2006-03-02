@@ -7,10 +7,16 @@
 
 2006-03-02  Prakash Punnoor <prakash@punnoor.de>
 
-	* CMakeLists.txt: remove al_ext_capture.c from sources
+	* CMakeLists.txt: remove al_ext_capture.c from sources; add __NO_CTYPE
+	definition
 
 	* Makefile.am: add admin/CMakeModules/FindPkgConfig.cmake and
 	FindSelectArgtypes.cmake to EXTRA_DIST
+
+	*admin/CMakeModules/CMakeASMInformation.cmake: add a fake linking
+	command
+
+	configure.ac: add __NO_CTYPE definition
 
 2006-03-02  Sven Panne  <sven.panne@aedion.de>
 

@@ -61,6 +61,12 @@ AC_SUBST([VERSIONINFO], ["$CURRENT:$REVISION:$AGE"])
 AC_DEFINE([_ISOC99_SOURCE], [1], [Define to 1 if extensions to ISO C89 from ISO C99 are needed.])
 AC_DEFINE([_POSIX_C_SOURCE], [199309], [Define to the POSIX version that should be used.])
 
+# Without __NO_CTYPE tolower and friends are macros which introduce a GLIBC 2.3
+# dependency. By defining this identifier we are currently backwards compatible
+# to GLIBC 2.1.3, which is a good thing. In addition, the macros lead to code
+# which triggers warnings with -Wunreachable-code.
+AC_DEFINE([__NO_CTYPE], [1], [Define to 1 if tolower and friends should not be macros.])
+
 AC_DEFINE([AL_BUILD_LIBRARY], [1], [Define to 1 if we are building the OpenAL library.])
 
 AC_PROG_CC
