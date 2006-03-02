@@ -1,17 +1,27 @@
+2006-03-02  Sven Panne  <sven.panne@aedion.de>
+
+	* include/AL/alext.h, src/Makefile.am, src/al_main.c,
+	src/alc/alc_context.c, src/alc/alc_context.h: Removed pre-OpenAL 1.1
+	capturing facility. According to Ryan it is unused, apart from Tribes 2,
+	but this comes with its own OpenAL, anyway.
+
+	* src/extensions/al_ext_capture.c, src/extensions/al_ext_capture.h:
+	Removed.
+
 2006-03-01  Prakash Punnoor <prakash@punnoor.de>
 
 	* CMakeLists.txt: detect (currently a work-around) and enable nasm
 	symbol visibility support in Linux
 
 	* admin/CMakeModules/CMakeASMCompiler.cmake.in,
-	admin/CMakeModules/CMakeDetermineASMCompiler.cmake: change a bit more
-	to CMake supplied modules' style
+	admin/CMakeModules/CMakeDetermineASMCompiler.cmake: change a bit more to
+	CMake supplied modules' style
 
 	* admin/CMakeModules/CMakeASMInformation.cmake: respect global compiler
 	flags
 
-	* admin/CMakeModules/FindCompilerVisibility.cmake: don't pollute globally
-	visible compiler flags with gcc specific stuff
+	* admin/CMakeModules/FindCompilerVisibility.cmake: don't pollute
+	globally visible compiler flags with gcc specific stuff
 
 	* src/arch/i386/memcpy_mmx_prk.nasm,
 	src/arch/i386/x86_cpu_caps_detect_prk.nasm: rename visibility enabling

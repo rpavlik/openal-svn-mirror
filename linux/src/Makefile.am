@@ -208,8 +208,6 @@ libopenal_la_SOURCES +=			\
 endif
 
 libopenal_la_SOURCES +=			\
-	extensions/al_ext_capture.c	\
-	extensions/al_ext_capture.h	\
 	extensions/al_ext_loki.c	\
 	extensions/al_ext_loki.h	\
 	extensions/al_ext_needed.h

@@ -114,17 +114,6 @@ AL_API  ALsizei  AL_APIENTRY alBufferAppendData( ALuint buffer, ALenum format, A
 AL_API void AL_APIENTRY alReverbScale_LOKI(ALuint sid, ALfloat param);
 AL_API void AL_APIENTRY alReverbDelay_LOKI(ALuint sid, ALfloat param);
 
-/* Capture api */
-
-ALC_API ALboolean ALC_APIENTRY alCaptureInit_EXT( ALenum format, ALuint rate, ALsizei bufferSize );
-ALC_API ALboolean ALC_APIENTRY alCaptureDestroy_EXT( void );
-ALC_API ALboolean ALC_APIENTRY alCaptureStart_EXT( void );
-ALC_API ALboolean ALC_APIENTRY alCaptureStop_EXT( void );
-
-/* Non-blocking device read */
-
-ALC_API ALsizei   ALC_APIENTRY alCaptureGetData_EXT( ALvoid *data, ALsizei n, ALenum format, ALuint rate );
-
 /* custom loaders */
 
 AL_API ALboolean AL_APIENTRY alutLoadVorbis_LOKI( ALuint bid, const ALvoid *data, ALint size );
@@ -141,13 +130,6 @@ typedef void      ( AL_APIENTRY *PFNALBUFFERWRITEDATAPROC ) ( ALuint buffer, ALe
 typedef void      ( AL_APIENTRY *PFNALGENSTREAMINGBUFFERSPROC ) ( ALsizei n, ALuint *samples );
 typedef ALsizei   ( AL_APIENTRY *PFNALBUFFERAPPENDDATAPROC ) ( ALuint buffer, ALenum format, ALvoid *data, ALsizei size, ALsizei freq );
 typedef ALsizei   ( AL_APIENTRY *PFNALBUFFERAPPENDWRITEDATAPROC ) ( ALuint buffer, ALenum format, ALvoid *data, ALsizei size, ALsizei freq, ALenum internalFormat );
-
-typedef ALboolean ( ALC_APIENTRY *PFNALCAPTUREINITPROC ) ( ALenum format, ALuint rate, ALsizei bufferSize );
-typedef ALboolean ( ALC_APIENTRY *PFNALCAPTUREDESTROYPROC ) ( void );
-typedef ALboolean ( ALC_APIENTRY *PFNALCAPTURESTARTPROC ) ( void );
-typedef ALboolean ( ALC_APIENTRY *PFNALCAPTURESTOPPROC ) ( void );
-
-typedef ALsizei   ( ALC_APIENTRY *PFNALCAPTUREGETDATAPROC ) ( ALvoid *data, ALsizei n, ALenum format, ALuint rate );
 
 typedef ALboolean ( AL_APIENTRY *PFNALUTLOADVORBISPROC ) ( ALuint bid, ALvoid *data, ALint size );
 typedef ALboolean ( AL_APIENTRY *PFNALUTLOADRAW_ADPCMDATAPROC ) ( ALuint bid, ALvoid *data, ALuint size, ALuint freq, ALenum format );

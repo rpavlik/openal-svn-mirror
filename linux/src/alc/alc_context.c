@@ -1675,6 +1675,126 @@ alcGetIntegerv (ALCdevice *deviceHandle, ALCenum token,
  Capture functions
 */
 
+static ALboolean
+alCaptureInit_EXT( UNUSED(ALenum format), ALuint rate, ALsizei UNUSED(bufferSize))
+{
+	ALuint cid;
+	AL_context *cc;
+	AL_device *capture_device;
+
+	/* get the current context */
+	capture_device = NULL;
+	cid = _alcCCId;
+	_alcLockContext( cid );
+	cc = _alcGetContext(cid);
+	if ( cc != NULL ) {
+		capture_device = cc->read_device;
+		if ( capture_device == NULL ) {
+			char spec[1024];
+			const char *fmt="'( (direction \"read\") (sampling-rate %d))";
+
+			snprintf(spec, sizeof(spec), fmt, rate);
+			capture_device = alcOpenDevice((ALchar *)spec);
+			if ( capture_device ) {
+				_alcSetContext(NULL, cid, capture_device);
+				_alcDeviceSet(capture_device);
+			}
+		}
+	}
+	_alcUnlockContext( cid );
+
+	return (capture_device != NULL);
+}
+
+static ALboolean
+alCaptureDestroy_EXT( void )
+{
+	ALuint cid;
+	AL_context *cc;
+
+	/* get the current context */
+	cid = _alcCCId;
+	_alcLockContext( cid );
+	cc = _alcGetContext(cid);
+	if ( cc == NULL ) {
+		_alcUnlockContext( cid );
+		return AL_FALSE;
+	}
+
+	if ( cc->read_device ) {
+		/* Only close it if we opened it originally */
+		if (cc->write_device && (cc->read_device != cc->write_device)) {
+			alcCloseDevice(cc->read_device);
+			cc->read_device = NULL;
+		}
+	}
+	_alcUnlockContext( cid );
+
+	return AL_TRUE;
+}
+
+static ALsizei
+alCaptureGetData_EXT( ALvoid* data, ALsizei n, ALenum format, ALuint rate)
+{
+	AL_device *dev;
+	ALuint size;
+	ALuint cid;
+	AL_context *cc;
+
+	/* get the read device */
+	cid = _alcCCId;
+	cc = _alcGetContext(cid);
+	if ( cc == NULL ) {
+		return 0;
+	}
+	dev = cc->read_device;
+
+	if ( (dev->format == format) && (dev->speed == rate) ) {
+		size = _alcDeviceRead(cid, data, (ALuint)n);
+	} else {
+		ALuint samples;
+		void *temp;
+
+		samples = n / (_alGetBitsFromFormat(format) / 8);
+
+		/* Set size to the bytes of raw audio data we need */
+		size = _al_PCMRatioify(rate, dev->speed,
+		                       format, dev->format, samples);
+		size *= (_alGetBitsFromFormat(dev->format) / 8);
+
+        	if ( n > (ALsizei)size )
+			temp = malloc( (size_t)n );
+		else
+			temp = malloc( (size_t)size );
+
+		if ( size > 0 ) {
+			size = _alcDeviceRead(cid, temp, size);
+
+			temp = (void *)_alBufferCanonizeData(dev->format,
+						     temp,
+						     size,
+						     dev->speed,
+						     format,
+						     rate,
+						     &size,
+						     AL_TRUE);
+		} else {
+			/* Hmm, zero size in record.. */
+			memset(temp, 0, (size_t)n);
+			size = n;
+		}
+		if(temp == NULL) {
+			fprintf(stderr, "could not canonize data\n");
+			return 0;
+		}
+
+		memcpy(data, temp, size);
+
+		free( temp );
+	}
+	return size;
+}
+
 /* Hacked in ALC_EXT_capture support.  --ryan. */
 /* This doesn't support multiple devices, device enumeration, or capture */
 /*  devices seperate from an existing context. How painful. */
@@ -1688,14 +1808,6 @@ typedef struct {
 	ALsizei read;
 	ALsizei used;
 } __ALRingBuffer;
-
-static ALboolean __alRingBufferInit( __ALRingBuffer * ring, ALsizei size );
-static ALvoid __alRingBufferShutdown( __ALRingBuffer * ring );
-static ALsizei __alRingBufferSize( __ALRingBuffer * ring );
-static ALvoid __alRingBufferPut( __ALRingBuffer * ring, ALubyte *data,
-				 ALsizei size );
-static ALsizei __alRingBufferGet( __ALRingBuffer * ring, ALubyte *data,
-				  ALsizei size );
 
 static __ALRingBuffer captureRing;
 
@@ -1884,13 +1996,10 @@ ALCboolean alcCaptureCloseDevice( ALCdevice *device )
 
 void alcCaptureStart( UNUSED(ALCdevice *device) )
 {
-	alCaptureStart_EXT();
-
 }
 
 void alcCaptureStop( UNUSED(ALCdevice *device) )
 {
-	alCaptureStop_EXT();
 }
 
 /* !!! FIXME: Not ideal; reads samples in ALC_CAPTURE_SAMPLES query */

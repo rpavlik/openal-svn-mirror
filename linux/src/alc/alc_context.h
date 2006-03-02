@@ -204,7 +204,6 @@ ALsizei _alcDeviceRead( ALuint cid, void *data, ALuint bytes_to_read );
 #define _alcDCGetWriteSpeed()     _alcGetWriteSpeed(_alcCCId)
 #define _alcDCGetWriteFormat()    _alcGetWriteFormat(_alcCCId)
 #define _alcDCDeviceWrite(d,b)    _alcDeviceWrite(_alcCCId, d, b)
-#define _alcDCDeviceRead(d,b)     _alcDeviceRead(_alcCCId, d, b)
 
 #define _alcDCLockContext()     FL_alcLockContext(_alcCCId, __FILE__, __LINE__)
 #define _alcDCUnlockContext()   FL_alcUnlockContext(_alcCCId,__FILE__, __LINE__)

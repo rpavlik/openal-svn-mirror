@@ -49,7 +49,6 @@
 #include "extensions/al_ext_loki.h"
 #include "extensions/al_ext_mp3.h"
 #include "extensions/al_ext_vorbis.h"
-#include "extensions/al_ext_capture.h"
 
 #ifndef M_PI
 #define M_PI		3.14159265358979323846	/* pi */
@@ -78,9 +77,6 @@ static AL_extension exts[] = {
 #ifdef BUILTIN_EXT_VORBIS
 	BUILTIN_EXT_VORBIS,
 #endif /* BUILDIN_EXT_VORBIS */
-#ifdef BUILTIN_EXT_CAPTURE
-	BUILTIN_EXT_CAPTURE,
-#endif
 	{ NULL, NULL }
 };
 
@@ -146,7 +142,6 @@ ALboolean _alInit( void ) {
 
 	/* do builtin extensions initialization */
 	BUILTIN_EXT_LOKI_INIT;
-	BUILTIN_EXT_CAPTURE_INIT;
 	BUILTIN_EXT_MP3_INIT;
 	BUILTIN_EXT_VORBIS_INIT;
 
@@ -199,7 +194,6 @@ void _alExit( void ) {
 
 	/* do builtin extensions destruction */
 	BUILTIN_EXT_LOKI_FINI;
-	BUILTIN_EXT_CAPTURE_FINI;
 	BUILTIN_EXT_MP3_FINI;
 	BUILTIN_EXT_VORBIS_FINI;
 
