@@ -175,10 +175,10 @@ ALCboolean alcMakeContextCurrent( ALCcontext *handle )
 				 * impending stall.
 				 */
 				if( cc->write_device ) {
-					_alcDevicePause( cc->write_device );
+					alcDevicePause_( cc->write_device );
 				}
 				if( cc->read_device ) {
-					_alcDevicePause( cc->read_device );
+					alcDevicePause_( cc->read_device );
 				}
 
 				_alcCCId = (ALuint) -1;
@@ -221,14 +221,14 @@ ALCboolean alcMakeContextCurrent( ALCcontext *handle )
 	/* set device's current context */
 	if(cc->write_device) {
 		cc->write_device->cc = cc;
-		_alcDeviceSet( cc->write_device );
+		alcDeviceSet_( cc->write_device );
 	}
 
 	_alSetMixer( cc->should_sync ); /* set mixing stats */
 
 	if(cc->read_device) {
 		cc->read_device->cc = cc;
-		_alcDeviceSet( cc->read_device );
+		alcDeviceSet_( cc->read_device );
 	}
 
 
@@ -236,8 +236,8 @@ ALCboolean alcMakeContextCurrent( ALCcontext *handle )
 		/* someone unpaused us */
 		ispaused = AL_FALSE;
 
-		_alcDeviceResume( cc->write_device );
-		_alcDeviceResume( cc->read_device );
+		alcDeviceResume_( cc->write_device );
+		alcDeviceResume_( cc->read_device );
 
 		_alcUnlockAllContexts();
 		_alUnlockMixerPause();
@@ -1230,59 +1230,6 @@ ALuint _alcGetWriteSpeed( ALuint cid ) {
 }
 
 /*
- * _alcDeviceRead( ALuint cid, ALvoid *dataptr, ALuint bytes_to_read )
- *
- * Reads bytes_to_read worth of data from the read device
- * associated with the context named cid.
- *
- * assumes locked context
- */
-ALsizei _alcDeviceRead( ALuint cid, ALvoid *dataptr, ALuint bytes_to_read )
-{
-	AL_context *cc;
-	AL_device *dev;
-
-	cc = _alcGetContext( cid );
-	if( cc == NULL ) {
-		return 0;
-	}
-
-	dev = cc->read_device;
-	if( dev == NULL ) {
-		return 0;
-	}
-
-	return dev->ops->read(dev->privateData, dataptr, bytes_to_read);
-}
-
-/*
- * _alcDeviceWrite( ALuint cid, ALvoid *dataptr, ALuint bytes_to_write )
- *
- * Writes bytes_to_write worth of data from dataptr to the write device
- * associated with the context named cid.
- *
- * assumes locked context
- */
-void _alcDeviceWrite( ALuint cid, ALvoid *dataptr, ALuint bytes_to_write ) {
-	AL_context *cc;
-	AL_device *dev;
-
-	cc = _alcGetContext( cid );
-	if( cc == NULL ) {
-		return;
-	}
-
-	dev = cc->write_device;
-	if( dev == NULL ) {
-		return;
-	}
-
-	dev->ops->write( dev->privateData, dataptr, bytes_to_write );
-
-	return;
-}
-
-/*
  * _alcIsContext( ALuint cid )
  *
  * Returns AL_TRUE if cid names a valid context, AL_FALSE otherwise.
@@ -1697,7 +1644,7 @@ alCaptureInit_EXT( UNUSED(ALenum format), ALuint rate, ALsizei UNUSED(bufferSize
 			capture_device = alcOpenDevice((ALchar *)spec);
 			if ( capture_device ) {
 				_alcSetContext(NULL, cid, capture_device);
-				_alcDeviceSet(capture_device);
+				alcDeviceSet_(capture_device);
 			}
 		}
 	}
@@ -1750,7 +1697,7 @@ alCaptureGetData_EXT( ALvoid* data, ALsizei n, ALenum format, ALuint rate)
 	dev = cc->read_device;
 
 	if ( (dev->format == format) && (dev->speed == rate) ) {
-		size = _alcDeviceRead(cid, data, (ALuint)n);
+		size = alcDeviceRead_(dev, data, (ALuint)n);
 	} else {
 		ALuint samples;
 		void *temp;
@@ -1768,7 +1715,7 @@ alCaptureGetData_EXT( ALvoid* data, ALsizei n, ALenum format, ALuint rate)
 			temp = malloc( (size_t)size );
 
 		if ( size > 0 ) {
-			size = _alcDeviceRead(cid, temp, size);
+			size = alcDeviceRead_(dev, temp, size);
 
 			temp = (void *)_alBufferCanonizeData(dev->format,
 						     temp,

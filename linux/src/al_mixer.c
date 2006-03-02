@@ -1099,7 +1099,14 @@ int async_mixer_iterate(UNUSED(void *dummy)) {
 
 			if(bytes_to_write)
 			{
-				_alcDCDeviceWrite(mixbuf.data, bytes_to_write);
+				/* ToDo: We are handling the current context here only, there might be other active contexts!!! */
+				AL_context *cc = _alcDCGetContext( );
+				if( cc != NULL ) {
+					AL_device *dev = cc->write_device;
+					if( dev != NULL ) {
+						alcDeviceWrite_(dev, mixbuf.data, bytes_to_write);
+					}
+				}
 			}
 
 			/* clear buffer */
@@ -1369,7 +1376,13 @@ int sync_mixer_iterate(UNUSED(void *dummy))
 
 	if(dataptr)
 	{
-		_alcDCDeviceWrite( dataptr, bytes_to_write );
+		AL_context *cc = _alcDCGetContext( );
+		if( cc != NULL ) {
+			AL_device *dev = cc->write_device;
+			if( dev != NULL ) {
+				alcDeviceWrite_( dev, dataptr, bytes_to_write );
+			}
+		}
 	}
 
 	return 0;

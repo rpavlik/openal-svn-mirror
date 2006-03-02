@@ -198,20 +198,32 @@ alcCloseDevice( ALCdevice *dev )
 	return ALC_TRUE;
 }
 
+void
+alcDevicePause_( AL_device *dev  )
+{
+	dev->ops->pause( dev->privateData );
+}
+
+void
+alcDeviceResume_( AL_device *dev  )
+{
+	dev->ops->resume( dev->privateData );
+}
+
 /*
  * Sets the attributes for the device from the settings in the device. The
  * library is free to change the parameters associated with the device, but
- * until _alcDeviceSet is called, none of the changes are important.
+ * until alcDeviceSet_ is called, none of the changes are important.
  *
  * Sets ALC_INVALID_DEVICE if the setting operation failed.  After a call to
  * this function, the caller should check the members in dev is see what the
  * actual values set where.
  */
 void
-_alcDeviceSet( AL_device *dev )
+alcDeviceSet_( AL_device *dev )
 {
 	if( dev->ops->setAttributes(dev->privateData, &dev->bufsiz, &dev->format, &dev->speed) != AL_TRUE ) {
-		_alDebug(ALD_CONTEXT, __FILE__, __LINE__, "_alcDeviceSet failed.");
+		_alDebug(ALD_CONTEXT, __FILE__, __LINE__, "alcDeviceSet_ failed.");
 		_alcSetError( ALC_INVALID_DEVICE );
 	}
 	_alDebug( ALD_CONVERT, __FILE__, __LINE__,
@@ -221,20 +233,26 @@ _alcDeviceSet( AL_device *dev )
 		  dev->bufsiz );
 }
 
-/*
- * Pauses a device.
- */
 void
-_alcDevicePause( AL_device *dev  )
+alcDeviceWrite_( AL_device *dev, ALvoid *dataptr, ALuint bytes_to_write )
 {
-	dev->ops->pause( dev->privateData );
+	dev->ops->write( dev->privateData, dataptr, bytes_to_write );
 }
 
-/*
- * Resumes a device.
- */
-void
-_alcDeviceResume( AL_device *dev  )
+ALsizei
+alcDeviceRead_( AL_device *dev, ALvoid *dataptr, ALuint bytes_to_read )
 {
-	dev->ops->resume( dev->privateData );
+	return dev->ops->read(dev->privateData, dataptr, bytes_to_read);
+}
+
+ALfloat
+alcDeviceGetAudioChannel_( AL_device *dev, ALuint channel)
+{
+	return dev->ops->getAudioChannel( dev->privateData, channel);
+}
+
+void
+alcDeviceSetAudioChannel_( AL_device *dev, ALuint channel, ALfloat volume)
+{
+	dev->ops->setAudioChannel(dev->privateData, channel, volume);
 }

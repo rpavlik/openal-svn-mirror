@@ -23,6 +23,7 @@
 #include "al_debug.h"
 #include "al_source.h"
 #include "alc/alc_context.h"
+#include "alc/alc_device.h"
 #include "alc/alc_speaker.h"
 
 #include "audioconvert/audioconvert.h"
@@ -32,9 +33,6 @@
 #ifndef elementsof
 #define elementsof(a) ((sizeof(a)) / (sizeof *(a)))
 #endif
-
-static ALfloat _alcGetAudioChannel_LOKI(ALuint channel);
-static void _alcSetAudioChannel_LOKI(ALuint channel, ALfloat volume);
 
 /* BufferAppendData defines */
 #define MINSTREAMCHUNKSIZE  32768 /* minimum reasonable size */
@@ -100,52 +98,30 @@ void alExtFini_03282000(void) {
 }
 #endif /* OPENAL_EXTENSION */
 
-ALfloat alcGetAudioChannel_LOKI(ALuint channel) {
-	ALfloat retval;
-
+ALfloat
+alcGetAudioChannel_LOKI(ALuint channel)
+{
+	AL_context *cc;
+	ALfloat retval = 0.0f;
 	_alcDCLockContext();
-
-	retval = _alcGetAudioChannel_LOKI(channel);
-
+	cc = _alcDCGetContext();
+	if(cc != NULL) {
+		retval = alcDeviceGetAudioChannel_( cc->write_device, channel );
+	}
 	_alcDCUnlockContext();
-
 	return retval;
 }
 
-void alcSetAudioChannel_LOKI(ALuint channel, ALfloat volume) {
+void
+alcSetAudioChannel_LOKI(ALuint channel, ALfloat volume)
+{
+	AL_context *cc;
 	_alcDCLockContext();
-
-	_alcSetAudioChannel_LOKI(channel, volume);
-
+	cc = _alcDCGetContext();
+	if(cc != NULL) {
+		alcDeviceSetAudioChannel_( cc->write_device, channel, volume );
+	}
 	_alcDCUnlockContext();
-}
-
-static void _alcSetAudioChannel_LOKI(ALuint channel, ALfloat volume) {
-	AL_context *cc;
-	AL_device *dev;
-
-	cc = _alcDCGetContext();
-	if(cc == NULL) {
-		return;
-	}
-
-	dev = cc->write_device;
-	dev->ops->setAudioChannel(dev->privateData, channel, volume);
-
-	return;
-}
-
-static ALfloat _alcGetAudioChannel_LOKI(ALuint channel) {
-	AL_context *cc;
-	AL_device *dev;
-
-	cc = _alcDCGetContext();
-	if(cc == NULL) {
-		return 0;
-	}
-
-	dev = cc->write_device;
-	return dev->ops->getAudioChannel( dev->privateData, channel);
 }
 
 /* 0.0 - 1.0 */

@@ -1,8 +1,16 @@
+2006-03-02  Sven Panne  <sven.panne@aedion.de>
+
+	* src/al_mixer.c, src/alc/alc_context.c, src/alc/alc_context.h,
+	src/alc/alc_device.c, src/alc/alc_device.h,
+	src/extensions/al_ext_loki.c: Made the device's privateData field really
+	private.
+
 2006-03-02  Prakash Punnoor <prakash@punnoor.de>
 
 	* CMakeLists.txt: remove al_ext_capture.c from sources
 
 2006-03-02  Sven Panne  <sven.panne@aedion.de>
+
 	* src/backends/alc_backend.h: Fixed comment.
 
 	* include/AL/alext.h, src/Makefile.am, src/al_main.c,

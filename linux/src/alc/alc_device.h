@@ -12,25 +12,28 @@
 #include <AL/al.h>
 
 #include "al_types.h"
-/*
- * Pauses a device.
- */
-void _alcDevicePause( AL_device *dev );
 
-/*
- * Resumes a device.
- */
-void _alcDeviceResume( AL_device *dev );
+void alcDevicePause_( AL_device *dev );
+
+void alcDeviceResume_( AL_device *dev );
 
 /*
  * Sets the attributes for the device from the settings in the device. The
  * library is free to change the parameters associated with the device, but
- * until _alcDeviceSet is called, none of the changes are important.
+ * until alcDeviceSet_ is called, none of the changes are important.
  *
  * Sets ALC_INVALID_DEVICE if the setting operation failed.  After a call to
  * this function, the caller should check the members in dev is see what the
  * actual values set where.
  */
-void _alcDeviceSet( AL_device *dev );
+void alcDeviceSet_( AL_device *dev );
+
+void alcDeviceWrite_( AL_device *dev, ALvoid *dataptr, ALuint bytes_to_write );
+
+ALsizei alcDeviceRead_( AL_device *dev, ALvoid *dataptr, ALuint bytes_to_read );
+
+ALfloat alcDeviceGetAudioChannel_( AL_device *dev, ALuint channel);
+
+void alcDeviceSetAudioChannel_( AL_device *dev, ALuint channel, ALfloat volume);
 
 #endif /* _ALC_DEVICE_H_ */

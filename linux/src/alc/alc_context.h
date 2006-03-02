@@ -177,18 +177,6 @@ void FL_alcLockAllContexts( const char *fn, int ln );
  */
 void FL_alcUnlockAllContexts( const char *fn, int ln );
 
-/*
- * Write bytes_to_write worth of data from data to the device associated with
- * the context named by cid.
- */
-void _alcDeviceWrite( ALuint cid, ALvoid *data, ALuint bytes_to_write );
-
-/*
- * Read bytes_to_read worth of data from the device associated with the
- * context named by cid.
- */
-ALsizei _alcDeviceRead( ALuint cid, void *data, ALuint bytes_to_read );
-
 /* default context macros */
 #define _alcDCGetContext()        _alcGetContext(_alcCCId)
 #define _alcDCGetReadBufsiz()     _alcGetReadBufsiz(_alcCCId)
@@ -203,7 +191,6 @@ ALsizei _alcDeviceRead( ALuint cid, void *data, ALuint bytes_to_read );
 #define _alcDCGetReadFormat()     _alcGetReadFormat(_alcCCId)
 #define _alcDCGetWriteSpeed()     _alcGetWriteSpeed(_alcCCId)
 #define _alcDCGetWriteFormat()    _alcGetWriteFormat(_alcCCId)
-#define _alcDCDeviceWrite(d,b)    _alcDeviceWrite(_alcCCId, d, b)
 
 #define _alcDCLockContext()     FL_alcLockContext(_alcCCId, __FILE__, __LINE__)
 #define _alcDCUnlockContext()   FL_alcUnlockContext(_alcCCId,__FILE__, __LINE__)
