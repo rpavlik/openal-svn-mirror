@@ -9,6 +9,9 @@
 
 	* CMakeLists.txt: remove al_ext_capture.c from sources
 
+	* Makefile.am: add admin/CMakeModules/FindPkgConfig.cmake and
+	FindSelectArgtypes.cmake to EXTRA_DIST
+
 2006-03-02  Sven Panne  <sven.panne@aedion.de>
 
 	* src/backends/alc_backend.h: Fixed comment.
