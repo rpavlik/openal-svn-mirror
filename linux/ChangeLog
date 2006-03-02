@@ -1,4 +1,5 @@
 2006-03-02  Sven Panne  <sven.panne@aedion.de>
+	* src/backends/alc_backend.h: Fixed comment.
 
 	* include/AL/alext.h, src/Makefile.am, src/al_main.c,
 	src/alc/alc_context.c, src/alc/alc_context.h: Removed pre-OpenAL 1.1

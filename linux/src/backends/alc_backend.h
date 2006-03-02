@@ -76,7 +76,7 @@ typedef struct ALC_BackendOpsStruct
 
   /*
    * Captures data from an input backend into the given buffer. This function is
-   * used to implement alCaptureGetData_EXT.
+   * used to implement capture functionality.
    */
   ALsizei (*read) (ALC_BackendPrivateData *privateData, void *data, int size);
 
