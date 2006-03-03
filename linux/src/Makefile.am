@@ -68,15 +68,16 @@ endif
 
 # backend sources
 
-if USEBACKENDALSA
 libopenal_la_SOURCES +=			\
-	backends/alc_backend_alsa.c
-endif
-
-if USEBACKENDARTS
-libopenal_la_SOURCES +=			\
-	backends/alc_backend_arts.c
-endif
+	backends/alc_backend.c		\
+	backends/alc_backend.h		\
+	backends/alc_backend_alsa.c	\
+	backends/alc_backend_arts.c	\
+	backends/alc_backend_esd.c	\
+	backends/alc_backend_irix.c	\
+	backends/alc_backend_null.c	\
+	backends/alc_backend_sdl.c	\
+	backends/alc_backend_wave.c
 
 if USEBACKENDNATIVEBSD
 libopenal_la_SOURCES +=			\
@@ -86,16 +87,6 @@ endif
 if USEBACKENDNATIVEDARWIN
 libopenal_la_SOURCES +=			\
 	backends/alc_backend_darwin.c
-endif
-
-if USEBACKENDESD
-libopenal_la_SOURCES +=			\
-	backends/alc_backend_esd.c
-endif
-
-if USEBACKENDNATIVEIRIX
-libopenal_la_SOURCES +=			\
-	backends/alc_backend_irix.c
 endif
 
 if USEBACKENDNATIVELINUX
@@ -108,34 +99,15 @@ libopenal_la_SOURCES +=			\
 	backends/alc_backend_morphos.c
 endif
 
-if USEBACKENDNULL
-libopenal_la_SOURCES +=			\
-	backends/alc_backend_null.c
-endif
-
-if USEBACKENDSDL
-libopenal_la_SOURCES +=			\
-	backends/alc_backend_sdl.c
-endif
-
 if USEBACKENDNATIVESOLARIS
 libopenal_la_SOURCES +=			\
 	backends/alc_backend_solaris.c
-endif
-
-if USEBACKENDWAVEOUT
-libopenal_la_SOURCES +=			\
-	backends/alc_backend_wave.c
 endif
 
 if USEBACKENDNATIVEWINDOWS
 libopenal_la_SOURCES +=			\
 	backends/alc_backend_windows.c
 endif
-
-libopenal_la_SOURCES +=			\
-	backends/alc_backend.c \
-	backends/alc_backend.h
 
 # processor-specific sources
 

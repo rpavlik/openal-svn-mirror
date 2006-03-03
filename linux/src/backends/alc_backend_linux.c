@@ -8,6 +8,18 @@
  *
  */
 #include "al_siteconfig.h"
+#include <stdlib.h>
+#include "backends/alc_backend.h"
+
+#ifndef USE_BACKEND_NATIVE_LINUX
+
+void alcBackendOpenNative_ (UNUSED(ALC_OpenMode mode), UNUSED(ALC_BackendOps **ops),
+			    ALC_BackendPrivateData **privateData)
+{
+	*privateData = NULL;
+}
+
+#else
 
 #include <AL/al.h>
 #include <AL/alext.h>
@@ -24,7 +36,6 @@
 #include "al_main.h"
 #include "al_debug.h"
 #include "alc/alc_context.h"
-#include "backends/alc_backend.h"
 
 #ifdef WORDS_BIGENDIAN
 #define AFMT_S16 AFMT_S16_BE
@@ -234,12 +245,6 @@ static void *grab_read_native(void)
 
 	linuxMode = ALC_OPEN_INPUT_;
 	return &read_fd;
-}
-
-static void *
-alcBackendOpenNative_( ALC_OpenMode mode )
-{
-	return mode == ALC_OPEN_INPUT_ ? grab_read_native() : grab_write_native();
 }
 
 static int grab_mixerfd(void) {
@@ -701,7 +706,6 @@ static int try_to_open(const char **paths, int n_paths, const char **used_path, 
 }
 
 static ALC_BackendOps nativeOps = {
-	alcBackendOpenNative_,
 	release_native,
 	pause_nativedevice,
 	resume_nativedevice,
@@ -712,8 +716,13 @@ static ALC_BackendOps nativeOps = {
 	set_nativechannel
 };
 
-ALC_BackendOps *
-alcGetBackendOpsNative_ (void)
+void
+alcBackendOpenNative_ (ALC_OpenMode mode, ALC_BackendOps **ops, ALC_BackendPrivateData **privateData)
 {
-	return &nativeOps;
+	*privateData = (mode == ALC_OPEN_INPUT_) ? grab_read_native() : grab_write_native();
+	if (*privateData != NULL) {
+		*ops = &nativeOps;
+	}
 }
+
+#endif /* USE_BACKEND_NATIVE_LINUX */

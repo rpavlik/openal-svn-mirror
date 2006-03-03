@@ -1,10 +1,5 @@
-/* -*- mode: C; tab-width:8; c-basic-offset:8 -*-
- * vi:set ts=8:
- *
- * interface_sound.h
- *
+/*
  * High level prototypes for sound device aquisition and management.
- *
  */
 #ifndef AL_BACKENDS_ALC_BACKEND_H_
 #define AL_BACKENDS_ALC_BACKEND_H_
@@ -24,18 +19,8 @@ typedef enum
  */
 typedef void ALC_BackendPrivateData;
 
-/*
- * Various data, the details depend on the backend in question.
- */
 typedef struct ALC_BackendOpsStruct
 {
-  /*
-   * Returns a pointer to private data of a backend suitable for reading or
-   * writing sound data to this kind of backend, or NULL if opening failed. This
-   * function is used to implement alcOpenDevice.
-   */
-  ALC_BackendPrivateData *(*open) (ALC_OpenMode mode);
-
   /*
    * Closes an (output or input) backend. Returns AL_TRUE if closing was
    * successful, AL_FALSE if the backend could not be closed for some
@@ -95,58 +80,31 @@ typedef struct ALC_BackendOpsStruct
 } ALC_BackendOps;
 
 /*
- * Returns a pointer (via the 2nd argument) to a backend function table suitable
- * for reading or writing sound data, or NULL if no such backend is available.
- * In the former case, private backend data is passed back via the 3rd argument.
- * This function is used to implement alcOpenDevice.
+ * Returns a pointer to private backend data via the 3rd argument, or NULL if no
+ * such backend is available. In the former case, a pointer to a backend
+ * function table suitable for reading or writing sound data is returned via the
+ * 2nd argument. This function is used to implement alcOpenDevice.
  */
-void alcBackendOpen_ (ALC_OpenMode mode, ALC_BackendOps **theOps,
-                      ALC_BackendPrivateData **thePrivateData);
+void alcBackendOpen_ (ALC_OpenMode mode, ALC_BackendOps **ops,
+                      ALC_BackendPrivateData **privateData);
 
 /******************************************************************************/
 
-ALC_BackendOps *alcGetBackendOpsNative_ (void);
-
-#ifdef USE_BACKEND_ALSA
-ALC_BackendOps *alcGetBackendOpsALSA_ (void);
-#else
-#define alcGetBackendOpsALSA_() NULL
-#endif /* USE_BACKEND_ALSA */
-
-#ifdef USE_BACKEND_ARTS
-ALC_BackendOps *alcGetBackendOpsARts_ (void);
-#else
-#define alcGetBackendOpsARts_() NULL
-#endif /* USE_BACKEND_ARTS */
-
-#ifdef USE_BACKEND_DMEDIA
-ALC_BackendOps *alcGetBackendOpsDMedia_ (void);
-#else
-#define alcGetBackendOpsDMedia_() NULL
-#endif /* USE_BACKEND_DMEDIA */
-
-#ifdef USE_BACKEND_ESD
-ALC_BackendOps *alcGetBackendOpsESD_ (void);
-#else
-#define alcGetBackendOpsESD_() NULL
-#endif /* USE_BACKEND_ESD */
-
-#ifdef USE_BACKEND_SDL
-ALC_BackendOps *alcGetBackendOpsSDL_ (void);
-#else
-#define alcGetBackendOpsSDL_() NULL
-#endif /* USE_BACKEND_SDL */
-
-#ifdef USE_BACKEND_NULL
-ALC_BackendOps *alcGetBackendOpsNull_ (void);
-#else
-#define alcGetBackendOpsNull_() NULL
-#endif /* USE_BACKEND_NULL */
-
-#ifdef USE_BACKEND_WAVEOUT
-ALC_BackendOps *alcGetBackendOpsWAVE_ (void);
-#else
-#define alcGetBackendOpsWAVE_() NULL
-#endif /* USE_BACKEND_WAVEOUT */
+void alcBackendOpenNative_ (ALC_OpenMode mode, ALC_BackendOps **ops,
+                            ALC_BackendPrivateData **privateData);
+void alcBackendOpenALSA_ (ALC_OpenMode mode, ALC_BackendOps **ops,
+                          ALC_BackendPrivateData **privateData);
+void alcBackendOpenARts_ (ALC_OpenMode mode, ALC_BackendOps **ops,
+                          ALC_BackendPrivateData **privateData);
+void alcBackendOpenDMedia_ (ALC_OpenMode mode, ALC_BackendOps **ops,
+                            ALC_BackendPrivateData **privateData);
+void alcBackendOpenESD_ (ALC_OpenMode mode, ALC_BackendOps **ops,
+                         ALC_BackendPrivateData **privateData);
+void alcBackendOpenSDL_ (ALC_OpenMode mode, ALC_BackendOps **ops,
+                         ALC_BackendPrivateData **privateData);
+void alcBackendOpenNull_ (ALC_OpenMode mode, ALC_BackendOps **ops,
+                          ALC_BackendPrivateData **privateData);
+void alcBackendOpenWAVE_ (ALC_OpenMode mode, ALC_BackendOps **ops,
+                          ALC_BackendPrivateData **privateData);
 
 #endif /* AL_BACKENDS_ALC_BACKEND_H_ */

@@ -166,7 +166,7 @@ ALCdevice *alcOpenDevice( const ALchar *deviceSpecifier ) {
 
 	openForInput = (strncmp( dirstr, "read", 64 ) == 0);
 	alcBackendOpen_( (openForInput ? ALC_OPEN_INPUT_ : ALC_OPEN_OUTPUT_), &retval->ops, &retval->privateData );
-	if( retval->ops == NULL ) {
+	if( retval->privateData == NULL ) {
 		free( retval );
 		_alcSetError(ALC_INVALID_DEVICE);
 		return NULL;

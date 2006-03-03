@@ -6,9 +6,21 @@
  * SDL backend.
  */
 #include "al_siteconfig.h"
+#include "backends/alc_backend.h"
+#include <stdlib.h>
+
+#ifndef USE_BACKEND_SDL
+
+void
+alcBackendOpenSDL_ (UNUSED(ALC_OpenMode mode), UNUSED(ALC_BackendOps **ops),
+		    ALC_BackendPrivateData **privateData)
+{
+	*privateData = NULL;
+}
+
+#else
 
 #include <AL/al.h>
-#include <stdlib.h>
 #include <string.h>
 #include <SDL.h>
 #include <SDL_audio.h>
@@ -16,7 +28,6 @@
 #include "al_debug.h"
 #include "al_main.h"
 #include "alc/alc_context.h"
-#include "backends/alc_backend.h"
 
 #ifdef OPENAL_DLOPEN_SDL
 #include <dlfcn.h>
@@ -158,12 +169,6 @@ grab_read_sdl(void)
 	return NULL;
 }
 
-static void *
-alcBackendOpenSDL_( ALC_OpenMode mode )
-{
-	return mode == ALC_OPEN_INPUT_ ? grab_read_sdl() : grab_write_sdl();
-}
-
 static void
 sdl_blitbuffer(UNUSED(void *handle), const void *data, int bytes)
 {
@@ -283,7 +288,6 @@ set_sdlchannel( UNUSED(void *handle), UNUSED(ALuint channel), UNUSED(ALfloat vol
 }
 
 static ALC_BackendOps sdlOps = {
-	alcBackendOpenSDL_,
 	release_sdl,
 	pause_sdl,
 	resume_sdl,
@@ -294,8 +298,13 @@ static ALC_BackendOps sdlOps = {
 	set_sdlchannel
 };
 
-ALC_BackendOps *
-alcGetBackendOpsSDL_ (void)
+void
+alcBackendOpenSDL_ (ALC_OpenMode mode, ALC_BackendOps **ops, ALC_BackendPrivateData **privateData)
 {
-	return &sdlOps;
+	*privateData = (mode == ALC_OPEN_INPUT_) ? grab_read_sdl() : grab_write_sdl();
+	if (*privateData != NULL) {
+		*ops = &sdlOps;
+	}
 }
+
+#endif /* USE_BACKEND_SDL */

@@ -7,16 +7,27 @@
  *
  */
 #include "al_siteconfig.h"
+#include "backends/alc_backend.h"
+#include <stdlib.h>
+
+#ifndef USE_BACKEND_WAVEOUT
+
+void
+alcBackendOpenWAVE_ (UNUSED(ALC_OpenMode mode), UNUSED(ALC_BackendOps **ops),
+		     ALC_BackendPrivateData **privateData)
+{
+	*privateData = NULL;
+}
+
+#else
 
 #include <AL/al.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 
 #include "al_main.h"
 #include "al_debug.h"
-#include "backends/alc_backend.h"
 #include "audioconvert/ac_endian.h"
 
 #define WAVEOUT_NAMELEN 16
@@ -112,12 +123,6 @@ static void *grab_write_waveout(void) {
 
 static void *grab_read_waveout(void) {
 	return NULL;
-}
-
-static void *
-alcBackendOpenWAVE_( ALC_OpenMode mode )
-{
-	return mode == ALC_OPEN_INPUT_ ? grab_read_waveout() : grab_write_waveout();
 }
 
 static void waveout_blitbuffer(void *handle, const void *dataptr, int bytes_to_write) {
@@ -389,7 +394,6 @@ set_waveoutchannel( UNUSED(void *handle), UNUSED(ALuint channel), UNUSED(ALfloat
 }
 
 static ALC_BackendOps waveOps = {
-	alcBackendOpenWAVE_,
 	release_waveout,
 	pause_waveout,
 	resume_waveout,
@@ -400,8 +404,13 @@ static ALC_BackendOps waveOps = {
 	set_waveoutchannel
 };
 
-ALC_BackendOps *
-alcGetBackendOpsWAVE_ (void)
+void
+alcBackendOpenWAVE_ (ALC_OpenMode mode, ALC_BackendOps **ops, ALC_BackendPrivateData **privateData)
 {
-	return &waveOps;
+	*privateData = (mode == ALC_OPEN_INPUT_) ? grab_read_waveout() : grab_write_waveout();
+	if (*privateData != NULL) {
+		*ops = &waveOps;
+	}
 }
+
+#endif /* USE_BACKEND_WAVEOUT */

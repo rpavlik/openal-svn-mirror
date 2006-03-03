@@ -3,12 +3,24 @@
  * there is very little documentation available, so let's hope for the best...
  */
 #include "al_siteconfig.h"
+#include "backends/alc_backend.h"
+#include <stdlib.h>
+
+#ifndef USE_BACKEND_ESD
+
+void
+alcBackendOpenESD_ (UNUSED(ALC_OpenMode mode), UNUSED(ALC_BackendOps **ops),
+		    ALC_BackendPrivateData **privateData)
+{
+	*privateData = NULL;
+}
+
+#else
 
 #include <AL/al.h>
 
 #include <errno.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #if HAVE_SYS_SELECT_H
@@ -33,7 +45,6 @@
 
 #include "al_debug.h"
 #include "al_main.h"
-#include "backends/alc_backend.h"
 
 #include <esd.h>
 
@@ -337,7 +348,6 @@ setAudioChannelESD (void *privateData, ALuint channel, ALfloat volume)
 }
 
 static ALC_BackendOps esdOps = {
-  openESD,
   closeESD,
   pauseESD,
   resumeESD,
@@ -348,8 +358,13 @@ static ALC_BackendOps esdOps = {
   setAudioChannelESD
 };
 
-ALC_BackendOps *
-alcGetBackendOpsESD_ (void)
+void
+alcBackendOpenESD_ (ALC_OpenMode mode, ALC_BackendOps **ops, ALC_BackendPrivateData **privateData)
 {
-  return &esdOps;
+  *privateData = openESD (mode);
+  if (*privateData != NULL) {
+    *ops = &esdOps;
+  }
 }
+
+#endif /* USE_BACKEND_ESD */

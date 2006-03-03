@@ -1,3 +1,22 @@
+2006-03-03  Sven Panne  <sven.panne@aedion.de>
+
+	* configure.ac, src/Makefile.am, src/alc/alc_device.c,
+	src/backends/alc_backend.c, src/backends/alc_backend.h,
+	src/backends/alc_backend_alsa.c, src/backends/alc_backend_arts.c,
+	src/backends/alc_backend_bsd.c, src/backends/alc_backend_darwin.c,
+	src/backends/alc_backend_esd.c, src/backends/alc_backend_irix.c,
+	src/backends/alc_backend_linux.c, src/backends/alc_backend_morphos.c,
+	src/backends/alc_backend_null.c, src/backends/alc_backend_sdl.c,
+	src/backends/alc_backend_solaris.c, src/backends/alc_backend_wave.c,
+	src/backends/alc_backend_windows.c: Slightly changed the interface for
+	opening a backend. The reason for this was that the analogy between
+	alcBackendOpenFOO_ and constructors, which are never virtual, is
+	improved and the structure of the "virtual function table" is only known
+	to src/alc/alc_device.c now. The association between device names and
+	backends is now table-driven, and an alias table has been
+	introduced. The only strange thing currently is the handling of the
+	DMedia backend, which will hopefully be fixed soon.
+
 2006-03-02  Sven Panne  <sven.panne@aedion.de>
 
 	* src/al_mixer.c, src/alc/alc_context.c, src/alc/alc_context.h,

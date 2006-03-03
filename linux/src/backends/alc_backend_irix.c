@@ -45,25 +45,36 @@
  * 1 channel audio doesn't work as expected.
  */
 
-#include <stdio.h>
+#include "al_siteconfig.h"
 #include <stdlib.h>
-#include <dmedia/audio.h>
-#include <errno.h>
 
 /* dmedia complains */
+#ifdef USE_BACKEND_DMEDIA
+#include <dmedia/audio.h>
 #define SGI_AL_CHANNELS	AL_CHANNELS
 #define SGI_AL_GAIN	AL_GAIN
 #undef AL_CHANNELS
 #undef AL_GAIN
 #undef AL_VERSION
 #undef AL_INVALID_VALUE
-
-#include "al_siteconfig.h"
-
-#include <AL/al.h>
-#include <AL/alext.h>
+#endif
 
 #include "backends/alc_backend.h"
+
+#ifndef USE_BACKEND_DMEDIA
+
+void alcBackendOpenDMedia_ (UNUSED(ALC_OpenMode mode), UNUSED(ALC_BackendOps **ops),
+			    ALC_BackendPrivateData **privateData)
+{
+	*privateData = NULL;
+}
+
+#else
+
+#include <stdio.h>
+#include <errno.h>
+#include <AL/al.h>
+#include <AL/alext.h>
 
 #include "al_config.h"
 #include "al_main.h"
@@ -111,19 +122,6 @@ static int grab_device_byname(const char *name);
 static void *grab_read_dmedia(void);
 static void *grab_write_dmedia(void);
 static void release_dmedia(void *handle);
-
-/* Fallback function, not a good sign that it's needed here */
-ALC_BackendOps *alcGetBackendOpsNative_ (void)
-{
-    return NULL;
-}
-
-static ALC_BackendPrivateData *
-alcBackendOpenDMedia_( ALC_OpenMode mode )
-{
-    return mode == ALC_OPEN_INPUT_ ? grab_read_dmedia() : grab_write_dmedia();
-}
-
 
 /*
  * Driver functions
@@ -711,7 +709,6 @@ static int grab_device_byname(const char *name)
 }
 
 static ALC_BackendOps dmediaOps = {
-	alcBackendOpenDMedia_,
 	release_dmedia,
 	pause_dmedia,
 	resume_dmedia,
@@ -722,8 +719,13 @@ static ALC_BackendOps dmediaOps = {
 	set_dmediachannel
 };
 
-ALC_BackendOps *
-alcGetBackendOpsDMedia_ (void)
+void
+alcBackendOpenDMedia_ (ALC_OpenMode mode, ALC_BackendOps **ops, ALC_BackendPrivateData **privateData)
 {
-	return &dmediaOps;
+	*privateData = (mode == ALC_OPEN_INPUT_) ? grab_read_dmedia() : grab_write_dmedia();
+	if (*privateData != NULL) {
+		*ops = &dmediaOps;
+	}
 }
+
+#endif /* USE_BACKEND_DMEDIA */

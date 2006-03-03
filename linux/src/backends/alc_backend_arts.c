@@ -6,11 +6,25 @@
  * arts backend.
  */
 #include "al_siteconfig.h"
+#include <stdlib.h>
+#include "backends/alc_backend.h"
+
+#ifndef USE_BACKEND_ARTS
+
+void
+alcBackendOpenARts_ (UNUSED(ALC_OpenMode mode), UNUSED(ALC_BackendOps **ops),
+		     ALC_BackendPrivateData **privateData)
+{
+	*privateData = NULL;
+}
+
+#else
+
+
 
 #include <AL/al.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -25,8 +39,6 @@
 
 #include "al_main.h"
 #include "al_debug.h"
-
-#include "backends/alc_backend.h"
 
 #define DEF_SPEED	_ALC_CANON_SPEED
 #define DEF_SIZE	_AL_DEF_BUFSIZ
@@ -154,14 +166,6 @@ static void *grab_write_arts(void) {
         return ahandle;
 }
 
-static void *
-alcBackendOpenARts_( ALC_OpenMode mode )
-{
-	return mode == ALC_OPEN_INPUT_ ? grab_read_arts() : grab_write_arts();
-}
-
-
-
 static void arts_blitbuffer(void *handle, const void *data, int bytes)  {
 	t_arts_handle * ahandle = (t_arts_handle *) handle;
 
@@ -286,7 +290,6 @@ set_artschannel( UNUSED(void *handle), UNUSED(ALuint channel), UNUSED(ALfloat vo
 }
 
 static ALC_BackendOps artsOps = {
-	alcBackendOpenARts_,
 	release_arts,
 	pause_arts,
 	resume_arts,
@@ -297,8 +300,13 @@ static ALC_BackendOps artsOps = {
 	set_artschannel
 };
 
-ALC_BackendOps *
-alcGetBackendOpsARts_ (void)
+void
+alcBackendOpenARts_ (ALC_OpenMode mode, ALC_BackendOps **ops, ALC_BackendPrivateData **privateData)
 {
-	return &artsOps;
+	*privateData = (mode == ALC_OPEN_INPUT_) ? grab_read_arts() : grab_write_arts();
+	if (*privateData != NULL) {
+		*ops = &artsOps;
+	}
 }
+
+#endif /* USE_BACKEND_ARTS */

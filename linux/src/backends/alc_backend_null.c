@@ -2,13 +2,25 @@
  * null output. Context writes, we sleep.
 */
 #include "al_siteconfig.h"
+#include "backends/alc_backend.h"
+#include <stdlib.h>
+
+#ifndef USE_BACKEND_NULL
+
+void
+alcBackendOpenNull_ (UNUSED(ALC_OpenMode mode), UNUSED(ALC_BackendOps **ops),
+		     ALC_BackendPrivateData **privateData)
+{
+	*privateData = NULL;
+}
+
+#else
 
 #include <AL/al.h>
 
 #include "al_main.h"
 #include "al_debug.h"
 
-#include "backends/alc_backend.h"
 
 static void *bogus_handle = (void *) 0x4ABAD1;
 static ALuint sleep_usec (ALuint speed, ALuint chunk);
@@ -27,12 +39,6 @@ grab_read_null (void)
 {
   nullMode = ALC_OPEN_INPUT_;
   return NULL;
-}
-
-static void *
-alcBackendOpenNull_ (ALC_OpenMode mode)
-{
-  return mode == ALC_OPEN_INPUT_ ? grab_read_null () : grab_write_null ();
 }
 
 static ALboolean
@@ -109,7 +115,6 @@ set_nullchannel (UNUSED (void *handle), UNUSED (ALuint channel),
 }
 
 static ALC_BackendOps nullOps = {
-	alcBackendOpenNull_,
 	release_null,
 	pause_null,
 	resume_null,
@@ -120,8 +125,13 @@ static ALC_BackendOps nullOps = {
 	set_nullchannel
 };
 
-ALC_BackendOps *
-alcGetBackendOpsNull_ (void)
+void
+alcBackendOpenNull_ (ALC_OpenMode mode, ALC_BackendOps **ops, ALC_BackendPrivateData **privateData)
 {
-	return &nullOps;
+  *privateData =  (mode == ALC_OPEN_INPUT_) ? grab_read_null () : grab_write_null ();
+  if (*privateData != NULL) {
+    *ops = &nullOps;
+  }
 }
+
+#endif /* USE_BACKEND_NULL */

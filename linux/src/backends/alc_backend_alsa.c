@@ -23,12 +23,21 @@
 #endif /* _GNU_SOURCE */
 
 #include "al_siteconfig.h"
+#include <stdlib.h>
+#include "backends/alc_backend.h"
+
+#ifndef USE_BACKEND_ALSA
+
+void alcBackendOpenALSA_ (UNUSED(ALC_OpenMode mode), UNUSED(ALC_BackendOps **ops),
+			  ALC_BackendPrivateData **privateData)
+{
+	*privateData = NULL;
+}
+
+#else
 
 #include <AL/alext.h>
 #include <stdio.h>
-#include <stdlib.h>
-
-#include "backends/alc_backend.h"
 
 #include "al_config.h"
 #include "al_debug.h"
@@ -326,12 +335,6 @@ static void *grab_write_alsa( void )
 		 "grab_alsa: init ok, using %s", card_name);
 
 	return retval;
-}
-
-static void *
-alcBackendOpenALSA_( ALC_OpenMode mode )
-{
-	return mode == ALC_OPEN_INPUT_ ? grab_read_alsa() : grab_write_alsa();
 }
 
 static ALboolean set_read_alsa( void *handle,
@@ -831,7 +834,6 @@ set_alsachannel( UNUSED(void *handle), UNUSED(ALuint channel), UNUSED(ALfloat vo
 }
 
 static ALC_BackendOps alsaOps = {
-	alcBackendOpenALSA_,
 	release_alsa,
 	pause_alsa,
 	resume_alsa,
@@ -842,8 +844,14 @@ static ALC_BackendOps alsaOps = {
 	set_alsachannel
 };
 
-ALC_BackendOps *
-alcGetBackendOpsALSA_ (void)
+void
+alcBackendOpenALSA_ (ALC_OpenMode mode, ALC_BackendOps **ops,
+		     ALC_BackendPrivateData **privateData)
 {
-	return &alsaOps;
+	*privateData = (mode == ALC_OPEN_INPUT_) ? grab_read_alsa() : grab_write_alsa();
+	if (*privateData != NULL) {
+		*ops = &alsaOps;
+	}
 }
+
+#endif /* USE_BACKEND_ALSA */

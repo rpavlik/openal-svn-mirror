@@ -19,13 +19,24 @@
  *   <johns@megapixel.com>
  *   <j.stone@acm.org>
  */
+#include "al_siteconfig.h"
+#include <stdlib.h>
+#include "backends/alc_backend.h"
+
+#ifndef USE_BACKEND_NATIVE_SOLARIS
+
+void alcBackendOpenNative_ (UNUSED(ALC_OpenMode mode), UNUSED(ALC_BackendOps **ops),
+			    ALC_BackendPrivateData **privateData)
+{
+	*privateData = NULL;
+}
+
+#else
+
 #include <AL/al.h>
 
 #include <assert.h>
 #include <stdio.h>
-#include <stdlib.h>
-
-#include "backends/alc_backend.h"
 
 #include "al_main.h"
 #include "al_debug.h"
@@ -93,12 +104,6 @@ static void *grab_write_native(void) {
   saudio->mode = ALC_OPEN_OUTPUT_;
 
   return saudio ;
-}
-
-static void *
-alcBackendOpenNative_( ALC_OpenMode mode )
-{
-	return mode == ALC_OPEN_INPUT_ ? grab_read_native() : grab_write_native();
 }
 
 static void native_blitbuffer(void *handle,
@@ -281,7 +286,6 @@ alcBackendSetAttributesNative_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint
 }
 
 static ALC_BackendOps nativeOps = {
-	alcBackendOpenNative_,
 	release_native,
 	pause_nativedevice,
 	resume_nativedevice,
@@ -292,8 +296,13 @@ static ALC_BackendOps nativeOps = {
 	set_nativechannel
 };
 
-ALC_BackendOps *
-alcGetBackendOpsNative_ (void)
+void
+alcBackendOpenNative_ (ALC_OpenMode mode, ALC_BackendOps **ops, ALC_BackendPrivateData **privateData)
 {
-	return &nativeOps;
+	*privateData = (mode == ALC_OPEN_INPUT_) ? grab_read_native() : grab_write_native();
+	if (*privateData != NULL) {
+		*ops = &nativeOps;
+	}
 }
+
+#endif /* USE_BACKEND_NATIVE_SOLARIS */

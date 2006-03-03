@@ -8,13 +8,24 @@
  *
  */
 #include "al_siteconfig.h"
+#include <stdlib.h>
+#include "backends/alc_backend.h"
+
+#ifndef USE_BACKEND_NATIVE_BSD
+
+void alcBackendOpenNative_ (UNUSED(ALC_OpenMode mode), UNUSED(ALC_BackendOps **ops),
+			    ALC_BackendPrivateData **privateData)
+{
+	*privateData = NULL;
+}
+
+#else
 
 #include <AL/al.h>
 #include <assert.h>
 #include <fcntl.h>
 #include <sys/soundcard.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
@@ -22,8 +33,6 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
-
-#include "backends/alc_backend.h"
 
 /* is this right? */
 #define _AL_DEF_BUFSIZ _ALC_DEF_BUFSIZ
@@ -390,14 +399,7 @@ static void *grab_read_native(void)
 	return NULL;
 }
 
-static void *
-alcBackendOpenNative_( ALC_OpenMode mode )
-{
-	return mode == ALC_OPEN_INPUT_ ? grab_read_native() : grab_write_native();
-}
-
 static ALC_BackendOps nativeOps = {
-	alcBackendOpenNative_,
 	release_native,
 	pause_nativedevice,
 	resume_nativedevice,
@@ -408,8 +410,13 @@ static ALC_BackendOps nativeOps = {
 	set_nativechannel
 };
 
-ALC_BackendOps *
-alcGetBackendOpsNative_ (void)
+void
+alcBackendOpenNative_ (ALC_OpenMode mode, ALC_BackendOps **ops, ALC_BackendPrivateData **privateData)
 {
-	return &nativeOps;
+	*privateData = (mode == ALC_OPEN_INPUT_) ? grab_read_native() : grab_write_native();
+	if (*privateData != NULL) {
+		*ops = &nativeOps;
+	}
 }
+
+#endif /* USE_BACKEND_NATIVE_BSD */
