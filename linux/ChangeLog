@@ -1,3 +1,7 @@
+2006-03-05  Prakash Punnoor <prakash@punnoor.de>
+
+	* CMakeLists.txt: don't copy over static lib in windows
+
 2006-03-03  Sven Panne  <sven.panne@aedion.de>
 
 	* configure.ac, src/Makefile.am, src/alc/alc_device.c,
