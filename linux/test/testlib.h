@@ -5,7 +5,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 /* function pointers for LOKI extensions */
 extern PFNALCGETAUDIOCHANNELPROC palcGetAudioChannel;
@@ -20,11 +20,6 @@ extern PFNALBUFFERIPROC palBufferi;
 extern PFNALBUFFERWRITEDATAPROC palBufferWriteData;
 extern PFNALBUFFERAPPENDWRITEDATAPROC palBufferAppendWriteData;
 
-extern PFNALCAPTUREINITPROC palCaptureInit;
-extern PFNALCAPTUREDESTROYPROC palCaptureDestroy;
-extern PFNALCAPTURESTARTPROC palCaptureStart;
-extern PFNALCAPTURESTOPPROC palCaptureStop;
-extern PFNALCAPTUREGETDATAPROC palCaptureGetData;
 
 /* new ones */
 extern PFNALGENSTREAMINGBUFFERSPROC palGenStreamingBuffers;
@@ -42,6 +37,6 @@ void testExit( void );
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
-#endif				/* TEST_TESTLIB_H */
+#endif /* TEST_TESTLIB_H */

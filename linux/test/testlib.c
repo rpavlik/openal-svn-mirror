@@ -50,7 +50,7 @@ void microSleep( unsigned int n )
 	select( 0, NULL, NULL, NULL, &tv );
 }
 
-#endif				/* _WIN32 */
+#endif  /* _WIN32 */
 
 #define GP(type,var,name) \
         var = (type)alGetProcAddress((const ALchar*) name); \
@@ -70,12 +70,6 @@ PFNALBOMBONERRORPROC palBombOnError;
 PFNALBUFFERIPROC palBufferi;
 PFNALBUFFERWRITEDATAPROC palBufferWriteData;
 PFNALBUFFERAPPENDWRITEDATAPROC palBufferAppendWriteData;
-
-PFNALCAPTUREINITPROC palCaptureInit;
-PFNALCAPTUREDESTROYPROC palCaptureDestroy;
-PFNALCAPTURESTARTPROC palCaptureStart;
-PFNALCAPTURESTOPPROC palCaptureStop;
-PFNALCAPTUREGETDATAPROC palCaptureGetData;
 
 PFNALGENSTREAMINGBUFFERSPROC palGenStreamingBuffers;
 PFNALUTLOADRAW_ADPCMDATAPROC palutLoadRAW_ADPCMData;
@@ -97,14 +91,6 @@ void getExtensionEntries( void )
 	    "alBufferWriteData_LOKI" );
 	GP( PFNALBUFFERAPPENDWRITEDATAPROC, palBufferAppendWriteData,
 	    "alBufferAppendWriteData_LOKI" );
-
-	GP( PFNALCAPTUREINITPROC, palCaptureInit, "alCaptureInit_EXT" );
-	GP( PFNALCAPTUREDESTROYPROC, palCaptureDestroy,
-	    "alCaptureDestroy_EXT" );
-	GP( PFNALCAPTURESTARTPROC, palCaptureStart, "alCaptureStart_EXT" );
-	GP( PFNALCAPTURESTOPPROC, palCaptureStop, "alCaptureStop_EXT" );
-	GP( PFNALCAPTUREGETDATAPROC, palCaptureGetData,
-	    "alCaptureGetData_EXT" );
 
 	GP( PFNALGENSTREAMINGBUFFERSPROC, palGenStreamingBuffers,
 	    "alGenStreamingBuffers_LOKI" );

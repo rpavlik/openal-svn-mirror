@@ -663,6 +663,7 @@ IF(BUILD_TESTS)
 
     IF(DEFINED ALUT_INCLUDE_DIR)
       INCLUDE_DIRECTORIES(${ALUT_INCLUDE_DIR})
+      SET(ALUT_INCLUDE_DIR "${ALUT_INCLUDE_DIR}" CACHE INTERNAL "")
     ENDIF(DEFINED ALUT_INCLUDE_DIR)
 
     ADD_LIBRARY(testlib test/testlib.c)
@@ -714,7 +715,6 @@ IF(BUILD_TESTS)
               queue
               queue2
               queue3
-              capture
               capture2
               leak
               multicontext
