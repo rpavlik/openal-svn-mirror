@@ -62,7 +62,7 @@ extern ThreadID mixthread;
 /*
  * pcm buffers that filters act on
  */
-_alDecodeScratch f_buffers;
+_alDecodeScratch f_buffers = {{NULL}, 0}; /* MacOS needs init vals */
 
 /*
  * Our extension functions

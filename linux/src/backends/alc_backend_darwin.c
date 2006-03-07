@@ -62,13 +62,13 @@ static int stillToPlay = 0;
 /************************************* PROTOTYPES *********************************/
 
 static void implement_me(const char *fn);
-OSStatus deviceFillingProc (AudioDeviceID  inDevice, const AudioTimeStamp*  inNow, const AudioBufferList*  inInputData, const AudioTimeStamp*  inInputTime, AudioBufferList* outOutputData, const AudioTimeStamp* inOutputTime, void* inClientData);
+static OSStatus deviceFillingProc (AudioDeviceID  inDevice, const AudioTimeStamp*  inNow, const AudioBufferList*  inInputData, const AudioTimeStamp*  inInputTime, AudioBufferList* outOutputData, const AudioTimeStamp* inOutputTime, void* inClientData);
 
-OSStatus GetAudioDevices (void **devices /*Dev IDs*/, short	*devicesAvailable /*Dev number*/);
+static OSStatus GetAudioDevices (void **devices /*Dev IDs*/, short	*devicesAvailable /*Dev number*/);
 
 int sync_mixer_iterate( void *dummy );
 
-void playABuffer(void *realdata);
+static void playABuffer(void *realdata);
 
 /************************************** UTILITIES *********************************/
 
@@ -100,7 +100,7 @@ static void implement_me(const char *fn)
 
 /*********************************** OS callback proc *****************************/
 
-static OSStatus deviceFillingProc (UNUSED(AudioDeviceID  inDevice), UNUSED(const AudioTimeStamp*  inNow), UNUSED(const AudioBufferList*  inInputData), UNUSED(const AudioTimeStamp*  inInputTime), AudioBufferList*  outOutputData, UNUSED(const AudioTimeStamp* inOutputTime), void* inClientData)
+static OSStatus deviceFillingProc (UNUSED(AudioDeviceID  inDevice), UNUSED(const AudioTimeStamp*  inNow), UNUSED(const AudioBufferList*  inInputData), UNUSED(const AudioTimeStamp*  inInputTime), AudioBufferList*  outOutputData, UNUSED(const AudioTimeStamp* inOutputTime), UNUSED(void* inClientData))
 {
     coreAudioDestination = (outOutputData->mBuffers[0]).mData;
 
@@ -118,27 +118,27 @@ static OSStatus GetAudioDevices (void **devices /*Dev IDs*/, short	*devicesAvail
     int i;
     char	cStr[256];
 #endif
-    OSStatus	err = NULL;
+    OSStatus	err;
     UInt32 	outSize;
     Boolean	outWritable;
 
     DebugPrintf("OpenAL MOSX Backend : Build %d\n",buildID);
 
-    // find out how many audio devices there are, if any
+    /* find out how many audio devices there are, if any */
     err = AudioHardwareGetPropertyInfo(kAudioHardwarePropertyDevices, &outSize, &outWritable);
-    if (err != NULL) return (err);
+    if (err) return (err);
 
-    // calculate the number of device available
+    /* calculate the number of device available */
     *devicesAvailable = outSize / sizeof(AudioDeviceID);
-    // Bail if there aren't any devices
+    /* Bail if there aren't any devices */
     if (*devicesAvailable < 1) return (-1);
 
-    // make space for the devices we are about to get
+    /* make space for the devices we are about to get */
     if (*devices != NULL) free(*devices);
     *devices = malloc(outSize);
-    // get an array of AudioDeviceIDs
+    /* get an array of AudioDeviceIDs */
     err = AudioHardwareGetProperty(kAudioHardwarePropertyDevices, &outSize, (void *) *devices);
-    if (err != NULL) free(*devices);
+    if (err) free(*devices);
 #ifdef DEBUG_MAXIMUS
     DebugPrintf("Found %d Audio Device(s)\n",*devicesAvailable);
 
@@ -253,7 +253,7 @@ static void *grab_write_native(void)
 
 Crash :
     DebugPrintf("An error occured during void *grab_write_native()\n");
-    libGlobals.deviceW = NULL;
+    libGlobals.deviceW = 0;
     return NULL;
 }
 
@@ -266,8 +266,8 @@ static ALboolean set_write_native(UNUSED(void *handle),
 
     DebugPrintf("Init Speed : %d\n",*speed);
 
-    //*fmt = AL_FORMAT_STEREO16;
-    //*speed = (unsigned int)libGlobals.deviceFormat.mSampleRate;
+    /* *fmt = AL_FORMAT_STEREO16; */
+    /* *speed = (unsigned int)libGlobals.deviceFormat.mSampleRate; */
 
     alWriteFormat = *fmt;
 
@@ -299,7 +299,7 @@ static ALboolean set_write_native(UNUSED(void *handle),
 
     /* start playing sound through the device */
     error = AudioDeviceStart(libGlobals.deviceW, deviceFillingProc);
-    if (error != 0) return NULL;
+    if (error != 0) return AL_FALSE;
 
     return AL_TRUE;
 }
@@ -331,7 +331,7 @@ static void  native_blitbuffer(void *handle, const void *data, int bytes)
         return;
     }
 
-    // Gyom FIXME: Is this useful?
+    /* Gyom FIXME: Is this useful? */
     assert(nativePreferedBuffSize <= bytes);
 
     playABuffer(data);
@@ -455,7 +455,7 @@ static void resume_nativedevice(void *handle) /* Not tested :-( */
 static ALsizei capture_nativedevice(UNUSED(void *handle), UNUSED(void *capture_buffer), UNUSED(int bufsiz))
 {
     implement_me("void capture_nativedevice()");
-    return NULL;
+    return 0;
 }
 
 static ALC_BackendOps nativeOps = {
