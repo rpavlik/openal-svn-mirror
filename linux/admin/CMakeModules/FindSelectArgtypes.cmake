@@ -11,12 +11,11 @@ SET(ARG234 "fd_set *;int *;void *")
 SET(ARG1 "int;size_t;unsigned long;unsigned")
 SET(ARG5 "struct timeval *;const struct timeval *")
 
-SET(SOURCE_DEFINITIONS
-  "-DHAVE_SYS_TYPES_H=${HAVE_SYS_TYPES_H} "
-  "-DHAVE_SYS_TIME_H=${HAVE_SYS_TIME_H} "
-  "-DHAVE_UNISTD_H=${HAVE_UNISTD_H} "
-  "-DHAVE_SYS_SELECT_H=${HAVE_SYS_SELECT_H} "
-  "-DHAVE_SYS_SOCKET_H=${HAVE_SYS_SOCKET_H}")
+SET(SOURCE_DEFINITIONS "-DHAVE_SYS_TYPES_H=${HAVE_SYS_TYPES_H}")
+SET(SOURCE_DEFINITIONS "${SOURCE_DEFINITIONS} -DHAVE_SYS_TIME_H=${HAVE_SYS_TIME_H}")
+SET(SOURCE_DEFINITIONS "${SOURCE_DEFINITIONS} -DHAVE_UNISTD_H=${HAVE_UNISTD_H}")
+SET(SOURCE_DEFINITIONS "${SOURCE_DEFINITIONS} -DHAVE_SYS_SELECT_H=${HAVE_SYS_SELECT_H}")
+SET(SOURCE_DEFINITIONS "${SOURCE_DEFINITIONS} -DHAVE_SYS_SOCKET_H=${HAVE_SYS_SOCKET_H}")
 
 FOREACH(CUR_ARG234 ${ARG234})
 IF(NOT SELECT_ARGTYPES_FOUND)
@@ -25,47 +24,19 @@ IF(NOT SELECT_ARGTYPES_FOUND)
 FOREACH(CUR_ARG5 ${ARG5})
 IF(NOT SELECT_ARGTYPES_FOUND)
 
-SET(SOURCE
-"#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#if HAVE_SYS_TIME_H
-# include <sys/time.h>
-#endif
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif
-#if HAVE_SYS_SELECT_H
-# include <sys/select.h>
-#endif
-#if HAVE_SYS_SOCKET_H
-# include <sys/socket.h>
-#endif
-#ifdef __STDC__
-extern int select (${CUR_ARG1},
-                   ${CUR_ARG234}, ${CUR_ARG234}, ${CUR_ARG234},
-                   ${CUR_ARG5});
-#else
-extern int select ();
-  ${CUR_ARG1} s;
-  ${CUR_ARG234} p;
-  ${CUR_ARG5} t;
-#endif
-int main(){}
-")
-
-FILE(WRITE "${CMAKE_BINARY_DIR}/CMakeFiles/CMakeTmp/src.c" "${SOURCE}")
+CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/admin/CMakeModules/SelectArgtypes.c.in
+  ${CMAKE_BINARY_DIR}/CMakeFiles/CMakeTmp/SelectArgtypes.c IMMEDIATE)
 
 TRY_COMPILE(SELECT_ARGTYPES_FOUND
   ${CMAKE_BINARY_DIR}
-  ${CMAKE_BINARY_DIR}/CMakeFiles/CMakeTmp/src.c
-  COMPILE_DEFINITIONS "${SOURCE_DEFINITIONS}"
+  ${CMAKE_BINARY_DIR}/CMakeFiles/CMakeTmp/SelectArgtypes.c
+  CMAKE_FLAGS
+  "-DCOMPILE_DEFINITIONS:STRING=${SOURCE_DEFINITIONS}"
   OUTPUT_VARIABLE OUTPUT)
 
-WRITE_FILE(${CMAKE_BINARY_DIR}/CMakeOutput.log 
+WRITE_FILE(${CMAKE_BINARY_DIR}/CMakeFiles/CMakeOutput.log
   "Performing C SOURCE FILE Test SELECT_ARGTYPES with the following output:\n"
-  "${OUTPUT}\n"
-  "Source file was:\n${SOURCE}\n" APPEND)
+  "${OUTPUT}\n" APPEND)
 
 IF(SELECT_ARGTYPES_FOUND)
   MESSAGE(STATUS "Determining select arguments -- found")
