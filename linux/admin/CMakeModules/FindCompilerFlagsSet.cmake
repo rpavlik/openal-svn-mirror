@@ -2,7 +2,11 @@ IF(CMAKE_COMPILER_IS_GNUCC)
   #ADD_DEFINITIONS(-std=c99)
 
   IF(WARNINGS)
-    SET(ADD_WFLAGS "${ADD_WFLAGS} -Wall -ansi -pedantic -W")
+    SET(ADD_WFLAGS "${ADD_WFLAGS} -Wall -pedantic -W")
+    IF(NOT APPLE OR NOT OPTIMIZATION)
+      # -ansi and --ffast-math don't like each other
+      SET(ADD_WFLAGS "${ADD_WFLAGS} -ansi")
+    ENDIF(NOT APPLE OR NOT OPTIMIZATION)
 
     IF(MORE_WARNINGS)
       SET(ADD_WFLAGS "${ADD_WFLAGS} -Waggregate-return -Wbad-function-cast -Wcast-align -Wcast-qual -Wdisabled-optimization -Wendif-labels -Winline -Wlong-long -Wmissing-declarations -Wmissing-noreturn -Wmissing-prototypes -Wnested-externs -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wsign-compare -Wstrict-prototypes -Wwrite-strings")

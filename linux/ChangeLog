@@ -10,6 +10,9 @@
 	* admin/CMakeModules/SelectArgtypes.c.in: added
 
 	* admin/CMakeModules/FindSelectArgtypes.cmake: make more compatible
+	
+	* admin/CMakeModules/FindCompilerFlagsSet.cmake: MacOS X gcc doesn't
+	like -ansi and -ffastmath
 
 2006-03-05  Prakash Punnoor <prakash@punnoor.de>
 
