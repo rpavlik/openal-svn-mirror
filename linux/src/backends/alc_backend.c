@@ -58,13 +58,27 @@ struct ALC_BackendNameAndOpen backends[] = {
 #ifndef USE_BACKEND_DMEDIA
   {"native", alcBackendOpenNative_},
 #endif
+#ifdef USE_BACKEND_ALSA
   {"alsa", alcBackendOpenALSA_},
+#endif
+#ifdef USE_BACKEND_ARTS
   {"arts", alcBackendOpenARts_},
+#endif
+#ifdef USE_BACKEND_DMEDIA
   {"dmedia", alcBackendOpenDMedia_},
+#endif
+#ifdef USE_BACKEND_ESD
   {"esd", alcBackendOpenESD_},
+#endif
+#ifdef USE_BACKEND_SDL
   {"sdl", alcBackendOpenSDL_},
+#endif
+#ifdef USE_BACKEND_NULL
   {"null", alcBackendOpenNull_},
+#endif
+#ifdef USE_BACKEND_WAVEOUT
   {"wave", alcBackendOpenWAVE_},
+#endif
   {NULL, NULL}
 };
 
