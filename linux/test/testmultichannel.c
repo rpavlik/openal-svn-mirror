@@ -26,8 +26,9 @@ static void init( const ALbyte *fname )
 	ALsizei size;
 	ALsizei freq;
 	ALsizei format;
+#ifndef __APPLE__
 	ALboolean loop;
-
+#endif
 	start = time( NULL );
 
 	alListenerfv( AL_POSITION, zeroes );
@@ -37,8 +38,11 @@ static void init( const ALbyte *fname )
 	 */
 
 	alGenBuffers( 1, &boom );
-
+#ifndef __APPLE__
 	alutLoadWAVFile( fname, &format, &wave, &size, &freq, &loop );
+#else
+	alutLoadWAVFile( fname, &format, &wave, &size, &freq );
+#endif
 	if( wave == NULL ) {
 		fprintf( stderr, "Could not open %s\n",
 			 ( const char * ) fname );
