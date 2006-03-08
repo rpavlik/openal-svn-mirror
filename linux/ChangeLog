@@ -1,3 +1,9 @@
+2006-03-08  Prakash Punnoor <prakash@punnoor.de>
+
+	* test/testmultichannel.c: fix MacOS case
+
+	* CMakeLists.txt: allow overiding of system alut
+
 2006-03-07  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/backends/alc_backend.c: fix linking errors if some back-ends
