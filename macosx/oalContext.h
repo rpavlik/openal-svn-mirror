@@ -25,14 +25,39 @@
 #define __OAL_CONTEXT__
 
 #include "oalDevice.h"
+#include "alc.h"
 #include <Carbon/Carbon.h>
 #include <map>
+
+#define LOG_BUS_CONNECTIONS  	0
+
+#define kDefaultReferenceDistance   1.0
+#define kDefaultMaximumDistance     1000000.0
+#define kDefaultRolloff             1.0
+#define kPreferredMixerVersion 		0x21000 
+#define kMinimumMixerVersion 		0x10300
+
+// Default Low Quality Stereo Spatial Setting:
+#define	kDefaultLowQuality      kSpatializationAlgorithm_EqualPowerPanning
+
+// Default High Quality Stereo Spatial Setting:
+#define	kDefaultHighQuality     kSpatializationAlgorithm_HRTF
+
+// Default MultiChannel Spatial Setting:
+#define	kDefaultMultiChannelQuality kSpatializationAlgorithm_SoundField
+
 
 /*
 	An OALContext is basically the equivalent of a 'room' or 'scene'. It is attached to an OALDevice which
 	is a piece of hardware and contains a single 3DMixer. Each context has it's own source objects
 	and a single listener. It also has it's own settings for the 3DMixer, such as Reverb, Doppler, etc.
 */
+
+struct BusInfo {
+					bool		mIsAvailable;       // is an OALSource using this bus?
+					UInt32		mNumberChannels;    // mono/stereo setting of the bus
+                    UInt32      mReverbState;     // unused until Reverb extension is added to the implementation
+};
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -49,58 +74,77 @@ class OALSourceMap;     // forward declaration
 class OALContext
 {
 	public:
-	OALContext(const UInt32	inSelfToken, OALDevice *inOALDevice);
+	OALContext(const uintptr_t	inSelfToken, OALDevice *inOALDevice, UInt32	inBusCount);
 	~OALContext();
 	
-	// get info methods
-	OALDevice               *GetOwningDevice () { return mOwningDevice;}
-	UInt32					GetDeviceToken () { return mOwningDevice->GetDeviceToken();}
-	UInt32					GetDistanceModel() { return mDistanceModel;}
-	Float32					GetDopplerFactor() {return (mDopplerFactor);}
-	Float32					GetDopplerVelocity() {return (mDopplerVelocity);}
-	Float32					GetListenerGain() {return (mListenerGain);}
-	void					GetListenerPosition(Float32	*posX, Float32	*posY, Float32	*posZ) {*posX = mListenerPosition[0];
+	bool			DoSetDistance() { return mCalculateDistance;}
+	UInt32			GetDesiredRenderChannels(UInt32	inDeviceChannels);
+	AudioUnit		GetMixerUnit() { return mMixerUnit;}
+	AUNode			GetMixerNode() { return mMixerNode;}
+	UInt32			GetRenderQuality() {return mRenderQuality;}
+	Float32         GetFramesPerSlice() { return mOwningDevice->GetFramesPerSlice();}
+	Float64			GetMixerRate () const { return mMixerOutputRate; }
+	Float32         GetDefaultReferenceDistance() { return mDefaultReferenceDistance;}
+	Float32         GetDefaultMaxDistance() { return mDefaultMaxDistance;}
+	bool            IsDistanceScalingRequired() { return mDistanceScalingRequired;}
+	UInt32			GetAvailableMonoBus ();
+	UInt32			GetAvailableStereoBus ();
+	UInt32			GetBusCount () { return mBusCount;}
+	uintptr_t		GetDeviceToken () { return mOwningDevice->GetDeviceToken();}
+	UInt32			GetDistanceModel() { return mDistanceModel;}
+	Float32			GetDopplerFactor() {return (mDopplerFactor);}
+	Float32			GetDopplerVelocity() {return (mDopplerVelocity);}
+	Float32			GetListenerGain() {return (mListenerGain);}
+	void			GetListenerPosition(Float32	*posX, Float32	*posY, Float32	*posZ) {*posX = mListenerPosition[0];
 																								*posY = mListenerPosition[1];
 																								*posZ = mListenerPosition[2];}
 																								
-	void					GetListenerVelocity(Float32	*posX, Float32	*posY, Float32	*posZ) {*posX = mListenerVelocity[0];
-																								*posY = mListenerVelocity[1];
-																								*posZ = mListenerVelocity[2];}
+	void			GetListenerVelocity(Float32	*posX, Float32	*posY, Float32	*posZ) {	*posX = mListenerVelocity[0];
+																							*posY = mListenerVelocity[1];
+																							*posZ = mListenerVelocity[2];}
 																								
-	void					GetListenerOrientation(	Float32	*forwardX, Float32	*forwardY, Float32	*forwardZ,
-													Float32	*upX, Float32	*upY, Float32	*upZ) {	*forwardX = mListenerOrientationForward[0];
-																									*forwardY = mListenerOrientationForward[1];
-																									*forwardZ = mListenerOrientationForward[2];
-																									*upX = mListenerOrientationUp[0];
-																									*upY = mListenerOrientationUp[1];
-																									*upZ = mListenerOrientationUp[2];}
-	
+	void			GetListenerOrientation(	Float32	*forwardX, Float32	*forwardY, Float32	*forwardZ,
+											Float32	*upX, Float32	*upY, Float32	*upZ) {		*forwardX = mListenerOrientationForward[0];
+																								*forwardY = mListenerOrientationForward[1];
+																								*forwardZ = mListenerOrientationForward[2];
+																								*upX = mListenerOrientationUp[0];
+																								*upY = mListenerOrientationUp[1];
+																								*upZ = mListenerOrientationUp[2];		}
+																							
 	// set info methods
-	void					SetDistanceModel(UInt32	inDistanceModel);
-	void					SetDopplerFactor(Float32	inDopplerFactor, bool isRenderThread);
-	void					SetDopplerVelocity(Float32	inDopplerVelocity, bool isRenderThread);
-	void					SetListenerPosition(Float32	posX, Float32	posY, Float32	posZ);
-	void					SetListenerVelocity(Float32	posX, Float32	posY, Float32	posZ);
-	void					SetListenerGain(Float32 inGain);
-	void					SetListenerOrientation( Float32  forwardX,   Float32  forwardY, Float32  forwardZ,
-													Float32  upX,        Float32  upY, 		Float32  upZ);
-	
-	// context activity methods
-	void					ProcessContext();
-	void					SuspendContext();
+	void			SetBusAsAvailable (UInt32 inBusIndex);
+	void			SetDistanceAttenuation(UInt32    inBusIndex, Float64 inRefDist, Float64 inMaxDist, Float64 inRolloff);
+	void			SetRenderQuality (UInt32 inRenderQuality);
+	void			SetDistanceModel(UInt32	inDistanceModel);
+	void			SetDopplerFactor(Float32	inDopplerFactor);
+	void			SetDopplerVelocity(Float32	inDopplerVelocity);
+	void			SetListenerPosition(Float32	posX, Float32	posY, Float32	posZ);
+	void			SetListenerVelocity(Float32	posX, Float32	posY, Float32	posZ);
+	void			SetListenerGain(Float32 inGain);
+	void			SetListenerOrientation( Float32  forwardX,   Float32  forwardY, Float32  forwardZ,
+											Float32  upX,        Float32  upY, 		Float32  upZ);
 
+	// context activity methods
+	void			ProcessContext();
+	void			SuspendContext();
 	// source methods
-	void					AddSource(UInt32 inSourceToken);
-	void					RemoveSource(UInt32 inSourceToken);
-	OALSource*				GetSource(UInt32 inSourceToken);
-	UInt32					GetSourceCount();
-	void					DisableContext();
+	void			AddSource(ALuint inSourceToken);
+	void			RemoveSource(ALuint inSourceToken);
+	OALSource*		GetSource(ALuint inSourceToken);
+	UInt32			GetSourceCount();
+
+	// device methods
+	void			DeviceConnect();
+	void			DeviceDisconnect();
+	void			InitRenderQualityOnBusses();
 		
 	private:
-		UInt32				mSelfToken;
+		uintptr_t			mSelfToken;
+		bool				mProcessingActive;
 		OALDevice			*mOwningDevice;
+        AUNode				mMixerNode;
+        AudioUnit			mMixerUnit;
 		OALSourceMap		*mSourceMap;
-		AudioUnit			mMixerUnit;
 		UInt32				mDistanceModel;
 		Float32				mDopplerFactor;
 		Float32				mDopplerVelocity;
@@ -109,33 +153,58 @@ class OALContext
 		Float32				mListenerGain;
 		Float32				mListenerOrientationForward[3];
 		Float32				mListenerOrientationUp[3];
+		UInt32				mAttributeListSize;
+		ALCint*				mAttributeList;
+        bool				mDistanceScalingRequired;
+		bool				mCalculateDistance;				// true except: for 1.3 mixer Inverse curve, OR pre 2.2 mixer and either Exponential or Linear curves
+		Float64				mStoredInverseAttenuation;
+		UInt32				mRenderQuality;                 // Hi or Lo for now
+        UInt32				mSpatialSetting;
+        UInt32				mBusCount;
+        Float64				mMixerOutputRate;
+        Float32				mDefaultReferenceDistance;
+        Float32				mDefaultMaxDistance;
+		bool				mUserSpecifiedBusCounts;
+        BusInfo				*mBusInfo;
+		UInt32				mReverbState;
+
+#if LOG_BUS_CONNECTIONS
+        UInt32		mMonoSourcesConnected;
+        UInt32		mStereoSourcesConnected;
+#endif
+
+	void	InitializeMixer(UInt32	inStereoBusCount);
+
 };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // OALDevices contain a single OALContextMap to keep track of the contexts that belong to it.
 #pragma mark _____OALContextMap_____
-class OALContextMap : std::multimap<UInt32, OALContext*, std::less<UInt32> > {
+class OALContextMap : std::multimap<uintptr_t, OALContext*, std::less<uintptr_t> > {
 public:
     
-    void Add (const	UInt32	inContextToken, OALContext **inContext)  {
+    void Add (const	uintptr_t	inContextToken, OALContext **inContext)  {
 		iterator it = upper_bound(inContextToken);
 		insert(it, value_type (inContextToken, *inContext));
 	}
 
-    OALContext* Get (UInt32	inContextToken) {
+    OALContext* Get (uintptr_t	inContextToken) {
         iterator	it = find(inContextToken);
         if (it != end())
             return ((*it).second);
 		return (NULL);
     }
     
-    void Remove (const	UInt32	inContextToken) {
+    bool Remove (const	uintptr_t	inContextToken) {
         iterator 	it = find(inContextToken);
-        if (it != end())
+        if (it != end()) {
             erase(it);
+			return true; // success
+		}
+		return false;
     }
 	
-	OALContext* GetContextByIndex(UInt32	inIndex, UInt32	&outContextToken) {
+	OALContext* GetContextByIndex(UInt32	inIndex, uintptr_t	&outContextToken) {
 		iterator	it = begin();		
         std::advance(it, inIndex);		
 		if (it != end())
@@ -146,7 +215,7 @@ public:
 		return (NULL);
 	}
 
-	UInt32	GetDeviceTokenForContext(UInt32	inContextToken) {
+	uintptr_t	GetDeviceTokenForContext(uintptr_t	inContextToken) {
 		OALContext	*context = Get(inContextToken);
 		if (context != NULL)
 			return (context->GetDeviceToken());

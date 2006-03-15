@@ -21,14 +21,28 @@
 *
 **********************************************************************************************************************************/
 
+#ifndef __OAL_OSX__
+#define __OAL_OSX__
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <Carbon/Carbon.h>
 #include <AudioToolbox/AudioToolbox.h>
-
 #include "CAStreamBasicDescription.h"
-
 #include "oalImp.h"
 
-bool	IsFormatSupported(UInt32	inFormatID);
+#define maxLen 256
+
+bool		IsFormatSupported(UInt32	inFormatID);
+OSStatus	FillInASBD(CAStreamBasicDescription &inASBD, UInt32	inFormatID, UInt32 inSampleRate);
+bool		IsValidRenderQuality (UInt32 inRenderQuality);
+UInt32		GetDesiredRenderChannelsFor3DMixer(UInt32	inDeviceChannels);
+void		GetDefaultDeviceName(ALCubyte*		outDeviceName, bool	isInput);
+uintptr_t	GetNewPtrToken (void);
+ALuint		GetNewToken (void);
+const char* GetFormatString(UInt32 inToken);
+const char* GetALAttributeString(UInt32 inToken);
+const char* GetALCAttributeString(UInt32 inToken);
+
+#endif

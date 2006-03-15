@@ -22,31 +22,25 @@
 **********************************************************************************************************************************/
 
 /*
-	Each OALSource object maintains a BufferQueue (list) and an ACMap (multimap). The buffer queue is an ordered list of BufferInfo structs.
+	Each OALSource object maintains a BufferQueue and an ACMap. The buffer queue is an ordered list of BufferInfo structs.
 	These structs contain an OAL buffer and other pertinent data. The ACMap is a multimap of ACInfo structs. These structs each contain an
 	AudioConverter and the input format of the AudioConverter. The AudioConverters are created as needed each time a buffer with a new 
     format is added to the queue. This allows differently formatted data to be queued seemlessly. The correct AC is used for each 
     buffer as the BufferInfo keeps track of the appropriate AC to use.
-
-    All public methods that are not called from within the source object are guarded by a state mutex to ensure the object is not disposed from one
-    thread, while running one of it's mthods from another. If the method is also used from within an object method, it takes
-
-
 */
 
 #include "oalSource.h"
+#include "oalBuffer.h"
 
 #define		LOG_PLAYBACK				0
 #define		LOG_VERBOSE					0
 #define		LOG_BUFFER_QUEUEING			0
 #define		LOG_DOPPLER                 0
+#define		LOG_MESSAGE_QUEUE			0
 
 #define		CALCULATE_POSITION	1	// this should be true except for testing
-#define		USE_MUTEXES			1	// this should be true except for testing
-#define		WARM_THE_BUFFERS	1	// when playing, touch all the audio data in memory once before it is needed in the render proc  (RealTime thread)
 
-#define		DEFER_DISCONNECT	1
-
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // These are macros for locking around play/stop code:
 #define TRY_PLAY_MUTEX										\
 	bool wasLocked = false;									\
@@ -95,6 +89,37 @@ enum {
 };
 #endif
 
+inline bool zapBadness(Float32&		inValue)
+{
+	Float32		absInValue = fabs(inValue);
+	
+	if (!(absInValue > 1e-15 && absInValue < 1e15)){
+		// inValue was one of the following: 0.0, infinity, denormal or NaN
+		inValue = 0.0;
+		return true;
+	}
+	
+	return false;
+}
+
+// if dopplerShift = inifinity then peg to 16 (4 octaves up)
+// if dopplershift is a denormal then peg to .125 (3 octaves down)
+// if nan, then set to 1.0 (no doppler)
+// if 0.0 then set to 1.0 which is no shift
+inline bool zapBadnessForDopplerShift(Float32&		inValue)
+{
+	Float32		absInValue = fabs(inValue);
+
+	if (isnan(inValue) || (inValue == 0.0))
+		inValue = 1.0;
+	else if (absInValue > 1e15)
+		inValue = 16.0;
+	else if (absInValue < 1e-15)
+		inValue = .125;
+
+	return false;
+}
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // OALSource
@@ -105,16 +130,15 @@ enum {
 #pragma mark ***** PUBLIC *****
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-OALSource::OALSource (const UInt32 	 	inSelfToken, OALContext	*inOwningContext)
+OALSource::OALSource (const ALuint 	 	inSelfToken, OALContext	*inOwningContext)
 	: 	mSelfToken (inSelfToken),
 		mOwningContext(inOwningContext),
-		mOwningDevice(NULL),
+		mIsSuspended(false),
 		mCalculateDistance(true),
 		mResetBusFormat(true),
         mResetPitch(true),
 		mBufferQueueActive(NULL),
 		mBufferQueueInactive(NULL),
-        mBufferQueueMutex(kBufferQueueMutex),                     
 		mCurrentBufferIndex(0),
 		mQueueIsProcessed(true),
 		mRenderThreadID (0),
@@ -124,9 +148,12 @@ OALSource::OALSource (const UInt32 	 	inSelfToken, OALContext	*inOwningContext)
 		mOutputSilence(false),
 		mLooping(AL_FALSE),
 		mSourceRelative(AL_FALSE),
+		mSourceType(AL_UNDETERMINED),
 		mConeInnerAngle(360.0),
 		mConeOuterAngle(360.0),
 		mConeOuterGain(0.0),
+		mConeGainScaler(1.0),
+		mAttenuationGainScaler(1.0),
         mReadIndex(0.0),
         mTempSourceStorageBufferSize(2048),             // only used if preferred mixer is unavailable
 		mState(AL_INITIAL),
@@ -140,12 +167,11 @@ OALSource::OALSource (const UInt32 	 	inSelfToken, OALContext	*inOwningContext)
 		mMinGain(0.0),
 		mMaxGain(1.0),
 		mRampState(kNoRamping),
-		mStopInPostRender(false),
-		mPauseInPostRender(false),
-		mResetQInPostRender(kResetQueueOff)
+		mResetBufferToken(0),
+		mResetBuffer(NULL),
+		mResetBuffersToUnqueue(0),
+		mTransitioningToFlushQ(false)
 {		
-    mOwningDevice = mOwningContext->GetOwningDevice();
-
     mPosition[0] = 0.0;
     mPosition[1] = 0.0;
     mPosition[2] = 0.0;
@@ -154,76 +180,87 @@ OALSource::OALSource (const UInt32 	 	inSelfToken, OALContext	*inOwningContext)
     mVelocity[1] = 0.0;
     mVelocity[2] = 0.0;
 
-    mDirection[0] = 0.0;
-    mDirection[1] = 0.0;
-    mDirection[2] = 0.0;
+    mConeDirection[0] = 0.0;
+    mConeDirection[1] = 0.0;
+    mConeDirection[2] = 0.0;
 
     mBufferQueueActive = new BufferQueue();
     mBufferQueueInactive = new BufferQueue();
     mACMap = new ACMap();
 
-    mReferenceDistance = mOwningDevice->GetDefaultReferenceDistance();
-    mMaxDistance = mOwningDevice->GetDefaultMaxDistance();
+    mReferenceDistance = mOwningContext->GetDefaultReferenceDistance();
+    mMaxDistance = mOwningContext->GetDefaultMaxDistance();
      
-    if (!mOwningDevice->IsPreferredMixerAvailable())
+    if (!IsPreferred3DMixerPresent())
     {
         // since the preferred mixer is not available, some temporary storgae will be needed for SRC
         // for now assume that sources will not have more than 2 channels of data
         mTempSourceStorage = (AudioBufferList *) malloc ((offsetof(AudioBufferList, mBuffers)) + (2 * sizeof(AudioBuffer)));
-        mTempSourceStorage->mBuffers[0].mDataByteSize = mTempSourceStorageBufferSize;
+        
+		mTempSourceStorage->mBuffers[0].mDataByteSize = mTempSourceStorageBufferSize;
         mTempSourceStorage->mBuffers[0].mData = malloc(mTempSourceStorageBufferSize);
         
         mTempSourceStorage->mBuffers[1].mDataByteSize = mTempSourceStorageBufferSize;
         mTempSourceStorage->mBuffers[1].mData = malloc(mTempSourceStorageBufferSize);
     }
+	else
+	{
+	   mTempSourceStorage = NULL;
+	}
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 OALSource::~OALSource()
 {
 #if LOG_VERBOSE
-	DebugMessageN1("OALSource::~OALSource() - OALSource = %ld\n", mSelfToken);
+	DebugMessageN1("OALSource::~OALSource() - OALSource = %ld\n", (long int) mSelfToken);
 #endif
-
+		
 	Stop(); // stop any playback that is in progress
 	
 	// Let a render cycle go by so the source input callback can be removed from the mixer
-	// before the source object goes away. THis will eventually be fixed in AudioUnits but needs to be here for now
-	UInt32	microseconds = (UInt32)((mOwningDevice->GetFramesPerSlice() / (mOwningDevice->GetMixerRate()/1000)) * 1000);
+	// before the source object goes away. This will eventually be fixed in AudioUnits but needs to be here for now
+	UInt32	microseconds = (UInt32)((mOwningContext->GetFramesPerSlice() / (mOwningContext->GetMixerRate()/1000)) * 1000);
 	usleep (microseconds * 2);
 
     // release the 3DMixer bus if necessary
 	if (mCurrentPlayBus != kSourceNeedsBus)
 	{
-		mOwningDevice->SetBusAsAvailable (mCurrentPlayBus);
+		mOwningContext->SetBusAsAvailable (mCurrentPlayBus);
 		mCurrentPlayBus = kSourceNeedsBus;		
 	}
-		
-    mBufferQueueMutex.Lock();
-    
+		    
     // empty the two queues
     UInt32  count = mBufferQueueInactive->Size();
     for (UInt32	i = 0; i < count; i++)
     {	
-        mBufferQueueInactive->RemoveQueueEntryByIndex(0);
+        mBufferQueueInactive->RemoveQueueEntryByIndex(this, 0, true);
     }
     delete (mBufferQueueInactive);
    
     count = mBufferQueueActive->Size();
     for (UInt32	i = 0; i < count; i++)
     {	
-        mBufferQueueActive->RemoveQueueEntryByIndex(0);
+        mBufferQueueActive->RemoveQueueEntryByIndex(this, 0, true);
     }
     delete (mBufferQueueActive);
-    
-    mBufferQueueMutex.Unlock();
-	
+    	
 	// remove all the AudioConverters that were created for the buffer queue of this source object
     if (mACMap)
 	{
 		mACMap->RemoveAllConverters();
 		delete (mACMap);
 	}
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void	OALSource::Suspend ()
+{
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void	OALSource::Unsuspend ()
+{
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -235,13 +272,16 @@ OALSource::~OALSource()
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void	OALSource::SetPitch (float	inPitch)
 {
+	if (inPitch < 0.0f)
+		throw ((OSStatus) AL_INVALID_VALUE);
+
     if ((inPitch == mPitch) && (mResetPitch == false))
 		return;			// nothing to do
 	
 	mPitch = inPitch;
 
      // 1.3 3DMixer does not work properly when doing SRC on a mono bus
-	 if (!mOwningDevice->IsPreferredMixerAvailable())
+	 if (!IsPreferred3DMixerPresent())
         return;        
 
 	Float32     newPitch = mPitch * mDopplerScaler;
@@ -255,9 +295,9 @@ void	OALSource::SetPitch (float	inPitch)
     DebugMessageN2("OALSource::SetPitch: k3DMixerParam_PlaybackRate called - OALSource:mPitch = %ld:%f2\n", mSelfToken, mPitch );
 #endif            
 			
-			OSStatus    result = AudioUnitSetParameter (	mOwningDevice->GetMixerUnit(), k3DMixerParam_PlaybackRate, kAudioUnitScope_Input, mCurrentPlayBus, newPitch, 0);
+			OSStatus    result = AudioUnitSetParameter (mOwningContext->GetMixerUnit(), k3DMixerParam_PlaybackRate, kAudioUnitScope_Input, mCurrentPlayBus, newPitch, 0);
             if (result != noErr)
-                DebugMessageN2("OALSource::SetPitch: k3DMixerParam_PlaybackRate called - OALSource:mPitch = %ld:%f2\n", mSelfToken, mPitch );
+                DebugMessageN3("OALSource::SetPitch: k3DMixerParam_PlaybackRate called - OALSource = %ld mPitch = %f2 result = %ld\n", (long int) mSelfToken, mPitch, result );
         }
 
 		mResetPitch = false;
@@ -270,7 +310,7 @@ void	OALSource::SetPitch (float	inPitch)
 void	OALSource::SetGain (float	inGain)
 {	
 #if LOG_VERBOSE
-        DebugMessageN2("OALSource::SetGain - OALSource:inGain = %ld:%f\n", mSelfToken, inGain);
+        DebugMessageN2("OALSource::SetGain - OALSource:inGain = %ld:%f\n", (long int) mSelfToken, inGain);
 #endif
 
 	if (mGain != inGain)
@@ -284,8 +324,10 @@ void	OALSource::SetGain (float	inGain)
 void	OALSource::SetMinGain (Float32	inMinGain)
 {
 #if LOG_VERBOSE
-	DebugMessageN2("OALSource::SetMinGain - OALSource:inMinGain = %ld:%f\n", mSelfToken, inMinGain);
+	DebugMessageN2("OALSource::SetMinGain - OALSource:inMinGain = %ld:%f\n", (long int) mSelfToken, inMinGain);
 #endif
+	if ((inMinGain < 0.0f) && (inMinGain > 1.0f))
+		throw ((OSStatus) AL_INVALID_VALUE);
 
 	if (mMinGain != inMinGain)
 	{
@@ -298,8 +340,11 @@ void	OALSource::SetMinGain (Float32	inMinGain)
 void	OALSource::SetMaxGain (Float32	inMaxGain)
 {
 #if LOG_VERBOSE
-	DebugMessageN2("OALSource::SetMaxGain - OALSource:inMaxGain = %ld:%f\n", mSelfToken, inMaxGain);
+	DebugMessageN2("OALSource::SetMaxGain - OALSource:inMaxGain = %ld:%f\n", (long int) mSelfToken, inMaxGain);
 #endif
+
+	if ((inMaxGain < 0.0f) && (inMaxGain > 1.0f))
+		throw ((OSStatus) AL_INVALID_VALUE);
 
 	if (mMaxGain != inMaxGain)
 	{
@@ -312,31 +357,37 @@ void	OALSource::SetMaxGain (Float32	inMaxGain)
 void	OALSource::SetReferenceDistance (Float32	inReferenceDistance)
 {
 #if LOG_VERBOSE
-	DebugMessageN2("OALSource::SetReferenceDistance - OALSource:inReferenceDistance = %ld/%f2\n", mSelfToken, inReferenceDistance);
+	DebugMessageN2("OALSource::SetReferenceDistance - OALSource:inReferenceDistance = %ld/%f2\n", (long int) mSelfToken, inReferenceDistance);
 #endif
+
+	if (inReferenceDistance <= 0.0f)
+		throw ((OSStatus) AL_INVALID_VALUE);
 				
 	if (inReferenceDistance == mReferenceDistance)
 		return; // nothing to do
 
 	mReferenceDistance = inReferenceDistance;
+
+	if (!mOwningContext->DoSetDistance())
+		return; // nothing else to do?
  	
     if (mCurrentPlayBus != kSourceNeedsBus)
     {
-        if (!mOwningDevice->IsPreferredMixerAvailable())	
+        if (!IsPreferred3DMixerPresent())	
         {
             // the pre-2.0 3DMixer does not accept kAudioUnitProperty_3DMixerDistanceParams, it has do some extra work and use the DistanceAtten property instead
-            mOwningDevice->SetDistanceAttenuation(mCurrentPlayBus, mReferenceDistance, mMaxDistance, mRollOffFactor);
+            mOwningContext->SetDistanceAttenuation(mCurrentPlayBus, mReferenceDistance, mMaxDistance, mRollOffFactor);
         }
         else
         {
             MixerDistanceParams		distanceParams;
             UInt32					outSize = sizeof(distanceParams);
-            OSStatus	result = AudioUnitGetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, &outSize);
+            OSStatus	result = AudioUnitGetProperty(mOwningContext->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, &outSize);
             if (result == noErr)
             {
                 Float32     rollOff = mRollOffFactor;
 
-                if (mOwningDevice->IsDistanceScalingRequired())
+                if (mOwningContext->IsDistanceScalingRequired())
                 {
                     // scale the reference distance
                     distanceParams.mReferenceDistance = (mReferenceDistance/mMaxDistance) * kDistanceScalar;
@@ -354,7 +405,7 @@ void	OALSource::SetReferenceDistance (Float32	inReferenceDistance)
                 else 
                     distanceParams.mMaxAttenuation = 0.0;   // if db result was positive, clamp it to zero
                 
-                result = AudioUnitSetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, sizeof(distanceParams));
+                result = AudioUnitSetProperty(mOwningContext->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, sizeof(distanceParams));
             }
         }
 	}
@@ -364,7 +415,7 @@ void	OALSource::SetReferenceDistance (Float32	inReferenceDistance)
 void	OALSource::SetMaxDistance (Float32	inMaxDistance)
 {
 #if LOG_VERBOSE
-	DebugMessageN2("OALSource::SetMaxDistance - OALSource:inMaxDistance = %ld:%f2\n", mSelfToken, inMaxDistance);
+	DebugMessageN2("OALSource::SetMaxDistance - OALSource:inMaxDistance = %ld:%f2\n", (long int) mSelfToken, inMaxDistance);
 #endif
 
 	if (inMaxDistance == mMaxDistance)
@@ -372,23 +423,26 @@ void	OALSource::SetMaxDistance (Float32	inMaxDistance)
 
 	mMaxDistance = inMaxDistance;
 
+	if (!mOwningContext->DoSetDistance())
+		return; // nothing else to do?
+
     if (mCurrentPlayBus != kSourceNeedsBus)
     {
-        if (!mOwningDevice->IsPreferredMixerAvailable())	
+        if (!IsPreferred3DMixerPresent())	
         {
             // the pre-2.0 3DMixer does not accept kAudioUnitProperty_3DMixerDistanceParams, it has do some extra work and use the DistanceAtten property instead
-            mOwningDevice->SetDistanceAttenuation(mCurrentPlayBus, mReferenceDistance, mMaxDistance, mRollOffFactor);
+            mOwningContext->SetDistanceAttenuation(mCurrentPlayBus, mReferenceDistance, mMaxDistance, mRollOffFactor);
         }
         else
         {
             MixerDistanceParams		distanceParams;
             UInt32					outSize = sizeof(distanceParams);
-            OSStatus	result = AudioUnitGetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, &outSize);
+            OSStatus	result = AudioUnitGetProperty(mOwningContext->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, &outSize);
             if (result == noErr)
             {
                 Float32     rollOff = mRollOffFactor;
 
-                if (mOwningDevice->IsDistanceScalingRequired())
+                if (mOwningContext->IsDistanceScalingRequired())
                 {
                     // scale the reference distance
                     distanceParams.mReferenceDistance = (mReferenceDistance/mMaxDistance) * kDistanceScalar;
@@ -406,7 +460,7 @@ void	OALSource::SetMaxDistance (Float32	inMaxDistance)
                 else 
                     distanceParams.mMaxAttenuation = 0.0;   // if db result was positive, clamp it to zero
                 
-                result = AudioUnitSetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, sizeof(distanceParams));
+                result = AudioUnitSetProperty(mOwningContext->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, sizeof(distanceParams));
             }
         }
     }
@@ -416,31 +470,37 @@ void	OALSource::SetMaxDistance (Float32	inMaxDistance)
 void	OALSource::SetRollOffFactor (Float32	inRollOffFactor)
 {
 #if LOG_VERBOSE
-	DebugMessageN2("OALSource::SetRollOffFactor - OALSource:inRollOffFactor = %ld:%f\n", mSelfToken, inRollOffFactor);
+	DebugMessageN2("OALSource::SetRollOffFactor - OALSource:inRollOffFactor = %ld:%f\n", (long int) mSelfToken, inRollOffFactor);
 #endif
+
+	if (inRollOffFactor < 0.0f) 
+		throw ((OSStatus) AL_INVALID_VALUE);
 
 	if (inRollOffFactor == mRollOffFactor)
 		return; // nothing to do
 
 	mRollOffFactor = inRollOffFactor;
+	
+	if (!mOwningContext->DoSetDistance())
+		return; // nothing else to do?
  	
     if (mCurrentPlayBus != kSourceNeedsBus)
     {
-        if (!mOwningDevice->IsPreferredMixerAvailable())	
+        if (!IsPreferred3DMixerPresent())	
         {
             // the pre-2.0 3DMixer does not accept kAudioUnitProperty_3DMixerDistanceParams, it has do some extra work and use the DistanceAtten property instead
-            mOwningDevice->SetDistanceAttenuation(mCurrentPlayBus, mReferenceDistance, mMaxDistance, mRollOffFactor);
+            mOwningContext->SetDistanceAttenuation(mCurrentPlayBus, mReferenceDistance, mMaxDistance, mRollOffFactor);
         }
         else
         {
 			MixerDistanceParams		distanceParams;
 			UInt32					outSize = sizeof(distanceParams);
-			OSStatus	result = AudioUnitGetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, &outSize);
+			OSStatus	result = AudioUnitGetProperty(mOwningContext->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, &outSize);
 			if (result == noErr)
 			{
                 Float32     rollOff = mRollOffFactor;
 
-                if (mOwningDevice->IsDistanceScalingRequired())
+                if (mOwningContext->IsDistanceScalingRequired())
                 {
                     // scale the reference distance
                     distanceParams.mReferenceDistance = (mReferenceDistance/mMaxDistance) * kDistanceScalar;
@@ -456,7 +516,7 @@ void	OALSource::SetRollOffFactor (Float32	inRollOffFactor)
 				else 
 					distanceParams.mMaxAttenuation = 0.0;   // if db result was positive, clamp it to zero
 				
-                result = AudioUnitSetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, sizeof(distanceParams));
+                result = AudioUnitSetProperty(mOwningContext->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, sizeof(distanceParams));
 			}
         }
     }
@@ -466,7 +526,7 @@ void	OALSource::SetRollOffFactor (Float32	inRollOffFactor)
 void	OALSource::SetLooping (UInt32	inLooping)
 {
 #if LOG_VERBOSE
-	DebugMessageN2("OALSource::SetLooping called - OALSource:inLooping = %ld:%ld\n", mSelfToken, inLooping);
+	DebugMessageN2("OALSource::SetLooping called - OALSource:inLooping = %ld:%ld\n", (long int) mSelfToken, inLooping);
 #endif
 
     mLooping = inLooping;
@@ -476,8 +536,11 @@ void	OALSource::SetLooping (UInt32	inLooping)
 void	OALSource::SetPosition (Float32 inX, Float32 inY, Float32 inZ)
 {
 #if LOG_VERBOSE
-	DebugMessageN4("OALSource::SetPosition called - OALSource:X:Y:Z = %ld:%f:%f:%f\n", mSelfToken, inX, inY, inZ);
+	DebugMessageN4("OALSource::SetPosition called - OALSource:X:Y:Z = %ld:%f:%f:%f\n", (long int) mSelfToken, inX, inY, inZ);
 #endif
+
+	if (isnan(inX) || isnan(inY) || isnan(inZ))
+		throw ((OSStatus) AL_INVALID_VALUE);
 
 	mPosition[0] = inX;
 	mPosition[1] = inY;
@@ -490,7 +553,7 @@ void	OALSource::SetPosition (Float32 inX, Float32 inY, Float32 inZ)
 void	OALSource::SetVelocity (Float32 inX, Float32 inY, Float32 inZ)
 {
 #if LOG_VERBOSE
-	DebugMessageN1("OALSource::SetVelocity called - OALSource = %ld\n", mSelfToken);
+	DebugMessageN1("OALSource::SetVelocity called - OALSource = %ld\n", (long int) mSelfToken);
 #endif
 
 	mVelocity[0] = inX;
@@ -504,12 +567,12 @@ void	OALSource::SetVelocity (Float32 inX, Float32 inY, Float32 inZ)
 void	OALSource::SetDirection (Float32 inX, Float32 inY, Float32 inZ)
 {
 #if LOG_VERBOSE
-	DebugMessageN1("OALSource::SetDirection called - OALSource = %ld\n", mSelfToken);
+	DebugMessageN1("OALSource::SetDirection called - OALSource = %ld\n", (long int) mSelfToken);
 #endif
 
-	mDirection[0] = inX;
-	mDirection[1] = inY;
-	mDirection[2] = inZ;
+	mConeDirection[0] = inX;
+	mConeDirection[1] = inY;
+	mConeDirection[2] = inZ;
 
 	mCalculateDistance = true;  // change the direction next time the PreRender proc or a new Play() is called
 }
@@ -518,8 +581,11 @@ void	OALSource::SetDirection (Float32 inX, Float32 inY, Float32 inZ)
 void	OALSource::SetSourceRelative (UInt32	inSourceRelative)
 {
 #if LOG_VERBOSE
-	DebugMessageN2("OALSource::SetSourceRelative called - OALSource:inSourceRelative = %ld:%ld\n", mSelfToken, inSourceRelative);
+	DebugMessageN2("OALSource::SetSourceRelative called - OALSource:inSourceRelative = %ld:%ld\n", (long int) mSelfToken, inSourceRelative);
 #endif
+
+	if ((inSourceRelative != AL_FALSE) && (inSourceRelative != AL_TRUE))
+		throw ((OSStatus) AL_INVALID_VALUE);
 
 	mSourceRelative = inSourceRelative;
 	mCalculateDistance = true;  // change the source relative next time the PreRender proc or a new Play() is called
@@ -529,40 +595,58 @@ void	OALSource::SetSourceRelative (UInt32	inSourceRelative)
 void	OALSource::SetChannelParameters ()	
 {
 #if LOG_VERBOSE
-	DebugMessageN1("OALSource::SetChannelParameters called - OALSource = %ld\n", mSelfToken);
+	DebugMessageN1("OALSource::SetChannelParameters called - OALSource = %ld\n", (long int) mSelfToken);
 #endif
 
-    mCalculateDistance = true;
+	SetReferenceDistance(mReferenceDistance);
+	SetMaxDistance(mMaxDistance);
+	SetRollOffFactor(mRollOffFactor);
+	 
+	mCalculateDistance = true;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void	OALSource::SetConeInnerAngle (Float32	inConeInnerAngle)
 {
 #if LOG_VERBOSE
-	DebugMessageN2("OALSource::SetConeInnerAngle called - OALSource:inConeInnerAngle = %ld:%f2\n", mSelfToken, inConeInnerAngle);
+	DebugMessageN2("OALSource::SetConeInnerAngle called - OALSource:inConeInnerAngle = %ld:%f2\n", (long int) mSelfToken, inConeInnerAngle);
 #endif
 
-    mConeInnerAngle = inConeInnerAngle;
+    if (mConeInnerAngle != inConeInnerAngle)
+	{
+		mConeInnerAngle = inConeInnerAngle;
+		mCalculateDistance = true;  
+	}
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void	OALSource::SetConeOuterAngle (Float32	inConeOuterAngle)
 {
 #if LOG_VERBOSE
-	DebugMessageN2("OALSource::SetConeOuterAngle called - OALSource:inConeOuterAngle = %ld:%f2\n", mSelfToken, inConeOuterAngle);
+	DebugMessageN2("OALSource::SetConeOuterAngle called - OALSource:inConeOuterAngle = %ld:%f2\n", (long int) mSelfToken, inConeOuterAngle);
 #endif
 
-    mConeOuterAngle = inConeOuterAngle;
+    if (mConeOuterAngle != inConeOuterAngle)
+	{
+		mConeOuterAngle = inConeOuterAngle;
+		mCalculateDistance = true;  
+	}
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void	OALSource::SetConeOuterGain (Float32	inConeOuterGain)
 {
 #if LOG_VERBOSE
-	DebugMessageN2("OALSource::SetConeOuterGain called - OALSource:inConeOuterGain = %ld:%f2\n", mSelfToken, inConeOuterGain);
+	DebugMessageN2("OALSource::SetConeOuterGain called - OALSource:inConeOuterGain = %ld:%f2\n", (long int) mSelfToken, inConeOuterGain);
 #endif
-
-    mConeOuterGain = inConeOuterGain;
+	if (inConeOuterGain >= 0.0 && inConeOuterGain <= 1.0)
+	{
+		if (mConeOuterGain != inConeOuterGain)
+		{
+			mConeOuterGain = inConeOuterGain;
+			mCalculateDistance = true;  
+		}
+	}
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -627,7 +711,7 @@ UInt32	OALSource::GetLooping ()
 void	OALSource::GetPosition (Float32 &inX, Float32 &inY, Float32 &inZ)
 {
 #if LOG_VERBOSE
-	DebugMessageN1("OALSource::GetPosition called - OALSource = %ld\n", mSelfToken);
+	DebugMessageN1("OALSource::GetPosition called - OALSource = %ld\n", (long int) mSelfToken);
 #endif
 
 	inX = mPosition[0];
@@ -639,7 +723,7 @@ void	OALSource::GetPosition (Float32 &inX, Float32 &inY, Float32 &inZ)
 void	OALSource::GetVelocity (Float32 &inX, Float32 &inY, Float32 &inZ)
 {
 #if LOG_VERBOSE
-	DebugMessageN1("OALSource::GetVelocity called - OALSource = %ld\n", mSelfToken);
+	DebugMessageN1("OALSource::GetVelocity called - OALSource = %ld\n", (long int) mSelfToken);
 #endif
 
 	inX = mVelocity[0];
@@ -651,12 +735,12 @@ void	OALSource::GetVelocity (Float32 &inX, Float32 &inY, Float32 &inZ)
 void	OALSource::GetDirection (Float32 &inX, Float32 &inY, Float32 &inZ)
 {
 #if LOG_VERBOSE
-	DebugMessageN1("OALSource::GetDirection called - OALSource = %ld\n", mSelfToken);
+	DebugMessageN1("OALSource::GetDirection called - OALSource = %ld\n", (long int) mSelfToken);
 #endif
 
-	inX = mDirection[0];
-	inY = mDirection[1];
-	inZ = mDirection[2];
+	inX = mConeDirection[0];
+	inY = mConeDirection[1];
+	inZ = mConeDirection[2];
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -686,10 +770,16 @@ Float32	OALSource::GetConeOuterGain ()
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 UInt32	OALSource::GetState()
 {
-    return mState;
+    // this is a special situation. The only time mState will be kTransitionState is when the source was stopped
+	// while currently playing, but the deferred Q has not yet cleaned up. Effectively this is a stopped state for the
+	// caller, as the source should behave as if it was already stopped. It's an internal state.
+	if (mState == kTransitionState)
+		return AL_STOPPED;
+		
+	return mState;
 }
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-UInt32	OALSource::GetToken()
+ALuint	OALSource::GetToken()
 {
     return mSelfToken;
 }
@@ -704,12 +794,14 @@ UInt32	OALSource::GetQLength()
     // as far as the user is concerned, the Q length is the size of the inactive & active lists
     UInt32  returnValue = 0;
     
-    CAMutex::Locker qMutex(mBufferQueueMutex);
+	TRY_PLAY_MUTEX
 
     returnValue = mBufferQueueInactive->Size() + mBufferQueueActive->Size();
 
+	UNLOCK_PLAY_MUTEX
+
 #if LOG_BUFFER_QUEUEING
-	DebugMessageN2("OALSource::GetQLength called - OALSource:QLength = %ld:%ld\n", mSelfToken, returnValue);
+	DebugMessageN2("OALSource::GetQLength called - OALSource:QLength = %ld:%ld\n", (long int) mSelfToken, returnValue);
 #endif
 
 	return (returnValue);
@@ -721,9 +813,11 @@ UInt32	OALSource::GetBuffersProcessed()
     UInt32  returnValue = 0;
 	if (mState == AL_INITIAL)
         return(0);
+	else if (mState == kTransitionState)
+		return(GetQLength());	// transistioning to Stop is the same as being in a stopped state for this call, but the queues may not be joined yet
     else
     {
-		CAMutex::Locker qMutex(mBufferQueueMutex);
+		TRY_PLAY_MUTEX
 		
 		if (mQueueIsProcessed)
 		{
@@ -734,74 +828,128 @@ UInt32	OALSource::GetBuffersProcessed()
 		}
 		
         returnValue = mBufferQueueInactive->Size();
+		
+		UNLOCK_PLAY_MUTEX
     }
 
 #if LOG_BUFFER_QUEUEING
-	DebugMessageN2("OALSource::GetBuffersProcessed called - OALSource:ProcessedCount = %ld:%ld\n", mSelfToken, returnValue);
+	DebugMessageN2("OALSource::GetBuffersProcessed called - OALSource:ProcessedCount = %ld:%ld\n", (long int) mSelfToken, returnValue);
 #endif
     
 	return (returnValue);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// This should not be called from the render thread, the caller can wait on the lock until it is safe to touch both active and inactive lists
-void	OALSource::SetBuffer (UInt32 inBufferToken, OALBuffer	*inBuffer)
+void	OALSource::SetBuffer (ALuint inBufferToken, OALBuffer	*inBuffer)
 {
-#if LOG_VERBOSE
-	DebugMessageN2("OALSource::SetBuffer called - OALSource:inBufferToken = %ld:%ld\n", mSelfToken, inBufferToken);
-#endif
+	if (inBuffer == NULL)
+		return;	// invalid case
     
-	UInt32  count = 0;
+	TRY_PLAY_MUTEX
 
-#if USE_MUTEXES
-		TRY_PLAY_MUTEX
-#endif												
-    
-    // empty the two queues
-    count = mBufferQueueInactive->Size();
-    for (UInt32	i = 0; i < count; i++)
-    {	
-        mBufferQueueInactive->RemoveQueueEntryByIndex(0);
-    }
-   
-    count = mBufferQueueActive->Size();
-    for (UInt32	i = 0; i < count; i++)
-    {	
-        mBufferQueueActive->RemoveQueueEntryByIndex(0);
-    }
-    	
-	// if inBufferToken == 0, do nothing, passing NONE to this method is legal and should merely empty the queue
-	if (inBufferToken != 0)
+	switch (mState)
 	{
-		AppendBufferToQueue(inBufferToken, inBuffer);
-	}
-	
-#if USE_MUTEXES
-	UNLOCK_PLAY_MUTEX
+		case AL_PLAYING:
+		case AL_PAUSED:
+#if LOG_VERBOSE
+			DebugMessageN2("OALSource::SetBuffer ERROR is already playing - OALSource:inBufferToken = %ld:%ld", (long int) mSelfToken, (long int) inBufferToken);
 #endif
+			throw AL_INVALID_OPERATION;
+			break;
+		
+		case kTransitionState:
+		{
+#if LOG_VERBOSE
+			DebugMessageN2("OALSource::SetBuffer Deferred - OALSource:inBufferToken = %ld:%ld", (long int) mSelfToken, (long int) inBufferToken);
+#endif
+			if (inBufferToken == 0)
+			{
+				mSourceType = AL_UNDETERMINED;
+			}
+				
+			// reset the Q in the Post Render proc
+			mTransitioningToFlushQ = true;
+			mResetBufferToken = inBufferToken;
+			mResetBuffer = inBuffer;
+#if	LOG_MESSAGE_QUEUE					
+			DebugMessageN2("SetBuffer ADDING : kMQ_SetBuffer - OALSource = %ld mResetBufferToken = %ld\n", mSelfToken, mResetBufferToken);
+#endif
+			PlaybackMessage*		pbm = new PlaybackMessage((UInt32) kMQ_SetBuffer);
+			mMessageQueue.push_atomic(pbm);
+			break;
+		}
+		
+		default:
+		{										
+#if LOG_VERBOSE
+			DebugMessageN2("OALSource::SetBuffer NOW - OALSource:inBufferToken = %ld:%ld\n", (long int) mSelfToken, (long int) inBufferToken);
+#endif
+			// In the initial or stopped state it is ok to flush the buffer Qs and add this new buffer right now
+			// empty the two queues
+			UInt32	count = mBufferQueueInactive->Size();
+			for (UInt32	i = 0; i < count; i++)
+			{	
+				mBufferQueueInactive->RemoveQueueEntryByIndex(this, 0, true);
+			}
+		   
+			count = mBufferQueueActive->Size();
+			for (UInt32	i = 0; i < count; i++)
+			{	
+				mBufferQueueActive->RemoveQueueEntryByIndex(this, 0, true);
+			}
+				
+			// if inBufferToken == 0, do nothing, passing NONE to this method is legal and should merely empty the queue
+			if (inBufferToken != 0)
+			{
+				AppendBufferToQueue(inBufferToken, inBuffer);
+				mSourceType = AL_STATIC;
+			}
+			else
+				mSourceType = AL_UNDETERMINED;
+		}
+	}
+
+	UNLOCK_PLAY_MUTEX
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-UInt32	OALSource::GetBuffer ()
+ALuint	OALSource::GetBuffer ()
 {
 #if LOG_VERBOSE
-	DebugMessageN2("OALSource::GetBuffer called - OALSource:currentBuffer = %ld:%ld\n", mSelfToken, mBufferQueueActive->GetBufferTokenByIndex(mCurrentBufferIndex));
+	DebugMessageN2("OALSource::GetBuffer called - OALSource:currentBuffer = %ld:%ld\n", (long int) mSelfToken, (long int) mBufferQueueActive->GetBufferTokenByIndex(mCurrentBufferIndex));
 #endif
 	// for now, return the currently playing buffer in an active source, or the 1st buffer of the Q in an inactive source
 	return (mBufferQueueActive->GetBufferTokenByIndex(mCurrentBufferIndex));
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// This should NOT be called from the render thread
-void	OALSource::AppendBufferToQueue(UInt32	inBufferToken, OALBuffer	*inBuffer)
+// public method
+void	OALSource::AddToQueue(ALuint	inBufferToken, OALBuffer	*inBuffer)
 {
+	TRY_PLAY_MUTEX
+
+		if (mSourceType == AL_STATIC)
+			throw AL_INVALID_OPERATION;
+			
+		if (mSourceType == AL_UNDETERMINED)
+			mSourceType = AL_STREAMING;
+			
+		AppendBufferToQueue(inBufferToken, inBuffer);
+
+	UNLOCK_PLAY_MUTEX
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// This should NOT be called from the render thread
+void	OALSource::AppendBufferToQueue(ALuint	inBufferToken, OALBuffer	*inBuffer)
+{
+	OSStatus	result = noErr;	
 #if LOG_BUFFER_QUEUEING
-	DebugMessageN2("OALSource::AppendBufferToQueue called - OALSource:inBufferToken = %ld:%ld\n", mSelfToken, inBufferToken);
+	DebugMessageN2("OALSource::AppendBufferToQueue called - OALSource:inBufferToken = %ld:%ld\n", (long int) mSelfToken, (long int) inBufferToken);
 #endif
 
-    CAMutex::Locker qMutex(mBufferQueueMutex);
+	TRY_PLAY_MUTEX
     
-	OSStatus	result = noErr;	
 	try {
 		if (mBufferQueueActive->Empty())
 		{
@@ -810,24 +958,24 @@ void	OALSource::AppendBufferToQueue(UInt32	inBufferToken, OALBuffer	*inBuffer)
 		}
 								
 		// do we need an AC for the format of this buffer?
-		if (inBuffer->mDataHasBeenConverted)
+		if (inBuffer->HasBeenConverted())
 		{
 			// the data was already convertered to the mixer format, no AC is necessary (as indicated by the ACToken setting of zero)
-			mBufferQueueActive->AppendBuffer(inBufferToken, inBuffer, 0);
+			mBufferQueueActive->AppendBuffer(this, inBufferToken, inBuffer, 0);
 		}
 		else
 		{			
 			// check the format against the real format of the data, NOT the input format of the converter which may be subtly different
 			// both in SampleRate and Interleaved flags
-			UInt32		outToken = 0;
-			mACMap->GetACForFormat(inBuffer->mDataFormat, outToken);
+			ALuint		outToken = 0;
+			mACMap->GetACForFormat(inBuffer->GetFormat(), outToken);
 			if (outToken == 0)
 			{
 				// create an AudioConverter for this format because there isn't one yet
 				AudioConverterRef				converter = 0;
 				CAStreamBasicDescription		inFormat;
 				
-				inFormat.SetFrom(inBuffer->mDataFormat);
+				inFormat.SetFrom(*(inBuffer->GetFormat()));
 					
 				// if the source is mono, set the flags to be non interleaved, so a reinterleaver does not get setup when
 				// completely unnecessary - since the flags on output are always set to non interleaved
@@ -850,29 +998,33 @@ void	OALSource::AppendBufferToQueue(UInt32	inBufferToken, OALBuffer	*inBuffer)
 					THROW_RESULT
 				
 				ACInfo	info;
-				info.mInputFormat = inBuffer->mDataFormat;
+				info.mInputFormat = *(inBuffer->GetFormat());
 				info.mConverter = converter;
 				
 				// add this AudioConverter to the source's ACMap
-				UInt32	newACToken = GetNewToken();
+				ALuint	newACToken = GetNewToken();
 				mACMap->Add(newACToken, &info);
 				// add the buffer to the queue - each buffer now knows which AC to use when it is converted in the render proc
-				mBufferQueueActive->AppendBuffer(inBufferToken, inBuffer, newACToken);
+				mBufferQueueActive->AppendBuffer(this, inBufferToken, inBuffer, newACToken);
 			}
 			else
 			{
 				// there is already an AC for this buffer's data format, so just append the buffer to the queue
-				mBufferQueueActive->AppendBuffer(inBufferToken, inBuffer, outToken);
+				mBufferQueueActive->AppendBuffer(this, inBufferToken, inBuffer, outToken);
 			}
 		}
+		
+		inBuffer->UseThisBuffer(this);
 	}
 	catch (OSStatus	 result) {
-		DebugMessageN1("APPEND BUFFER FAILED %ld\n", mSelfToken);
+		DebugMessageN1("APPEND BUFFER FAILED %ld\n", (long int) mSelfToken);
 		throw (result);
 	}
 
+	UNLOCK_PLAY_MUTEX
+
 #if LOG_BUFFER_QUEUEING
-	DebugMessageN2("OALSource::AppendBufferToQueue called - OALSource:QLength = %ld:%ld\n", mSelfToken, mBufferQueueInactive->Size() + mBufferQueueActive->Size());
+	DebugMessageN2("OALSource::AppendBufferToQueue called - OALSource:QLength = %ld:%ld\n", (long int) mSelfToken, mBufferQueueInactive->Size() + mBufferQueueActive->Size());
 #endif
 
 	return;
@@ -880,66 +1032,81 @@ void	OALSource::AppendBufferToQueue(UInt32	inBufferToken, OALBuffer	*inBuffer)
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Do NOT call this from the render thread
-void	OALSource::RemoveBuffersFromQueue(UInt32	inCount, UInt32	*outBufferTokens)
+void	OALSource::RemoveBuffersFromQueue(UInt32	inCount, ALuint	*outBufferTokens)
 {
 	if (inCount == 0)
 		return;
 
 #if LOG_BUFFER_QUEUEING
-	DebugMessageN2("OALSource::RemoveBuffersFromQueue called - OALSource:inCount = %ld:%ld\n", mSelfToken, inCount);
+	DebugMessageN2("OALSource::RemoveBuffersFromQueue called - OALSource:inCount = %ld:%ld\n", (long int) mSelfToken, inCount);
 #endif
 	
 	try {
-		// 1) do nothing if queue is playing and in loop mode - to risky that a requested unqueue buffer will be needed
-		// 2) do nothing if any of the requested buffers is in progress or not processed and queue is PLAYING
-		// 3) if source state is not playing or paused, do the request if the buffer count is valid
-		
+        
+		TRY_PLAY_MUTEX
+
 		if ((mState == AL_PLAYING) || (mState == AL_PAUSED))
 		{			
 			if (mLooping == true)
-			{
-				// case #1
-				throw ((OSStatus) AL_INVALID_OPERATION);		
-			}
+				throw ((OSStatus) AL_INVALID_OPERATION);
+			else if (inCount > mBufferQueueInactive->Size())
+				throw ((OSStatus) AL_INVALID_OPERATION);
 		}
-        
-		bool wasLocked = mBufferQueueMutex.Lock();
-
-		// if the current state is STOPPED, then make sure all the buffers are in the inactive list so they can be removed
-		if (mState == AL_STOPPED)
+		else if (mState == AL_STOPPED)
 		{
 			ClearActiveQueue();
+			if (inCount > mBufferQueueInactive->Size())
+				throw ((OSStatus) AL_INVALID_OPERATION);			
+		}
+		else if (mState == kTransitionState)
+		{
+#if LOG_BUFFER_QUEUEING
+			DebugMessageN2("RemoveBuffersFromQueue kTransitionState - OALSource:inCount = %ld:%ld\n", (long int) mSelfToken, inCount);
+#endif
+			if (inCount > GetQLength())
+				throw ((OSStatus) AL_INVALID_OPERATION);			
+
+			mResetBuffersToUnqueue = inCount;
+#if	LOG_MESSAGE_QUEUE					
+			DebugMessageN1("RemoveBuffersFromQueue ADDING : kMQ_ClearBuffersFromQueue - OALSource = %ld\n", mSelfToken);
+#endif
+			PlaybackMessage*		pbm = new PlaybackMessage((UInt32) kMQ_ClearBuffersFromQueue);
+			mMessageQueue.push_atomic(pbm);
 		}
 		
-		// see if there are enough buffers in the inactive list to satisfy the request
-		if (inCount > mBufferQueueInactive->Size())
-		{
-			if (wasLocked)
-				mBufferQueueMutex.Unlock();
-			throw ((OSStatus) AL_INVALID_OPERATION);		
-		}
-		
-		if (!mBufferQueueInactive->Empty())
-		{
-			for (UInt32	i = 0; i < inCount; i++)
-			{	
-				UInt32		outToken = mBufferQueueInactive->RemoveQueueEntryByIndex(0);
-									
-				if (outBufferTokens)
-					outBufferTokens[i] = outToken;
+		for (UInt32	i = 0; i < inCount; i++)
+		{	
+			ALuint		outToken = 0;
+			if (mState == kTransitionState)
+			{
+				// we're transitioning, so let the caller know what buffers will be removed, but don't actually do it until the deferred message is acted on
+				// first return the token for the buffers in the active queue, then the inactive queue
+				if (i < mBufferQueueActive->Size())
+					outToken = mBufferQueueActive->GetBufferTokenByIndex(i);
+				else
+					outToken = mBufferQueueInactive->GetBufferTokenByIndex(i - (mBufferQueueActive->Size()-1));
 			}
+			else
+			{
+				outToken = mBufferQueueInactive->RemoveQueueEntryByIndex(this, 0, true);
+			}
+
+			if (outBufferTokens)
+				outBufferTokens[i] = outToken;
 		}
-		if (wasLocked)
-			mBufferQueueMutex.Unlock();
-		
+
+		if (GetQLength() == 0)
+			mSourceType = AL_UNDETERMINED;	// Q has been cleared and is now available for both static or streaming usage
+
+		UNLOCK_PLAY_MUTEX
 	}
 	catch (OSStatus	 result) {
-		DebugMessageN1("REMOVE BUFFER FAILED, OALSource = %ld\n", mSelfToken);
+		DebugMessageN1("REMOVE BUFFER FAILED, OALSource = %ld\n", (long int) mSelfToken);
 		throw (result);
 	}
 
 #if LOG_BUFFER_QUEUEING
-	DebugMessageN2("OALSource:RemoveBuffersFromQueue called - OALSource:QLength = %ld:%ld\n", mSelfToken, mBufferQueueInactive->Size() + mBufferQueueActive->Size());
+	DebugMessageN2("OALSource:RemoveBuffersFromQueue called - OALSource:QLength = %ld:%ld\n", (long int) mSelfToken, mBufferQueueInactive->Size() + mBufferQueueActive->Size());
 #endif
 
 	return;
@@ -950,168 +1117,244 @@ void	OALSource::RemoveBuffersFromQueue(UInt32	inCount, UInt32	*outBufferTokens)
 // PLAYBACK METHODS 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void	OALSource::RestartQueue()
-{
-#if USE_MUTEXES
-		TRY_PLAY_MUTEX
-#endif												
-	
-	mRampState = kRampDown;						// ramp down the next buffer
-	mResetQInPostRender = kResetQueueRampDown;	// set state of this queue restart (stage 1)
 
-#if USE_MUTEXES
-		UNLOCK_PLAY_MUTEX	
+void	OALSource::SetupMixerBus()
+{
+	OSStatus					result = noErr;
+	CAStreamBasicDescription    desc;
+	UInt32						outSize = 0;
+	BufferInfo*					buffer = mBufferQueueActive->Get(mCurrentBufferIndex);
+
+	if (buffer == NULL)
+		throw -1; 
+
+	if (mCurrentPlayBus == kSourceNeedsBus)
+	{		
+		// the bus stream format will get set if necessary while getting the available bus
+		mCurrentPlayBus = (buffer->mBuffer->GetNumberChannels() == 1) ? mOwningContext->GetAvailableMonoBus() : mOwningContext->GetAvailableStereoBus();                
+		if (mCurrentPlayBus == -1)
+			throw -1; 
+		
+		if (IsPreferred3DMixerPresent())
+		{
+			Float32     rollOff = mRollOffFactor;
+			Float32     refDistance = mReferenceDistance;
+			Float32     maxDistance = mMaxDistance;
+
+			if (mOwningContext->IsDistanceScalingRequired())
+			{
+				refDistance = (mReferenceDistance/mMaxDistance) * kDistanceScalar;
+				maxDistance = kDistanceScalar;
+				rollOff *= (kDistanceScalar/mMaxDistance);
+			}
+			
+			Float32	testAttenuation  = 20 * log10(mReferenceDistance / (mReferenceDistance + (mRollOffFactor * (mMaxDistance -  mReferenceDistance))));
+			if (testAttenuation < 0.0)
+				testAttenuation *= -1.0;
+			else 
+				testAttenuation = 0.0;   // if db result was positive, clamp it to zero
+
+			// Set the MixerDistanceParams for the new bus if necessary
+			MixerDistanceParams		distanceParams;
+			outSize = sizeof(distanceParams);
+			result = AudioUnitGetProperty(mOwningContext->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, &outSize);
+
+			if  ((result == noErr) 	&& ((distanceParams.mReferenceDistance != refDistance)      ||
+										(distanceParams.mMaxDistance != maxDistance)            ||
+										(distanceParams.mMaxAttenuation != testAttenuation)))
+
+			{
+				distanceParams.mMaxAttenuation = testAttenuation;
+			
+				if (mOwningContext->IsDistanceScalingRequired())
+				{
+
+					distanceParams.mReferenceDistance = (mReferenceDistance/mMaxDistance) * kDistanceScalar;
+					// limit the max distance
+					distanceParams.mMaxDistance = kDistanceScalar;
+					distanceParams.mMaxAttenuation = testAttenuation;
+				}
+				else
+				{
+					distanceParams.mReferenceDistance = mReferenceDistance;
+					distanceParams.mMaxDistance = mMaxDistance;
+				}
+				
+				result = AudioUnitSetProperty(mOwningContext->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, sizeof(distanceParams));
+			}
+		}
+		else
+		{
+			// the pre-2.0 3DMixer does not accept kAudioUnitProperty_3DMixerDistanceParams, it has do some extra work and use the DistanceAtten property instead
+			mOwningContext->SetDistanceAttenuation(mCurrentPlayBus, mReferenceDistance, mMaxDistance, mRollOffFactor);
+		}
+	}
+
+	// get the sample rate of the bus
+	outSize = sizeof(desc);
+	result = AudioUnitGetProperty(mOwningContext->GetMixerUnit(), kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, mCurrentPlayBus, &desc, &outSize);
+	
+	mResetPitch = true;	
+	mCalculateDistance = true;				
+	if (desc.mSampleRate != buffer->mBuffer->GetSampleRate())
+		mResetBusFormat = true;     // only reset the bus stream format if it is different than sample rate of the data   		
+	
+	// *************************** Set properties for the mixer bus
+	
+	ChangeChannelSettings();
+	UpdateBusGain();
+	
+	return;			
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// returns false if there is no data to play
+bool	OALSource::PrepBufferQueueForPlayback()
+{
+    BufferInfo		*buffer = NULL;
+
+	JoinBufferLists();
+	
+	if (mBufferQueueActive->Empty())
+		return false; // there isn't anything to do
+		
+	// Get the format for the first buffer in the queue
+	SkipALNONEBuffers(); // move past any AL_NONE buffers
+				
+	buffer = mBufferQueueActive->Get(mCurrentBufferIndex);
+	if (buffer == NULL)
+		return false; // there isn't anything to do
+	
+#if LOG_PLAYBACK
+	DebugMessage("OALSource::PrepBufferQueueForPlayback called - Format of 1st buffer in the Q = ");
+	buffer->mBuffer->PrintFormat();
 #endif
+			
+	// WARM THE BUFFERS
+	// when playing, touch all the audio data in memory once before it is needed in the render proc  (RealTime thread)
+	{
+		volatile UInt32	X;
+		UInt32		*start = (UInt32 *)buffer->mBuffer->GetDataPtr();
+		UInt32		*end = (UInt32 *)(buffer->mBuffer->GetDataPtr() + (buffer->mBuffer->GetDataSize() &0xFFFFFFFC));
+		while (start < end)
+		{
+			X = *start; 
+			start += 1024;
+		}
+	}		
+		
+	if (buffer->mBuffer->HasBeenConverted() == false)
+		AudioConverterReset(mACMap->Get(buffer->mACToken));
+
+	return true;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void	OALSource::Play()
 {
-	OSStatus					result = noErr;
-    UInt32						outSize;
-	CAStreamBasicDescription    desc;
-    BufferInfo					*buffer = NULL;
+	if (GetQLength() == 0)
+		return; // nothing to do
 	
-	if (!mOwningDevice->IsPlayable())
-		return;
-		
 	try {
-#if LOG_PLAYBACK
-		DebugMessageN3("OALSource::Play called - OALSource:QSize:Looping = %ld:%ld:%ld\n", mSelfToken, mBufferQueueActive->Size(), mLooping);
-#endif
         
-#if USE_MUTEXES
 		TRY_PLAY_MUTEX
-#endif												
-		// If this code executes after a call to stop but before the source has reached the PostRender proc, then just reset the buffers and
-		// keep on playing. This allows a call to alPlaySource to work correctly if called while the sound is still playing.
-		mStopInPostRender = false;		
-		mPauseInPostRender = false;
 
-		Reset();	// reset some of the class members before we start playing; will reset mCurrentBufferIndex to zero		
-
-        if (mBufferQueueActive->Empty())
-			return; // there isn't anything to do
-		
-		// Get the format for the first buffer in the queue
-		SkipALNONEBuffers(); // move past any AL_NONE buffers
-				
-		buffer = mBufferQueueActive->Get(mCurrentBufferIndex);
-        if (buffer == NULL)
-            throw AL_INVALID_OPERATION;
-            
+		switch (mState)
+		{
+			case AL_PLAYING:
 #if LOG_PLAYBACK
-			DebugMessage("OALSource::Play called - Format of 1st buffer in the Q = \n");
-			buffer->mBuffer->mDataFormat.Print();
+				DebugMessageN3("OALSource::Play Deferred Rewind - OALSource:QSize:Looping = %ld:%ld:%ld", mSelfToken, mBufferQueueActive->Size(), mLooping);
 #endif
-	
-#if WARM_THE_BUFFERS
-		// touch the memory now instead of in the render proc, so audio data will be paged in if it's currently in VM
-		{
-			volatile UInt32	X;
-			UInt32		*start = (UInt32 *)buffer->mBuffer->mData;
-			UInt32		*end = (UInt32 *)(buffer->mBuffer->mData + (buffer->mBuffer->mDataSize &0xFFFFFFFC));
-			while (start < end)
-			{
-				X = *start; 
-				start += 1024;
-			}
-		}		
-#endif
-		
-		if (buffer->mBuffer->mDataHasBeenConverted == false)
-			AudioConverterReset(mACMap->Get(buffer->mACToken));
-		
-		if (mCurrentPlayBus == kSourceNeedsBus)
-		{
-			// the bus stream format will get set if necessary while getting the available bus
-            mCurrentPlayBus = (buffer->mBuffer->mDataFormat.NumberChannels() == 1) ? mOwningDevice->GetAvailableMonoBus() : mOwningDevice->GetAvailableStereoBus();                
-            
-			Float32     rollOff = mRollOffFactor;
-			Float32     refDistance = mReferenceDistance;
-			Float32     maxDistance = mMaxDistance;
-
-            if (mOwningDevice->IsDistanceScalingRequired())
-            {
-                refDistance = (mReferenceDistance/mMaxDistance) * kDistanceScalar;
-                maxDistance = kDistanceScalar;
-                rollOff *= (kDistanceScalar/mMaxDistance);
-            }
-            
-            Float32	testAttenuation  = 20 * log10(mReferenceDistance / (mReferenceDistance + (mRollOffFactor * (mMaxDistance -  mReferenceDistance))));
-            if (testAttenuation < 0.0)
-                testAttenuation *= -1.0;
-            else 
-                testAttenuation = 0.0;   // if db result was positive, clamp it to zero
-
-			if (mOwningDevice->IsPreferredMixerAvailable())
-			{
-				// Set the MixerDistanceParams for the new bus if necessary
-				MixerDistanceParams		distanceParams;
-				outSize = sizeof(distanceParams);
-				result = AudioUnitGetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, &outSize);
-
-				if  ((result == noErr) 	&& ((distanceParams.mReferenceDistance != refDistance)      ||
-											(distanceParams.mMaxDistance != maxDistance)            ||
-											(distanceParams.mMaxAttenuation != testAttenuation)))
-
+				if (mRampState != kRampingComplete)	mRampState = kRampDown;
 				{
-					distanceParams.mMaxAttenuation = testAttenuation;
-                
-                    if (mOwningDevice->IsDistanceScalingRequired())
-                    {
-
-                        distanceParams.mReferenceDistance = (mReferenceDistance/mMaxDistance) * kDistanceScalar;
-                        // limit the max distance
-                        distanceParams.mMaxDistance = kDistanceScalar;
-                        distanceParams.mMaxAttenuation = testAttenuation;
-                    }
-                    else
-                    {
-                        distanceParams.mReferenceDistance = mReferenceDistance;
-                        distanceParams.mMaxDistance = mMaxDistance;
-                    }
-					
- 					result = AudioUnitSetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_3DMixerDistanceParams, kAudioUnitScope_Input, mCurrentPlayBus, &distanceParams, sizeof(distanceParams));
-				}
-			}
-            else
-            {
-                // the pre-2.0 3DMixer does not accept kAudioUnitProperty_3DMixerDistanceParams, it has do some extra work and use the DistanceAtten property instead
-                mOwningDevice->SetDistanceAttenuation(mCurrentPlayBus, mReferenceDistance, mMaxDistance, mRollOffFactor);
-            }
-		}	
-
-        // get the sample rate of the bus
-        outSize = sizeof(desc);
-        result = AudioUnitGetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, mCurrentPlayBus, &desc, &outSize);
-        
-		mResetPitch = true;	
-		mCalculateDistance = true;				
-        if (desc.mSampleRate != buffer->mBuffer->mDataFormat.mSampleRate)
-            mResetBusFormat = true;     // only reset the bus stream format if it is different than sample rate of the data   		
-		
-		// *************************** Set properties for the mixer bus
-		
-		ChangeChannelSettings();
-		UpdateBusGain();			
-
-		mState = AL_PLAYING;
-		mQueueIsProcessed = false;
-
-		// attach the notify and render procs to start processing audio data
-		AddNotifyAndRenderProcs();
-						
-#if USE_MUTEXES
-			UNLOCK_PLAY_MUTEX	
+#if	LOG_MESSAGE_QUEUE					
+					DebugMessageN1("Play(AL_PLAYING)  ADDING : kMQ_Rewind - OALSource = %ld\n", mSelfToken);
 #endif
+					PlaybackMessage*		pbm = new PlaybackMessage((UInt32) kMQ_Rewind);
+					mMessageQueue.push_atomic(pbm);
+			 	}
+				break;
+			
+			case AL_PAUSED:
+#if LOG_PLAYBACK
+				DebugMessage("OALSource::Play Resuming");
+#endif
+				Resume();
+				break;
+			
+			case kTransitionState:
+#if LOG_PLAYBACK
+				DebugMessageN3("OALSource::Play Deferred Play - OALSource:QSize:Looping = %ld:%ld:%ld", mSelfToken, mBufferQueueActive->Size(), mLooping);
+#endif
+				if (mRampState != kRampingComplete)	mRampState = kRampDown;
+				{
+#if	LOG_MESSAGE_QUEUE					
+					DebugMessageN1("Play (kTransitionState)  ADDING : kMQ_Play - OALSource = %ld\n", mSelfToken);
+#endif
+					PlaybackMessage*		pbm = new PlaybackMessage((UInt32) kMQ_Play);
+					mMessageQueue.push_atomic(pbm);
+				}
+				break;
+			
+			default:
+			{								
+#if LOG_PLAYBACK
+				DebugMessageN3("OALSource::Play Starting from a Stopped or Initial state (BEFORE PREP) - OALSource:QSize:Looping = %ld:%ld:%ld", mSelfToken,mBufferQueueActive->Size(), mLooping);
+#endif
+				// get the buffer q in a ready state for playback
+				PrepBufferQueueForPlayback();	
+#if LOG_PLAYBACK
+				DebugMessageN3("OALSource::Play Starting from a Stopped or Initial state (AFTER PREP) - OALSource:QSize:Looping = %ld:%ld:%ld", mSelfToken,mBufferQueueActive->Size(), mLooping);
+#endif
+						
+				// set up a mixer bus now
+				SetupMixerBus();
+												
+				mState = AL_PLAYING;
+				mQueueIsProcessed = false;
+
+				// attach the notify and render procs to start processing audio data
+				AddNotifyAndRenderProcs();
+			}
+		}
+
+		UNLOCK_PLAY_MUTEX	
 	}
 	catch (OSStatus	result) {
-		DebugMessageN2("PLAY FAILED source = %ld, err = %ld\n", mSelfToken, result);
+		DebugMessageN2("PLAY FAILED source = %ld, err = %ld\n", (long int) mSelfToken, result);
 		throw (result);
 	}
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void	OALSource::Rewind()
+{
+#if LOG_PLAYBACK
+	DebugMessageN1("OALSource::Pause called - OALSource = %ld\n", mSelfToken);
+#endif
+
+	TRY_PLAY_MUTEX
+
+	switch (mState)
+	{
+		case AL_PLAYING:
+			if (mRampState != kRampingComplete)	
+				mRampState = kRampDown;
+#if	LOG_MESSAGE_QUEUE					
+			DebugMessageN1("Rewind(AL_PLAYING)  ADDING : kMQ_Rewind - OALSource = %ld\n", mSelfToken);
+#endif
+			PlaybackMessage*		pbm = new PlaybackMessage((UInt32) kMQ_Rewind);
+			mMessageQueue.push_atomic(pbm);
+		case AL_PAUSED:
+		case AL_STOPPED:
+			LoopToBeginning();	// just reset the buffer queue now
+			break;
+		case kTransitionState:
+		case AL_INITIAL:
+			break;
+	}
+
+	UNLOCK_PLAY_MUTEX
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1121,106 +1364,101 @@ void	OALSource::Pause()
 	DebugMessageN1("OALSource::Pause called - OALSource = %ld\n", mSelfToken);
 #endif
 
-	if (mState == AL_PAUSED)
-		return; // nothing to do
-
-#if USE_MUTEXES
 	TRY_PLAY_MUTEX
+
+	switch (mState)
+	{
+		case AL_PLAYING:
+			if (mRampState != kRampingComplete)	
+				mRampState = kRampDown;
+#if	LOG_MESSAGE_QUEUE					
+				DebugMessageN1("Pause(AL_PLAYING)  ADDING : kMQ_Pause - OALSource = %ld\n", mSelfToken);
 #endif
-
-	try {
-	
-#if DEFER_DISCONNECT
-		// if the source needs a bus, it can't currently be playing
-		if (mCurrentPlayBus != kSourceNeedsBus)
-		{            		
-			mPauseInPostRender = true;
-			mRampState = kRampDown;
-			UInt32	microseconds = (UInt32)((mOwningDevice->GetFramesPerSlice() / (mOwningDevice->GetMixerRate()/1000)) * 1000);
-			while(mPauseInPostRender == true){
-				usleep (microseconds);
-			}
-			
-			mState = AL_PAUSED;
-		}
-#else
-		ReleaseNotifyAndRenderProcs(); // THIS NEEDS TO BE DEFERRED TO POST RENDER - method will have to lock until render cycle completes so
-		// caller we are in a paused state when returning to the caller
-
-		if (mCurrentPlayBus != kSourceNeedsBus)
-		{
-			mState = AL_PAUSED;
-		}
-#endif
-
-
+			PlaybackMessage*		pbm = new PlaybackMessage((UInt32) kMQ_Pause);
+			mMessageQueue.push_atomic(pbm);
+		case AL_INITIAL:
+		case AL_STOPPED:
+		case AL_PAUSED:
+		case kTransitionState:
+			break;
+				
+		default:
+			// do nothing it's either stopped or initial right now
+			break;
 	}
-	catch (OSStatus	result) {
-	}
-	
-#if USE_MUTEXES
+
 	UNLOCK_PLAY_MUTEX
-#endif
+
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void	OALSource::Resume()
 {
 #if LOG_PLAYBACK
-	DebugMessageN1("OALSource::Resume called - OALSource = %ld\n", mSelfToken);
+	DebugMessageN1("OALSource::Resume called - OALSource = %ld\n", (long int) mSelfToken);
 #endif
 
-	if (mState != AL_PAUSED)
-		return;
-		
-#if USE_MUTEXES
 	TRY_PLAY_MUTEX
-#endif
-	
-	mRampState = kRampUp;
 
-	AddNotifyAndRenderProcs();
-	mState = AL_PLAYING;
+	switch (mState)
+	{
+		case AL_PLAYING:
+		case AL_INITIAL:
+		case AL_STOPPED:
+		case kTransitionState:
+			break;
 
-#if USE_MUTEXES
+		case AL_PAUSED:
+			mRampState = kRampUp;
+			AddNotifyAndRenderProcs();
+			mState = AL_PLAYING;
+			break;
+	}
+
 	UNLOCK_PLAY_MUTEX
-#endif
+
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void	OALSource::Stop()
 {
 #if LOG_PLAYBACK
-	DebugMessageN1("OALSource::Stop called - OALSource = %ld\n", mSelfToken);
+	DebugMessageN1("OALSource::Stop called - OALSource = %ld\n", (long int) mSelfToken);
 #endif
 
-	if ((mCurrentPlayBus != kSourceNeedsBus) && (mState != AL_STOPPED))
-	{            
-
-#if USE_MUTEXES
 	TRY_PLAY_MUTEX
+
+	switch (mState)
+	{
+		case AL_PAUSED:
+		if (mCurrentPlayBus != kSourceNeedsBus)
+		{
+			mOwningContext->SetBusAsAvailable (mCurrentPlayBus);
+			mCurrentPlayBus = kSourceNeedsBus;
+			mState = AL_STOPPED;
+		}
+			break;
+			
+		case AL_PLAYING:
+			mState = kTransitionState;
+			// fall through to the kTransitionState case as well.
+		case kTransitionState:
+			if (mRampState != kRampingComplete)	
+				mRampState = kRampDown;
+#if	LOG_MESSAGE_QUEUE					
+			DebugMessageN1("Stop(kTransitionState)  ADDING : kMQ_Stop - OALSource = %ld\n", mSelfToken);
 #endif
-#if DEFER_DISCONNECT
-
-		mRampState = kRampDown;
-		mStopInPostRender = true;
-		
-#else
-
-		DisconnectFromBus(); // THIS NEEDS TO BE DEFERRED TO POST RENDER - method will have to lock until render cycle completes so
-
-		// move all the remaining unprocessed buffers into the inactive queue so GetProcessedBuffers will return the correct value in the AL_STOPPED state
-        ClearActiveQueue();
-		// caller we are in a stopped state when returning to the caller
-        mState = AL_STOPPED;
-
-#endif
-#if USE_MUTEXES
-	UNLOCK_PLAY_MUTEX
-#endif
+			PlaybackMessage*		pbm = new PlaybackMessage((UInt32) kMQ_Stop);
+			mMessageQueue.push_atomic(pbm);
+			break;
+				
+		default:
+			// do nothing it's either stopped or initial right now
+			break;
 	}
-    
-	
+
+	UNLOCK_PLAY_MUTEX
+
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1233,16 +1471,6 @@ void	OALSource::Stop()
 #pragma mark ***** Buffer Queue Methods *****
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-void	OALSource::Reset()
-{
-#if LOG_VERBOSE
-	DebugMessageN1("OALSource::Reset called - OALSource = %ld\n", mSelfToken);
-#endif
-	JoinBufferLists();
-	mState = AL_INITIAL;
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void	OALSource::ClearActiveQueue()
 {
 	while (mBufferQueueActive->Size() > 0)
@@ -1251,9 +1479,9 @@ void	OALSource::ClearActiveQueue()
 		BufferInfo	*staleBufferInfo = mBufferQueueActive->Get(0);
 		mBufferQueueActive->SetBufferAsProcessed(0);
 		// Append it to Inactive List
-		mBufferQueueInactive->AppendBuffer(staleBufferInfo->mBufferToken, staleBufferInfo->mBuffer, staleBufferInfo->mACToken);
+		mBufferQueueInactive->AppendBuffer(this, staleBufferInfo->mBufferToken, staleBufferInfo->mBuffer, staleBufferInfo->mACToken);
 		// Remove it from Active List
-		mBufferQueueActive->RemoveQueueEntryByIndex(0);
+		mBufferQueueActive->RemoveQueueEntryByIndex(this, 0, false);
 	}
 }
 
@@ -1262,7 +1490,7 @@ void	OALSource::ClearActiveQueue()
 void	OALSource::LoopToBeginning()
 {
 #if LOG_VERBOSE
-	DebugMessageN1("OALSource::LoopToBeginning called - OALSource = %ld\n", mSelfToken);
+	DebugMessageN1("OALSource::LoopToBeginning called - OALSource = %ld\n", (long int) mSelfToken);
 #endif
 
 	ClearActiveQueue();
@@ -1272,13 +1500,9 @@ void	OALSource::LoopToBeginning()
     mBufferQueueActive  = mBufferQueueInactive;
     mBufferQueueInactive = tQ;
 
-    bool    gotTheLock;
-    mBufferQueueMutex.Try(gotTheLock);
     mBufferQueueActive->ResetBuffers(); 	// mark all the buffers as unprocessed
     mCurrentBufferIndex = 0;                // start at the first buffer in the queue
     mQueueIsProcessed = false;					
-    if (gotTheLock)
-        mBufferQueueMutex.Unlock();
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1286,66 +1510,51 @@ void	OALSource::LoopToBeginning()
 void	OALSource::JoinBufferLists()
 {	
 #if LOG_VERBOSE
-	DebugMessageN1("OALSource::JoinBufferLists called - OALSource = %ld\n", mSelfToken);
+	DebugMessageN1("OALSource::JoinBufferLists called - OALSource = %ld\n", (long int) mSelfToken);
 #endif
 
-    bool    gotTheLock;
-    // Try and get the mutex so this buffer can be moved to the inactive list
-    if (mBufferQueueMutex.Try(gotTheLock))
-    {
-        UInt32  count = mBufferQueueActive->Size();
-        for (UInt32 i = 0; i < count; i++)
-        {
-            // Get buffer #i from Active List
-            BufferInfo	*staleBufferInfo = mBufferQueueActive->Get(mCurrentBufferIndex);
-			if (staleBufferInfo)
-			{
-				mBufferQueueActive->SetBufferAsProcessed(mCurrentBufferIndex);
-				// Append it to Inactive List
-				mBufferQueueInactive->AppendBuffer(staleBufferInfo->mBufferToken, staleBufferInfo->mBuffer, staleBufferInfo->mACToken);
-				// Remove it from Active List
-				mBufferQueueActive->RemoveQueueEntryByIndex(mCurrentBufferIndex);
-			}
-        }
-        
-        // swap the list pointers now
-        BufferQueue*        tQ  = mBufferQueueActive;
-        mBufferQueueActive  = mBufferQueueInactive;
-        mBufferQueueInactive = tQ;
-        
-        mBufferQueueActive->ResetBuffers(); 	// mark all the buffers as unprocessed
-        mCurrentBufferIndex = 0;                // start at the first buffer in the queue
-        mQueueIsProcessed = false;					
-        
-        if (gotTheLock)
-            mBufferQueueMutex.Unlock();
-    }
+	UInt32  count = mBufferQueueActive->Size();
+	for (UInt32 i = 0; i < count; i++)
+	{
+		// Get buffer #i from Active List
+		BufferInfo	*staleBufferInfo = mBufferQueueActive->Get(mCurrentBufferIndex);
+		if (staleBufferInfo)
+		{
+			mBufferQueueActive->SetBufferAsProcessed(mCurrentBufferIndex);
+			// Append it to Inactive List
+			mBufferQueueInactive->AppendBuffer(this, staleBufferInfo->mBufferToken, staleBufferInfo->mBuffer, staleBufferInfo->mACToken);
+			// Remove it from Active List
+			mBufferQueueActive->RemoveQueueEntryByIndex(this, mCurrentBufferIndex, false);
+		}
+	}
+	
+	// swap the list pointers now
+	BufferQueue*        tQ  = mBufferQueueActive;
+	mBufferQueueActive  = mBufferQueueInactive;
+	mBufferQueueInactive = tQ;
+	
+	mBufferQueueActive->ResetBuffers(); 	// mark all the buffers as unprocessed
+	mCurrentBufferIndex = 0;                // start at the first buffer in the queue
+	mQueueIsProcessed = false;					
+	return;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void OALSource::UpdateQueue ()
 {
-	// update the Q lists before returning any data
 	if (mCurrentBufferIndex > 0)
     {
-        // This means there were buffers that could not be moved to the inactive list before, try and move them now
-        bool    gotTheLock;
-        if (mBufferQueueMutex.Try(gotTheLock))
-        {
-			BufferInfo			*bufferInfo = NULL;
-            for (UInt32 i = 0; i < mCurrentBufferIndex; i++)
-            {
-                // Get buffer #i from Active List
-                bufferInfo = mBufferQueueActive->Get(0);
-                // Append it to Inactive List
-                mBufferQueueInactive->AppendBuffer(bufferInfo->mBufferToken, bufferInfo->mBuffer, bufferInfo->mACToken);
-                // Remove it from Active List
-                mBufferQueueActive->RemoveQueueEntryByIndex(0);
-            }
-            mCurrentBufferIndex = 0;
-            if (gotTheLock) 
-                mBufferQueueMutex.Unlock();
-        }
+		BufferInfo			*bufferInfo = NULL;
+		for (UInt32 i = 0; i < mCurrentBufferIndex; i++)
+		{
+			// Get buffer #i from Active List
+			bufferInfo = mBufferQueueActive->Get(0);
+			// Append it to Inactive List
+			mBufferQueueInactive->AppendBuffer(this, bufferInfo->mBufferToken, bufferInfo->mBuffer, bufferInfo->mACToken);
+			// Remove it from Active List
+			mBufferQueueActive->RemoveQueueEntryByIndex(this, 0, false);
+		}
+		mCurrentBufferIndex = 0;
     }    
 }
 
@@ -1361,9 +1570,34 @@ void	OALSource::SkipALNONEBuffers()
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+bool	OALSource::IsSourceTransitioningToFlushQ()
+{
+	bool returnValue = false;
+
+	TRY_PLAY_MUTEX
+	
+	returnValue = mTransitioningToFlushQ;
+
+	UNLOCK_PLAY_MUTEX
+
+	return returnValue;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+bool	OALSource::IsBufferInActiveQueue(ALuint inBufferToken)
+{
+	for (UInt32	i = 0; i < mBufferQueueActive->Size(); i++)
+	{
+		ALuint     bid = mBufferQueueActive->GetBufferTokenByIndex(i);
+		if (bid == inBufferToken)
+			return true;
+	}
+	return false; // this buffer is not in trhe active Q
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #pragma mark ***** Mixer Bus Methods *****
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 void	OALSource::DisconnectFromBus()
 {
 	try {
@@ -1371,7 +1605,7 @@ void	OALSource::DisconnectFromBus()
 
 		if (mCurrentPlayBus != kSourceNeedsBus)
 		{
-			mOwningDevice->SetBusAsAvailable (mCurrentPlayBus);
+			mOwningContext->SetBusAsAvailable (mCurrentPlayBus);
 			mCurrentPlayBus = kSourceNeedsBus;		
 		}
 	}
@@ -1386,6 +1620,8 @@ void	OALSource::ChangeChannelSettings()
 {
 #if CALCULATE_POSITION
 
+	bool	coneGainChange = false;
+	
 	if (mCalculateDistance == true)
 	{
         BufferInfo	*bufferInfo = mBufferQueueActive->Get(mCurrentBufferIndex);	
@@ -1395,47 +1631,47 @@ void	OALSource::ChangeChannelSettings()
 	DebugMessageN1("OALSource::ChangeChannelSettings: k3DMixerParam_Azimuth/k3DMixerParam_Distance called - OALSource = %ld\n", mSelfToken);
 #endif
 			// only calculate position if sound is mono - stereo sounds get no location changes
-			if ( bufferInfo->mBuffer->mDataFormat.NumberChannels() == 1)
+			if ( bufferInfo->mBuffer->GetNumberChannels() == 1)
 			{
 				Float32 	rel_azimuth, rel_distance, rel_elevation, dopplerShift;
 				
 				CalculateDistanceAndAzimuth(&rel_distance, &rel_azimuth, &rel_elevation, &dopplerShift);
-				//DebugMessageN3("D : A : E  =  %.3f : %.3f : %.3f",rel_distance,rel_azimuth,rel_elevation);
 
-                if(dopplerShift != mDopplerScaler)
+                if (dopplerShift != mDopplerScaler)
                 {
                     mDopplerScaler = dopplerShift;
                     mResetPitch = true;
                 }
-				
-				if (isnan(rel_azimuth))
-				{
-					rel_azimuth = 0.0;	// DO NOT pass a NAN to the mixer for azimuth
-					DebugMessage("ERROR: OALSOurce::ChangeChannelSettings - CalculateDistanceAndAzimuth returned a NAN for rel_azimuth\n");
-				}
-				
-				AudioUnitSetParameter(mOwningDevice->GetMixerUnit(), k3DMixerParam_Azimuth, kAudioUnitScope_Input, mCurrentPlayBus, rel_azimuth, 0);
+								
+				// set azimuth
+				AudioUnitSetParameter(mOwningContext->GetMixerUnit(), k3DMixerParam_Azimuth, kAudioUnitScope_Input, mCurrentPlayBus, rel_azimuth, 0);
+				// set elevation
+				AudioUnitSetParameter(mOwningContext->GetMixerUnit(), k3DMixerParam_Elevation, kAudioUnitScope_Input, mCurrentPlayBus, rel_elevation, 0);
 
-				if (isnan(rel_elevation))
+				mAttenuationGainScaler = 1.0;
+				if (!mOwningContext->DoSetDistance())
 				{
-					rel_elevation = 0.0;	// DO NOT pass a NAN to the mixer for elevation
-					DebugMessage("ERROR: OALSOurce::ChangeChannelSettings - CalculateDistanceAndAzimuth returned a NAN for rel_elevation\n");
+					AudioUnitSetParameter(mOwningContext->GetMixerUnit(), k3DMixerParam_Distance, kAudioUnitScope_Input, mCurrentPlayBus, mReferenceDistance, 0);///////
+
+					switch (mOwningContext->GetDistanceModel())
+					{							
+						case AL_NONE:
+							mAttenuationGainScaler = 1.0;
+							break;	// nothing to do
+					}
+				}
+				else
+				{
+					// if 2.0 and Inverse, SCALE before setting distance
+					if (mOwningContext->IsDistanceScalingRequired())	// only true for 2.0 mixer doing inverse curve
+						rel_distance *= (kDistanceScalar/mMaxDistance);
+				
+					// set distance
+					AudioUnitSetParameter(mOwningContext->GetMixerUnit(), k3DMixerParam_Distance, kAudioUnitScope_Input, mCurrentPlayBus, rel_distance, 0);
 				}
 				
-				AudioUnitSetParameter(mOwningDevice->GetMixerUnit(), k3DMixerParam_Elevation, kAudioUnitScope_Input, mCurrentPlayBus, rel_elevation, 0);
-		
-                // do not change the distance if the user has set the distance model to AL_NONE
-                if (mOwningContext->GetDistanceModel() == AL_NONE)
-                {
-                    rel_distance = mReferenceDistance;
-                }
-                else
-                {
-                    if (mOwningDevice->IsDistanceScalingRequired())
-                        rel_distance *= (kDistanceScalar/mMaxDistance);
-                }
-                                        
-                AudioUnitSetParameter(mOwningDevice->GetMixerUnit(), k3DMixerParam_Distance, kAudioUnitScope_Input, mCurrentPlayBus, rel_distance, 0);
+				// Source Cone Support Here
+				coneGainChange = ConeAttenuation();
 			}
 		}
 		
@@ -1443,6 +1679,8 @@ void	OALSource::ChangeChannelSettings()
 	}
 		
 #endif	// end CALCULATE_POSITION
+
+	UpdateBusGain();
 
 	SetPitch (mPitch);
     UpdateBusFormat();
@@ -1463,6 +1701,9 @@ void	OALSource::UpdateBusGain ()
 		else
 			busGain = mGain;
 		
+		busGain *= mConeGainScaler;
+		busGain *= mAttenuationGainScaler;
+
 		// clamp the gain used to 0.0-1.0
         if (busGain > 1.0)
 			busGain = 1.0;
@@ -1478,9 +1719,10 @@ void	OALSource::UpdateBusGain ()
 				db = -120.0;						// clamp minimum audible level at -120db
 			
 #if LOG_GRAPH_AND_MIXER_CHANGES
-	DebugMessageN2("OALSource::UpdateBusGain: k3DMixerParam_Gain called - OALSource:busGain = %ld:%f2\n", mSelfToken, busGain );
+	DebugMessageN3("OALSource::UpdateBusGain: k3DMixerParam_Gain called - OALSource:busGain:db = %ld:%f2:%f2\n", mSelfToken, busGain, db );
 #endif
-			OSStatus	result = AudioUnitSetParameter (	mOwningDevice->GetMixerUnit(), k3DMixerParam_Gain, kAudioUnitScope_Input, mCurrentPlayBus, db, 0);
+
+			OSStatus	result = AudioUnitSetParameter (	mOwningContext->GetMixerUnit(), k3DMixerParam_Gain, kAudioUnitScope_Input, mCurrentPlayBus, db, 0);
 				THROW_RESULT
 		}
 	}
@@ -1490,24 +1732,24 @@ void	OALSource::UpdateBusGain ()
 void	OALSource::UpdateBusFormat ()
 {
 #if LOG_VERBOSE
-        DebugMessageN1("OALSource::UpdateBusFormat - OALSource = %ld\n", mSelfToken);
+		DebugMessageN1("OALSource::UpdateBusFormat - OALSource = %ld\n", (long int) mSelfToken);
 #endif
 
- 	if (!mOwningDevice->IsPreferredMixerAvailable())	// the pre-2.0 3DMixer cannot change stream formats once initialized
+ 	if (!IsPreferred3DMixerPresent())	// the pre-2.0 3DMixer cannot change stream formats once initialized
 		return;
 		
     if (mResetBusFormat)
     {
         CAStreamBasicDescription    desc;
         UInt32  outSize = sizeof(desc);
-        OSStatus result = AudioUnitGetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, mCurrentPlayBus, &desc, &outSize);
+        OSStatus result = AudioUnitGetProperty(mOwningContext->GetMixerUnit(), kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, mCurrentPlayBus, &desc, &outSize);
         if (result == noErr)
         {
             BufferInfo	*buffer = mBufferQueueActive->Get(mCurrentBufferIndex);	
             if (buffer != NULL)
             {
-                desc.mSampleRate = buffer->mBuffer->mDataFormat.mSampleRate;
-                AudioUnitSetProperty(mOwningDevice->GetMixerUnit(), kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, mCurrentPlayBus, &desc, sizeof(desc));
+                desc.mSampleRate = buffer->mBuffer->GetSampleRate();
+                AudioUnitSetProperty(mOwningContext->GetMixerUnit(), kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, mCurrentPlayBus, &desc, sizeof(desc));
                 mResetBusFormat = false;
             }
         }
@@ -1517,7 +1759,6 @@ void	OALSource::UpdateBusFormat ()
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #pragma mark ***** Render Proc Methods *****
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 void	OALSource::AddNotifyAndRenderProcs()
 {
 	if (mCurrentPlayBus == kSourceNeedsBus)
@@ -1527,11 +1768,11 @@ void	OALSource::AddNotifyAndRenderProcs()
 	
 	mPlayCallback.inputProc = SourceInputProc;
 	mPlayCallback.inputProcRefCon = this;
-	result = AudioUnitSetProperty (	mOwningDevice->GetMixerUnit(), kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Input, 
+	result = AudioUnitSetProperty (	mOwningContext->GetMixerUnit(), kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Input, 
 							mCurrentPlayBus, &mPlayCallback, sizeof(mPlayCallback));	
 			THROW_RESULT
 
-	result = AudioUnitAddRenderNotify(mOwningDevice->GetMixerUnit(), SourceNotificationProc, this);
+	result = AudioUnitAddRenderNotify(mOwningContext->GetMixerUnit(), SourceNotificationProc, this);
 			THROW_RESULT
 }
 
@@ -1541,12 +1782,12 @@ void	OALSource::ReleaseNotifyAndRenderProcs()
 	OSStatus	result = noErr;
 	if (mCurrentPlayBus != kSourceNeedsBus)
 	{
-		result = AudioUnitRemoveRenderNotify(mOwningDevice->GetMixerUnit(), SourceNotificationProc,this);
+		result = AudioUnitRemoveRenderNotify(mOwningContext->GetMixerUnit(), SourceNotificationProc,this);
 			THROW_RESULT
 					
 		mPlayCallback.inputProc = 0;
 		mPlayCallback.inputProcRefCon = 0;
-		result = AudioUnitSetProperty (	mOwningDevice->GetMixerUnit(), kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Input, 
+		result = AudioUnitSetProperty (	mOwningContext->GetMixerUnit()/*mOwningDevice->GetMixerUnit()*/, kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Input, 
 								mCurrentPlayBus, &mPlayCallback, sizeof(mPlayCallback));	
 			THROW_RESULT
 	}
@@ -1597,8 +1838,7 @@ OSStatus	OALSource::SourceInputProc (	void 						*inRefCon,
 #endif
 
 	OSStatus result = noErr;
-
-    if (THIS->mOwningDevice->IsPreferredMixerAvailable())
+    if (IsPreferred3DMixerPresent())
         result = THIS->DoRender (ioData);       // normal case
     else
         result = THIS->DoSRCRender (ioData);    // pre 2.0 mixer case
@@ -1614,26 +1854,21 @@ OSStatus	OALSource::SourceInputProc (	void 						*inRefCon,
 OSStatus OALSource::DoPreRender ()
 {    
 	BufferInfo	*bufferInfo = NULL;
+	OSStatus	err = noErr;
 	
-#if USE_MUTEXES
 	TRY_PLAY_MUTEX
-#endif
 	
 	bufferInfo = mBufferQueueActive->Get(mCurrentBufferIndex);
 	if (bufferInfo == NULL)
     {
-        mQueueIsProcessed = true;
-		DisconnectFromBus();
-        mState = AL_STOPPED;
-        // stop rendering, there is no more data
-        return -1;	// there are no buffers
+        // if there are no messages on the Q by now, then the source will be disconnected and reset in the PostRender Proc
+		mQueueIsProcessed = true;
+        err = -1;	// there are no buffers
     }
         
-#if USE_MUTEXES
 	UNLOCK_PLAY_MUTEX
-#endif
 	
-	return (noErr);
+	return (err);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1656,7 +1891,7 @@ OSStatus OALSource::ACComplexInputDataProc	(	AudioConverterRef				inAudioConvert
 		return -1;
 	}
 	
-	sourcePacketsLeft = (bufferInfo->mBuffer->mDataSize - bufferInfo->mOffset) / bufferInfo->mBuffer->mDataFormat.mBytesPerPacket;
+	sourcePacketsLeft = (bufferInfo->mBuffer->GetDataSize() - bufferInfo->mOffset) / bufferInfo->mBuffer->GetBytesPerPacket();
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// BUFFER EMPTY: If the buffer is empty now, decide on returning an error based on what gets played next in the queue
@@ -1700,8 +1935,8 @@ OSStatus OALSource::ACComplexInputDataProc	(	AudioConverterRef				inAudioConvert
 		if (sourcePacketsLeft < *ioNumberDataPackets)
 			*ioNumberDataPackets = sourcePacketsLeft;
 		
-		ioData->mBuffers[0].mData = bufferInfo->mBuffer->mData + bufferInfo->mOffset;	// point to the data we are providing		
-		ioData->mBuffers[0].mDataByteSize = *ioNumberDataPackets * bufferInfo->mBuffer->mDataFormat.mBytesPerPacket;
+		ioData->mBuffers[0].mData = bufferInfo->mBuffer->GetDataPtr() + bufferInfo->mOffset;	// point to the data we are providing		
+		ioData->mBuffers[0].mDataByteSize = *ioNumberDataPackets * bufferInfo->mBuffer->GetBytesPerPacket();
 		bufferInfo->mOffset += ioData->mBuffers[0].mDataByteSize;
 	}
 
@@ -1721,9 +1956,7 @@ OSStatus OALSource::DoRender (AudioBufferList 			*ioData)
 	BufferInfo			*bufferInfo = NULL;
 	bool				done = false;
 	 
-#if USE_MUTEXES
 	TRY_PLAY_MUTEX
-#endif
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// 1st move past any AL_NONE Buffers
@@ -1733,8 +1966,8 @@ OSStatus OALSource::DoRender (AudioBufferList 			*ioData)
 		bufferInfo = mBufferQueueActive->Get(mCurrentBufferIndex);
 		if (bufferInfo == NULL)
 		{
+			// if there are no messages on the Q by now, then the source will be disconnected and reset in the PostRender Proc
             mQueueIsProcessed = true;
-            mState = AL_STOPPED;
 			goto Finished;	// there are no more buffers
         }
 		else if (bufferInfo->mBufferToken == AL_NONE)
@@ -1759,8 +1992,8 @@ OSStatus OALSource::DoRender (AudioBufferList 			*ioData)
 	}
 	else if (bufferInfo == NULL)
     {
+        // if there are no messages on the Q by now, then the source will be disconnected and reset in the PostRender Proc
         mQueueIsProcessed = true;
-        mState = AL_STOPPED;
         // stop rendering, there is no more data
         goto Finished;	// there are no buffers
     }
@@ -1784,6 +2017,7 @@ OSStatus OALSource::DoRender (AudioBufferList 			*ioData)
 		if (bufferInfo == NULL)
 		{
             // just zero out the remainder of the buffer
+			// if there are no messages on the Q by now, then the source will be disconnected and reset in the PostRender Proc
             mQueueIsProcessed = true;
             goto Finished;
         }
@@ -1796,7 +2030,7 @@ OSStatus OALSource::DoRender (AudioBufferList 			*ioData)
 			tempBufferList->mBuffers[i].mData = (Byte *) ioData->mBuffers[i].mData + (packetsObtained * sizeof(Float32));
 		}		
 		
-		if (bufferInfo->mBuffer->mDataHasBeenConverted == false)
+		if (bufferInfo->mBuffer->HasBeenConverted() == false)
 		{
 			// CONVERT THE BUFFER DATA 
 			AudioConverterRef	converter = mACMap->Get(bufferInfo->mACToken);
@@ -1816,14 +2050,14 @@ OSStatus OALSource::DoRender (AudioBufferList 			*ioData)
 				// so reset this converter so it will be ready for the next time
 				AudioConverterReset(converter);
 #if	LOG_VERBOSE
-                DebugMessageN1("OALSource::DoRender: Resetting AudioConverter - OALSource = %ld\n", mSelfToken);
+                DebugMessageN1("OALSource::DoRender: Resetting AudioConverter - OALSource = %ld\n", (long int) mSelfToken);
 #endif
             }
         }
 		else
 		{
 			// Data has already been converted to the mixer's format, so just do a copy (should be mono only)
-			UInt32	bytesRemaining = bufferInfo->mBuffer->mDataSize - bufferInfo->mOffset;
+			UInt32	bytesRemaining = bufferInfo->mBuffer->GetDataSize() - bufferInfo->mOffset;
 			UInt32	framesRemaining = bytesRemaining / sizeof(Float32);
 			UInt32	bytesToCopy = 0;
 			UInt32	framesToCopy = packetsRequestedFromRenderProc - packetsObtained;
@@ -1832,7 +2066,7 @@ OSStatus OALSource::DoRender (AudioBufferList 			*ioData)
 				framesToCopy = framesRemaining;
 			
 			bytesToCopy = framesToCopy * sizeof(Float32);
-			memcpy(tempBufferList->mBuffers->mData, bufferInfo->mBuffer->mData + bufferInfo->mOffset, bytesToCopy);
+			memcpy(tempBufferList->mBuffers->mData, bufferInfo->mBuffer->GetDataPtr() + bufferInfo->mOffset, bytesToCopy);
 			bufferInfo->mOffset += bytesToCopy;
 			packetsObtained += framesToCopy;
 						
@@ -1840,7 +2074,7 @@ OSStatus OALSource::DoRender (AudioBufferList 			*ioData)
 			// this block of code is the same as that found in the fill proc - 
 			// it is for determining what to do when a buffer runs out of data
 
-			if (bufferInfo->mOffset == bufferInfo->mBuffer->mDataSize)
+			if (bufferInfo->mOffset == bufferInfo->mBuffer->GetDataSize())
 			{
 
 				mCurrentBufferIndex++;
@@ -1858,6 +2092,7 @@ OSStatus OALSource::DoRender (AudioBufferList 			*ioData)
 				{
 					// looping is false and there are no more buffers so we are really out of data
 					// return what we have and no error
+					// if there are no messages on the Q by now, then the source will be disconnected and reset in the PostRender Proc
 					mQueueIsProcessed = true;		// we are done now, the Q is dry
                     
                     // swap the list pointers now
@@ -1866,7 +2101,6 @@ OSStatus OALSource::DoRender (AudioBufferList 			*ioData)
                     mBufferQueueInactive = tQ;
 				}
 				// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-				
 			}
 		}
 	}
@@ -1895,80 +2129,114 @@ Finished:
 	{
 		// ramp down these samples to avoid any clicking - this is the last buffer before disconnecting in Post Render
 		RampDown(ioData);
-		mRampState = kNoRamping;
-		
-		if (mResetQInPostRender == kResetQueueRampDown)
-			mResetQInPostRender = kResetQueueJoinLists;	// now that the last buffer before restart has been ramped down, go ahead and rejoin in PostRender (stage 2)
-		
+		mRampState = kRampingComplete;
 	}
 	else if (mRampState == kRampUp)
 	{
 		// this is the first buffer since resuming, so ramp these samples up
 		RampUp(ioData);
-		mRampState = kNoRamping;
+		mRampState = kRampingComplete;
 	}
 	
-#if USE_MUTEXES
 	UNLOCK_PLAY_MUTEX
-#endif
 
-	
 	return (noErr);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 OSStatus OALSource::DoPostRender ()
 {
-#if USE_MUTEXES
 	TRY_PLAY_MUTEX
+
+	try {
+		// all messages must be executed after the last buffer has been ramped down
+		if (mRampState == kRampingComplete)
+		{
+			PlaybackMessage	*messages = mMessageQueue.pop_all_reversed();
+			while (messages != NULL)
+			{
+				switch (messages->mMessageID)
+				{
+					case kMQ_Stop:
+#if	LOG_MESSAGE_QUEUE					
+						DebugMessageN1("kMQ_Stop - OALSource = %ld\n", mSelfToken);
 #endif
-
-#if DEFER_DISCONNECT
-
-	if (mResetQInPostRender == kResetQueueJoinLists)
-	{
-		// Rejoin the Qs and start over, we should be playing right now and the last rendered buffer should have been ramped to zero
-		// so move the queue data to the start and keep going
-		LoopToBeginning();
-		mResetQInPostRender = kResetQueueOff;	// Restarting the queueu while playing is complete
-	}
-	else if ((mStopInPostRender == true) || (mQueueIsProcessed == true))
-	{
-		// remove the Notify and Render Procs and Release the Mixer Bus
-		DisconnectFromBus();
-		mState = AL_STOPPED;
-        // in order to allow the last buffer to be ramped down AND let alStopPlay() to return immediately, buffer queue management gets done here instead in the stop call
-		// this isn't optimal by doing it on the render thread but making the stop call block an entire render cycle is a performance problem
-		//if (mStopInPostRender == true)
+ 						if (mState != AL_STOPPED)
+						{
+							DisconnectFromBus();
+							mState = AL_STOPPED;
+							ClearActiveQueue();
+							mQueueIsProcessed = false;
+						}
+						break;
+						
+					case kMQ_Rewind:
+#if	LOG_MESSAGE_QUEUE					
+						DebugMessageN1("kMQ_Rewind - OALSource = %ld\n", mSelfToken);
+#endif
+						LoopToBeginning();
+						break;
+						
+					case kMQ_ClearBuffersFromQueue:
+#if	LOG_MESSAGE_QUEUE					
+						DebugMessageN1("kMQ_ClearBuffersFromQueue - OALSource = %ld\n", mSelfToken);
+#endif
+						// when unqueue buffers is called while a source is in transition, the action must be deferred so the audio data can finish up
+						RemoveBuffersFromQueue(mResetBuffersToUnqueue, NULL);
+						mResetBuffersToUnqueue = 0;
+						break;
+						
+					case kMQ_SetBuffer:
+#if	LOG_MESSAGE_QUEUE					
+						DebugMessageN1("kMQ_SetBuffer - OALSource = %ld\n", mSelfToken);
+#endif
+						DisconnectFromBus();
+						mState = AL_STOPPED;
+						mTransitioningToFlushQ = false;
+						SetBuffer(mResetBufferToken, mResetBuffer);	// this call will also set the mSourceType state
+						mResetBufferToken = 0;
+						mResetBuffer = NULL;
+						mQueueIsProcessed = false;
+						break;
+						
+					case kMQ_Play:
+#if	LOG_MESSAGE_QUEUE					
+						DebugMessageN1("kMQ_Play - OALSource = %ld\n", mSelfToken);
+#endif
+						Play();
+						break;
+						
+					case kMQ_Pause:
+#if	LOG_MESSAGE_QUEUE					
+						DebugMessageN1("kMQ_Pause - OALSource = %ld\n", mSelfToken);
+#endif
+						mState = AL_PAUSED;
+						ReleaseNotifyAndRenderProcs();
+						break;
+				}
+				
+				PlaybackMessage*	lastMessage = messages;
+				messages = messages->get_next();
+				delete (lastMessage); // made it, so now get rid of it
+			}
+			mRampState = kNoRamping;
+		}
+		
+		if (mQueueIsProcessed)
+		{
+			// this means that the data ran out on it's own and we are not stopped as a result of a queued message
+			DisconnectFromBus();
+			mState = AL_STOPPED;
 			ClearActiveQueue();
-		
-		// do not make a Stop or Pause method hang while waiting for these to turn false if the sound finished playing first
-		mStopInPostRender = false;		
-		mPauseInPostRender = false;
+			mQueueIsProcessed = false;
+		}
 	}
-	else if (mPauseInPostRender == true)
-	{
-		// remove the Notify and Render Procs
-		ReleaseNotifyAndRenderProcs();
-		// do not make a Stop or Pause method hang while waiting for these to turn false if the sound finished playing first
-		mStopInPostRender = false;		
-		mPauseInPostRender = false;
-	}
-
-		
-#else
-
-	if (mQueueIsProcessed == true)
-	{
-		DisconnectFromBus();
-		mState = AL_STOPPED;
+	catch(...){
+		DebugMessageN1("OALSource::DoPostRender:ERROR - OALSource = %ld\n", (long int)  mSelfToken);
 	}
 	
-#endif	
-
-#if USE_MUTEXES
 	UNLOCK_PLAY_MUTEX
-#endif
+
 	return noErr;
 }
 
@@ -2020,7 +2288,6 @@ void OALSource::RampUp (AudioBufferList 			*ioData)
 // output sample rate so the 1.3 mixer doesn't have to do any SRC.
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 OSStatus	OALSource::DoSRCRender(	AudioBufferList 			*ioData )
 {
    #warning "This needs to be tested"
@@ -2034,8 +2301,8 @@ OSStatus	OALSource::DoSRCRender(	AudioBufferList 			*ioData )
 		bufferInfo = mBufferQueueActive->Get(mCurrentBufferIndex);
 		if (bufferInfo == NULL)
 		{
+			// if there are no messages on the Q by now, then the source will be disconnected and reset in the PostRender Proc
             mQueueIsProcessed = true;
-            mState = AL_STOPPED;
 			return -1;	// there are no more buffers
         }
 		else if (bufferInfo->mBufferToken == AL_NONE)
@@ -2060,8 +2327,8 @@ OSStatus	OALSource::DoSRCRender(	AudioBufferList 			*ioData )
 	}
 	else if (bufferInfo == NULL)
     {
+        // if there are no messages on the Q by now, then the source will be disconnected and reset in the PostRender Proc
         mQueueIsProcessed = true;
-        mState = AL_STOPPED;
         // stop rendering, there is no more data
         return -1;	// there are no buffers
     }
@@ -2070,13 +2337,10 @@ OSStatus	OALSource::DoSRCRender(	AudioBufferList 			*ioData )
 
 	ChangeChannelSettings();
         			
-	//BufferInfo	*bufferInfo = mBufferQueueActive->Get(mCurrentBufferIndex);
-    //if (bufferInfo == NULL)
-    //    return -1;
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		
-	double srcSampleRate = bufferInfo->mBuffer->mDataFormat.mSampleRate;
-	double dstSampleRate = mOwningDevice->GetMixerRate();
+	double srcSampleRate = bufferInfo->mBuffer->GetSampleRate();
+	double dstSampleRate = mOwningContext->GetMixerRate();
 	double ratio = (srcSampleRate / dstSampleRate) * mPitch * mDopplerScaler;
 	
 	int nchannels = ioData->mNumberBuffers;
@@ -2284,6 +2548,8 @@ OSStatus	OALSource::DoSRCRender(	AudioBufferList 			*ioData )
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // CalculateDistanceAndAzimuth() support
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void aluCrossproduct(ALfloat *inVector1,ALfloat *inVector2,ALfloat *outVector)
 {
 	outVector[0]=(inVector1[1]*inVector2[2]-inVector1[2]*inVector2[1]);
@@ -2313,14 +2579,98 @@ void aluNormalize(ALfloat *inVector)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void aluMatrixVector(ALfloat *vector,ALfloat matrix[3][3])
+inline bool	IsZeroVector(Float32* inVector)
 {
-	ALfloat result[3];
+	if ((inVector[0] == 0.0) && (inVector[1] == 0.0) && (inVector[2] == 0.0))
+		return true;
+	else
+		return false;
+}
 
-	result[0]=vector[0]*matrix[0][0]+vector[1]*matrix[1][0]+vector[2]*matrix[2][0];
-	result[1]=vector[0]*matrix[0][1]+vector[1]*matrix[1][1]+vector[2]*matrix[2][1];
-	result[2]=vector[0]*matrix[0][2]+vector[1]*matrix[1][2]+vector[2]*matrix[2][2];
-	memcpy(vector,result,sizeof(result));
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#define	LOG_SOURCE_CONES	0
+bool OALSource::ConeAttenuation()
+{	
+	// determine if attenuation  is needed at all
+	if (	IsZeroVector(mConeDirection)		||
+			((mConeInnerAngle == 360.0) && (mConeOuterAngle == 360.0))	)
+	{
+		// Not Needed if: AL_Direction is 0,0,0, OR if (Inner and Outer Angle are both 360.0)
+		if (mConeGainScaler != 1.0)
+		{
+			// make sure to reset the bus gain if the current cone scaler is not 1.0 and source cone scaling is no longer required
+			mConeGainScaler = 1.0;
+			return true;	// let the caller know the bus gain needs resetting
+		}
+		return false;	// no change has occurred to require a bus gain reset
+	}
+	
+	// Calculate the Source Cone Attenuation scaler
+	
+	Float32		vsl[3];		// source to listener vector
+	Float32		coneDirection[3];
+	Float32		angle;
+	
+	mOwningContext->GetListenerPosition(&vsl[0], &vsl[1], &vsl[2]);
+
+	// calculate the source to listener vector
+	vsl[0] -= mPosition[0];
+	vsl[1] -= mPosition[1];
+	vsl[2] -= mPosition[2];
+	aluNormalize(vsl);				// Normalized source to listener vector
+
+    coneDirection[0] = mConeDirection[0];
+	coneDirection[1] = mConeDirection[1];
+	coneDirection[2] = mConeDirection[2];
+	aluNormalize(coneDirection);	// Normalized cone direction vector
+	
+	// calculate the angle between the cone direction vector and the source to listener vector
+	angle = 180.0 * acos (aluDotproduct(vsl, coneDirection))/M_PI; // convert from radians to degrees
+	
+	Float32		absAngle = fabs(angle);
+	Float32		absInnerAngle = fabs(mConeInnerAngle)/2.0;	// app provides the size of the entire inner angle
+	Float32		absOuterAngle = fabs(mConeOuterAngle)/2.0;	// app provides the size of the entire outer angle
+	Float32		newScaler;
+	
+	if (absAngle <= absInnerAngle)
+	{
+		 // listener is within the inner cone angle, no attenuation required
+		 newScaler = 1.0;
+#if LOG_SOURCE_CONES
+		DebugMessage("ConeAttenuation - Listener is within the inner angle, no Attenuation required");
+#endif
+	}
+	else if (absAngle >= absOuterAngle)
+	{
+		 // listener is outside the outer cone angle, sett attenuation to outer cone gain
+#if LOG_SOURCE_CONES
+		DebugMessageN1("ConeAttenuation - Listener is outside the outer angle, scaler equals the Outer Cone Gain = %f2", mConeOuterGain);
+#endif
+		newScaler = mConeOuterGain;
+	}
+	else
+	{
+		// this source to listener vector is between the inner and outer cone angles so apply some gain scaling
+		// db or linear?
+	
+		// as you move from inner to outer, x goes from 0->1
+		Float32 x =  (absAngle - absInnerAngle ) / (absOuterAngle - absInnerAngle );
+		
+		newScaler = 1.0/* cone inner gain */ * (1.0 - x)   +    mConeOuterGain * x;
+#if LOG_SOURCE_CONES
+		DebugMessageN1("ConeAttenuation - Listener is between inner and outer angles, scaler equals = %f2", newScaler);
+#endif
+	}
+	
+	// there is no need to reset the bus gain if the scaler has not changed (a common scenario)
+	// change is only necessaery when moving around within the transition zone or crossing between inner, transition and outer zones
+	if (newScaler != mConeGainScaler)
+	{
+		mConeGainScaler = newScaler;
+		return true;	// let the caller know the bus gain needs resetting
+	}
+	
+	return false;	// no change has occurred to require a bus gain reset
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2339,7 +2689,7 @@ void OALSource::CalculateDistanceAndAzimuth(Float32 *outDistance, Float32 *outAz
 				ProjectedSource[3],
 				UpProjection,
                 Look_Norm[3],
-                U[3],
+                RightEarVector[3],  // previously named U
 				Up[3],
                 tPosition[3],
                 dopplerShift = 1.0;     // default at No shift
@@ -2383,7 +2733,7 @@ void OALSource::CalculateDistanceAndAzimuth(Float32 *outDistance, Float32 *outAz
 	}
     
 	// Only apply 3D calculations for mono buffers
-	if (bufferInfo->mBuffer->mDataFormat.NumberChannels() == 1)
+	if (bufferInfo->mBuffer->GetNumberChannels() == 1)
 	{
 		//1. Translate Listener to origin (convert to head relative)
 		if (mSourceRelative == AL_FALSE)
@@ -2393,8 +2743,8 @@ void OALSource::CalculateDistanceAndAzimuth(Float32 *outDistance, Float32 *outAz
 			tPosition[2] -= ListenerPosition[2];
 		}
         //2. Align coordinate system axes
-        aluCrossproduct(&ListenerOrientation[0],&ListenerOrientation[3],U); // Right-ear-vector
-        aluNormalize(U); // Normalized Right-ear-vector
+        aluCrossproduct(&ListenerOrientation[0],&ListenerOrientation[3],RightEarVector); // Right-ear-vector
+        aluNormalize(RightEarVector); // Normalized Right-ear-vector
         Look_Norm[0] = ListenerOrientation[0];
         Look_Norm[1] = ListenerOrientation[1];
         Look_Norm[2] = ListenerOrientation[2];
@@ -2417,14 +2767,15 @@ void OALSource::CalculateDistanceAndAzimuth(Float32 *outDistance, Float32 *outAz
 		// DopplerFactor is 0.
 		aluNormalize(SourceToListener);
 
-		aluCrossproduct(U,Look_Norm,Up);
+		aluCrossproduct(RightEarVector, Look_Norm, Up);
 		UpProjection = aluDotproduct(SourceToListener,Up);
 		ProjectedSource[0] = SourceToListener[0] - UpProjection*Up[0];
 		ProjectedSource[1] = SourceToListener[1] - UpProjection*Up[1];
 		ProjectedSource[2] = SourceToListener[2] - UpProjection*Up[2];
 		aluNormalize(ProjectedSource);
 
-		Angle = 180.0 * acos (aluDotproduct(ProjectedSource,U))/3.141592654f;
+		Angle = 180.0 * acos (aluDotproduct(ProjectedSource, RightEarVector))/M_PI;
+		zapBadness(Angle); // remove potential NANs
 
 		//is the source infront of the listener or behind?
 		front_back = aluDotproduct(ProjectedSource,Look_Norm);
@@ -2432,12 +2783,15 @@ void OALSource::CalculateDistanceAndAzimuth(Float32 *outDistance, Float32 *outAz
 		  Angle = 360.0f - Angle;
 
 		//translate from cartesian angle to 3d mixer angle
-		if((Angle>=0.0f)&&(Angle<=270.0f)) Angle = 90.0f - Angle;
-		else Angle = 450.0f - Angle;
+		if((Angle>=0.0f)&&(Angle<=270.0f)) 
+			Angle = 90.0f - Angle;
+		else 
+			Angle = 450.0f - Angle;
 	  }
 		
         //5. Calculate elevation
 		Elevation = 90.0 - 180.0 * acos(    aluDotproduct(SourceToListener, Up)   )/ 3.141592654f;
+		zapBadness(Elevation); // remove potential NANs
 
 		if(SourceToListener[0]==0.0 && SourceToListener[1]==0.0 && SourceToListener[2]==0.0 )
 		   Elevation = 0.0;
@@ -2455,58 +2809,54 @@ void OALSource::CalculateDistanceAndAzimuth(Float32 *outDistance, Float32 *outAz
 
             GetVelocity (SourceVelocity[0], SourceVelocity[1], SourceVelocity[2]);
 
-            Float32 ProjectedSourceVelocity = aluDotproduct(SourceVelocity, SourceToListener);
-            Float32 ProjectedListenerVelocity = -aluDotproduct(ListenerVelocity, SourceToListener);
-			
-            if (fabsf(DopplerFactor) < 1.0e-6)
-            {
-                ProjectedSourceVelocity *= DopplerFactor;
-                ProjectedListenerVelocity *= DopplerFactor;
-            }
-            
-            #if LOG_DOPPLER
-                DebugMessageN2("CalculateDistanceAndAzimuth: ListenerVelocity/SourceVelocity %f2/%f2", ProjectedListenerVelocity, ProjectedSourceVelocity);
-            #endif
-            
-            if (fabsf(ProjectedSourceVelocity) > mOwningContext->GetDopplerVelocity())
-            {
-                ProjectedSourceVelocity = ProjectedSourceVelocity > 0.0 ? mOwningContext->GetDopplerVelocity() : -mOwningContext->GetDopplerVelocity();
-            #if LOG_DOPPLER
-                DebugMessageN1("CalculateDistanceAndAzimuth: Pinning ProjectedSourceVelocity at =  %f2", -mOwningContext->GetDopplerVelocity());
-            #endif
-            }
-            
-            if (fabsf(ProjectedListenerVelocity) > mOwningContext->GetDopplerVelocity())
-            {
-                ProjectedListenerVelocity = ProjectedListenerVelocity > 0.0 ? mOwningContext->GetDopplerVelocity() : -mOwningContext->GetDopplerVelocity();
-            #if LOG_DOPPLER
-                DebugMessageN1("CalculateDistanceAndAzimuth: Pinning ProjectedListenerVelocity at =  %f2", mOwningContext->GetDopplerVelocity());
-            #endif
-            }
+			bool	SourceHasVelocity = !IsZeroVector(SourceVelocity);
+			bool	ListenerHasVelocity = !IsZeroVector(ListenerVelocity);
+			if (SourceHasVelocity || ListenerHasVelocity)
+			{
+				Float32 ProjectedSourceVelocity = aluDotproduct(SourceVelocity, SourceToListener);
+				Float32 ProjectedListenerVelocity = -aluDotproduct(ListenerVelocity, SourceToListener);
+				
+				if (fabsf(DopplerFactor) < 1.0e-6)
+				{
+					ProjectedSourceVelocity *= DopplerFactor;
+					ProjectedListenerVelocity *= DopplerFactor;
+				}
+				
+				#if LOG_DOPPLER
+					DebugMessageN2("CalculateDistanceAndAzimuth: ListenerVelocity/SourceVelocity %f2/%f2", ProjectedListenerVelocity, ProjectedSourceVelocity);
+				#endif
+				
+				if (fabsf(ProjectedSourceVelocity) > mOwningContext->GetDopplerVelocity())
+				{
+					ProjectedSourceVelocity = ProjectedSourceVelocity > 0.0 ? mOwningContext->GetDopplerVelocity() : -mOwningContext->GetDopplerVelocity();
+				#if LOG_DOPPLER
+					DebugMessageN1("CalculateDistanceAndAzimuth: Pinning ProjectedSourceVelocity at =  %f2", -mOwningContext->GetDopplerVelocity());
+				#endif
+				}
+				
+				if (fabsf(ProjectedListenerVelocity) > mOwningContext->GetDopplerVelocity())
+				{
+					ProjectedListenerVelocity = ProjectedListenerVelocity > 0.0 ? mOwningContext->GetDopplerVelocity() : -mOwningContext->GetDopplerVelocity();
+				#if LOG_DOPPLER
+					DebugMessageN1("CalculateDistanceAndAzimuth: Pinning ProjectedListenerVelocity at =  %f2", mOwningContext->GetDopplerVelocity());
+				#endif
+				}
 
-			dopplerShift = (  (mOwningContext->GetDopplerVelocity() - ProjectedListenerVelocity) / (mOwningContext->GetDopplerVelocity() + ProjectedSourceVelocity)  );
-			if (isnan(dopplerShift))
-				dopplerShift = 1.0;
-																		                                        
-            // limit the pitch shifting to 4 octaves up and 3 octaves down
-            if (dopplerShift > 1.0)
-            {
-                dopplerShift *= DopplerFactor;
-                if (dopplerShift > 16.0)
-                    dopplerShift = 16.0;
-            }
-            else 
-            {
-                dopplerShift /= DopplerFactor;
-                if(dopplerShift < 0.125)
-                    dopplerShift = 0.125;   
-            }
-            
-            #if LOG_DOPPLER
-				DebugMessageN1("CalculateDistanceAndAzimuth: dopplerShift after scaling =  %f2\n", dopplerShift);
-            #endif
-            
-			*outDopplerShift = dopplerShift;
+				dopplerShift = DopplerFactor * (  (mOwningContext->GetDopplerVelocity() - ProjectedListenerVelocity) / (mOwningContext->GetDopplerVelocity() + ProjectedSourceVelocity)  );
+				zapBadnessForDopplerShift(dopplerShift); // remove potential NANs
+																													
+				// limit the pitch shifting to 4 octaves up and 3 octaves down
+				if (dopplerShift > 16.0)
+					dopplerShift = 16.0;
+				else if(dopplerShift < 0.125)
+					dopplerShift = 0.125;   
+				
+				#if LOG_DOPPLER
+					DebugMessageN1("CalculateDistanceAndAzimuth: dopplerShift after scaling =  %f2\n", dopplerShift);
+				#endif
+				
+				*outDopplerShift = dopplerShift;
+			}
         }
     }
     else
@@ -2514,19 +2864,98 @@ void OALSource::CalculateDistanceAndAzimuth(Float32 *outDistance, Float32 *outAz
         Angle=0.0;
         Distance=0.0;
     }
-        
-    if (!mOwningDevice->IsPreferredMixerAvailable() && (mReferenceDistance > 1.0))
-    {
+       
+
+	if (!IsPreferred3DMixerPresent() && (mReferenceDistance > 1.0))
+	{
         // the pre 2.0 mixer does not have the DistanceParam property so to compensate,
         // set the DistanceAtten property correctly for refDist, maxDist, and rolloff,
         // and then scale our calculated distance to a reference distance of 1.0 before passing to the mixer
         Distance = Distance/mReferenceDistance;
         if (Distance > mMaxDistance/mReferenceDistance) 
             Distance = mMaxDistance/mReferenceDistance; // clamp the distance to the max distance
-    }
+	}
 
     *outDistance = Distance;
     *outAzimuth = Angle;
     *outElevation = Elevation;
 }
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#pragma mark _____BufferQueue_____
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void 	BufferQueue::AppendBuffer(OALSource*	thisSource, ALuint	inBufferToken, OALBuffer	*inBuffer, ALuint	inACToken)
+ {
+				
+		BufferInfo	newBuffer;
+				
+		newBuffer.mBufferToken = inBufferToken;
+		newBuffer.mBuffer = inBuffer;
+		newBuffer.mOffset = 0;
+		newBuffer.mProcessedState = kPendingProcessing;
+		newBuffer.mACToken = inACToken;
+
+		push_back(value_type (newBuffer));
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ALuint 	BufferQueue::RemoveQueueEntryByIndex(OALSource*	thisSource, UInt32	inIndex, bool	inReleaseIt) 
+{
+	iterator	it = begin();
+	ALuint		outBufferToken = 0;
+
+	std::advance(it, inIndex);				
+	if (it != end())
+	{
+		outBufferToken = it->mBufferToken;
+		if(inReleaseIt)
+			it->mBuffer->ReleaseBuffer(thisSource);
+		erase(it);
+	}
+	
+	return (outBufferToken);
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ALuint 	BufferQueue::GetBufferTokenByIndex(UInt32	inBufferIndex) 
+{
+	iterator	it = begin();
+	std::advance(it, inBufferIndex);
+	if (it != end())
+		return (it->mBuffer->GetToken());
+		
+	return 0;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void 	BufferQueue::SetFirstBufferOffset(UInt32	inFrameOffset) 
+{
+	iterator	it = begin();
+	if (it == end())
+		return;
+	
+	UInt32		packetOffset = FrameOffsetToPacketOffset(inFrameOffset);
+	UInt32		packetSize = GetPacketSize();
+	
+	it->mOffset = packetOffset * packetSize;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+UInt32     BufferQueue::GetPacketSize()  
+{
+	iterator	it = begin();        
+	if (it != end())
+		return(it->mBuffer->GetBytesPerPacket());
+	return (0);
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+UInt32 	BufferQueue::FrameOffsetToPacketOffset(UInt32	inFrameOffset) 
+{
+	return inFrameOffset; // this is correct for pcm which is all we're doing right now
+	
+	// if non pcm formats are used return the packet that contains inFrameOffset, which may back up the
+	// requested frame - round backward not forward
+}

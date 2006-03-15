@@ -1,7 +1,7 @@
 /**********************************************************************************************************************************
 *
 *   OpenAL cross platform audio library
-*   Copyright Â© 2004, Apple Computer, Inc. All rights reserved.
+*   Copyright © 2004, Apple Computer, Inc. All rights reserved.
 *
 *   Redistribution and use in source and binary forms, with or without modification, are permitted provided 
 *   that the following conditions are met:
@@ -26,10 +26,37 @@
 
 #include "al.h"
 #include "alc.h"
-#include "altypes.h"
 #include "oalOSX.h"
 #include <Carbon/Carbon.h>
 #include <map>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define AL_STATIC                                 0x1028
+#define AL_STREAMING                              0x1029
+#define AL_UNDETERMINED                           0x1030
+	
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Continue exporting these deprectaed APIs to prevent runtime link errors
+
+#ifdef TARGET_OS_MAC
+   #if TARGET_OS_MAC
+       #pragma export on
+   #endif
+#endif
+
+
+#ifdef TARGET_OS_MAC
+   #if TARGET_OS_MAC
+      #pragma export off
+   #endif
+#endif
+
+#ifdef __cplusplus
+}
+#endif
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // development build flags
@@ -53,22 +80,10 @@
 #define	THROW_RESULT		if(result != noErr) throw static_cast<OSStatus>(result);
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/* 
-	The OALEnvironmentInfo struct will define a set of parameters that should be applied to the 3DMixer 
-    on a per context basis. i.e. Reverb setting, doppler, etc etc. These settings will be stored as a 
-    member of the OALContext class. Upon context switching, they will be passed to the context's 
-    owning OALDevice to reset the mixer.
-*/
 
-struct	OALEnvironmentInfo {
-	// currently unused
-};
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-UInt32	GetNewToken (void);
-
-ALAPI ALvoid ALAPIENTRY alSetError (ALenum errorCode);
+void	alSetError (ALenum errorCode);
+void	SetPreferred3DMixerPresent (bool inPreferredMixerIsPresent);
+bool	IsPreferred3DMixerPresent ();
 
 #endif
 
