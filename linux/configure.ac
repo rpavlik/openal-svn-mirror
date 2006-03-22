@@ -623,7 +623,6 @@ else
        if test "x$openal_cv_func_snd_pcm_info_sizeof" = xyes; then
          openal_backend_alsa_support=static
          FEATURECFLAGS="$FEATURECFLAGS $openal_cflags_alsa"
-         LIBS="$openal_libs_alsa $LIBS"
        else
          openal_backend_alsa_support=none
          LIBS=$openal_saved_LIBS
@@ -697,7 +696,6 @@ else
        if test "x$openal_cv_func_arts_free" = xyes; then
          openal_backend_arts_support=static
          FEATURECFLAGS="$FEATURECFLAGS $openal_cflags_arts"
-         LIBS="$openal_libs_arts $LIBS"
        else
          openal_backend_arts_support=none
          LIBS=$openal_saved_LIBS
@@ -816,7 +814,6 @@ else
        if test "x$openal_cv_func_esd_audio_open" = xyes; then
          openal_backend_esd_support=static
          FEATURECFLAGS="$FEATURECFLAGS $openal_cflags_esd"
-         LIBS="$openal_libs_esd $LIBS"
        else
          openal_backend_esd_support=none
          LIBS=$openal_saved_LIBS
@@ -855,7 +852,6 @@ else
           [openal_cv_func_algetresourcebyname=no])])
      if test "x$openal_cv_func_algetresourcebyname" = xyes; then
        openal_backend_irix_support=static
-       LIBS="$openal_libs_irix $LIBS"
      else
        openal_backend_irix_support=none
        LIBS=$openal_saved_LIBS
@@ -983,7 +979,6 @@ else
        if test "x$openal_cv_func_sdl_lockaudio" = xyes; then
          openal_backend_sdl_support=static
          FEATURECFLAGS="$FEATURECFLAGS $openal_cflags_sdl"
-         LIBS="$openal_libs_sdl $LIBS"
        else
          openal_backend_sdl_support=none
          LIBS=$openal_saved_LIBS
@@ -1059,7 +1054,6 @@ else
           [openal_cv_func_waveoutopen=no])])
      if test "x$openal_cv_func_waveoutopen" = xyes; then
        openal_backend_windows_support=static
-       LIBS="$openal_libs_windows $LIBS"
      else
        openal_backend_windows_support=none
        LIBS=$openal_saved_LIBS
@@ -1133,7 +1127,6 @@ else
        if test "x$openal_cv_func_ov_clear" = xyes; then
          openal_extension_vorbis_support=static
          FEATURECFLAGS="$FEATURECFLAGS $openal_cflags_vorbis"
-         LIBS="$openal_libs_vorbis $LIBS"
        else
          openal_extension_vorbis_support=none
          LIBS=$openal_saved_LIBS
@@ -1214,7 +1207,6 @@ else
        if test "x$openal_cv_func_SMPEG_play" = xyes; then
          openal_extension_smpeg_support=static
          FEATURECFLAGS="$FEATURECFLAGS $openal_cflags_smpeg"
-         LIBS="$openal_libs_smpeg $LIBS"
        else
          openal_extension_smpeg_support=none
          LIBS=$openal_saved_LIBS

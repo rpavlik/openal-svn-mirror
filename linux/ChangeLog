@@ -1,3 +1,8 @@
+2006-03-22  Sven Panne  <sven.panne@aedion.de>
+
+	* configure.ac: Don't mention libraries twice in the static backend
+	cases.
+
 2006-03-08  Prakash Punnoor <prakash@punnoor.de>
 
 	* test/testmultichannel.c: fix MacOS case
