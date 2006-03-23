@@ -82,11 +82,14 @@ void _alFloatMul(ALshort *bpt, ALfloat sa, ALuint len) {
 			v_sa.s[3] = v_sa.s[0];
 			
 			while (samples_main--) {
+				/* work-around gcc 3.3.x bug */
+				const long num_shift = 1L;
+				
 				temp = __builtin_ia32_pmulhw(*(v4hi*)bpt, v_sa.v);
-				*(v4hi*)bpt = __builtin_ia32_psllw(temp, 1LL);
+				*(v4hi*)bpt = __builtin_ia32_psllw(temp, num_shift);
 				bpt += 4;
 				temp = __builtin_ia32_pmulhw(*(v4hi*)bpt, v_sa.v);
-				*(v4hi*)bpt = __builtin_ia32_psllw(temp, 1LL);
+				*(v4hi*)bpt = __builtin_ia32_psllw(temp, num_shift);
 				bpt += 4;
 			}
 		}

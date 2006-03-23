@@ -1,3 +1,9 @@
+2006-03-23  Prakash Punnoor <prakash@punnoor.de>
+
+	* src/arch/i386/x86_floatmul.c: work-around gcc 3.3.x bug
+
+	* CMakeLists.txt: disable warnings by default
+
 2006-03-23  Sven Panne  <sven.panne@aedion.de>
 
 	* README: Mention CR/LF problem on MinGW/MSYS.
