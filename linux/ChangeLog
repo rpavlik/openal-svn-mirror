@@ -1,5 +1,10 @@
 2006-03-22  Sven Panne  <sven.panne@aedion.de>
 
+	* configure.ac: Due to some troubles with -ansi on MinGW and Cygwin,
+	don't enable warnings by default.
+
+2006-03-22  Sven Panne  <sven.panne@aedion.de>
+
 	* configure.ac: Don't mention libraries twice in the static backend
 	cases.
 

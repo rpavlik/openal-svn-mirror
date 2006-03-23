@@ -120,14 +120,18 @@ AC_FUNC_SELECT_ARGTYPES
 
 AC_ARG_ENABLE([warnings],
 [AS_HELP_STRING([--enable-warnings],
-                [enable pedantic compiler warnings @<:@default=yes@:>@])])
+                [enable pedantic compiler warnings @<:@default=no@:>@])])
 
-if test "x$enable_warnings" = xno; then
-  WARNINGCFLAGS=""
-else
+# Enabling -ansi sometimes switches off some features without any chance to
+# re-enable them via some feature-#defines. Examples for this are snprintf on
+# Cygwin and <sys/stat.h> on MinGW. So we play safe here and don't enable
+# warning options by default, which include -ansi for GCC.
+if test "x$enable_warnings" = xyes; then
   # Doing it in two steps gives a nicer message...
   AX_CFLAGS_WARN_ALL_ANSI([flags])
   WARNINGCFLAGS=$flags
+else
+  WARNINGCFLAGS=""
 fi
 
 AC_ARG_ENABLE([more-warnings],
