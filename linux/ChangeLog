@@ -4,6 +4,10 @@
 
 	* CMakeLists.txt: disable warnings by default
 
+	* src/arch/i386/x86_cpu_caps_prk.h, src/arch/i386/x86_cpu_caps_prk.c:
+	small optimization, so that _alHave[SIMD] functions only have to
+	check one variable
+
 2006-03-23  Sven Panne  <sven.panne@aedion.de>
 
 	* README: Mention CR/LF problem on MinGW/MSYS.

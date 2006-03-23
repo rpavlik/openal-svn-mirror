@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2005 by Prakash Punnoor                                 *
+ *   Copyright (C) 2005 - 2006 by Prakash Punnoor                          *
  *   prakash@punnoor.de                                                    *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -102,30 +102,37 @@ void _alDetectCPUCaps(void)
 		env = getenv("OPENAL_DISABLE_MMX");
 		if (env)
 			x86cpu_caps_use.mmx = !atoi(env);
+		x86cpu_caps_use.mmx &= x86cpu_caps.mmx;
 		
 		env = getenv("OPENAL_DISABLE_SSE");
 		if (env)
 			x86cpu_caps_use.sse = !atoi(env);
+		x86cpu_caps_use.sse &= x86cpu_caps.sse;
 		
 		env = getenv("OPENAL_DISABLE_SSE2");
 		if (env)
 			x86cpu_caps_use.sse2 = !atoi(env);
+		x86cpu_caps_use.sse2 &= x86cpu_caps.sse2;
 		
 		env = getenv("OPENAL_DISABLE_SSE3");
 		if (env)
 			x86cpu_caps_use.sse3 = !atoi(env);
+		x86cpu_caps_use.sse3 &= x86cpu_caps.sse3;
 		
 		env = getenv("OPENAL_DISABLE_3DNOW");
 		if (env)
 			x86cpu_caps_use.amd_3dnow = !atoi(env);
+		x86cpu_caps_use.amd_3dnow &= x86cpu_caps.amd_3dnow;
 		
 		env = getenv("OPENAL_DISABLE_3DNOWEXT");
 		if (env)
 			x86cpu_caps_use.amd_3dnowext = !atoi(env);
+		x86cpu_caps_use.amd_3dnowext &= x86cpu_caps.amd_3dnowext;
 		
 		env = getenv("OPENAL_DISABLE_SSE_MMX");
 		if (env)
 			x86cpu_caps_use.amd_sse_mmx = !atoi(env);
+		x86cpu_caps_use.amd_sse_mmx &= x86cpu_caps.amd_sse_mmx;
 		
 		env = getenv("OPENAL_DISABLE_SIMD");
 		if (env  &&  atoi(env))
