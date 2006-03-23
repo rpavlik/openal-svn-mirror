@@ -163,7 +163,7 @@ OPTION(BUILD_TESTS  "build the test-suite"     OFF)
 OPTION(PROFILE      "enable profile"           OFF)
 OPTION(OPTIMIZATION "enable optimization"      ON)
 OPTION(DEBUG        "enable debug"             OFF)
-OPTION(WARNINGS     "enable warnings"          ON)
+OPTION(WARNINGS     "enable warnings"          OFF)
 
 # sound backends
 IF(CMAKE_SYSTEM MATCHES "Linux")
