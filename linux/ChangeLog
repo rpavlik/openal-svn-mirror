@@ -1,4 +1,6 @@
-2006-03-22  Sven Panne  <sven.panne@aedion.de>
+2006-03-23  Sven Panne  <sven.panne@aedion.de>
+
+	* README: Mention CR/LF problem on MinGW/MSYS.
 
 	* configure.ac: Due to some troubles with -ansi on MinGW and Cygwin,
 	don't enable warnings by default.

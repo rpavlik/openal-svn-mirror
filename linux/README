@@ -29,7 +29,11 @@ this, just run:
 
 You might see quite a few warnings, but they are harmless and are caused
 by minor bugs outside OpenAL. If you don't want to see them anymore,
-contact your favourite distribution vendor. :-)
+contact your favourite distribution vendor. :-) A more serious problem
+is that MinGW/MSYS currently ships with a rather old automake version
+(1.7.1), which doesn't handle backslashes followed by CR/LF correctly.
+To work around this problem you can use dos2unix on src/Makefile.am or
+use a source distribution made on another platform.
 
 After that initial step, configuration and compilation work like this:
 
