@@ -5,8 +5,8 @@ includedir=@includedir@
 
 Name: OpenAL
 Description:  OpenAL is a cross-platform 3D audio API.
-Requires: @requirements@
+Requires: @PKG_CONFIG_REQUIRES@
 Version: @PACKAGE_VERSION@
-Libs: -L${libdir} -lopenal
+Libs: -L${libdir} -lopenal @PKG_CONFIG_LIBS@
 Cflags: -I${includedir}
 

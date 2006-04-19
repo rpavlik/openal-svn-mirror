@@ -1,5 +1,9 @@
 2006-04-19  Sven Panne  <sven.panne@aedion.de>
 
+	* configure.ac, admin/pkgconfig/openal-config.in,
+	admin/pkgconfig/openal.pc.in: Improved package dependencies a bit. Still
+	not perfect, but better.
+
 	* common/include/AL/alc.h, src/alc/alc_context.c: Use ALvoid and ALCvoid
 	only via pointer types, this is more in their intended spirit and works
 	around some bugs in GCC 4.2 snapshots.

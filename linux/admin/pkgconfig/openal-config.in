@@ -9,9 +9,9 @@ PACKAGE_VERSION="@PACKAGE_VERSION@"
 # PTHREAD_CFLAGS="@PTHREAD_CFLAGS@"
 # PTHREAD_LIBS="@PTHREAD_LIBS@"
 
-openal_dynamic_ldflags="-lopenal"
+openal_dynamic_ldflags="-lopenal @PKG_CONFIG_LIBS@"
 # TODO: configure should provide the following...
-openal_static_ldflags="-lopenal"
+openal_static_ldflags="-lopenal @PKG_CONFIG_LIBS@"
 
 prefix_set=no
 echo_prefix=no

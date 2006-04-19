@@ -79,6 +79,8 @@ AC_SUBST([LIBTOOL_DEPS])
 AC_PROG_CXX
 AC_ARG_VAR([PKG_CONFIG], [package configuration utility])
 AC_CHECK_PROGS([PKG_CONFIG], [pkg-config], [none])
+PKG_CONFIG_REQUIRES=""
+PKG_CONFIG_LIBS=""
 
 ################################################################################
 # Checks for library functions.
@@ -433,7 +435,9 @@ AC_C_BIGENDIAN
 # might be required, but not always (e.g. Cygwin).
 
 AC_CHECK_HEADERS([dlfcn.h],
-  [AC_CHECK_LIB([dl], [dlopen], [LIBS="-ldl $LIBS"])],
+  [AC_CHECK_LIB([dl], [dlopen],
+    [LIBS="$LIBS -ldl"
+     PKG_CONFIG_LIBS="$PKG_CONFIG_LIBS -ldl"])],
   [AC_MSG_WARN([Dynamic loading of libraries is not available.])
    AC_DEFINE([NODLOPEN], [1], [Define to 1 if dynamic loading of libraries is not available.])])
 
@@ -627,6 +631,7 @@ else
        if test "x$openal_cv_func_snd_pcm_info_sizeof" = xyes; then
          openal_backend_alsa_support=static
          FEATURECFLAGS="$FEATURECFLAGS $openal_cflags_alsa"
+         PKG_CONFIG_REQUIRES="$PKG_CONFIG_REQUIRES alsa"
        else
          openal_backend_alsa_support=none
          LIBS=$openal_saved_LIBS
@@ -818,6 +823,7 @@ else
        if test "x$openal_cv_func_esd_audio_open" = xyes; then
          openal_backend_esd_support=static
          FEATURECFLAGS="$FEATURECFLAGS $openal_cflags_esd"
+         PKG_CONFIG_REQUIRES="$PKG_CONFIG_REQUIRES esound"
        else
          openal_backend_esd_support=none
          LIBS=$openal_saved_LIBS
@@ -1131,6 +1137,7 @@ else
        if test "x$openal_cv_func_ov_clear" = xyes; then
          openal_extension_vorbis_support=static
          FEATURECFLAGS="$FEATURECFLAGS $openal_cflags_vorbis"
+         PKG_CONFIG_REQUIRES="$PKG_CONFIG_REQUIRES vorbisfile"
        else
          openal_extension_vorbis_support=none
          LIBS=$openal_saved_LIBS
@@ -1243,6 +1250,8 @@ AC_SUBST([LIBS])
 AC_SUBST([NASM])
 AC_SUBST([NASM_FORMAT])
 AC_SUBST([OPTIMIZATIONCFLAGS])
+AC_SUBST([PKG_CONFIG_LIBS])
+AC_SUBST([PKG_CONFIG_REQUIRES])
 AC_SUBST([PROFILINGLDFLAGS])
 AC_SUBST([RANLIB])
 AC_SUBST([SIZEOF_VOID_P])
