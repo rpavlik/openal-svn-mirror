@@ -5,14 +5,14 @@
  *
  * Stuff related to the rctree data structure.
  */
-#include "al_debug.h"
-#include "al_config.h"
-#include "al_rctree.h"
-#include "al_siteconfig.h"
 
+#include "al_siteconfig.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "al_config.h"
+#include "al_debug.h"
+#include "al_rctree.h"
 
 /*
  * AL_RcTreeNodes are used to help manage AL_rctrees.

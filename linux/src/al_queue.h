@@ -5,8 +5,10 @@
  *
  * Stuff related to the alQueue.
  */
-#ifndef AL_QUEUE_H_
+#ifndef AL_AL_QUEUE_H_
+#define AL_AL_QUEUE_H_
 
+#include "al_siteconfig.h"
 #include "al_types.h"
 
 /*
@@ -45,4 +47,4 @@ void _alSourceQueueAppend( AL_source *src, ALuint bid );
  */
 void _alSourceUnqueueBuffers( ALuint sid, ALsizei n, ALuint *bids );
 
-#endif /* AL_QUEUE_H_ */
+#endif /* not AL_AL_QUEUE_H_ */

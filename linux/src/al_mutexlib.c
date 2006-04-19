@@ -4,6 +4,7 @@
  * mutexlib.c
  */
 
+#include "al_siteconfig.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include "al_mutexlib.h"

@@ -1,5 +1,7 @@
-#ifndef AL_CPU_CAPS_H
-#define AL_CPU_CAPS_H
+#ifndef AL_AL_CPU_CAPS_H_
+#define AL_AL_CPU_CAPS_H_
+
+#include "al_siteconfig.h"
 
 void _alDetectCPUCaps(void);
 
@@ -7,4 +9,4 @@ void _alDetectCPUCaps(void);
 #include "arch/i386/x86_cpu_caps_prk.h"
 #endif
 
-#endif /* AL_CPU_CAPS_H */
+#endif /* not AL_AL_CPU_CAPS_H_ */

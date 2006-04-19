@@ -5,11 +5,10 @@
  *
  * Defines for RIFF WAVE files.
  */
-#ifndef AC_WAVE_H_
-#define AC_WAVE_H_
+#ifndef AL_AUDIOCONVERT_AC_WAVE_H_
+#define AL_AUDIOCONVERT_AC_WAVE_H_
 
 #include "al_siteconfig.h"
-
 #include <AL/al.h>
 
 #define DATA		0x61746164		/* "data" */
@@ -21,4 +20,4 @@
 
 int RiffOffset(ALubyte *rawdata, ALint magic);
 
-#endif /* AC_WAVE_H_ */
+#endif /* not AL_AUDIOCONVERT_AC_WAVE_H_ */

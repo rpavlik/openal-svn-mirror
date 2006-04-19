@@ -4,9 +4,10 @@
  * Plugins should include this header.
  *
  */
-#ifndef AL_EXT_NEEDED_H_
-#define AL_EXT_NEEDED_H_
+#ifndef AL_EXTENSIONS_AL_EXT_NEEDED_H_
+#define AL_EXTENSIONS_AL_EXT_NEEDED_H_
 
+#include "al_siteconfig.h"
 #include "al_main.h" /* for UNUSED macro */
 
 /*
@@ -29,4 +30,4 @@ void alExtFini_03282000( void );
  */
 #define AL_EXT_PAIR(x) { (const ALubyte *) #x, (AL_funcPtr) x }
 
-#endif /* AL_EXT_NEEDED_H_ */
+#endif /* not AL_EXTENSIONS_AL_EXT_NEEDED_H_ */

@@ -7,10 +7,11 @@
  * objects.  mspool objects are objects which ease the slab allocation of
  * _alMixSource objects.
  */
+
+#include "al_siteconfig.h"
+#include <stdlib.h>
 #include "al_debug.h"
 #include "al_mspool.h"
-
-#include <stdlib.h>
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))

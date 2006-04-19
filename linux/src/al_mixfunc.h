@@ -9,9 +9,10 @@
  * mixmanager, this provides an interface for the library to plug in well
  * optimized mixing functions.
  */
-#ifndef _AL_MIXFUNC_H_
-#define _AL_MIXFUNC_H_
+#ifndef AL_AL_MIXFUNC_H_
+#define AL_AL_MIXFUNC_H_
 
+#include "al_siteconfig.h"
 #include "al_types.h"
 #include "al_mixer.h"
 
@@ -36,4 +37,4 @@ ALboolean _alMixFuncInit( ALMixFunc *mf, ALuint size );
  */
 void _alMixFuncDestroy( ALMixFunc *mf );
 
-#endif /* _AL_MIXFUNC_H_ */
+#endif /* not AL_AL_MIXFUNC_H_ */

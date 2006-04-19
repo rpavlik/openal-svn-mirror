@@ -1,5 +1,5 @@
-#ifndef AL_SITECONFIG_H_
-#define AL_SITECONFIG_H_
+#ifndef AL_AL_SITECONFIG_H_
+#define AL_AL_SITECONFIG_H_
 
 /*
  * Wrap site specific config stuff
@@ -7,9 +7,9 @@
 
 #ifdef DARWIN_PBBUILDER
 #include "config-osx.h"
-#else
+#else /* not DARWIN_PBBUILDER */
 #include "config.h"
-#endif /* DARWIN_PBBUILDER */
+#endif /* not DARWIN_PBBUILDER */
 
 #if defined(_WIN32) || defined(__WIN32__)
 #define snprintf _snprintf
@@ -19,11 +19,11 @@
 #define UNUSED(x) x __attribute__((unused))
 #define AL_ATTRIBUTE_FORMAT_PRINTF_(x,y) __attribute__((format(printf, x, y)))
 #define AL_ATTRIBUTE_NORETURN_ __attribute__((noreturn))
-#else
+#else /* not HAVE___ATTRIBUTE__ */
 #define UNUSED(x) x
 #define AL_ATTRIBUTE_FORMAT_PRINTF_(x,y)
 #define AL_ATTRIBUTE_NORETURN_
-#endif
+#endif /* not HAVE___ATTRIBUTE__ */
 
 #define USE_LRINT 0 /* icculus look here JIV FIXME */
 
@@ -35,6 +35,6 @@
 #define __FAST_MATH__ 1
 #include <math.h>
 
-#endif
+#endif /* USE_LRINT */
 
-#endif /* AL_SITE_CONFIG_H_ */
+#endif /* not AL_SITE_CONFIG_H_ */

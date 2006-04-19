@@ -5,9 +5,10 @@
  *
  * Prototypes for (semi) standard loki extensions
  */
-#ifndef AL_EXT_LOKI_H_
-#define AL_EXT_LOKI_H_
+#ifndef AL_EXTENSIONS_AL_EXT_LOKI_H_
+#define AL_EXTENSIONS_AL_EXT_LOKI_H_
 
+#include "al_siteconfig.h"
 #include "al_ext_needed.h"
 #include <AL/alext.h>
 
@@ -50,11 +51,11 @@ void alFiniLoki( void );
 #define BUILTIN_EXT_LOKI_INIT  alInitLoki()
 #define BUILTIN_EXT_LOKI_FINI  alFiniLoki()
 
-#else
+#else /* OPENAL_EXTENSION */
 
 #define BUILTIN_EXT_LOKI_INIT
 #define BUILTIN_EXT_LOKI_FINI
 
 #endif /* OPENAL_EXTENSION */
 
-#endif /* AL_EXT_LOKI_H_ */
+#endif /* not AL_EXTENSIONS_AL_EXT_LOKI_H_ */

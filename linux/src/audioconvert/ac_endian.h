@@ -5,9 +5,10 @@
  *
  * This file contains macros and prototypes for endian management.
  */
+#ifndef AL_AUDIOCONVERT_AC_ENDIAN_H_
+#define AL_AUDIOCONVERT_AC_ENDIAN_H_
 
 #include "al_siteconfig.h"
-
 #include <AL/al.h>
 
 #define ac_swap16(D) ((ALushort) (((D)<<8) | ((D)>>8)))
@@ -21,10 +22,11 @@ ALubyte *cp32le(ALubyte *rawdata, ALuint *reader32);
 #define swap32le(x) ac_swap32(x)
 #define swap16be(x) (x)
 #define swap32be(x) (x)
-#else
+#else /* not WORDS_BIGENDIAN */
 #define swap16le(x) (x)
 #define swap32le(x) (x)
 #define swap16be(x) ac_swap16(x)
 #define swap32be(x) ac_swap32(x)
+#endif /* not WORDS_BIGENDIAN */
 
-#endif /* __big_endian */
+#endif /* not AL_AUDIOCONVERT_AC_ENDIAN_H_ */

@@ -6,8 +6,10 @@
  * matrix math stuff
  */
 
-#ifndef AL_MATRIX_H_
-#define AL_MATRIX_H_
+#ifndef AL_AL_MATRIX_H_
+#define AL_AL_MATRIX_H_
+
+#include "al_siteconfig.h"
 
 /*
  * Multiplies transposed vector v by matrix provided as 3x3 array,
@@ -33,4 +35,4 @@ void _alMatrixFree( ALmatrix *m );
 void _alMatrixMul( ALmatrix *result, ALmatrix *m1, ALmatrix *m2 );
 #endif /* 0 */
 
-#endif /* AL_MATRIX_H_ */
+#endif /* not AL_AL_MATRIX_H_ */

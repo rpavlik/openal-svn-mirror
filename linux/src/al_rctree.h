@@ -6,11 +6,12 @@
  * Stuff related to the rctree data structure
  *
  */
-#ifndef AL_RCTREE_H_
-#define AL_RCTREE_H_
+#ifndef AL_AL_RCTREE_H_
+#define AL_AL_RCTREE_H_
 
 #define ALRC_MAXSTRLEN 90
 
+#include "al_siteconfig.h"
 #include "al_rcvar.h"
 
 /*
@@ -59,4 +60,4 @@ void _alRcTreeFree( AL_rctree *node );
  */
 void _alRcTreeDestroyAll( void );
 
-#endif /* AL_RCTREE_H_ */
+#endif /* not AL_AL_RCTREE_H_ */

@@ -10,17 +10,16 @@
  * in the same way as they are described in the spec.
  */
 
-#ifndef _LAL_TYPES_H_
-#define _LAL_TYPES_H_
+#ifndef AL_AL_TYPES_H_
+#define AL_AL_TYPES_H_
 
+#include "al_siteconfig.h"
 #include <AL/al.h>
 #include <AL/alc.h>
-
-#include "al_mutexlib.h"
-#include "backends/alc_backend.h"
-
 #include <stddef.h>
 #include <sys/types.h>
+#include "al_mutexlib.h"
+#include "backends/alc_backend.h"
 
 #define _ALC_MAX_CHANNELS    6
 #define _ALC_MAX_FILTERS     9
@@ -359,4 +358,4 @@ typedef struct _alMixEntry {
 	ALint bytes;
 } alMixEntry;
 
-#endif /* _LAL_TYPES_H */
+#endif /* not AL_AL_TYPES_H_ */

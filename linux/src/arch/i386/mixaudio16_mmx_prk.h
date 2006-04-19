@@ -17,10 +17,11 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef _MIXAUDIO16_MMX_PRK_H_
-#define _MIXAUDIO16_MMX_PRK_H_
+#ifndef AL_ARCH_I386_MIXAUDIO16_MMX_PRK_H_
+#define AL_ARCH_I386_MIXAUDIO16_MMX_PRK_H_
 
 #include "al_siteconfig.h"
+
 #ifdef __MMX__
 #include <AL/al.h>
 #include "al_main.h"
@@ -70,5 +71,7 @@ void MixAudio16_MMX_29( ALshort *dst, alMixEntry *entries );
 void MixAudio16_MMX_30( ALshort *dst, alMixEntry *entries );
 void MixAudio16_MMX_31( ALshort *dst, alMixEntry *entries );
 void MixAudio16_MMX_32( ALshort *dst, alMixEntry *entries );
+
 #endif /* __MMX__ */
-#endif /* _MIXAUDIO16_MMX_PRK_H_ */
+
+#endif /* not AL_ARCH_I386_MIXAUDIO16_MMX_PRK_H_ */

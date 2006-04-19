@@ -5,13 +5,11 @@
  *
  * Miscellanous prototypes, macros and definitions
  */
-#ifndef _AL_MAIN_H_
-#define _AL_MAIN_H_
+#ifndef AL_AL_MAIN_H_
+#define AL_AL_MAIN_H_
 
 #include "al_siteconfig.h"
-
 #include <AL/al.h>
-
 #include "alc/alc_context.h"
 
 /*
@@ -21,7 +19,7 @@
  */
 #ifndef DEBUG_LOCK
 #define _alLockPrintf(x, f, l)
-#else
+#else /* DEBUG_LOCK */
 int _alLockPrintf( const char *str, const char *fn, int line );
 #endif /* DEBUG_LOCK */
 
@@ -60,9 +58,9 @@ int _alLockPrintf( const char *str, const char *fn, int line );
  */
 #ifdef DEBUG_STUB
 void _alStub( const char *str );
-#else
+#else /* not DEBUG_STUB */
 #define _alStub( s )
-#endif /* DEBUG_STUB */
+#endif /* not DEBUG_STUB */
 
 /*
  * Does misc. initialization for the library.
@@ -209,4 +207,4 @@ ALboolean _alIsFinite( ALfloat v );
  */
 ALuint _alSpot( ALuint num );
 
-#endif
+#endif /* not AL_AL_MAIN_H_ */

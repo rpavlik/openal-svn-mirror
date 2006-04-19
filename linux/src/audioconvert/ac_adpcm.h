@@ -33,8 +33,8 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * For more information, please see ac_adpcm.c
  */
-#ifndef _AC_ADPCM_H_
-#define _AC_ADPCM_H_
+#ifndef AL_AUDIOCONVERT_AC_ADPCM_H_
+#define AL_AUDIOCONVERT_AC_ADPCM_H_
 
 #include "al_siteconfig.h"
 
@@ -61,4 +61,4 @@ int IMA_ADPCM_decode_FULL(alIMAADPCM_state_LOKI *state,
 int IMA_ADPCM_decode(ALubyte *indata, ALubyte *outdata,
 		ALuint len, alIMAADPCM_state_LOKI *istate, int offset);
 
-#endif /* _AC_ADPCM_H_ */
+#endif /* not AL_AUDIOCONVERT_AC_ADPCM_H_ */

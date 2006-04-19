@@ -7,9 +7,10 @@
  * objects.  mspool objects are objects which ease the slab allocation of
  * _alMixSource objects.
  */
-#ifndef AL_MSPOOL_H_
-#define AL_MSPOOL_H_
+#ifndef AL_AL_MSPOOL_H_
+#define AL_AL_MSPOOL_H_
 
+#include "al_siteconfig.h"
 #include <AL/al.h>
 #include <stdlib.h>
 
@@ -90,4 +91,4 @@ int _alMixPoolFirstFreeIndex( _alMixPool *mspool );
  */
 void _alMixPoolFree( _alMixPool *mspool, void (*freer_func)(void *) );
 
-#endif /* AL_MSPOOL_H_ */
+#endif /* not AL_AL_MSPOOL_H_ */

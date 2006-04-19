@@ -5,12 +5,12 @@
  *
  * Mixing functions for signed, 16-bit PCM streams.
  */
-#ifndef _MIX_AUDIO16_H_
-#define _MIX_AUDIO16_H_
+#ifndef AL_MIXAUDIO16_H_
+#define AL_MIXAUDIO16_H_
 
+#include "al_siteconfig.h"
 #include <AL/al.h>
 #include "al_types.h"
-#include "al_siteconfig.h"
 
 #ifdef __MMX__
 #include "mixaudio16_mmx_prk.h"
@@ -109,5 +109,6 @@ void MixAudio16_61( ALshort *dst, alMixEntry *entries );
 void MixAudio16_62( ALshort *dst, alMixEntry *entries );
 void MixAudio16_63( ALshort *dst, alMixEntry *entries );
 void MixAudio16_64( ALshort *dst, alMixEntry *entries );
-#endif /* USE_LIGHT_GEN_MIXING */
-#endif /* _MIX_AUDIO16_H_ */
+#endif /* not USE_LIGHT_GEN_MIXING */
+
+#endif /* not AL_MIXAUDIO16_H_ */

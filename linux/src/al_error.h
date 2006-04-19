@@ -5,9 +5,10 @@
  *
  * openal error reporting.
  */
-#ifndef _AL_ERROR_H_
-#define _AL_ERROR_H_
+#ifndef AL_AL_ERROR_H_
+#define AL_AL_ERROR_H_
 
+#include "al_siteconfig.h"
 #include <AL/al.h>
 #include "alc/alc_context.h"
 
@@ -27,4 +28,4 @@ extern ALboolean _alShouldBombOnError_LOKI;
 
 #define _alDCSetError(p) _alSetError(_alcCCId, p)
 
-#endif /* _AL_ERROR_H_ */
+#endif /* not AL_AL_ERROR_H_ */

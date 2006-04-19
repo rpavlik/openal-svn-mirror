@@ -5,11 +5,10 @@
  *
  * openal alc error reporting.
  */
-#ifndef _LAL_ALC_ERROR_H_
-#define _LAL_ALC_ERROR_H_
+#ifndef AL_ALC_ALC_ERROR_H_
+#define AL_ALC_ALC_ERROR_H_
 
 #include "al_siteconfig.h"
-
 #include <AL/alc.h>
 
 /*
@@ -29,4 +28,4 @@ void _alcSetError( ALCenum param );
  */
 const ALubyte *_alcGetErrorString( ALCenum param );
 
-#endif /* _LAL_ALC_ERROR_H_ */
+#endif /* not AL_ALC_ALC_ERROR_H_ */

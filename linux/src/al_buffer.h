@@ -7,9 +7,10 @@
  * management of buffers.
  *
  */
-#ifndef _AL_BUFFER_H_
-#define _AL_BUFFER_H_
+#ifndef AL_AL_BUFFER_H_
+#define AL_AL_BUFFER_H_
 
+#include "al_siteconfig.h"
 #include "al_types.h"
 
 /*
@@ -189,4 +190,4 @@ ALvoid *_alBufferCanonizeData( ALenum format, const ALvoid *data, ALuint size, A
 #define _alDCGetBufferFromSid(x)                                    \
 	_alGetBufferFromSid((ALuint) _alcCCId, x)
 
-#endif
+#endif /* not AL_AL_BUFFER_H_ */

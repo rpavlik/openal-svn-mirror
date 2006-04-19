@@ -9,9 +9,10 @@
  * streams that need to be mixed simultaneously.
  *
  */
-#ifndef _AL_MIXMANAGER_H_
-#define _AL_MIXMANAGER_H_
+#ifndef AL_AL_MIXMANAGER_H_
+#define AL_AL_MIXMANAGER_H_
 
+#include "al_siteconfig.h"
 #include "al_types.h"
 #include "al_mixfunc.h"
 
@@ -58,4 +59,4 @@ void _alMixManagerAdd( ALMixManager *mixman, ALvoid *dataptr, int bytes_to_write
  */
 void _alMixManagerMix( ALMixManager *mixman, ALMixFunc *mf, ALvoid *dataptr );
 
-#endif /* _AL_MIXMANAGER_H_ */
+#endif /* not AL_AL_MIXMANAGER_H_ */

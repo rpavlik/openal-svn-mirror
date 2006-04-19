@@ -11,11 +11,10 @@
  * facilities in ISO99 C.
  *
  */
-#ifndef AL_DEBUG_H_
-#define AL_DEBUG_H_
+#ifndef AL_AL_DEBUG_H_
+#define AL_AL_DEBUG_H_
 
 #include "al_siteconfig.h"
-
 #include <assert.h>
 
 #if defined(DEBUG)        || defined(DEBUG_LOOP) || defined(DEBUG_STUB)    || \
@@ -69,13 +68,13 @@ typedef enum _aldEnum
 #ifdef NEED_DEBUG
 AL_ATTRIBUTE_FORMAT_PRINTF_(4,5)
 int _alDebug( aldEnum level, const char *fn, int ln, const char *format, ... );
-#else
+#else /* not NEED_DEBUG */
 AL_ATTRIBUTE_FORMAT_PRINTF_(4,5) static __inline
 int _alDebug( aldEnum level, const char *fn, int ln, const char *format, ... )
 {
 	(void)level; (void)fn; (void)ln; (void)format;
 	return 0;
 }
-#endif
+#endif /* not NEED_DEBUG */
 
-#endif
+#endif /* not AL_AL_DEBUG_H_ */

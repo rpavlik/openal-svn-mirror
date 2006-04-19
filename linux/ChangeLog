@@ -1,5 +1,25 @@
 2006-04-19  Sven Panne  <sven.panne@aedion.de>
 
+	* src/al_bpool.h, src/al_buffer.h, src/al_config.h, src/al_cpu_caps.h,
+	src/al_debug.h, src/al_distance.h, src/al_error.h, src/al_ext.h,
+	src/al_filter.h, src/al_listen.h, src/al_main.h, src/al_matrix.h,
+	src/al_mixer.h, src/al_mixfunc.h, src/al_mixmanager.h, src/al_mspool.c,
+	src/al_mspool.h, src/al_mutexlib.c, src/al_mutexlib.h, src/al_queue.h,
+	src/al_rctree.c, src/al_rctree.h, src/al_rcvar.h, src/al_siteconfig.h,
+	src/al_source.h, src/al_spool.h, src/al_threadlib.c, src/al_threadlib.h,
+	src/al_types.h, src/al_vector.h, src/alc/alc_context.h,
+	src/alc/alc_device.h, src/alc/alc_error.h, src/alc/alc_speaker.h,
+	src/arch/i386/mixaudio16_mmx_prk.c, src/arch/i386/mixaudio16_mmx_prk.h,
+	src/arch/i386/x86_cpu_caps_prk.h, src/arch/i386/x86_simd_support_prk.h,
+	src/arch/portable/cpu_caps.c, src/audioconvert/ac_adpcm.h,
+	src/audioconvert/ac_endian.h, src/audioconvert/ac_wave.h,
+	src/audioconvert/audioconvert.h, src/extensions/al_ext_loki.h,
+	src/extensions/al_ext_mp3.h, src/extensions/al_ext_needed.h,
+	src/extensions/al_ext_vorbis.h, src/mixaudio16.h: Every file starts with
+	including al_siteconfig.h now. Unified #defines for protection against
+	multiple inclusion. Commented #ifdefs according to the GNU coding
+	standards.
+	
 	* configure.ac: To guarantee version consistency, generate .spec
 	file via configure.
 

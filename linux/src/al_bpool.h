@@ -8,9 +8,10 @@
  * AL_buffer objects.
  *
  */
-#ifndef _AL_BPOOL_H_
-#define _AL_BPOOL_H_
+#ifndef AL_AL_BPOOL_H_
+#define AL_AL_BPOOL_H_
 
+#include "al_siteconfig.h"
 #include "al_types.h"
 
 /*
@@ -110,4 +111,4 @@ int bpool_bid_to_index( bpool_t *bpool, ALuint bid );
  */
 ALuint bpool_next_bid( void );
 
-#endif /* AL_BPOOL_H_ */
+#endif /* not AL_BPOOL_H_ */

@@ -8,11 +8,11 @@
  * AL_source objects.
  *
  */
-#ifndef _AL_SPOOL_H_
-#define _AL_SPOOL_H_
+#ifndef AL_AL_SPOOL_H_
+#define AL_AL_SPOOL_H_
 
+#include "al_siteconfig.h"
 #include "al_types.h"
-
 #include <sys/types.h>
 
 /*
@@ -74,4 +74,4 @@ ALboolean spool_dealloc( spool_t *spool, ALuint sid,
  */
 ALboolean spool_resize( spool_t *spool, size_t size );
 
-#endif /* AL_SPOOL_H_ */
+#endif /* not AL_AL_SPOOL_H_ */

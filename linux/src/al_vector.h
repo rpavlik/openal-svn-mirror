@@ -6,10 +6,12 @@
  * kludgey vector math stuff
  */
 
-#ifndef AL_VECTOR_H_
-#define AL_VECTOR_H_
+#ifndef AL_AL_VECTOR_H_
+#define AL_AL_VECTOR_H_
 
+#include "al_siteconfig.h"
 #include <math.h>
+
 /*
  * Returns magnitude of v2 with origin at (0,0,0).
  */
@@ -103,4 +105,4 @@ static __inline void _alVectorCrossProduct( ALfloat *d, const ALfloat *v1,
 	return;
 }
 
-#endif /* AL_VECTOR_H */
+#endif /* not AL_AL_VECTOR_H_ */

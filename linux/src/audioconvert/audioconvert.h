@@ -4,13 +4,11 @@
  * This is the header that apps should include when linking against
  * audioconvert or such.
  */
-#ifndef AC_H_
-#define AC_H_
+#ifndef AL_AUDIOCONVERT_AUDIOCONVERT_H_
+#define AL_AUDIOCONVERT_AUDIOCONVERT_H_
 
 #include "al_siteconfig.h"
-
 #include <AL/al.h>
-
 #include "audioconvert/ac_adpcm.h"
 
 /* new data types */
@@ -40,10 +38,10 @@ typedef struct _acAudioCVT {
 #ifndef WORDS_BIGENDIAN
 #define AUDIO_U16	AUDIO_U16LSB
 #define AUDIO_S16	AUDIO_S16LSB
-#else
+#else /* not WORDS_BIGENDIAN */
 #define AUDIO_U16	AUDIO_U16MSB
 #define AUDIO_S16	AUDIO_S16MSB
-#endif
+#endif /* not WORDS_BIGENDIAN */
 
 /* macros */
 #define acFormatBits(fmt)           (fmt & 0xff)
@@ -87,4 +85,4 @@ void *acLoadWAV(const void *data, ALuint *size, void **udata,
 		ALushort *channels,
 		ALushort *freq);
 
-#endif /* AC_H_ */
+#endif /* not AL_AUDIOCONVERT_AUDIOCONVERT_H_ */

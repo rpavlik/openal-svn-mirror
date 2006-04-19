@@ -5,8 +5,8 @@
  *
  * Include that sorts out which mutex library we're using.
  */
-#ifndef MUTEXLIB_H_
-#define MUTEXLIB_H_
+#ifndef AL_AL_MUTEXLIB_H_
+#define AL_AL_MUTEXLIB_H_
 
 #include "al_siteconfig.h"
 
@@ -18,7 +18,7 @@
 #define _alTryLockMutex(m)
 #define _alUnlockMutex(m)
 
-#else
+#else /* not defined(USE_EMPTY_LOCKS) */
 
 #if defined(USE_POSIXTHREADING)
 
@@ -35,11 +35,11 @@ typedef LPCRITICAL_SECTION MutexID;
 #include <exec/semaphores.h>
 typedef struct SignalSemaphore *MutexID;
 
-#else
+#else /* not defined(USE_MORPHOSTHREADING) */
 
 #error "No mutex package"
 
-#endif
+#endif /* not defined(USE_MORPHOSTHREADING) */
 
 /* Creates a new mutex. Returns NULL on error. */
 extern MutexID _alCreateMutex( void );
@@ -57,6 +57,6 @@ extern int _alTryLockMutex( MutexID mutex );
 /* Unlocks the given mutex, which must be locked by the same thread. */
 extern void _alUnlockMutex( MutexID mutex );
 
-#endif				/* USE_EMPTY_LOCKS */
+#endif /* not defined(USE_EMPTY_LOCKS) */
 
-#endif				/* MUTEXLIB_H_ */
+#endif /* AL_AL_MUTEXLIB_H_ */

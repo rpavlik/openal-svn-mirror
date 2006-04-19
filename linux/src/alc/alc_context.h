@@ -5,14 +5,12 @@
  *
  * Prototypes, defines etc for context aquisition and management.
  */
-#ifndef _ALC_CONTEXT_H_
-#define _ALC_CONTEXT_H_
+#ifndef AL_ALC_ALC_CONTEXT_H_
+#define AL_ALC_ALC_CONTEXT_H_
 
 #include "al_siteconfig.h"
-
 #include <AL/al.h>
 #include <AL/alc.h>
-
 #include "al_types.h"
 
 /*
@@ -199,4 +197,4 @@ void FL_alcUnlockAllContexts( const char *fn, int ln );
 #define _alcUnlockAllContexts() FL_alcUnlockAllContexts(__FILE__, __LINE__)
 #define _alcLockAllContexts()   FL_alcLockAllContexts(__FILE__, __LINE__)
 
-#endif /* _ALC_CONTEXT_H_ */
+#endif /* not AL_ALC_ALC_CONTEXT_H_ */

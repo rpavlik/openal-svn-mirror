@@ -7,11 +7,11 @@
  * management of sources.
  *
  */
-#ifndef _AL_SOURCE_H_
-#define _AL_SOURCE_H_
+#ifndef AL_AL_SOURCE_H_
+#define AL_AL_SOURCE_H_
 
+#include "al_siteconfig.h"
 #include <stdio.h>
-
 #include "al_types.h"
 
 /*
@@ -210,10 +210,10 @@ ALboolean FL_alUnlockSource( const char *fn, int ln, ALuint cid, ALuint sid );
 #ifdef PARANOID_LOCKING
 #define SOURCELOCK()   _alcDCLockContext()
 #define SOURCEUNLOCK() _alcDCUnlockContext()
-#else
+#else /* not PARANOID_LOCKING */
 #define SOURCELOCK()
 #define SOURCEUNLOCK()
-#endif
+#endif /* not PARANOID_LOCKING */
 
 /*
  * AL_FIRST_SOURCE_ID is the first integer value at which source names are
@@ -221,4 +221,4 @@ ALboolean FL_alUnlockSource( const char *fn, int ln, ALuint cid, ALuint sid );
  */
 #define AL_FIRST_SOURCE_ID  0x4000
 
-#endif /* _AL_SOURCE_H_ */
+#endif /* not AL_AL_SOURCE_H_ */

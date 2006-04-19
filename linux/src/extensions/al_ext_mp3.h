@@ -5,9 +5,10 @@
  *
  * Hack.
  */
-#ifndef AL_EXT_MP3
-#define AL_EXT_MP3
+#ifndef AL_EXTENSIONS_AL_EXT_MP3_H_
+#define AL_EXTENSIONS_AL_EXT_MP3_H_
 
+#include "al_siteconfig.h"
 #include <AL/alext.h>
 
 /*
@@ -25,7 +26,6 @@ ALint MP3_Callback(ALuint sid, ALuint bid,
 
 #ifdef ENABLE_EXTENSION_AL_EXT_MP3
 
-
 /*
  * we are being built into the standard library, so inform
  * the extension registrar
@@ -38,7 +38,7 @@ ALint MP3_Callback(ALuint sid, ALuint bid,
 #define BUILTIN_EXT_MP3_INIT
 #define BUILTIN_EXT_MP3_FINI
 
-#else
+#else /* not ENABLE_EXTENSION_AL_EXT_MP3 */
 
 /*
  * Without smpeg support (--enable-smpeg) we can't do mp3s, so we
@@ -48,8 +48,8 @@ ALint MP3_Callback(ALuint sid, ALuint bid,
 #define BUILTIN_EXT_MP3_INIT
 #define BUILTIN_EXT_MP3_FINI
 
-#endif /* ENABLE_EXTENSION_AL_EXT_MP3 */
+#endif /* not ENABLE_EXTENSION_AL_EXT_MP3 */
 
-#endif /* OPENAL_EXTENSION */
+#endif /* not OPENAL_EXTENSION */
 
-#endif /* AL_EXT_MP3 */
+#endif /* AL_EXTENSIONS_AL_EXT_MP3_H_ */

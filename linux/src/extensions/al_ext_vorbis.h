@@ -5,9 +5,10 @@
  *
  * Hack.
  */
-#ifndef AL_EXT_VORBIS
-#define AL_EXT_VORBIS
+#ifndef AL_EXTENSIONS_AL_EXT_VORBIS_H_
+#define AL_EXTENSIONS_AL_EXT_VORBIS_H_
 
+#include "al_siteconfig.h"
 #include <AL/al.h>
 
 /*
@@ -42,7 +43,7 @@ ALint Vorbis_Callback(ALuint sid, ALuint bid,
 #define BUILTIN_EXT_VORBIS_INIT
 #define BUILTIN_EXT_VORBIS_FINI
 
-#else
+#else /* not ENABLE_EXTENSION_AL_EXT_VORBIS */
 
 /*
  * Without libvorvis (--enable-vorbis) we can't do vorbis, so we
@@ -52,8 +53,8 @@ ALint Vorbis_Callback(ALuint sid, ALuint bid,
 #define BUILTIN_EXT_VORBIS_INIT
 #define BUILTIN_EXT_VORBIS_FINI
 
-#endif /* ENABLE_EXTENSION_AL_EXT_VORBIS */
+#endif /* not ENABLE_EXTENSION_AL_EXT_VORBIS */
 
-#endif /* OPENAL_EXTENSION */
+#endif /* not OPENAL_EXTENSION */
 
-#endif /* AL_EXT_VORBIS */
+#endif /* AL_EXTENSIONS_AL_EXT_VORBIS_H_ */

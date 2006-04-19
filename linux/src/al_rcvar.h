@@ -6,9 +6,10 @@
  * Stuff related to the Rcvar config interface
  *
  */
-#ifndef AL_RCVAR_H_
-#define AL_RCVAR_H_
+#ifndef AL_AL_RCVAR_H_
+#define AL_AL_RCVAR_H_
 
+#include "al_siteconfig.h"
 #include <AL/al.h>
 #include <stdlib.h>
 
@@ -163,4 +164,4 @@ Rcvar alrc_quote( Rcvar sym );
 #define rc_caddddr(s)                         rc_car(rc_cddddr(s))
 #define rc_cadddddr(s)                        rc_car(rc_cdddddr(s))
 
-#endif /* AL_RCVAR_H_ */
+#endif /* not AL_AL_RCVAR_H_ */

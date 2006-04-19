@@ -7,11 +7,11 @@
  * config state.
  *
  */
-#ifndef AL_CONFIG_H_
-#define AL_CONFIG_H_
+#ifndef AL_AL_CONFIG_H_
+#define AL_AL_CONFIG_H_
 
+#include "al_siteconfig.h"
 #include <AL/al.h>
-
 #include "al_rctree.h"
 #include "al_rcvar.h"
 
@@ -79,4 +79,4 @@ AL_rctree *alrc_cdr( AL_rctree *ls );
  */
 extern const AL_rctree scmtrue;
 
-#endif /* AL_CONFIG_H_ */
+#endif /* not AL_AL_CONFIG_H_ */

@@ -5,12 +5,11 @@
  *
  * Prototypes, defines etc for device aquisition and management.
  */
-#ifndef ALC_DEVICE_H_
-#define ALC_DEVICE_H_
+#ifndef AL_ALC_ALC_DEVICE_H_
+#define AL_ALC_ALC_DEVICE_H_
 
 #include "al_siteconfig.h"
 #include <AL/al.h>
-
 #include "al_types.h"
 
 void alcDevicePause_( AL_device *dev );
@@ -36,4 +35,4 @@ ALfloat alcDeviceGetAudioChannel_( AL_device *dev, ALuint channel);
 
 void alcDeviceSetAudioChannel_( AL_device *dev, ALuint channel, ALfloat volume);
 
-#endif /* _ALC_DEVICE_H_ */
+#endif /* not AL_ALC_ALC_DEVICE_H_ */

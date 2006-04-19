@@ -5,8 +5,8 @@
  *
  * Header which sorts out which thread package we're using.
  */
-#ifndef THREADLIB_H_
-#define THREADLIB_H_
+#ifndef AL_AL_THREADLIB_H_
+#define AL_AL_THREADLIB_H_
 
 #include "al_siteconfig.h"
 
@@ -32,11 +32,11 @@ struct ThreadData {
 
 typedef struct ThreadData *ThreadID;
 
-#else
+#else /* not defined(USE_MORPHOSTHREADING) */
 
 #error "No thread package"
 
-#endif
+#endif /* not defined(USE_MORPHOSTHREADING) */
 
 /*
  * Creates a thread, which starts by running fn.
@@ -58,4 +58,4 @@ extern unsigned int _alSelfThread( void );
  */
 extern void _alExitThread( void ) AL_ATTRIBUTE_NORETURN_;
 
-#endif				/* THREADLIB_H_ */
+#endif /* not AL_AL_THREADLIB_H_ */

@@ -5,13 +5,11 @@
  *
  * Prototypes, defines etc for speaker management.
  */
-#ifndef ALC_SPEAKER_H_
-#define ALC_SPEAKER_H_
+#ifndef AL_ALC_ALC_SPEAKER_H_
+#define AL_ALC_ALC_SPEAKER_H_
 
 #include "al_siteconfig.h"
-
 #include <AL/al.h>
-
 #include "alc/alc_context.h"
 
 typedef enum {
@@ -43,4 +41,4 @@ ALuint _alcGetNumSpeakers( ALuint cid );
 #define _alcDCSpeakerMove()     _alcSpeakerMove(_alcCCId)
 #define _alcDCGetNumSpeakers()  _alcGetNumSpeakers(_alcCCId)
 
-#endif /* _ALC_SPEAKERS_H_ */
+#endif /* not AL_ALC_ALC_SPEAKER_H_ */

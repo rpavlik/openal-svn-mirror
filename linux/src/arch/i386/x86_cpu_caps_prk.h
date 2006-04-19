@@ -17,8 +17,10 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef X86_CPU_CAPS_H
-#define X86_CPU_CAPS_H
+#ifndef AL_ARCH_I386_X86_CPU_CAPS_PRK_H_
+#define AL_ARCH_I386_X86_CPU_CAPS_PRK_H_
+
+#include "al_siteconfig.h"
 
 struct x86cpu_caps_s {
 	int mmx;
@@ -77,4 +79,4 @@ static __inline int _alHaveSSEMMX(void)
 	return x86cpu_caps_use.amd_sse_mmx;
 }
 
-#endif /* X86_CPU_CAPS_H */
+#endif /* not AL_ARCH_I386_X86_CPU_CAPS_PRK_H_ */

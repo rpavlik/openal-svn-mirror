@@ -11,33 +11,33 @@
  * etc.
  *
  */
-#ifndef _AL_MIXER_H_
-#define _AL_MIXER_H_
+#ifndef AL_AL_MIXER_H_
+#define AL_AL_MIXER_H_
 
-#include <AL/al.h>
 #include "al_siteconfig.h"
+#include <AL/al.h>
 
 /*
  * Number of sources for which optimized mixing functions exist.
  */
 #ifdef USE_LIGHT_GEN_MIXING
 #define GENMIXSOURCES 8
-#else
+#else /* not USE_LIGHT_GEN_MIXING */
 #define GENMIXSOURCES 64
-#endif /* USE_LIGHT_GEN_MIXING */
+#endif /* not USE_LIGHT_GEN_MIXING */
 
 #ifdef __MMX__
 #define MMXMIXSOURCES 32
-#else
+#else /* not __MMX__ */
 #define MMXMIXSOURCES 0
-#endif /* __MMX__ */
+#endif /* not __MMX__ */
 
 /* set MAXMIXSOURCES to MAX */
 #if GENMIXSOURCES<MMXMIXSOURCES
 #define MAXMIXSOURCES MMXMIXSOURCES
-#else
+#else /* not GENMIXSOURCES<MMXMIXSOURCES */
 #define MAXMIXSOURCES GENMIXSOURCES
-#endif
+#endif /* not GENMIXSOURCES<MMXMIXSOURCES */
 
 
 /*
@@ -121,4 +121,4 @@ void _alUnlockMixerPause( void );
 #define _alLockMixBuf()   FL_alLockMixBuf(__FILE__, __LINE__)
 #define _alUnlockMixBuf() FL_alUnlockMixBuf(__FILE__, __LINE__)
 
-#endif
+#endif /* not AL_AL_MIXER_H_ */

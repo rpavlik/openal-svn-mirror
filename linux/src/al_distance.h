@@ -6,11 +6,12 @@
  * Prototypes related to the distance model.
  *
  */
-#ifndef AL_DISTANCE_H_
-#define AL_DISTANCE_H_
+#ifndef AL_AL_DISTANCE_H_
+#define AL_AL_DISTANCE_H_
 
+#include "al_siteconfig.h"
 #include "al_types.h"
 
 void _alUpdateDistanceModel( AL_context *cc );
 
-#endif /* AL_DISTANCE_H_ */
+#endif /* not AL_AL_DISTANCE_H_ */

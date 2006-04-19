@@ -6,13 +6,11 @@
  * Prototypes, macros and definitions related to the application of filters.
  *
  */
-#ifndef _AL_FILTER_H_
-#define _AL_FILTER_H_
+#ifndef AL_AL_FILTER_H_
+#define AL_AL_FILTER_H_
 
 #include "al_siteconfig.h"
-
 #include <AL/al.h>
-
 #include "al_types.h"
 
 /*
@@ -84,4 +82,4 @@ time_filter alf_listenergain;
 /* macros */
 #define _alDCApplyFilters(s) 	_alApplyFilters(_alcCCId, s)
 
-#endif /* AL_FILTER_H_ */
+#endif /* not AL_AL_FILTER_H_ */

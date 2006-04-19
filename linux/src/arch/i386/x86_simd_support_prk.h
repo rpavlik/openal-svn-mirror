@@ -17,8 +17,10 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef _X86_SIMD_SUPPORT_H_
-#define _X86_SIMD_SUPPORT_H_
+#ifndef AL_ARCH_I386_X86_SIMD_SUPPORT_PRK_H_
+#define AL_ARCH_I386_X86_SIMD_SUPPORT_PRK_H_
+
+#include "al_siteconfig.h"
 
 #ifdef __MMX__
 /*
@@ -26,15 +28,16 @@
  * as (older) gccs are slower with them
  */
 #if __GNUC__ && !__INTEL_COMPILER
+
 #if __GNUC__ < 4
 typedef short v4hi __attribute__ ((__mode__(__V4HI__)));
 typedef int   v2si __attribute__ ((__mode__(__V2SI__)));
 typedef int   di   __attribute__ ((__mode__(__DI__)));
-#else
+#else /* __GNUC__ >= 4 */
 typedef short v4hi __attribute__ ((vector_size (8)));
 typedef int   v2si __attribute__ ((vector_size (8)));
 typedef int   di   __attribute__ ((vector_size (8)));
-#endif
+#endif /* __GNUC__ >= 4 */
 
 /* GCC 3.4 needs some explicit casts */
 #define to_v4hi(X) (v4hi)X
@@ -44,7 +47,8 @@ typedef int   di   __attribute__ ((vector_size (8)));
 #define ALIGN16(x) x __attribute__((aligned(16)))
 typedef unsigned long aint;
 
-#else /* NO GCC */
+#else /* !__GNUC__ || __INTEL_COMPILER */
+
 #include <mmintrin.h>
 typedef __m64 v4hi;
 typedef __m64 v2si;
@@ -70,10 +74,11 @@ typedef __m64 di;
 
 /* FIXME: msvc++'s long in x86_64 isn't 8bytes? */
 typedef unsigned long aint;
-#endif /* __GNUC__ */
+
+#endif /* !__GNUC__ || __INTEL_COMPILER */
 
 #define MMX_ALIGN 8
+
 #endif /* __MMX__ */
 
-#endif /* _X86_SIMD_SUPPORT_H_ */
-
+#endif /* not AL_ARCH_I386_X86_SIMD_SUPPORT_PRK_H_ */

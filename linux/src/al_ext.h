@@ -5,11 +5,10 @@
  *
  * Extension handling.
  */
-#ifndef _AL_EXT_H_
-#define _AL_EXT_H_
+#ifndef AL_AL_EXT_H_
+#define AL_AL_EXT_H_
 
 #include "al_siteconfig.h"
-
 #include "al_types.h"
 #include "al_filter.h"
 #include "al_config.h"
@@ -36,7 +35,7 @@
 /* stuff that was in the standard 1.0 headers, but shouldn't have been... */
 #ifndef AL_BYTE_LOKI
 #define AL_BYTE_LOKI                              0x100C
-#endif
+#endif /* not AL_BYTE_LOKI */
 
 
 /* bookkeeping stuff */
@@ -120,4 +119,4 @@ void alLokiTest( void *dummy );
 #define lal_GetGlobalScalar(s,t,r)   _alGetGlobalScalar(s,t,r)
 #define lal_GetGlobalVector(s,t,n,r) _alGetGlobalScalar(s,t,n,r)
 
-#endif /* _AL_EXT_H_ */
+#endif /* not AL_AL_EXT_H_ */

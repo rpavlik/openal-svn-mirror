@@ -6,9 +6,10 @@
  * Prototypes, macros and definitions related to the management of listeners.
  *
  */
-#ifndef _AL_LISTENER_H_
-#define _AL_LISTENER_H_
+#ifndef AL_AL_LISTEN_H_
+#define AL_AL_LISTEN_H_
 
+#include "al_siteconfig.h"
 #include "al_types.h"
 
 /*
@@ -21,4 +22,4 @@ void _alInitListener( AL_listener *listener );
  */
 void _alDestroyListener( AL_listener *listener );
 
-#endif /* _AL_LISTENER_H_ */
+#endif /* not AL_AL_LISTEN_H_ */

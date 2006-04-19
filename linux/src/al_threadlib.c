@@ -4,6 +4,7 @@
  * al_threadlib.c
  */
 
+#include "al_siteconfig.h"
 #include <stdlib.h>
 #include "al_threadlib.h"
 
