@@ -9,4 +9,9 @@ config.log
 config.status
 configure
 libtool
+openal-*.shar.gz
+openal-*.tar.Z
+openal-*.tar.bz2
+openal-*.tar.gz
+openal-*.zip
 stamp-h1

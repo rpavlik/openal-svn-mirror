@@ -1,5 +1,7 @@
 2006-04-19  Sven Panne  <sven.panne@aedion.de>
 
+	* .cvsignore: Ignore source distributions.
+
 	* configure.ac, admin/pkgconfig/openal-config.in,
 	admin/pkgconfig/openal.pc.in: Improved package dependencies a bit. Still
 	not perfect, but better.
