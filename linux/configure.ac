@@ -1260,7 +1260,7 @@ AC_SUBST([WARNINGCFLAGS])
 # Generate output.
 # NOTE: Do not break the following line, otherwise we are into CR/LF vs. LF
 # trouble! This is a buglet in autoconf IMHO, but easy to work around.
-AC_CONFIG_FILES([Makefile admin/Makefile admin/pkgconfig/Makefile admin/pkgconfig/openal-config admin/pkgconfig/openal.pc common/Makefile common/include/Makefile include/Makefile src/Makefile src/arch/Makefile src/arch/i386/Makefile])
+AC_CONFIG_FILES([Makefile admin/Makefile admin/pkgconfig/Makefile admin/pkgconfig/openal-config admin/pkgconfig/openal.pc admin/RPM/openal.spec common/Makefile common/include/Makefile include/Makefile src/Makefile src/arch/Makefile src/arch/i386/Makefile])
 
 AC_CONFIG_COMMANDS([default], [chmod +x admin/pkgconfig/openal-config])
 AC_OUTPUT

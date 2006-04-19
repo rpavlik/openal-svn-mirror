@@ -1,5 +1,12 @@
 2006-04-19  Sven Panne  <sven.panne@aedion.de>
 
+	* configure.ac: To guarantee version consistency, generate .spec
+	file via configure.
+
+	* admin/RPM/.cvsignore, admin/RPM/openal.spec.in: Added.
+
+	* admin/RPM/openal.spec: Removed.
+
 	* .cvsignore: Ignore source distributions.
 
 	* configure.ac, admin/pkgconfig/openal-config.in,

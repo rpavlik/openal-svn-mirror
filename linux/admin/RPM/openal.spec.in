@@ -1,5 +1,5 @@
 #
-# spec file for package openal (Version 0.0.8)
+# spec file for package openal (Version @PACKAGE_VERSION@)
 #
 # Copyright (c) 2005 SUSE LINUX Products GmbH, Nuernberg, Germany.
 # This file and all modifications and additions to the pristine
@@ -17,7 +17,7 @@ Name:         openal
 License:      LGPL
 Group:        System/Libraries
 Autoreqprov:  on
-Version:      0.0.8
+Version:      @PACKAGE_VERSION@
 Release:      1
 URL:          http://www.openal.org/
 Icon:         openal.xpm
@@ -147,6 +147,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/pkgconfig/openal.pc
 
 %changelog -n openal
+* Wed Apr 19 2006 - sven.panne@aedion.de
+- Handle version via configure
 * Thu Jan 05 2006 - sven.panne@aedion.de
 - Optimizations are enabled by default now
 * Thu Dec 22 2005 - sven.panne@aedion.de
