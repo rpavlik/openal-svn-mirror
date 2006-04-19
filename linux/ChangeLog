@@ -1,3 +1,9 @@
+2006-04-19  Sven Panne  <sven.panne@aedion.de>
+
+	* common/include/AL/alc.h, src/alc/alc_context.c: Use ALvoid and ALCvoid
+	only via pointer types, this is more in their intended spirit and works
+	around some bugs in GCC 4.2 snapshots.
+
 2006-03-23  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/arch/i386/x86_floatmul.c: work-around gcc 3.3.x bug

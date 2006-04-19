@@ -1773,7 +1773,7 @@ static ALboolean __alRingBufferInit( __ALRingBuffer * ring, ALsizei size )
 	return AL_TRUE;
 }
 
-static ALvoid __alRingBufferShutdown( __ALRingBuffer * ring )
+static void __alRingBufferShutdown( __ALRingBuffer * ring )
 {
 	free( ring->buffer );
 	ring->buffer = NULL;
@@ -1784,8 +1784,8 @@ static ALsizei __alRingBufferSize( __ALRingBuffer * ring )
 	return ring->used;
 }
 
-static ALvoid __alRingBufferPut( __ALRingBuffer * ring, ALubyte *data,
-				 ALsizei _size )
+static void __alRingBufferPut( __ALRingBuffer * ring, ALubyte *data,
+			       ALsizei _size )
 {
 	register ALsizei size = _size;
 	register ALsizei cpy;
