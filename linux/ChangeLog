@@ -1,3 +1,14 @@
+2006-04-23  Prakash Punnoor <prakash@punnoor.de>
+
+	* CMakeLists.txt: move defines into config.h, fix disabled native output
+	on Linux
+	
+	* admin/CMakeModules/FindCompilerVisibility.cmake:
+	move define into config.h
+	
+	* src/arch/i386/mixaudio16_mmx_prk.c: optimize away one instruction for
+	sign extension
+
 2006-04-19  Sven Panne  <sven.panne@aedion.de>
 
 	* src/al_bpool.h, src/al_buffer.h, src/al_config.h, src/al_cpu_caps.h,

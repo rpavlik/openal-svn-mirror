@@ -35,8 +35,7 @@ void _alMMXmemcpy(void* dst, void* src, unsigned int n);
 /* prepare sign-extension from 16bit to 32 bit for stream ST */
 #define GET_SIGNMASK(ST)							\
 	indata   = *(v4hi*)((ALshort*)entries[ST].data + offset);		\
-	signmask = to_v4hi(to_di(__builtin_ia32_pand(to_di(indata), to_di(m.v))));\
-	signmask = __builtin_ia32_pcmpeqw(signmask, m.v);
+	signmask = __builtin_ia32_psraw(indata, num_shift);
 
 /* mix stream 0 */
 #define MIX_ST0									\
@@ -104,6 +103,9 @@ void _alMMXmemcpy(void* dst, void* src, unsigned int n);
 	v2si hiout;								\
 	v2si temp;								\
 										\
+	/* work-around gcc 3.3.x bug */						\
+	const long num_shift = 16L;						\
+										\
 	samples /= sizeof(ALshort);						\
 	offset = 0;								\
 	if (samples < 40) {							\
@@ -138,19 +140,11 @@ void _alMMXmemcpy(void* dst, void* src, unsigned int n);
 /* sign-extension and mix stream; for generic function */
 #define MIX_N									\
 	indata   = *(v4hi*)((ALshort*)src->data + offset);			\
-	signmask = to_v4hi(to_di(__builtin_ia32_pand(to_di(indata), to_di(m.v))));\
-	signmask = __builtin_ia32_pcmpeqw(signmask, m.v);			\
+	signmask = __builtin_ia32_psraw(indata, num_shift);			\
 	temp  = to_v2si(__builtin_ia32_punpcklwd(indata, signmask));		\
 	loout = __builtin_ia32_paddd(loout, temp);				\
 	temp  = to_v2si(__builtin_ia32_punpckhwd(indata, signmask));		\
 	hiout = __builtin_ia32_paddd(hiout, temp);
-
-
-
-union {
-	unsigned short s[4];
-	v4hi v;
-} ALIGN16(m) = {{0x8000, 0x8000, 0x8000, 0x8000}};
 
 
 void MixAudio16_MMX_n(ALshort *dst, alMixEntry *entries, ALuint numents)
