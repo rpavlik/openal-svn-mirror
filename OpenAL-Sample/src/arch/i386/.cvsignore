@@ -1,6 +1,0 @@
-*.la
-*.lo
-.libs
-Makefile
-Makefile.in
-x86_cpu_caps_detect_prk.lo.lst
