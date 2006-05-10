@@ -781,14 +781,14 @@ int main(int argc, char* argv[])
 	eaxSet = (EAXSet)alGetProcAddress(szFnName);
 
 	if (eaxSet == NULL)
-		g_bEAX = false;
+		g_bEAX = AL_FALSE;
 
 	sprintf((char*)szFnName,"EAXGet");
 
 	eaxGet = (EAXGet)alGetProcAddress(szFnName);
 
 	if (eaxGet == NULL)
-		g_bEAX = false;
+		g_bEAX = AL_FALSE;
 #endif
 
 	/* *** Main Menu *** */
@@ -1060,26 +1060,26 @@ zero objects are requested, the call should be the equivalent of a NOP.
 */
 ALvoid FA_RequestObjectNames(ALvoid)
 {
-	bool localResultOK;
+	ALboolean localResultOK;
 	ALuint testSources[4], testBuffers[4];
 	ALint error;
 
 	printf("\nRequest Object Names Test. ");
 	alGetError(); /* clear error state */
-	localResultOK = true;
+	localResultOK = AL_TRUE;
 	alGenBuffers(0, testBuffers); /* should be equivalent to NOP */
 	error = alGetError();
 	if (error != AL_NO_ERROR)
 	{
-		localResultOK = false;
+		localResultOK = AL_FALSE;
 	}
 	alGenSources(0, testSources); /* should be equivalent to NOP */
 	error = alGetError();
 	if (error != AL_NO_ERROR)
 	{
-		localResultOK = false;
+		localResultOK = AL_FALSE;
 	}
-	if (localResultOK == true)
+	if (localResultOK == AL_TRUE)
 	{
 		printf("PASSED.");
 	} else
@@ -1097,26 +1097,26 @@ AL_INVALID_VALUE error should be generated.
 */
 ALvoid FA_ReleaseObjectNames (ALvoid)
 {
-	bool localResultOK;
+	ALboolean localResultOK;
 	ALuint testSources[4], testBuffers[4];
 	ALint error;
 
 	printf("\nReleasing Object Names Test. ");
 	alGetError();
-	localResultOK = true;
+	localResultOK = AL_TRUE;
 	alDeleteBuffers((ALuint)-1, testBuffers); /* invalid -- make sure error code comes back */
 	error = alGetError();
 	if (error == AL_NO_ERROR)
 	{
-		localResultOK = false;
+		localResultOK = AL_FALSE;
 	}
 	alDeleteSources((ALuint)-1, testSources); /* invalid -- make sure error code comes back */
 	error = alGetError();
 	if (error == AL_NO_ERROR)
 	{
-		localResultOK = false;
+		localResultOK = AL_FALSE;
 	}
-	if (localResultOK == true)
+	if (localResultOK == AL_TRUE)
 	{
 		printf("PASSED.");
 	} else
@@ -1134,41 +1134,41 @@ invalid objects to confirm a negative result.
 */
 ALvoid FA_ValidateObjectNames (ALvoid)
 {
-	bool localResultOK;
+	ALboolean localResultOK;
 	ALuint testSources[4], testBuffers[4];
 	ALint error;
 
 	printf("\nValidating Object Names Test. ");
 	alGetError();
-	localResultOK = true;
+	localResultOK = AL_TRUE;
 	alGenBuffers(1, testBuffers);
 	alGenSources(1, testSources);
 	error = alGetError();
 	if (error != AL_NO_ERROR)
 	{
-		localResultOK = false;
+		localResultOK = AL_FALSE;
 	} else
 	{
 		if (alIsBuffer(testBuffers[0]) == AL_FALSE) /* this buffer should test as valid */
 		{
-			localResultOK = false;
+			localResultOK = AL_FALSE;
 		}
 		if (alIsSource(testSources[0]) == AL_FALSE) /* this source should test as valid */
 		{
-			localResultOK = false;
+			localResultOK = AL_FALSE;
 		}
 		if (alIsBuffer(testBuffers[0] + 1) == AL_TRUE) /* this buffer should be invalid */
 		{
-			localResultOK = false;
+			localResultOK = AL_FALSE;
 		}
 		if (alIsSource(testSources[0] + 1) == AL_TRUE) /* this source should be invalid */
 		{
-			localResultOK = false;
+			localResultOK = AL_FALSE;
 		}
 		alDeleteBuffers(1, testBuffers);
 		alDeleteSources(1, testSources);
 	}
-	if (localResultOK == true)
+	if (localResultOK == AL_TRUE)
 	{
 		printf("PASSED.");
 	} else
@@ -1186,12 +1186,12 @@ AL_INITIAL, AL_PLAYING, AL_PAUSED, and AL_STOPPED.
 */
 ALvoid FA_StateTransition (ALvoid)
 {
-	bool localResultOK;
+	ALboolean localResultOK;
 	ALuint testSources[4];
 
 	printf("\nState Transition Test. ");
 	alGetError();
-	localResultOK = true;
+	localResultOK = AL_TRUE;
 	alGenSources(1, testSources);
 	alSourcei(testSources[0], AL_BUFFER, g_Buffers[0]);
 	alSourcei(testSources[0], AL_LOOPING, AL_TRUE);
@@ -1199,37 +1199,37 @@ ALvoid FA_StateTransition (ALvoid)
 	alGetSourcei(testSources[0], AL_SOURCE_STATE, &sourceState);
 	if (sourceState != AL_INITIAL)
 	{
-		localResultOK = false;
+		localResultOK = AL_FALSE;
 	}
 	alSourcePlay(testSources[0]);
 	delay_ms(500);
 	alGetSourcei(testSources[0], AL_SOURCE_STATE, &sourceState);
 	if (sourceState != AL_PLAYING)
 	{
-		localResultOK = false;
+		localResultOK = AL_FALSE;
 	}
 	alSourcePause(testSources[0]);
 	delay_ms(500);
 	alGetSourcei(testSources[0], AL_SOURCE_STATE, &sourceState);
 	if (sourceState != AL_PAUSED)
 	{
-		localResultOK = false;
+		localResultOK = AL_FALSE;
 	}
 	alSourcePlay(testSources[0]);
 	delay_ms(500);
 	alGetSourcei(testSources[0], AL_SOURCE_STATE, &sourceState);
 	if (sourceState != AL_PLAYING)
 	{
-		localResultOK = false;
+		localResultOK = AL_FALSE;
 	}
 	alSourceStop(testSources[0]);
 	delay_ms(500);
 	alGetSourcei(testSources[0], AL_SOURCE_STATE, &sourceState);
 	if (sourceState != AL_STOPPED)
 	{
-		localResultOK = false;
+		localResultOK = AL_FALSE;
 	}
-	if (localResultOK == true)
+	if (localResultOK == AL_TRUE)
 	{
 		printf("PASSED.");
 	} else
@@ -1249,13 +1249,13 @@ AL_PAUSED, and AL_STOPPED.
 */	
 ALvoid FA_VectorStateTransition (ALvoid)
 {
-	bool localResultOK;
+	ALboolean localResultOK;
 	ALuint testSources[4];
 	ALenum sourceState;
 
 	printf("\nVector State Transition Test. ");
 	alGetError();
-	localResultOK = true;
+	localResultOK = AL_TRUE;
 	alGenSources(2, testSources);
 	alSourcei(testSources[0], AL_BUFFER, g_Buffers[0]);
 	alSourcei(testSources[1], AL_BUFFER, g_Buffers[1]);
@@ -1264,13 +1264,13 @@ ALvoid FA_VectorStateTransition (ALvoid)
 	alGetSourcei(testSources[0], AL_SOURCE_STATE, &sourceState);
 	if (sourceState != AL_INITIAL)
 	{
-		localResultOK = false;
+		localResultOK = AL_FALSE;
 		printf("FAILED -- AL_INITIAL 0");
 	}
 	alGetSourcei(testSources[1], AL_SOURCE_STATE, &sourceState);
 	if (sourceState != AL_INITIAL)
 	{
-		localResultOK = false;
+		localResultOK = AL_FALSE;
 		printf("FAILED -- AL_INITIAL 1");
 	}
 	alSourcePlayv(2, &testSources[0]);
@@ -1278,13 +1278,13 @@ ALvoid FA_VectorStateTransition (ALvoid)
 	alGetSourcei(testSources[0], AL_SOURCE_STATE, &sourceState);
 	if (sourceState != AL_PLAYING)
 	{
-		localResultOK = false;
+		localResultOK = AL_FALSE;
 		printf("FAILED -- AL_PLAYING 0");
 	}
 	alGetSourcei(testSources[1], AL_SOURCE_STATE, &sourceState);
 	if (sourceState != AL_PLAYING)
 	{
-		localResultOK = false;
+		localResultOK = AL_FALSE;
 		printf("FAILED -- AL_PLAYING 1");
 	}
 	alSourcePausev(2, &testSources[0]);
@@ -1292,13 +1292,13 @@ ALvoid FA_VectorStateTransition (ALvoid)
 	alGetSourcei(testSources[0], AL_SOURCE_STATE, &sourceState);
 	if (sourceState != AL_PAUSED)
 	{
-		localResultOK = false;
+		localResultOK = AL_FALSE;
 		printf("FAILED -- AL_PAUSED 0");
 	}
 	alGetSourcei(testSources[1], AL_SOURCE_STATE, &sourceState);
 	if (sourceState != AL_PAUSED)
 	{
-		localResultOK = false;
+		localResultOK = AL_FALSE;
 		printf("FAILED -- AL_PAUSED 1");
 	}
 	alSourcePlayv(2, &testSources[0]);
@@ -1306,13 +1306,13 @@ ALvoid FA_VectorStateTransition (ALvoid)
 	alGetSourcei(testSources[0], AL_SOURCE_STATE, &sourceState);
 	if (sourceState != AL_PLAYING)
 	{
-		localResultOK = false;
+		localResultOK = AL_FALSE;
 		printf("FAILED -- AL_PLAYING 0A");
 	}
 	alGetSourcei(testSources[1], AL_SOURCE_STATE, &sourceState);
 	if (sourceState != AL_PLAYING)
 	{
-		localResultOK = false;
+		localResultOK = AL_FALSE;
 		printf("FAILED -- AL_PLAYING 1A");
 	}
 	alSourceStopv(2, &testSources[0]);
@@ -1320,16 +1320,16 @@ ALvoid FA_VectorStateTransition (ALvoid)
 	alGetSourcei(testSources[0], AL_SOURCE_STATE, &sourceState);
 	if (sourceState != AL_STOPPED)
 	{
-		localResultOK = false;
+		localResultOK = AL_FALSE;
 		printf("FAILED -- AL_STOPPED 0");
 	}
 	alGetSourcei(testSources[1], AL_SOURCE_STATE, &sourceState);
 	if (sourceState != AL_STOPPED)
 	{
-		localResultOK = false;
+		localResultOK = AL_FALSE;
 		printf("FAILED -- AL_STOPPED 1");
 	}
-	if (localResultOK == true)
+	if (localResultOK == AL_TRUE)
 	{
 		printf("PASSED.");
 	} else
@@ -1373,7 +1373,7 @@ This test checks that the implementation's enumeration values are correct.
 */
 ALvoid FA_EnumerationValue(ALvoid)
 {
-	bool result = true;
+	ALboolean result = AL_TRUE;
 	int i = 0;
 	int getVal;
 
@@ -1392,7 +1392,7 @@ ALvoid FA_EnumerationValue(ALvoid)
 			if (getVal != enumeration[i].value)
 			{
 				printf("\n%s has an invalid enum value.", enumeration[i].enumName);
-				result = false;
+				result = AL_FALSE;
 			}
 			i++;
 		} else {
@@ -1400,13 +1400,13 @@ ALvoid FA_EnumerationValue(ALvoid)
 			if (getVal != enumeration[i].value)
 			{
 				printf("\n%s has an invalid enum value.", enumeration[i].enumName);
-				result = false;
+				result = AL_FALSE;
 			}
 			i++;
 		}
 	}
 	
-	if (result == true)
+	if (result == AL_TRUE)
 	{
 		printf("PASSED.");
 	} else
@@ -1427,10 +1427,10 @@ ALvoid FA_QueuingUnderrunStates(ALvoid)
 	ALuint bufferName;
 	ALuint error;
 	ALint tempInt;
-	bool localResultOK;
+	ALboolean localResultOK;
 
 	printf("\nQueuing Underrun States Test. ");
-	localResultOK = true;
+	localResultOK = AL_TRUE;
 	alGetError();
 	alGenSources(1, testSources);
 	alSourcei(testSources[0], AL_BUFFER, 0);
@@ -1438,32 +1438,32 @@ ALvoid FA_QueuingUnderrunStates(ALvoid)
 	if ((error = alGetError()) != AL_NO_ERROR)
 		DisplayALError((ALbyte *) "Init error : ", error);
 	alSourceQueueBuffers(testSources[0], 1, &g_Buffers[1]);
-	if ((error = alGetError()) != AL_NO_ERROR) localResultOK = false;
+	if ((error = alGetError()) != AL_NO_ERROR) localResultOK = AL_FALSE;
 	alSourcePlay(testSources[0]);
 	delay_ms(1000);
 	alGetSourcei(testSources[0], AL_SOURCE_STATE, &tempInt);
-	if (tempInt != AL_STOPPED) localResultOK = false;
+	if (tempInt != AL_STOPPED) localResultOK = AL_FALSE;
 	alGetSourcei(testSources[0], AL_BUFFERS_PROCESSED, &tempInt);
 	if (tempInt != 1)
 	{
-		localResultOK = false;
+		localResultOK = AL_FALSE;
 	} else
 	{
 		alSourceUnqueueBuffers(testSources[0], tempInt, &bufferName);
 	}
 	alSourceQueueBuffers(testSources[0], 1, &g_Buffers[1]);
-	if ((error = alGetError()) != AL_NO_ERROR) localResultOK = false;
+	if ((error = alGetError()) != AL_NO_ERROR) localResultOK = AL_FALSE;
 	alSourcePlay(testSources[0]);
 	delay_ms(100);
 	alGetSourcei(testSources[0], AL_SOURCE_STATE, &tempInt);
-	if (tempInt != AL_PLAYING) localResultOK = false;
+	if (tempInt != AL_PLAYING) localResultOK = AL_FALSE;
 		
 	/* cleanup */
 	alSourcei(testSources[0], AL_BUFFER, 0);
 	alDeleteSources(1, testSources);
 	
 	/* display result */
-	if (localResultOK == true)
+	if (localResultOK == AL_TRUE)
 	{
 		printf("PASSED.");
 	} else
@@ -1626,7 +1626,7 @@ ALvoid SA_Position(ALvoid)
 	
 		printf("Trying Left-to-Right sweep by moving listener(Press Return):\n");
 		CRToContinue();
-		alSourcei(testSources[0], AL_LOOPING, true);
+		alSourcei(testSources[0], AL_LOOPING, AL_TRUE);
 		alListener3f(AL_POSITION, 100.0, 0.0, 0.0);
 		alGetListener3f(AL_POSITION, &tempFVect[0], &tempFVect[1], &tempFVect[2]);
 		if ((tempFVect[0] != 100.0) || (tempFVect[1] != 0.0) || (tempFVect[2] != 0.0))
@@ -1648,7 +1648,7 @@ ALvoid SA_Position(ALvoid)
 		alSourceStop(testSources[0]);
 		printf("Trying Left-to-Right sweep by moving source (Press Return):\n");
 		CRToContinue();
-		alSourcei(testSources[0], AL_LOOPING, true);
+		alSourcei(testSources[0], AL_LOOPING, AL_TRUE);
 		alSource3f(testSources[0], AL_POSITION, -100.0, 0.0, 0.0);
 		alSourcePlay(testSources[0]);
 		for (i = -100; i < 100; i++)
@@ -1660,7 +1660,7 @@ ALvoid SA_Position(ALvoid)
 		alSourceStop(testSources[0]);
 		printf("Trying Back-to-Front sweep (Press Return):\n");
 		CRToContinue();
-		alSourcei(testSources[0], AL_LOOPING, true);
+		alSourcei(testSources[0], AL_LOOPING, AL_TRUE);
 		alSource3f(testSources[0], AL_POSITION, 0.0, 0.0, -100.0);
 		alGetSource3f(testSources[0], AL_POSITION, &tempFVect[0], &tempFVect[1], &tempFVect[2]);
 		if ((tempFVect[0] != 0.0) || (tempFVect[1] != 0.0) || (tempFVect[2] != -100.0))
@@ -1711,7 +1711,7 @@ ALvoid SA_SourceRelative(ALvoid)
 		CRToContinue();
 		alListener3f(AL_POSITION, 100.0, 0.0, 0.0);
 		alListenerfv(AL_ORIENTATION, listenerOri);
-		alSourcei(testSources[0], AL_LOOPING, true);
+		alSourcei(testSources[0], AL_LOOPING, AL_TRUE);
 		alSource3f(testSources[0], AL_POSITION, -10.0, 0.0, 0.0);
 		alSourcePlay(testSources[0]);
 		for (i = 00; i < 100; i++)
@@ -1725,7 +1725,7 @@ ALvoid SA_SourceRelative(ALvoid)
 		printf("Turning on source relative mode, placing Listener at (100, 0, 0), and sweeping source from (0, 0, 0) to (100, 0, 0).  The sound should pan from center to right (Press Return):\n");
 		CRToContinue();
 		alSourcei(testSources[0], AL_SOURCE_RELATIVE, AL_TRUE);
-		alSourcei(testSources[0], AL_LOOPING, true);
+		alSourcei(testSources[0], AL_LOOPING, AL_TRUE);
 		alSource3f(testSources[0], AL_POSITION, -100.0, 0.0, 0.0);
 		alSourcePlay(testSources[0]);
 		for (i = 0; i < 100; i++)
@@ -1779,7 +1779,7 @@ ALvoid SA_ListenerOrientation (ALvoid)
 		listenerOri[4]=1.0;
 		listenerOri[5]=0.0;
 		alListenerfv(AL_ORIENTATION, listenerOri);
-		alSourcei(testSources[0], AL_LOOPING, true);
+		alSourcei(testSources[0], AL_LOOPING, AL_TRUE);
 		alSourcePlay(testSources[0]);
 		delay_ms(4000);
 		alSourceStop(testSources[0]);
@@ -1937,7 +1937,7 @@ ALvoid SA_MinMaxGain(ALvoid)
 		CRToContinue();
 		alSourcef(testSources[0], AL_GAIN, 1.0);
 		alSourcef(testSources[0], AL_MAX_GAIN, 1.0);
-		alSourcei(testSources[0], AL_LOOPING, false);
+		alSourcei(testSources[0], AL_LOOPING, AL_FALSE);
 		alSourcePlay(testSources[0]);
 
 		printf("The source will be played at GAIN 0.1 with MIN gain set to 0.6.  This should be at medium volume. (Press Return):\n");
@@ -1996,7 +1996,7 @@ ALvoid SA_ReferenceDistance(ALvoid)
 		CRToContinue();
 		alSource3f(testSources[0], AL_POSITION, 0.0, 0.0, -10.0);
 		alSourcef(testSources[0], AL_REFERENCE_DISTANCE, 1.0);
-		alSourcei(testSources[0], AL_LOOPING, false);
+		alSourcei(testSources[0], AL_LOOPING, AL_FALSE);
 		alSourcePlay(testSources[0]);
 		
 		printf("The source will be played with the reference distance set to 3.0.  This should be medium volume. (Press Return):\n");
@@ -2039,7 +2039,7 @@ ALvoid SA_RolloffFactor(ALvoid)
 		printf("The source will be played with the rolloff factor set to 0.0.  This should be high volume. (Press Return):\n");
 		CRToContinue();
 		alSource3f(testSources[0], AL_POSITION, 0.0, 0.0, -10.0);
-		alSourcei(testSources[0], AL_LOOPING, false);
+		alSourcei(testSources[0], AL_LOOPING, AL_FALSE);
 		alSourcef(testSources[0], AL_ROLLOFF_FACTOR, 0.0);
 		alSourcePlay(testSources[0]);
 
@@ -2087,7 +2087,7 @@ ALvoid SA_DistanceModel(ALvoid)
 		CRToContinue();
 		alSource3f(testSources[0], AL_POSITION, 0.0, 0.0, -10.0);
 		alDistanceModel(AL_INVERSE_DISTANCE);
-		alSourcei(testSources[0], AL_LOOPING, false);
+		alSourcei(testSources[0], AL_LOOPING, AL_FALSE);
 		alSourcePlay(testSources[0]);
 		
 		printf("The source will be placed at (0, 0, -1). This should be high volume. (Press Return):\n");
@@ -2158,7 +2158,7 @@ ALvoid SA_Doppler(ALvoid)
 		printf("Trying Left-to-Right sweep with doppler shift, and the speed of sound at its default setting (Press Return):\n");
 		CRToContinue();
 		alListenerfv(AL_ORIENTATION, listenerOri);
-		alSourcei(testSources[0], AL_LOOPING, true);
+		alSourcei(testSources[0], AL_LOOPING, AL_TRUE);
 		alSource3f(testSources[0], AL_POSITION, -100.0, 0.0, 0.0);
 		alSource3f(testSources[0], AL_VELOCITY, 10.0, 0.0, 0.0);
 		alSourcefv(testSources[0], AL_DIRECTION, sourceDir);
@@ -2243,7 +2243,7 @@ ALvoid SA_Frequency(ALvoid)
 	
 		printf("A source will be played fifteen times -- going from one-half to double it's native frequency (Press Return):\n");
 		CRToContinue();
-		alSourcei(testSources[0], AL_LOOPING, false);
+		alSourcei(testSources[0], AL_LOOPING, AL_FALSE);
 		for (i = 0; i < 15; i++)
 		{
 			alSourcef(testSources[0], AL_PITCH,
@@ -2421,7 +2421,7 @@ ALvoid I_BufferTest(ALvoid)
 
 	alSourcei(source[0],AL_LOOPING,AL_FALSE);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING true: \n", error);
+		DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING AL_TRUE: \n", error);
 
 	printf("Buffer Test\n");
 	printf("Press '1' to play buffer 0 on source 0\n");
@@ -2534,7 +2534,7 @@ ALvoid I_PositionTest(ALvoid)
 
 	alSourcei(source[0],AL_LOOPING,AL_TRUE);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING true: \n", error);
+		DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING AL_TRUE: \n", error);
 
 
 	alSourcef(source[1],AL_PITCH,1.0f);
@@ -2559,7 +2559,7 @@ ALvoid I_PositionTest(ALvoid)
 
 	alSourcei(source[1],AL_LOOPING,AL_FALSE);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError((ALbyte *) "alSourcei 1 AL_LOOPING false: \n", error);
+		DisplayALError((ALbyte *) "alSourcei 1 AL_LOOPING AL_FALSE: \n", error);
 
 	printf("Position Test\n");
 	printf("Press '1' to play source 0 (looping) rear left of listener\n");
@@ -2664,7 +2664,7 @@ ALvoid I_LoopingTest(ALvoid)
 
 	alSourcei(source[0],AL_LOOPING,AL_FALSE);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING false : \n", error);
+		DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING AL_FALSE : \n", error);
 
 
 	alSourcef(source[1],AL_PITCH,1.0f);
@@ -2689,7 +2689,7 @@ ALvoid I_LoopingTest(ALvoid)
 
 	alSourcei(source[1],AL_LOOPING,AL_FALSE);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError((ALbyte *) "alSourcei 1 AL_LOOPING false: \n", error);
+		DisplayALError((ALbyte *) "alSourcei 1 AL_LOOPING AL_FALSE: \n", error);
 
 	printf("Looping Test\n");
 	printf("Press '1' to play source 0 once (single shot)\n");
@@ -2826,7 +2826,7 @@ ALvoid I_EAXTest(ALvoid)
 
 	alSourcei(source[0],AL_LOOPING,AL_TRUE);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING true: \n", error);
+		DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING AL_TRUE: \n", error);
 
 
 	alSourcef(source[1],AL_PITCH,1.0f);
@@ -2851,7 +2851,7 @@ ALvoid I_EAXTest(ALvoid)
 
 	alSourcei(source[1],AL_LOOPING,AL_FALSE);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError((ALbyte *) "alSourcei 1 AL_LOOPING false: \n", error);
+		DisplayALError((ALbyte *) "alSourcei 1 AL_LOOPING AL_FALSE: \n", error);
 
 	printf("EAX Test\n\n");
 	printf("Press '1' to play source 0 (looping)\n");
@@ -3022,9 +3022,9 @@ ALvoid I_QueueTest(ALvoid)
 
 	alSourcei(source[0],AL_LOOPING,AL_FALSE);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcei 0 AL_LOOPING false: ", error);
+		DisplayALError("alSourcei 0 AL_LOOPING AL_FALSE: ", error);
 
-	bLooping = false;
+	bLooping = AL_FALSE;
 
 	printf("Queue Test\n\n");
 	printf("Press '1' to start playing source 0\n");
@@ -3352,7 +3352,7 @@ ALvoid I_FreqTest(ALvoid)
 
 	alSourcei(source[0],AL_LOOPING,AL_TRUE);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING true: \n", error);
+		DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING AL_TRUE: \n", error);
 
 	printf("Frequency Test\n");
 	printf("Press '1' to play source 0 (looping)\n");
@@ -3412,7 +3412,7 @@ ALvoid I_StereoTest(ALvoid)
 	ALuint	Buffer;
 	ALint	BuffersInQueue, BuffersProcessed;
 	ALbyte	ch;
-	ALboolean bLoop = true;
+	ALboolean bLoop = AL_TRUE;
 	ALfloat source0Pos[]={ 1.0, 0.0,-1.0};	/* Front and right of the listener */
 	ALfloat source0Vel[]={ 0.0, 0.0, 0.0};
 
@@ -3462,7 +3462,7 @@ ALvoid I_StereoTest(ALvoid)
 				/* Set looping */
 				alSourcei(source[0],AL_LOOPING,bLoop);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING true: \n", error);
+					DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING AL_TRUE: \n", error);
 
 				/* Play source */
 				alSourcePlay(source[0]);
@@ -3644,7 +3644,7 @@ ALvoid I_GainTest(ALvoid)
 
 	alSourcei(source[0],AL_LOOPING,AL_TRUE);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING true: \n", error);
+		DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING AL_TRUE: \n", error);
 
 
 	alSourcef(source[1],AL_PITCH,1.0f);
@@ -3669,7 +3669,7 @@ ALvoid I_GainTest(ALvoid)
 
 	alSourcei(source[1],AL_LOOPING,AL_TRUE);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError((ALbyte *) "alSourcei 1 AL_LOOPING true: \n", error);
+		DisplayALError((ALbyte *) "alSourcei 1 AL_LOOPING AL_TRUE: \n", error);
 
 	printf("Gain Test\n");
 	printf("Press '1' to play source 0 (looping)\n");
@@ -4092,7 +4092,7 @@ ALvoid I_SourceRelativeTest()
 
 	alSourcei(source[0],AL_LOOPING,AL_TRUE);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcei 0 AL_LOOPING true: ", error);
+		DisplayALError("alSourcei 0 AL_LOOPING AL_TRUE: ", error);
 
 	alSourcei(source[0], AL_SOURCE_RELATIVE, AL_FALSE);	
 	if ((error = alGetError()) != AL_NO_ERROR)
@@ -4126,14 +4126,14 @@ ALvoid I_SourceRelativeTest()
 		case '3':
 			if (bRelative)
 			{
-				printf("Source Relative == FALSE\r");
+				printf("Source Relative == AL_FALSE\r");
 				alSourcei(source[0], AL_SOURCE_RELATIVE, AL_FALSE);
 				bRelative = AL_FALSE;
 			}
 			else
 			{
 				alSourcei(source[0], AL_SOURCE_RELATIVE, AL_TRUE);
-				printf("Source Relative == TRUE \r");
+				printf("Source Relative == AL_TRUE \r");
 				bRelative = AL_TRUE;
 			}
 			if ((error = alGetError()) != AL_NO_ERROR)
@@ -4191,7 +4191,7 @@ ALvoid I_SourceRolloffTest()
 
 	alSourcei(source[0],AL_LOOPING,AL_TRUE);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcei 0 AL_LOOPING true: ", error);
+		DisplayALError("alSourcei 0 AL_LOOPING AL_TRUE: ", error);
 
 	alSourcefv(source[1],AL_POSITION,source1Pos);
 	if ((error = alGetError()) != AL_NO_ERROR)
@@ -4203,7 +4203,7 @@ ALvoid I_SourceRolloffTest()
 
 	alSourcei(source[1],AL_LOOPING,AL_TRUE);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcei 1 AL_LOOPING false: ", error);
+		DisplayALError("alSourcei 1 AL_LOOPING AL_FALSE: ", error);
 
 	printf("Source Roll-off Test\n");
 	printf("Press '1' to play source 0 rear left of listener\n");
@@ -4400,7 +4400,7 @@ ALvoid I_VelocityTest()
 
 	alSourcei(source,AL_LOOPING,AL_TRUE);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcei 0 AL_LOOPING true: \n", error);
+		DisplayALError("alSourcei 0 AL_LOOPING AL_TRUE: \n", error);
 
 	alListenerfv(AL_POSITION, listenerPos);
 	alListenerfv(AL_VELOCITY, listenerVel);
@@ -5246,7 +5246,7 @@ ALvoid I_VorbisTest()
       ALuint source[3];
       ALuint tempBuffers[4];
       ALbyte ch;
-      ALboolean bLoop = false;
+      ALboolean bLoop = AL_FALSE;
 
       alGetError(); /* reset error state */
 
@@ -5294,7 +5294,7 @@ ALvoid I_VorbisTest()
 				/* Set looping */
 				alSourcei(source[0],AL_LOOPING,bLoop);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING true: \n", error);
+					DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING AL_TRUE: \n", error);
 
 				/* Play source */
 				alSourcePlay(source[0]);

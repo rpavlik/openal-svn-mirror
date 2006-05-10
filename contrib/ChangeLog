@@ -1,5 +1,8 @@
 2006-05-10  Sven Panne  <sven.panne@aedion.de>
 
+	* tests/altest/altest.c: Use ALboolean instead of bool. Compiles again
+	on Linux as a plain C program.
+
 	* tests/altest/altest.c(I_QueueTest): Use arrays instead of new/delete.
 
 	* tests/altest/altest.c: Simplified header inclusion.
