@@ -41,6 +41,18 @@
  "*** Main Menu ***".
   */
 
+#define FILENAME_BOOM      "sounds/boom.ogg"
+#define FILENAME_DING      "sounds/ding.wav"
+#define FILENAME_FOOTADPCM "sounds/footadpcm.wav"
+#define FILENAME_FOOTSTEPS "sounds/footsteps.wav"
+#define FILENAME_STEREO    "sounds/stereo.wav"
+#define FILENAME_WAVE1     "sounds/wave1.wav"
+#define FILENAME_WAVE2     "sounds/wave2.wav"
+#define FILENAME_WAVE3     "sounds/wave3.wav"
+#define FILENAME_WAVE4     "sounds/wave4.wav"
+
+#define FILENAME_RECORDING "recording.wav"
+
 #define _CRT_SECURE_NO_DEPRECATE /* get rid of sprintf security warnings on VS2005 */
 
 #define INITGUID
@@ -734,13 +746,13 @@ int main(int argc, char* argv[])
 	}
 
 	/* Load in samples to be used by Test functions */
-	if ((!LoadWave("Footsteps.wav", g_Buffers[0])) ||
-		(!LoadWave("ding.wav", g_Buffers[1])) ||
-		(!LoadWave("Wave1.WAV", g_Buffers[2])) ||
-		(!LoadWave("Wave2.WAV", g_Buffers[3])) ||
-		(!LoadWave("Wave3.WAV", g_Buffers[4])) ||
-		(!LoadWave("Wave4.WAV", g_Buffers[5])) ||
-		(!LoadWave("stereo.wav", g_Buffers[6])))
+	if ((!LoadWave(FILENAME_FOOTSTEPS, g_Buffers[0])) ||
+		(!LoadWave(FILENAME_DING, g_Buffers[1])) ||
+		(!LoadWave(FILENAME_WAVE1, g_Buffers[2])) ||
+		(!LoadWave(FILENAME_WAVE2, g_Buffers[3])) ||
+		(!LoadWave(FILENAME_WAVE3, g_Buffers[4])) ||
+		(!LoadWave(FILENAME_WAVE4, g_Buffers[5])) ||
+		(!LoadWave(FILENAME_STEREO, g_Buffers[6])))
 	{
 		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
 		exit(-1);
@@ -751,10 +763,10 @@ int main(int argc, char* argv[])
 	void *ovdata;	
 
 	FILE *fh;
-	fh = fopen("boom.ogg", "rb");
+	fh = fopen(FILENAME_BOOM, "rb");
 	if (fh != NULL) {
 		structStat sbuf;
-		if (stat("boom.ogg", &sbuf) != -1) {
+		if (stat(FILENAME_BOOM, &sbuf) != -1) {
 			g_ovSize = sbuf.st_size;
 			ovdata = malloc(g_ovSize);
 
@@ -762,7 +774,7 @@ int main(int argc, char* argv[])
 				ALenum formatVorbis = alGetEnumValue("AL_FORMAT_VORBIS_EXT");
 				fread(ovdata, 1, g_ovSize, fh);
 
-			        /* Copy boom.ogg data into AL Buffer 7 */
+			        /* Copy boom data into AL Buffer 7 */
 				alGetError();
 				alBufferData(g_Buffers[7], formatVorbis, ovdata, g_ovSize, 1);
 				error = alGetError();
@@ -3856,10 +3868,10 @@ ALvoid I_StreamingTest(ALvoid)
 
 	printf("Streaming Test\n");
 
-	fp = fopen("stereo.wav", "rb");
+	fp = fopen(FILENAME_STEREO, "rb");
 	if (fp == NULL)
 	{
-		printf("Failed to open stereo.wav\n");
+	  printf("Failed to open %s\n", FILENAME_STEREO);
 		return;
 	}
 
@@ -4313,13 +4325,13 @@ ALvoid I_ADPCMTest()
 	eMonoADPCM = alGetEnumValue("AL_FORMAT_MONO_IMA4");
 	eStereoADPCM = alGetEnumValue("AL_FORMAT_STEREO_IMA4");
 
-	if (eMonoADPCM && eStereoADPCM)
+	if (1 || (eMonoADPCM && eStereoADPCM))
 	{
-		/* Load footadpcm.wav */
-		getWAVData("footadpcm.wav",&format,&data,&size,&freq,&loop);
+		/* Load ADPCM data */
+		getWAVData(FILENAME_FOOTADPCM,&format,&data,&size,&freq,&loop);
 		if (alGetError() != AL_NO_ERROR)
 		{
-			printf("Failed to load footadpcm.wav\n");
+			printf("Failed to load %s\n", FILENAME_FOOTADPCM);
 			return;
 		}
 
@@ -4503,7 +4515,7 @@ ALvoid I_GetSourceOffsetTest()
 	alSourcei(Source, AL_BUFFER, g_Buffers[6]);
 
 	printf("Get Source Offset Test\n");
-	printf("Press 1 to Play Stereo.wav\n");
+	printf("Press 1 to Play %s\n", FILENAME_STEREO);
 	printf("Press 2 to Use AL_BYTE_OFFSET (int) to track progress\n");
 	printf("Press 3 to Use AL_SAMPLE_OFFSET (int) to track progress\n");
 	printf("Press 4 to Use AL_SEC_OFFSET (int) to track progress\n");
@@ -4930,7 +4942,7 @@ ALvoid I_CaptureTest()
 		printf("Press 2 to Stop Recording\n");
 		printf("Press Q to quit\n");
 
-		pFile = fopen("recording.wav", "wb");
+		pFile = fopen(FILENAME_RECORDING, "wb");
 
 		sprintf(waveHeader.szRIFF, "RIFF");
 		waveHeader.lRIFFSize = 0;
@@ -5355,9 +5367,9 @@ ALvoid I_VorbisTest()
                 alSourcei(source[2], AL_BUFFER, 0);
 		   
                 /* Queue buffers */
-		        fp = fopen("boom.ogg", "rb");
+		        fp = fopen(FILENAME_BOOM, "rb");
 		        if (fp == NULL) {
-					printf("Failed to open boom.ogg\n");
+			  printf("Failed to open %s\n", FILENAME_BOOM);
 					break;
 				}
 		   
