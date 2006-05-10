@@ -1,5 +1,7 @@
 2006-05-10  Sven Panne  <sven.panne@aedion.de>
 
+	* tests/altest/altest.c: Centralized #if for _kbhit().
+
 	* tests/altest/altest.c(main,I_QueueTest,I_StereoTest): Remove #ifs for
 	ancient OpenAL versions on Linux.
 

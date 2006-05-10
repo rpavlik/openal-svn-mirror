@@ -83,6 +83,13 @@
 #define structStat struct stat
 #endif
 
+#if defined(_WIN32)
+#include <conio.h>
+#define KBHIT() _kbhit()
+#else
+#define KBHIT() 1
+#endif
+
 #include <ctype.h>
 #include <math.h>
 #include <stdio.h>
@@ -3861,11 +3868,7 @@ ALvoid I_StreamingTest(ALvoid)
 	ulBuffersAvailable = NUMBUFFERS;
 	ulDataSize = wave.dataSize;
 
-#ifdef _WIN32
-	while (!_kbhit())
-#else
-	while (1)
-#endif
+	while (!KBHIT())
 	{
 		/* Check how many Buffers have been processed */
 		alGetSourcei(SourceID, AL_BUFFERS_PROCESSED, &lProcessed);
@@ -4471,11 +4474,7 @@ ALvoid I_GetSourceOffsetTest()
 
 	while (1)
 	{
-#ifdef _WIN32
-		if (_kbhit())
-#else
-		if (1)
-#endif /* _WIN32 */
+		if (KBHIT())
 		{
 			ch = getUpperCh(); 
 
@@ -4566,11 +4565,7 @@ ALvoid I_SetSourceOffsetTest()
 
 	while (1)
 	{
-#ifdef _WIN32
-		if (_kbhit())
-#else
-		if (1)
-#endif /* _WIN32 */
+		if (KBHIT())
 		{
 			ch = getUpperCh();   
 
@@ -4903,11 +4898,7 @@ ALvoid I_CaptureTest()
 
 		while (1)
 		{
-#ifdef _WIN32
-			if (_kbhit())
-#else
-			if (1)
-#endif /* _WIN32 */
+			if (KBHIT())
 			{
 				ch = getUpperCh();   
 
@@ -5062,11 +5053,7 @@ ALvoid I_CaptureAndPlayTest()
 
 		while (1)
 		{
-#ifdef _WIN32
-			if (_kbhit())
-#else
-		        if (1)
-#endif /* _WIN32 */
+			if (KBHIT())
 			{
 				ch = getUpperCh();   
 
