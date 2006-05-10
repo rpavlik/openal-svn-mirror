@@ -1,5 +1,10 @@
 2006-05-10  Sven Panne  <sven.panne@aedion.de>
 
+	* tests/altest/Makefile.am: Added a "README" target for generating docs
+	directly from the sources.
+
+	* tests/altest/gendocs.py: Added.
+	
 	* tests/altest/altest.c: Fixed mini-typo in comment.
 	
 	* tests/altest/altest.c: Centralized #if for _kbhit().
