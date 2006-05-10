@@ -161,7 +161,6 @@ EAXGet	eaxGet;						/* EAXGet function, retrieved if EAX Extension is supported 
 ALboolean g_bEAX;					/* Boolean variable to indicate presence of EAX Extension */
 #endif
 #if TEST_VORBIS
-#define AL_FORMAT_VORBIS_EXT 0x10003
 unsigned int g_ovSize;
 #endif
 
@@ -760,11 +759,12 @@ int main(int argc, char* argv[])
 			ovdata = malloc(g_ovSize);
 
 		        if (ovdata != NULL) {
+				ALenum formatVorbis = alGetEnumValue("AL_FORMAT_VORBIS_EXT");
 				fread(ovdata, 1, g_ovSize, fh);
 
 			        /* Copy boom.ogg data into AL Buffer 7 */
 				alGetError();
-				alBufferData(g_Buffers[7], AL_FORMAT_VORBIS_EXT, ovdata, g_ovSize, 1);
+				alBufferData(g_Buffers[7], formatVorbis, ovdata, g_ovSize, 1);
 				error = alGetError();
 				if (error != AL_NO_ERROR) {
 					DisplayALError((ALbyte *) "alBufferData buffer 7 : ", error);
@@ -5365,9 +5365,10 @@ ALvoid I_VorbisTest()
 		   
 				data = (ALbyte *)malloc(((g_ovSize / 4) + 1));
 				if (data != 0) {
+					ALenum formatVorbis = alGetEnumValue("AL_FORMAT_VORBIS_EXT");
 		        for (loop = 0; loop < 4; loop++) {
 						actual = fread(data, 1, ((g_ovSize / 4) + 1), fp);
-						alBufferData(tempBuffers[loop], AL_FORMAT_VORBIS_EXT, data, actual, 0);
+						alBufferData(tempBuffers[loop], formatVorbis, data, actual, 0);
 					}
 					alSourceQueueBuffers(source[2], 4, tempBuffers);
 			   
