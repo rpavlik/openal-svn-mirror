@@ -61,6 +61,17 @@
 #include <AL/alc.h>
 #endif
 
+/* get header for stat and friends, used for getting the file length only */
+#include <sys/types.h>
+#include <sys/stat.h>
+#if defined(_WIN32)
+#define stat(p,b) _stat((p),(b))
+#define structStat struct _stat
+#else
+#include <unistd.h>
+#define structStat struct stat
+#endif
+
 #include <ctype.h>
 #include <math.h>
 #include <stdio.h>
@@ -737,18 +748,14 @@ int main(int argc, char* argv[])
 	}
 
 #if TEST_VORBIS
+	{
 	void *ovdata;	
 
 	FILE *fh;
 	fh = fopen("boom.ogg", "rb");
 	if (fh != NULL) {
-#ifndef _WIN32
-		struct stat sbuf;
+		structStat sbuf;
 		if (stat("boom.ogg", &sbuf) != -1) {
-#else
-		struct _stat sbuf;
-		if (_fstat(fh->_file, &sbuf) != -1) {
-#endif
 			g_ovSize = sbuf.st_size;
 			ovdata = malloc(g_ovSize);
 
@@ -757,7 +764,7 @@ int main(int argc, char* argv[])
 
 			        /* Copy boom.ogg data into AL Buffer 7 */
 				alGetError();
-				alBufferData(g_Buffers[7], AL_FORMAT_VORBIS_EXT, ovdata, g_ovSize, freq);
+				alBufferData(g_Buffers[7], AL_FORMAT_VORBIS_EXT, ovdata, g_ovSize, 1);
 				error = alGetError();
 				if (error != AL_NO_ERROR) {
 					DisplayALError((ALbyte *) "alBufferData buffer 7 : ", error);
@@ -766,6 +773,7 @@ int main(int argc, char* argv[])
 			}				 
 			fclose(fh);
 		}	   
+	}
 	}
 #endif
 
@@ -5337,14 +5345,16 @@ ALvoid I_VorbisTest()
 					DisplayALError((ALbyte *) "alSourcePlay source 1 : ", error);
 		   				
 				break;
-			case '4':
+			case '4': {
+				FILE *fp;
+			        int actual;
+			        int loop;
 				/* Stop source */
 				alSourceStop(source[2]);
 				if ((error = alGetError()) != AL_NO_ERROR) DisplayALError((ALbyte *) "alSourceStop source 2 : ", error);
                 alSourcei(source[2], AL_BUFFER, 0);
 		   
                 /* Queue buffers */
-				FILE *fp;
 		        fp = fopen("boom.ogg", "rb");
 		        if (fp == NULL) {
 					printf("Failed to open boom.ogg\n");
@@ -5353,10 +5363,9 @@ ALvoid I_VorbisTest()
 		   
 		        alGetError(); /* clear error state */
 		   
-		        int actual;
 				data = (ALbyte *)malloc(((g_ovSize / 4) + 1));
 				if (data != 0) {
-		        for (int loop = 0; loop < 4; loop++) {
+		        for (loop = 0; loop < 4; loop++) {
 						actual = fread(data, 1, ((g_ovSize / 4) + 1), fp);
 						alBufferData(tempBuffers[loop], AL_FORMAT_VORBIS_EXT, data, actual, 0);
 					}
@@ -5376,7 +5385,7 @@ ALvoid I_VorbisTest()
 				} else {
 					printf("Failed memory allocation.\n");
 				}
-		   				
+		   		}	
 				break;
 		}
 	} while (ch != 'Q');
