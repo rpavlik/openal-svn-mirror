@@ -58,7 +58,6 @@
 #define INITGUID
 #define OPENAL
 
-#define TEST_VORBIS 0	/* enable for ogg vorbis testing */
 #define TEST_EAX    0   /* enable for EAX testing */
 
 /* get OpenAL header via obscure and fragile platform conditionals */
@@ -172,9 +171,8 @@ EAXSet	eaxSet;						/* EAXSet function, retrieved if EAX Extension is supported 
 EAXGet	eaxGet;						/* EAXGet function, retrieved if EAX Extension is supported */
 ALboolean g_bEAX;					/* Boolean variable to indicate presence of EAX Extension */
 #endif
-#if TEST_VORBIS
+
 unsigned int g_ovSize;
-#endif
 
 static ALenums enumeration[]={
 	/* Types */
@@ -357,10 +355,7 @@ ALvoid SA_Frequency(ALvoid);
 ALvoid SA_Stereo(ALvoid);
 ALvoid SA_Streaming(ALvoid);
 ALvoid SA_QueuingUnderrunPerformance(ALvoid);
-
-#if TEST_VORBIS
 ALvoid I_VorbisTest(ALvoid);
-#endif
 
 #if TEST_EAX
 ALvoid I_EAXTest(ALvoid);
@@ -758,11 +753,11 @@ int main(int argc, char* argv[])
 		exit(-1);
 	}
 
-#if TEST_VORBIS
-	{
+      if (alIsExtensionPresent((ALchar *)"AL_EXT_vorbis") == AL_TRUE) {
 	void *ovdata;	
 
 	FILE *fh;
+	printf("Ogg Vorbis extension available.\n");
 	fh = fopen(FILENAME_BOOM, "rb");
 	if (fh != NULL) {
 		structStat sbuf;
@@ -787,7 +782,6 @@ int main(int argc, char* argv[])
 		}	   
 	}
 	}
-#endif
 
 #if TEST_EAX
 	/* Check for EAX extension */
@@ -839,9 +833,7 @@ int main(int argc, char* argv[])
 #if TEST_EAX
 		printf("L) EAX Test\n");
 #endif
-#if TEST_VORBIS
 		printf("M) Ogg Vorbis Test\n");
-#endif
 		printf("\nQ) to quit\n\n\n");
 
 		ch = getUpperCh();
@@ -930,11 +922,9 @@ int main(int argc, char* argv[])
 					I_EAXTest();
 				break;
 #endif
-#if TEST_VORBIS
 		    case 'M':
 		        I_VorbisTest();
 		        break;
-#endif
 			default:
 				break;
 		}
@@ -5250,7 +5240,6 @@ ALvoid I_CaptureAndPlayTest()
 		alDeleteBuffers(1, &BufferID[lLoop]);
 }
 
-#if TEST_VORBIS
 /* Vorbis Test */
 /** used by gendocs.pyp
 $SECTION Interactive Tests
@@ -5420,4 +5409,3 @@ ALvoid I_VorbisTest()
 	
       return;
 }
-#endif

@@ -1,5 +1,7 @@
 2006-05-10  Sven Panne  <sven.panne@aedion.de>
 
+	* tests/altest/altest.c: Make the Ogg Vorbis test dynamic.
+
 	* tests/altest/altest.c: Moved filenames into #defines.
 
 	* tests/altest/sounds/README: Added info about footadpcm.wav.
