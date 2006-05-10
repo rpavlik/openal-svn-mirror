@@ -1,9 +1,0 @@
-#!/bin/bash
-
-CXXFLAGS="-Wall -ansi -pedantic -fPIC -g -O2 -DLINUX -I../../../include -L../../../linux/src -lopenal"
-
-if test "$1" = "osx-framework"; then
-    CXXFLAGS="$CFLAGS -DOSX_FRAMEWORK"
-fi
-
-g++ $CXXFLAGS -o altest ../common/altest.cpp
