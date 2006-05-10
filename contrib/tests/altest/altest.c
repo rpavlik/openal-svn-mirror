@@ -603,11 +603,7 @@ int main(int argc, char* argv[])
 {
 	ALbyte	ch;
 	ALint	error;
-#ifndef LINUX
     ALCcontext *Context;
-#else
-    ALvoid *Context;
-#endif
 	ALCdevice *Device;
 	ALfloat listenerPos[]={0.0,0.0,0.0};
 	ALfloat listenerVel[]={0.0,0.0,0.0};
@@ -3261,23 +3257,11 @@ ALvoid I_QueueTest(ALvoid)
 				break;
 			case '0':
 				/* Retrieve number of buffers in queue */
-#ifndef LINUX
 		        alGetSourcei(source[0], AL_BUFFERS_QUEUED, &BuffersInQueue);
-#else
-		        alGetSourceiv(source[0], AL_BUFFERS_QUEUED, &BuffersInQueue);
-#endif
 				/* Retrieve number of processed buffers */
-#ifndef LINUX
 		        alGetSourcei(source[0], AL_BUFFERS_PROCESSED, &BuffersProcessed);
-#else
-		       alGetSourceiv(source[0], AL_BUFFERS_PROCESSED, &BuffersProcessed);
-#endif
 				/* Retrieve current buffer */
-#ifndef LINUX
 		        alGetSourcei(source[0], AL_BUFFER, (ALint*)&Buffer);
-#else
-		       alGetSourceiv(source[0], AL_BUFFER, (ALint*)&Buffer);
-#endif
 				if (Buffer == buffers[0])
 					Buffer = 1;
 				else if (Buffer == buffers[1])
@@ -3550,22 +3534,12 @@ ALvoid I_StereoTest(ALvoid)
 					DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING : \n", error);
 				break;
 			case '0':
-#ifndef LINUX
 		                /* Retrieve number of buffers in queue */
 				alGetSourcei(source[0], AL_BUFFERS_QUEUED, &BuffersInQueue);
 				/* Retrieve number of processed buffers */
 				alGetSourcei(source[0], AL_BUFFERS_PROCESSED, &BuffersProcessed);
 				/* Retrieve current buffer */
 				alGetSourcei(source[0], AL_BUFFER, (ALint*)&Buffer);
-#else
-		                /* Retrieve number of buffers in queue */
-				alGetSourceiv(source[0], AL_BUFFERS_QUEUED, &BuffersInQueue);
-				/* Retrieve number of processed buffers */
-				alGetSourceiv(source[0], AL_BUFFERS_PROCESSED, &BuffersProcessed);
-				/* Retrieve current buffer */
-				alGetSourceiv(source[0], AL_BUFFER, (ALint*)&Buffer);
-		   
-#endif
 		                if (Buffer == buffers[0])
 					Buffer = 6;
 				else if (Buffer == buffers[1])
