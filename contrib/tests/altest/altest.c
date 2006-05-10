@@ -47,7 +47,7 @@
 #define OPENAL
 
 #define TEST_VORBIS 0	/* enable for ogg vorbis testing */
-/* #define TEST_EAX 1 */  /* enable for EAX testing */
+#define TEST_EAX    0   /* enable for EAX testing */
 
 /* get OpenAL header via obscure and fragile platform conditionals */
 #if defined(_MSC_VER)
@@ -5041,7 +5041,7 @@ ALvoid I_CaptureAndPlayTest()
 	ALboolean		bPlaying = AL_FALSE;
 	ALboolean		bPlay = AL_FALSE;
 	const ALchar		*pDeviceList;
-#ifdef TEST_EAX
+#if TEST_EAX
 	ALint			lEnv, lDirect, lRoom;
 #endif
 
@@ -5094,7 +5094,7 @@ ALvoid I_CaptureAndPlayTest()
 
 		printf("Press 1 to Start Recording and Playing\n");
 		printf("Press 2 to Stop Recording\n");
-#ifdef TEST_EAX
+#if TEST_EAX
 		printf("Press 3 to Apply EAX Reverb\n");
 		printf("Press 4 to Remove EAX Reverb\n");
 #endif
@@ -5120,7 +5120,7 @@ ALvoid I_CaptureAndPlayTest()
 				case '2':
 					alcCaptureStop(pCaptureDevice);
 					break;
-#ifdef TEST_EAX
+#if TEST_EAX
 				case '3':
 					/* Mute Direct path */
 					lDirect = -10000;
