@@ -1,5 +1,9 @@
 2006-05-10  Sven Panne  <sven.panne@aedion.de>
 
+	* tests/altest/sounds/README: Added info about footadpcm.wav.
+
+	* tests/altest/sounds/footadpcm.wav: Added.
+
 	* tests/altest/sounds/README: Added.
 
 	* tests/altest/altest.c: Get value of AL_FORMAT_VORBIS_EXT dynamically.
