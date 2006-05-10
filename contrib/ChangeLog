@@ -1,3 +1,9 @@
+2006-05-10  Sven Panne  <sven.panne@aedion.de>
+
+	* tests/altest/altest.c: Start from scratch (i.e. altest.cpp) again to
+	get more meaningful and fine-grained commits. Will not compile for the
+	next few commits, sorry...
+
 2006-02-08  Sven Panne  <sven.panne@aedion.de>
 
 	* tests/altest/altest.c: Warning police.

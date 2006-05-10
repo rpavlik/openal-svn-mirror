@@ -41,39 +41,16 @@
  "*** Main Menu ***".
   */
 
+#define _CRT_SECURE_NO_DEPRECATE // get rid of sprintf security warnings on VS2005
+
 #define INITGUID
 #define OPENAL
 
-/* enable for ogg vorbis testing */
-#define TEST_VORBIS 0
+#define TEST_VORBIS 0	// enable for ogg vorbis testing
+//#define TEST_EAX	1   // enable for EAX testing
 
-/* enable for EAX testing */
-#define TEST_EAX 0
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <math.h>
-
-#ifdef OSX_FRAMEWORK
-#include <OpenAL/al.h>
-#include <OpenAL/alc.h>
-#else
-#include <AL/al.h>
-#include <AL/alc.h>
-#endif
-
-typedef ALboolean bool;
-const ALboolean false = AL_FALSE;
-const ALboolean true = AL_TRUE;
-
-#if 0
 #ifdef _WIN32
-
-/* For timeGetTime() */
-#include <windows.h>
-
+#include <windows.h>	// For timeGetTime()
 #include <stdio.h>
 #include <conio.h>
 #include <stdlib.h>
@@ -83,7 +60,7 @@ const ALboolean true = AL_TRUE;
 #include <sys/stat.h>
 #include <al/al.h>
 #include <al/alc.h>
-#endif /* _WIN32 */
+#endif // _WIN32
 
 #ifdef LINUX
 #include <stdio.h>
@@ -97,7 +74,15 @@ const ALboolean true = AL_TRUE;
 #include <unistd.h>
 #include <sys/stat.h>
 
-#endif /* LINUX */
+#ifdef OSX_FRAMEWORK
+#include <OpenAL/al.h>
+#include <OpenAL/alc.h>
+#else
+#include <AL/al.h>
+#include <AL/alc.h>
+#endif
+
+#endif // LINUX
 
 #ifdef __MACOS__
 #include <stdio.h>
@@ -111,7 +96,7 @@ const ALboolean true = AL_TRUE;
 #include <eax.h>
 #include <Timer.h>
 #define SWAPBYTES
-#endif /* MACOS */
+#endif // MACOS
 
 #ifdef MAC_OS_X
 #include <sys/types.h>
@@ -126,8 +111,7 @@ const ALboolean true = AL_TRUE;
 #include <openal/alc.h>
 #include <unistd.h>
 #define SWAPBYTES
-#endif /* MAC_OS_X */
-#endif
+#endif // MAC_OS_X
 
 #if TEST_VORBIS
 #include <AL/alext.h>
@@ -138,8 +122,7 @@ const ALboolean true = AL_TRUE;
 #include <eax.h>
 #endif
 
-/* Number of buffers to be Generated */
-#define NUM_BUFFERS 8
+#define NUM_BUFFERS 8	// Number of buffers to be Generated
 
 #ifndef LINUX
 #ifndef MAC_OS_X
@@ -158,14 +141,14 @@ typedef struct
         ALshort         wBitsPerSample;
         ALshort         cbSize;
 } WAVEFORMATEX;
-#endif /* _WIN32 */
+#endif // _WIN32
 
 typedef struct
 {
-	ALchar		riff[4];		/* 'RIFF' */
+	ALchar		riff[4];		// 'RIFF'
 	ALsizei		riffSize;
-	ALchar		wave[4];		/* 'WAVE' */
-	ALchar		fmt[4];			/* 'fmt ' */
+	ALchar		wave[4];		// 'WAVE'
+	ALchar		fmt[4];			// 'fmt '
 	ALuint		fmtSize;
 	ALushort	Format;                              
 	ALushort	Channels;
@@ -173,7 +156,7 @@ typedef struct
 	ALuint		BytesPerSec;
 	ALushort	BlockAlign;
 	ALushort	BitsPerSample;
-	ALchar		data[4];		/* 'data' */
+	ALchar		data[4];		// 'data'
 	ALuint		dataSize;
 } WAVE_Struct;
 
@@ -194,16 +177,10 @@ typedef struct
 #define QUEUEBUFFERSIZE		2048
 #define QUEUEBUFFERCOUNT	4
 
-typedef struct ALCenum_struct
-{
-	const ALCchar	*enumName;
-	ALCenum		expectedValue;
-} ALCenums;
-
 typedef struct ALenum_struct
 {
-	const ALchar	*enumName;
-	ALenum		expectedValue;
+	ALchar		*enumName;
+	ALenum		value;
 } ALenums;
 
 #ifndef LINUX
@@ -212,148 +189,143 @@ typedef struct ALenum_struct
 #endif
 #endif
 
-/* Global variables */
-ALuint	g_Buffers[NUM_BUFFERS];		/* Array of Buffers */
+// Global variables
+ALuint	g_Buffers[NUM_BUFFERS];		// Array of Buffers
+ALboolean g_bNewDistModels = AL_TRUE;
+ALboolean g_bOffsetExt = AL_TRUE;
+ALboolean g_bCaptureExt = AL_TRUE;
 
 #if TEST_EAX
-EAXSet	eaxSet;						/* EAXSet function, retrieved if EAX Extension is supported */
-EAXGet	eaxGet;						/* EAXGet function, retrieved if EAX Extension is supported */
-ALboolean g_bEAX;					/* Boolean variable to indicate presence of EAX Extension */
+EAXSet	eaxSet;						// EAXSet function, retrieved if EAX Extension is supported
+EAXGet	eaxGet;						// EAXGet function, retrieved if EAX Extension is supported
+ALboolean g_bEAX;					// Boolean variable to indicate presence of EAX Extension 
 #endif
 #if TEST_VORBIS
 #define AL_FORMAT_VORBIS_EXT 0x10003
 unsigned int g_ovSize;
 #endif
 
-static ALCenums enumerationALC[] = {
-  /* Types */
-  {(const ALCchar *) "ALC_FALSE", ALC_FALSE},
-  {(const ALCchar *) "ALC_TRUE", ALC_TRUE},
+static ALenums enumeration[]={
+	// Types
+	{ (ALchar *)"AL_NONE",							    AL_NONE								},
+	{ (ALchar *)"AL_FALSE",							    AL_FALSE							},
+	{ (ALchar *)"ALC_FALSE",						    ALC_FALSE							},
+	{ (ALchar *)"AL_TRUE",							    AL_TRUE								},
+	{ (ALchar *)"ALC_TRUE",							    ALC_TRUE							},
+	
+	// Source and Listener Properties
+	{ (ALchar *)"AL_SOURCE_RELATIVE",				    AL_SOURCE_RELATIVE					},
+	{ (ALchar *)"AL_CONE_INNER_ANGLE",				    AL_CONE_INNER_ANGLE					},
+	{ (ALchar *)"AL_CONE_OUTER_ANGLE",				    AL_CONE_OUTER_ANGLE					},
+	{ (ALchar *)"AL_PITCH",							    AL_PITCH							},
+	{ (ALchar *)"AL_POSITION",						    AL_POSITION							},
+	{ (ALchar *)"AL_DIRECTION",						    AL_DIRECTION						},
+	{ (ALchar *)"AL_VELOCITY",						    AL_VELOCITY							},
+	{ (ALchar *)"AL_LOOPING",						    AL_LOOPING							},
+	{ (ALchar *)"AL_BUFFER",						    AL_BUFFER							},
+	{ (ALchar *)"AL_GAIN",							    AL_GAIN								},
+	{ (ALchar *)"AL_MIN_GAIN",						    AL_MIN_GAIN							},
+	{ (ALchar *)"AL_MAX_GAIN",						    AL_MAX_GAIN							},
+	{ (ALchar *)"AL_ORIENTATION",					    AL_ORIENTATION						},
+	{ (ALchar *)"AL_REFERENCE_DISTANCE",			    AL_REFERENCE_DISTANCE				},
+	{ (ALchar *)"AL_ROLLOFF_FACTOR",				    AL_ROLLOFF_FACTOR					},
+	{ (ALchar *)"AL_CONE_OUTER_GAIN",				    AL_CONE_OUTER_GAIN					},
+	{ (ALchar *)"AL_MAX_DISTANCE",					    AL_MAX_DISTANCE						},
+	{ (ALchar *)"AL_SEC_OFFSET",                        AL_SEC_OFFSET                       },
+	{ (ALchar *)"AL_SAMPLE_OFFSET",                     AL_SAMPLE_OFFSET                    },
+	{ (ALchar *)"AL_BYTE_OFFSET",                       AL_BYTE_OFFSET                      },
+	{ (ALchar *)"AL_SOURCE_TYPE",                       AL_SOURCE_TYPE                      },
+	{ (ALchar *)"AL_STATIC",                            AL_STATIC                           },
+	{ (ALchar *)"AL_STREAMING",                         AL_STREAMING                        },
+	{ (ALchar *)"AL_UNDETERMINED",                      AL_UNDETERMINED                     },
 
-  /* ALC Properties */
-  {(const ALCchar *) "ALC_MAJOR_VERSION", ALC_MAJOR_VERSION},
-  {(const ALCchar *) "ALC_MINOR_VERSION", ALC_MINOR_VERSION},
-  {(const ALCchar *) "ALC_ATTRIBUTES_SIZE", ALC_ATTRIBUTES_SIZE},
-  {(const ALCchar *) "ALC_ALL_ATTRIBUTES", ALC_ALL_ATTRIBUTES},
-  {(const ALCchar *) "ALC_DEFAULT_DEVICE_SPECIFIER", ALC_DEFAULT_DEVICE_SPECIFIER},
-  {(const ALCchar *) "ALC_DEVICE_SPECIFIER", ALC_DEVICE_SPECIFIER},
-  {(const ALCchar *) "ALC_EXTENSIONS", ALC_EXTENSIONS},
-  {(const ALCchar *) "ALC_FREQUENCY", ALC_FREQUENCY},
-  {(const ALCchar *) "ALC_REFRESH", ALC_REFRESH},
-  {(const ALCchar *) "ALC_SYNC", ALC_SYNC},
-  {(const ALCchar *) "ALC_MONO_SOURCES", ALC_MONO_SOURCES},
-  {(const ALCchar *) "ALC_STEREO_SOURCES", ALC_STEREO_SOURCES},
-  {(const ALCchar *) "ALC_CAPTURE_DEVICE_SPECIFIER", ALC_CAPTURE_DEVICE_SPECIFIER},
-  {(const ALCchar *) "ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER", ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER},
-  {(const ALCchar *) "ALC_CAPTURE_SAMPLES", ALC_CAPTURE_SAMPLES},
+	// Source State information
+	{ (ALchar *)"AL_SOURCE_STATE",					    AL_SOURCE_STATE						},
+	{ (ALchar *)"AL_INITIAL",						    AL_INITIAL							},
+	{ (ALchar *)"AL_PLAYING",						    AL_PLAYING							},
+	{ (ALchar *)"AL_PAUSED",						    AL_PAUSED							},
+	{ (ALchar *)"AL_STOPPED",						    AL_STOPPED							},
 
-  /* ALC Error Message */
-  {(const ALCchar *) "ALC_NO_ERROR", ALC_NO_ERROR},
-  {(const ALCchar *) "ALC_INVALID_DEVICE", ALC_INVALID_DEVICE},
-  {(const ALCchar *) "ALC_INVALID_CONTEXT", ALC_INVALID_CONTEXT},
-  {(const ALCchar *) "ALC_INVALID_ENUM", ALC_INVALID_ENUM},
-  {(const ALCchar *) "ALC_INVALID_VALUE", ALC_INVALID_VALUE},
-  {(const ALCchar *) "ALC_OUT_OF_MEMORY", ALC_OUT_OF_MEMORY},
+	// Queue information
+	{ (ALchar *)"AL_BUFFERS_QUEUED",				    AL_BUFFERS_QUEUED					},
+	{ (ALchar *)"AL_BUFFERS_PROCESSED",				    AL_BUFFERS_PROCESSED				},
+	
+	// Buffer Formats
+	{ (ALchar *)"AL_FORMAT_MONO8",					    AL_FORMAT_MONO8						},
+	{ (ALchar *)"AL_FORMAT_MONO16",					    AL_FORMAT_MONO16					},
+	{ (ALchar *)"AL_FORMAT_STEREO8",				    AL_FORMAT_STEREO8					},
+	{ (ALchar *)"AL_FORMAT_STEREO16",				    AL_FORMAT_STEREO16					},
 
-  /* Default */
-  {(const ALCchar *) NULL, (ALenum) 0}
-};
+	// Buffer attributes
+	{ (ALchar *)"AL_FREQUENCY",						    AL_FREQUENCY						},
+	{ (ALchar *)"AL_BITS",						        AL_BITS								},
+	{ (ALchar *)"AL_CHANNELS",					        AL_CHANNELS							},
+	{ (ALchar *)"AL_SIZE",							    AL_SIZE								},
 
-static ALenums enumerationAL[] = {
-  /* Types */
-  {(const ALchar *) "AL_NONE", AL_NONE},
-  {(const ALchar *) "AL_FALSE", AL_FALSE},
-  {(const ALchar *) "AL_TRUE", AL_TRUE},
+	// Buffer States (not supported yet)
+	{ (ALchar *)"AL_UNUSED",						    AL_UNUSED							},
+	{ (ALchar *)"AL_PENDING",						    AL_PENDING							},
+	{ (ALchar *)"AL_PROCESSED",						    AL_PROCESSED						},
 
-  /* Source and Listener Properties */
-  {(const ALchar *) "AL_SOURCE_RELATIVE", AL_SOURCE_RELATIVE},
-  {(const ALchar *) "AL_CONE_INNER_ANGLE", AL_CONE_INNER_ANGLE},
-  {(const ALchar *) "AL_CONE_OUTER_ANGLE", AL_CONE_OUTER_ANGLE},
-  {(const ALchar *) "AL_PITCH", AL_PITCH},
-  {(const ALchar *) "AL_POSITION", AL_POSITION},
-  {(const ALchar *) "AL_DIRECTION", AL_DIRECTION},
-  {(const ALchar *) "AL_VELOCITY", AL_VELOCITY},
-  {(const ALchar *) "AL_LOOPING", AL_LOOPING},
-  {(const ALchar *) "AL_BUFFER", AL_BUFFER},
-  {(const ALchar *) "AL_GAIN", AL_GAIN},
-  {(const ALchar *) "AL_MIN_GAIN", AL_MIN_GAIN},
-  {(const ALchar *) "AL_MAX_GAIN", AL_MAX_GAIN},
-  {(const ALchar *) "AL_ORIENTATION", AL_ORIENTATION},
-  {(const ALchar *) "AL_REFERENCE_DISTANCE", AL_REFERENCE_DISTANCE},
-  {(const ALchar *) "AL_ROLLOFF_FACTOR", AL_ROLLOFF_FACTOR},
-  {(const ALchar *) "AL_CONE_OUTER_GAIN", AL_CONE_OUTER_GAIN},
-  {(const ALchar *) "AL_MAX_DISTANCE", AL_MAX_DISTANCE},
-  {(const ALchar *) "AL_SEC_OFFSET", AL_SEC_OFFSET},
-  {(const ALchar *) "AL_SAMPLE_OFFSET", AL_SAMPLE_OFFSET},
-  {(const ALchar *) "AL_BYTE_OFFSET", AL_BYTE_OFFSET},
-  {(const ALchar *) "AL_SOURCE_TYPE", AL_SOURCE_TYPE},
-  {(const ALchar *) "AL_STATIC", AL_STATIC},
-  {(const ALchar *) "AL_STREAMING", AL_STREAMING},
-  {(const ALchar *) "AL_UNDETERMINED", AL_UNDETERMINED},
+	// ALC Properties
+	{ (ALchar *)"ALC_MAJOR_VERSION",				    ALC_MAJOR_VERSION					},
+	{ (ALchar *)"ALC_MINOR_VERSION",				    ALC_MINOR_VERSION					},
+	{ (ALchar *)"ALC_ATTRIBUTES_SIZE",				    ALC_ATTRIBUTES_SIZE					},
+	{ (ALchar *)"ALC_ALL_ATTRIBUTES",				    ALC_ALL_ATTRIBUTES					},
+	{ (ALchar *)"ALC_DEFAULT_DEVICE_SPECIFIER",		    ALC_DEFAULT_DEVICE_SPECIFIER		},
+	{ (ALchar *)"ALC_DEVICE_SPECIFIER",				    ALC_DEVICE_SPECIFIER				},
+	{ (ALchar *)"ALC_EXTENSIONS",					    ALC_EXTENSIONS						},
+	{ (ALchar *)"ALC_FREQUENCY",					    ALC_FREQUENCY						},
+	{ (ALchar *)"ALC_REFRESH",						    ALC_REFRESH							},
+	{ (ALchar *)"ALC_SYNC",							    ALC_SYNC							},
+	{ (ALchar *)"ALC_MONO_SOURCES",                     ALC_MONO_SOURCES                    },
+	{ (ALchar *)"ALC_STEREO_SOURCES",                   ALC_STEREO_SOURCES                  },
+	{ (ALchar *)"ALC_CAPTURE_DEVICE_SPECIFIER",         ALC_CAPTURE_DEVICE_SPECIFIER        },
+	{ (ALchar *)"ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER", ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER },
+    { (ALchar *)"ALC_CAPTURE_SAMPLES",                  ALC_CAPTURE_SAMPLES                 },
 
-  /* Source State information */
-  {(const ALchar *) "AL_SOURCE_STATE", AL_SOURCE_STATE},
-  {(const ALchar *) "AL_INITIAL", AL_INITIAL},
-  {(const ALchar *) "AL_PLAYING", AL_PLAYING},
-  {(const ALchar *) "AL_PAUSED", AL_PAUSED},
-  {(const ALchar *) "AL_STOPPED", AL_STOPPED},
+	// AL Error Messages
+	{ (ALchar *)"AL_NO_ERROR",						    AL_NO_ERROR							},
+	{ (ALchar *)"AL_INVALID_NAME",					    AL_INVALID_NAME						},
+	{ (ALchar *)"AL_INVALID_ENUM",					    AL_INVALID_ENUM						},
+	{ (ALchar *)"AL_INVALID_VALUE",					    AL_INVALID_VALUE					},
+	{ (ALchar *)"AL_INVALID_OPERATION",				    AL_INVALID_OPERATION				},
+	{ (ALchar *)"AL_OUT_OF_MEMORY",					    AL_OUT_OF_MEMORY					},
+	
+	// ALC Error Message
+	{ (ALchar *)"ALC_NO_ERROR",						    ALC_NO_ERROR						},
+	{ (ALchar *)"ALC_INVALID_DEVICE",				    ALC_INVALID_DEVICE					},
+	{ (ALchar *)"ALC_INVALID_CONTEXT",				    ALC_INVALID_CONTEXT					},
+	{ (ALchar *)"ALC_INVALID_ENUM",					    ALC_INVALID_ENUM					},
+	{ (ALchar *)"ALC_INVALID_VALUE",				    ALC_INVALID_VALUE					},
+	{ (ALchar *)"ALC_OUT_OF_MEMORY",				    ALC_OUT_OF_MEMORY					},
 
-  /* Queue information */
-  {(const ALchar *) "AL_BUFFERS_QUEUED", AL_BUFFERS_QUEUED},
-  {(const ALchar *) "AL_BUFFERS_PROCESSED", AL_BUFFERS_PROCESSED},
+	// Context strings
+	{ (ALchar *)"AL_VENDOR",						    AL_VENDOR							},
+	{ (ALchar *)"AL_VERSION",						    AL_VERSION							},
+	{ (ALchar *)"AL_RENDERER",						    AL_RENDERER							},
+	{ (ALchar *)"AL_EXTENSIONS",					    AL_EXTENSIONS						},
+	
+	// Global states
+	{ (ALchar *)"AL_DOPPLER_FACTOR",				    AL_DOPPLER_FACTOR					},
+	{ (ALchar *)"AL_DOPPLER_VELOCITY",				    AL_DOPPLER_VELOCITY					},
+	{ (ALchar *)"AL_DISTANCE_MODEL",				    AL_DISTANCE_MODEL					},
+	{ (ALchar *)"AL_SPEED_OF_SOUND",                    AL_SPEED_OF_SOUND                   },
+	
+	// Distance Models
+	{ (ALchar *)"AL_INVERSE_DISTANCE",				    AL_INVERSE_DISTANCE					},
+	{ (ALchar *)"AL_INVERSE_DISTANCE_CLAMPED",		    AL_INVERSE_DISTANCE_CLAMPED			},
+	{ (ALchar *)"AL_LINEAR_DISTANCE",				    AL_LINEAR_DISTANCE					},
+	{ (ALchar *)"AL_LINEAR_DISTANCE_CLAMPED",		    AL_LINEAR_DISTANCE_CLAMPED			},
+	{ (ALchar *)"AL_EXPONENT_DISTANCE",				    AL_EXPONENT_DISTANCE			    },
+	{ (ALchar *)"AL_EXPONENT_DISTANCE_CLAMPED",		    AL_EXPONENT_DISTANCE_CLAMPED	    },
 
-  /* Buffer Formats */
-  {(const ALchar *) "AL_FORMAT_MONO8", AL_FORMAT_MONO8},
-  {(const ALchar *) "AL_FORMAT_MONO16", AL_FORMAT_MONO16},
-  {(const ALchar *) "AL_FORMAT_STEREO8", AL_FORMAT_STEREO8},
-  {(const ALchar *) "AL_FORMAT_STEREO16", AL_FORMAT_STEREO16},
+	// Default
+	{ (ALchar *)NULL,								(ALenum  ) 0 						} };
 
-  /* Buffer attributes */
-  {(const ALchar *) "AL_FREQUENCY", AL_FREQUENCY},
-  {(const ALchar *) "AL_BITS", AL_BITS},
-  {(const ALchar *) "AL_CHANNELS", AL_CHANNELS},
-  {(const ALchar *) "AL_SIZE", AL_SIZE},
-
-  /* Buffer States (not supported yet) */
-  {(const ALchar *) "AL_UNUSED", AL_UNUSED},
-  {(const ALchar *) "AL_PENDING", AL_PENDING},
-  {(const ALchar *) "AL_PROCESSED", AL_PROCESSED},
-
-  /* AL Error Messages */
-  {(const ALchar *) "AL_NO_ERROR", AL_NO_ERROR},
-  {(const ALchar *) "AL_INVALID_NAME", AL_INVALID_NAME},
-  {(const ALchar *) "AL_INVALID_ENUM", AL_INVALID_ENUM},
-  {(const ALchar *) "AL_INVALID_VALUE", AL_INVALID_VALUE},
-  {(const ALchar *) "AL_INVALID_OPERATION", AL_INVALID_OPERATION},
-  {(const ALchar *) "AL_OUT_OF_MEMORY", AL_OUT_OF_MEMORY},
-
-  /* Context strings */
-  {(const ALchar *) "AL_VENDOR", AL_VENDOR},
-  {(const ALchar *) "AL_VERSION", AL_VERSION},
-  {(const ALchar *) "AL_RENDERER", AL_RENDERER},
-  {(const ALchar *) "AL_EXTENSIONS", AL_EXTENSIONS},
-
-  /* Global states */
-  {(const ALchar *) "AL_DOPPLER_FACTOR", AL_DOPPLER_FACTOR},
-  {(const ALchar *) "AL_DOPPLER_VELOCITY", AL_DOPPLER_VELOCITY},
-  {(const ALchar *) "AL_DISTANCE_MODEL", AL_DISTANCE_MODEL},
-  {(const ALchar *) "AL_SPEED_OF_SOUND", AL_SPEED_OF_SOUND},
-
-  /* Distance Models */
-  {(const ALchar *) "AL_INVERSE_DISTANCE", AL_INVERSE_DISTANCE},
-  {(const ALchar *) "AL_INVERSE_DISTANCE_CLAMPED", AL_INVERSE_DISTANCE_CLAMPED},
-  {(const ALchar *) "AL_LINEAR_DISTANCE", AL_LINEAR_DISTANCE},
-  {(const ALchar *) "AL_LINEAR_DISTANCE_CLAMPED", AL_LINEAR_DISTANCE_CLAMPED},
-  {(const ALchar *) "AL_EXPONENT_DISTANCE", AL_EXPONENT_DISTANCE},
-  {(const ALchar *) "AL_EXPONENT_DISTANCE_CLAMPED", AL_EXPONENT_DISTANCE_CLAMPED},
-
-  /* Default */
-  {(const ALchar *) NULL, (ALenum) 0}
-};
-
-/* Function prototypes */
+// Function prototypes
 void delay_ms(unsigned int ms);
-ALvoid DisplayALError(const char *szText, ALint errorcode);
+ALvoid DisplayALError(ALchar *szText, ALint errorcode);
 
 char getUpperCh(void);
 int CRToContinue(void);
@@ -371,7 +343,7 @@ void ALTestSwapWords(unsigned int *puint);
 void ALTestSwapBytes(unsigned short *pshort);
 #endif
 
-/* Test Function prototypes */
+// Test Function prototypes
 ALvoid I_PositionTest(ALvoid);
 ALvoid I_LoopingTest(ALvoid);
 ALvoid I_QueueTest(ALvoid);
@@ -456,14 +428,14 @@ void delay_ms(unsigned int ms)
 /*
 	Display AL Error message
 */
-ALvoid DisplayALError(const char *szText, ALint errorcode)
+ALvoid DisplayALError(ALchar *szText, ALint errorcode)
 {
 	printf("%s%s\n",szText,alGetString(errorcode));
 	return;
 }
 
 
-/* ***** GH -- OS X is going to need some byte-swaps and whatnot... */
+// ***** GH -- OS X is going to need some byte-swaps and whatnot...
 
 #if defined _MSC_VER
 	#pragma pack (push,1) 							/* Turn off alignment */
@@ -535,8 +507,7 @@ typedef struct                                  /* WAV Chunk-header */
 	#pragma pack (pop)
 #endif
 
-static ALvoid
-getWAVData(const ALbyte *file,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq, ALboolean *loop)
+ALvoid getWAVData(const ALbyte *file,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq, ALboolean *loop)
 {
 	WAVChunkHdr_Struct ChunkHdr;
 	WAVFmtExHdr_Struct FmtExHdr;
@@ -615,8 +586,7 @@ getWAVData(const ALbyte *file,ALenum *format,ALvoid **data,ALsizei *size,ALsizei
 	}
 }
 
-static ALvoid
-unloadWAVData(ALvoid *data)
+ALvoid unloadWAVData(ALvoid *data)
 {
 	if (data)
 		free(data);
@@ -625,8 +595,7 @@ unloadWAVData(ALvoid *data)
 /*
 	Loads the wave file into the given Buffer ID
 */
-static ALboolean
-LoadWave(const char *szWaveFile, ALuint BufferID)
+ALboolean LoadWave(char *szWaveFile, ALuint BufferID)
 {
 	ALint	error;
 	ALsizei size,freq;
@@ -644,7 +613,7 @@ LoadWave(const char *szWaveFile, ALuint BufferID)
 		return AL_FALSE;
 	}
 
-	/* Copy data into ALBuffer */
+	// Copy data into ALBuffer
 	alBufferData(BufferID,format,data,size,freq);
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
@@ -677,7 +646,7 @@ int main(int argc, char* argv[])
 	ALCdevice *Device;
 	ALfloat listenerPos[]={0.0,0.0,0.0};
 	ALfloat listenerVel[]={0.0,0.0,0.0};
-	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};	/* Listener facing into the screen */
+	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};	// Listener facing into the screen
 
 #if TEST_EAX
 	ALchar szFnName[128];
@@ -685,22 +654,22 @@ int main(int argc, char* argv[])
 #endif	
 
 
-	/* Initialize Open AL manually */
-	/* Open device */
-	char deviceName[256];
-	const char *defaultDevice;
-	const char *deviceList;
-	const char *devices[12];
-	int numDevices, numDefaultDevice = 0, i;
-
 	printf("OpenAL Test Application\n");
 	printf("=======================\n\n");
 
+	// Initialize Open AL manually
+	//Open device
+	char deviceName[256];
+	char *defaultDevice;
+	char *deviceList;
+	char *devices[12];
+	int numDevices, numDefaultDevice = 0, i;
+
 	strcpy(deviceName, "");
-	if (alcIsExtensionPresent(NULL, "ALC_ENUMERATION_EXT") == AL_TRUE) { /* try out enumeration extension */
-		defaultDevice = (const char *)alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
+	if (alcIsExtensionPresent(NULL, "ALC_ENUMERATION_EXT") == AL_TRUE) { // try out enumeration extension
+		defaultDevice = (char *)alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
 		if ((defaultDevice != NULL) && (strlen(defaultDevice) > 0)) {
-			deviceList = (const char *)alcGetString(NULL, ALC_DEVICE_SPECIFIER);
+			deviceList = (char *)alcGetString(NULL, ALC_DEVICE_SPECIFIER);
 			for (numDevices = 0; numDevices < 12; numDevices++) {devices[numDevices] = NULL;}
 			for (numDevices = 0; numDevices < 12; numDevices++) {
 				devices[numDevices] = deviceList;
@@ -738,90 +707,81 @@ int main(int argc, char* argv[])
 	}
 
 	if (strlen(deviceName) == 0) {
-		Device = alcOpenDevice(NULL); /* this is supposed to select the "preferred device" */
+		Device = alcOpenDevice(NULL); // this is supposed to select the "preferred device"
 	} else {
-		Device = alcOpenDevice((ALchar*)deviceName); /* have a name from enumeration process above, so use it... */
+		Device = alcOpenDevice((ALchar*)deviceName); // have a name from enumeration process above, so use it...
 	}
-	/* Create context(s) */
-	Context=alcCreateContext(Device,NULL);
-	/* Set active context */
+	//Create context(s)
+	Context=alcCreateContext(Device, NULL);
+	//Set active context
 	alcMakeContextCurrent(Context);
 
-	/* Clear Error Codes */
+	// Clear Error Codes
 	alGetError();
 	alcGetError(Device);
 
-	/* Check what version of Open AL we are using */
-	{
+	// Check what version of Open AL we are using
 	ALint major, minor;
 	alcGetIntegerv(Device, ALC_MAJOR_VERSION, 1, &major);
 	alcGetIntegerv(Device, ALC_MINOR_VERSION, 1, &minor);
 	printf("\nOpen AL Version %d.%d\n", major, minor);
-	}
 
-	/* Check for all the AL 1.1 Extensions (they may be present on AL 1.0 implementations too) */
-	{
-	ALboolean bOffsetExt = alIsExtensionPresent("al_ext_offset");
-	if (bOffsetExt)
+	// Check for all the AL 1.1 Extensions (they may be present on AL 1.0 implementations too)
+	g_bOffsetExt = alIsExtensionPresent("al_ext_offset");
+	if (g_bOffsetExt)
 		printf("AL_EXT_OFFSET support found !\n");
-	}
 
-	{
-	ALboolean bNewDistModels = AL_TRUE;
-	bNewDistModels &= alIsExtensionPresent("AL_EXT_LINEAR_DISTANCE");
-	bNewDistModels &= alIsExtensionPresent("AL_EXT_EXPONENT_DISTANCE");
-	if (bNewDistModels)
+	g_bNewDistModels &= alIsExtensionPresent("AL_EXT_LINEAR_DISTANCE");
+	g_bNewDistModels &= alIsExtensionPresent("AL_EXT_EXPONENT_DISTANCE");
+	if (g_bNewDistModels)
 		printf("AL_EXT_LINEAR_DISTANCE and AL_EXT_EXPONENT_DISTANCE support found !\n");
-	}
-
-	{
-	ALboolean bCaptureExt = alcIsExtensionPresent(Device, "alc_EXT_capTure");
-	if (bCaptureExt)
+	
+	ALboolean g_bCaptureExt = alcIsExtensionPresent(Device, "alc_EXT_capTure");
+	if (g_bCaptureExt)
 		printf("ALC_EXT_CAPTURE support found !\n");
-	}
 
-	/* Set Listener attributes */
+	// Set Listener attributes
 
-	/* Position ... */
+	// Position ...
 	alListenerfv(AL_POSITION,listenerPos);
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
-		DisplayALError("alListenerfv POSITION : ", error);
+		DisplayALError((ALbyte *) "alListenerfv POSITION : ", error);
 		exit(-1);
 	}
 
-	/* Velocity ... */
+	// Velocity ...
 	alListenerfv(AL_VELOCITY,listenerVel);
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
-		DisplayALError("alListenerfv VELOCITY : ", error);
+		DisplayALError((ALbyte *) "alListenerfv VELOCITY : ", error);
 		exit(-1);
 	}
 
-	/* Orientation ... */
+	// Orientation ...
 	alListenerfv(AL_ORIENTATION,listenerOri);
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
-		DisplayALError("alListenerfv ORIENTATION : ", error);
+		DisplayALError((ALbyte *) "alListenerfv ORIENTATION : ", error);
 		exit(-1);
 	}
 
-	/* Generate Buffers */
+	// Generate Buffers
 	alGenBuffers(NUM_BUFFERS, g_Buffers);
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
-		DisplayALError("alGenBuffers :", error);
+		DisplayALError((ALbyte *) "alGenBuffers :", error);
 		exit(-1);
 	}
 
-	/* Load in samples to be used by Test functions */
-	if ((!LoadWave("sounds/footsteps.wav", g_Buffers[0])) ||
-		(!LoadWave("sounds/ding.wav", g_Buffers[1])) ||
-		(!LoadWave("sounds/wave1.wav", g_Buffers[2])) ||
-		(!LoadWave("sounds/wave2.wav", g_Buffers[3])) ||
-		(!LoadWave("sounds/wave3.wav", g_Buffers[4])) ||
-		(!LoadWave("sounds/wave4.wav", g_Buffers[5])) ||
-		(!LoadWave("sounds/stereo.wav", g_Buffers[6])))
+	// Load in samples to be used by Test functions
+	if ((!LoadWave("Footsteps.wav", g_Buffers[0])) ||
+		(!LoadWave("ding.wav", g_Buffers[1])) ||
+		(!LoadWave("Wave1.WAV", g_Buffers[2])) ||
+		(!LoadWave("Wave2.WAV", g_Buffers[3])) ||
+		(!LoadWave("Wave3.WAV", g_Buffers[4])) ||
+		(!LoadWave("Wave4.WAV", g_Buffers[5])) ||
+		(!LoadWave("stereo.wav", g_Buffers[6])))
 	{
 		alDeleteBuffers(NUM_BUFFERS, g_Buffers);
 		exit(-1);
@@ -831,7 +791,7 @@ int main(int argc, char* argv[])
 	void *ovdata;	
 
 	FILE *fh;
-	fh = fopen("sounds/boom.ogg", "rb");
+	fh = fopen("boom.ogg", "rb");
 	if (fh != NULL) {
 #ifndef _WIN32
 		struct stat sbuf;
@@ -846,12 +806,12 @@ int main(int argc, char* argv[])
 		        if (ovdata != NULL) {
 				fread(ovdata, 1, g_ovSize, fh);
 
-			        /* Copy boom.ogg data into AL Buffer 7 */
+			        // Copy boom.ogg data into AL Buffer 7
 				alGetError();
 				alBufferData(g_Buffers[7], AL_FORMAT_VORBIS_EXT, ovdata, g_ovSize, freq);
 				error = alGetError();
 				if (error != AL_NO_ERROR) {
-					DisplayALError("alBufferData buffer 7 : ", error);
+					DisplayALError((ALbyte *) "alBufferData buffer 7 : ", error);
 				}
 			        free(ovdata);
 			}				 
@@ -861,7 +821,7 @@ int main(int argc, char* argv[])
 #endif
 
 #if TEST_EAX
-	/* Check for EAX extension */
+	// Check for EAX extension
 	g_bEAX = alIsExtensionPresent(szEAX);
 
         if (g_bEAX)
@@ -965,19 +925,35 @@ int main(int argc, char* argv[])
 	    		I_VelocityTest();
 		    	break;
     		case 'G':
-	    		I_GetSourceOffsetTest();
+				if (g_bOffsetExt) {
+	    			I_GetSourceOffsetTest();
+				} else {
+					printf("Offset Extension not supported.\n\n"); 
+				}
 		    	break;
     		case 'H':
-	    		I_SetSourceOffsetTest();
+				if (g_bOffsetExt) {
+					I_SetSourceOffsetTest();
+				} else {
+					printf("Offset Extension not supported.\n\n"); 
+				}
 		    	break;
     		case 'I':
 	    		I_DistanceModelTest();
 		    	break;
     		case 'J':
-	    		I_CaptureTest();
+				if (g_bCaptureExt) {
+	    			I_CaptureTest();
+				} else {
+					printf("Capture Extension not supported.\n\n");
+				}
 		    	break;
     		case 'K':
-	    		I_CaptureAndPlayTest();
+				if (g_bCaptureExt) {
+	    			I_CaptureAndPlayTest();
+				} else {
+					printf("Capture Extension not supported.\n\n");
+				}
 		    	break;
 #if TEST_EAX
 			case 'L':
@@ -995,21 +971,21 @@ int main(int argc, char* argv[])
 		}
 	} while (ch != 'Q');
 
-	alGetError(); /* clear error state */
+	alGetError(); // clear error state
 	alDeleteBuffers(NUM_BUFFERS, g_Buffers);
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
-		DisplayALError("alDeleteBuffers : ", error);
+		DisplayALError((ALbyte *) "alDeleteBuffers : ", error);
 		exit(-1);
 	}
 
-	/*Get active context */
+	//Get active context
 	Context=alcGetCurrentContext();
-	/*Get device for active context */
+	//Get device for active context
 	Device=alcGetContextsDevice(Context);
-	/*Release context(s) */
+	//Release context(s)
 	alcDestroyContext(Context);
-	/*Close device */
+	//Close device
 	alcCloseDevice(Device);
 
 	printf("\nProgram Terminated\n");
@@ -1023,14 +999,14 @@ int main(int argc, char* argv[])
 */
 ALvoid FullAutoTests(ALvoid)
 {	
-	FA_RequestObjectNames();  /* Request Object Names */
-	FA_ReleaseObjectNames();  /* Release Object Names */
-	FA_ValidateObjectNames();  /* Validating Object Names */
-	FA_StateTransition();  /* State Transistion Testing */
-	FA_VectorStateTransition();  /* Vector State Transistion Testing */
-	FA_GetBufferProperties();  /* Get Buffer Properties */
-	FA_EnumerationValue(); /* Enumeration Value Test */
-	FA_QueuingUnderrunStates(); /* test underrun while queuing */
+	FA_RequestObjectNames();  // Request Object Names
+	FA_ReleaseObjectNames();  // Release Object Names
+	FA_ValidateObjectNames();  // Validating Object Names
+	FA_StateTransition();  // State Transistion Testing
+	FA_VectorStateTransition();  // Vector State Transistion Testing
+	FA_GetBufferProperties();  // Get Buffer Properties
+	FA_EnumerationValue(); // Enumeration Value Test
+	FA_QueuingUnderrunStates(); // test underrun while queuing
 
 	printf("\n\n");
 	delay_ms(1000);
@@ -1104,22 +1080,22 @@ int ContinueOrSkip()
 */
 ALvoid SemiAutoTests(ALvoid)
 {
-	SA_StringQueries();  /* String Queries Test */
-	SA_SourceGain();  /* Source Gain Test */
-	SA_ListenerGain();  /* Listener Gain Test */
-	SA_Position();  /* Position Test */
-	SA_SourceRelative();  /* Source Relative Test */
-	SA_ListenerOrientation();  /* Listener Orientation Test */
-	SA_SourceCone();  /* Source Cone Test */
-	SA_MinMaxGain();  /* MIN/MAX Gain Test */
-	SA_ReferenceDistance();  /* Reference Distance Test */
-	SA_RolloffFactor();  /* Rolloff Factor Test */
-	SA_DistanceModel();  /* Distance Model Test */
-	SA_Doppler();  /* Doppler Test */
-	SA_Frequency();  /* Frequency Test */
-	SA_Stereo();  /* Stereo Test */
-	SA_Streaming(); /* Streaming Test */
-	SA_QueuingUnderrunPerformance(); /* test underrun performance */
+	SA_StringQueries();  // String Queries Test
+	SA_SourceGain();  // Source Gain Test
+	SA_ListenerGain();  // Listener Gain Test
+	SA_Position();  // Position Test
+	SA_SourceRelative();  // Source Relative Test
+	SA_ListenerOrientation();  // Listener Orientation Test
+	SA_SourceCone();  // Source Cone Test
+	SA_MinMaxGain();  // MIN/MAX Gain Test
+	SA_ReferenceDistance();  // Reference Distance Test
+	SA_RolloffFactor();  // Rolloff Factor Test
+	SA_DistanceModel();  // Distance Model Test
+	SA_Doppler();  // Doppler Test
+	SA_Frequency();  // Frequency Test
+	SA_Stereo();  // Stereo Test
+	SA_Streaming(); // Streaming Test
+	SA_QueuingUnderrunPerformance(); // test underrun performance
 
 	printf("\nDone with this series of tests. Going back to the main menu...");
 	delay_ms(1000);
@@ -1140,15 +1116,15 @@ ALvoid FA_RequestObjectNames(ALvoid)
 	ALint error;
 
 	printf("\nRequest Object Names Test. ");
-	alGetError(); /* clear error state */
+	alGetError(); // clear error state
 	localResultOK = true;
-	alGenBuffers(0, testBuffers); /* should be equivalent to NOP */
+	alGenBuffers(0, testBuffers); // should be equivalent to NOP
 	error = alGetError();
 	if (error != AL_NO_ERROR)
 	{
 		localResultOK = false;
 	}
-	alGenSources(0, testSources); /* should be equivalent to NOP */
+	alGenSources(0, testSources); // should be equivalent to NOP
 	error = alGetError();
 	if (error != AL_NO_ERROR)
 	{
@@ -1179,13 +1155,13 @@ ALvoid FA_ReleaseObjectNames (ALvoid)
 	printf("\nReleasing Object Names Test. ");
 	alGetError();
 	localResultOK = true;
-	alDeleteBuffers((ALuint)-1, testBuffers); /* invalid -- make sure error code comes back */
+	alDeleteBuffers((ALuint)-1, testBuffers); // invalid -- make sure error code comes back
 	error = alGetError();
 	if (error == AL_NO_ERROR)
 	{
 		localResultOK = false;
 	}
-	alDeleteSources((ALuint)-1, testSources); /* invalid -- make sure error code comes back */
+	alDeleteSources((ALuint)-1, testSources); // invalid -- make sure error code comes back
 	error = alGetError();
 	if (error == AL_NO_ERROR)
 	{
@@ -1224,19 +1200,19 @@ ALvoid FA_ValidateObjectNames (ALvoid)
 		localResultOK = false;
 	} else
 	{
-		if (alIsBuffer(testBuffers[0]) == AL_FALSE) /* this buffer should test as valid */
+		if (alIsBuffer(testBuffers[0]) == AL_FALSE) // this buffer should test as valid
 		{
 			localResultOK = false;
 		}
-		if (alIsSource(testSources[0]) == AL_FALSE) /* this source should test as valid */
+		if (alIsSource(testSources[0]) == AL_FALSE) // this source should test as valid
 		{
 			localResultOK = false;
 		}
-		if (alIsBuffer(testBuffers[0] + 1) == AL_TRUE) /* this buffer should be invalid */
+		if (alIsBuffer(testBuffers[0] + 1) == AL_TRUE) // this buffer should be invalid
 		{
 			localResultOK = false;
 		}
-		if (alIsSource(testSources[0] + 1) == AL_TRUE) /* this source should be invalid */
+		if (alIsSource(testSources[0] + 1) == AL_TRUE) // this source should be invalid
 		{
 			localResultOK = false;
 		}
@@ -1263,7 +1239,6 @@ ALvoid FA_StateTransition (ALvoid)
 {
 	bool localResultOK;
 	ALuint testSources[4];
-	ALint sourceState;
 
 	printf("\nState Transition Test. ");
 	alGetError();
@@ -1271,6 +1246,7 @@ ALvoid FA_StateTransition (ALvoid)
 	alGenSources(1, testSources);
 	alSourcei(testSources[0], AL_BUFFER, g_Buffers[0]);
 	alSourcei(testSources[0], AL_LOOPING, AL_TRUE);
+	ALint sourceState;
 	alGetSourcei(testSources[0], AL_SOURCE_STATE, &sourceState);
 	if (sourceState != AL_INITIAL)
 	{
@@ -1420,141 +1396,76 @@ $SECTION Fully Automatic Tests
 $SUBTITLE Get Buffer Properties Test
 This test checks that OpenAL can retrieve buffer properties properly.
 */
-ALvoid
-FA_GetBufferProperties (ALvoid)
+ALvoid FA_GetBufferProperties(ALvoid)
 {
-  ALint freq, size;
+	ALint freq, size;
+	ALboolean passNULL;
 
-  printf ("\nGet Buffer Properties Test. ");
-  alGetBufferi (g_Buffers[0], AL_FREQUENCY, &freq);
-  alGetBufferi (g_Buffers[0], AL_SIZE, &size);
+	printf("\nGet Buffer Properties Test. ");
+	alGetBufferi(g_Buffers[0], AL_FREQUENCY, &freq);
+	alGetBufferi(g_Buffers[0], AL_SIZE, &size);
+	
+	passNULL = alIsBuffer(0);  // the NULL buffer should cause alIsBuffer to be TRUE (non-annotated 1.0 spec, pg 26)
 
-  /* The behaviour of the following call is a bit under dispute: Although the
-     OpenAL 1.1 clearly states that buffer names are only valid from the point
-     on they are allocated up to the point where they are released, the
-     documentation for the AL_BUFFER source attribute says that AL_NONE is
-     allowed in that special case. The latter might be considered a hack,
-     though... */
-
-  if (alIsBuffer (AL_NONE) != AL_FALSE)
-    {
-      printf
-        ("\nalIsBuffer does not return AL_FALSE for AL_NONE (dubious behaviour)");
-    }
-
-  printf (((freq == 44100) && (size == 282626)) ? "PASSED." : "FAILED.");
+	if ((freq == 44100) && (size == 282626) && (passNULL == AL_TRUE))
+	{
+		printf("PASSED.");
+	} else
+	{
+		printf("FAILED.");
+	}
 }
+
 
 /** used by gendocs.py
 $SECTION Fully Automatic Tests
 $SUBTITLE Enumeration Value Test
 This test checks that the implementation's enumeration values are correct.
 */
-ALvoid
-FA_EnumerationValue (ALvoid)
+ALvoid FA_EnumerationValue(ALvoid)
 {
-  int i;
-  ALboolean result = AL_TRUE;
-  ALCcontext *context;
-  ALCdevice *device;
-  ALCenum actualValueALC;
-  ALenum actualValueAL;
+	bool result = true;
+	int i = 0;
+	int getVal;
 
-  printf ("\nEnumeration Value Test. ");
+	ALCcontext *context;
+	ALCdevice *device;
 
-  context = alcGetCurrentContext ();
-  device = alcGetContextsDevice (context);
+	printf("\nEnumeration Value Test. ");
 
-  /* Check ALC enums. */
-  for (i = 0; enumerationALC[i].enumName; i++)
-    {
-      const ALCchar *enumName = enumerationALC[i].enumName;
-      ALCenum expectedValue = enumerationALC[i].expectedValue;
+	context = alcGetCurrentContext();
+	device = alcGetContextsDevice(context);
 
-      /* Check if the ALC enum can be retrieved at all. */
-      alcGetError (device);
-      actualValueALC = alcGetEnumValue (device, enumName);
-      if (alcGetError (device) != ALC_NO_ERROR)
-        {
-          printf ("\ngetting %s vial alcGetEnumValue failed",
-                  (const char *) enumName);
-          result = AL_FALSE;
-        }
-
-      /* Check if the ALC enum has the expected value. */
-      if (expectedValue != actualValueALC)
-        {
-          printf ("\n%s has an invalid enum value: expected %d, got %d",
-                  (const char *) enumName, (int) expectedValue,
-                  (int) actualValueALC);
-          result = AL_FALSE;
-        }
-
-      /* Check that the ALC enum can not be retrieved via alGetEnumValue. Note
-         that the OpenAL 1.1 spec is a bit strange here: For alGetEnumValue it
-         doesn't specify an error code, but for a similar call of
-         alcGetEnumValue it does. Hmmm... */
-      alGetError ();
-      actualValueAL = alGetEnumValue (enumName);
-      if (actualValueAL != 0)
-        {
-          printf
-            ("\n%s could be retrieved vial alGetEnumValue (dubious behaviour)",
-             (const char *) enumName);
-          result = AL_FALSE;
-        }
-      alGetError ();
-    }
-
-  /* Check AL enums */
-  for (i = 0; enumerationAL[i].enumName; i++)
-    {
-      const ALchar *enumName = enumerationAL[i].enumName;
-      ALenum expectedValue = enumerationAL[i].expectedValue;
-
-      /* Check if the AL enum can be retrieved at all. */
-      alGetError ();
-      actualValueAL = alGetEnumValue (enumName);
-      if (alGetError () != AL_NO_ERROR)
-        {
-          printf ("\ngetting %s vial alGetEnumValue failed",
-                  (const char *) enumName);
-          result = AL_FALSE;
-        }
-
-      /* Check if the AL enum has the expected value. */
-      if (expectedValue != actualValueAL)
-        {
-          printf ("\n%s has an invalid enum value: expected %d, got %d",
-                  (const char *) enumName, (int) expectedValue,
-                  (int) actualValueAL);
-          result = AL_FALSE;
-        }
-
-      /* Check that retrieving an AL enum via alcGetEnumValue yields an
-         error. */
-      alcGetError (device);
-      actualValueALC = alcGetEnumValue (device, enumName);
-      if (alcGetError (device) != ALC_INVALID_VALUE)
-        {
-          printf
-            ("\nwhen retrieving %s via alcGetEnumValue, no ALC_INVALID_VALUE error was reported (dubious behaviour)",
-             (const char *) enumName);
-          result = AL_FALSE;
-        }
-
-      /* Check that retrieving an AL enum via alcGetEnumValue returns 0. */
-      if (actualValueALC != 0)
-        {
-          printf
-            ("\nwhen retrieving %s via alcGetEnumValue: expected 0, got %d (dubious behaviour)",
-             (const char *) enumName, (int) actualValueALC);
-          result = AL_FALSE;
-        }
-    }
-
-  printf (result == AL_TRUE ? "PASSED." : "FAILED.");
+	while (enumeration[i].enumName)
+	{
+		if (strstr(enumeration[i].enumName, "ALC_")) {
+			getVal = alcGetEnumValue(device, enumeration[i].enumName);
+			if (getVal != enumeration[i].value)
+			{
+				printf("\n%s has an invalid enum value.", enumeration[i].enumName);
+				result = false;
+			}
+			i++;
+		} else {
+			getVal = alGetEnumValue(enumeration[i].enumName);
+			if (getVal != enumeration[i].value)
+			{
+				printf("\n%s has an invalid enum value.", enumeration[i].enumName);
+				result = false;
+			}
+			i++;
+		}
+	}
+	
+	if (result == true)
+	{
+		printf("PASSED.");
+	} else
+	{
+		printf("FAILED.");
+	}
 }
+
 
 /** used by gendocs.py
 $SECTION Fully Automatic Tests
@@ -1576,7 +1487,7 @@ ALvoid FA_QueuingUnderrunStates(ALvoid)
 	alSourcei(testSources[0], AL_BUFFER, 0);
 	alSourcei(testSources[0], AL_LOOPING, AL_FALSE);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("Init error : ", error);
+		DisplayALError((ALbyte *) "Init error : ", error);
 	alSourceQueueBuffers(testSources[0], 1, &g_Buffers[1]);
 	if ((error = alGetError()) != AL_NO_ERROR) localResultOK = false;
 	alSourcePlay(testSources[0]);
@@ -1598,11 +1509,11 @@ ALvoid FA_QueuingUnderrunStates(ALvoid)
 	alGetSourcei(testSources[0], AL_SOURCE_STATE, &tempInt);
 	if (tempInt != AL_PLAYING) localResultOK = false;
 		
-	/* cleanup */
+	// cleanup
 	alSourcei(testSources[0], AL_BUFFER, 0);
 	alDeleteSources(1, testSources);
 	
-	/* display result */
+	// display result
 	if (localResultOK == true)
 	{
 		printf("PASSED.");
@@ -1625,10 +1536,12 @@ ALvoid SA_StringQueries(ALvoid)
 	printf("String Queries Test:");
 	if (ContinueOrSkip())
 	{
+		printf("Check that the following values are reasonable:\n");
+
 		const ALchar *tempString;
+
 		ALCcontext* pContext;
 		ALCdevice* pDevice;
-		printf("Check that the following values are reasonable:\n");
 		pContext = alcGetCurrentContext();
 		pDevice = alcGetContextsDevice(pContext);
 		tempString = alcGetString(pDevice, ALC_DEVICE_SPECIFIER);
@@ -1666,7 +1579,7 @@ ALvoid SA_SourceGain(ALvoid)
 	printf("Source Gain Test:");
 	if (ContinueOrSkip())
 	{
-		/* load up sources */
+		// load up sources
 		alGenSources(1, testSources);
 		alSourcei(testSources[0], AL_BUFFER, g_Buffers[1]);
 	
@@ -1689,7 +1602,7 @@ ALvoid SA_SourceGain(ALvoid)
 		CRForNextTest();
 		alSourcef(testSources[0],AL_GAIN,1.0f); 
 		
-		/* dispose of sources */
+		// dispose of sources
 		alSourcei(testSources[0], AL_BUFFER, 0);
 		alDeleteSources(1, testSources);
 	}
@@ -1709,8 +1622,7 @@ ALvoid SA_ListenerGain(ALvoid)
 	printf("Listener Gain Test:");
 	if (ContinueOrSkip())
 	{
-		float f;
-		/* load up sources */
+		// load up sources
 		alGenSources(1, testSources);
 		alSourcei(testSources[0], AL_BUFFER, g_Buffers[1]);
 	
@@ -1732,11 +1644,12 @@ ALvoid SA_ListenerGain(ALvoid)
 		alSourcePlay(testSources[0]);
 		CRForNextTest();
 		alListenerf(AL_GAIN,1.0f);
+		float f;
 		alGetListenerf(AL_GAIN, &f);
 		if (f != 1.0) { printf("ERROR:  alGetListenerf failed.\n"); }
 		alSourceStop(testSources[0]);
 		
-		/* dispose of sources */
+		// dispose of sources
 		alSourcei(testSources[0], AL_BUFFER, 0);
 		alDeleteSources(1, testSources);
 	} 
@@ -1757,7 +1670,7 @@ ALvoid SA_Position(ALvoid)
 	printf("Position Test:");
 	if (ContinueOrSkip())
 	{
-		/* load up sources */
+		// load up sources
 		alGenSources(1, testSources);
 		alSourcei(testSources[0], AL_BUFFER, g_Buffers[1]);
 		alSource3f(testSources[0], AL_POSITION, 0.0, 0.0, 0.0);
@@ -1820,7 +1733,7 @@ ALvoid SA_Position(ALvoid)
 		alSourceStop(testSources[0]);
 		CRForNextTest(); 
 		
-		/* dispose of sources */
+		// dispose of sources
 		alSourcei(testSources[0], AL_BUFFER, 0);
 		alDeleteSources(1, testSources);
 	}
@@ -1841,7 +1754,7 @@ ALvoid SA_SourceRelative(ALvoid)
 	printf("Source Relative Test:");
 	if (ContinueOrSkip())
 	{
-		/* load up sources */
+		// load up sources
 		alGenSources(1, testSources);
 		alSourcei(testSources[0], AL_BUFFER, g_Buffers[1]);
 		
@@ -1878,7 +1791,7 @@ ALvoid SA_SourceRelative(ALvoid)
 		alSourceStop(testSources[0]);
 		CRForNextTest(); 
 		
-		/* dispose of sources */
+		// dispose of sources
 		alSourcei(testSources[0], AL_BUFFER, 0);
 		alDeleteSources(1, testSources);
 	}
@@ -1898,8 +1811,7 @@ ALvoid SA_ListenerOrientation (ALvoid)
 	printf("Listener Orientation Test:");
 	if (ContinueOrSkip())
 	{
-		float f;
-		/* load up sources */
+		// load up sources
 		alGenSources(1, testSources);
 		alSourcei(testSources[0], AL_BUFFER, g_Buffers[1]);
 	
@@ -1907,10 +1819,11 @@ ALvoid SA_ListenerOrientation (ALvoid)
 		CRToContinue();
 		alSource3f(testSources[0], AL_POSITION, 0.0, 0.0, 0.0);
 		alListenerf(AL_GAIN,1.0f);
+		float f;
 		alGetSourcef(testSources[0], AL_GAIN, &f);
 		if (f != 1.0) { printf("ERROR: alGetSourcef(..., AL_GAIN, ...).\n"); }
 		alListener3f(AL_POSITION, 1.0, 0.0, 0.0);
-		listenerOri[0]= -1.0;
+		listenerOri[0]=-1.0;
 		listenerOri[1]=0.0;
 		listenerOri[2]=0.0;
 		listenerOri[3]=0.0;
@@ -1926,7 +1839,7 @@ ALvoid SA_ListenerOrientation (ALvoid)
 		CRToContinue();
 		listenerOri[0]=0.0;
 		listenerOri[1]=0.0;
-		listenerOri[2]= -1.0;
+		listenerOri[2]=-1.0;
 		listenerOri[3]=0.0;
 		listenerOri[4]=1.0;
 		listenerOri[5]=0.0;
@@ -1939,9 +1852,9 @@ ALvoid SA_ListenerOrientation (ALvoid)
 		CRToContinue();
 		listenerOri[0]=0.0;
 		listenerOri[1]=0.0;
-		listenerOri[2]= -1.0;
+		listenerOri[2]=-1.0;
 		listenerOri[3]=0.0;
-		listenerOri[4]= -1.0;
+		listenerOri[4]=-1.0;
 		listenerOri[5]=0.0;
 		alListenerfv(AL_ORIENTATION, listenerOri);
 		alSourcePlay(testSources[0]);
@@ -1977,7 +1890,7 @@ ALvoid SA_ListenerOrientation (ALvoid)
 	        printf("The listener will now be oriented down the -Y axis and with a +Z 'up' vector.  The sound should be to the right. (Press Return):\n");
 		CRToContinue();
 		listenerOri[0]=0.0;
-		listenerOri[1]= -1.0;
+		listenerOri[1]=-1.0;
 		listenerOri[2]=0.0;
 		listenerOri[3]=0.0;
 		listenerOri[4]=0.0;
@@ -1992,13 +1905,13 @@ ALvoid SA_ListenerOrientation (ALvoid)
 		alListener3f(AL_POSITION, 0.0, 0.0, 0.0);
 		listenerOri[0]=0.0;
 		listenerOri[1]=0.0;
-		listenerOri[2]= -1.0;
+		listenerOri[2]=-1.0;
 		listenerOri[3]=0.0;
 		listenerOri[4]=1.0;
 		listenerOri[5]=0.0;
 		alListenerfv(AL_ORIENTATION, listenerOri);
 		
-		/* dispose of sources */
+		// dispose of sources
 		alSourcei(testSources[0], AL_BUFFER, 0);
 		alDeleteSources(1, testSources);
 	} 
@@ -2021,7 +1934,7 @@ ALvoid SA_SourceCone (ALvoid)
 	printf("Source Cone Test:");
 	if (ContinueOrSkip())
 	{
-		/* load up sources */
+		// load up sources
 		alGenSources(1, testSources);
 		alSourcei(testSources[0], AL_BUFFER, g_Buffers[1]);
 	
@@ -2048,7 +1961,7 @@ ALvoid SA_SourceCone (ALvoid)
 		
 		CRForNextTest();
 		
-		/* dispose of sources */
+		// dispose of sources
 		alSourcei(testSources[0], AL_BUFFER, 0);
 		alDeleteSources(1, testSources);
 	} 
@@ -2067,7 +1980,7 @@ ALvoid SA_MinMaxGain(ALvoid)
 	printf("MIN/MAX Gain Test:");
 	if (ContinueOrSkip())
 	{
-		/* load up sources */
+		// load up sources
 		alGenSources(1, testSources);
 		alSourcei(testSources[0], AL_BUFFER, g_Buffers[1]);
 	
@@ -2107,7 +2020,7 @@ ALvoid SA_MinMaxGain(ALvoid)
 		alSourcef(testSources[0], AL_MAX_GAIN, 1.0);
 		alSourcef(testSources[0], AL_MIN_GAIN, 0.0);
 		
-		/* dispose of sources */
+		// dispose of sources
 		alSourcei(testSources[0], AL_BUFFER, 0);
 		alDeleteSources(1, testSources);
 	} 
@@ -2126,7 +2039,7 @@ ALvoid SA_ReferenceDistance(ALvoid)
 	printf("Reference Distance Test:");
 	if (ContinueOrSkip())
 	{
-		/* load up sources */
+		// load up sources
 		alGenSources(1, testSources);
 		alSourcei(testSources[0], AL_BUFFER, g_Buffers[1]);
 	
@@ -2151,7 +2064,7 @@ ALvoid SA_ReferenceDistance(ALvoid)
 		alSource3f(testSources[0], AL_POSITION, 0.0, 0.0, 0.0);
 		alSourcef(testSources[0], AL_REFERENCE_DISTANCE, 1.0);
 		
-		/* dispose of sources */
+		// dispose of sources
 		alSourcei(testSources[0], AL_BUFFER, 0);
 		alDeleteSources(1, testSources);
 	} 
@@ -2170,7 +2083,7 @@ ALvoid SA_RolloffFactor(ALvoid)
 	printf("Rolloff Factor Test:");
 	if (ContinueOrSkip())
 	{
-		/* load up sources */
+		// load up sources
 		alGenSources(1, testSources);
 		alSourcei(testSources[0], AL_BUFFER, g_Buffers[1]);
 	
@@ -2198,7 +2111,7 @@ ALvoid SA_RolloffFactor(ALvoid)
 		
 		CRForNextTest();
 		
-		/* dispose of sources */
+		// dispose of sources
 		alSourcei(testSources[0], AL_BUFFER, 0);
 		alDeleteSources(1, testSources);
 	} 
@@ -2217,7 +2130,7 @@ ALvoid SA_DistanceModel(ALvoid)
 	printf("Distance Model Test:");
 	if (ContinueOrSkip())
 	{
-		/* load up sources */
+		// load up sources
 		alGenSources(1, testSources);
 		alSourcei(testSources[0], AL_BUFFER, g_Buffers[1]);
 	
@@ -2267,7 +2180,7 @@ ALvoid SA_DistanceModel(ALvoid)
 		alSource3f(testSources[0], AL_POSITION, 0.0, 0.0, 0.0);
 		alDistanceModel(AL_INVERSE_DISTANCE);
 		
-		/* dispose of sources */
+		// dispose of sources
 		alSourcei(testSources[0], AL_BUFFER, 0);
 		alDeleteSources(1, testSources);
 	} 
@@ -2289,7 +2202,7 @@ ALvoid SA_Doppler(ALvoid)
 	printf("Doppler Test:");
 	if (ContinueOrSkip())
 	{
-		/* load up sources */
+		// load up sources
 		alGenSources(1, testSources);
 		alSourcei(testSources[0], AL_BUFFER, g_Buffers[1]);
 	
@@ -2352,7 +2265,7 @@ ALvoid SA_Doppler(ALvoid)
 		alSourceStop(testSources[0]);
 		CRForNextTest();
 		
-		/* dispose of sources */
+		// dispose of sources
 		alSourcei(testSources[0], AL_BUFFER, 0);
 		alDeleteSources(1, testSources);
 	} 
@@ -2375,7 +2288,7 @@ ALvoid SA_Frequency(ALvoid)
 	printf("Frequency Test:");
 	if (ContinueOrSkip())
 	{
-		/* load up sources */
+		// load up sources
 		alGenSources(1, testSources);
 		alSourcei(testSources[0], AL_BUFFER, g_Buffers[1]);
 	
@@ -2393,7 +2306,7 @@ ALvoid SA_Frequency(ALvoid)
 		alSourcef(testSources[0], AL_PITCH, 1.0);
 		CRForNextTest();
 		
-		/* dispose of sources */
+		// dispose of sources
 		alSourcei(testSources[0], AL_BUFFER, 0);
 		alDeleteSources(1, testSources);
 	} 
@@ -2413,10 +2326,10 @@ ALvoid SA_Stereo(ALvoid)
 	printf("Stereo Test:");
 	if (ContinueOrSkip())
 	{
-		/* clear error state */
+		// clear error state
 		alGetError();
 	
-		/* load up sources */
+		// load up sources
 		alGenSources(1, testSources);
 		alSourcei(testSources[0], AL_BUFFER, g_Buffers[1]);
 	
@@ -2425,17 +2338,17 @@ ALvoid SA_Stereo(ALvoid)
 		alSourcei(testSources[0], AL_BUFFER, 0);
 		alSourcei(testSources[0], AL_LOOPING, AL_FALSE);
 		if ((error = alGetError()) != AL_NO_ERROR)
-			DisplayALError("Init error : ", error);
+			DisplayALError((ALbyte *) "Init error : ", error);
 		alSourceQueueBuffers(testSources[0], 1, &g_Buffers[6]);
 		if ((error = alGetError()) != AL_NO_ERROR)
-			DisplayALError("alSourceQueueBuffers 1 (stereo) : ", error);
+			DisplayALError((ALbyte *) "alSourceQueueBuffers 1 (stereo) : ", error);
 		alSourceQueueBuffers(testSources[0], 1, &g_Buffers[6]);
 		if ((error = alGetError()) != AL_NO_ERROR)
-			DisplayALError("alSourceQueueBuffers 1 (stereo) : ", error);
+			DisplayALError((ALbyte *) "alSourceQueueBuffers 1 (stereo) : ", error);
 		alSourcePlay(testSources[0]);
 		CRForNextTest();
 		
-		/* dispose of sources */
+		// dispose of sources
 		alSourcei(testSources[0], AL_BUFFER, 0);
 		alDeleteSources(1, testSources);
 	}
@@ -2482,10 +2395,10 @@ ALvoid SA_QueuingUnderrunPerformance(ALvoid)
 		alSourcei(testSources[0], AL_BUFFER, 0);
 		alSourcei(testSources[0], AL_LOOPING, AL_FALSE);
 		if ((error = alGetError()) != AL_NO_ERROR)
-			DisplayALError("Init error : ", error);
+			DisplayALError((ALbyte *) "Init error : ", error);
 		alSourceQueueBuffers(testSources[0], 1, &g_Buffers[6]);
 		if ((error = alGetError()) != AL_NO_ERROR)
-			DisplayALError("alSourceQueueBuffers 1 (stereo) : ", error);
+			DisplayALError((ALbyte *) "alSourceQueueBuffers 1 (stereo) : ", error);
 		alSourcePlay(testSources[0]);
 		delay_ms(4000);
 		alGetSourcei(testSources[0], AL_SOURCE_STATE, &tempInt);
@@ -2501,7 +2414,7 @@ ALvoid SA_QueuingUnderrunPerformance(ALvoid)
 		}
 		alSourceQueueBuffers(testSources[0], 1, &g_Buffers[6]);
 		if ((error = alGetError()) != AL_NO_ERROR)
-			DisplayALError("alSourceQueueBuffers 1 (stereo) : ", error);
+			DisplayALError((ALbyte *) "alSourceQueueBuffers 1 (stereo) : ", error);
 		alSourcePlay(testSources[0]);
 		delay_ms(3000);
 		printf("The stereo buffer will now play twice with no pause (Press Return):\n");
@@ -2511,14 +2424,14 @@ ALvoid SA_QueuingUnderrunPerformance(ALvoid)
 		delay_ms(4000);
 		CRForNextTest();
 		
-		/* dispose of sources */
+		// dispose of sources
 		alSourcei(testSources[0], AL_BUFFER, 0);
 		alDeleteSources(1, testSources);
 	}
 }
 
 
-/* Buffer Test */
+// Buffer Test
 /** used by gendocs.py
 $SECTION Interactive Tests
 $SUBTITLE Buffer Test
@@ -2531,35 +2444,35 @@ ALvoid I_BufferTest(ALvoid)
 	ALint	error;
 	char ch;
 
-	ALfloat source0Pos[]={ 1.0, 0.0,-1.0};	/* Front and right of the listener */
+	ALfloat source0Pos[]={ 1.0, 0.0,-1.0};	// Front and right of the listener
 	ALfloat source0Vel[]={ 0.0, 0.0, 0.0};
 	
 	alGenSources(1,source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
-		DisplayALError("alGenSources 2 : ", error);
+		DisplayALError((ALbyte *) "alGenSources 2 : ", error);
 		return;
 	}
 
 	alSourcef(source[0],AL_PITCH,1.0f);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcef 0 AL_PITCH : \n", error);
+		DisplayALError((ALbyte *) "alSourcef 0 AL_PITCH : \n", error);
 
 	alSourcef(source[0],AL_GAIN,1.0f);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcef 0 AL_GAIN : \n", error);
+		DisplayALError((ALbyte *) "alSourcef 0 AL_GAIN : \n", error);
 	
 	alSourcefv(source[0],AL_POSITION,source0Pos);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcefv 0 AL_POSITION : \n", error);
+		DisplayALError((ALbyte *) "alSourcefv 0 AL_POSITION : \n", error);
 	
 	alSourcefv(source[0],AL_VELOCITY,source0Vel);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcefv 0 AL_VELOCITY : \n", error);
+		DisplayALError((ALbyte *) "alSourcefv 0 AL_VELOCITY : \n", error);
 
 	alSourcei(source[0],AL_LOOPING,AL_FALSE);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcei 0 AL_LOOPING true: \n", error);
+		DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING true: \n", error);
 
 	printf("Buffer Test\n");
 	printf("Press '1' to play buffer 0 on source 0\n");
@@ -2574,56 +2487,56 @@ ALvoid I_BufferTest(ALvoid)
 		switch (ch)
 		{
 			case '1':
-				/* Stop source */
+				// Stop source
 				alSourceStop(source[0]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourceStop 0 : ", error);
-				/* Attach buffer 0 to source */
+					DisplayALError((ALbyte *) "alSourceStop 0 : ", error);
+				// Attach buffer 0 to source
 				alSourcei(source[0], AL_BUFFER, g_Buffers[0]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcei AL_BUFFER 0 : ", error);
-				/* Play */
+					DisplayALError((ALbyte *) "alSourcei AL_BUFFER 0 : ", error);
+				// Play
 				alSourcePlay(source[0]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcePlay 0 : ", error);
+					DisplayALError((ALbyte *) "alSourcePlay 0 : ", error);
 				break;
 			case '2':
-				/* Stop source */
+				// Stop source
 				alSourceStop(source[0]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourceStop 0 : ", error);
-				/* Attach buffer 0 to source */
+					DisplayALError((ALbyte *) "alSourceStop 0 : ", error);
+				// Attach buffer 0 to source
 				alSourcei(source[0], AL_BUFFER, g_Buffers[1]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcei AL_BUFFER 1 : ", error);
-				/* Play */
+					DisplayALError((ALbyte *) "alSourcei AL_BUFFER 1 : ", error);
+				// Play
 				alSourcePlay(source[0]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcePlay 0 : ", error);
+					DisplayALError((ALbyte *) "alSourcePlay 0 : ", error);
 				break;
 			case '3':
-				/* Stop source */
+				// Stop source
 				alSourceStop(source[0]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourceStop 0 : ", error);
+					DisplayALError((ALbyte *) "alSourceStop 0 : ", error);
 				break;
 		}
 	} while (ch != 'Q');
 
-	/* Release resources */
+	// Release resources
 	alSourceStopv(1, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourceStopv 1 : ", error);
+		DisplayALError((ALbyte *) "alSourceStopv 1 : ", error);
 
 	alDeleteSources(1, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alDeleteSources 1 : ", error);
+		DisplayALError((ALbyte *) "alDeleteSources 1 : ", error);
 
 	return;
 }
 
 
-/* Position Test */
+// Position Test
 /** used by gendocs.py
 $SECTION Interactive Tests
 $SUBTITLE Position Test
@@ -2637,67 +2550,67 @@ ALvoid I_PositionTest(ALvoid)
 	ALuint	source[2];
 	ALbyte	ch;
 
-	ALfloat source0Pos[]={ -1.0, 0.0, 1.0};	/* Behind and to the left of the listener */
+	ALfloat source0Pos[]={ -1.0, 0.0, 1.0};	// Behind and to the left of the listener
 	ALfloat source0Vel[]={ 0.0, 0.0, 0.0};
 
-	ALfloat source1Pos[]={ 1.0, 0.0,-1.0};	/* Front and right of the listener */
+	ALfloat source1Pos[]={ 1.0, 0.0,-1.0};	// Front and right of the listener
 	ALfloat source1Vel[]={ 0.0, 0.0, 0.0};
 
 	alGenSources(2,source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
-		DisplayALError("alGenSources 2 : ", error);
+		DisplayALError((ALbyte *) "alGenSources 2 : ", error);
 		return;
 	}
 	
 	alSourcef(source[0],AL_PITCH,1.0f);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcef 0 AL_PITCH : \n", error);
+		DisplayALError((ALbyte *) "alSourcef 0 AL_PITCH : \n", error);
 
 	alSourcef(source[0],AL_GAIN,1.0f);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcef 0 AL_GAIN : \n", error);
+		DisplayALError((ALbyte *) "alSourcef 0 AL_GAIN : \n", error);
 	
 	alSourcefv(source[0],AL_POSITION,source0Pos);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcefv 0 AL_POSITION : \n", error);
+		DisplayALError((ALbyte *) "alSourcefv 0 AL_POSITION : \n", error);
 	
 	alSourcefv(source[0],AL_VELOCITY,source0Vel);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcefv 0 AL_VELOCITY : \n", error);
+		DisplayALError((ALbyte *) "alSourcefv 0 AL_VELOCITY : \n", error);
 
 	alSourcei(source[0],AL_BUFFER, g_Buffers[1]);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcei 0 AL_BUFFER buffer 0 : \n", error);
+		DisplayALError((ALbyte *) "alSourcei 0 AL_BUFFER buffer 0 : \n", error);
 
 	alSourcei(source[0],AL_LOOPING,AL_TRUE);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcei 0 AL_LOOPING true: \n", error);
+		DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING true: \n", error);
 
 
 	alSourcef(source[1],AL_PITCH,1.0f);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcef 1 AL_PITCH : \n", error);
+		DisplayALError((ALbyte *) "alSourcef 1 AL_PITCH : \n", error);
 
 	alSourcef(source[1],AL_GAIN,1.0f);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcef 1 AL_GAIN : \n", error);
+		DisplayALError((ALbyte *) "alSourcef 1 AL_GAIN : \n", error);
 
 	alSourcefv(source[1],AL_POSITION,source1Pos);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcefv 1 AL_POSITION : \n", error);
+		DisplayALError((ALbyte *) "alSourcefv 1 AL_POSITION : \n", error);
 
 	alSourcefv(source[1],AL_VELOCITY,source1Vel);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcefv 1 AL_VELOCITY : \n", error);
+		DisplayALError((ALbyte *) "alSourcefv 1 AL_VELOCITY : \n", error);
 
 	alSourcei(source[1],AL_BUFFER, g_Buffers[1]); 
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcei 1 AL_BUFFER buffer 1 : \n", error);
+		DisplayALError((ALbyte *) "alSourcei 1 AL_BUFFER buffer 1 : \n", error);
 
 	alSourcei(source[1],AL_LOOPING,AL_FALSE);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcei 1 AL_LOOPING false: \n", error);
+		DisplayALError((ALbyte *) "alSourcei 1 AL_LOOPING false: \n", error);
 
 	printf("Position Test\n");
 	printf("Press '1' to play source 0 (looping) rear left of listener\n");
@@ -2715,40 +2628,40 @@ ALvoid I_PositionTest(ALvoid)
 			case '1':
 				alSourcePlay(source[0]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcePlay source 0 : ", error);
+					DisplayALError((ALbyte *) "alSourcePlay source 0 : ", error);
 				break;
 			case '2':
 				alSourcePlay(source[1]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcePlay source 1 : ", error);
+					DisplayALError((ALbyte *) "alSourcePlay source 1 : ", error);
 				break;
 			case '3':
 				alSourceStop(source[0]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourceStop source 0 : ", error);
+					DisplayALError((ALbyte *) "alSourceStop source 0 : ", error);
 				break;
 			case '4':
 				alSourceStop(source[1]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourceStop source 1 : ", error);
+					DisplayALError((ALbyte *) "alSourceStop source 1 : ", error);
 				break;
 		}
 	} while (ch != 'Q');
 
-	/* Release resources */
+	// Release resources
 	alSourceStopv(2, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourceStopv 2 : ", error);
+		DisplayALError((ALbyte *) "alSourceStopv 2 : ", error);
 
 	alDeleteSources(2, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alDeleteSources 2 : ", error);
+		DisplayALError((ALbyte *) "alDeleteSources 2 : ", error);
 
 	return;
 }
 
 
-/* Looping Test */
+// Looping Test
 /** used by gendocs.py
 $SECTION Interactive Tests
 $SUBTITLE Looping Test
@@ -2764,70 +2677,70 @@ ALvoid I_LoopingTest(ALvoid)
 	ALboolean bLooping0 = AL_FALSE;
 	ALboolean bLooping1 = AL_FALSE;
 
-	ALfloat source0Pos[]={ -1.0, 0.0, -1.0};	/* Front left of the listener */
+	ALfloat source0Pos[]={ -1.0, 0.0, -1.0};	// Front left of the listener
 	ALfloat source0Vel[]={ 0.0, 0.0, 0.0};
 
-	ALfloat source1Pos[]={ 1.0, 0.0, -1.0};		/* Front right of the listener */
+	ALfloat source1Pos[]={ 1.0, 0.0, -1.0};		// Front right of the listener
 	ALfloat source1Vel[]={ 0.0, 0.0, 0.0};
 
-	/* Clear Error Code */
+	// Clear Error Code
 	alGetError();
 
 	alGenSources(2,source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
-		DisplayALError("alGenSources 1 : ", error);
+		DisplayALError((ALbyte *) "alGenSources 1 : ", error);
 		return;
 	}
 	
 	alSourcef(source[0],AL_PITCH,1.0f);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcef 0 AL_PITCH : \n", error);
+		DisplayALError((ALbyte *) "alSourcef 0 AL_PITCH : \n", error);
 
 	alSourcef(source[0],AL_GAIN,1.0f);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcef 0 AL_GAIN : \n", error);
+		DisplayALError((ALbyte *) "alSourcef 0 AL_GAIN : \n", error);
 	
 	alSourcefv(source[0],AL_POSITION,source0Pos);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcefv 0 AL_POSITION : \n", error);
+		DisplayALError((ALbyte *) "alSourcefv 0 AL_POSITION : \n", error);
 	
 	alSourcefv(source[0],AL_VELOCITY,source0Vel);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcefv 0 AL_VELOCITY : \n", error);
+		DisplayALError((ALbyte *) "alSourcefv 0 AL_VELOCITY : \n", error);
 
 	alSourcei(source[0],AL_BUFFER, g_Buffers[0]);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcei 0 AL_BUFFER buffer 0 : \n", error);
+		DisplayALError((ALbyte *) "alSourcei 0 AL_BUFFER buffer 0 : \n", error);
 
 	alSourcei(source[0],AL_LOOPING,AL_FALSE);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcei 0 AL_LOOPING false : \n", error);
+		DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING false : \n", error);
 
 
 	alSourcef(source[1],AL_PITCH,1.0f);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcef 1 AL_PITCH : \n", error);
+		DisplayALError((ALbyte *) "alSourcef 1 AL_PITCH : \n", error);
 
 	alSourcef(source[1],AL_GAIN,1.0f);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcef 1 AL_GAIN : \n", error);
+		DisplayALError((ALbyte *) "alSourcef 1 AL_GAIN : \n", error);
 
 	alSourcefv(source[1],AL_POSITION,source1Pos);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcefv 1 AL_POSITION : \n", error);
+		DisplayALError((ALbyte *) "alSourcefv 1 AL_POSITION : \n", error);
 
 	alSourcefv(source[1],AL_VELOCITY,source1Vel);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcefv 1 AL_VELOCITY : \n", error);
+		DisplayALError((ALbyte *) "alSourcefv 1 AL_VELOCITY : \n", error);
 
 	alSourcei(source[1],AL_BUFFER, g_Buffers[1]);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcei 1 AL_BUFFER buffer 1 : \n", error);
+		DisplayALError((ALbyte *) "alSourcei 1 AL_BUFFER buffer 1 : \n", error);
 
 	alSourcei(source[1],AL_LOOPING,AL_FALSE);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcei 1 AL_LOOPING false: \n", error);
+		DisplayALError((ALbyte *) "alSourcei 1 AL_LOOPING false: \n", error);
 
 	printf("Looping Test\n");
 	printf("Press '1' to play source 0 once (single shot)\n");
@@ -2845,7 +2758,7 @@ ALvoid I_LoopingTest(ALvoid)
 			case '1':
 				alSourcePlay(source[0]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcePlay source 0 : ", error);
+					DisplayALError((ALbyte *) "alSourcePlay source 0 : ", error);
 				break;
 			case '2':
 				if (bLooping0 == AL_FALSE)
@@ -2869,7 +2782,7 @@ ALvoid I_LoopingTest(ALvoid)
 			case '3':
 				alSourcePlay(source[1]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcePlay source 1 : ", error);
+					DisplayALError((ALbyte *) "alSourcePlay source 1 : ", error);
 				break;
 			case '4':
 				if (bLooping1 == AL_FALSE)
@@ -2895,20 +2808,20 @@ ALvoid I_LoopingTest(ALvoid)
 
 	printf("\n");
 
-	/* Release resources */
+	// Release resources
 	alSourceStop(source[0]);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourceStop source 1 : ", error);
+		DisplayALError((ALbyte *) "alSourceStop source 1 : ", error);
 
 	alDeleteSources(2, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alDeleteSources 1 : ", error);
+		DisplayALError((ALbyte *) "alDeleteSources 1 : ", error);
 
 	return;
 }
 
 #if TEST_EAX
-/* EAX Test */
+// EAX Test
 /** used by gendocs.py
 $SECTION Interactive Tests
 $SUBTITLE EAX Test
@@ -2926,70 +2839,70 @@ ALvoid I_EAXTest(ALvoid)
 	ALint	Obstruction;
 	EAXBUFFERPROPERTIES eaxBufferProp0;
 
-	ALfloat source0Pos[]={ -1.0, 0.0, 1.0};	/* Behind and to the left of the listener */
+	ALfloat source0Pos[]={ -1.0, 0.0, 1.0};	// Behind and to the left of the listener
 	ALfloat source0Vel[]={ 0.0, 0.0, 0.0};
 
-	ALfloat source1Pos[]={ 1.0, 0.0,-1.0};	/* Front and right of the listener */
+	ALfloat source1Pos[]={ 1.0, 0.0,-1.0};	// Front and right of the listener
 	ALfloat source1Vel[]={ 0.0, 0.0, 0.0};
 
-	/* Clear Error Code */
+	// Clear Error Code
 	alGetError();
 
 	alGenSources(2,source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
-		DisplayALError("alGenSources 2 : ", error);
+		DisplayALError((ALbyte *) "alGenSources 2 : ", error);
 		return;
 	}
 	
 	alSourcef(source[0],AL_PITCH,1.0f);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcef 0 AL_PITCH : \n", error);
+		DisplayALError((ALbyte *) "alSourcef 0 AL_PITCH : \n", error);
 
 	alSourcef(source[0],AL_GAIN,1.0f);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcef 0 AL_GAIN : \n", error);
+		DisplayALError((ALbyte *) "alSourcef 0 AL_GAIN : \n", error);
 	
 	alSourcefv(source[0],AL_POSITION,source0Pos);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcefv 0 AL_POSITION : \n", error);
+		DisplayALError((ALbyte *) "alSourcefv 0 AL_POSITION : \n", error);
 	
 	alSourcefv(source[0],AL_VELOCITY,source0Vel);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcefv 0 AL_VELOCITY : \n", error);
+		DisplayALError((ALbyte *) "alSourcefv 0 AL_VELOCITY : \n", error);
 
 	alSourcei(source[0],AL_BUFFER, g_Buffers[0]);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcei 0 AL_BUFFER buffer 0 : \n", error);
+		DisplayALError((ALbyte *) "alSourcei 0 AL_BUFFER buffer 0 : \n", error);
 
 	alSourcei(source[0],AL_LOOPING,AL_TRUE);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcei 0 AL_LOOPING true: \n", error);
+		DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING true: \n", error);
 
 
 	alSourcef(source[1],AL_PITCH,1.0f);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcef 1 AL_PITCH : \n", error);
+		DisplayALError((ALbyte *) "alSourcef 1 AL_PITCH : \n", error);
 
 	alSourcef(source[1],AL_GAIN,1.0f);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcef 1 AL_GAIN : \n", error);
+		DisplayALError((ALbyte *) "alSourcef 1 AL_GAIN : \n", error);
 
 	alSourcefv(source[1],AL_POSITION,source1Pos);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcefv 1 AL_POSITION : \n", error);
+		DisplayALError((ALbyte *) "alSourcefv 1 AL_POSITION : \n", error);
 
 	alSourcefv(source[1],AL_VELOCITY,source1Vel);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcefv 1 AL_VELOCITY : \n", error);
+		DisplayALError((ALbyte *) "alSourcefv 1 AL_VELOCITY : \n", error);
 
 	alSourcei(source[1],AL_BUFFER, g_Buffers[1]);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcei 1 AL_BUFFER buffer 1 : \n", error);
+		DisplayALError((ALbyte *) "alSourcei 1 AL_BUFFER buffer 1 : \n", error);
 
 	alSourcei(source[1],AL_LOOPING,AL_FALSE);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcei 1 AL_LOOPING false: \n", error);
+		DisplayALError((ALbyte *) "alSourcei 1 AL_LOOPING false: \n", error);
 
 	printf("EAX Test\n\n");
 	printf("Press '1' to play source 0 (looping)\n");
@@ -3029,7 +2942,7 @@ ALvoid I_EAXTest(ALvoid)
 				eaxSet(&DSPROPSETID_EAX20_ListenerProperties, DSPROPERTY_EAXLISTENER_ENVIRONMENT | DSPROPERTY_EAXLISTENER_DEFERRED,
 					NULL, &Env, sizeof(ALuint));
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("eaxSet EAXLISTENER_ENVIRONMENT | EAXLISTENER_DEFERRED : \n", error);
+					DisplayALError((ALbyte *) "eaxSet EAXLISTENER_ENVIRONMENT | EAXLISTENER_DEFERRED : \n", error);
 				break;
 
 			case '6':
@@ -3037,19 +2950,19 @@ ALvoid I_EAXTest(ALvoid)
 				eaxSet(&DSPROPSETID_EAX20_ListenerProperties, DSPROPERTY_EAXLISTENER_ROOM | DSPROPERTY_EAXLISTENER_DEFERRED, NULL,
 					&Room, sizeof(ALint));
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("eaxSet EAXLISTENER_ROOM | EAXLISTENER_DEFERRED : \n", error);
+					DisplayALError((ALbyte *) "eaxSet EAXLISTENER_ROOM | EAXLISTENER_DEFERRED : \n", error);
 				break;
 
 			case '7':
 				eaxGet(&DSPROPSETID_EAX20_BufferProperties, DSPROPERTY_EAXBUFFER_ALLPARAMETERS, source[0],
 					&eaxBufferProp0, sizeof(EAXBUFFERPROPERTIES));
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("eaxGet EAXBUFFER_ALLPARAMETERS : \n", error);
+					DisplayALError((ALbyte *) "eaxGet EAXBUFFER_ALLPARAMETERS : \n", error);
 				eaxBufferProp0.lOcclusion = -5000;
 				eaxSet(&DSPROPSETID_EAX20_BufferProperties, DSPROPERTY_EAXBUFFER_ALLPARAMETERS | DSPROPERTY_EAXBUFFER_DEFERRED, source[0],
 					&eaxBufferProp0, sizeof(EAXBUFFERPROPERTIES));
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("eaxSet EAXBUFFER_ALLPARAMETERS | EAXBUFFER_DEFERRED : \n", error);
+					DisplayALError((ALbyte *) "eaxSet EAXBUFFER_ALLPARAMETERS | EAXBUFFER_DEFERRED : \n", error);
 				break;
 
 			case '8':
@@ -3057,7 +2970,7 @@ ALvoid I_EAXTest(ALvoid)
 				eaxSet(&DSPROPSETID_EAX20_BufferProperties, DSPROPERTY_EAXBUFFER_OCCLUSION | DSPROPERTY_EAXBUFFER_DEFERRED, source[0],
 					&Occlusion, sizeof(ALint));
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("eaxSet EAXBUFFER_OCCLUSION | EAXBUFFER_DEFERRED : \n", error);
+					DisplayALError((ALbyte *) "eaxSet EAXBUFFER_OCCLUSION | EAXBUFFER_DEFERRED : \n", error);
 				break;
 
 			case '9':
@@ -3065,7 +2978,7 @@ ALvoid I_EAXTest(ALvoid)
 				eaxSet(&DSPROPSETID_EAX20_BufferProperties, DSPROPERTY_EAXBUFFER_OBSTRUCTION, source[1],
 					&Obstruction, sizeof(ALint));
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("eaxSet EAXBUFFER_OBSTRUCTION : \n", error);
+					DisplayALError((ALbyte *) "eaxSet EAXBUFFER_OBSTRUCTION : \n", error);
 				break;
 
 			case '0':
@@ -3073,45 +2986,45 @@ ALvoid I_EAXTest(ALvoid)
 				eaxSet(&DSPROPSETID_EAX20_BufferProperties, DSPROPERTY_EAXBUFFER_OBSTRUCTION, source[1],
 					&Obstruction, sizeof(ALint));
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("eaxSet EAXBUFFER_OBSTRUCTION : \n", error);
+					DisplayALError((ALbyte *) "eaxSet EAXBUFFER_OBSTRUCTION : \n", error);
 				break;
 
 			case 'C':
-				/* Commit settings on source 0 */
+				// Commit settings on source 0
 				eaxSet(&DSPROPSETID_EAX20_BufferProperties, DSPROPERTY_EAXBUFFER_COMMITDEFERREDSETTINGS,
 					source[0], NULL, 0);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("eaxSet EAXBUFFER_COMMITDEFERREDSETTINGS : \n", error);
+					DisplayALError((ALbyte *) "eaxSet EAXBUFFER_COMMITDEFERREDSETTINGS : \n", error);
 
-				/* Commit Listener settings */
+				// Commit Listener settings
 				eaxSet(&DSPROPSETID_EAX20_ListenerProperties, DSPROPERTY_EAXLISTENER_COMMITDEFERREDSETTINGS,
 					NULL, NULL, 0);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("eaxSet EAXLISTENER_COMMITDEFERREDSETTINGSENVIRONMENT : \n", error);
+					DisplayALError((ALbyte *) "eaxSet EAXLISTENER_COMMITDEFERREDSETTINGSENVIRONMENT : \n", error);
 				break;
 		}
 	} while (ch != 'Q');
 
-	/* reset EAX level */
+	// reset EAX level
 	Room = -10000;
 	eaxSet(&DSPROPSETID_EAX20_ListenerProperties, DSPROPERTY_EAXLISTENER_ROOM, NULL, &Room, sizeof(ALint));
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("eaxSet EAXLISTENER_ROOM : \n", error);
+		DisplayALError((ALbyte *) "eaxSet EAXLISTENER_ROOM : \n", error);
 
-	/* Release resources */
+	// Release resources
 	alSourceStopv(2, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourceStopv 2 : ", error);
+		DisplayALError((ALbyte *) "alSourceStopv 2 : ", error);
 
 	alDeleteSources(2, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alDeleteSources 2 : ", error);
+		DisplayALError((ALbyte *) "alDeleteSources 2 : ", error);
 	return;
 }
 #endif
 
 
-/* Queue Test */
+// Queue Test
 /** used by gendocs.py
 $SECTION Interactive Tests
 $SUBTITLE Queue Test
@@ -3124,14 +3037,15 @@ ALvoid I_QueueTest(ALvoid)
 	ALuint	source[1];
 	ALbyte	ch;
 	ALuint  buffers[5];
+	ALuint  *buffersremoved;
 	ALboolean bLooping;
 	ALint	BuffersInQueue, BuffersProcessed;
-	ALfloat source0Pos[]={ 0.0, 0.0, -1.0};	/* Immediately in front of listener */
+	ALfloat source0Pos[]={ 0.0, 0.0, -1.0};	// Immediately in front of listener
 	ALfloat source0Vel[]={ 0.0, 0.0, 0.0};
 	ALuint	Buffer;
 	ALint	i;
 
-	/* Clear Error Code */
+	// Clear Error Code
 	alGetError();
 
 	alGenSources(1,source);
@@ -3248,14 +3162,14 @@ ALvoid I_QueueTest(ALvoid)
 					DisplayALError("alSourceQueueBuffers 1 : ", error);
 				break;
 			case '9':
-				/* Queue buffer 0 */
+				// Queue buffer 0
 				alSourceQueueBuffers(source[0], 1, &buffers[4]);
 				if ((error = alGetError()) != AL_NO_ERROR)
 					DisplayALError("alSourceQueueBuffers 1 (buffer 0) : ", error);
 				break;
-			case 'A': {
-				/* Unqueue first Buffer */
-				ALuint buffersremoved[1];
+			case 'A':
+				// Unqueue first Buffer
+				buffersremoved = new ALuint[1];
 				alSourceUnqueueBuffers(source[0], 1, buffersremoved);
 				
 				if ((error = alGetError()) != AL_NO_ERROR)
@@ -3277,11 +3191,11 @@ ALvoid I_QueueTest(ALvoid)
 					printf("\nRemoved Buffer %d from queue\n", buffersremoved[0]);
 				}
 				
-				}
+				delete buffersremoved;
 				break;
-			case 'B': {
-				/* Unqueue first 2 Buffers */
-				ALuint buffersremoved[2];
+			case 'B':
+				// Unqueue first 2 Buffers
+				buffersremoved = new ALuint[2];
 				alSourceUnqueueBuffers(source[0], 2, buffersremoved);
 				
 				if ((error = alGetError()) != AL_NO_ERROR)
@@ -3306,11 +3220,11 @@ ALvoid I_QueueTest(ALvoid)
 					printf("\nRemoved Buffers %d and %d from queue\n", buffersremoved[0], buffersremoved[1]);
 				}
 
-				}
+				delete buffersremoved;
 				break;
-			case 'C': {
-				/* Unqueue first 3 Buffers */
-				ALuint buffersremoved[3];
+			case 'C':
+				// Unqueue first 3 Buffers
+				buffersremoved = new ALuint[3];
 				alSourceUnqueueBuffers(source[0], 3, buffersremoved);
 				if ((error = alGetError()) != AL_NO_ERROR)
 				{
@@ -3335,11 +3249,11 @@ ALvoid I_QueueTest(ALvoid)
 						buffersremoved[2]);
 				}
 
-				}
+				delete buffersremoved;
 				break;
-			case 'D': {
-				/* Unqueue first 4 Buffers */
-				ALuint buffersremoved[4];
+			case 'D':
+				// Unqueue first 4 Buffers
+				buffersremoved = new ALuint[4];
 				alSourceUnqueueBuffers(source[0], 4, buffersremoved);
 				
 				if ((error = alGetError()) != AL_NO_ERROR)
@@ -3365,11 +3279,11 @@ ALvoid I_QueueTest(ALvoid)
 						buffersremoved[2], buffersremoved[3]);
 				}
 
-				}
+				delete buffersremoved;
 				break;
-			case 'E': {
-				/* Unqueue first 5 Buffers */
-				ALuint buffersremoved[5];
+			case 'E':
+				// Unqueue first 5 Buffers
+				buffersremoved = new ALuint[5];
 				alSourceUnqueueBuffers(source[0], 5, buffersremoved);
 				
 				if ((error = alGetError()) != AL_NO_ERROR)
@@ -3395,7 +3309,7 @@ ALvoid I_QueueTest(ALvoid)
 						buffersremoved[2], buffersremoved[3], buffersremoved[4]);
 				}
 
-				}
+				delete buffersremoved;
 				break;
 			case 'F':
 				alSourcei(source[0], AL_BUFFER, 0);
@@ -3403,19 +3317,19 @@ ALvoid I_QueueTest(ALvoid)
 					DisplayALError("alSource AL_BUFFER NULL : ", error);
 				break;
 			case '0':
-				/* Retrieve number of buffers in queue */
+				// Retrieve number of buffers in queue
 #ifndef LINUX
 		        alGetSourcei(source[0], AL_BUFFERS_QUEUED, &BuffersInQueue);
 #else
 		        alGetSourceiv(source[0], AL_BUFFERS_QUEUED, &BuffersInQueue);
 #endif
-				/* Retrieve number of processed buffers */
+				// Retrieve number of processed buffers
 #ifndef LINUX
 		        alGetSourcei(source[0], AL_BUFFERS_PROCESSED, &BuffersProcessed);
 #else
 		       alGetSourceiv(source[0], AL_BUFFERS_PROCESSED, &BuffersProcessed);
 #endif
-				/* Retrieve current buffer */
+				// Retrieve current buffer
 #ifndef LINUX
 		        alGetSourcei(source[0], AL_BUFFER, (ALint*)&Buffer);
 #else
@@ -3438,7 +3352,7 @@ ALvoid I_QueueTest(ALvoid)
 		}
 	} while (ch != 'Q');
 
-	/* Release resources */
+	// Release resources
 	alSourceStop(source[0]);
 	if ((error = alGetError()) != AL_NO_ERROR)
 		DisplayALError("alSourceStop : ", error);
@@ -3450,7 +3364,7 @@ ALvoid I_QueueTest(ALvoid)
 	return;
 }
 
-/* Frequency Test */
+// Frequency Test
 /** used by gendocs.py
 $SECTION Interactive Tests
 $SUBTITLE Frequency Test
@@ -3461,40 +3375,40 @@ ALvoid I_FreqTest(ALvoid)
 	ALint	error;
 	ALuint	source[1];
 	ALbyte	ch;
-	ALfloat source0Pos[]={ 1.0, 0.0,-1.0};	/* Front and right of the listener */
+	ALfloat source0Pos[]={ 1.0, 0.0,-1.0};	// Front and right of the listener
 	ALfloat source0Vel[]={ 0.0, 0.0, 0.0};
 
 
 	alGenSources(1,source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
-		DisplayALError("alGenSources 1 : ", error);
+		DisplayALError((ALbyte *) "alGenSources 1 : ", error);
 		return;
 	}
 	
 	alSourcef(source[0],AL_PITCH,1.0f);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcef 0 AL_PITCH : \n", error);
+		DisplayALError((ALbyte *) "alSourcef 0 AL_PITCH : \n", error);
 
 	alSourcef(source[0],AL_GAIN,1.0f);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcef 0 AL_GAIN : \n", error);
+		DisplayALError((ALbyte *) "alSourcef 0 AL_GAIN : \n", error);
 	
 	alSourcefv(source[0],AL_POSITION,source0Pos);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcefv 0 AL_POSITION : \n", error);
+		DisplayALError((ALbyte *) "alSourcefv 0 AL_POSITION : \n", error);
 	
 	alSourcefv(source[0],AL_VELOCITY,source0Vel);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcefv 0 AL_VELOCITY : \n", error);
+		DisplayALError((ALbyte *) "alSourcefv 0 AL_VELOCITY : \n", error);
 
 	alSourcei(source[0],AL_BUFFER, g_Buffers[1]);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcei 0 AL_BUFFER buffer 1 : \n", error);
+		DisplayALError((ALbyte *) "alSourcei 0 AL_BUFFER buffer 1 : \n", error);
 
 	alSourcei(source[0],AL_LOOPING,AL_TRUE);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcei 0 AL_LOOPING true: \n", error);
+		DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING true: \n", error);
 
 	printf("Frequency Test\n");
 	printf("Press '1' to play source 0 (looping)\n");
@@ -3512,35 +3426,35 @@ ALvoid I_FreqTest(ALvoid)
 				alSourcef(source[0], AL_PITCH, 1.0f);
 				alSourcePlay(source[0]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcePlay source 0 : ", error);
+					DisplayALError((ALbyte *) "alSourcePlay source 0 : ", error);
 				break;
 			case '2':
 				alSourcef(source[0], AL_PITCH, 2.0f);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcef source 0 AL_PITCH 2.0 : ", error);
+					DisplayALError((ALbyte *) "alSourcef source 0 AL_PITCH 2.0 : ", error);
 				break;
 			case '3':
 				alSourcef(source[0], AL_PITCH, 0.5f);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcef source 0 AL PITCH 0.5: ", error);
+					DisplayALError((ALbyte *) "alSourcef source 0 AL PITCH 0.5: ", error);
 				break;
 		}
 	} while (ch != 'Q');
 
-	/* Release resources */
+	// Release resources
 	alSourceStopv(1, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourceStopv 2 : ", error);
+		DisplayALError((ALbyte *) "alSourceStopv 2 : ", error);
 
 	alDeleteSources(1, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alDeleteSources 2 : ", error);
+		DisplayALError((ALbyte *) "alDeleteSources 2 : ", error);
 	
 	return;
 }
 
 
-/* Stereo Test */
+// Stereo Test
 /** used by gendocs.py
 $SECTION Interactive Tests
 $SUBTITLE Stereo Test
@@ -3555,13 +3469,13 @@ ALvoid I_StereoTest(ALvoid)
 	ALint	BuffersInQueue, BuffersProcessed;
 	ALbyte	ch;
 	ALboolean bLoop = true;
-	ALfloat source0Pos[]={ 1.0, 0.0,-1.0};	/* Front and right of the listener */
+	ALfloat source0Pos[]={ 1.0, 0.0,-1.0};	// Front and right of the listener
 	ALfloat source0Vel[]={ 0.0, 0.0, 0.0};
 
 	alGenSources(1,source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
-		DisplayALError("alGenSources 1 : ", error);
+		DisplayALError((ALbyte *) "alGenSources 1 : ", error);
 		return;
 	}
 
@@ -3586,100 +3500,100 @@ ALvoid I_StereoTest(ALvoid)
 		switch (ch)
 		{
 			case '1':
-				/* Stop source */
+				// Stop source
 				alSourceStop(source[0]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourceStop source 0 : ", error);
+					DisplayALError((ALbyte *) "alSourceStop source 0 : ", error);
 
-				/* Attach new buffer */
+				// Attach new buffer
 				alSourcei(source[0],AL_BUFFER, g_Buffers[6]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcei 0 AL_BUFFER buffer 6 (stereo) : \n", error);
+					DisplayALError((ALbyte *) "alSourcei 0 AL_BUFFER buffer 6 (stereo) : \n", error);
 
-				/* Set volume */
+				// Set volume
 				alSourcef(source[0],AL_GAIN,0.5f);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcef 0 AL_GAIN : \n", error);
+					DisplayALError((ALbyte *) "alSourcef 0 AL_GAIN : \n", error);
 
-				/* Set looping */
+				// Set looping
 				alSourcei(source[0],AL_LOOPING,bLoop);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcei 0 AL_LOOPING true: \n", error);
+					DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING true: \n", error);
 
-				/* Play source */
+				// Play source
 				alSourcePlay(source[0]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcePlay source 0 : ", error);
+					DisplayALError((ALbyte *) "alSourcePlay source 0 : ", error);
 				
 				break;
 			case '2':
-				/* Stop source */
+				// Stop source
 				alSourceStop(source[0]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourceStop source 0 : ", error);
+					DisplayALError((ALbyte *) "alSourceStop source 0 : ", error);
 
-				/* Attach new buffer */
+				// Attach new buffer
 				alSourcei(source[0],AL_BUFFER, g_Buffers[0]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcei 0 AL_BUFFER buffer 0 (mono) : \n", error);
+					DisplayALError((ALbyte *) "alSourcei 0 AL_BUFFER buffer 0 (mono) : \n", error);
 
-				/* Set 3D position */
+				// Set 3D position
 				alSourcefv(source[0],AL_POSITION,source0Pos);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcefv 0 AL_POSITION : \n", error);
+					DisplayALError((ALbyte *) "alSourcefv 0 AL_POSITION : \n", error);
 	
-				/* Set 3D velocity */
+				// Set 3D velocity
 				alSourcefv(source[0],AL_VELOCITY,source0Vel);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcefv 0 AL_VELOCITY : \n", error);
+					DisplayALError((ALbyte *) "alSourcefv 0 AL_VELOCITY : \n", error);
 
-				/* Set volume to full */
+				// Set volume to full
 				alSourcef(source[0],AL_GAIN,1.0f);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcef 0 AL_GAIN : \n", error);
+					DisplayALError((ALbyte *) "alSourcef 0 AL_GAIN : \n", error);
 
-				/* Set Looping */
+				// Set Looping
 				alSourcei(source[0],AL_LOOPING,bLoop);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcei 0 AL_LOOPING : \n", error);
+					DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING : \n", error);
 
-				/* Play source */
+				// Play source
 				alSourcePlay(source[0]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcePlay source 0 : ", error);
+					DisplayALError((ALbyte *) "alSourcePlay source 0 : ", error);
 				break;
 			case '3':
 				alSourceStop(source[0]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourceStop source 0 : ", error);
+					DisplayALError((ALbyte *) "alSourceStop source 0 : ", error);
 				break;
 			case '4':
 				alSourceStop(source[0]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourceStop Source 0 : ", error);
+					DisplayALError((ALbyte *) "alSourceStop Source 0 : ", error);
 
-				/* Attach NULL buffer to source to clear everything */
+				// Attach NULL buffer to source to clear everything
 				alSourcei(source[0], AL_BUFFER, 0);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcei AL_BUFFER (NULL) : ", error);
+					DisplayALError((ALbyte *) "alSourcei AL_BUFFER (NULL) : ", error);
 
 				alSourceQueueBuffers(source[0], 2, buffers);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourceQueueBuffers 2 (stereo) : ", error);
+					DisplayALError((ALbyte *) "alSourceQueueBuffers 2 (stereo) : ", error);
 
-				/* Set Looping */
+				// Set Looping
 				alSourcei(source[0],AL_LOOPING,bLoop);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcei 0 AL_LOOPING : \n", error);
+					DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING : \n", error);
 
 				alSourcePlay(source[0]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcePlay Source 0 : ", error);
+					DisplayALError((ALbyte *) "alSourcePlay Source 0 : ", error);
 				break;
 			case '5':
 				alSourceUnqueueBuffers(source[0], 2, buffers);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourceUnqueueBuffers 2 (stereo) : ", error);
+					DisplayALError((ALbyte *) "alSourceUnqueueBuffers 2 (stereo) : ", error);
 				break;
 			case '6':
 				if (bLoop)
@@ -3694,22 +3608,22 @@ ALvoid I_StereoTest(ALvoid)
 				}
 				alSourcei(source[0], AL_LOOPING, bLoop);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcei 0 AL_LOOPING : \n", error);
+					DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING : \n", error);
 				break;
 			case '0':
 #ifndef LINUX
-		                /* Retrieve number of buffers in queue */
+		                // Retrieve number of buffers in queue
 				alGetSourcei(source[0], AL_BUFFERS_QUEUED, &BuffersInQueue);
-				/* Retrieve number of processed buffers */
+				// Retrieve number of processed buffers
 				alGetSourcei(source[0], AL_BUFFERS_PROCESSED, &BuffersProcessed);
-				/* Retrieve current buffer */
+				// Retrieve current buffer
 				alGetSourcei(source[0], AL_BUFFER, (ALint*)&Buffer);
 #else
-		                /* Retrieve number of buffers in queue */
+		                // Retrieve number of buffers in queue
 				alGetSourceiv(source[0], AL_BUFFERS_QUEUED, &BuffersInQueue);
-				/* Retrieve number of processed buffers */
+				// Retrieve number of processed buffers
 				alGetSourceiv(source[0], AL_BUFFERS_PROCESSED, &BuffersProcessed);
-				/* Retrieve current buffer */
+				// Retrieve current buffer
 				alGetSourceiv(source[0], AL_BUFFER, (ALint*)&Buffer);
 		   
 #endif
@@ -3726,20 +3640,20 @@ ALvoid I_StereoTest(ALvoid)
 		}
 	} while (ch != 'Q');
 
-	/* Release resources */
+	// Release resources
 	alSourceStop(source[0]);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourceStop : ", error);
+		DisplayALError((ALbyte *) "alSourceStop : ", error);
 
 	alDeleteSources(1, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alDeleteSources 2 : ", error);
+		DisplayALError((ALbyte *) "alDeleteSources 2 : ", error);
 	
 	return;
 }
 
 
-/* Gain Test */
+// Gain Test
 /** used by gendocs.py
 $SECTION Interactive Tests
 $SUBTITLE Gain Test
@@ -3751,7 +3665,7 @@ ALvoid I_GainTest(ALvoid)
 	ALuint	source[2];
 	ALbyte	ch;
 
-	ALfloat source0Pos[]={ 1.0, 0.0,-1.0};	/* Front and right of the listener */
+	ALfloat source0Pos[]={ 1.0, 0.0,-1.0};	// Front and right of the listener
 	ALfloat source0Vel[]={ 0.0, 0.0, 0.0};
 
 	ALfloat source1Pos[]={-1.0, 0.0,-1.0};
@@ -3760,58 +3674,58 @@ ALvoid I_GainTest(ALvoid)
 	alGenSources(2,source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
-		DisplayALError("alGenSources 2 : ", error);
+		DisplayALError((ALbyte *) "alGenSources 2 : ", error);
 		return;
 	}
 
 	alSourcef(source[0],AL_PITCH,1.0f);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcef 0 AL_PITCH : \n", error);
+		DisplayALError((ALbyte *) "alSourcef 0 AL_PITCH : \n", error);
 
 	alSourcef(source[0],AL_GAIN,1.0f);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcef 0 AL_GAIN : \n", error);
+		DisplayALError((ALbyte *) "alSourcef 0 AL_GAIN : \n", error);
 	
 	alSourcefv(source[0],AL_POSITION,source0Pos);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcefv 0 AL_POSITION : \n", error);
+		DisplayALError((ALbyte *) "alSourcefv 0 AL_POSITION : \n", error);
 	
 	alSourcefv(source[0],AL_VELOCITY,source0Vel);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcefv 0 AL_VELOCITY : \n", error);
+		DisplayALError((ALbyte *) "alSourcefv 0 AL_VELOCITY : \n", error);
 
 	alSourcei(source[0],AL_BUFFER, g_Buffers[0]);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcei 0 AL_BUFFER buffer 0 : \n", error);
+		DisplayALError((ALbyte *) "alSourcei 0 AL_BUFFER buffer 0 : \n", error);
 
 	alSourcei(source[0],AL_LOOPING,AL_TRUE);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcei 0 AL_LOOPING true: \n", error);
+		DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING true: \n", error);
 
 
 	alSourcef(source[1],AL_PITCH,1.0f);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcef 1 AL_PITCH : \n", error);
+		DisplayALError((ALbyte *) "alSourcef 1 AL_PITCH : \n", error);
 
 	alSourcef(source[1],AL_GAIN,1.0f);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcef 1 AL_GAIN : \n", error);
+		DisplayALError((ALbyte *) "alSourcef 1 AL_GAIN : \n", error);
 
 	alSourcefv(source[1],AL_POSITION,source1Pos);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcefv 1 AL_POSITION : \n", error);
+		DisplayALError((ALbyte *) "alSourcefv 1 AL_POSITION : \n", error);
 
 	alSourcefv(source[1],AL_VELOCITY,source1Vel);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcefv 1 AL_VELOCITY : \n", error);
+		DisplayALError((ALbyte *) "alSourcefv 1 AL_VELOCITY : \n", error);
 
 	alSourcei(source[1],AL_BUFFER, g_Buffers[1]);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcei 1 AL_BUFFER buffer 1 : \n", error);
+		DisplayALError((ALbyte *) "alSourcei 1 AL_BUFFER buffer 1 : \n", error);
 
 	alSourcei(source[1],AL_LOOPING,AL_TRUE);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourcei 1 AL_LOOPING true: \n", error);
+		DisplayALError((ALbyte *) "alSourcei 1 AL_LOOPING true: \n", error);
 
 	printf("Gain Test\n");
 	printf("Press '1' to play source 0 (looping)\n");
@@ -3837,75 +3751,75 @@ ALvoid I_GainTest(ALvoid)
 			case '1':
 				alSourcePlay(source[0]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcePlay source 0 : ", error);
+					DisplayALError((ALbyte *) "alSourcePlay source 0 : ", error);
 				break;
 			case '2':
 				alSourcePlay(source[1]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcePlay source 1 : ", error);
+					DisplayALError((ALbyte *) "alSourcePlay source 1 : ", error);
 				break;
 			case '3':
 				alSourceStop(source[0]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourceStop source 0 : \n", error);
+					DisplayALError((ALbyte *) "alSourceStop source 0 : \n", error);
 				break;
 			case '4':
 				alSourceStop(source[1]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourceStop source 1 : \n", error);
+					DisplayALError((ALbyte *) "alSourceStop source 1 : \n", error);
 				break;
 			case '5':
 				alSourcef(source[0],AL_GAIN,1.0f);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcef 0 AL_GAIN 1.0 : \n", error);
+					DisplayALError((ALbyte *) "alSourcef 0 AL_GAIN 1.0 : \n", error);
 				break;
 			case '6':
 				alSourcef(source[0],AL_GAIN,0.5f);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcef 0 AL_GAIN 0.5 : \n", error);
+					DisplayALError((ALbyte *) "alSourcef 0 AL_GAIN 0.5 : \n", error);
 				break;
 			case '7':
 				alSourcef(source[0],AL_GAIN,0.25f);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcef 0 AL_GAIN 0.25 : \n", error);
+					DisplayALError((ALbyte *) "alSourcef 0 AL_GAIN 0.25 : \n", error);
 				break;
 			case '8':
 				alSourcef(source[0],AL_GAIN,0.0f);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcef 0 AL_GAIN 0.0 : \n", error);
+					DisplayALError((ALbyte *) "alSourcef 0 AL_GAIN 0.0 : \n", error);
 				break;
 			case 'A':
 				alListenerf(AL_GAIN,1.0f);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alListenerf AL_GAIN 1.0 : \n", error);
+					DisplayALError((ALbyte *) "alListenerf AL_GAIN 1.0 : \n", error);
 				break;
 			case 'B':
 				alListenerf(AL_GAIN,0.5f);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alListenerf AL_GAIN 0.5 : \n", error);
+					DisplayALError((ALbyte *) "alListenerf AL_GAIN 0.5 : \n", error);
 				break;
 			case 'C':
 				alListenerf(AL_GAIN,0.25f);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alListenerf AL_GAIN 0.25 : \n", error);
+					DisplayALError((ALbyte *) "alListenerf AL_GAIN 0.25 : \n", error);
 				break;
 			case 'D':
 				alListenerf(AL_GAIN,0.0f);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alListenerf AL_GAIN 0.0 : \n", error);
+					DisplayALError((ALbyte *) "alListenerf AL_GAIN 0.0 : \n", error);
 				break;
 		}
 	} while (ch != 'Q');
 
-	/* Reset & Release resources */
+	// Reset & Release resources
 	alListenerf(AL_GAIN,1.0f);
 	alSourceStopv(2,source);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourceStop : ", error);
+		DisplayALError((ALbyte *) "alSourceStop : ", error);
 
 	alDeleteSources(2, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alDeleteSources 2 : ", error);
+		DisplayALError((ALbyte *) "alDeleteSources 2 : ", error);
 	
 	return;
 }
@@ -3973,7 +3887,7 @@ void ALTestSwapBytes(unsigned short *pshort)
 #define NUMBUFFERS	4
 
 
-/* Streaming Test */
+// Streaming Test
 /** used by gendocs.py
 $SECTION Interactive Tests
 $SUBTITLE Streaming Test
@@ -4000,7 +3914,7 @@ ALvoid I_StreamingTest(ALvoid)
 		return;
 	}
 
-	/* Read in WAVE Header */
+	// Read in WAVE Header
 	if (fread(&wave, 1, sizeof(WAVE_Struct), fp) != sizeof(WAVE_Struct))
 	{
 		printf("Invalid wave file\n");
@@ -4014,7 +3928,7 @@ ALvoid I_StreamingTest(ALvoid)
     ALTestSwapWords(&wave.SamplesPerSec);
 #endif
 
-	/* Generate a number of buffers to be used to queue data on to Source */
+	// Generate a number of buffers to be used to queue data on to Source
 	alGenBuffers(NUMBUFFERS, BufferID);
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
@@ -4023,7 +3937,7 @@ ALvoid I_StreamingTest(ALvoid)
 		return;
 	}
 
-	/* Generate a Source */
+	// Generate a Source
 	alGenSources(1, &SourceID);
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
@@ -4044,25 +3958,25 @@ ALvoid I_StreamingTest(ALvoid)
 	while (1)
 #endif
 	{
-		/* Check how many Buffers have been processed */
+		// Check how many Buffers have been processed
 		alGetSourcei(SourceID, AL_BUFFERS_PROCESSED, &lProcessed);
 		while (lProcessed)
 		{
-			/* Unqueue the buffer */
+			// Unqueue the buffer
 			alSourceUnqueueBuffers(SourceID, 1, &TempBufferID);
 
-			/* Update unqueue count */
+			// Update unqueue count
 			if (++ulUnqueueCount == NUMBUFFERS)
 				ulUnqueueCount = 0;
 
-			/* Increment buffers available */
+			// Increment buffers available
 			ulBuffersAvailable++;
 
-			/* Decrement lProcessed count */
+			// Decrement lProcessed count
 			lProcessed--;
 		}
 
-		/* If there is more data to read, and available buffers ... read in more data and fill the buffers ! */
+		// If there is more data to read, and available buffers ... read in more data and fill the buffers !
 		if ((ulDataSize) && (ulBuffersAvailable))
 		{
 			ulDataToRead = (ulDataSize > BSIZE) ? BSIZE : ulDataSize;
@@ -4070,7 +3984,7 @@ ALvoid I_StreamingTest(ALvoid)
 			fread(data, ulDataToRead, 1, fp);
 			ulDataSize -= ulDataToRead;
 
-			/* Copy to Buffer */
+			// Copy to Buffer
 #ifdef SWAPBYTES
     		for (int i = 0; i < BSIZE; i=i+2)
     		{
@@ -4079,28 +3993,28 @@ ALvoid I_StreamingTest(ALvoid)
 #endif
 			alBufferData(BufferID[ulQueueCount], AL_FORMAT_STEREO16, data, ulDataToRead, wave.SamplesPerSec);
 
-			/* Queue the buffer */
+			// Queue the buffer
 			alSourceQueueBuffers(SourceID, 1, &BufferID[ulQueueCount]);
 
 			if (++ulQueueCount == NUMBUFFERS)
 				ulQueueCount = 0;
 
-			/* Decrement buffers available */
+			// Decrement buffers available
 			ulBuffersAvailable--;
 		}
 
-		/* If all the Buffers are available then we must have finished */
+		// If all the Buffers are available then we must have finished
 		if (ulBuffersAvailable == NUMBUFFERS)
 			break;
 
-		/* If the Source has stopped (been starved of data) it will need to be restarted */
+		// If the Source has stopped (been starved of data) it will need to be restarted
 		alGetSourcei(SourceID, AL_SOURCE_STATE, &lPlaying);
 		if (lPlaying != AL_PLAYING)
 		{	
-			/* If the Source has stopped prematurely, all the processed buffers must be unqueued */
-			/* before re-playing (otherwise they will be heard twice). */
-			/* Any buffers queued after the Source stopped will not be processed, so they won't */
-			/* be unqueued by this step */
+			// If the Source has stopped prematurely, all the processed buffers must be unqueued
+			// before re-playing (otherwise they will be heard twice).
+			// Any buffers queued after the Source stopped will not be processed, so they won't
+			// be unqueued by this step
 			alGetSourcei(SourceID, AL_BUFFERS_PROCESSED, &lProcessed);
 			while (lProcessed)
 			{
@@ -4115,7 +4029,7 @@ ALvoid I_StreamingTest(ALvoid)
 		}
 	}
 
-	/* Clean-up */
+	// Clean-up
 	alSourceStop(SourceID);
 
 	alDeleteSources(1, &SourceID);
@@ -4125,7 +4039,7 @@ ALvoid I_StreamingTest(ALvoid)
 }
 
 
-/* Multiple Sources Test */
+// Multiple Sources Test
 /** used by gendocs.py
 $SECTION Interactive Tests
 $SUBTITLE Multiple Sources Test
@@ -4142,7 +4056,7 @@ ALvoid I_MultipleSourcesTest()
 	double anglestep;
 	ALfloat pos[3];
 
-	/* Generate as many sources as possible (up to 64) */
+	// Generate as many sources as possible (up to 64)
 	for (i = 0; i < 64; i++)
 	{
 		alGenSources(1, &Sources[i]);
@@ -4155,24 +4069,24 @@ ALvoid I_MultipleSourcesTest()
 	printf("Multiple Sources Test\n\n");
 	printf("Generated %d Sources\n", numSources);
 
-	/* Set sources to located in a circle around the listener */
+	// Set sources to located in a circle around the listener
 
 	anglestep = (2 * 3.1416) / (ALfloat)numSources;
 	radius = 2.0f;
 
 	for (i = 0; i < numSources; i++)
 	{
-		/* Attach buffer */
+		// Attach buffer
 		alSourcei(Sources[i], AL_BUFFER, g_Buffers[0]);
 
-		/* Set position */
+		// Set position
 		pos[0] = (float)(cos(anglestep*i) * radius);
 		pos[1] = 0.0f;
 		pos[2] = (float)(sin(anglestep*i) * radius);
 		alSourcefv(Sources[i], AL_POSITION, pos);
 		printf("Source %d at %.3f, %.3f, %.3f\n", i, pos[0], pos[1], pos[2]);
 
-		/* Enable looping */
+		// Enable looping
 		alSourcei(Sources[i], AL_LOOPING, AL_TRUE);
 	}
 
@@ -4193,7 +4107,7 @@ ALvoid I_MultipleSourcesTest()
 					if ((error = alGetError()) != AL_NO_ERROR)
 						DisplayALError("alSourcePlay : ", error);
 
-					/* Delay a little */
+					// Delay a little
 					delay_ms(100);
 				}
 				break;
@@ -4205,11 +4119,11 @@ ALvoid I_MultipleSourcesTest()
 		}
 	} while (ch != 'Q');
 
-	/* Delete the Sources */
+	// Delete the Sources
 	alDeleteSources(numSources, Sources);
 }
 
-/* Source Relative Test */
+// Source Relative Test
 /** used by gendocs.py
 $SECTION Interactive Tests
 $SUBTITLE Source Relative Test
@@ -4284,7 +4198,7 @@ ALvoid I_SourceRelativeTest()
 		}
 	} while (ch != 'Q');
 
-	/* Release resources */
+	// Release resources
 	alSourceStopv(1, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 		DisplayALError("alSourceStopv 1 : ", error);
@@ -4293,7 +4207,7 @@ ALvoid I_SourceRelativeTest()
 	if ((error = alGetError()) != AL_NO_ERROR)
 		DisplayALError("alDeleteSources 1 : ", error);
 
-	/* Restore Listener Position */
+	// Restore Listener Position
 	alListener3f(AL_POSITION,0.0f,0.0f,0.0f);
 	if ((error = alGetError()) != AL_NO_ERROR)
 		DisplayALError("alListenerfv  AL_POSITION : ", error);
@@ -4301,7 +4215,7 @@ ALvoid I_SourceRelativeTest()
 	return;
 }
 
-/* Source Rolloff Test */
+// Source Rolloff Test
 /** used by gendocs.py
 $SECTION Interactive Tests
 $SUBTITLE Source Rolloff Test
@@ -4313,8 +4227,8 @@ ALvoid I_SourceRolloffTest()
 	ALuint	source[2];
 	ALbyte	ch;
 
-	ALfloat source0Pos[]={-4.0, 0.0,  4.0};	/* Behind and to the left of the listener */
-	ALfloat source1Pos[]={ 4.0, 0.0, -4.0};	/* Front and to the right of the listener */
+	ALfloat source0Pos[]={-4.0, 0.0,  4.0};	// Behind and to the left of the listener
+	ALfloat source1Pos[]={ 4.0, 0.0, -4.0};	// Front and to the right of the listener
 
 	alGenSources(2,source);
 	if ((error = alGetError()) != AL_NO_ERROR)
@@ -4419,7 +4333,7 @@ ALvoid I_SourceRolloffTest()
 		}
 	} while (ch != 'Q');
 
-	/* Release resources */
+	// Release resources
 	alSourceStopv(2, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 		DisplayALError("alSourceStopv 2 : ", error);
@@ -4431,7 +4345,7 @@ ALvoid I_SourceRolloffTest()
 	return;
 }
 
-/* ADPCM Test */
+// ADPCM Test
 /** used by gendocs.py
 $SECTION Interactive Tests
 $SUBTITLE ADPCM Test
@@ -4446,13 +4360,13 @@ ALvoid I_ADPCMTest()
 	ALboolean loop;
 	char ch;
 
-	/* Check for support for ADPCM */
+	// Check for support for ADPCM
 	eMonoADPCM = alGetEnumValue("AL_FORMAT_MONO_IMA4");
 	eStereoADPCM = alGetEnumValue("AL_FORMAT_STEREO_IMA4");
 
 	if (eMonoADPCM && eStereoADPCM)
 	{
-		/* Load footadpcm.wav */
+		// Load footadpcm.wav
 		getWAVData("footadpcm.wav",&format,&data,&size,&freq,&loop);
 		if (alGetError() != AL_NO_ERROR)
 		{
@@ -4462,11 +4376,11 @@ ALvoid I_ADPCMTest()
 
 		alGetError();
 
-		/* Generate an AL Buffer and an AL Source */
+		// Generate an AL Buffer and an AL Source
 		alGenBuffers(1, &uiBufferID);
-		/* Copy data to AL buffer */
+		// Copy data to AL buffer
 		alBufferData(uiBufferID,format,data,size,freq);
-		/* Release wave data */
+		// Release wave data
 		unloadWAVData(data);
 
 		if (alGetError() != AL_NO_ERROR)
@@ -4475,25 +4389,25 @@ ALvoid I_ADPCMTest()
 			return;
 		}
 
-		/* Generate a Source */
+		// Generate a Source
 		alGenSources(1, &uiSourceID);
-		/* Attach buffer to Source */
+		// Attach buffer to Source
 		alSourcei(uiSourceID, AL_BUFFER, uiBufferID);
-		/* Enable Looping */
+		// Enable Looping
 		alSourcei(uiSourceID, AL_LOOPING, AL_TRUE);
-		/* Play Source */
+		// Play Source
 		alSourcePlay(uiSourceID);
 
 		printf("Press a key to stop test\n");
 		ch = getUpperCh();
 
-		/* Stop the Source */
+		// Stop the Source
 		alSourceStop(uiSourceID);
-		/* Attach NULL Buffer */
+		// Attach NULL Buffer
 		alSourcei(uiSourceID, AL_BUFFER, 0);
-		/* Delete Source */
+		// Delete Source
 		alDeleteSources(1, &uiSourceID);
-		/* Delete Buffer */
+		// Delete Buffer
 		alDeleteBuffers(1, &uiBufferID);
 	}
 	else
@@ -4502,7 +4416,7 @@ ALvoid I_ADPCMTest()
 	}
 }
 
-/* Velocity Test */
+// Velocity Test
 /** used by gendocs.py
 $SECTION Interactive Tests
 $SUBTITLE Velocity Test
@@ -4612,7 +4526,7 @@ ALvoid I_VelocityTest()
 		alListenerfv(AL_VELOCITY, listenerVel);
 	} while (ch != 'Q');
 
-	/* Release resources */
+	// Release resources
 	alSourceStopv(1, &source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 		DisplayALError("alSourceStopv 2 : ", error);
@@ -4624,7 +4538,7 @@ ALvoid I_VelocityTest()
 	return;
 }
 
-/* Get Source Offset Test */
+// Get Source Offset Test
 /** used by gendocs.py
 $SECTION Interactive Tests
 $SUBTITLE Get Source Offset Test
@@ -4632,7 +4546,7 @@ $SUBTITLE Get Source Offset Test
 ALvoid I_GetSourceOffsetTest()
 {
 	ALuint Source;
-	char ch, oldch;
+	char ch, state;
 	ALint lOffset;
 	ALfloat flOffset;
 
@@ -4648,34 +4562,38 @@ ALvoid I_GetSourceOffsetTest()
 	printf("Press 6 to Use AL_SAMPLE_OFFSET (float) to track progress\n");
 	printf("Press 7 to Use AL_SEC_OFFSET (float) to track progress\n");
 	printf("Press Q to quit\n");
+
+	ch = '1';
+	state = '2';
+
 	while (1)
 	{
 #ifdef _WIN32
 		if (_kbhit())
 #else
 		if (1)
-#endif /* _WIN32 */
+#endif // _WIN32
 		{
-			ch = getUpperCh();   
+			ch = getUpperCh(); 
 
 			if (ch == '1')
 			{
 				alSourcePlay(Source);
-				ch = oldch;
 			}
 			else if (ch == 'Q')
 			{
 				break;
 			}
 
-			oldch = ch;
+			if ((ch >= '2') && (ch <= '7')) {
+				state = ch;
+			}
 		}
 		else
 		{
-			switch (ch)
+			switch (state)
 			{
 			case '2':
-			default:
 				alGetSourcei(Source, AL_BYTE_OFFSET, &lOffset);
 				printf("ByteOffset is %d                   \r", lOffset);
 				break;
@@ -4707,7 +4625,7 @@ ALvoid I_GetSourceOffsetTest()
 	alDeleteSources(1, &Source);
 }
 
-/* Set Source Offset Test */
+// Set Source Offset Test
 /** used by gendocs.py
 $SECTION Interactive Tests
 $SUBTITLE Set Source Offset Test
@@ -4749,7 +4667,7 @@ ALvoid I_SetSourceOffsetTest()
 		if (_kbhit())
 #else
 		if (1)
-#endif /* _WIN32 */
+#endif // _WIN32
 		{
 			ch = getUpperCh();   
 
@@ -4878,7 +4796,7 @@ ALvoid I_SetSourceOffsetTest()
 				break;
 
 			case 'F':
-				iType = (iType + 1) % 3;
+				iType = (++iType % 3);
 				break;
 			}
 
@@ -4920,7 +4838,7 @@ ALvoid I_SetSourceOffsetTest()
 	alDeleteSources(1, &Source);
 }
 
-/* Distance Model Test */
+// Distance Model Test
 /** used by gendocs.py
 $SECTION Interactive Tests
 $SUBTITLE Distance Model Test
@@ -4929,7 +4847,7 @@ ALvoid I_DistanceModelTest()
 {
 	ALuint	source[1];
 	ALint	error;
-	ALint	lLoop;
+	ALint	lLoop, endLoop;
 
 	alGenSources(1,source);
 	if ((error = alGetError()) != AL_NO_ERROR)
@@ -4938,13 +4856,19 @@ ALvoid I_DistanceModelTest()
 		return;
 	}
 
+	if (g_bNewDistModels) {
+		endLoop = 6;
+	} else {
+		endLoop = 2;
+	}
+
 	alSourcei(source[0], AL_BUFFER, g_Buffers[0]);
 	alSourcei(source[0], AL_LOOPING, AL_TRUE);
 	alSourcePlay(source[0]);
 
 	printf("Distance Model Test\n");
 
-	for (lLoop = 0; lLoop < 7; lLoop++)
+	for (lLoop = 0; lLoop <= endLoop; lLoop++)
 	{
 		switch (lLoop)
 		{
@@ -5012,7 +4936,7 @@ ALvoid I_DistanceModelTest()
 	return;
 }
 
-/* Capture Test */
+// Capture Test
 /** used by gendocs.py
 $SECTION Interactive Tests
 $SUBTITLE Capture Test
@@ -5029,10 +4953,10 @@ ALvoid I_CaptureTest()
 	ALint lDataSize = 0;
 	ALint lSize;
 
-	/* NOTE : This code does NOT setup the Wave Device's Audio Mixer to select a recording input */
-	/* or recording level. */
+	// NOTE : This code does NOT setup the Wave Device's Audio Mixer to select a recording input
+	// or recording level.
 
-	/* Get list of available Capture Devices */
+	// Get list of available Capture Devices
 	const ALchar *pDeviceList = alcGetString(NULL, ALC_CAPTURE_DEVICE_SPECIFIER);
 	if (pDeviceList)
 	{
@@ -5066,7 +4990,7 @@ ALvoid I_CaptureTest()
 		waveHeader.lFmtSize = sizeof(WAVEFORMATEX);		
 		waveHeader.wfex.nChannels = 2;
 		waveHeader.wfex.wBitsPerSample = 16;
-		waveHeader.wfex.wFormatTag = 1; /* WAVE_FORMAT_PCM */
+		waveHeader.wfex.wFormatTag = 1; // WAVE_FORMAT_PCM
 		waveHeader.wfex.nSamplesPerSec = 22050;
 		waveHeader.wfex.nBlockAlign = waveHeader.wfex.nChannels * waveHeader.wfex.wBitsPerSample / 8;
 		waveHeader.wfex.nAvgBytesPerSec = waveHeader.wfex.nSamplesPerSec * waveHeader.wfex.nBlockAlign;
@@ -5082,7 +5006,7 @@ ALvoid I_CaptureTest()
 			if (_kbhit())
 #else
 			if (1)
-#endif /* _WIN32 */
+#endif // _WIN32
 			{
 				ch = getUpperCh();   
 
@@ -5108,22 +5032,22 @@ ALvoid I_CaptureTest()
 				alcGetIntegerv(pCaptureDevice, ALC_CAPTURE_SAMPLES, 1, &lSamplesAvailable);
 				printf("Samples available is %d\r", lSamplesAvailable);
 
-				/* When we have enough data to fill our 4000 byte buffer, grab the samples */
+				// When we have enough data to fill our 4000 byte buffer, grab the samples
 				if (lSamplesAvailable > (4000 / waveHeader.wfex.nBlockAlign))
 				{
-					/* Consume Samples */
+					// Consume Samples
 					alcCaptureSamples(pCaptureDevice, Buffer, 4000 / waveHeader.wfex.nBlockAlign);
 
-					/* Write the audio data to a file */
+					// Write the audio data to a file
 					fwrite(Buffer, 4000, 1, pFile);
 
-					/* Record total amount of data recorded */
+					// Record total amount of data recorded
 					lDataSize += 4000;
 				}
 			}
 		}
 
-		/* Check if any Samples haven't been captured yet */
+		// Check if any Samples haven't been captured yet
 		alcGetIntegerv(pCaptureDevice, ALC_CAPTURE_SAMPLES, 1, &lSamplesAvailable);
 		while (lSamplesAvailable)
 		{
@@ -5143,7 +5067,7 @@ ALvoid I_CaptureTest()
 			}
 		}
 
-		/* Fill in Size information in Wave Header */
+		// Fill in Size information in Wave Header
 		fseek(pFile, 4, SEEK_SET);
 		lSize = lDataSize + sizeof(WAVEHEADER) - 8;
 		fwrite(&lSize, 4, 1, pFile);
@@ -5156,7 +5080,7 @@ ALvoid I_CaptureTest()
 	}
 }
 
-/* Capture And Play Test */
+// Capture And Play Test
 /** used by gendocs.py
 $SECTION Interactive Tests
 $SUBTITLE Capture And Play Test
@@ -5175,15 +5099,14 @@ ALvoid I_CaptureAndPlayTest()
 	ALint			lLoop, lFormat, lFrequency, lBlockAlignment, lProcessed, lPlaying;
 	ALboolean		bPlaying = AL_FALSE;
 	ALboolean		bPlay = AL_FALSE;
-#if TEST_EAX
+#ifdef TEST_EAX
 	ALint			lEnv, lDirect, lRoom;
 #endif
-	const ALchar *pDeviceList;
 
-	/* NOTE : This code does NOT setup the Wave Device's Audio Mixer to select a recording input */
-	/* or recording level. */
+	// NOTE : This code does NOT setup the Wave Device's Audio Mixer to select a recording input
+	// or recording level.
 
-	/* Generate a Source and QUEUEBUFFERCOUNT Buffers for Queuing */
+	// Generate a Source and QUEUEBUFFERCOUNT Buffers for Queuing
 	alGetError();
 	alGenSources(1, &SourceID);
 
@@ -5199,8 +5122,8 @@ ALvoid I_CaptureAndPlayTest()
 	ulUnqueueCount = 0;
 	ulQueueCount = 0;
 
-	/* Get list of available Capture Devices */
-	pDeviceList = alcGetString(NULL, ALC_CAPTURE_DEVICE_SPECIFIER);
+	// Get list of available Capture Devices
+	const ALchar *pDeviceList = alcGetString(NULL, ALC_CAPTURE_DEVICE_SPECIFIER);
 	if (pDeviceList)
 	{
 		printf("Available Capture Devices are:-\n");
@@ -5215,8 +5138,8 @@ ALvoid I_CaptureAndPlayTest()
 	szDefaultCaptureDevice = alcGetString(NULL, ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER);
 	printf("\nDefault Capture Device is '%s'\n\n", szDefaultCaptureDevice);
 
-	/* The next call can fail if the WaveDevice does not support the requested format, so the application */
-	/* should be prepared to try different formats in case of failure */
+	// The next call can fail if the WaveDevice does not support the requested format, so the application
+	// should be prepared to try different formats in case of failure
 
 	lFormat = AL_FORMAT_MONO16;
 	lFrequency = 22050;
@@ -5229,7 +5152,7 @@ ALvoid I_CaptureAndPlayTest()
 
 		printf("Press 1 to Start Recording and Playing\n");
 		printf("Press 2 to Stop Recording\n");
-#if TEST_EAX
+#ifdef TEST_EAX
 		printf("Press 3 to Apply EAX Reverb\n");
 		printf("Press 4 to Remove EAX Reverb\n");
 #endif
@@ -5241,7 +5164,7 @@ ALvoid I_CaptureAndPlayTest()
 			if (_kbhit())
 #else
 		        if (1)
-#endif /* _WIN32 */
+#endif // _WIN32
 			{
 				ch = getUpperCh();   
 
@@ -5255,14 +5178,14 @@ ALvoid I_CaptureAndPlayTest()
 				case '2':
 					alcCaptureStop(pCaptureDevice);
 					break;
-#if TEST_EAX
+#ifdef TEST_EAX
 				case '3':
-					/* Mute Direct path */
+					// Mute Direct path
 					lDirect = -10000;
 					eaxSet(&DSPROPSETID_EAX20_BufferProperties, DSPROPERTY_EAXBUFFER_DIRECT,
 						NULL, &lDirect, sizeof(ALint));
 
-					/* Apply a Reverb Preset */
+					// Apply a Reverb Preset
 					lEnv = EAX_ENVIRONMENT_HANGAR;
 					eaxSet(&DSPROPSETID_EAX20_ListenerProperties, DSPROPERTY_EAXLISTENER_ENVIRONMENT,
 						NULL, &lEnv, sizeof(ALint));
@@ -5273,12 +5196,12 @@ ALvoid I_CaptureAndPlayTest()
 					break;
 
 				case '4':
-					/* Un-mute Direct path */
+					// Un-mute Direct path
 					lDirect = 0;
 					eaxSet(&DSPROPSETID_EAX20_BufferProperties, DSPROPERTY_EAXBUFFER_DIRECT,
 						NULL, &lDirect, sizeof(ALint));
 
-					/* Mute Reverb Preset */
+					// Mute Reverb Preset
 					lRoom = -10000;
 					eaxSet(&DSPROPSETID_EAX20_ListenerProperties, DSPROPERTY_EAXLISTENER_ROOM,
 						NULL, &lRoom, sizeof(ALint));
@@ -5297,51 +5220,51 @@ ALvoid I_CaptureAndPlayTest()
 				alcGetIntegerv(pCaptureDevice, ALC_CAPTURE_SAMPLES, 1, &lSamplesAvailable);
 				printf("Samples available is %d\r", lSamplesAvailable);
 
-				/* If the Source is (or should be) playing, get number of buffers processed */
-				/* and check play status */
+				// If the Source is (or should be) playing, get number of buffers processed
+				// and check play status
 				if (bPlaying)
 				{
 					alGetSourcei(SourceID, AL_BUFFERS_PROCESSED, &lProcessed);
 					while (lProcessed)
 					{
-						/* Unqueue the buffer */
+						// Unqueue the buffer
 						alSourceUnqueueBuffers(SourceID, 1, &TempBufferID);
 
-						/* Update unqueue count */
+						// Update unqueue count
 						if (++ulUnqueueCount == QUEUEBUFFERCOUNT)
 							ulUnqueueCount = 0;
 
-						/* Increment buffers available */
+						// Increment buffers available
 						ulBuffersAvailable++;
 
 						lProcessed--;
 					}
 
-					/* If the Source has stopped (been starved of data) it will need to be */
-					/* restarted */
+					// If the Source has stopped (been starved of data) it will need to be
+					// restarted
 					alGetSourcei(SourceID, AL_SOURCE_STATE, &lPlaying);
 					if (lPlaying == AL_STOPPED)
 						bPlay = AL_TRUE;
 				}
 
-				/* When we have enough data to fill our QUEUEBUFFERSIZE byte buffer, grab the samples */
+				// When we have enough data to fill our QUEUEBUFFERSIZE byte buffer, grab the samples
 				if ((lSamplesAvailable > (QUEUEBUFFERSIZE / lBlockAlignment)) && (ulBuffersAvailable))
 				{
-					/* Consume Samples */
+					// Consume Samples
 					alcCaptureSamples(pCaptureDevice, Buffer, QUEUEBUFFERSIZE / lBlockAlignment);
 
 					alBufferData(BufferID[ulQueueCount], lFormat, Buffer, QUEUEBUFFERSIZE, lFrequency);
 
-					/* Queue the buffer, and mark buffer as queued */
+					// Queue the buffer, and mark buffer as queued
 					alSourceQueueBuffers(SourceID, 1, &BufferID[ulQueueCount]);
 
 					if (++ulQueueCount == QUEUEBUFFERCOUNT)
 						ulQueueCount = 0;
 
-					/* Decrement buffers available */
+					// Decrement buffers available
 					ulBuffersAvailable--;
 
-					/* If we need to start the Source do it now IF AND ONLY IF we have queued at least 2 buffers */
+					// If we need to start the Source do it now IF AND ONLY IF we have queued at least 2 buffers
 					if ((bPlay) && (ulBuffersAvailable <= (QUEUEBUFFERCOUNT - 2)))
 					{
 						alSourcePlay(SourceID);
@@ -5366,7 +5289,7 @@ ALvoid I_CaptureAndPlayTest()
 }
 
 #if TEST_VORBIS
-/* Vorbis Test */
+// Vorbis Test
 /** used by gendocs.pyp
 $SECTION Interactive Tests
 $SUBTITLE Vorbis Test
@@ -5381,17 +5304,17 @@ ALvoid I_VorbisTest()
       ALbyte ch;
       ALboolean bLoop = false;
 
-      alGetError(); /* reset error state */
+      alGetError(); // reset error state
 
       if (alIsExtensionPresent((ALchar *)"AL_EXT_vorbis") == AL_TRUE) {
 	alGenSources(3,source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
-		DisplayALError("alGenSources 3 : ", error);
+		DisplayALError((ALbyte *) "alGenSources 3 : ", error);
 		return;
 	}
 	 
-	/* create buffers for queueing */
+	// create buffers for queueing
 	alGenBuffers(4, tempBuffers);
 
 	printf("Vorbis Test\n");
@@ -5409,30 +5332,30 @@ ALvoid I_VorbisTest()
 		switch (ch)
 		{
 			case '1':
-				/* Stop source */
+				// Stop source
 				alSourceStop(source[0]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourceStop source 0 : ", error);
+					DisplayALError((ALbyte *) "alSourceStop source 0 : ", error);
 
-				/* Attach new buffer */
+				// Attach new buffer
 				alSourcei(source[0],AL_BUFFER, g_Buffers[7]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcei 0 AL_BUFFER buffer 7 : \n", error);
+					DisplayALError((ALbyte *) "alSourcei 0 AL_BUFFER buffer 7 : \n", error);
 
-				/* Set volume */
+				// Set volume
 				alSourcef(source[0],AL_GAIN,0.5f);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcef 0 AL_GAIN : \n", error);
+					DisplayALError((ALbyte *) "alSourcef 0 AL_GAIN : \n", error);
 
-				/* Set looping */
+				// Set looping
 				alSourcei(source[0],AL_LOOPING,bLoop);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcei 0 AL_LOOPING true: \n", error);
+					DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING true: \n", error);
 
-				/* Play source */
+				// Play source
 				alSourcePlay(source[0]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcePlay source 0 : ", error);
+					DisplayALError((ALbyte *) "alSourcePlay source 0 : ", error);
 		   				
 				break;
 			case '2':
@@ -5448,37 +5371,37 @@ ALvoid I_VorbisTest()
 				}
 				alSourcei(source[0], AL_LOOPING, bLoop);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcei 0 AL_LOOPING : \n", error);
+					DisplayALError((ALbyte *) "alSourcei 0 AL_LOOPING : \n", error);
 				break;
 			case '3':
-				/* Stop source */
+				// Stop source
 				alSourceStop(source[1]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourceStop source 1 : ", error);
+					DisplayALError((ALbyte *) "alSourceStop source 1 : ", error);
 
-				/* Attach new buffer */
+				// Attach new buffer
 				alSourcei(source[1],AL_BUFFER, g_Buffers[7]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcei 1 AL_BUFFER buffer 7 : \n", error);
+					DisplayALError((ALbyte *) "alSourcei 1 AL_BUFFER buffer 7 : \n", error);
 
-				/* Set volume */
+				// Set volume
 				alSourcef(source[1],AL_GAIN,0.5f);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcef 1 AL_GAIN : \n", error);
+					DisplayALError((ALbyte *) "alSourcef 1 AL_GAIN : \n", error);
 
-				/* Play source */
+				// Play source
 				alSourcePlay(source[1]);
 				if ((error = alGetError()) != AL_NO_ERROR)
-					DisplayALError("alSourcePlay source 1 : ", error);
+					DisplayALError((ALbyte *) "alSourcePlay source 1 : ", error);
 		   				
 				break;
 			case '4':
-				/* Stop source */
+				// Stop source
 				alSourceStop(source[2]);
-				if ((error = alGetError()) != AL_NO_ERROR) DisplayALError("alSourceStop source 2 : ", error);
+				if ((error = alGetError()) != AL_NO_ERROR) DisplayALError((ALbyte *) "alSourceStop source 2 : ", error);
                 alSourcei(source[2], AL_BUFFER, 0);
 		   
-                /* Queue buffers */
+                // Queue buffers
 				FILE *fp;
 		        fp = fopen("boom.ogg", "rb");
 		        if (fp == NULL) {
@@ -5486,7 +5409,7 @@ ALvoid I_VorbisTest()
 					break;
 				}
 		   
-		        alGetError(); /* clear error state */
+		        alGetError(); // clear error state
 		   
 		        int actual;
 				data = (ALbyte *)malloc(((g_ovSize / 4) + 1));
@@ -5499,13 +5422,13 @@ ALvoid I_VorbisTest()
 			   
 					fclose(fp);
 
-					/* Set volume */
+					// Set volume
 					alSourcef(source[2],AL_GAIN,0.5f);
-					if ((error = alGetError()) != AL_NO_ERROR) DisplayALError("alSourcef 2 AL_GAIN : \n", error);
+					if ((error = alGetError()) != AL_NO_ERROR) DisplayALError((ALbyte *) "alSourcef 2 AL_GAIN : \n", error);
 
-					/* Play source */
+					// Play source
 					alSourcePlay(source[2]);
-					if ((error = alGetError()) != AL_NO_ERROR) DisplayALError("alSourcePlay source 2 : ", error);
+					if ((error = alGetError()) != AL_NO_ERROR) DisplayALError((ALbyte *) "alSourcePlay source 2 : ", error);
 
 					free((void *)data);
 				} else {
@@ -5516,18 +5439,18 @@ ALvoid I_VorbisTest()
 		}
 	} while (ch != 'Q');
 
-	/* Release resources */
+	// Release resources
 	alSourceStop(source[0]);
 	alSourceStop(source[1]);
 	alSourceStop(source[2]);
 	alDeleteBuffers(4, tempBuffers);
 	if ((error = alGetError()) != AL_NO_ERROR)
-		DisplayALError("alSourceStop : ", error);
+		DisplayALError((ALbyte *) "alSourceStop : ", error);
 
 	alDeleteSources(3, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
-  	  DisplayALError("alDeleteSources 3 : ", error);    
-      } else { /* Ogg Vorbis extension not present */
+  	  DisplayALError((ALbyte *) "alDeleteSources 3 : ", error);    
+      } else { // Ogg Vorbis extension not present
 	printf("\nOgg Vorbis extension not available.\n");
       }
 	
