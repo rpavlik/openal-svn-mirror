@@ -397,7 +397,6 @@ void delay_ms(unsigned int ms)
 ALvoid DisplayALError(ALchar *szText, ALint errorcode)
 {
 	printf("%s%s\n",szText,alGetString(errorcode));
-	return;
 }
 
 
@@ -2488,8 +2487,6 @@ ALvoid I_BufferTest(ALvoid)
 	alDeleteSources(1, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 		DisplayALError((ALbyte *) "alDeleteSources 1 : ", error);
-
-	return;
 }
 
 
@@ -2613,8 +2610,6 @@ ALvoid I_PositionTest(ALvoid)
 	alDeleteSources(2, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 		DisplayALError((ALbyte *) "alDeleteSources 2 : ", error);
-
-	return;
 }
 
 
@@ -2773,8 +2768,6 @@ ALvoid I_LoopingTest(ALvoid)
 	alDeleteSources(2, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 		DisplayALError((ALbyte *) "alDeleteSources 1 : ", error);
-
-	return;
 }
 
 #if TEST_EAX
@@ -2976,7 +2969,6 @@ ALvoid I_EAXTest(ALvoid)
 	alDeleteSources(2, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 		DisplayALError((ALbyte *) "alDeleteSources 2 : ", error);
-	return;
 }
 #endif
 
@@ -3311,8 +3303,6 @@ ALvoid I_QueueTest(ALvoid)
 	alDeleteSources(1, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 		DisplayALError("alDeleteSources 1 : ", error);
-
-	return;
 }
 
 /* Frequency Test */
@@ -3400,8 +3390,6 @@ ALvoid I_FreqTest(ALvoid)
 	alDeleteSources(1, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 		DisplayALError((ALbyte *) "alDeleteSources 2 : ", error);
-	
-	return;
 }
 
 
@@ -3599,8 +3587,6 @@ ALvoid I_StereoTest(ALvoid)
 	alDeleteSources(1, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 		DisplayALError((ALbyte *) "alDeleteSources 2 : ", error);
-	
-	return;
 }
 
 
@@ -3771,8 +3757,6 @@ ALvoid I_GainTest(ALvoid)
 	alDeleteSources(2, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 		DisplayALError((ALbyte *) "alDeleteSources 2 : ", error);
-	
-	return;
 }
 
 #ifdef __MACOS__
@@ -4162,8 +4146,6 @@ ALvoid I_SourceRelativeTest()
 	alListener3f(AL_POSITION,0.0f,0.0f,0.0f);
 	if ((error = alGetError()) != AL_NO_ERROR)
 		DisplayALError("alListenerfv  AL_POSITION : ", error);
-
-	return;
 }
 
 /* Source Rolloff Test */
@@ -4292,8 +4274,6 @@ ALvoid I_SourceRolloffTest()
 	alDeleteSources(2, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 		DisplayALError("alDeleteSources 2 : ", error);
-
-	return;
 }
 
 /* ADPCM Test */
@@ -4485,8 +4465,6 @@ ALvoid I_VelocityTest()
 	alDeleteSources(1, &source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 		DisplayALError("alDeleteSources 2 : ", error);
-
-	return;
 }
 
 /* Get Source Offset Test */
@@ -4883,8 +4861,6 @@ ALvoid I_DistanceModelTest()
 	alDeleteSources(1, source);
 	if ((error = alGetError()) != AL_NO_ERROR)
 		DisplayALError("alDeleteSources 1 : ", error);
-
-	return;
 }
 
 /* Capture Test */
@@ -5406,6 +5382,4 @@ ALvoid I_VorbisTest()
       } else { /* Ogg Vorbis extension not present */
 	printf("\nOgg Vorbis extension not available.\n");
       }
-	
-      return;
 }
