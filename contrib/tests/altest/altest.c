@@ -5178,7 +5178,7 @@ ALvoid I_CaptureAndPlayTest()
 }
 
 /* Vorbis Test */
-/** used by gendocs.pyp
+/** used by gendocs.py
 $SECTION Interactive Tests
 $SUBTITLE Vorbis Test
 This test exercises Ogg Vorbis playback functionality.
