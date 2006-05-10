@@ -49,74 +49,23 @@
 #define TEST_VORBIS 0	/* enable for ogg vorbis testing */
 /* #define TEST_EAX 1 */  /* enable for EAX testing */
 
-#ifdef _WIN32
-#include <windows.h>	/* For timeGetTime() */
-#include <stdio.h>
-#include <conio.h>
-#include <stdlib.h>
-#include <memory.h>
-#include <math.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <al/al.h>
-#include <al/alc.h>
-#endif /* _WIN32 */
-
-#ifdef LINUX
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <memory.h>
-#include <math.h>
-#ifndef __USE_BSD
-#define __USE_BSD
-#endif
-#include <unistd.h>
-#include <sys/stat.h>
-
-#ifdef OSX_FRAMEWORK
-#include <OpenAL/al.h>
+/* get OpenAL header via obscure and fragile platform conditionals */
+#if defined(_MSC_VER)
+#include <alc.h>
+#include <al.h>
+#elif defined(__MACOS__)
 #include <OpenAL/alc.h>
+#include <OpenAL/al.h>
 #else
 #include <AL/al.h>
 #include <AL/alc.h>
 #endif
 
-#endif /* LINUX */
-
-#ifdef __MACOS__
+#include <ctype.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
-#include <memory.h>
-#include <math.h>
 #include <string.h>
-#include <al.h>
-#include <alc.h>
-#include <eax.h>
-#include <Timer.h>
-#define SWAPBYTES
-#endif /* MACOS */
-
-#ifdef MAC_OS_X
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <memory.h>
-#include <math.h>
-#include <string.h>
-#include <openal/al.h>
-#include <openal/alc.h>
-#include <unistd.h>
-#define SWAPBYTES
-#endif /* MAC_OS_X */
-
-#if TEST_VORBIS
-#include <AL/alext.h>
-#include <AL/alexttypes.h>
-#endif
 
 #if TEST_EAX
 #include <eax.h>
