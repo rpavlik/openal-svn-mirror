@@ -602,10 +602,6 @@ int main(int argc, char* argv[])
 	ALchar szEAX[] = "EAX";
 #endif	
 
-
-	printf("OpenAL Test Application\n");
-	printf("=======================\n\n");
-
 	/* Initialize Open AL manually */
 	/*Open device */
 	char deviceName[256];
@@ -613,6 +609,11 @@ int main(int argc, char* argv[])
 	char *deviceList;
 	char *devices[12];
 	int numDevices, numDefaultDevice = 0, i;
+	ALint major, minor;
+	ALboolean g_bCaptureExt;
+
+	printf("OpenAL Test Application\n");
+	printf("=======================\n\n");
 
 	strcpy(deviceName, "");
 	if (alcIsExtensionPresent(NULL, "ALC_ENUMERATION_EXT") == AL_TRUE) { /* try out enumeration extension */
@@ -670,7 +671,6 @@ int main(int argc, char* argv[])
 	alcGetError(Device);
 
 	/* Check what version of Open AL we are using */
-	ALint major, minor;
 	alcGetIntegerv(Device, ALC_MAJOR_VERSION, 1, &major);
 	alcGetIntegerv(Device, ALC_MINOR_VERSION, 1, &minor);
 	printf("\nOpen AL Version %d.%d\n", major, minor);
@@ -685,7 +685,7 @@ int main(int argc, char* argv[])
 	if (g_bNewDistModels)
 		printf("AL_EXT_LINEAR_DISTANCE and AL_EXT_EXPONENT_DISTANCE support found !\n");
 	
-	ALboolean g_bCaptureExt = alcIsExtensionPresent(Device, "alc_EXT_capTure");
+	g_bCaptureExt = alcIsExtensionPresent(Device, "alc_EXT_capTure");
 	if (g_bCaptureExt)
 		printf("ALC_EXT_CAPTURE support found !\n");
 
@@ -1188,6 +1188,7 @@ ALvoid FA_StateTransition (ALvoid)
 {
 	ALboolean localResultOK;
 	ALuint testSources[4];
+	ALint sourceState;
 
 	printf("\nState Transition Test. ");
 	alGetError();
@@ -1195,7 +1196,6 @@ ALvoid FA_StateTransition (ALvoid)
 	alGenSources(1, testSources);
 	alSourcei(testSources[0], AL_BUFFER, g_Buffers[0]);
 	alSourcei(testSources[0], AL_LOOPING, AL_TRUE);
-	ALint sourceState;
 	alGetSourcei(testSources[0], AL_SOURCE_STATE, &sourceState);
 	if (sourceState != AL_INITIAL)
 	{
@@ -1485,12 +1485,10 @@ ALvoid SA_StringQueries(ALvoid)
 	printf("String Queries Test:");
 	if (ContinueOrSkip())
 	{
-		printf("Check that the following values are reasonable:\n");
-
 		const ALchar *tempString;
-
 		ALCcontext* pContext;
 		ALCdevice* pDevice;
+		printf("Check that the following values are reasonable:\n");
 		pContext = alcGetCurrentContext();
 		pDevice = alcGetContextsDevice(pContext);
 		tempString = alcGetString(pDevice, ALC_DEVICE_SPECIFIER);
@@ -1567,6 +1565,7 @@ This test outputs a source at a fixed gain level, and tests various listener gai
 ALvoid SA_ListenerGain(ALvoid)
 {	
 	ALuint testSources[2];
+	ALfloat f;
 
 	printf("Listener Gain Test:");
 	if (ContinueOrSkip())
@@ -1593,7 +1592,6 @@ ALvoid SA_ListenerGain(ALvoid)
 		alSourcePlay(testSources[0]);
 		CRForNextTest();
 		alListenerf(AL_GAIN,1.0f);
-		float f;
 		alGetListenerf(AL_GAIN, &f);
 		if (f != 1.0) { printf("ERROR:  alGetListenerf failed.\n"); }
 		alSourceStop(testSources[0]);
@@ -1756,6 +1754,7 @@ ALvoid SA_ListenerOrientation (ALvoid)
 {	
 	ALuint testSources[2];
 	ALfloat	listenerOri[]={0.0,0.0,-1.0, 0.0,1.0,0.0};
+	ALfloat f;
 
 	printf("Listener Orientation Test:");
 	if (ContinueOrSkip())
@@ -1768,7 +1767,6 @@ ALvoid SA_ListenerOrientation (ALvoid)
 		CRToContinue();
 		alSource3f(testSources[0], AL_POSITION, 0.0, 0.0, 0.0);
 		alListenerf(AL_GAIN,1.0f);
-		float f;
 		alGetSourcef(testSources[0], AL_GAIN, &f);
 		if (f != 1.0) { printf("ERROR: alGetSourcef(..., AL_GAIN, ...).\n"); }
 		alListener3f(AL_POSITION, 1.0, 0.0, 0.0);
@@ -5043,6 +5041,7 @@ ALvoid I_CaptureAndPlayTest()
 	ALint			lLoop, lFormat, lFrequency, lBlockAlignment, lProcessed, lPlaying;
 	ALboolean		bPlaying = AL_FALSE;
 	ALboolean		bPlay = AL_FALSE;
+	const ALchar		*pDeviceList;
 #ifdef TEST_EAX
 	ALint			lEnv, lDirect, lRoom;
 #endif
@@ -5067,7 +5066,7 @@ ALvoid I_CaptureAndPlayTest()
 	ulQueueCount = 0;
 
 	/* Get list of available Capture Devices */
-	const ALchar *pDeviceList = alcGetString(NULL, ALC_CAPTURE_DEVICE_SPECIFIER);
+	pDeviceList = alcGetString(NULL, ALC_CAPTURE_DEVICE_SPECIFIER);
 	if (pDeviceList)
 	{
 		printf("Available Capture Devices are:-\n");

@@ -1,5 +1,9 @@
 2006-05-10  Sven Panne  <sven.panne@aedion.de>
 
+	* tests/altest/altest.c(main,FA_StateTransition,SA_StringQueries,
+	SA_ListenerGain,SA_ListenerOrientation,I_CaptureAndPlayTest): Don't mix
+	declarations and code.
+
 	* tests/altest/altest.c: Use ALboolean instead of bool. Compiles again
 	on Linux as a plain C program.
 
