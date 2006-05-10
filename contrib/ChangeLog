@@ -1,5 +1,7 @@
 2006-05-10  Sven Panne  <sven.panne@aedion.de>
 
+	* tests/altest/altest.c(I_QueueTest): Removed unused variable.
+
 	* tests/altest/altest.c(main,FA_StateTransition,SA_StringQueries,
 	SA_ListenerGain,SA_ListenerOrientation,I_CaptureAndPlayTest): Don't mix
 	declarations and code.

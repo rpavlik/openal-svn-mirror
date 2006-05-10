@@ -2984,7 +2984,6 @@ ALvoid I_QueueTest(ALvoid)
 	ALuint	source[1];
 	ALbyte	ch;
 	ALuint  buffers[5];
-	ALuint  *buffersremoved;
 	ALboolean bLooping;
 	ALint	BuffersInQueue, BuffersProcessed;
 	ALfloat source0Pos[]={ 0.0, 0.0, -1.0};	/* Immediately in front of listener */
