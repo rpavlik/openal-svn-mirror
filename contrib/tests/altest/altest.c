@@ -4737,7 +4737,7 @@ ALvoid I_SetSourceOffsetTest()
 				break;
 
 			case 'F':
-				iType = (++iType % 3);
+				iType = (iType + 1) % 3;
 				break;
 			}
 
