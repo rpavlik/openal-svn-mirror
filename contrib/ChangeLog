@@ -1,5 +1,7 @@
 2006-05-10  Sven Panne  <sven.panne@aedion.de>
 
+	* tests/altest/altest.c(I_QueueTest): Use arrays instead of new/delete.
+
 	* tests/altest/altest.c: Simplified header inclusion.
 
 	* tests/altest/altest.c: Use C comment syntax, not C++ syntax.

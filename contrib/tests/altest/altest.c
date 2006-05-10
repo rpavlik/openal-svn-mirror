@@ -3116,9 +3116,9 @@ ALvoid I_QueueTest(ALvoid)
 				if ((error = alGetError()) != AL_NO_ERROR)
 					DisplayALError("alSourceQueueBuffers 1 (buffer 0) : ", error);
 				break;
-			case 'A':
+			case 'A': {
 				/* Unqueue first Buffer */
-				buffersremoved = new ALuint[1];
+				ALuint buffersremoved[1];
 				alSourceUnqueueBuffers(source[0], 1, buffersremoved);
 				
 				if ((error = alGetError()) != AL_NO_ERROR)
@@ -3139,12 +3139,11 @@ ALvoid I_QueueTest(ALvoid)
 				
 					printf("\nRemoved Buffer %d from queue\n", buffersremoved[0]);
 				}
-				
-				delete buffersremoved;
+				}
 				break;
-			case 'B':
+			case 'B': {
 				/* Unqueue first 2 Buffers */
-				buffersremoved = new ALuint[2];
+				ALuint buffersremoved[2];
 				alSourceUnqueueBuffers(source[0], 2, buffersremoved);
 				
 				if ((error = alGetError()) != AL_NO_ERROR)
@@ -3168,12 +3167,11 @@ ALvoid I_QueueTest(ALvoid)
 
 					printf("\nRemoved Buffers %d and %d from queue\n", buffersremoved[0], buffersremoved[1]);
 				}
-
-				delete buffersremoved;
+				}
 				break;
-			case 'C':
+			case 'C': {
 				/* Unqueue first 3 Buffers */
-				buffersremoved = new ALuint[3];
+				ALuint buffersremoved[3];
 				alSourceUnqueueBuffers(source[0], 3, buffersremoved);
 				if ((error = alGetError()) != AL_NO_ERROR)
 				{
@@ -3197,12 +3195,11 @@ ALvoid I_QueueTest(ALvoid)
 					printf("\nRemoved Buffers %d, %d and %d from queue\n", buffersremoved[0], buffersremoved[1],
 						buffersremoved[2]);
 				}
-
-				delete buffersremoved;
+				}
 				break;
-			case 'D':
+			case 'D': {
 				/* Unqueue first 4 Buffers */
-				buffersremoved = new ALuint[4];
+				ALuint buffersremoved[4];
 				alSourceUnqueueBuffers(source[0], 4, buffersremoved);
 				
 				if ((error = alGetError()) != AL_NO_ERROR)
@@ -3227,12 +3224,11 @@ ALvoid I_QueueTest(ALvoid)
 					printf("\nRemoved Buffers %d, %d, %d and %d from queue\n", buffersremoved[0], buffersremoved[1],
 						buffersremoved[2], buffersremoved[3]);
 				}
-
-				delete buffersremoved;
+				}
 				break;
-			case 'E':
+			case 'E': {
 				/* Unqueue first 5 Buffers */
-				buffersremoved = new ALuint[5];
+				ALuint buffersremoved[5];
 				alSourceUnqueueBuffers(source[0], 5, buffersremoved);
 				
 				if ((error = alGetError()) != AL_NO_ERROR)
@@ -3257,8 +3253,7 @@ ALvoid I_QueueTest(ALvoid)
 					printf("\nRemoved Buffers %d, %d, %d, %d and %d from queue\n", buffersremoved[0], buffersremoved[1],
 						buffersremoved[2], buffersremoved[3], buffersremoved[4]);
 				}
-
-				delete buffersremoved;
+				}
 				break;
 			case 'F':
 				alSourcei(source[0], AL_BUFFER, 0);
