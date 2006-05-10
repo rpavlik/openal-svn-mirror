@@ -1,0 +1,10 @@
+name           data  audio    sample  channels  rate      bitrate
+--------------------------------------------------------------------
+boom.ogg       Ogg   Vorbis           mono      11025 Hz  ~32000 bps
+ding.wav       Wave  PCM      16 bit  mono      22050 Hz
+footsteps.wav  Wave  PCM      16 bit  mono      44100 Hz
+stereo.wav     Wave  PCM      16 bit  stereo    22050 Hz
+wave1.wav      Wave  PCM      16 bit  mono      44100 Hz
+wave2.wav      Wave  PCM      16 bit  mono      44100 Hz
+wave3.wav      Wave  PCM      16 bit  mono      44100 Hz
+wave4.wav      Wave  PCM      16 bit  mono      44100 Hz

@@ -1,5 +1,7 @@
 2006-05-10  Sven Panne  <sven.panne@aedion.de>
 
+	* tests/altest/sounds/README: Added.
+
 	* tests/altest/altest.c: Get value of AL_FORMAT_VORBIS_EXT dynamically.
 
 	* tests/altest/altest.c: Unbreak Ogg Vorbis tests.
