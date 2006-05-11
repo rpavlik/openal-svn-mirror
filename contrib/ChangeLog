@@ -1,3 +1,7 @@
+2006-05-11  Sven Panne  <sven.panne@aedion.de>
+
+	* tests/altest/altest.c: Hopefully improved header selection for Macs.
+
 2006-05-10  Sven Panne  <sven.panne@aedion.de>
 
 	* tests/altest/Makefile.am: Added a "README" target for generating docs
