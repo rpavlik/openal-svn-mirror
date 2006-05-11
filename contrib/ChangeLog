@@ -1,5 +1,8 @@
 2006-05-11  Sven Panne  <sven.panne@aedion.de>
 
+	* tests/altest/altest.c(SA_ListenerOrientation): Don't use the ambiguous
+	"foo=-1".
+
 	* tests/altest/altest.c: Hopefully improved header selection for Macs.
 
 2006-05-10  Sven Panne  <sven.panne@aedion.de>
