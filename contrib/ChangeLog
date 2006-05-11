@@ -1,5 +1,8 @@
 2006-05-11  Sven Panne  <sven.panne@aedion.de>
 
+	* tests/altest/altest.c(FA_EnumerationValue): Distinguish between ALC
+	enums and AL enums.
+
 	* tests/altest/altest.c: Reformatted automatically with GNU indent. In
 	the future, please use "make indent" before commiting (if possible).
 

@@ -155,10 +155,16 @@ typedef struct
 #define QUEUEBUFFERSIZE         2048
 #define QUEUEBUFFERCOUNT        4
 
+typedef struct ALCenum_struct
+{
+  const ALCchar *enumName;
+  ALCenum expectedValue;
+} ALCenums;
+
 typedef struct ALenum_struct
 {
-  ALchar *enumName;
-  ALenum value;
+  const ALchar *enumName;
+  ALenum expectedValue;
 } ALenums;
 
 #ifndef LINUX
@@ -181,124 +187,135 @@ ALboolean g_bEAX;               /* Boolean variable to indicate presence of EAX 
 
 unsigned int g_ovSize;
 
-static ALenums enumeration[] = {
+static ALCenums enumerationALC[] = {
   /* Types */
-  {(ALchar *) "AL_NONE", AL_NONE},
-  {(ALchar *) "AL_FALSE", AL_FALSE},
-  {(ALchar *) "ALC_FALSE", ALC_FALSE},
-  {(ALchar *) "AL_TRUE", AL_TRUE},
-  {(ALchar *) "ALC_TRUE", ALC_TRUE},
-
-  /* Source and Listener Properties */
-  {(ALchar *) "AL_SOURCE_RELATIVE", AL_SOURCE_RELATIVE},
-  {(ALchar *) "AL_CONE_INNER_ANGLE", AL_CONE_INNER_ANGLE},
-  {(ALchar *) "AL_CONE_OUTER_ANGLE", AL_CONE_OUTER_ANGLE},
-  {(ALchar *) "AL_PITCH", AL_PITCH},
-  {(ALchar *) "AL_POSITION", AL_POSITION},
-  {(ALchar *) "AL_DIRECTION", AL_DIRECTION},
-  {(ALchar *) "AL_VELOCITY", AL_VELOCITY},
-  {(ALchar *) "AL_LOOPING", AL_LOOPING},
-  {(ALchar *) "AL_BUFFER", AL_BUFFER},
-  {(ALchar *) "AL_GAIN", AL_GAIN},
-  {(ALchar *) "AL_MIN_GAIN", AL_MIN_GAIN},
-  {(ALchar *) "AL_MAX_GAIN", AL_MAX_GAIN},
-  {(ALchar *) "AL_ORIENTATION", AL_ORIENTATION},
-  {(ALchar *) "AL_REFERENCE_DISTANCE", AL_REFERENCE_DISTANCE},
-  {(ALchar *) "AL_ROLLOFF_FACTOR", AL_ROLLOFF_FACTOR},
-  {(ALchar *) "AL_CONE_OUTER_GAIN", AL_CONE_OUTER_GAIN},
-  {(ALchar *) "AL_MAX_DISTANCE", AL_MAX_DISTANCE},
-  {(ALchar *) "AL_SEC_OFFSET", AL_SEC_OFFSET},
-  {(ALchar *) "AL_SAMPLE_OFFSET", AL_SAMPLE_OFFSET},
-  {(ALchar *) "AL_BYTE_OFFSET", AL_BYTE_OFFSET},
-  {(ALchar *) "AL_SOURCE_TYPE", AL_SOURCE_TYPE},
-  {(ALchar *) "AL_STATIC", AL_STATIC},
-  {(ALchar *) "AL_STREAMING", AL_STREAMING},
-  {(ALchar *) "AL_UNDETERMINED", AL_UNDETERMINED},
-
-  /* Source State information */
-  {(ALchar *) "AL_SOURCE_STATE", AL_SOURCE_STATE},
-  {(ALchar *) "AL_INITIAL", AL_INITIAL},
-  {(ALchar *) "AL_PLAYING", AL_PLAYING},
-  {(ALchar *) "AL_PAUSED", AL_PAUSED},
-  {(ALchar *) "AL_STOPPED", AL_STOPPED},
-
-  /* Queue information */
-  {(ALchar *) "AL_BUFFERS_QUEUED", AL_BUFFERS_QUEUED},
-  {(ALchar *) "AL_BUFFERS_PROCESSED", AL_BUFFERS_PROCESSED},
-
-  /* Buffer Formats */
-  {(ALchar *) "AL_FORMAT_MONO8", AL_FORMAT_MONO8},
-  {(ALchar *) "AL_FORMAT_MONO16", AL_FORMAT_MONO16},
-  {(ALchar *) "AL_FORMAT_STEREO8", AL_FORMAT_STEREO8},
-  {(ALchar *) "AL_FORMAT_STEREO16", AL_FORMAT_STEREO16},
-
-  /* Buffer attributes */
-  {(ALchar *) "AL_FREQUENCY", AL_FREQUENCY},
-  {(ALchar *) "AL_BITS", AL_BITS},
-  {(ALchar *) "AL_CHANNELS", AL_CHANNELS},
-  {(ALchar *) "AL_SIZE", AL_SIZE},
-
-  /* Buffer States (not supported yet) */
-  {(ALchar *) "AL_UNUSED", AL_UNUSED},
-  {(ALchar *) "AL_PENDING", AL_PENDING},
-  {(ALchar *) "AL_PROCESSED", AL_PROCESSED},
+  {(const ALCchar *) "ALC_FALSE", ALC_FALSE},
+  {(const ALCchar *) "ALC_TRUE", ALC_TRUE},
 
   /* ALC Properties */
-  {(ALchar *) "ALC_MAJOR_VERSION", ALC_MAJOR_VERSION},
-  {(ALchar *) "ALC_MINOR_VERSION", ALC_MINOR_VERSION},
-  {(ALchar *) "ALC_ATTRIBUTES_SIZE", ALC_ATTRIBUTES_SIZE},
-  {(ALchar *) "ALC_ALL_ATTRIBUTES", ALC_ALL_ATTRIBUTES},
-  {(ALchar *) "ALC_DEFAULT_DEVICE_SPECIFIER", ALC_DEFAULT_DEVICE_SPECIFIER},
-  {(ALchar *) "ALC_DEVICE_SPECIFIER", ALC_DEVICE_SPECIFIER},
-  {(ALchar *) "ALC_EXTENSIONS", ALC_EXTENSIONS},
-  {(ALchar *) "ALC_FREQUENCY", ALC_FREQUENCY},
-  {(ALchar *) "ALC_REFRESH", ALC_REFRESH},
-  {(ALchar *) "ALC_SYNC", ALC_SYNC},
-  {(ALchar *) "ALC_MONO_SOURCES", ALC_MONO_SOURCES},
-  {(ALchar *) "ALC_STEREO_SOURCES", ALC_STEREO_SOURCES},
-  {(ALchar *) "ALC_CAPTURE_DEVICE_SPECIFIER", ALC_CAPTURE_DEVICE_SPECIFIER},
-  {(ALchar *) "ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER",
+  {(const ALCchar *) "ALC_MAJOR_VERSION", ALC_MAJOR_VERSION},
+  {(const ALCchar *) "ALC_MINOR_VERSION", ALC_MINOR_VERSION},
+  {(const ALCchar *) "ALC_ATTRIBUTES_SIZE", ALC_ATTRIBUTES_SIZE},
+  {(const ALCchar *) "ALC_ALL_ATTRIBUTES", ALC_ALL_ATTRIBUTES},
+  {(const ALCchar *) "ALC_DEFAULT_DEVICE_SPECIFIER",
+   ALC_DEFAULT_DEVICE_SPECIFIER},
+  {(const ALCchar *) "ALC_DEVICE_SPECIFIER", ALC_DEVICE_SPECIFIER},
+  {(const ALCchar *) "ALC_EXTENSIONS", ALC_EXTENSIONS},
+  {(const ALCchar *) "ALC_FREQUENCY", ALC_FREQUENCY},
+  {(const ALCchar *) "ALC_REFRESH", ALC_REFRESH},
+  {(const ALCchar *) "ALC_SYNC", ALC_SYNC},
+  {(const ALCchar *) "ALC_MONO_SOURCES", ALC_MONO_SOURCES},
+  {(const ALCchar *) "ALC_STEREO_SOURCES", ALC_STEREO_SOURCES},
+  {(const ALCchar *) "ALC_CAPTURE_DEVICE_SPECIFIER",
+   ALC_CAPTURE_DEVICE_SPECIFIER},
+  {(const ALCchar *) "ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER",
    ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER},
-  {(ALchar *) "ALC_CAPTURE_SAMPLES", ALC_CAPTURE_SAMPLES},
-
-  /* AL Error Messages */
-  {(ALchar *) "AL_NO_ERROR", AL_NO_ERROR},
-  {(ALchar *) "AL_INVALID_NAME", AL_INVALID_NAME},
-  {(ALchar *) "AL_INVALID_ENUM", AL_INVALID_ENUM},
-  {(ALchar *) "AL_INVALID_VALUE", AL_INVALID_VALUE},
-  {(ALchar *) "AL_INVALID_OPERATION", AL_INVALID_OPERATION},
-  {(ALchar *) "AL_OUT_OF_MEMORY", AL_OUT_OF_MEMORY},
+  {(const ALCchar *) "ALC_CAPTURE_SAMPLES", ALC_CAPTURE_SAMPLES},
 
   /* ALC Error Message */
-  {(ALchar *) "ALC_NO_ERROR", ALC_NO_ERROR},
-  {(ALchar *) "ALC_INVALID_DEVICE", ALC_INVALID_DEVICE},
-  {(ALchar *) "ALC_INVALID_CONTEXT", ALC_INVALID_CONTEXT},
-  {(ALchar *) "ALC_INVALID_ENUM", ALC_INVALID_ENUM},
-  {(ALchar *) "ALC_INVALID_VALUE", ALC_INVALID_VALUE},
-  {(ALchar *) "ALC_OUT_OF_MEMORY", ALC_OUT_OF_MEMORY},
-
-  /* Context strings */
-  {(ALchar *) "AL_VENDOR", AL_VENDOR},
-  {(ALchar *) "AL_VERSION", AL_VERSION},
-  {(ALchar *) "AL_RENDERER", AL_RENDERER},
-  {(ALchar *) "AL_EXTENSIONS", AL_EXTENSIONS},
-
-  /* Global states */
-  {(ALchar *) "AL_DOPPLER_FACTOR", AL_DOPPLER_FACTOR},
-  {(ALchar *) "AL_DOPPLER_VELOCITY", AL_DOPPLER_VELOCITY},
-  {(ALchar *) "AL_DISTANCE_MODEL", AL_DISTANCE_MODEL},
-  {(ALchar *) "AL_SPEED_OF_SOUND", AL_SPEED_OF_SOUND},
-
-  /* Distance Models */
-  {(ALchar *) "AL_INVERSE_DISTANCE", AL_INVERSE_DISTANCE},
-  {(ALchar *) "AL_INVERSE_DISTANCE_CLAMPED", AL_INVERSE_DISTANCE_CLAMPED},
-  {(ALchar *) "AL_LINEAR_DISTANCE", AL_LINEAR_DISTANCE},
-  {(ALchar *) "AL_LINEAR_DISTANCE_CLAMPED", AL_LINEAR_DISTANCE_CLAMPED},
-  {(ALchar *) "AL_EXPONENT_DISTANCE", AL_EXPONENT_DISTANCE},
-  {(ALchar *) "AL_EXPONENT_DISTANCE_CLAMPED", AL_EXPONENT_DISTANCE_CLAMPED},
+  {(const ALCchar *) "ALC_NO_ERROR", ALC_NO_ERROR},
+  {(const ALCchar *) "ALC_INVALID_DEVICE", ALC_INVALID_DEVICE},
+  {(const ALCchar *) "ALC_INVALID_CONTEXT", ALC_INVALID_CONTEXT},
+  {(const ALCchar *) "ALC_INVALID_ENUM", ALC_INVALID_ENUM},
+  {(const ALCchar *) "ALC_INVALID_VALUE", ALC_INVALID_VALUE},
+  {(const ALCchar *) "ALC_OUT_OF_MEMORY", ALC_OUT_OF_MEMORY},
 
   /* Default */
-  {(ALchar *) NULL, (ALenum) 0}
+  {(const ALCchar *) NULL, (ALCenum) 0}
+};
+
+static ALenums enumerationAL[] = {
+  /* Types */
+  {(const ALchar *) "AL_NONE", AL_NONE},
+  {(const ALchar *) "AL_FALSE", AL_FALSE},
+  {(const ALchar *) "AL_TRUE", AL_TRUE},
+
+  /* Source and Listener Properties */
+  {(const ALchar *) "AL_SOURCE_RELATIVE", AL_SOURCE_RELATIVE},
+  {(const ALchar *) "AL_CONE_INNER_ANGLE", AL_CONE_INNER_ANGLE},
+  {(const ALchar *) "AL_CONE_OUTER_ANGLE", AL_CONE_OUTER_ANGLE},
+  {(const ALchar *) "AL_PITCH", AL_PITCH},
+  {(const ALchar *) "AL_POSITION", AL_POSITION},
+  {(const ALchar *) "AL_DIRECTION", AL_DIRECTION},
+  {(const ALchar *) "AL_VELOCITY", AL_VELOCITY},
+  {(const ALchar *) "AL_LOOPING", AL_LOOPING},
+  {(const ALchar *) "AL_BUFFER", AL_BUFFER},
+  {(const ALchar *) "AL_GAIN", AL_GAIN},
+  {(const ALchar *) "AL_MIN_GAIN", AL_MIN_GAIN},
+  {(const ALchar *) "AL_MAX_GAIN", AL_MAX_GAIN},
+  {(const ALchar *) "AL_ORIENTATION", AL_ORIENTATION},
+  {(const ALchar *) "AL_REFERENCE_DISTANCE", AL_REFERENCE_DISTANCE},
+  {(const ALchar *) "AL_ROLLOFF_FACTOR", AL_ROLLOFF_FACTOR},
+  {(const ALchar *) "AL_CONE_OUTER_GAIN", AL_CONE_OUTER_GAIN},
+  {(const ALchar *) "AL_MAX_DISTANCE", AL_MAX_DISTANCE},
+  {(const ALchar *) "AL_SEC_OFFSET", AL_SEC_OFFSET},
+  {(const ALchar *) "AL_SAMPLE_OFFSET", AL_SAMPLE_OFFSET},
+  {(const ALchar *) "AL_BYTE_OFFSET", AL_BYTE_OFFSET},
+  {(const ALchar *) "AL_SOURCE_TYPE", AL_SOURCE_TYPE},
+  {(const ALchar *) "AL_STATIC", AL_STATIC},
+  {(const ALchar *) "AL_STREAMING", AL_STREAMING},
+  {(const ALchar *) "AL_UNDETERMINED", AL_UNDETERMINED},
+
+  /* Source State information */
+  {(const ALchar *) "AL_SOURCE_STATE", AL_SOURCE_STATE},
+  {(const ALchar *) "AL_INITIAL", AL_INITIAL},
+  {(const ALchar *) "AL_PLAYING", AL_PLAYING},
+  {(const ALchar *) "AL_PAUSED", AL_PAUSED},
+  {(const ALchar *) "AL_STOPPED", AL_STOPPED},
+
+  /* Queue information */
+  {(const ALchar *) "AL_BUFFERS_QUEUED", AL_BUFFERS_QUEUED},
+  {(const ALchar *) "AL_BUFFERS_PROCESSED", AL_BUFFERS_PROCESSED},
+
+  /* Buffer Formats */
+  {(const ALchar *) "AL_FORMAT_MONO8", AL_FORMAT_MONO8},
+  {(const ALchar *) "AL_FORMAT_MONO16", AL_FORMAT_MONO16},
+  {(const ALchar *) "AL_FORMAT_STEREO8", AL_FORMAT_STEREO8},
+  {(const ALchar *) "AL_FORMAT_STEREO16", AL_FORMAT_STEREO16},
+
+  /* Buffer attributes */
+  {(const ALchar *) "AL_FREQUENCY", AL_FREQUENCY},
+  {(const ALchar *) "AL_BITS", AL_BITS},
+  {(const ALchar *) "AL_CHANNELS", AL_CHANNELS},
+  {(const ALchar *) "AL_SIZE", AL_SIZE},
+
+  /* Buffer States (not supported yet) */
+  {(const ALchar *) "AL_UNUSED", AL_UNUSED},
+  {(const ALchar *) "AL_PENDING", AL_PENDING},
+  {(const ALchar *) "AL_PROCESSED", AL_PROCESSED},
+
+  /* AL Error Messages */
+  {(const ALchar *) "AL_NO_ERROR", AL_NO_ERROR},
+  {(const ALchar *) "AL_INVALID_NAME", AL_INVALID_NAME},
+  {(const ALchar *) "AL_INVALID_ENUM", AL_INVALID_ENUM},
+  {(const ALchar *) "AL_INVALID_VALUE", AL_INVALID_VALUE},
+  {(const ALchar *) "AL_INVALID_OPERATION", AL_INVALID_OPERATION},
+  {(const ALchar *) "AL_OUT_OF_MEMORY", AL_OUT_OF_MEMORY},
+
+  /* Context strings */
+  {(const ALchar *) "AL_VENDOR", AL_VENDOR},
+  {(const ALchar *) "AL_VERSION", AL_VERSION},
+  {(const ALchar *) "AL_RENDERER", AL_RENDERER},
+  {(const ALchar *) "AL_EXTENSIONS", AL_EXTENSIONS},
+
+  /* Global states */
+  {(const ALchar *) "AL_DOPPLER_FACTOR", AL_DOPPLER_FACTOR},
+  {(const ALchar *) "AL_DOPPLER_VELOCITY", AL_DOPPLER_VELOCITY},
+  {(const ALchar *) "AL_DISTANCE_MODEL", AL_DISTANCE_MODEL},
+  {(const ALchar *) "AL_SPEED_OF_SOUND", AL_SPEED_OF_SOUND},
+
+  /* Distance Models */
+  {(const ALchar *) "AL_INVERSE_DISTANCE", AL_INVERSE_DISTANCE},
+  {(const ALchar *) "AL_INVERSE_DISTANCE_CLAMPED",
+   AL_INVERSE_DISTANCE_CLAMPED},
+  {(const ALchar *) "AL_LINEAR_DISTANCE", AL_LINEAR_DISTANCE},
+  {(const ALchar *) "AL_LINEAR_DISTANCE_CLAMPED", AL_LINEAR_DISTANCE_CLAMPED},
+  {(const ALchar *) "AL_EXPONENT_DISTANCE", AL_EXPONENT_DISTANCE},
+  {(const ALchar *) "AL_EXPONENT_DISTANCE_CLAMPED",
+   AL_EXPONENT_DISTANCE_CLAMPED},
+
+  /* Default */
+  {(const ALchar *) NULL, (ALenum) 0}
 };
 
 /* Function prototypes */
@@ -1478,52 +1495,107 @@ This test checks that the implementation's enumeration values are correct.
 ALvoid
 FA_EnumerationValue (ALvoid)
 {
+  int i;
   ALboolean result = AL_TRUE;
-  int i = 0;
-  int getVal;
-
   ALCcontext *context;
   ALCdevice *device;
+  ALCenum actualValueALC;
+  ALenum actualValueAL;
 
   printf ("\nEnumeration Value Test. ");
 
   context = alcGetCurrentContext ();
   device = alcGetContextsDevice (context);
 
-  while (enumeration[i].enumName)
+  /* Check ALC enums. */
+  for (i = 0; enumerationALC[i].enumName; i++)
     {
-      if (strstr (enumeration[i].enumName, "ALC_"))
+      const ALCchar *enumName = enumerationALC[i].enumName;
+      ALCenum expectedValue = enumerationALC[i].expectedValue;
+
+      /* Check if the ALC enum can be retrieved at all. */
+      alcGetError (device);
+      actualValueALC = alcGetEnumValue (device, enumName);
+      if (alcGetError (device) != ALC_NO_ERROR)
         {
-          getVal = alcGetEnumValue (device, enumeration[i].enumName);
-          if (getVal != enumeration[i].value)
-            {
-              printf ("\n%s has an invalid enum value.",
-                      enumeration[i].enumName);
-              result = AL_FALSE;
-            }
-          i++;
+          printf ("\ngetting %s vial alcGetEnumValue failed",
+                  (const char *) enumName);
+          result = AL_FALSE;
         }
-      else
+
+      /* Check if the ALC enum has the expected value. */
+      if (expectedValue != actualValueALC)
         {
-          getVal = alGetEnumValue (enumeration[i].enumName);
-          if (getVal != enumeration[i].value)
-            {
-              printf ("\n%s has an invalid enum value.",
-                      enumeration[i].enumName);
-              result = AL_FALSE;
-            }
-          i++;
+          printf ("\n%s has an invalid enum value: expected %d, got %d",
+                  (const char *) enumName, (int) expectedValue,
+                  (int) actualValueALC);
+          result = AL_FALSE;
+        }
+
+      /* Check that the ALC enum can not be retrieved via alGetEnumValue. Note
+         that the OpenAL 1.1 spec is a bit strange here: For alGetEnumValue it
+         doesn't specify an error code, but for a similar call of
+         alcGetEnumValue it does. Hmmm... */
+      alGetError ();
+      actualValueAL = alGetEnumValue (enumName);
+      if (actualValueAL != 0)
+        {
+          printf
+            ("\n%s could be retrieved vial alGetEnumValue (dubious behaviour)",
+             (const char *) enumName);
+          result = AL_FALSE;
+        }
+      alGetError ();
+    }
+
+  /* Check AL enums */
+  for (i = 0; enumerationAL[i].enumName; i++)
+    {
+      const ALchar *enumName = enumerationAL[i].enumName;
+      ALenum expectedValue = enumerationAL[i].expectedValue;
+
+      /* Check if the AL enum can be retrieved at all. */
+      alGetError ();
+      actualValueAL = alGetEnumValue (enumName);
+      if (alGetError () != AL_NO_ERROR)
+        {
+          printf ("\ngetting %s vial alGetEnumValue failed",
+                  (const char *) enumName);
+          result = AL_FALSE;
+        }
+
+      /* Check if the AL enum has the expected value. */
+      if (expectedValue != actualValueAL)
+        {
+          printf ("\n%s has an invalid enum value: expected %d, got %d",
+                  (const char *) enumName, (int) expectedValue,
+                  (int) actualValueAL);
+          result = AL_FALSE;
+        }
+
+      /* Check that retrieving an AL enum via alcGetEnumValue yields an
+         error. */
+      alcGetError (device);
+      actualValueALC = alcGetEnumValue (device, enumName);
+      if (alcGetError (device) != ALC_INVALID_VALUE)
+        {
+          printf
+            ("\nwhen retrieving %s via alcGetEnumValue, no ALC_INVALID_VALUE error was reported (dubious behaviour)",
+             (const char *) enumName);
+          result = AL_FALSE;
+        }
+
+      /* Check that retrieving an AL enum via alcGetEnumValue returns 0. */
+      if (actualValueALC != 0)
+        {
+          printf
+            ("\nwhen retrieving %s via alcGetEnumValue: expected 0, got %d (dubious behaviour)",
+             (const char *) enumName, (int) actualValueALC);
+          result = AL_FALSE;
         }
     }
 
-  if (result == AL_TRUE)
-    {
-      printf ("PASSED.");
-    }
-  else
-    {
-      printf ("FAILED.");
-    }
+  printf (result == AL_TRUE ? "PASSED." : "FAILED.");
 }
 
 /** used by gendocs.py
