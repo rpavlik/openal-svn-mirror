@@ -93,7 +93,7 @@ const ALchar*
 alGetString( ALenum param )
 {
 	const ALchar *value;
-	ALchar extensions[1024]; /* TODO: Ugly! */
+	static ALchar extensions[1024]; /* TODO: Ugly and not thread-safe! */
 
 	AL_context *cc = _alcDCGetContext();
 	if( cc == NULL ) {

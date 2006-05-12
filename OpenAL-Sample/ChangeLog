@@ -1,3 +1,11 @@
+2006-05-12  Sven Panne  <sven.panne@aedion.de>
+
+	* src/al_state.c(alGetString): Fixed a bug found by valgrind: For the
+	AL_EXTENSIONS query, the pointer returned was pointing to a local
+	variable which was already dead. Using "static" is better, but still not
+	perfect, because we are still limited to 1kB and the query is not
+	thread-safe.
+
 2006-04-23  Prakash Punnoor <prakash@punnoor.de>
 
 	* CMakeLists.txt: move defines into config.h, fix disabled native output
