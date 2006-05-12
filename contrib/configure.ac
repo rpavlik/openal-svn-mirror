@@ -32,8 +32,19 @@ AC_CHECK_PROGS([PKG_CONFIG], [pkg-config], [none])
 AC_CHECK_LIBM
 AC_SUBST([LIBM])
 
-# ToDo: Not perfect, pkg-config might be nicer
-AC_SEARCH_LIBS([alGetError], [openal32 openal])
+if test "x$PKG_CONFIG" != xnone && "$PKG_CONFIG" --exists openal; then
+  AM_CFLAGS="`$PKG_CONFIG --cflags openal` $AM_CFLAGS"
+  LIBS="`$PKG_CONFIG --libs openal` $LIBS"
+else
+  AC_SEARCH_LIBS([alGetError], [openal32 openal])
+fi
+
+if test "x$PKG_CONFIG" != xnone && "$PKG_CONFIG" --exists alut; then
+  AM_CFLAGS="`$PKG_CONFIG --cflags alut` $AM_CFLAGS"
+  LIBS="`$PKG_CONFIG --libs alut` $LIBS"
+else
+  AC_SEARCH_LIBS([alutExit], [alut])
+fi
 
 ################################################################################
 # Handle warning-related options.
@@ -182,6 +193,6 @@ AC_SUBST([LIBS])
 # Generate output.
 # NOTE: Do not break the following line, otherwise we are into CR/LF vs. LF
 # trouble! This is a buglet in autoconf IMHO, but easy to work around.
-AC_CONFIG_FILES([Makefile demos/Makefile demos/panning2d/Makefile examples/Makefile tests/Makefile tests/altest/Makefile])
+AC_CONFIG_FILES([Makefile demos/Makefile demos/panning2d/Makefile examples/Makefile examples/openal-info/Makefile tests/Makefile tests/altest/Makefile])
 
 AC_OUTPUT

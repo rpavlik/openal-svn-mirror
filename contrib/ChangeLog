@@ -1,3 +1,11 @@
+2006-05-12  Sven Panne  <sven.panne@aedion.de>
+
+	* configure.ac, examples/Makefile.am: Hook openal-info example into
+	build system.
+
+	* examples/openal-info/openal-info.c, examples/openal-info/Makefile.am:
+	Added.
+
 2006-05-11  Sven Panne  <sven.panne@aedion.de>
 
 	* tests/altest/altest.c(FA_EnumerationValue): Distinguish between ALC
