@@ -7,9 +7,13 @@ ACLOCAL_AMFLAGS = -I admin/autotools/m4
 # The following files should be in our source distribution in addition to the
 # standard ones included by automake itself.
 EXTRA_DIST =					\
+	admin/autotools/.indent.pro		\
 	autogen.sh				\
+	tests/altest/gendocs.py			\
+	tests/altest/sounds/README		\
 	tests/altest/sounds/boom.ogg		\
 	tests/altest/sounds/ding.wav		\
+	tests/altest/sounds/footadpcm.wav	\
 	tests/altest/sounds/footsteps.wav	\
 	tests/altest/sounds/stereo.wav		\
 	tests/altest/sounds/wave1.wav		\

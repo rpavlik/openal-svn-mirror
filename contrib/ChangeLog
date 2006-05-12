@@ -1,5 +1,7 @@
 2006-05-12  Sven Panne  <sven.panne@aedion.de>
 
+	* Makefile.am: Update EXTRA_DIST.
+
 	* configure.ac, examples/Makefile.am: Hook openal-info example into
 	build system.
 
