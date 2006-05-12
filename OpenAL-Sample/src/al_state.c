@@ -107,7 +107,7 @@ alGetString( ALenum param )
 		value = "1.1";
 		break;
 	case AL_RENDERER:
-		value = "Software";
+		value = "OpenAL Sample Implementation";
 		break;
 	case AL_VENDOR:
 		value = "OpenAL Community";
