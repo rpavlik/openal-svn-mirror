@@ -9,6 +9,7 @@ ACLOCAL_AMFLAGS = -I admin/autotools/m4
 EXTRA_DIST =					\
 	admin/autotools/.indent.pro		\
 	autogen.sh				\
+	demos/panning2d/sounds/boom.wav		\
 	tests/altest/gendocs.py			\
 	tests/altest/sounds/README		\
 	tests/altest/sounds/boom.ogg		\
