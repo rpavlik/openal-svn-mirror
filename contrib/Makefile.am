@@ -25,10 +25,6 @@ EXTRA_DIST =					\
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status --recheck
 
-# The Creative repository has some broken permissions, let's fix this.
-permissions:
-	find . -type f \! -perm +222 \! -name "*.sh" -exec chmod +w {} \;
-
 # Automatically reformat all C headers and sources with indent according to
 # admin/autotools/.indent.pro, but be make-friendly and take some precautions to
 # leave those files untouched which wouldn't change.
