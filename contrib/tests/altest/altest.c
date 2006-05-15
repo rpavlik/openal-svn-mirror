@@ -75,19 +75,34 @@
 /* get header for stat and friends, used for getting the file length only */
 #include <sys/types.h>
 #include <sys/stat.h>
-#if defined(_WIN32)
+#if HAVE_STAT
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#define structStat struct stat
+#elif HAVE__STAT
 #define stat(p,b) _stat((p),(b))
 #define structStat struct _stat
 #else
-#include <unistd.h>
-#define structStat struct stat
+#error No stat-like function on this platform
 #endif
 
-#if defined(_WIN32)
+#if HAVE_CONIO_H
 #include <conio.h>
 #define KBHIT() _kbhit()
 #else
 #define KBHIT() 1
+#endif
+
+#if HAVE_NANOSLEEP && HAVE_TIME_H
+#include <time.h>
+#include <errno.h>
+#elif HAVE_USLEEP && HAVE_UNISTD_H
+#include <unistd.h>
+#elif HAVE_SLEEP && HAVE_WINDOWS_H
+#include <windows.h>
+#else
+#error No way to sleep on this platform
 #endif
 
 #include <ctype.h>
@@ -108,7 +123,9 @@
 #endif
 #endif
 
-#ifndef _WIN32
+#if HAVE_WINDOWS_H
+#include <windows.h>
+#else
 typedef struct
 {
   ALshort wFormatTag;
@@ -319,7 +336,6 @@ static ALenums enumerationAL[] = {
 };
 
 /* Function prototypes */
-void delay_ms (unsigned int ms);
 ALvoid DisplayALError (ALchar *szText, ALint errorcode);
 
 char getUpperCh (void);
@@ -387,35 +403,59 @@ ALvoid I_VorbisTest (ALvoid);
 ALvoid I_EAXTest (ALvoid);
 #endif
 
-/*
-        delay_ms -- delay by given number of milliseconds
-*/
-void
-delay_ms (unsigned int ms)
+/* cut-n-paste from freealut plus some simplifications */
+static void
+sleepSeconds (ALfloat duration)
 {
-#ifdef __MACOS__
-  UnsignedWide endTime, currentTime;
-
-  Microseconds (&currentTime);
-  endTime = currentTime;
-  endTime.lo += ms * 1000;
-
-  while (endTime.lo > currentTime.lo)
+  if (duration < 0)
     {
-      Microseconds (&currentTime);
+      return;
     }
+
+  {
+    ALuint seconds = (ALuint) duration;
+    ALfloat rest = duration - (ALfloat) seconds;
+
+#if HAVE_NANOSLEEP && HAVE_TIME_H
+
+    ALuint microSecs = (ALuint) (rest * 1000000);
+    struct timespec t, remainingTime;
+    t.tv_sec = (time_t) seconds;
+    t.tv_nsec = ((long) microSecs) * 1000;
+
+    /* At least the interaction of nanosleep and signals is specified! */
+    while (nanosleep (&t, &remainingTime) < 0)
+      {
+        if (errno != EINTR)
+          {
+            return;
+          }
+        /* If we received a signal, let's try again with the remaining time. */
+        t.tv_sec = remainingTime.tv_sec;
+        t.tv_nsec = remainingTime.tv_nsec;
+      }
+
+#elif HAVE_USLEEP && HAVE_UNISTD_H
+
+    while (seconds > 0)
+      {
+        usleep (1000000);
+        seconds--;
+      }
+    usleep ((unsigned int) (rest * 1000000));
+
+#elif HAVE_SLEEP && HAVE_WINDOWS_H
+
+    while (seconds > 0)
+      {
+        Sleep (1000);
+        seconds--;
+      }
+    Sleep ((DWORD) (rest * 1000));
+
 #endif
-#ifdef MAC_OS_X
-  usleep (ms * 1000);
-#endif
-#ifdef LINUX
-  usleep (ms * 1000);
-#endif
-#ifdef _WIN32
-  int startTime;
-  startTime = timeGetTime ();
-  while ((startTime + ms) > timeGetTime ());
-#endif
+
+  }
 }
 
 /*
@@ -1063,7 +1103,7 @@ FullAutoTests (ALvoid)
   FA_QueuingUnderrunStates ();  /* test underrun while queuing */
 
   printf ("\n\n");
-  delay_ms (1000);
+  sleepSeconds (1.0f);
 }
 
 char
@@ -1158,7 +1198,7 @@ SemiAutoTests (ALvoid)
   SA_QueuingUnderrunPerformance ();     /* test underrun performance */
 
   printf ("\nDone with this series of tests. Going back to the main menu...");
-  delay_ms (1000);
+  sleepSeconds (1.0f);
 }
 
 /** used by gendocs.py
@@ -1320,28 +1360,28 @@ FA_StateTransition (ALvoid)
       localResultOK = AL_FALSE;
     }
   alSourcePlay (testSources[0]);
-  delay_ms (500);
+  sleepSeconds (0.5f);
   alGetSourcei (testSources[0], AL_SOURCE_STATE, &sourceState);
   if (sourceState != AL_PLAYING)
     {
       localResultOK = AL_FALSE;
     }
   alSourcePause (testSources[0]);
-  delay_ms (500);
+  sleepSeconds (0.5f);
   alGetSourcei (testSources[0], AL_SOURCE_STATE, &sourceState);
   if (sourceState != AL_PAUSED)
     {
       localResultOK = AL_FALSE;
     }
   alSourcePlay (testSources[0]);
-  delay_ms (500);
+  sleepSeconds (0.5f);
   alGetSourcei (testSources[0], AL_SOURCE_STATE, &sourceState);
   if (sourceState != AL_PLAYING)
     {
       localResultOK = AL_FALSE;
     }
   alSourceStop (testSources[0]);
-  delay_ms (500);
+  sleepSeconds (0.5f);
   alGetSourcei (testSources[0], AL_SOURCE_STATE, &sourceState);
   if (sourceState != AL_STOPPED)
     {
@@ -1394,7 +1434,7 @@ FA_VectorStateTransition (ALvoid)
       printf ("FAILED -- AL_INITIAL 1");
     }
   alSourcePlayv (2, &testSources[0]);
-  delay_ms (500);
+  sleepSeconds (0.5f);
   alGetSourcei (testSources[0], AL_SOURCE_STATE, &sourceState);
   if (sourceState != AL_PLAYING)
     {
@@ -1408,7 +1448,7 @@ FA_VectorStateTransition (ALvoid)
       printf ("FAILED -- AL_PLAYING 1");
     }
   alSourcePausev (2, &testSources[0]);
-  delay_ms (500);
+  sleepSeconds (0.5f);
   alGetSourcei (testSources[0], AL_SOURCE_STATE, &sourceState);
   if (sourceState != AL_PAUSED)
     {
@@ -1422,7 +1462,7 @@ FA_VectorStateTransition (ALvoid)
       printf ("FAILED -- AL_PAUSED 1");
     }
   alSourcePlayv (2, &testSources[0]);
-  delay_ms (500);
+  sleepSeconds (0.5f);
   alGetSourcei (testSources[0], AL_SOURCE_STATE, &sourceState);
   if (sourceState != AL_PLAYING)
     {
@@ -1436,7 +1476,7 @@ FA_VectorStateTransition (ALvoid)
       printf ("FAILED -- AL_PLAYING 1A");
     }
   alSourceStopv (2, &testSources[0]);
-  delay_ms (500);
+  sleepSeconds (0.5f);
   alGetSourcei (testSources[0], AL_SOURCE_STATE, &sourceState);
   if (sourceState != AL_STOPPED)
     {
@@ -1624,7 +1664,7 @@ FA_QueuingUnderrunStates (ALvoid)
   if ((error = alGetError ()) != AL_NO_ERROR)
     localResultOK = AL_FALSE;
   alSourcePlay (testSources[0]);
-  delay_ms (1000);
+  sleepSeconds (1.0f);
   alGetSourcei (testSources[0], AL_SOURCE_STATE, &tempInt);
   if (tempInt != AL_STOPPED)
     localResultOK = AL_FALSE;
@@ -1641,7 +1681,7 @@ FA_QueuingUnderrunStates (ALvoid)
   if ((error = alGetError ()) != AL_NO_ERROR)
     localResultOK = AL_FALSE;
   alSourcePlay (testSources[0]);
-  delay_ms (100);
+  sleepSeconds (0.1f);
   alGetSourcei (testSources[0], AL_SOURCE_STATE, &tempInt);
   if (tempInt != AL_PLAYING)
     localResultOK = AL_FALSE;
@@ -1846,7 +1886,7 @@ SA_Position (ALvoid)
       for (i = -100; i < 100; i++)
         {
           alListener3f (AL_POSITION, (float) -i, 0.0, 0.0);
-          delay_ms (100);
+          sleepSeconds (0.1f);
         }
       alListener3f (AL_POSITION, 0.0, 0.0, 0.0);
       alSourceStop (testSources[0]);
@@ -1859,7 +1899,7 @@ SA_Position (ALvoid)
       for (i = -100; i < 100; i++)
         {
           alSource3f (testSources[0], AL_POSITION, (float) i, 0.0, 0.0);
-          delay_ms (100);
+          sleepSeconds (0.1f);
         }
       alSource3f (testSources[0], AL_POSITION, 0.0, 0.0, 0.0);
       alSourceStop (testSources[0]);
@@ -1884,7 +1924,7 @@ SA_Position (ALvoid)
       for (i = -100; i < 100; i++)
         {
           alSource3f (testSources[0], AL_POSITION, 0.0, 0.0, (float) -i);
-          delay_ms (100);
+          sleepSeconds (0.1f);
         }
       alSource3f (testSources[0], AL_POSITION, 0.0, 0.0, 0.0);
       alSourceStop (testSources[0]);
@@ -1926,7 +1966,7 @@ SA_SourceRelative (ALvoid)
       for (i = 00; i < 100; i++)
         {
           alSource3f (testSources[0], AL_POSITION, (float) i, 0.0, 0.0);
-          delay_ms (100);
+          sleepSeconds (0.1f);
         }
       alSource3f (testSources[0], AL_POSITION, 0.0, 0.0, 0.0);
       alSourceStop (testSources[0]);
@@ -1941,7 +1981,7 @@ SA_SourceRelative (ALvoid)
       for (i = 0; i < 100; i++)
         {
           alSource3f (testSources[0], AL_POSITION, (float) i, 0.0, 0.0);
-          delay_ms (100);
+          sleepSeconds (0.1f);
         }
 
       alListener3f (AL_POSITION, 0.0, 0.0, 0.0);
@@ -1995,7 +2035,7 @@ SA_ListenerOrientation (ALvoid)
       alListenerfv (AL_ORIENTATION, listenerOri);
       alSourcei (testSources[0], AL_LOOPING, AL_TRUE);
       alSourcePlay (testSources[0]);
-      delay_ms (4000);
+      sleepSeconds (4.0f);
       alSourceStop (testSources[0]);
 
       printf
@@ -2009,7 +2049,7 @@ SA_ListenerOrientation (ALvoid)
       listenerOri[5] = 0.0;
       alListenerfv (AL_ORIENTATION, listenerOri);
       alSourcePlay (testSources[0]);
-      delay_ms (4000);
+      sleepSeconds (4.0f);
       alSourceStop (testSources[0]);
 
       printf
@@ -2023,7 +2063,7 @@ SA_ListenerOrientation (ALvoid)
       listenerOri[5] = 0.0;
       alListenerfv (AL_ORIENTATION, listenerOri);
       alSourcePlay (testSources[0]);
-      delay_ms (4000);
+      sleepSeconds (4.0f);
       alSourceStop (testSources[0]);
 
       printf
@@ -2037,7 +2077,7 @@ SA_ListenerOrientation (ALvoid)
       listenerOri[5] = 0.0;
       alListenerfv (AL_ORIENTATION, listenerOri);
       alSourcePlay (testSources[0]);
-      delay_ms (4000);
+      sleepSeconds (4.0f);
       alSourceStop (testSources[0]);
 
       printf
@@ -2051,7 +2091,7 @@ SA_ListenerOrientation (ALvoid)
       listenerOri[5] = 1.0;
       alListenerfv (AL_ORIENTATION, listenerOri);
       alSourcePlay (testSources[0]);
-      delay_ms (4000);
+      sleepSeconds (4.0f);
       alSourceStop (testSources[0]);
 
       printf
@@ -2065,7 +2105,7 @@ SA_ListenerOrientation (ALvoid)
       listenerOri[5] = 1.0;
       alListenerfv (AL_ORIENTATION, listenerOri);
       alSourcePlay (testSources[0]);
-      delay_ms (4000);
+      sleepSeconds (4.0f);
       alSourceStop (testSources[0]);
 
       CRForNextTest ();
@@ -2408,7 +2448,7 @@ SA_Doppler (ALvoid)
       for (i = -100; i < 100; i++)
         {
           alSource3f (testSources[0], AL_POSITION, (float) i, 0.0, 0.0);
-          delay_ms (100);
+          sleepSeconds (0.1f);
         }
       alSourceStop (testSources[0]);
       printf
@@ -2425,7 +2465,7 @@ SA_Doppler (ALvoid)
       for (i = -100; i < 100; i++)
         {
           alSource3f (testSources[0], AL_POSITION, (float) i, 0.0, 0.0);
-          delay_ms (100);
+          sleepSeconds (0.1f);
         }
       alSourceStop (testSources[0]);
       alDopplerFactor (1.0);
@@ -2443,7 +2483,7 @@ SA_Doppler (ALvoid)
       for (i = -100; i < 100; i++)
         {
           alSource3f (testSources[0], AL_POSITION, (float) i, 0.0, 0.0);
-          delay_ms (100);
+          sleepSeconds (0.1f);
         }
       alSourceStop (testSources[0]);
       alDopplerFactor (2.0);
@@ -2457,7 +2497,7 @@ SA_Doppler (ALvoid)
       for (i = -100; i < 100; i++)
         {
           alSource3f (testSources[0], AL_POSITION, (float) i, 0.0, 0.0);
-          delay_ms (100);
+          sleepSeconds (0.1f);
         }
       alSpeedOfSound (343.3f);
       alDopplerFactor (1.0f);
@@ -2502,7 +2542,7 @@ SA_Frequency (ALvoid)
           alSourcef (testSources[0], AL_PITCH,
                      (float) (pow (root12, increments[i])));
           alSourcePlay (testSources[0]);
-          delay_ms (2000);
+          sleepSeconds (2.0f);
         }
       alSourceStop (testSources[0]);
       alSourcef (testSources[0], AL_PITCH, 1.0);
@@ -2608,7 +2648,7 @@ SA_QueuingUnderrunPerformance (ALvoid)
         DisplayALError ((ALbyte *) "alSourceQueueBuffers 1 (stereo) : ",
                         error);
       alSourcePlay (testSources[0]);
-      delay_ms (4000);
+      sleepSeconds (4.0f);
       alGetSourcei (testSources[0], AL_SOURCE_STATE, &tempInt);
       if (tempInt != AL_STOPPED)
         printf ("Wrong underrun state -- should be AL_STOPPED. ");
@@ -2627,13 +2667,13 @@ SA_QueuingUnderrunPerformance (ALvoid)
         DisplayALError ((ALbyte *) "alSourceQueueBuffers 1 (stereo) : ",
                         error);
       alSourcePlay (testSources[0]);
-      delay_ms (3000);
+      sleepSeconds (3.0f);
       printf
         ("The stereo buffer will now play twice with no pause (Press Return):\n");
       CRToContinue ();
       alSourceQueueBuffers (testSources[0], 1, &g_Buffers[6]);
       alSourcePlay (testSources[0]);
-      delay_ms (4000);
+      sleepSeconds (4.0f);
       CRForNextTest ();
 
       /* dispose of sources */
@@ -4345,7 +4385,7 @@ I_MultipleSourcesTest ()
                 DisplayALError ("alSourcePlay : ", error);
 
               /* Delay a little */
-              delay_ms (100);
+              sleepSeconds (0.1f);
             }
           break;
         case '2':
@@ -5148,7 +5188,7 @@ I_DistanceModelTest ()
       printf ("Max Distance is 32\n");
       alSourcef (source[0], AL_MAX_DISTANCE, 32.0f);
 
-      delay_ms (2000);
+      sleepSeconds (2.0f);
 
       printf ("Distance is 64\n");
       alSource3f (source[0], AL_POSITION, 0.0f, 0.0f, -64.0f);
@@ -5157,12 +5197,12 @@ I_DistanceModelTest ()
       printf ("Max Distance is 32\n");
       alSourcef (source[0], AL_MAX_DISTANCE, 32.0f);
 
-      delay_ms (2000);
+      sleepSeconds (2.0f);
     }
 
   printf ("Restoring INVERSE_DISTANCE_CLAMPED model\n");
   alDistanceModel (AL_INVERSE_DISTANCE_CLAMPED);
-  delay_ms (50);
+  sleepSeconds (0.05f);
 
   alSourceStopv (1, source);
   if ((error = alGetError ()) != AL_NO_ERROR)
