@@ -1,5 +1,12 @@
 2006-05-15  Sven Panne  <sven.panne@aedion.de>
 
+	* admin/VisualStudio6/altest/altest.dsp,
+	admin/VisualStudio6/contrib.dsw,
+	admin/VisualStudio6/openal_info/openal_info.dsp,
+	admin/VisualStudio6/panning2d/panning2d.dsp: Added support for building
+	with Visual Studio 6. Currently only altest works, the rest of the
+	workspace consists of skeletons only.
+
 	* tests/altest/altest.c: Fixes for compilation with Visual Studio.
 
 2006-05-12  Sven Panne  <sven.panne@aedion.de>
