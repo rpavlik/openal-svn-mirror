@@ -1,5 +1,8 @@
 2006-05-15  Sven Panne  <sven.panne@aedion.de>
 
+	* tests/altest/altest.c: Fixed NULL vs. 0 confusion. Use more generic
+	#defines, so altest works with both EAX 2.0 and EAX 3.0 headers now.
+
 	* admin/VisualStudio6/altest/altest.dsp,
 	admin/VisualStudio6/contrib.dsw,
 	admin/VisualStudio6/openal_info/openal_info.dsp,

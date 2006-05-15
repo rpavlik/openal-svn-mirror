@@ -3187,9 +3187,9 @@ I_EAXTest (ALvoid)
 
         case '5':
           Env = EAX_ENVIRONMENT_HANGAR;
-          eaxSet (&DSPROPSETID_EAX20_ListenerProperties,
+          eaxSet (&DSPROPSETID_EAX_ListenerProperties,
                   DSPROPERTY_EAXLISTENER_ENVIRONMENT |
-                  DSPROPERTY_EAXLISTENER_DEFERRED, NULL, &Env,
+                  DSPROPERTY_EAXLISTENER_DEFERRED, 0, &Env,
                   sizeof (ALuint));
           if ((error = alGetError ()) != AL_NO_ERROR)
             DisplayALError ((ALbyte *)
@@ -3199,9 +3199,9 @@ I_EAXTest (ALvoid)
 
         case '6':
           Room = -10000;
-          eaxSet (&DSPROPSETID_EAX20_ListenerProperties,
+          eaxSet (&DSPROPSETID_EAX_ListenerProperties,
                   DSPROPERTY_EAXLISTENER_ROOM |
-                  DSPROPERTY_EAXLISTENER_DEFERRED, NULL, &Room,
+                  DSPROPERTY_EAXLISTENER_DEFERRED, 0, &Room,
                   sizeof (ALint));
           if ((error = alGetError ()) != AL_NO_ERROR)
             DisplayALError ((ALbyte *)
@@ -3210,14 +3210,14 @@ I_EAXTest (ALvoid)
           break;
 
         case '7':
-          eaxGet (&DSPROPSETID_EAX20_BufferProperties,
+          eaxGet (&DSPROPSETID_EAX_BufferProperties,
                   DSPROPERTY_EAXBUFFER_ALLPARAMETERS, source[0],
                   &eaxBufferProp0, sizeof (EAXBUFFERPROPERTIES));
           if ((error = alGetError ()) != AL_NO_ERROR)
             DisplayALError ((ALbyte *) "eaxGet EAXBUFFER_ALLPARAMETERS : \n",
                             error);
           eaxBufferProp0.lOcclusion = -5000;
-          eaxSet (&DSPROPSETID_EAX20_BufferProperties,
+          eaxSet (&DSPROPSETID_EAX_BufferProperties,
                   DSPROPERTY_EAXBUFFER_ALLPARAMETERS |
                   DSPROPERTY_EAXBUFFER_DEFERRED, source[0], &eaxBufferProp0,
                   sizeof (EAXBUFFERPROPERTIES));
@@ -3229,7 +3229,7 @@ I_EAXTest (ALvoid)
 
         case '8':
           Occlusion = 0;
-          eaxSet (&DSPROPSETID_EAX20_BufferProperties,
+          eaxSet (&DSPROPSETID_EAX_BufferProperties,
                   DSPROPERTY_EAXBUFFER_OCCLUSION |
                   DSPROPERTY_EAXBUFFER_DEFERRED, source[0], &Occlusion,
                   sizeof (ALint));
@@ -3241,7 +3241,7 @@ I_EAXTest (ALvoid)
 
         case '9':
           Obstruction = -5000;
-          eaxSet (&DSPROPSETID_EAX20_BufferProperties,
+          eaxSet (&DSPROPSETID_EAX_BufferProperties,
                   DSPROPERTY_EAXBUFFER_OBSTRUCTION, source[1], &Obstruction,
                   sizeof (ALint));
           if ((error = alGetError ()) != AL_NO_ERROR)
@@ -3251,7 +3251,7 @@ I_EAXTest (ALvoid)
 
         case '0':
           Obstruction = 0;
-          eaxSet (&DSPROPSETID_EAX20_BufferProperties,
+          eaxSet (&DSPROPSETID_EAX_BufferProperties,
                   DSPROPERTY_EAXBUFFER_OBSTRUCTION, source[1], &Obstruction,
                   sizeof (ALint));
           if ((error = alGetError ()) != AL_NO_ERROR)
@@ -3261,7 +3261,7 @@ I_EAXTest (ALvoid)
 
         case 'C':
           /* Commit settings on source 0 */
-          eaxSet (&DSPROPSETID_EAX20_BufferProperties,
+          eaxSet (&DSPROPSETID_EAX_BufferProperties,
                   DSPROPERTY_EAXBUFFER_COMMITDEFERREDSETTINGS, source[0],
                   NULL, 0);
           if ((error = alGetError ()) != AL_NO_ERROR)
@@ -3270,8 +3270,8 @@ I_EAXTest (ALvoid)
                             error);
 
           /* Commit Listener settings */
-          eaxSet (&DSPROPSETID_EAX20_ListenerProperties,
-                  DSPROPERTY_EAXLISTENER_COMMITDEFERREDSETTINGS, NULL, NULL,
+          eaxSet (&DSPROPSETID_EAX_ListenerProperties,
+                  DSPROPERTY_EAXLISTENER_COMMITDEFERREDSETTINGS, 0, NULL,
                   0);
           if ((error = alGetError ()) != AL_NO_ERROR)
             DisplayALError ((ALbyte *)
@@ -3284,8 +3284,8 @@ I_EAXTest (ALvoid)
 
   /* reset EAX level */
   Room = -10000;
-  eaxSet (&DSPROPSETID_EAX20_ListenerProperties, DSPROPERTY_EAXLISTENER_ROOM,
-          NULL, &Room, sizeof (ALint));
+  eaxSet (&DSPROPSETID_EAX_ListenerProperties, DSPROPERTY_EAXLISTENER_ROOM,
+          0, &Room, sizeof (ALint));
   if ((error = alGetError ()) != AL_NO_ERROR)
     DisplayALError ((ALbyte *) "eaxSet EAXLISTENER_ROOM : \n", error);
 
@@ -5470,33 +5470,33 @@ I_CaptureAndPlayTest ()
                 case '3':
                   /* Mute Direct path */
                   lDirect = -10000;
-                  eaxSet (&DSPROPSETID_EAX20_BufferProperties,
-                          DSPROPERTY_EAXBUFFER_DIRECT, NULL, &lDirect,
+                  eaxSet (&DSPROPSETID_EAX_BufferProperties,
+                          DSPROPERTY_EAXBUFFER_DIRECT, 0, &lDirect,
                           sizeof (ALint));
 
                   /* Apply a Reverb Preset */
                   lEnv = EAX_ENVIRONMENT_HANGAR;
-                  eaxSet (&DSPROPSETID_EAX20_ListenerProperties,
-                          DSPROPERTY_EAXLISTENER_ENVIRONMENT, NULL, &lEnv,
+                  eaxSet (&DSPROPSETID_EAX_ListenerProperties,
+                          DSPROPERTY_EAXLISTENER_ENVIRONMENT, 0, &lEnv,
                           sizeof (ALint));
 
                   lRoom = 0;
-                  eaxSet (&DSPROPSETID_EAX20_ListenerProperties,
-                          DSPROPERTY_EAXLISTENER_ROOM, NULL, &lRoom,
+                  eaxSet (&DSPROPSETID_EAX_ListenerProperties,
+                          DSPROPERTY_EAXLISTENER_ROOM, 0, &lRoom,
                           sizeof (ALint));
                   break;
 
                 case '4':
                   /* Un-mute Direct path */
                   lDirect = 0;
-                  eaxSet (&DSPROPSETID_EAX20_BufferProperties,
-                          DSPROPERTY_EAXBUFFER_DIRECT, NULL, &lDirect,
+                  eaxSet (&DSPROPSETID_EAX_BufferProperties,
+                          DSPROPERTY_EAXBUFFER_DIRECT, 0, &lDirect,
                           sizeof (ALint));
 
                   /* Mute Reverb Preset */
                   lRoom = -10000;
-                  eaxSet (&DSPROPSETID_EAX20_ListenerProperties,
-                          DSPROPERTY_EAXLISTENER_ROOM, NULL, &lRoom,
+                  eaxSet (&DSPROPSETID_EAX_ListenerProperties,
+                          DSPROPERTY_EAXLISTENER_ROOM, 0, &lRoom,
                           sizeof (ALint));
                   break;
 #endif
