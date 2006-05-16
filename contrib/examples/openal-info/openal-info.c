@@ -136,7 +136,7 @@ printALCInfo ()
   ALCint major, minor;
   ALCdevice *device;
 
-  if (alcIsExtensionPresent (NULL, (const ALCchar *) "ALC_enumeration_EXT") ==
+  if (alcIsExtensionPresent (NULL, (const ALCchar *) "ALC_ENUMERATION_EXT") ==
       AL_TRUE)
     {
       s = alcGetString (NULL, ALC_DEVICE_SPECIFIER);
