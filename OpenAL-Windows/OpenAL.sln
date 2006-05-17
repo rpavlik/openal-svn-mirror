@@ -12,12 +12,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenAL32", "OpenAL32\OpenAL
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Router", "Router\Router.vcproj", "{ED1DE89D-A3E6-4FEE-ABC7-E1B2E3EB8013}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "altest", "..\demos\altest\win\altest.vcproj", "{8803C70A-6C3A-435B-A977-44822F5CF372}"
-	ProjectSection(ProjectDependencies) = postProject
-		{DC6C7281-068A-4BEC-8A37-6613198345F5} = {DC6C7281-068A-4BEC-8A37-6613198345F5}
-		{ED1DE89D-A3E6-4FEE-ABC7-E1B2E3EB8013} = {ED1DE89D-A3E6-4FEE-ABC7-E1B2E3EB8013}
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32

@@ -57,24 +57,6 @@ Package=<4>
 
 ###############################################################################
 
-Project: "altest"="..\demos\altest\win\altest.dsp" - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name OpenAL32
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name Router
-    End Project Dependency
-}}}
-
-###############################################################################
-
 Global:
 
 Package=<5>
