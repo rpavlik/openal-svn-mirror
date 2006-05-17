@@ -1,3 +1,7 @@
+2006-05-17  Sven Panne  <sven.panne@aedion.de>
+
+	* examples/openal-info/openal-info.c: Warning police.
+
 2006-05-16  Sven Panne  <sven.panne@aedion.de>
 
 	* admin/VisualStudio6/openal_info/openal_info.dsp,

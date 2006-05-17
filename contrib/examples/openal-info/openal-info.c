@@ -7,9 +7,19 @@
  *
  */
 
+#if HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <AL/alut.h>
+
+#if HAVE___ATTRIBUTE__
+#define ATTRIBUTE_NORETURN __attribute__((noreturn))
+#else
+#define ATTRIBUTE_NORETURN
+#endif
 
 static const int indentation = 4;
 static const int maxmimumWidth = 79;
@@ -75,7 +85,7 @@ printExtensions (const char *header, char separator, const char *extensions)
   printChar ('\n', &width);
 }
 
-static void
+ATTRIBUTE_NORETURN static void
 die (const char *kind, const char *description)
 {
   fprintf (stderr, "%s error %s occured\n", kind, description);
@@ -83,7 +93,7 @@ die (const char *kind, const char *description)
 }
 
 static void
-checkForErrors ()
+checkForErrors (void)
 {
   {
     ALenum error = alutGetError ();
@@ -110,7 +120,7 @@ checkForErrors ()
 }
 
 static void
-printALUTInfo ()
+printALUTInfo (void)
 {
   ALint major, minor;
   const ALchar *s;
@@ -130,7 +140,7 @@ printALUTInfo ()
 }
 
 static void
-printALCInfo ()
+printALCInfo (void)
 {
   const ALCchar *s;
   ALCint major, minor;
@@ -172,7 +182,7 @@ printALCInfo ()
 }
 
 static void
-printALInfo ()
+printALInfo (void)
 {
   const ALchar *s;
 
