@@ -1,5 +1,9 @@
 2006-05-17  Sven Panne  <sven.panne@aedion.de>
 
+	* configure.ac, tests/altest/altest.c: Compilation fixes for Linux.
+
+	* admin/autotools/m4/alut_check_func.m4: Added.
+
 	* examples/openal-info/openal-info.c: Warning police.
 
 2006-05-16  Sven Panne  <sven.panne@aedion.de>

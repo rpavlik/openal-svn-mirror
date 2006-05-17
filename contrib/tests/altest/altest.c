@@ -41,6 +41,10 @@
  "*** Main Menu ***".
   */
 
+#if HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #define FILENAME_BOOM      "sounds/boom.ogg"
 #define FILENAME_DING      "sounds/ding.wav"
 #define FILENAME_FOOTADPCM "sounds/footadpcm.wav"

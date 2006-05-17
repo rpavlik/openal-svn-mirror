@@ -47,6 +47,44 @@ else
 fi
 
 ################################################################################
+# Checks for header files.
+################################################################################
+
+# We could possibly need struct timespec, which is not ANSI.
+AC_DEFINE([_XOPEN_SOURCE], [500], [Define to 500 if Single Unix conformance is wanted, 600 for sixth revision.])
+
+# We might need nanosleep, which is a POSIX IEEE Std 1003.1b-1993 feature.
+AC_DEFINE([_POSIX_C_SOURCE], [199309], [Define to the POSIX version that should be used.])
+
+# Without __NO_CTYPE tolower and friends are macros which introduce a GLIBC 2.3
+# dependency. By defining this identifier we are currently backwards compatible
+# to GLIBC 2.1.3, which is a good thing. In addition, the macros lead to code
+# which triggers warnings with -Wunreachable-code.
+AC_DEFINE([__NO_CTYPE], [1], [Define to 1 if tolower and friends should not be macros.])
+
+AC_HEADER_STDC
+AC_CHECK_HEADERS([conio.h time.h windows.h])
+
+# Checks for library functions.
+ALUT_CHECK_FUNC([[@%:@include <time.h>]],
+                [nanosleep], [[((struct timespec*)0, (struct timespec*)0)]])
+
+ALUT_CHECK_FUNC([[@%:@include <unistd.h>]],
+                [usleep], [[(0)]])
+
+ALUT_CHECK_FUNC([[@%:@include <windows.h>]],
+                [Sleep], [[(0)]])
+
+ALUT_CHECK_FUNC([[@%:@include <sys/types.h>
+                  @%:@include <sys/stat.h>
+                  @%:@include <unistd.h>]],
+                [stat], [[("", (struct stat*)0)]])
+
+ALUT_CHECK_FUNC([[@%:@include <sys/types.h>
+                  @%:@include <sys/stat.h>]],
+                [_stat], [[("", (struct _stat*)0)]])
+
+################################################################################
 # Handle warning-related options.
 ################################################################################
 
