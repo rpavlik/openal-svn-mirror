@@ -212,7 +212,8 @@ ALboolean NewSpecifierCheck(const ALCchar* specifier)
 	return AL_TRUE;
 }
 
-ALboolean notOldNVIDIALib(const ALCchar* fileName)
+/* Note: Semantically the parameter has type LPCSTR, but VC6 headers lack the 'C'. :-( */
+ALboolean notOldNVIDIALib(LPSTR fileName)
 {
 	DWORD handle;
 	DWORD size;
@@ -225,7 +226,7 @@ ALboolean notOldNVIDIALib(const ALCchar* fileName)
 	WORD V2 = 365;
 	WORD V3 = 2;
 
-	if (strstr(fileName, "NVOPENAL.DLL") != 0) {
+	if (_tcsstr(fileName, __TEXT("NVOPENAL.DLL")) != 0) {
 		ms = V3 * 65536 + V2;
 		ls = V1 * 65536 + V0;
 
