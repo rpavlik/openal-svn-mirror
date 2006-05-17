@@ -1430,7 +1430,7 @@ ALCAPI ALboolean ALCAPIENTRY alcIsExtensionPresent(ALCdevice* device, const ALCc
     // ALC calls go through the router if possible.
     //
     ALsizei i = 0;
-    while(alcExtensions[i].ename && strcmp((char*)alcExtensions[i].ename, (char*)ename))
+    while(alcExtensions[i].ename && _stricmp((char*)alcExtensions[i].ename, (char*)ename))
     {
         i++;
     }
