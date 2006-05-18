@@ -140,7 +140,7 @@ typedef struct
   ALshort wBitsPerSample;
   ALshort cbSize;
 } WAVEFORMATEX;
-#endif /* _WIN32 */
+#endif /* HAVE_WINDOWS_H */
 
 typedef struct
 {
@@ -1115,7 +1115,7 @@ getUpperCh (void)
 {
   char ch;
 
-#ifdef _WIN32
+#if HAVE_CONIO_H
   ch = _getch ();
 #else
   int bs;
