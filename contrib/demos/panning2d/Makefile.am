@@ -1,4 +1,3 @@
 noinst_PROGRAMS = panning2d
-
-# ToDo: Quick hack only, use configure to find out the right flags.
-panning2d_LDFLAGS = -lglut -lalut
+AM_CFLAGS += @X_CFLAGS@
+LIBS += @X_PRE_LIBS@ @X_LIBS@ @X_EXTRA_LIBS@

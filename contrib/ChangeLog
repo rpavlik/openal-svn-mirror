@@ -1,5 +1,8 @@
 2006-05-18  Sven Panne  <sven.panne@aedion.de>
 
+	* configure.ac, demos/panning2d/Makefile.am: Improved GL/GLU/GLUT
+	detection magic a bit.
+
 	* tests/altest/altest.c: Improved platform #ifdefs a bit.
 
 2006-05-17  Sven Panne  <sven.panne@aedion.de>
