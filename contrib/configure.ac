@@ -46,11 +46,8 @@ else
   AC_SEARCH_LIBS([alutExit], [alut])
 fi
 
-# ToDo: This is a bit fragile...
-AC_PATH_XTRA
-AC_SEARCH_LIBS([glEnd], [GL opengl32 opengl])
-AC_SEARCH_LIBS([gluNewTess], [GLU glu32 glu])
-AC_SEARCH_LIBS([glutMainLoop], [glut glut32])
+enable_opengl="yes"
+FP_CHECK_GLUT
 
 ################################################################################
 # Checks for header files.

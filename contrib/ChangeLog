@@ -1,3 +1,17 @@
+2006-05-19  Sven Panne  <sven.panne@aedion.de>
+
+	* configure.ac, demos/panning2d/Makefile.am: The previous GL/GLU/GLUT
+	detection magic was a bit too simple and fragile, so a more full-blown
+	solution from another project (a GLUT binding for Haskell) is used now.
+
+	* admin/autotools/m4/fp_arg_opengl.m4,
+	admin/autotools/m4/fp_check_gl_helper.m4,
+	admin/autotools/m4/fp_check_gl.m4, admin/autotools/m4/fp_check_win32.m4,
+	admin/autotools/m4/fp_check_glu.m4,
+	admin/autotools/m4/fp_check_quartz_opengl.m4,
+	admin/autotools/m4/fp_check_glut.m4, admin/autotools/m4/fp_path_xtra.m4:
+	Added.
+
 2006-05-18  Sven Panne  <sven.panne@aedion.de>
 
 	* configure.ac, demos/panning2d/Makefile.am: Improved GL/GLU/GLUT
