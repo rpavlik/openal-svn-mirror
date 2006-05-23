@@ -1617,7 +1617,7 @@ alcGetIntegerv (ALCdevice *deviceHandle, ALCenum token,
         {
           return;
         }
-      *dest = 0;
+      *dest = 1;
       return;
 
     case ALC_CAPTURE_SAMPLES:
