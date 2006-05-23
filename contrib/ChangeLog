@@ -1,5 +1,8 @@
 2006-05-23  Sven Panne  <sven.panne@aedion.de>
 
+	* examples/openal-info/openal-info.c: Print info about capture
+	devices. Some small stylistic cleanup.
+
 	* tests/altest/altest.c: Whitespace changes after "make indent" only.
 
 2006-05-19  Sven Panne  <sven.panne@aedion.de>

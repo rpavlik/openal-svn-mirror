@@ -99,7 +99,7 @@ checkForErrors (void)
     ALenum error = alutGetError ();
     if (error != ALUT_ERROR_NO_ERROR)
       {
-        die ("ALUT", (const char *) alutGetErrorString (error));
+        die ("ALUT", alutGetErrorString (error));
       }
   }
   {
@@ -119,11 +119,27 @@ checkForErrors (void)
   }
 }
 
+static const char *
+getStringALC (ALCdevice *device, ALCenum param)
+{
+  const char *s = (const char *) alcGetString (device, param);
+  checkForErrors ();
+  return s;
+}
+
+static const char *
+getStringAL (ALenum param)
+{
+  const char *s = (const char *) alGetString (param);
+  checkForErrors ();
+  return s;
+}
+
 static void
 printALUTInfo (void)
 {
   ALint major, minor;
-  const ALchar *s;
+  const char *s;
 
   major = alutGetMajorVersion ();
   minor = alutGetMinorVersion ();
@@ -132,32 +148,37 @@ printALUTInfo (void)
 
   s = alutGetMIMETypes (ALUT_LOADER_BUFFER);
   checkForErrors ();
-  printExtensions ("ALUT buffer loaders", ',', (const char *) s);
+  printExtensions ("ALUT buffer loaders", ',', s);
 
   s = alutGetMIMETypes (ALUT_LOADER_MEMORY);
   checkForErrors ();
-  printExtensions ("ALUT memory loaders", ',', (const char *) s);
+  printExtensions ("ALUT memory loaders", ',', s);
+}
+
+static void
+printDevices (ALCenum which, const char *kind)
+{
+  const char *s = getStringALC (NULL, ALC_DEVICE_SPECIFIER);
+  printf ("available %sdevices:\n", kind);
+  while (*s != '\0')
+    {
+      printf ("    %s\n", s);
+      while (*s++ != '\0')
+        ;
+    }
 }
 
 static void
 printALCInfo (void)
 {
-  const ALCchar *s;
   ALCint major, minor;
   ALCdevice *device;
 
   if (alcIsExtensionPresent (NULL, (const ALCchar *) "ALC_ENUMERATION_EXT") ==
       AL_TRUE)
     {
-      s = alcGetString (NULL, ALC_DEVICE_SPECIFIER);
-      checkForErrors ();
-      printf ("available devices:\n");
-      while (*s != '\0')
-        {
-          printf ("    %s\n", (const char *) s);
-          while (*s++ != '\0')
-            ;
-        }
+      printDevices (ALC_DEVICE_SPECIFIER, "");
+      printDevices (ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER, "capture ");
     }
   else
     {
@@ -168,39 +189,27 @@ printALCInfo (void)
   checkForErrors ();
 
   printf ("default device: %s\n",
-          (const char *) alcGetString (device, ALC_DEFAULT_DEVICE_SPECIFIER));
-  checkForErrors ();
+          getStringALC (device, ALC_DEFAULT_DEVICE_SPECIFIER));
+
+  printf ("default capture device: %s\n",
+          getStringALC (device, ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER));
 
   alcGetIntegerv (device, ALC_MAJOR_VERSION, 1, &major);
   alcGetIntegerv (device, ALC_MAJOR_VERSION, 1, &minor);
   checkForErrors ();
   printf ("ALC version: %d.%d\n", (int) major, (int) minor);
 
-  s = alcGetString (device, ALC_EXTENSIONS);
-  checkForErrors ();
-  printExtensions ("ALC extensions", ' ', (const char *) s);
+  printExtensions ("ALC extensions", ' ',
+                   getStringALC (device, ALC_EXTENSIONS));
 }
 
 static void
 printALInfo (void)
 {
-  const ALchar *s;
-
-  s = alGetString (AL_VENDOR);
-  checkForErrors ();
-  printf ("OpenAL vendor string: %s\n", (const char *) s);
-
-  s = alGetString (AL_RENDERER);
-  checkForErrors ();
-  printf ("OpenAL renderer string: %s\n", (const char *) s);
-
-  s = alGetString (AL_VERSION);
-  checkForErrors ();
-  printf ("OpenAL version string: %s\n", (const char *) s);
-
-  s = alGetString (AL_EXTENSIONS);
-  checkForErrors ();
-  printExtensions ("OpenAL extensions", ' ', (const char *) s);
+  printf ("OpenAL vendor string: %s\n", getStringAL (AL_VENDOR));
+  printf ("OpenAL renderer string: %s\n", getStringAL (AL_RENDERER));
+  printf ("OpenAL version string: %s\n", getStringAL (AL_VERSION));
+  printExtensions ("OpenAL extensions", ' ', getStringAL (AL_EXTENSIONS));
 }
 
 int
