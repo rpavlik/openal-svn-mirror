@@ -158,7 +158,7 @@ printALUTInfo (void)
 static void
 printDevices (ALCenum which, const char *kind)
 {
-  const char *s = getStringALC (NULL, ALC_DEVICE_SPECIFIER);
+  const char *s = getStringALC (NULL, which);
   printf ("available %sdevices:\n", kind);
   while (*s != '\0')
     {
@@ -178,7 +178,7 @@ printALCInfo (void)
       AL_TRUE)
     {
       printDevices (ALC_DEVICE_SPECIFIER, "");
-      printDevices (ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER, "capture ");
+      printDevices (ALC_CAPTURE_DEVICE_SPECIFIER, "capture ");
     }
   else
     {
