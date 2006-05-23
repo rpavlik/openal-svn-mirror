@@ -3193,8 +3193,7 @@ I_EAXTest (ALvoid)
           Env = EAX_ENVIRONMENT_HANGAR;
           eaxSet (&DSPROPSETID_EAX_ListenerProperties,
                   DSPROPERTY_EAXLISTENER_ENVIRONMENT |
-                  DSPROPERTY_EAXLISTENER_DEFERRED, 0, &Env,
-                  sizeof (ALuint));
+                  DSPROPERTY_EAXLISTENER_DEFERRED, 0, &Env, sizeof (ALuint));
           if ((error = alGetError ()) != AL_NO_ERROR)
             DisplayALError ((ALbyte *)
                             "eaxSet EAXLISTENER_ENVIRONMENT | EAXLISTENER_DEFERRED : \n",
@@ -3205,8 +3204,7 @@ I_EAXTest (ALvoid)
           Room = -10000;
           eaxSet (&DSPROPSETID_EAX_ListenerProperties,
                   DSPROPERTY_EAXLISTENER_ROOM |
-                  DSPROPERTY_EAXLISTENER_DEFERRED, 0, &Room,
-                  sizeof (ALint));
+                  DSPROPERTY_EAXLISTENER_DEFERRED, 0, &Room, sizeof (ALint));
           if ((error = alGetError ()) != AL_NO_ERROR)
             DisplayALError ((ALbyte *)
                             "eaxSet EAXLISTENER_ROOM | EAXLISTENER_DEFERRED : \n",
@@ -3275,8 +3273,7 @@ I_EAXTest (ALvoid)
 
           /* Commit Listener settings */
           eaxSet (&DSPROPSETID_EAX_ListenerProperties,
-                  DSPROPERTY_EAXLISTENER_COMMITDEFERREDSETTINGS, 0, NULL,
-                  0);
+                  DSPROPERTY_EAXLISTENER_COMMITDEFERREDSETTINGS, 0, NULL, 0);
           if ((error = alGetError ()) != AL_NO_ERROR)
             DisplayALError ((ALbyte *)
                             "eaxSet EAXLISTENER_COMMITDEFERREDSETTINGSENVIRONMENT : \n",

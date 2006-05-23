@@ -1,3 +1,7 @@
+2006-05-23  Sven Panne  <sven.panne@aedion.de>
+
+	* tests/altest/altest.c: Whitespace changes after "make indent" only.
+
 2006-05-19  Sven Panne  <sven.panne@aedion.de>
 
 	* configure.ac, demos/panning2d/Makefile.am: The previous GL/GLU/GLUT
