@@ -12,6 +12,7 @@
 #include <AL/alext.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 
 #include "al_mixer.h"
 #include "al_main.h"
@@ -1272,8 +1273,11 @@ ALboolean _alcIsContextSuspended( ALuint cid ) {
  * Returns AL_TRUE if the alc extension extName is present, AL_FALSE
  * otherwise.
  */
-ALCboolean alcIsExtensionPresent( UNUSED(ALCdevice *device), const ALCchar *extName ) {
-	return alIsExtensionPresent( extName );
+ALCboolean
+alcIsExtensionPresent (UNUSED (ALCdevice *device), const ALCchar *extName)
+{
+  return strcasecmp (extName, "ALC_ENUMERATION_EXT") == 0 ||
+    strcasecmp (extName, "ALC_EXT_CAPTURE") == 0;
 }
 
 #define DEFINE_ALC_PROC(p) { #p, (AL_funcPtr)p }
@@ -1474,46 +1478,59 @@ ALCdevice *alcGetContextsDevice(ALCcontext *handle)
 	return dc;
 }
 
-const ALCchar *alcGetString( ALCdevice *dev, ALCenum token )
+const ALCchar *
+alcGetString (ALCdevice *dev, ALCenum token)
 {
-	switch(token)
-	{
-		case ALC_DEFAULT_DEVICE_SPECIFIER:
-		  return (const ALCchar *) "'((sampling-rate 44100) (device '(native))";
-		  break;
-		case ALC_DEVICE_SPECIFIER:
-		  if(!dev)
-		  {
-			  _alcSetError(ALC_INVALID_DEVICE);
-			  return (const ALCchar *) "";
-		  }
-
-		  return dev->specifier;
-		  break;
-		case ALC_EXTENSIONS:
-		  return (const ALCchar *) "";
-		  break;
-		case ALC_NO_ERROR:
-		  return (const ALCchar *) "ALC_NO_ERROR";
-		  break;
-		case ALC_INVALID_DEVICE:
-		  return (const ALCchar *) "ALC_INVALID_DEVICE";
-		  break;
-		case ALC_INVALID_CONTEXT:
-		  return (const ALCchar *) "ALC_INVALID_CONTEXT";
-		  break;
-		case ALC_INVALID_ENUM:
-		  return (const ALCchar *) "ALC_INVALID_ENUM";
-		  break;
-		case ALC_INVALID_VALUE:
-		  return (const ALCchar *) "ALC_INVALID_VALUE";
-		  break;
-		default:
-		  _alcSetError(ALC_INVALID_ENUM);
-		  break;
-	}
-
-	return (const ALCchar *) "";
+  switch (token)
+    {
+    case ALC_DEFAULT_DEVICE_SPECIFIER:
+      return (const ALCchar *) "'((sampling-rate 44100) (device '(native))";
+    case ALC_DEVICE_SPECIFIER:
+      if (dev == NULL)
+        {
+          /* fake device enumeration for now */
+          return (const ALCchar *) "'((sampling-rate 44100) (device '(native))\0'((sampling-rate 44100) (device '(wave))\0'((sampling-rate 44100) (device '(null))\0";
+        }
+      else
+        {
+          return dev->specifier;
+        }
+    case ALC_EXTENSIONS:
+      if (dev == NULL)
+        {
+          _alcSetError (ALC_INVALID_VALUE);
+          return NULL;
+        }
+      return (const ALCchar *) "ALC_ENUMERATION_EXT ALC_EXT_CAPTURE";
+    case ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER:
+      return (const ALCchar *) "'((device '(native))\0";
+    case ALC_CAPTURE_DEVICE_SPECIFIER:
+      /* We happily ignore the capture device name for now, so we can't do something sensible here. */
+      if (dev == NULL)
+        {
+          /* fake device enumeration for now */
+          return (const ALCchar *) "'((device '(native))\0'((device '(null))\0";
+        }
+      else
+        {
+          return (const ALCchar *) "dummy";
+        }
+    case ALC_NO_ERROR:
+      return (const ALCchar *) "ALC_NO_ERROR";
+    case ALC_INVALID_DEVICE:
+      return (const ALCchar *) "ALC_INVALID_DEVICE";
+    case ALC_INVALID_CONTEXT:
+      return (const ALCchar *) "ALC_INVALID_CONTEXT";
+    case ALC_INVALID_ENUM:
+      return (const ALCchar *) "ALC_INVALID_ENUM";
+    case ALC_INVALID_VALUE:
+      return (const ALCchar *) "ALC_INVALID_VALUE";
+    case ALC_OUT_OF_MEMORY:
+      return (const ALCchar *) "ALC_OUT_OF_MEMORY";
+    default:
+      _alcSetError (ALC_INVALID_ENUM);
+      return NULL;
+    }
 }
 
 /* evil */
@@ -1883,15 +1900,12 @@ static ALenum captureFmt = AL_NONE;
 static ALuint captureFreq = 0;
 static ALint captureFmtSize = 0;
 
-ALCdevice *alcCaptureOpenDevice( const ALCchar *deviceName, ALCuint frequency, ALCenum format, ALCsizei bufferSize )
+/* We happily ignore the capture device name for now */
+ALCdevice *alcCaptureOpenDevice( UNUSED(const ALCchar *deviceName), ALCuint frequency, ALCenum format, ALCsizei bufferSize )
 {
 	ALCdevice *retval;
 	AL_context *cc;
 	ALuint cid;
-
-	if ( deviceName != NULL )  { /* !!! FIXME */
-		return NULL;
-	}
 
 	switch( format ) { /* try to keep this sane for now... */
         case AL_FORMAT_MONO8:
