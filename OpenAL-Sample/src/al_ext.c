@@ -875,6 +875,24 @@ getExtensionEnumValue( ALenum *value, const ALchar *enumName )
 	} else if (strcmp(name, "AL_FORMAT_QUAD8_LOKI") == 0) {
 		*value = AL_FORMAT_QUAD8_LOKI;
 		return AL_TRUE;
+	} else if (strcmp(name, "AL_FORMAT_IMA_ADPCM_MONO16_EXT") == 0) {
+		*value = AL_FORMAT_IMA_ADPCM_MONO16_EXT;
+		return AL_TRUE;
+	} else if (strcmp(name, "AL_FORMAT_IMA_ADPCM_STEREO16_EXT") == 0) {
+		*value = AL_FORMAT_IMA_ADPCM_STEREO16_EXT;
+		return AL_TRUE;
+	} else if (strcmp(name, "AL_FORMAT_MONO_IMA4") == 0) {
+		*value = AL_FORMAT_IMA_ADPCM_MONO16_EXT; /* white lie */
+		return AL_TRUE;
+	} else if (strcmp(name, "AL_FORMAT_STEREO_IMA4") == 0) {
+		*value = AL_FORMAT_IMA_ADPCM_STEREO16_EXT; /* white lie */
+		return AL_TRUE;
+	} else if (strcmp(name, "AL_FORMAT_VORBIS_EXT") == 0) {
+		*value = AL_FORMAT_VORBIS_EXT;
+		return AL_TRUE;
+	} else if (strcmp(name, "AL_FORMAT_WAVE_EXT") == 0) {
+		*value = AL_FORMAT_WAVE_EXT;
+		return AL_TRUE;
 	} else {
 		return AL_FALSE;
 	}

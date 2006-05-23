@@ -1,5 +1,8 @@
 2006-05-23  Sven Panne  <sven.panne@aedion.de>
 
+	* src/al_ext.c: Extend the set of tokens recognized by alGetEnumValue a
+	bit.
+	
 	* src/alc/alc_context.c: Faked device enumeration a bit. Announce
 	ALC_ENUMERATION_EXT and ALC_EXT_CAPTURE extensions. Pretend that we are
 	OpenAL 1.1, which is not fully correct yet.
