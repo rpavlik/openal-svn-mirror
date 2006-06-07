@@ -1,5 +1,9 @@
 2006-06-07  Sven Panne  <sven.panne@aedion.de>
 
+	* src/backends/alc_backend_alsa.c: Give snd_pcm_open a 2nd chance after
+	0.2sec if it fails, because dmix tends to have problems with it when the
+	device has been closed recently.
+
 	* src/backends/alc_backend_alsa.c: Make "default" the default ALSA device.
 
 2006-06-07  Prakash Punnoor <prakash@punnoor.de>

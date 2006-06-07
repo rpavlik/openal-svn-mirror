@@ -297,6 +297,15 @@ static void *grab_write_alsa( void )
          * try other backends even if this would block.
          */
 	err = psnd_pcm_open(&handle, card_name, SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK);
+	if (err < 0) {
+		/* We give a chance again after a short delay since dmix tends
+		 * to fail to open when the device is closed shortly ago.
+		 */
+		usleep(200000);
+		err = psnd_pcm_open(&handle, card_name,
+				    SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK);
+	}
+
 	if(err < 0)
 	{
 		const char *serr = psnd_strerror(err);
