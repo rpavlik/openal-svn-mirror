@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 ################################################################################
 
-AC_INIT([OpenAL library], [0.0.8], [openal-devel@opensource.creative.com], [openal])
+AC_INIT([OpenAL library], [1.1.0], [openal-devel@opensource.creative.com], [openal])
 AC_CONFIG_AUX_DIR([admin/autotools])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE
