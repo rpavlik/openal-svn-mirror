@@ -1,3 +1,7 @@
+2006-06-07  Sven Panne  <sven.panne@aedion.de>
+
+	* src/backends/alc_backend_alsa.c: Make "default" the default ALSA device.
+
 2006-06-07  Prakash Punnoor <prakash@punnoor.de>
 
 	* CMakeLists.txt: Bump version to 1.1.0.

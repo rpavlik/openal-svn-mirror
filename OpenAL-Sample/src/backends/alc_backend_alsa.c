@@ -159,7 +159,7 @@ static int openal_load_alsa_library(void)
 }
 
 /* alsa stuff */
-#define DEFAULT_DEVICE "plughw:0,0"
+#define DEFAULT_DEVICE "default"
 
 /* convert from AL to ALSA format */
 static int AL2ALSAFMT(ALenum format);
