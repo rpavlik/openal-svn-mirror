@@ -1,5 +1,7 @@
 2006-06-07  Sven Panne  <sven.panne@aedion.de>
 
+	* admin/RPM/openal.spec.in: Spec updates for SuSE 10.1.
+
 	* configure.ac: Bump version to 1.1.0. This is necessary for building an
 	RPM on SuSE 10.1 via y2pmbuild, because the distro already ships a
 	snapshot version 1.0.x. Any lower version would be ignored when

@@ -1,29 +1,28 @@
 #
 # spec file for package openal (Version @PACKAGE_VERSION@)
 #
-# Copyright (c) 2005 SUSE LINUX Products GmbH, Nuernberg, Germany.
+# Copyright (c) 2006 SUSE LINUX Products GmbH, Nuernberg, Germany.
 # This file and all modifications and additions to the pristine
 # package are under the same license as the package itself.
 #
-# Please submit bugfixes or comments via http://www.suse.de/feedback/
+# Please submit bugfixes or comments via http://bugs.opensuse.org/
 #
 
 # norootforbuild
-# neededforbuild SDL SDL-devel aalib aalib-devel alsa alsa-devel arts arts-devel audiofile esound esound-devel glib2 glib2-devel libogg libogg-devel libstdc++-devel libvorbis libvorbis-devel pkgconfig resmgr slang smpeg smpeg-devel xorg-x11-libs
+# usedforbuild    SDL SDL-devel aaa_base aalib aalib-devel acl alsa alsa-devel attr audiofile audiofile-devel audit-libs autoconf automake bash bind-libs bind-utils binutils bison bzip2 coreutils cpio cpp cracklib cvs cyrus-sasl db diffutils e2fsprogs esound esound-devel expat file filesystem fillup findutils flex fontconfig fontconfig-devel gawk gcc gcc-c++ gdbm gdbm-devel gettext gettext-devel glibc glibc-devel glibc-locale gpm grep groff gzip info insserv klogd less libacl libattr libcom_err libgcc libnscd libstdc++ libstdc++-devel libtool libxcrypt libzio m4 make man mktemp module-init-tools nasm ncurses ncurses-devel net-tools netcfg openldap2-client openssl pam pam-modules patch perl permissions popt procinfo procps psmisc pwdutils rcs readline resmgr rpm sed slang slang-devel strace sysvinit tar tcpd texinfo timezone unzip util-linux vim xorg-x11-devel xorg-x11-libs zlib zlib-devel
 
-BuildRequires: aaa_base acl attr bash bind-utils bison bzip2 coreutils cpio cpp cracklib cvs cyrus-sasl db devs diffutils e2fsprogs file filesystem fillup findutils flex gawk gdbm-devel glibc glibc-devel glibc-locale gpm grep groff gzip info insserv klogd less libacl libattr libgcc libnscd libselinux libstdc++ libxcrypt libzio m4 make man mktemp module-init-tools ncurses ncurses-devel net-tools netcfg openldap2-client openssl pam pam-modules patch permissions popt procinfo procps psmisc pwdutils rcs readline sed strace syslogd sysvinit tar tcpd texinfo timezone unzip util-linux vim zlib zlib-devel autoconf automake binutils gcc gdbm gettext libtool perl rpm SDL SDL-devel aalib aalib-devel alsa alsa-devel arts arts-devel audiofile esound esound-devel glib2 glib2-devel libogg libogg-devel libstdc++-devel libvorbis libvorbis-devel pkgconfig resmgr slang smpeg smpeg-devel xorg-x11-libs dialog expat fontconfig fontconfig-devel freeglut freeglut-devel freetype2 freetype2-devel gcc-c++ gnome-filesystem jack jack-devel libjpeg liblcms liblcms-devel libmng libmng-devel libpng libpng-devel libsndfile libtiff pciutils qt3 qt3-devel xorg-x11-Mesa xorg-x11-Mesa-devel xorg-x11-devel aaa_skel ash bind-libs gpg libgcj logrotate openslp suse-build-key suse-release tcsh
-
-Name:         openal
-License:      LGPL
-Group:        System/Libraries
-Autoreqprov:  on
-Version:      @PACKAGE_VERSION@
-Release:      1
-URL:          http://www.openal.org/
-Icon:         openal.xpm
-Summary:      Open Audio Library
-Source:       openal-%{version}.tar.gz
-BuildRoot:    %{_tmppath}/%{name}-%{version}-build
+Name:           openal
+BuildRequires:  SDL-devel esound-devel nasm
+License:        LGPL
+Group:          System/Libraries
+Autoreqprov:    on
+Version:        @PACKAGE_VERSION@
+Release:        1
+URL:            http://www.openal.org/
+Icon:           openal.xpm
+Summary:        Open Audio Library
+Source:         openal-%{version}.tar.bz2
+BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
 %description
 OpenAL is an audio library designed in the spirit of OpenGL--machine
@@ -102,9 +101,7 @@ make
 
 %install
 rm -rf $RPM_BUILD_ROOT
-make DESTDIR=$RPM_BUILD_ROOT \
-     DESTLIB=$RPM_BUILD_ROOT%{_libdir} \
-     install
+make DESTDIR=$RPM_BUILD_ROOT install
 #
 # documentation
 install -m 755 -d $RPM_BUILD_ROOT%{_defaultdocdir}/%{name}
@@ -136,8 +133,8 @@ rm -rf $RPM_BUILD_ROOT
 
 %files devel
 %defattr(-,root,root)
-%doc %{_defaultdocdir}/%{name}/OpenAL1-1Spec.pdf
 %{_prefix}/bin/openal-config
+%doc %{_defaultdocdir}/%{name}/OpenAL1-1Spec.pdf
 %{_includedir}/AL/al.h
 %{_includedir}/AL/alc.h
 %{_includedir}/AL/alext.h
