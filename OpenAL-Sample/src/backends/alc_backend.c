@@ -134,8 +134,7 @@ alcBackendOpen_ (ALC_OpenMode mode, ALC_BackendOps **ops,
           break;
         default:
           _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
-                    "alcBackendOpen_: bad type %s for device",
-                    rc_typestr (rc_type (device)));
+                    "alcBackendOpen_: bad type for device");
           continue;
         }
       openNamedDevice (deviceName, mode, ops, privateData);

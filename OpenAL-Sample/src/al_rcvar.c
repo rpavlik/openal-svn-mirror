@@ -18,6 +18,12 @@
 #include "al_rcvar.h"
 #include "al_rctree.h"
 
+static alrc_prim rc_toprim( Rcvar sym );
+static ALfloat rc_tofloat( Rcvar sym );
+static ALboolean rc_equal( Rcvar r1, Rcvar r2 );
+static Rcvar rc_member( Rcvar ls, Rcvar symp );
+static ALboolean rc_strequal( Rcvar d1, Rcvar d2 );
+
 /*
  * print_prim( Rcvar obj )
  *
@@ -170,42 +176,12 @@ Rcvar rc_define( const char *symname, Rcvar value ) {
 }
 
 /*
- * rc_typestr( ALRcEnum type )
- *
- * Returns a const char *representation of type.
- */
-const char *rc_typestr( ALRcEnum type ) {
-	switch( type ) {
-		case ALRC_INVALID:
-			return "ALRC_INVALID";
-		case ALRC_PRIMITIVE:
-			return "ALRC_PRIMITIVE";
-		case ALRC_CONSCELL:
-			return "ALRC_CONSCELL";
-		case ALRC_SYMBOL:
-			return "ALRC_SYMBOL";
-		case ALRC_INTEGER:
-			return "ALRC_INTEGER";
-		case ALRC_FLOAT:
-			return "ALRC_FLOAT";
-		case ALRC_STRING:
-			return "ALRC_STRING";
-		case ALRC_BOOL:
-			return "ALRC_BOOL";
-		default:
-			break;
-	}
-
-	return NULL;
-}
-
-/*
  * rc_member( Rcvar ls, Rcvar sym )
  *
  * Returns a list with the first conscell to have a matching car with sym as
  * its head, NULL otherwise.
  */
-Rcvar rc_member( Rcvar ls, Rcvar symp ) {
+static Rcvar rc_member( Rcvar ls, Rcvar symp ) {
 	if( rc_type(symp) != ALRC_CONSCELL ) {
 		return NULL;
 	}
@@ -222,7 +198,7 @@ Rcvar rc_member( Rcvar ls, Rcvar symp ) {
  *
  * Returns AL_TRUE if r1 and r2 and equivilant, AL_FALSE otherwise.
  */
-ALboolean rc_equal( Rcvar r1, Rcvar r2 ) {
+static ALboolean rc_equal( Rcvar r1, Rcvar r2 ) {
 	if( rc_type(r1) != rc_type(r2) ) {
 		return AL_FALSE;
 	}
@@ -256,7 +232,7 @@ ALboolean rc_equal( Rcvar r1, Rcvar r2 ) {
  *
  * Returns an alrc from sym, or NULL if sym's type is not ALRC_PRIMITIVE.
  */
-alrc_prim rc_toprim( Rcvar sym ) {
+static alrc_prim rc_toprim( Rcvar sym ) {
 	AL_rctree *r = sym;
 
 	if( rc_type(sym) != ALRC_PRIMITIVE ) {
@@ -293,7 +269,7 @@ ALint rc_toint( Rcvar sym ) {
  * If sym is a numerical type, returns the float value of sym.  Otherwise,
  * returns 0.0f.
  */
-ALfloat rc_tofloat( Rcvar sym ) {
+static ALfloat rc_tofloat( Rcvar sym ) {
 	AL_rctree *r = sym;
 
 	if( rc_type(sym) == ALRC_INTEGER ) {
@@ -313,7 +289,7 @@ ALfloat rc_tofloat( Rcvar sym ) {
  * If d1 and d2 both have type AL_STRING, returns AL_TRUE if there are
  * equivilant.  Returns AL_FALSE otherwise.
  */
-ALboolean rc_strequal( Rcvar d1, Rcvar d2 ) {
+static ALboolean rc_strequal( Rcvar d1, Rcvar d2 ) {
 	static char str1[65], str2[65];
 
 	switch( rc_type( d1 ) ) {
@@ -346,28 +322,13 @@ ALboolean rc_strequal( Rcvar d1, Rcvar d2 ) {
 }
 
 /*
- * rc_lookup_list( Rcvar haystack, const char *needle )
- *
- * Evaluates needle and sees if it is a member in haystack, returning a list
- * with the first conscell to have a matching car as its head.
- */
-Rcvar rc_lookup_list( Rcvar haystack, const char *needle ) {
-	Rcvar rcneedle = rc_eval( needle );
-
-	return rc_member( haystack, rcneedle );
-}
-
-/*
  * rc_foreach( Rcvar ls, Rcvar (*op)( Rcvar operand ))
  *
  * For each member in ls, apply op to the member.
  */
 void rc_foreach( Rcvar ls, Rcvar (*op)(Rcvar operand) ) {
 	if( rc_type( ls ) != ALRC_CONSCELL ) {
-		_alDebug( ALD_CONFIG, __FILE__, __LINE__,
-			  "rc_foreach fail type = %s",
-			  rc_typestr( rc_type(ls )));
-
+		_alDebug( ALD_CONFIG, __FILE__, __LINE__, "rc_foreach failed");
 		return;
 	}
 
@@ -389,7 +350,7 @@ Rcvar rc_define_list( Rcvar ls ) {
 
 	rc_symtostr0( rc_car(ls), symname, 65 );
 
-	return rc_define( symname, rc_cadr(ls) );
+	return rc_define( symname, rc_car( rc_cdr( ls ) ) );
 }
 
 /*
@@ -467,19 +428,6 @@ static void print_prim( Rcvar obj ) {
 			assert( 0 );
 			break;
 	}
-
-	return;
-}
-
-/*
- * rc_print( Rcvar sym )
- *
- * Prints a stdout representation of sym to stdout.
- */
-void rc_print( Rcvar sym ) {
-	print_prim( sym );
-
-	printf("\n");
 
 	return;
 }

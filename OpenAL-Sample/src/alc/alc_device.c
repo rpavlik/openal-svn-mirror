@@ -139,8 +139,7 @@ ALCdevice *alcOpenDevice( const ALchar *deviceSpecifier ) {
 				break;
 			default:
 				_alDebug(ALD_CONVERT, __FILE__, __LINE__,
-					"invalid type %s for sampling-rate",
-					rc_typestr( rc_type( freq_sym ) ));
+					"invalid type for sampling-rate");
 				break;
 		}
 	}

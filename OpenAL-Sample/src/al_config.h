@@ -28,17 +28,6 @@ ALboolean _alParseConfig( void );
 void _alDestroyConfig( void );
 
 /*
- * If str names an existing alrc symbol, and type matches the type of that
- * symbol, *retref is populated with the value of that symbol and this call
- * returns AL_TRUE.  Otherwise, AL_FALSE is returned.
- *
- * NOTE: future revisions should replace this with a call to rc_lookup.
- */
-ALboolean _alGetGlobalScalar( const char *str,
-			      ALRcEnum type,
-			      void *retref );
-
-/*
  * If str names an existing alrc symbol, return a pointer to the value
  * associated with that symbol.  Otherwise, return NULL.
  *

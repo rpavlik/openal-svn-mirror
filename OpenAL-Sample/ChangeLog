@@ -1,3 +1,13 @@
+2006-06-09  Sven Panne  <sven.panne@aedion.de>
+
+	* src/al_ext.h, src/al_rcvar.c, src/al_rcvar.h, src/alc/alc_device.c,
+	src/al_config.c, src/al_config.h, src/backends/alc_backend.c: Removed
+	unused rc_typestr, rc_lookup_list, rc_print, _alGetGlobalScalar
+	functions. Removed unused lal_GetGlobalScalar, lal_GetGlobalVector,
+	rc_cddr, rc_cdddr, rc_cddddr, rc_cddddddr, rc_cadr, rc_caddr, rc_cadddr,
+	rc_caddddr, rc_cadddddr macro. Made rc_toprim, rc_tofloat, rc_equal,
+	rc_member, rc_strequal functions static.
+
 2006-06-07  Sven Panne  <sven.panne@aedion.de>
 
 	* src/backends/alc_backend_alsa.c: Give snd_pcm_open a 2nd chance after

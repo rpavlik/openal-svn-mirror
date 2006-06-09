@@ -111,12 +111,4 @@ ALboolean lal_addTimeFilter( const char *name, time_filter *addr );
  */
 void alLokiTest( void *dummy );
 
-/*
- * look up bindings for symbols.
- *
- * FIXME: should replace with rc_lookup functions.
- */
-#define lal_GetGlobalScalar(s,t,r)   _alGetGlobalScalar(s,t,r)
-#define lal_GetGlobalVector(s,t,n,r) _alGetGlobalScalar(s,t,n,r)
-
 #endif /* not AL_AL_EXT_H_ */

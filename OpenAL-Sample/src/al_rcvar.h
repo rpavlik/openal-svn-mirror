@@ -98,70 +98,13 @@ ALboolean rc_tobool( Rcvar sym );
 ALint rc_toint( Rcvar sym );
 
 /*
- * If sym is a numerical type, returns the float value of sym.  Otherwise,
- * returns 0.0f.
- */
-ALfloat rc_tofloat( Rcvar sym );
-
-/*
- * If d1 and d2 both have type AL_STRING, returns AL_TRUE if there are
- * equivilant.  Returns AL_FALSE otherwise.
- */
-ALboolean rc_strequal( Rcvar d1, Rcvar d2 );
-
-/*
- * Evaluates needle and sees if it is a member in haystack, returning a list
- * with the first conscell to have a matching car as its head.
- */
-Rcvar rc_lookup_list( Rcvar haystack, const char *needle );
-
-/*
- * Returns a list with the first conscell to have a matching car with sym as
- * its head, NULL otherwise.
- */
-Rcvar rc_member( Rcvar ls, Rcvar sym );
-
-/*
- * Returns AL_TRUE if r1 and r2 and equivilant, AL_FALSE otherwise.
- */
-ALboolean rc_equal( Rcvar r1, Rcvar r2 );
-
-struct _AL_rctree;
-struct _AL_rctree *(*rc_toprim( Rcvar sym ))( struct _AL_rctree *,
-					      struct _AL_rctree * );
-
-/*
- * Returns a const char *representation of type.
- */
-const char *rc_typestr( ALRcEnum type );
-
-/*
  * For each member in ls, apply op to the member.
  */
 void rc_foreach( Rcvar ls, Rcvar (*op)( Rcvar operand ));
 
 /*
- * Prints a stdout representation of sym to stdout.
- */
-void rc_print( Rcvar sym );
-
-/*
  * Quotes sym, returning that.
  */
 Rcvar alrc_quote( Rcvar sym );
-
-/*
- * car and cdr convienence macros.
- */
-#define rc_cddr(s)                            rc_cdr(rc_cdr(s))
-#define rc_cdddr(s)                           rc_cdr(rc_cddr(s))
-#define rc_cddddr(s)                          rc_cdr(rc_cdddr(s))
-#define rc_cddddddr(s)                        rc_cdr(rc_cdddddr(s))
-
-#define rc_cadr(s)                            rc_car(rc_cdr(s))
-#define rc_caddr(s)                           rc_car(rc_cddr(s))
-#define rc_cadddr(s)                          rc_car(rc_cdddr(s))
-#define rc_caddddr(s)                         rc_car(rc_cddddr(s))
-#define rc_cadddddr(s)                        rc_car(rc_cdddddr(s))
 
 #endif /* not AL_AL_RCVAR_H_ */

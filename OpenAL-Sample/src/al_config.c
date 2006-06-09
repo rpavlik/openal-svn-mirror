@@ -811,66 +811,6 @@ static AL_rctree *quote_prim(UNUSED(AL_rctree *env), AL_rctree *args) {
 }
 
 /*
- * _alGetGlobalScalar( const char *str, ALRcEnum type, ALvoid *retref )
- *
- * If str names an existing alrc symbol, and type matches the type of that
- * symbol, *retref is populated with the value of that symbol and this call
- * returns AL_TRUE.  Otherwise, AL_FALSE is returned.
- *
- * NOTE: future revisions should replace this with a call to rc_lookup.
- *
- * FIXME: fill out literal support
- */
-ALboolean _alGetGlobalScalar( const char *str, ALRcEnum type, ALvoid *retref ) {
-	AL_rctree *sym;
-	ALfloat *fvp;
-	ALint   *ivp;
-
-	if(retref == NULL) {
-		return AL_FALSE;
-	}
-
-	/* [fi]vp, the dereference helper */
-	fvp = retref;
-	ivp = retref;
-
-	sym = _alGlobalBinding(str);
-	if(sym == NULL) {
-		return AL_FALSE;
-	}
-
-	switch(sym->type) {
-		case ALRC_INTEGER:
-		case ALRC_BOOL:
-			switch(type) {
-				case ALRC_INTEGER:
-				case ALRC_BOOL:
-					*ivp = sym->data.i;
-					return AL_TRUE;
-				case ALRC_FLOAT:
-					*fvp = sym->data.i;
-					return AL_TRUE;
-				default:
-					return AL_FALSE;
-			}
-		case ALRC_FLOAT:
-			switch(type) {
-				case ALRC_INTEGER:
-				case ALRC_BOOL:
-					*ivp = sym->data.f;
-					return AL_TRUE;
-				case ALRC_FLOAT:
-					*fvp = sym->data.f;
-					return AL_TRUE;
-				default:
-					return AL_FALSE;
-			}
-		default:
-			return AL_FALSE;
-	}
-}
-
-/*
  * _alDefine( const char *symname, AL_rctree *value )
  *
  * Bind a symbol, named by symname, to the evaluation of value.
