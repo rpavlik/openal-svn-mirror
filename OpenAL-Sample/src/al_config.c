@@ -1142,14 +1142,7 @@ static AL_rctree *literalExp( const char *foo ) {
 	assert(foo[0] != '\'');
 	assert(foo[0] != '(');
 
-	if ((foo[0] == '#') && (foo[1] == 'p'))
-        {
-		long foop = strtol( &foo[2], NULL, 0 );
-
-		retval->type = ALRC_POINTER;
-		retval->data.p = (void *) foop;
-	}
-	else if ((foo[0] == '#') && ((foo[1] == 't') || (foo[1] == 'f')))
+	if ((foo[0] == '#') && ((foo[1] == 't') || (foo[1] == 'f')))
 	{
 		switch(foo[1]) {
 			case 'f':

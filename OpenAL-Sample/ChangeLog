@@ -1,5 +1,10 @@
 2006-06-09  Sven Panne  <sven.panne@aedion.de>
 
+	* src/al_rcvar.c, src/al_rcvar.h, src/al_rctree.h, src/al_config.c:
+	Removed unused print_prim function. Moved ALRcEnum type where it
+	belongs. Removed unused cell types "pointer value" and "unsingned
+	integer".
+
 	* src/al_ext.h, src/al_rcvar.c, src/al_rcvar.h, src/alc/alc_device.c,
 	src/al_config.c, src/al_config.h, src/backends/alc_backend.c: Removed
 	unused rc_typestr, rc_lookup_list, rc_print, _alGetGlobalScalar

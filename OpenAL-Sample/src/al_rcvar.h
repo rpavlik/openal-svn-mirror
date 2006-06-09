@@ -20,22 +20,6 @@
 typedef void *Rcvar;
 
 /*
- * Each AL_rctree has a type, which reflects how its data should be
- * interpreted.  There are those types.
- */
-typedef enum {
-	ALRC_INVALID,
-	ALRC_PRIMITIVE,
-	ALRC_CONSCELL,
-	ALRC_SYMBOL,
-	ALRC_INTEGER,
-	ALRC_FLOAT,
-	ALRC_STRING,
-	ALRC_BOOL,
-	ALRC_POINTER
-} ALRcEnum;
-
-/*
  * Returns the binding for the symbol named by name, if it exists, or NULL if
  * it doesn't.
  */

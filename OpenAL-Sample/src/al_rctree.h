@@ -12,7 +12,22 @@
 #define ALRC_MAXSTRLEN 90
 
 #include "al_siteconfig.h"
-#include "al_rcvar.h"
+
+/*
+ * Each AL_rctree has a type, which reflects how its data should be
+ * interpreted.  There are those types.
+ */
+typedef enum {
+	ALRC_INVALID,
+	ALRC_PRIMITIVE,
+	ALRC_CONSCELL,
+	ALRC_SYMBOL,
+	ALRC_INTEGER,
+	ALRC_FLOAT,
+	ALRC_STRING,
+	ALRC_BOOL,
+	ALRC_POINTER
+} ALRcEnum;
 
 /*
  * The AL_rctree is the base type for the alrc language.
@@ -24,9 +39,6 @@ typedef struct _AL_rctree {
 		ALboolean b;
 		ALint   i;
 		ALfloat f;
-		ALuint ui;
-		ALvoid *p;
-
 		struct {
 			char c_str[ALRC_MAXSTRLEN];
 			size_t len;

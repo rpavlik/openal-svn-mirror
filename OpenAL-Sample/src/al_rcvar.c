@@ -25,13 +25,6 @@ static Rcvar rc_member( Rcvar ls, Rcvar symp );
 static ALboolean rc_strequal( Rcvar d1, Rcvar d2 );
 
 /*
- * print_prim( Rcvar obj )
- *
- * Prints obj.
- */
-static void print_prim( Rcvar obj );
-
-/*
  * rc_lookup( const char *name )
  *
  * Returns the binding for the symbol named by name, if it exists, or NULL if
@@ -351,85 +344,6 @@ Rcvar rc_define_list( Rcvar ls ) {
 	rc_symtostr0( rc_car(ls), symname, 65 );
 
 	return rc_define( symname, rc_car( rc_cdr( ls ) ) );
-}
-
-/*
- * print_prim( Rcvar obj )
- *
- * Prints obj.
- */
-static void print_prim( Rcvar obj ) {
-	Rcvar lcar;
-	Rcvar lcdr;
-
-	if(obj == NULL) {
-		/* FIXME */
-		return;
-	}
-
-	switch(rc_type(obj)) {
-		case ALRC_SYMBOL:
-		case ALRC_STRING:
-			printf("%s ", ((AL_rctree *) obj)->data.str.c_str );
-			break;
-		case ALRC_INTEGER:
-			printf("%d ", ((AL_rctree *) obj)->data.i);
-			break;
-		case ALRC_FLOAT:
-			printf("%f ", ((AL_rctree *) obj)->data.f );
-			break;
-		case ALRC_PRIMITIVE:
-			printf("%p ", (void *) ((AL_rctree *) obj)->data.proc);
-			break;
-		case ALRC_POINTER:
-			printf("%p ", (void *) ((AL_rctree *) obj)->data.p);
-			break;
-		case ALRC_BOOL:
-			if(((AL_rctree *) obj)->data.b) {
-				printf("#t ");
-			} else {
-				printf("#f ");
-			}
-			break;
-		case ALRC_CONSCELL:
-			lcar = rc_car(obj);
-			lcdr = rc_cdr(obj);
-
-			if(rc_type(lcar) == ALRC_CONSCELL) {
-				printf("(");
-			} else {
-				printf("( ");
-			}
-
-			print_prim(lcar);
-
-			for( ; rc_type(lcdr) == ALRC_CONSCELL; lcdr = rc_cdr(lcdr)) {
-				Rcvar temp = rc_car(lcdr);
-
-				print_prim(temp);
-			}
-
-			if(lcdr) {
-				if(lcdr == rc_cdr(obj)) {
-					/* pair */
-					printf(" . ");
-				}
-
-				print_prim(lcdr);
-			}
-
-			if(rc_type(lcdr) == ALRC_CONSCELL) {
-				printf(") ");
-			} else {
-				printf(")");
-			}
-			break;
-		case ALRC_INVALID:
-			assert( 0 );
-			break;
-	}
-
-	return;
 }
 
 Rcvar alrc_quote( Rcvar val) {
