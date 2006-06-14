@@ -59,7 +59,7 @@ INCLUDE_DIRECTORIES(${OpenAL_SOURCE_DIR}/src/arch/i386)
 
 SET(AL_OBJS              src/al_bpool.c
                          src/al_buffer.c
-                         src/al_config.c
+                         src/config/al_config.c
                          src/al_distance.c
                          src/al_error.c
                          src/al_ext.c
@@ -72,8 +72,8 @@ SET(AL_OBJS              src/al_bpool.c
                          src/al_mspool.c
                          src/al_mutexlib.c
                          src/al_queue.c
-                         src/al_rctree.c
-                         src/al_rcvar.c
+                         src/config/al_rctree.c
+                         src/config/al_rcvar.c
                          src/al_source.c
                          src/al_spool.c
                          src/al_state.c

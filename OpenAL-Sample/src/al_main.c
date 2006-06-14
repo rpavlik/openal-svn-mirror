@@ -33,7 +33,7 @@
 #include "al_source.h"
 #include "al_mixer.h"
 #include "al_ext.h"
-#include "al_config.h"
+#include "config/al_config.h"
 #include "al_vector.h"
 #include "alc/alc_context.h"
 

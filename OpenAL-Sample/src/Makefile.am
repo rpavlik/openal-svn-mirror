@@ -13,8 +13,6 @@ libopenal_la_SOURCES =			\
 	al_bpool.h			\
 	al_buffer.c			\
 	al_buffer.h			\
-	al_config.c			\
-	al_config.h			\
 	al_cpu_caps.h			\
 	al_debug.h			\
 	al_distance.c			\
@@ -41,10 +39,6 @@ libopenal_la_SOURCES =			\
 	al_mutexlib.h			\
 	al_queue.c			\
 	al_queue.h			\
-	al_rctree.c			\
-	al_rctree.h			\
-	al_rcvar.c			\
-	al_rcvar.h			\
 	al_siteconfig.h			\
 	al_source.c			\
 	al_source.h			\
@@ -60,6 +54,16 @@ libopenal_la_SOURCES =			\
 	al_matrix.h			\
 	mixaudio16.h			\
 	mixaudio16.c
+
+# configuration handling sources
+
+libopenal_la_SOURCES +=			\
+	config/al_config.c		\
+	config/al_config.h		\
+	config/al_rctree.c		\
+	config/al_rctree.h		\
+	config/al_rcvar.c		\
+	config/al_rcvar.h
 
 if NEEDDEBUG
 libopenal_la_SOURCES +=			\

@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "al_config.h"
+#include "config/al_config.h"
 #include "al_debug.h"
 #include "al_main.h"
 #include "backends/alc_backend.h"

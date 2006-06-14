@@ -1,3 +1,18 @@
+2006-06-14  Sven Panne  <sven.panne@aedion.de>
+
+	* CMakeLists.txt, ChangeLog, src/Makefile.am, src/al_ext.h,
+	src/al_main.c, src/al_queue.c, src/al_source.c, src/alc/alc_device.c,
+	src/backends/alc_backend.c, src/backends/alc_backend_alsa.c,
+	src/backends/alc_backend_darwin.c, src/backends/alc_backend_irix.c,
+	src/backends/alc_backend_linux.c, src/backends/alc_backend_morphos.c:
+	Moved config handling to a separate directory.
+
+	* config/al_config.c, config/al_config.h, config/al_rctree.c,
+	config/al_rctree.h, config/al_rcvar.c, config/al_rcvar.h: Added.
+
+	* al_config.c, al_config.h, al_rctree.c, al_rctree.h, al_rcvar.c,
+	al_rcvar.h: Removed.
+
 2006-06-09  Sven Panne  <sven.panne@aedion.de>
 
 	* src/al_rcvar.c, src/al_rcvar.h, src/al_rctree.h, src/al_config.c:

@@ -39,7 +39,7 @@ void alcBackendOpenALSA_ (UNUSED(ALC_OpenMode mode), UNUSED(ALC_BackendOps **ops
 #include <AL/alext.h>
 #include <stdio.h>
 
-#include "al_config.h"
+#include "config/al_config.h"
 #include "al_debug.h"
 #include "al_main.h"
 

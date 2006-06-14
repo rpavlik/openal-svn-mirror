@@ -13,10 +13,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "al_config.h"
+#include "config/al_config.h"
 #include "al_debug.h"
-#include "al_rcvar.h"
-#include "al_rctree.h"
 
 static alrc_prim rc_toprim( Rcvar sym );
 static ALfloat rc_tofloat( Rcvar sym );

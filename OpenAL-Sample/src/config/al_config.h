@@ -12,8 +12,8 @@
 
 #include "al_siteconfig.h"
 #include <AL/al.h>
-#include "al_rctree.h"
-#include "al_rcvar.h"
+#include "config/al_rctree.h"
+#include "config/al_rcvar.h"
 
 /*
  * Parse the openalrc config file, if any.  Returns AL_TRUE if one was found

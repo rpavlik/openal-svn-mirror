@@ -25,7 +25,7 @@ void alcBackendOpenNative_ (UNUSED(ALC_OpenMode mode), UNUSED(ALC_BackendOps **o
 
 #include "al_main.h"
 #include "al_debug.h"
-#include "al_rcvar.h"
+#include "config/al_config.h"
 #include "alc/alc_context.h"
 
 #include <clib/ddebug_protos.h>

@@ -21,7 +21,6 @@
 #include <float.h>
 
 #include "al_buffer.h"
-#include "al_config.h"
 #include "al_debug.h"
 #include "al_error.h"
 #include "al_main.h"

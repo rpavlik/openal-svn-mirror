@@ -21,7 +21,7 @@
 
 #include "al_main.h"
 #include "al_ext.h"
-#include "al_config.h"
+#include "config/al_config.h"
 #include "al_error.h"
 #include "al_debug.h"
 

@@ -32,7 +32,7 @@ void alcBackendOpenNative_ (UNUSED(ALC_OpenMode mode), UNUSED(ALC_BackendOps **o
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "al_config.h"
+#include "config/al_config.h"
 #include "al_main.h"
 #include "al_debug.h"
 #include "alc/alc_context.h"

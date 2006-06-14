@@ -11,7 +11,6 @@
 #include "al_siteconfig.h"
 #include "al_types.h"
 #include "al_filter.h"
-#include "al_config.h"
 
 /*
  * the LAL... defines are used in conjunction with plugins, to determine the

@@ -10,9 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "al_config.h"
+#include "config/al_config.h"
 #include "al_debug.h"
-#include "al_rctree.h"
 
 /*
  * AL_RcTreeNodes are used to help manage AL_rctrees.
