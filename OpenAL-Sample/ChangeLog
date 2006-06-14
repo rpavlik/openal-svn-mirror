@@ -1,5 +1,9 @@
 2006-06-14  Sven Panne  <sven.panne@aedion.de>
 
+	* CMakeLists.txt, config-osx.h, configure.ac, src/al_ext.c: Replaced
+	NODLOPEN with USE_DLOPEN, because inverted logic is harder to understand
+	in general.
+
 	* CMakeLists.txt, ChangeLog, src/Makefile.am, src/al_ext.h,
 	src/al_main.c, src/al_queue.c, src/al_source.c, src/alc/alc_device.c,
 	src/backends/alc_backend.c, src/backends/alc_backend_alsa.c,

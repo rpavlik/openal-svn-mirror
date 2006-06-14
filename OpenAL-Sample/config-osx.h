@@ -21,7 +21,7 @@
 
 #define USE_POSIXTHREADING 1
 
-#define NODLOPEN 1
+/* #undef USE_DLOPEN */
 #define RDYNAMIC "-rdynamic"
 
 #define WORDS_BIGENDIAN 1

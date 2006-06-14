@@ -435,11 +435,11 @@ AC_C_BIGENDIAN
 # might be required, but not always (e.g. Cygwin).
 
 AC_CHECK_HEADERS([dlfcn.h],
-  [AC_CHECK_LIB([dl], [dlopen],
+  [AC_DEFINE([USE_DLOPEN], [1], [Define to 1 if dynamic loading of libraries should be used.])
+   AC_CHECK_LIB([dl], [dlopen],
     [LIBS="$LIBS -ldl"
      PKG_CONFIG_LIBS="$PKG_CONFIG_LIBS -ldl"])],
-  [AC_MSG_WARN([Dynamic loading of libraries is not available.])
-   AC_DEFINE([NODLOPEN], [1], [Define to 1 if dynamic loading of libraries is not available.])])
+  [AC_MSG_WARN([Dynamic loading of libraries is not available.])])
 
 # ranlib stuff
 case "$target" in

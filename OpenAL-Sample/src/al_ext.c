@@ -22,7 +22,7 @@
 
 #include "al_mutexlib.h"
 
-#ifndef NODLOPEN
+#ifdef USE_DLOPEN
 #include <dlfcn.h>
 #endif
 
@@ -112,7 +112,7 @@ static void tree_free( enode_t *treehead, void (*ff)(void *) );
  */
 static enode_t *new_ext( const ALubyte *name, AL_funcPtr addr );
 
-#ifndef NODLOPEN
+#ifdef USE_DLOPEN
 /* following functions unneeded in we don't have dlopen */
 
 /*
@@ -123,7 +123,7 @@ static enode_t *new_ext( const ALubyte *name, AL_funcPtr addr );
  */
 static void _alExtPushFiniFunc( void (*func)(void) );
 
-#endif /* NODLOPEN */
+#endif /* USE_DLOPEN */
 
 /*
  * On the level of the specification, "Extension" is a
@@ -580,13 +580,7 @@ static enode_t *get_node( enode_t *treehead, const ALchar *name ) {
 	return treehead;
 }
 
-#ifdef NODLOPEN
-
-ALboolean _alLoadDL(UNUSED(const char *fname)) {
-	return AL_FALSE;
-}
-
-#else
+#ifdef USE_DLOPEN
 
 /*
  * _alLoadDL( const char *fname )
@@ -639,6 +633,13 @@ ALboolean _alLoadDL( const char *fname ) {
 
 	return AL_TRUE;
 }
+
+#else
+
+ALboolean _alLoadDL(UNUSED(const char *fname)) {
+	return AL_FALSE;
+}
+
 #endif
 
 /*
@@ -737,7 +738,7 @@ static void FL_alUnlockExtension(UNUSED(const char *fn), UNUSED(int ln)) {
 }
 
 
-#ifndef NODLOPEN
+#ifdef USE_DLOPEN
 /* avoid errors on platforms that don't support dlopen */
 
 /*
@@ -755,7 +756,7 @@ static void _alExtPushFiniFunc( void (*func)(void) ) {
 
 	return;
 }
-#endif /* NODLOPEN */
+#endif /* USE_DLOPEN */
 
 #define DEFINE_AL_ENUM(e) { #e, e }
 
