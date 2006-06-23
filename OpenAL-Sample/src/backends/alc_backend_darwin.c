@@ -258,7 +258,7 @@ Crash :
 }
 
 static ALboolean set_write_native(UNUSED(void *handle),
-				  unsigned int *bufsiz,
+				  unsigned int *deviceBufferSizeInBytes,
 				  unsigned int *fmt,
 				  unsigned int *speed)
 {
@@ -274,28 +274,28 @@ static ALboolean set_write_native(UNUSED(void *handle),
     /* defines what the AL buffer size should be */
     switch(alWriteFormat)
     {
-	case AL_FORMAT_STEREO8:*bufsiz = libGlobals.deviceWBufferSize/4;
+	case AL_FORMAT_STEREO8:*deviceBufferSizeInBytes = libGlobals.deviceWBufferSize/4;
                                 DebugPrintf("Init fmt : AL_FORMAT_STEREO8\n");
         break;
-	case AL_FORMAT_MONO16: *bufsiz = libGlobals.deviceWBufferSize/4;
+	case AL_FORMAT_MONO16: *deviceBufferSizeInBytes = libGlobals.deviceWBufferSize/4;
                                 DebugPrintf("Init fmt : AL_FORMAT_MONO16\n");
 	break;
 
-	case AL_FORMAT_STEREO16: *bufsiz = libGlobals.deviceWBufferSize/2;
+	case AL_FORMAT_STEREO16: *deviceBufferSizeInBytes = libGlobals.deviceWBufferSize/2;
                                 DebugPrintf("Init fmt : AL_FORMAT_STEREO16\n");
 	break;
 
-	case AL_FORMAT_MONO8: *bufsiz = libGlobals.deviceWBufferSize/8;
+	case AL_FORMAT_MONO8: *deviceBufferSizeInBytes = libGlobals.deviceWBufferSize/8;
                                 DebugPrintf("Init fmt : AL_FORMAT_MONO8\n");
 	break;
 
 	default: break;
     }
-    *bufsiz /= ((unsigned int)libGlobals.deviceFormat.mSampleRate) / *speed;
+    *deviceBufferSizeInBytes /= ((unsigned int)libGlobals.deviceFormat.mSampleRate) / *speed;
 
     alWriteSpeed = *speed;
     ratio = ((unsigned int)libGlobals.deviceFormat.mSampleRate) / *speed;
-    nativePreferedBuffSize = *bufsiz;
+    nativePreferedBuffSize = *deviceBufferSizeInBytes;
 
     /* start playing sound through the device */
     error = AudioDeviceStart(libGlobals.deviceW, deviceFillingProc);
@@ -305,23 +305,23 @@ static ALboolean set_write_native(UNUSED(void *handle),
 }
 
 
-static ALboolean set_read_native(UNUSED(void *handle), UNUSED(unsigned int *bufsiz), UNUSED(unsigned int *fmt), UNUSED(unsigned int *speed))
+static ALboolean set_read_native(UNUSED(void *handle), UNUSED(unsigned int *deviceBufferSizeInBytes), UNUSED(unsigned int *fmt), UNUSED(unsigned int *speed))
 {
     implement_me("ALboolean set_read_native()");
     return AL_FALSE;
 }
 
 static ALboolean
-alcBackendSetAttributesNative_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesNative_(void *handle, ALuint *deviceBufferSizeInBytes, ALenum *fmt, ALuint *speed)
 {
 	return libGlobals.mode == ALC_OPEN_INPUT_ ?
-		set_read_native(handle, bufsiz, fmt, speed) :
-		set_write_native(handle, bufsiz, fmt, speed);
+		set_read_native(handle, deviceBufferSizeInBytes, fmt, speed) :
+		set_write_native(handle, deviceBufferSizeInBytes, fmt, speed);
 }
 
-static void  native_blitbuffer(void *handle, const void *data, int bytes)
+static void  native_blitbuffer(void *handle, const void *data, int bytesToWrite)
 {
-    stillToPlay = bytes / nativePreferedBuffSize;
+    stillToPlay = bytesToWrite / nativePreferedBuffSize;
 
     if (handle == NULL) return;
 
@@ -332,7 +332,7 @@ static void  native_blitbuffer(void *handle, const void *data, int bytes)
     }
 
     /* Gyom FIXME: Is this useful? */
-    assert(nativePreferedBuffSize <= bytes);
+    assert(nativePreferedBuffSize <= bytesToWrite);
 
     playABuffer(data);
 }
@@ -452,7 +452,7 @@ static void resume_nativedevice(void *handle) /* Not tested :-( */
 	AudioDeviceStart(libGlobals.deviceW, deviceFillingProc);
 }
 
-static ALsizei capture_nativedevice(UNUSED(void *handle), UNUSED(void *capture_buffer), UNUSED(int bufsiz))
+static ALsizei capture_nativedevice(UNUSED(void *handle), UNUSED(void *capture_buffer), UNUSED(int bytesToRead))
 {
     implement_me("void capture_nativedevice()");
     return 0;

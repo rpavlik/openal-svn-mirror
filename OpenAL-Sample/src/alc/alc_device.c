@@ -128,7 +128,7 @@ ALCdevice *alcOpenDevice( const ALchar *deviceSpecifier ) {
 	/* defaults */
 	retval->format = _ALC_EXTERNAL_FMT;
 	retval->speed  = _ALC_EXTERNAL_SPEED;
-	retval->bufsiz = _ALC_DEF_BUFSIZ;
+	retval->bufferSizeInBytes = ALC_DEFAULT_DEVICE_BUFFER_SIZE_IN_BYTES;
 	retval->flags  = ALCD_NONE;
 
 	if( freq_sym != NULL ) {
@@ -221,7 +221,7 @@ alcDeviceResume_( AL_device *dev  )
 void
 alcDeviceSet_( AL_device *dev )
 {
-	if( dev->ops->setAttributes(dev->privateData, &dev->bufsiz, &dev->format, &dev->speed) != AL_TRUE ) {
+	if( dev->ops->setAttributes(dev->privateData, &dev->bufferSizeInBytes, &dev->format, &dev->speed) != AL_TRUE ) {
 		_alDebug(ALD_CONTEXT, __FILE__, __LINE__, "alcDeviceSet_ failed.");
 		_alcSetError( ALC_INVALID_DEVICE );
 	}
@@ -229,7 +229,7 @@ alcDeviceSet_( AL_device *dev )
 		  "after set_audiodevice, f|s|b 0x%x|%d|%d",
 		  dev->format,
 		  dev->speed,
-		  dev->bufsiz );
+		  dev->bufferSizeInBytes );
 }
 
 void

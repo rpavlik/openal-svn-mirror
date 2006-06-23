@@ -42,14 +42,14 @@ typedef struct ALC_BackendOpsStruct
 
   /*
    * Sets the parameters for a backend. Because we follow a meet-or-exceed
-   * policty, *bufsiz, *fmt, and *speed might be different from the parameters
-   * initially passed, so the caller should check these after a succesful
-   * call. Returns AL_TRUE if setting was successful, AL_FALSE if the parameters
-   * could not be matched or exceeded. This function is used to implement
-   * alcMakeContextCurrent(NON_NULL).
+   * policty, *deviceBufferSizeInBytes, *fmt, and *speed might be different from
+   * the parameters initially passed, so the caller should check these after a
+   * succesful call. Returns AL_TRUE if setting was successful, AL_FALSE if the
+   * parameters could not be matched or exceeded. This function is used to
+   * implement alcMakeContextCurrent(NON_NULL).
    */
   ALboolean (*setAttributes) (ALC_BackendPrivateData *privateData,
-                              ALuint *bufferSize, ALenum *format,
+                              ALuint *deviceBufferSizeInBytes, ALenum *format,
                               ALuint *speed);
 
   /*
@@ -57,13 +57,14 @@ typedef struct ALC_BackendOpsStruct
    * function is used to implement (a)sync_mixer_iterate.
    */
   void (*write) (ALC_BackendPrivateData *privateData, const void *data,
-                 int size);
+                 int bytesToWrite);
 
   /*
    * Captures data from an input backend into the given buffer. This function is
    * used to implement capture functionality.
    */
-  ALsizei (*read) (ALC_BackendPrivateData *privateData, void *data, int size);
+  ALsizei (*read) (ALC_BackendPrivateData *privateData, void *data,
+                   int bytesToRead);
 
   /*
    * Returns the normalized volume for the given channel (main/PCM/CD) on an

@@ -83,7 +83,7 @@ static MutexID pause_mutex = NULL;
 /*
  * Size of how much data we should mix at a time for each source.
  */
-static ALuint bufsiz = 0;
+static ALuint deviceBufferSizeInBytes = 0;
 
 static struct {
 	void *data;
@@ -267,7 +267,7 @@ static void _alMixSources( void )
 		/* apply each filter to sourceid sid */
 		_alApplyFilters(itr->context_id, itr->sid);
 
-		_alAddDataToMixer(src->srcParams.outbuf, bufsiz);
+		_alAddDataToMixer(src->srcParams.outbuf, deviceBufferSizeInBytes);
 
 		if(_alSourceShouldIncrement(src) == AL_TRUE)
 		{
@@ -283,7 +283,7 @@ static void _alMixSources( void )
 			 * the mixer, because we should be memsetting it
 			 * to 0 when we're applying the filters.
 			 */
-			_alSourceIncrement(src, bufsiz / nc);
+			_alSourceIncrement(src, deviceBufferSizeInBytes / nc);
 		}
 
 		if((isinqueue == AL_TRUE) &&
@@ -409,9 +409,9 @@ static ALuint _alAddDataToMixer( void *dataptr, ALuint bytes_to_write )
 		return 0;
 	}
 
-	if(bytes_to_write > bufsiz)
+	if(bytes_to_write > deviceBufferSizeInBytes)
 	{
-		bytes_to_write = bufsiz;
+		bytes_to_write = deviceBufferSizeInBytes;
 	}
 
 	/* add entry to mix manager */
@@ -609,7 +609,7 @@ static void _alDestroyMixSource( void *ms )
  */
 ALboolean _alInitMixer( void )
 {
-	bufsiz = _alcDCGetWriteBufsiz();
+	deviceBufferSizeInBytes = _alcDCGetWriteDeviceBufferSizeInBytes();
 
 	mix_mutex = _alCreateMutex();
 	if(mix_mutex == NULL)
@@ -679,11 +679,11 @@ void _alSetMixer( ALboolean synchronous )
 	if ( dc->write_device ) {
 		ex_format   = _alcDCGetWriteFormat();
 		ex_speed    = _alcDCGetWriteSpeed();
-		bufsiz      = _alcDCGetWriteBufsiz();
+		deviceBufferSizeInBytes      = _alcDCGetWriteDeviceBufferSizeInBytes();
 	} else {
 		ex_format   = _alcDCGetReadFormat();
 		ex_speed    = _alcDCGetReadSpeed();
-		bufsiz      = _alcDCGetReadBufsiz();
+		deviceBufferSizeInBytes      = _alcDCGetReadDeviceBufferSizeInBytes();
 	}
 
 	_alDebug(ALD_CONVERT, __FILE__, __LINE__,
@@ -718,9 +718,9 @@ void _alSetMixer( ALboolean synchronous )
 		 * we always alloc the larger value, because
 		 * we need the extra space
 		 */
-		mixbuf.length = bufsiz * s16le.len_mult;
+		mixbuf.length = deviceBufferSizeInBytes * s16le.len_mult;
 	} else {
-		mixbuf.length = bufsiz;
+		mixbuf.length = deviceBufferSizeInBytes;
 	}
 
 	free(mixbuf.data);
@@ -728,7 +728,7 @@ void _alSetMixer( ALboolean synchronous )
 	assert(mixbuf.data);
 
 	s16le.buf     = mixbuf.data;
-	s16le.len     = bufsiz;
+	s16le.len     = deviceBufferSizeInBytes;
 
 	if(synchronous == AL_TRUE) {
 		mixer_iterate = sync_mixer_iterate;
@@ -1318,7 +1318,7 @@ void _alProcessFlags( void ) {
 			continue;
 		}
 
-		bitr->streampos += bufsiz/nc;
+		bitr->streampos += deviceBufferSizeInBytes/nc;
 
 		if(bitr->streampos >= bitr->size) {
 			if(bitr->flags & ALB_STREAMING_WRAP) {
@@ -1354,7 +1354,7 @@ int sync_mixer_iterate(UNUSED(void *dummy))
 	/* clear buffer */
 	if(dataptr)
 	{
-		memset( dataptr, 0, bufsiz );
+		memset( dataptr, 0, deviceBufferSizeInBytes );
 	}
 
 	_alLockMixBuf();

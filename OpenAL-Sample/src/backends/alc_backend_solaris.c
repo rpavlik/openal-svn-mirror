@@ -108,7 +108,7 @@ static void *grab_write_native(void) {
 
 static void native_blitbuffer(void *handle,
 		       const void *dataptr,
-		       int bytes_to_write) {
+		       int bytesToWrite) {
 	solaris_audio* sa ;
 
 	/* arch/bsd graft */
@@ -118,7 +118,7 @@ static void native_blitbuffer(void *handle,
 	fd_set sa_fd_set ;
 
 
-	/*fprintf(stderr, "Writing to audio device bytes_to_write{ %d }...\n", bytes_to_write );*/
+	/*fprintf(stderr, "Writing to audio device bytesToWrite{ %d }...\n", bytesToWrite );*/
 
 	if( handle == NULL )
 		return ;
@@ -127,13 +127,13 @@ static void native_blitbuffer(void *handle,
 		return ;
 
 	/* This is the original write. */
-	/* write(sa->fd, (char *) dataptr, bytes_to_write);*/
+	/* write(sa->fd, (char *) dataptr, bytesToWrite);*/
 
 	/* This is the write() adapted from arch/bsd */
 
 	FD_SET(sa->fd, &sa_fd_set);
 
-	for(iterator = bytes_to_write; iterator > 0; ) {
+	for(iterator = bytesToWrite; iterator > 0; ) {
 		if(select(sa->fd + 1, NULL, &sa_fd_set, NULL, &tv) == 0) {
 			/* timeout occured, don't try and write */
 #ifdef DEBUG_MAXIMUS
@@ -146,10 +146,10 @@ static void native_blitbuffer(void *handle,
 		FD_SET(sa->fd, &sa_fd_set);
 
 		assert(iterator > 0);
-		assert(iterator <= bytes_to_write);
+		assert(iterator <= bytesToWrite);
 
 		err = write(sa->fd,
-			    (char *) dataptr + bytes_to_write - iterator,
+			    (char *) dataptr + bytesToWrite - iterator,
 			    iterator);
 		if(err < 0) {
 #ifdef DEBUG_MAXIMUS
@@ -210,12 +210,12 @@ static ALfloat get_nativechannel(UNUSED(void *handle), UNUSED(ALuint channel)) {
 
 static ALsizei capture_nativedevice(UNUSED(void *handle),
 			  UNUSED(void *capture_buffer),
-			  UNUSED(int bufsiz)) {
+			  UNUSED(int bytesToRead)) {
 	return 0; /* unimplemented */
 }
 
 static ALboolean set_write_native(void *handle,
-				  unsigned int *bufsiz,
+				  unsigned int *deviceBufferSizeInBytes,
 				  ALenum *fmt,
 				  unsigned int *speed) {
   solaris_audio* sa ;
@@ -236,7 +236,7 @@ static ALboolean set_write_native(void *handle,
   fprintf(stderr, "Setting audio device...\n");
   sa->ainfo.play.sample_rate = *speed;
   sa->ainfo.play.channels = channels;
-  /*fprintf(stderr, "solaris: set_write_native speed{ %d }, channels{ %d }, format{ %d }, buffer_size{ %u } \n", *speed, channels, *fmt, *bufsiz ) ;*/
+  /*fprintf(stderr, "solaris: set_write_native speed{ %d }, channels{ %d }, format{ %d }, buffer_size{ %u } \n", *speed, channels, *fmt, *deviceBufferSizeInBytes ) ;*/
   switch (*fmt) {
     case AL_FORMAT_MONO8:
     case AL_FORMAT_STEREO8:
@@ -261,7 +261,7 @@ static ALboolean set_write_native(void *handle,
       return AL_FALSE;
   }
 
-  sa->ainfo.play.buffer_size = *bufsiz;
+  sa->ainfo.play.buffer_size = *deviceBufferSizeInBytes;
 
   /*if (ioctl(gaudio.fd, AUDIO_SETINFO, &gaudio.ainfo) < 0)*/
   if (ioctl(sa->fd, AUDIO_SETINFO, &(sa->ainfo)) < 0)
@@ -271,18 +271,18 @@ static ALboolean set_write_native(void *handle,
 }
 
 static ALboolean set_read_native(UNUSED(void *handle),
-				 UNUSED(unsigned int *bufsiz),
+				 UNUSED(unsigned int *deviceBufferSizeInBytes),
 				 UNUSED(ALenum *fmt),
 				 UNUSED(unsigned int *speed)) {
 	return AL_FALSE;
 }
 
 static ALboolean
-alcBackendSetAttributesNative_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesNative_(void *handle, ALuint *deviceBufferSizeInBytes, ALenum *fmt, ALuint *speed)
 {
 	return ((solaris_audio *)handle)->mode == ALC_OPEN_INPUT_ ?
-		set_read_native(handle, bufsiz, fmt, speed) :
-		set_write_native(handle, bufsiz, fmt, speed);
+		set_read_native(handle, deviceBufferSizeInBytes, fmt, speed) :
+		set_write_native(handle, deviceBufferSizeInBytes, fmt, speed);
 }
 
 static ALC_BackendOps nativeOps = {

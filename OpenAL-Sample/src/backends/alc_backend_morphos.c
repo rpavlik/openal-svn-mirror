@@ -94,10 +94,10 @@ struct DispatcherMsg
 };
 
 #define AHI_BUFFERS		4
-#define AHI_BUF_SIZE    _ALC_DEF_BUFSIZ*4
+#define AHI_BUF_SIZE    ALC_DEFAULT_DEVICE_BUFFER_SIZE_IN_BYTES*4
 
 static VOID DispatcherThread(struct MOSWriteHandle*);
-static BOOL start_sound_thread(struct MOSWriteHandle* h, ALuint *bufsiz, ALuint *speed);
+static BOOL start_sound_thread(struct MOSWriteHandle* h, ALuint *deviceBufferSizeInBytes, ALuint *speed);
 static void stop_sound_thread(struct MOSWriteHandle* h);
 
 static void do_command(struct MOSWriteHandle* h, ULONG cmd)
@@ -164,7 +164,7 @@ static void *grab_write_native(void)
 }
 
 static ALboolean set_write_native(void *h,
-				  ALuint *bufsiz,
+				  ALuint *deviceBufferSizeInBytes,
 				  ALenum *fmt,
 				  ALuint *speed)
 {
@@ -174,7 +174,7 @@ static ALboolean set_write_native(void *h,
 	if (h == NULL)
 		return AL_FALSE;
 
-	/*dprintf("set_write_native(%d, %d, %d)\n", *bufsiz, *fmt, *speed);*/
+	/*dprintf("set_write_native(%d, %d, %d)\n", *deviceBufferSizeInBytes, *fmt, *speed);*/
 
 	switch(*fmt)
 	{
@@ -210,16 +210,16 @@ static ALboolean set_write_native(void *h,
 
 	Handle(h)->wh_SampleType = sample_type;
 	Handle(h)->wh_Frequency = *speed;
-	Handle(h)->wh_BufSize = *bufsiz;
+	Handle(h)->wh_BufSize = *deviceBufferSizeInBytes;
 	Handle(h)->wh_Channels = channels;
 	Handle(h)->wh_ReadBuf = 0;
 	Handle(h)->wh_WriteBuf = 0;
 	Handle(h)->wh_FirstBufSent = FALSE;
 
-	return start_sound_thread(Handle(h), bufsiz, speed);
+	return start_sound_thread(Handle(h), deviceBufferSizeInBytes, speed);
 }
 
-static BOOL start_sound_thread(struct MOSWriteHandle* h, ALuint *bufsiz, ALuint *speed)
+static BOOL start_sound_thread(struct MOSWriteHandle* h, ALuint *deviceBufferSizeInBytes, ALuint *speed)
 {
 	h->wh_StartupMsg->dsm_Msg.mn_Node.ln_Type = NT_MESSAGE;
 	h->wh_StartupMsg->dsm_Msg.mn_ReplyPort = h->wh_StartupPort;
@@ -239,7 +239,7 @@ static BOOL start_sound_thread(struct MOSWriteHandle* h, ALuint *bufsiz, ALuint 
 		init_report = (struct DispatcherInitReport *) GetMsg(h->wh_StartupPort);
 		if (init_report->dir_Msg.mn_Length == sizeof (struct DispatcherInitReport))
 		{
-			if (bufsiz)	*bufsiz = init_report->dir_RealBufSize;
+			if (deviceBufferSizeInBytes)	*deviceBufferSizeInBytes = init_report->dir_RealBufSize;
 			if (speed)	*speed  = init_report->dir_RealFrequency;
 			ReplyMsg((struct Message*) init_report);
 			return AL_TRUE;
@@ -298,7 +298,7 @@ static void release_native(void *h)
 }
 
 static ALboolean set_read_native(UNUSED(void *handle),
-				 UNUSED(ALuint *bufsiz),
+				 UNUSED(ALuint *deviceBufferSizeInBytes),
 				 UNUSED(ALenum *fmt),
 				 UNUSED(ALuint *speed))
 {
@@ -307,22 +307,22 @@ static ALboolean set_read_native(UNUSED(void *handle),
 }
 
 static ALboolean
-alcBackendSetAttributesNative_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesNative_(void *handle, ALuint *deviceBufferSizeInBytes, ALenum *fmt, ALuint *speed)
 {
   return ((MOSWriteHandle *)handle)->mode == ALC_OPEN_INPUT_ ?
-		set_read_native(handle, bufsiz, fmt, speed) :
-		set_write_native(handle, bufsiz, fmt, speed);
+		set_read_native(handle, deviceBufferSizeInBytes, fmt, speed) :
+		set_write_native(handle, deviceBufferSizeInBytes, fmt, speed);
 }
 
-static void native_blitbuffer(void *h, const void *data, int bytes)
+static void native_blitbuffer(void *h, const void *data, int bytesToWrite)
 {
 	UWORD next_buf;
 
 	/* Prepare buffer */
 	next_buf = Handle(h)->wh_WriteBuf;
 	ObtainSemaphore(&Handle(h)->wh_Buffers[next_buf].bn_Semaphore);
-	CopyMem(data, Handle(h)->wh_Buffers[next_buf].bn_SampleInfo.ahisi_Address, bytes);
-	Handle(h)->wh_Buffers[next_buf].bn_FillSize = bytes;
+	CopyMem(data, Handle(h)->wh_Buffers[next_buf].bn_SampleInfo.ahisi_Address, bytesToWrite);
+	Handle(h)->wh_Buffers[next_buf].bn_FillSize = bytesToWrite;
 	ReleaseSemaphore(&Handle(h)->wh_Buffers[next_buf].bn_Semaphore);
 
 	if (!Handle(h)->wh_FirstBufSent)
@@ -362,7 +362,7 @@ static void resume_nativedevice(UNUSED(void *h))
 //	  do_command(Handle(h), DISPATCHER_CMD_RESUME);
 }
 
-static ALsizei capture_nativedevice(UNUSED(void *h), UNUSED(void *capture_buffer), UNUSED(int bufsiz))
+static ALsizei capture_nativedevice(UNUSED(void *h), UNUSED(void *capture_buffer), UNUSED(int bytesToRead))
 {
 	/* Not yet implemented */
 	return NULL;

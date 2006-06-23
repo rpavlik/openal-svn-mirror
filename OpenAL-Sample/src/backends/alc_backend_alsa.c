@@ -347,7 +347,7 @@ static void *grab_write_alsa( void )
 }
 
 static ALboolean set_read_alsa( void *handle,
-				ALuint *bufsiz,
+				ALuint *deviceBufferSizeInBytes,
 				ALenum *fmt,
 				ALuint *speed)
 {
@@ -480,10 +480,10 @@ static ALboolean set_read_alsa( void *handle,
 #endif
 
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-			"set_read_alsa (info): Buffersize = %lu (%u)",buffer_size, *bufsiz);
+			"set_read_alsa (info): Buffersize = %lu (%u)",buffer_size, *deviceBufferSizeInBytes);
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
 			"set_read_alsa (info): Periodsize = %lu", period_size);
-	*bufsiz = buffer_size * ai->framesize;
+	*deviceBufferSizeInBytes = buffer_size * ai->framesize;
 
 	err = psnd_pcm_hw_params(phandle, setup);
 	if(err < 0)
@@ -512,7 +512,7 @@ static ALboolean set_read_alsa( void *handle,
 }
 
 static ALboolean set_write_alsa(void *handle,
-				ALuint *bufsiz,
+				ALuint *deviceBufferSizeInBytes,
 				ALenum *fmt,
 				ALuint *speed)
 {
@@ -529,7 +529,7 @@ static ALboolean set_write_alsa(void *handle,
 	ai->format      = (unsigned int) AL2ALSAFMT(*fmt);
 	ai->speed       = (unsigned int) *speed;
 	ai->framesize   = (unsigned int) FRAMESIZE(ai->format, ai->channels);
-	ai->bufframesize= (snd_pcm_uframes_t) *bufsiz / ai->framesize * 4;
+	ai->bufframesize= (snd_pcm_uframes_t) *deviceBufferSizeInBytes / ai->framesize * 4;
 	ai->periods     = 2;
 
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
@@ -647,7 +647,7 @@ static ALboolean set_write_alsa(void *handle,
 #endif
 
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
-			"set_write_alsa (info): Buffersize = %lu (%u)",buffer_size, *bufsiz);
+			"set_write_alsa (info): Buffersize = %lu (%u)",buffer_size, *deviceBufferSizeInBytes);
 	_alDebug(ALD_MAXIMUS, __FILE__, __LINE__,
 			"set_write_alsa (info): Periodsize = %lu", period_size);
 
@@ -678,19 +678,19 @@ static ALboolean set_write_alsa(void *handle,
 }
 
 static ALboolean
-alcBackendSetAttributesALSA_( void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesALSA_( void *handle, ALuint *deviceBufferSizeInBytes, ALenum *fmt, ALuint *speed)
 {
 	return ((struct alsa_info *)handle)->mode == ALC_OPEN_INPUT_ ?
-		set_read_alsa(handle, bufsiz, fmt, speed) :
-		set_write_alsa(handle, bufsiz, fmt, speed);
+		set_read_alsa(handle, deviceBufferSizeInBytes, fmt, speed) :
+		set_write_alsa(handle, deviceBufferSizeInBytes, fmt, speed);
 }
 
-static void alsa_blitbuffer(void *handle, const void *data, int bytes)
+static void alsa_blitbuffer(void *handle, const void *data, int bytesToWrite)
 {
 	struct alsa_info *ai = handle;
 	snd_pcm_t *phandle = 0;
 	const char *pdata = data;
-	int data_len = bytes;
+	int data_len = bytesToWrite;
 	int channels = 0;
 	int err;
 	snd_pcm_uframes_t frames;
@@ -702,7 +702,7 @@ static void alsa_blitbuffer(void *handle, const void *data, int bytes)
 
 	phandle = ai->handle;
 	channels= ai->channels;
-	frames  = (snd_pcm_uframes_t) bytes / ai->framesize;
+	frames  = (snd_pcm_uframes_t) bytesToWrite / ai->framesize;
 
 	while(data_len > 0)
 	{
@@ -752,7 +752,7 @@ static void alsa_blitbuffer(void *handle, const void *data, int bytes)
 /* capture data from the audio device */
 static ALsizei capture_alsa(void *handle,
 		void *capture_buffer,
-		int bufsize)
+		int bytesToRead)
 {
 	struct alsa_info *ai = handle;
 	snd_pcm_t *phandle = 0;
@@ -764,7 +764,7 @@ static ALsizei capture_alsa(void *handle,
 		return 0;
 
 	phandle = ai->handle;
-	frames = (snd_pcm_uframes_t) bufsize / ai->framesize;
+	frames = (snd_pcm_uframes_t) bytesToRead / ai->framesize;
 
 grab:
 	ret = psnd_pcm_readi (phandle, pdata, frames);

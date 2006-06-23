@@ -41,8 +41,6 @@ alcBackendOpenARts_ (UNUSED(ALC_OpenMode mode), UNUSED(ALC_BackendOps **ops),
 #include "al_debug.h"
 
 #define DEF_SPEED	_ALC_CANON_SPEED
-#define DEF_SIZE	_AL_DEF_BUFSIZ
-#define DEF_SAMPLES     (DEF_SIZE / 2)
 #define DEF_BITS        16
 #define DEF_CHANNELS	2
 
@@ -166,16 +164,14 @@ static void *grab_write_arts(void) {
         return ahandle;
 }
 
-static void arts_blitbuffer(void *handle, const void *data, int bytes)  {
+static void arts_blitbuffer(void *handle, const void *data, int bytesToWrite)  {
 	t_arts_handle * ahandle = (t_arts_handle *) handle;
 
 	if ((ahandle == NULL)||(ahandle->stream == NULL)) {
 		return;
 	}
 
-	parts_write(ahandle->stream, data, bytes);
-
-        return;
+	parts_write(ahandle->stream, data, bytesToWrite);
 }
 
 static void release_arts(void *handle) {
@@ -205,7 +201,7 @@ static const char *genartskey(void) {
 }
 
 static ALboolean set_write_arts(void *handle,
-				ALuint *bufsiz,
+				ALuint *deviceBufferSizeInBytes,
 				ALenum *fmt,
 				ALuint *speed) {
 	t_arts_handle * ahandle = (t_arts_handle *) handle;
@@ -237,27 +233,27 @@ static ALboolean set_write_arts(void *handle,
                 return AL_FALSE;
         }
         
-	parts_stream_set(ahandle->stream, ARTS_P_BUFFER_SIZE, *bufsiz);
+	parts_stream_set(ahandle->stream, ARTS_P_BUFFER_SIZE, *deviceBufferSizeInBytes);
 	parts_stream_set(ahandle->stream, ARTS_P_BLOCKING, 1);
 
-	*bufsiz = parts_stream_get(ahandle->stream, ARTS_P_BUFFER_SIZE);
+	*deviceBufferSizeInBytes = parts_stream_get(ahandle->stream, ARTS_P_BUFFER_SIZE);
 
         return AL_TRUE;
 }
 
 static ALboolean set_read_arts(UNUSED(void *handle),
-			       UNUSED(ALuint *bufsiz),
+			       UNUSED(ALuint *deviceBufferSizeInBytes),
 			       UNUSED(ALenum *fmt),
 			       UNUSED(ALuint *speed)) {
 	return AL_FALSE;
 }
 
 static ALboolean
-alcBackendSetAttributesARts_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesARts_(void *handle, ALuint *deviceBufferSizeInBytes, ALenum *fmt, ALuint *speed)
 {
 	return ((t_arts_handle *)handle)->mode == ALC_OPEN_INPUT_ ?
-		set_read_arts(handle, bufsiz, fmt, speed) :
-		set_write_arts(handle, bufsiz, fmt, speed);
+		set_read_arts(handle, deviceBufferSizeInBytes, fmt, speed) :
+		set_write_arts(handle, deviceBufferSizeInBytes, fmt, speed);
 }
 
 static void
@@ -272,7 +268,7 @@ resume_arts( UNUSED(void *handle) )
 
 
 static ALsizei
-capture_arts( UNUSED(void *handle), UNUSED(void *capture_buffer), UNUSED(int bufsiz) )
+capture_arts( UNUSED(void *handle), UNUSED(void *capture_buffer), UNUSED(int bytesToRead) )
 {
 	return 0;
 }

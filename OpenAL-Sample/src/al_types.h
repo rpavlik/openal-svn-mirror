@@ -292,7 +292,7 @@ typedef struct ALCdevice_struct {
 	/* device settings, not internal format */
 	ALenum format;
 	ALuint speed;
-	ALuint bufsiz;
+	ALuint bufferSizeInBytes;
 
 	DeviceEnum flags;
 	ALCchar *specifier;

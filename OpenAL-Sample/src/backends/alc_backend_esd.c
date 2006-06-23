@@ -194,14 +194,14 @@ resumeESD (void *privateData)
 }
 
 static ALboolean
-setAttributesESD (void *privateData, ALuint *bufferSize, ALenum *format,
+setAttributesESD (void *privateData, ALuint *bufferSizeInBytes, ALenum *format,
                   ALuint *speed)
 {
   ALC_BackendDataESD *eh = (ALC_BackendDataESD *) privateData;
   esd_format_t esd_format;
   _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
-            "setting attributes for ESD device '%s': buffer size %u, format 0x%x, speed %d",
-            eh->name, (unsigned int) *bufferSize, (int) *format,
+            "setting attributes for ESD device '%s': buffer size in bytes %u, format 0x%x, speed %d",
+            eh->name, (unsigned int) *bufferSizeInBytes, (int) *format,
             (unsigned int) *speed);
 
   /*
@@ -253,17 +253,17 @@ setAttributesESD (void *privateData, ALuint *bufferSize, ALenum *format,
 }
 
 static void
-writeESD (void *privateData, const void *data, int size)
+writeESD (void *privateData, const void *data, int bytesToWrite)
 {
   fd_set esd_fd_set;
   ALC_BackendDataESD *eh = (ALC_BackendDataESD *) privateData;
   struct timeval tv = { 0, 800000 };    /* at most .8 secs */
-  int bytesToWrite = size;
+  int bytesLeft = bytesToWrite;
   int bytesWritten;
   SELECT_TYPE_ARG1 fd;
 
   _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
-            "writing %d bytes to ESD device '%s'", size, eh->name);
+            "writing %d bytes to ESD device '%s'", bytesToWrite, eh->name);
 
   if (eh->paused == AL_TRUE)
     {
@@ -277,7 +277,7 @@ writeESD (void *privateData, const void *data, int size)
     }
 
   fd = eh->esd;
-  while (bytesToWrite > 0)
+  while (bytesLeft > 0)
     {
       FD_ZERO (&esd_fd_set);
       FD_SET (fd, &esd_fd_set);
@@ -295,7 +295,7 @@ writeESD (void *privateData, const void *data, int size)
         }
 
       bytesWritten =
-        write (fd, (const char *) data + size - bytesToWrite, bytesToWrite);
+        write (fd, (const char *) data + bytesToWrite - bytesLeft, bytesLeft);
       if (bytesWritten < 0)
         {
           _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
@@ -304,7 +304,7 @@ writeESD (void *privateData, const void *data, int size)
           return;
         }
 
-      bytesToWrite -= bytesWritten;
+      bytesLeft -= bytesWritten;
     }
 }
 
@@ -312,12 +312,12 @@ writeESD (void *privateData, const void *data, int size)
  * ToDo: Implement!
  */
 static ALsizei
-readESD (void *privateData, UNUSED (void *data), int size)
+readESD (void *privateData, UNUSED (void *data), int bytesToRead)
 {
   ALC_BackendDataESD *eh = (ALC_BackendDataESD *) privateData;
   _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
             "reading up to %d bytes from ESD device '%s', %d bytes actually read",
-            size, eh->name, 0);
+            bytesToRead, eh->name, 0);
   return 0;
 }
 

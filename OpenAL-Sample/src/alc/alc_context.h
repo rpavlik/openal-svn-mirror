@@ -19,10 +19,10 @@
 #define _ALC_DEF_FREQ        44100
 
 /*
- * _ALC_DEF_BUFSIZ is the default length of chunks mixed and written to the
- * audio device.  Must be a power of two.
+ * ALC_DEFAULT_DEVICE_BUFFER_SIZE_IN_BYTES is the default length of chunks mixed
+ * and written to the audio device.  Must be a power of two.
  */
-#define _ALC_DEF_BUFSIZ       1024
+#define ALC_DEFAULT_DEVICE_BUFFER_SIZE_IN_BYTES 1024
 
 /*
  * Canonical stuff
@@ -103,13 +103,13 @@ ALboolean _alcSetUse( ALuint cid, ALboolean value );
  * Returns the preferred read buffer size of the context named by cid,
  * in bytes.
  */
-ALuint _alcGetReadBufsiz( ALuint cid );
+ALuint _alcGetReadDeviceBufferSizeInBytes( ALuint cid );
 
 /*
  * Returns the preferred write buffer size of the context named by cid,
  * in bytes.
  */
-ALuint _alcGetWriteBufsiz( ALuint cid );
+ALuint _alcGetWriteDeviceBufferSizeInBytes( ALuint cid );
 
 /*
  * Returns the preferred read openal format of the context named by cid.
@@ -177,8 +177,8 @@ void FL_alcUnlockAllContexts( const char *fn, int ln );
 
 /* default context macros */
 #define _alcDCGetContext()        _alcGetContext(_alcCCId)
-#define _alcDCGetReadBufsiz()     _alcGetReadBufsiz(_alcCCId)
-#define _alcDCGetWriteBufsiz()    _alcGetWriteBufsiz(_alcCCId)
+#define _alcDCGetReadDeviceBufferSizeInBytes() _alcGetReadDeviceBufferSizeInBytes(_alcCCId)
+#define _alcDCGetWriteDeviceBufferSizeInBytes() _alcGetWriteDeviceBufferSizeInBytes(_alcCCId)
 #define _alcDCGetTimeFilters()    _alcGetTimeFilters(_alcCCId)
 #define _alcDCGetFreqFilters()    _alcGetFreqFilters(_alcCCId)
 #define _alcDCGetListener()       _alcGetListener(_alcCCId)

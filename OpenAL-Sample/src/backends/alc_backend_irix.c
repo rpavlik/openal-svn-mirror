@@ -246,7 +246,7 @@ static void *grab_write_dmedia(void)
 
 static void dmedia_blitbuffer(void *handle,
                       const void *dataptr,
-                      int bytes_to_write)
+                      int bytesToWrite)
 {
     static int check_ = CHECK_FRAMES;
     _ALhandle *alh = (_ALhandle *)handle;
@@ -257,7 +257,7 @@ static void dmedia_blitbuffer(void *handle,
 
     if (alh->numOutputPorts == 1)
     {
-        alWriteFrames(alh->output[0].port, ptr, bytes_to_write/frame_size);
+        alWriteFrames(alh->output[0].port, ptr, bytesToWrite/frame_size);
         return;
     }
 
@@ -265,7 +265,7 @@ static void dmedia_blitbuffer(void *handle,
     /*
      * Setup a buffer for each audio port.
      */
-    frames_to_write = bytes_to_write / alh->numOutputPorts;
+    frames_to_write = bytesToWrite / alh->numOutputPorts;
 
     buf = (char **)calloc(alh->numOutputPorts, sizeof(char *));
     for (i=0; i < alh->numOutputPorts; i++)
@@ -403,13 +403,13 @@ static ALfloat get_dmediachannel(UNUSED(void *handle), UNUSED(ALuint channel))
 /* capture data from the audio device */
 static ALsizei capture_dmedia(UNUSED(void *handle),
                              UNUSED(void *capture_buffer),
-                             UNUSED(int bufsiz))
+                             UNUSED(int bytesToRead))
 {
     return 0;
 }
 
 static ALboolean set_write_dmedia(void *handle,
-				  unsigned int *bufsiz,
+				  unsigned int *deviceBufferSizeInBytes,
 				  ALenum *fmt,
 				  unsigned int *speed)
 {
@@ -536,7 +536,7 @@ static ALboolean set_write_dmedia(void *handle,
 }
 
 static ALboolean set_read_dmedia(UNUSED(void *handle),
-				 UNUSED(unsigned int *bufsiz),
+				 UNUSED(unsigned int *deviceBufferSizeInBytes),
 				 UNUSED(ALenum *fmt),
 				 UNUSED(unsigned int *speed))
 {
@@ -544,11 +544,11 @@ static ALboolean set_read_dmedia(UNUSED(void *handle),
 }
 
 static ALboolean
-alcBackendSetAttributesDMedia_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesDMedia_(void *handle, ALuint *deviceBufferSizeInBytes, ALenum *fmt, ALuint *speed)
 {
 	return ((_ALhandle*)handle)->mode == ALC_OPEN_INPUT_ ?
-		set_read_dmedia(handle, bufsiz, fmt, speed) :
-		set_write_dmedia(handle, bufsiz, fmt, speed);
+		set_read_dmedia(handle, deviceBufferSizeInBytes, fmt, speed) :
+		set_write_dmedia(handle, deviceBufferSizeInBytes, fmt, speed);
 }
 
 /*

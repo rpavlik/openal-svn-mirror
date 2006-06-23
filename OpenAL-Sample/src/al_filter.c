@@ -15,12 +15,12 @@
  * ApplyFilters takes a chunk of data from the original buffer
  * associated with the passed source.
  *
- * This chunk is understood to be that block of data samp->_orig_buffer
- * offset src->soundpos to src->soundpos + bufsiz, where src is the
- * passed AL_source, samp is the AL_buffer associated with src, and
- * bufsiz is the length of the chunk of data that we want.  It is usually
- * set to _AL_DEF_BUFSIZE, unless specified by ALC_BUFFERSIZE in the
- * application.
+ * This chunk is understood to be that block of data samp->_orig_buffer offset
+ * src->soundpos to src->soundpos + bufferSizeInBytes, where src is the passed
+ * AL_source, samp is the AL_buffer associated with src, and bufferSizeInBytes
+ * is the length of the chunk of data that we want.  It is usually set to
+ * ALC_DEFAULT_DEVICE_BUFFER_SIZE_IN_BYTES, unless specified by ALC_BUFFERSIZE
+ * in the application.
  *
  * Applying filters to a source does not (should not) change the original
  * pcm data.  ApplyFilters will split the original pcm data prior to
@@ -288,7 +288,7 @@ void _alApplyFilters( ALuint cid, ALuint sid ) {
 	_alcLockContext( cid );
 
 	mc = _alcGetNumSpeakers( cid );
-	mixbuflen = _alcGetWriteBufsiz( cid );
+	mixbuflen = _alcGetWriteDeviceBufferSizeInBytes( cid );
 
 	samp = _alGetBufferFromSid( cid, sid );
 	if(samp == NULL) {

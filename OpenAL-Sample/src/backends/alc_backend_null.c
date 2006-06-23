@@ -42,7 +42,7 @@ grab_read_null (void)
 }
 
 static ALboolean
-set_write_null (UNUSED (void *handle), UNUSED (ALuint *bufsiz),
+set_write_null (UNUSED (void *handle), UNUSED (ALuint *deviceBufferSizeInBytes),
                 UNUSED (ALenum *fmt), ALuint *speed)
 {
   nullspeed = *speed;
@@ -50,7 +50,7 @@ set_write_null (UNUSED (void *handle), UNUSED (ALuint *bufsiz),
 }
 
 static ALboolean
-set_read_null (UNUSED (void *handle), UNUSED (ALuint *bufsiz),
+set_read_null (UNUSED (void *handle), UNUSED (ALuint *deviceBufferSizeInBytes),
                UNUSED (ALenum *fmt), UNUSED (ALuint *speed))
 {
 
@@ -58,19 +58,19 @@ set_read_null (UNUSED (void *handle), UNUSED (ALuint *bufsiz),
 }
 
 static ALboolean
-alcBackendSetAttributesNull_ (void *handle, ALuint *bufsiz,
+alcBackendSetAttributesNull_ (void *handle, ALuint *deviceBufferSizeInBytes,
                               ALenum *fmt, ALuint *speed)
 {
   return nullMode == ALC_OPEN_INPUT_ ?
-    set_read_null (handle, bufsiz, fmt, speed) :
-    set_write_null (handle, bufsiz, fmt, speed);
+    set_read_null (handle, deviceBufferSizeInBytes, fmt, speed) :
+    set_write_null (handle, deviceBufferSizeInBytes, fmt, speed);
 }
 
 static void
 null_blitbuffer (UNUSED (void *handle),
-                 UNUSED (const void *dataptr), int bytes_to_write)
+                 UNUSED (const void *dataptr), int bytesToWrite)
 {
-  _alMicroSleep (sleep_usec (nullspeed, bytes_to_write));
+  _alMicroSleep (sleep_usec (nullspeed, bytesToWrite));
 }
 
 static void
@@ -96,7 +96,7 @@ resume_null (UNUSED (void *handle))
 
 static ALsizei
 capture_null (UNUSED (void *handle), UNUSED (void *capture_buffer),
-              UNUSED (int bufsiz))
+              UNUSED (int bytesToRead))
 {
   return 0;
 }

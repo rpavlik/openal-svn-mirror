@@ -35,7 +35,7 @@ alcBackendOpenSDL_ (UNUSED(ALC_OpenMode mode), UNUSED(ALC_BackendOps **ops),
 
 
 #define DEF_SPEED	_ALC_CANON_SPEED
-#define DEF_SIZE	_ALC_DEF_BUFSIZ
+#define DEF_SIZE	ALC_DEFAULT_DEVICE_BUFFER_SIZE_IN_BYTES
 #define DEF_SAMPLES     (DEF_SIZE / 2)
 #define DEF_CHANNELS	2
 #define SDL_DEF_FMT	AUDIO_S16
@@ -170,12 +170,12 @@ grab_read_sdl(void)
 }
 
 static void
-sdl_blitbuffer(UNUSED(void *handle), const void *data, int bytes)
+sdl_blitbuffer(UNUSED(void *handle), const void *data, int bytesToWrite)
 {
 	if (sdl_info.firstTime == AL_TRUE) {
 		sdl_info.firstTime = AL_FALSE;
-		offset_memcpy(ringbuffer, writeOffset, data, (size_t)bytes);
-		writeOffset = bytes;
+		offset_memcpy(ringbuffer, writeOffset, data, (size_t)bytesToWrite);
+		writeOffset = bytesToWrite;
 		/* start SDL callback mojo */
 		pSDL_PauseAudio(0);
 	} else {
@@ -186,8 +186,8 @@ sdl_blitbuffer(UNUSED(void *handle), const void *data, int bytes)
 			pSDL_LockAudio();
 		}
 
-		offset_memcpy(ringbuffer, writeOffset, data, (size_t)bytes);
-		writeOffset += bytes;
+		offset_memcpy(ringbuffer, writeOffset, data, (size_t)bytesToWrite);
+		writeOffset += bytesToWrite;
 
 		pSDL_UnlockAudio();
 	}
@@ -200,7 +200,7 @@ release_sdl(UNUSED(void *handle))
 }
 
 static ALboolean
-set_write_sdl(UNUSED(void *handle), ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+set_write_sdl(UNUSED(void *handle), ALuint *deviceBufferSizeInBytes, ALenum *fmt, ALuint *speed)
 {
 	ALuint bytesPerSample   = _alGetBitsFromFormat(*fmt) >> 3;
 	ALuint channels = _alGetChannelsFromFormat(*fmt);
@@ -208,7 +208,7 @@ set_write_sdl(UNUSED(void *handle), ALuint *bufsiz, ALenum *fmt, ALuint *speed)
         memset(&sdl_info, '\0', sizeof (sdl_info));
         sdl_info.spec.freq     = *speed;
         sdl_info.spec.channels = channels;
-        sdl_info.spec.samples  = *bufsiz / bytesPerSample;
+        sdl_info.spec.samples  = *deviceBufferSizeInBytes / bytesPerSample;
         sdl_info.spec.format   = _al_AL2ACFMT(*fmt);
         sdl_info.spec.callback = dummy;
 	sdl_info.firstTime     = AL_TRUE;
@@ -222,7 +222,7 @@ set_write_sdl(UNUSED(void *handle), ALuint *bufsiz, ALenum *fmt, ALuint *speed)
                 return AL_FALSE;
         }
 
-	*bufsiz = sdl_info.spec.size;
+	*deviceBufferSizeInBytes = sdl_info.spec.size;
 
 	if(ringbuffer != NULL) {
 		free(ringbuffer);
@@ -245,18 +245,18 @@ set_write_sdl(UNUSED(void *handle), ALuint *bufsiz, ALenum *fmt, ALuint *speed)
 }
 
 static ALboolean
-set_read_sdl(UNUSED(void *handle), UNUSED(ALuint *bufsiz), UNUSED(ALenum *fmt),
+set_read_sdl(UNUSED(void *handle), UNUSED(ALuint *deviceBufferSizeInBytes), UNUSED(ALenum *fmt),
 	     UNUSED(ALuint *speed))
 {
 	return AL_FALSE;
 }
 
 static ALboolean
-alcBackendSetAttributesSDL_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesSDL_(void *handle, ALuint *deviceBufferSizeInBytes, ALenum *fmt, ALuint *speed)
 {
 	return sdl_info.mode == ALC_OPEN_INPUT_ ?
-		set_read_sdl(handle, bufsiz, fmt, speed) :
-		set_write_sdl(handle, bufsiz, fmt, speed);
+		set_read_sdl(handle, deviceBufferSizeInBytes, fmt, speed) :
+		set_write_sdl(handle, deviceBufferSizeInBytes, fmt, speed);
 }
 
 static void
@@ -270,7 +270,7 @@ resume_sdl( UNUSED(void *handle) )
 }
 
 static ALsizei
-capture_sdl( UNUSED(void *handle), UNUSED(void *capture_buffer), UNUSED(int bufsiz) )
+capture_sdl( UNUSED(void *handle), UNUSED(void *capture_buffer), UNUSED(int bytesToRead) )
 {
 	return 0;
 }

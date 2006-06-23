@@ -590,7 +590,7 @@ void _alcSetContext(const ALCint *attrlist, ALuint cid, AL_device *dev ) {
 	ALboolean reading_keys = AL_TRUE;
 	struct { int key; int val; } rdr;
 	ALuint refresh_rate = 15;
-        ALuint bufsiz;
+        ALuint deviceBufferSizeInBytes;
 
 	cc = _alcGetContext( cid );
 	if(cc == NULL) {
@@ -685,15 +685,16 @@ void _alcSetContext(const ALCint *attrlist, ALuint cid, AL_device *dev ) {
 		refresh_rate = canon_speed;
 	}
 
-	bufsiz = _alSmallestPowerOfTwo(
+	/* ToDo: Shouldn't we include the number of channels and format here? */
+	deviceBufferSizeInBytes = _alSmallestPowerOfTwo(
 				(ALuint) ((float) canon_speed / refresh_rate));
         if (dev->flags & ALCD_WRITE)
-		cc->write_device->bufsiz = bufsiz;
+		cc->write_device->bufferSizeInBytes = deviceBufferSizeInBytes;
         if (dev->flags & ALCD_READ)
-		cc->read_device->bufsiz = bufsiz;
+		cc->read_device->bufferSizeInBytes = deviceBufferSizeInBytes;
 
 	_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
-		"new bufsiz = %d", bufsiz);
+		"new device buffer size in bytes = %d", deviceBufferSizeInBytes);
 
 	return;
 }
@@ -1101,12 +1102,10 @@ ALCcontext *alcGetCurrentContext( void )
 }
 
 /*
- * _alcGetReadBufsiz( ALuint cid )
- *
  * Returns the preferred read buffer size of the context named by cid,
  * in bytes.
  */
-ALuint _alcGetReadBufsiz( ALuint cid ) {
+ALuint _alcGetReadDeviceBufferSizeInBytes ( ALuint cid ) {
 	AL_context *cc = _alcGetContext( cid );
 
 	if(cc == NULL) {
@@ -1117,18 +1116,16 @@ ALuint _alcGetReadBufsiz( ALuint cid ) {
 		return 0;
 	}
 
-	return cc->read_device->bufsiz;
+	return cc->read_device->bufferSizeInBytes;
 }
 
 /*
- * _alcGetWriteBufsiz( ALuint cid )
- *
  * Returns the preferred write buffer size of the context named by cid,
  * in bytes.
  *
  * assumes locked context
  */
-ALuint _alcGetWriteBufsiz( ALuint cid ) {
+ALuint _alcGetWriteDeviceBufferSizeInBytes ( ALuint cid ) {
 	AL_context *cc = _alcGetContext( cid );
 
 	if(cc == NULL) {
@@ -1139,7 +1136,7 @@ ALuint _alcGetWriteBufsiz( ALuint cid ) {
 		return 0;
 	}
 
-	return cc->write_device->bufsiz;
+	return cc->write_device->bufferSizeInBytes;
 }
 
 /*

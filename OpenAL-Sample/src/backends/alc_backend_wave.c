@@ -125,7 +125,7 @@ static void *grab_read_waveout(void) {
 	return NULL;
 }
 
-static void waveout_blitbuffer(void *handle, const void *dataptr, int bytes_to_write) {
+static void waveout_blitbuffer(void *handle, const void *dataptr, int bytesToWrite) {
 	waveout_t *whandle = NULL;
 
 	if(handle == NULL) {
@@ -138,7 +138,7 @@ static void waveout_blitbuffer(void *handle, const void *dataptr, int bytes_to_w
 		return;
 	}
 
-	whandle->length += bytes_to_write;
+	whandle->length += bytesToWrite;
 
 	/*
 	 * WAV files expect their PCM data in LE format.  If we are on
@@ -148,13 +148,11 @@ static void waveout_blitbuffer(void *handle, const void *dataptr, int bytes_to_w
 	 */
 	convert_to_little_endian( whandle->bitspersample,
 				  (void *)dataptr,
-				  bytes_to_write );
+				  bytesToWrite );
 
-	fwrite(dataptr, 1, bytes_to_write, whandle->fh);
+	fwrite(dataptr, 1, bytesToWrite, whandle->fh);
 
-	_alMicroSleep(sleep_usec(whandle->speed, bytes_to_write));
-
-        return;
+	_alMicroSleep(sleep_usec(whandle->speed, bytesToWrite));
 }
 
 /*
@@ -293,7 +291,7 @@ static const char *waveout_unique_name(char *template) {
 }
 
 static ALboolean set_write_waveout(void *handle,
-				   UNUSED(ALuint *bufsiz),
+				   UNUSED(ALuint *deviceBufferSizeInBytes),
 				   ALenum *fmt,
 				   ALuint *speed) {
 	waveout_t *whandle;
@@ -314,7 +312,7 @@ static ALboolean set_write_waveout(void *handle,
 }
 
 static ALboolean set_read_waveout(UNUSED(void *handle),
-				  UNUSED(ALuint *bufsiz),
+				  UNUSED(ALuint *deviceBufferSizeInBytes),
 				  UNUSED(ALenum *fmt),
 				  UNUSED(ALuint *speed)) {
 
@@ -322,11 +320,11 @@ static ALboolean set_read_waveout(UNUSED(void *handle),
 }
 
 static ALboolean
-alcBackendSetAttributesWAVE_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesWAVE_(void *handle, ALuint *deviceBufferSizeInBytes, ALenum *fmt, ALuint *speed)
 {
 	return ((waveout_t *)handle)->mode == ALC_OPEN_INPUT_ ?
-		set_read_waveout(handle, bufsiz, fmt, speed) :
-		set_write_waveout(handle, bufsiz, fmt, speed);
+		set_read_waveout(handle, deviceBufferSizeInBytes, fmt, speed) :
+		set_write_waveout(handle, deviceBufferSizeInBytes, fmt, speed);
 }
 
 /*
@@ -376,7 +374,7 @@ resume_waveout( UNUSED(void *handle) )
 }
 
 static ALsizei
-capture_waveout( UNUSED(void *handle), UNUSED(void *capture_buffer), UNUSED(int bufsiz) )
+capture_waveout( UNUSED(void *handle), UNUSED(void *capture_buffer), UNUSED(int bytesToRead) )
 {
 	return 0;
 }

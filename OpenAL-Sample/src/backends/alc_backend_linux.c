@@ -69,7 +69,7 @@ static int try_to_open(const char **paths, int n_paths, const char **used_path, 
 
 /* set the params associated with a file descriptor */
 static int set_fd(int dsp_fd, ALboolean readable,
-			      ALuint *bufsiz,
+			      ALuint *deviceBufferSizeInBytes,
 			      ALuint *fmt,
 			      ALuint *speed,
 			      ALuint *channels);
@@ -174,7 +174,7 @@ static void *grab_write_native(void)
 	static int write_fd;
 	Rcvar rc_use_select;
 	const char *writepath = NULL;
-	int divisor = DONTCARE | _alSpot( _ALC_DEF_BUFSIZ );
+	int divisor = DONTCARE | _alSpot( ALC_DEFAULT_DEVICE_BUFFER_SIZE_IN_BYTES );
 	const char *tried_paths[] = {
 		"",
 		"/dev/sound/dsp",
@@ -435,18 +435,18 @@ static const char *lin_getreadpath(void) {
 /* capture data from the audio device */
 static ALsizei capture_nativedevice(void *handle,
 			  void *capture_buffer,
-			  int bufsiz) {
+			  int bytesToRead) {
 	int read_fd = *(int *)handle;
 	int retval;
 
-	retval = read(read_fd, capture_buffer, bufsiz);
+	retval = read(read_fd, capture_buffer, bytesToRead);
 	return retval > 0 ? retval : 0;
 }
 
 static int aquire_read(void) {
 	int read_fd;
 	const char *readpath = NULL;
-	int divisor = _alSpot(_ALC_DEF_BUFSIZ) | (1<<16);
+	int divisor = _alSpot(ALC_DEFAULT_DEVICE_BUFFER_SIZE_IN_BYTES) | (1<<16);
 	const char *tried_paths[] = {
 		"",
 		"/dev/sound/dsp",
@@ -467,7 +467,7 @@ static int aquire_read(void) {
 }
 
 static ALboolean set_write_native(UNUSED(void *handle),
-				  ALuint *bufsiz,
+				  ALuint *deviceBufferSizeInBytes,
 				  ALenum *fmt,
 				  ALuint *speed) {
 	int write_fd = *(int *)handle;
@@ -481,7 +481,7 @@ static ALboolean set_write_native(UNUSED(void *handle),
 
 	linformat = AL2LINFMT(*fmt);
 
-	err = set_fd(write_fd, AL_FALSE, bufsiz, &linformat, speed, &channels);
+	err = set_fd(write_fd, AL_FALSE, deviceBufferSizeInBytes, &linformat, speed, &channels);
 	if(err < 0) {
 #ifdef DEBUG
 		fprintf(stderr, "Could not do write_fd\n");
@@ -496,7 +496,7 @@ static ALboolean set_write_native(UNUSED(void *handle),
 }
 
 static ALboolean set_read_native(UNUSED(void *handle),
-				 ALuint *bufsiz,
+				 ALuint *deviceBufferSizeInBytes,
 				 ALenum *fmt,
 				 ALuint *speed) {
 	int read_fd = *(int *)handle;
@@ -505,7 +505,7 @@ static ALboolean set_read_native(UNUSED(void *handle),
 
 	linformat = AL2LINFMT(*fmt);
 
-	if(set_fd(read_fd, AL_TRUE, bufsiz, &linformat, speed, &channels) >= 0) {
+	if(set_fd(read_fd, AL_TRUE, deviceBufferSizeInBytes, &linformat, speed, &channels) >= 0) {
 		/* set format for caller */
 		*fmt = LIN2ALFMT(linformat, channels);
 
@@ -516,14 +516,14 @@ static ALboolean set_read_native(UNUSED(void *handle),
 }
 
 static ALboolean
-alcBackendSetAttributesNative_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesNative_(void *handle, ALuint *deviceBufferSizeInBytes, ALenum *fmt, ALuint *speed)
 {
 	return linuxMode == ALC_OPEN_INPUT_ ?
-		set_read_native(handle, bufsiz, fmt, speed) :
-		set_write_native(handle, bufsiz, fmt, speed);
+		set_read_native(handle, deviceBufferSizeInBytes, fmt, speed) :
+		set_write_native(handle, deviceBufferSizeInBytes, fmt, speed);
 }
 
-static void native_blitbuffer(void *handle, const void *dataptr, int bytes_to_write) {
+static void native_blitbuffer(void *handle, const void *dataptr, int bytesToWrite) {
 	struct timeval tv = { 0, 800000 }; /* at most .8 secs */
 	int iterator = 0;
 	int err;
@@ -537,7 +537,7 @@ static void native_blitbuffer(void *handle, const void *dataptr, int bytes_to_wr
 
 	assert( fd >= 0 );
 
-	for(iterator = bytes_to_write; iterator > 0; ) {
+	for(iterator = bytesToWrite; iterator > 0; ) {
 		FD_ZERO(&dsp_fd_set);
 		FD_SET(fd, &dsp_fd_set);
 
@@ -555,10 +555,10 @@ static void native_blitbuffer(void *handle, const void *dataptr, int bytes_to_wr
 		}
 
 		assert(iterator > 0);
-		assert(iterator <= bytes_to_write);
+		assert(iterator <= bytesToWrite);
 
 		err = write(fd,
-			    (const char *) dataptr + bytes_to_write - iterator,
+			    (const char *) dataptr + bytesToWrite - iterator,
 			    iterator);
 
 		if(err < 0) {
@@ -577,7 +577,7 @@ static void native_blitbuffer(void *handle, const void *dataptr, int bytes_to_wr
 }
 
 static int set_fd(int dsp_fd, ALboolean readable,
-		     ALuint *bufsiz,
+		     ALuint *deviceBufferSizeInBytes,
 		     ALuint *fmt,
 		     ALuint *speed,
 		     ALuint *channels)
@@ -589,14 +589,14 @@ static int set_fd(int dsp_fd, ALboolean readable,
 	}
 
 #ifdef DEBUG
-	fprintf( stderr, "set_fd in: bufsiz %d fmt 0x%x speed %d channels %d\n",
-		 *bufsiz, *fmt, *speed, *channels );
+	fprintf( stderr, "set_fd in: deviceBufferSizeInBytes %d fmt 0x%x speed %d channels %d\n",
+		 *deviceBufferSizeInBytes, *fmt, *speed, *channels );
 #endif
 
 
 #if 0 /* This code breaks 4Front's commercial drivers. Just say no. --ryan. */
 {
-	int divisor = DONTCARE | _alSpot( *bufsiz );
+	int divisor = DONTCARE | _alSpot( *deviceBufferSizeInBytes );
 	if( ioctl(dsp_fd, SNDCTL_DSP_SETFRAGMENT, &divisor ) < 0) {
 #ifdef DEBUG
 		perror("ioctl SETFRAGMENT");
@@ -670,21 +670,21 @@ static int set_fd(int dsp_fd, ALboolean readable,
 #endif
 		}
 
-		/* set bufsiz correctly */
+		/* set deviceBufferSizeInBytes correctly */
 
-		*bufsiz = info.fragsize;
+		*deviceBufferSizeInBytes = info.fragsize;
 
 #ifdef DEBUG
-		if( *bufsiz & (*bufsiz - 1) ) {
-			fprintf( stderr, "Non power-of-two bufsiz %d\n",
-				*bufsiz );
+		if( *deviceBufferSizeInBytes & (*deviceBufferSizeInBytes - 1) ) {
+			fprintf( stderr, "Non power-of-two deviceBufferSizeInBytes %d\n",
+				*deviceBufferSizeInBytes );
 		}
 #endif
 	}
 
 #ifdef DEBUG
-	fprintf( stderr, "set_fd out: bufsiz %d fmt 0x%x speed %d channels %d\n",
-		 *bufsiz, *fmt, *speed, *channels );
+	fprintf( stderr, "set_fd out: deviceBufferSizeInBytes %d fmt 0x%x speed %d channels %d\n",
+		 *deviceBufferSizeInBytes, *fmt, *speed, *channels );
 #endif
 
 	return 0;

@@ -34,9 +34,6 @@ void alcBackendOpenNative_ (UNUSED(ALC_OpenMode mode), UNUSED(ALC_BackendOps **o
 #include <sys/types.h>
 #include <unistd.h>
 
-/* is this right? */
-#define _AL_DEF_BUFSIZ _ALC_DEF_BUFSIZ
-
 #include "al_main.h"
 #include "al_debug.h"
 #include "alc/alc_context.h"
@@ -123,7 +120,7 @@ static int AL2BSDFMT(int fmt)
  */
 static void *grab_write_native(void) {
 	const char *dsppath = "/dev/dsp";
-	int divisor = _alSpot(_AL_DEF_BUFSIZ) | (2<<16);
+	int divisor = _alSpot(ALC_DEFAULT_DEVICE_BUFFER_SIZE_IN_BYTES) | (2<<16);
 
 	dsp_fd = open(dsppath, O_WRONLY | O_NONBLOCK);
 
@@ -169,7 +166,7 @@ static int grab_mixerfd(void) {
 	return -1;
 }
 
-static void native_blitbuffer(void *handle, const void *dataptr, int bytes_to_write) {
+static void native_blitbuffer(void *handle, const void *dataptr, int bytesToWrite) {
 	struct timeval tv = { 1, 0 }; /* wait 1 sec max */
 	int iterator = 0;
 	int err;
@@ -181,7 +178,7 @@ static void native_blitbuffer(void *handle, const void *dataptr, int bytes_to_wr
 
 	fd = *(int *) handle;
 
-	for(iterator = bytes_to_write; iterator > 0; ) {
+	for(iterator = bytesToWrite; iterator > 0; ) {
 		if(select(fd + 1, NULL, &dsp_fd_set, NULL, &tv) == 0) {
 			/* timeout occured, don't try and write */
 #ifdef DEBUG_MAXIMUS
@@ -194,10 +191,10 @@ static void native_blitbuffer(void *handle, const void *dataptr, int bytes_to_wr
 		FD_SET(fd, &dsp_fd_set);
 
 		assert(iterator > 0);
-		assert(iterator <= bytes_to_write);
+		assert(iterator <= bytesToWrite);
 
 		err = write(fd,
-			    (char *) dataptr + bytes_to_write - iterator,
+			    (char *) dataptr + bytesToWrite - iterator,
 			    iterator);
 		if(err < 0) {
 #ifdef DEBUG_MAXIMUS
@@ -323,13 +320,13 @@ static void resume_nativedevice(void *handle) {
 
 static ALsizei capture_nativedevice(UNUSED(void *handle),
 			  UNUSED(void *capture_buffer),
-			  UNUSED(int bufsiz)) {
+			  UNUSED(int bytesToRead)) {
 	/* unimplemented */
 	return 0;
 }
 
 static ALboolean set_write_native(UNUSED(void *handle),
-				  UNUSED(unsigned int *bufsiz),
+				  UNUSED(unsigned int *deviceBufferSizeInBytes),
 				  ALenum *fmt,
 				  unsigned int *speed) {
 	ALuint channels = _alGetChannelsFromFormat(*fmt);
@@ -379,18 +376,18 @@ static ALboolean set_write_native(UNUSED(void *handle),
 }
 
 static ALboolean set_read_native(UNUSED(void *handle),
-				 UNUSED(unsigned int *bufsiz),
+				 UNUSED(unsigned int *deviceBufferSizeInBytes),
 				 UNUSED(ALenum *fmt),
 				 UNUSED(unsigned int *speed)) {
 	return AL_FALSE;
 }
 
 static ALboolean
-alcBackendSetAttributesNative_(void *handle, ALuint *bufsiz, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesNative_(void *handle, ALuint *deviceBufferSizeInBytes, ALenum *fmt, ALuint *speed)
 {
 	return bsdMode == ALC_OPEN_INPUT_ ?
-		set_read_native(handle, bufsiz, fmt, speed) :
-		set_write_native(handle, bufsiz, fmt, speed);
+		set_read_native(handle, deviceBufferSizeInBytes, fmt, speed) :
+		set_write_native(handle, deviceBufferSizeInBytes, fmt, speed);
 }
 
 static void *grab_read_native(void)
