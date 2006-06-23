@@ -27,6 +27,7 @@
 #endif
 
 #include "al_debug.h"
+#include "al_dlopen.h"
 #include "al_types.h"
 #include "al_main.h"
 #include "al_buffer.h"
@@ -92,6 +93,8 @@ static AL_extension exts[] = {
 ALboolean _alInit( void ) {
 	ALboolean err;
 	ALuint i;
+
+	alDLInit_ ();
 
 	for(i = 0; i < _ALC_MAX_CHANNELS; i++) {
 		f_buffers.data[i]   = NULL;
@@ -197,7 +200,7 @@ void _alExit( void ) {
 	BUILTIN_EXT_MP3_FINI;
 	BUILTIN_EXT_VORBIS_FINI;
 
-	return;
+	alDLExit_ ();
 }
 
 /*

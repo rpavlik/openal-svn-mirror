@@ -21,10 +21,7 @@
 #include "al_debug.h"
 
 #include "al_mutexlib.h"
-
-#ifdef USE_DLOPEN
-#include <dlfcn.h>
-#endif
+#include "al_dlopen.h"
 
 /*
  * Maximum length of an extension function name.
@@ -386,13 +383,10 @@ void *
 alGetProcAddress( const ALchar *funcName )
 {
 	AL_funcPtr value = NULL;
-	if (getStandardProcAddress(&value, funcName) == AL_TRUE) {
-		return (void *)value; /* NOTE: The cast is not valid ISO C! */
+	if ((getStandardProcAddress(&value, funcName) == AL_FALSE) &&
+            (_alGetExtensionProcAddress(&value, funcName) == AL_FALSE)) {
+		    _alDCSetError( AL_INVALID_VALUE );
 	}
-	if (_alGetExtensionProcAddress(&value, funcName) == AL_TRUE) {
-		return (void *)value; /* NOTE: The cast is not valid ISO C! */
-	}
-	_alDCSetError( AL_INVALID_VALUE );
 	return (void *)value; /* NOTE: The cast is not valid ISO C! */
 }
 
@@ -419,8 +413,7 @@ ALboolean _alRegisterExtension( const ALubyte *name, AL_funcPtr addr ) {
 	_alUnlockExtension();
 	etree = temp;
 
-	_alDebug(ALD_EXT, __FILE__, __LINE__,
-		 "registered %s at %p", name, (void*)addr);
+	_alDebug(ALD_EXT, __FILE__, __LINE__, "registered %s", name);
 
 	return AL_TRUE;
 }
@@ -594,28 +587,28 @@ static enode_t *get_node( enode_t *treehead, const ALchar *name ) {
  *         can actually call it.
  */
 ALboolean _alLoadDL( const char *fname ) {
-	void *handle;
+	AL_DLHandle handle;
 	AL_extension *ext_table;
 	static void (*init_func)( void );
 	static void (*fini_func)( void );
 	int i;
 
-	handle = dlopen( fname, RTLD_GLOBAL | RTLD_NOW );
-	if(handle == NULL) {
+	handle = alDLOpen_ ( fname );
+	if(handle == (AL_DLHandle)0) {
 		_alDebug(ALD_EXT, __FILE__, __LINE__,
-			"Could not load %s:\n\t%s", fname, dlerror());
+			"Could not load %s:\n\t%s", fname, alDLError_ ());
 		return AL_FALSE;
 	}
 
-	ext_table = dlsym(handle, LAL_EXT_TABLE_STR);
+	ext_table = (AL_extension *) alDLDataSym_ (handle, LAL_EXT_TABLE_STR);
 	if(ext_table == NULL) {
 		_alDebug(ALD_EXT, __FILE__, __LINE__,
 			"%s has no extension table.", fname);
 		return AL_FALSE;
 	}
 
-	init_func = (void (*)(void)) dlsym(handle, LAL_EXT_INIT_STR);
-	fini_func = (void (*)(void)) dlsym(handle, LAL_EXT_FINI_STR);
+	init_func = (void (*)(void)) alDLFunSym_ (handle, LAL_EXT_INIT_STR);
+	fini_func = (void (*)(void)) alDLFunSym_ (handle, LAL_EXT_FINI_STR);
 
 	for( i = 0; (ext_table[i].name != NULL) &&
 		    (ext_table[i].addr != NULL); i++) {

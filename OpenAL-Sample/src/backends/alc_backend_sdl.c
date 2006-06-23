@@ -28,10 +28,7 @@ alcBackendOpenSDL_ (UNUSED(ALC_OpenMode mode), UNUSED(ALC_BackendOps **ops),
 #include "al_debug.h"
 #include "al_main.h"
 #include "alc/alc_context.h"
-
-#ifdef OPENAL_DLOPEN_SDL
-#include <dlfcn.h>
-#endif
+#include "al_dlopen.h"
 
 
 #define DEF_SPEED	_ALC_CANON_SPEED
@@ -68,44 +65,44 @@ static void SDLCALL (*pSDL_UnlockAudio)(void);
 /*
  * sdl library handle.
  */
-static void * sdl_lib_handle = NULL;
+static AL_DLHandle sdl_lib_handle = (AL_DLHandle) 0;
 
 static int openal_load_sdl_library(void)
 {
 #ifdef OPENAL_DLOPEN_SDL
-        char * error = NULL;
+        const char *error = NULL;
 #endif
     
-	if (sdl_lib_handle != NULL)
+	if (sdl_lib_handle != (AL_DLHandle) 0)
 		return 1;  /* already loaded. */
 
 	#ifdef OPENAL_DLOPEN_SDL
-		#define OPENAL_LOAD_SDL_SYMBOL(x) p##x = dlsym(sdl_lib_handle, #x); \
-                                                   error = dlerror(); \
+		#define OPENAL_LOAD_SDL_SYMBOL(t, x) p##x = t alDLFunSym_(sdl_lib_handle, #x); \
+                                                   error = alDLError_(); \
                                                    if (p##x == NULL) { \
                                                            fprintf(stderr,"Could not resolve SDL symbol %s: %s\n", #x, ((error!=NULL)?(error):("(null)"))); \
-                                                           dlclose(sdl_lib_handle); sdl_lib_handle = NULL; \
+                                                           alDLClose_(sdl_lib_handle); sdl_lib_handle = (AL_DLHandle) 0; \
                                                            return 0; }
-                dlerror(); /* clear error state */
-		sdl_lib_handle = dlopen("libSDL.so", RTLD_LAZY | RTLD_GLOBAL);
-                error = dlerror();
-		if (sdl_lib_handle == NULL) {
+                alDLError_(); /* clear error state */
+		sdl_lib_handle = alDLOpen_("libSDL.so");
+                error = alDLError_();
+		if (sdl_lib_handle == (AL_DLHandle) 0) {
                         fprintf(stderr,"Could not open SDL library: %s\n",((error!=NULL)?(error):("(null)")));
 			return 0;
                 }
 	#else
-		#define OPENAL_LOAD_SDL_SYMBOL(x) p##x = x;
-		sdl_lib_handle = (void *) 0xF00DF00D;
+		#define OPENAL_LOAD_SDL_SYMBOL(t, x) p##x = x;
+		sdl_lib_handle = (AL_DLHandle *) 0xF00DF00D;
 	#endif
 
-        OPENAL_LOAD_SDL_SYMBOL(SDL_Delay);
-        OPENAL_LOAD_SDL_SYMBOL(SDL_PauseAudio);
-        OPENAL_LOAD_SDL_SYMBOL(SDL_CloseAudio);
-        OPENAL_LOAD_SDL_SYMBOL(SDL_OpenAudio);
-        OPENAL_LOAD_SDL_SYMBOL(SDL_Init);
-        OPENAL_LOAD_SDL_SYMBOL(SDL_GetError);
-        OPENAL_LOAD_SDL_SYMBOL(SDL_LockAudio);
-        OPENAL_LOAD_SDL_SYMBOL(SDL_UnlockAudio);
+	OPENAL_LOAD_SDL_SYMBOL ( (void SDLCALL (*)(Uint32)), SDL_Delay );
+	OPENAL_LOAD_SDL_SYMBOL ( (void SDLCALL (*)(int)), SDL_PauseAudio );
+	OPENAL_LOAD_SDL_SYMBOL ( (void SDLCALL (*)(void)), SDL_CloseAudio );
+	OPENAL_LOAD_SDL_SYMBOL ( (int SDLCALL (*)(SDL_AudioSpec *, SDL_AudioSpec *)), SDL_OpenAudio );
+	OPENAL_LOAD_SDL_SYMBOL ( (int SDLCALL (*)(Uint32)), SDL_Init );
+	OPENAL_LOAD_SDL_SYMBOL ( (char* SDLCALL (*)(void)), SDL_GetError );
+	OPENAL_LOAD_SDL_SYMBOL ( (void SDLCALL (*)(void)), SDL_LockAudio );
+	OPENAL_LOAD_SDL_SYMBOL ( (void SDLCALL (*)(void)), SDL_UnlockAudio );
 
 	return 1;
 }

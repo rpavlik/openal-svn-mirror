@@ -18,10 +18,9 @@
 
 #include "al_ext_needed.h"
 #include "al_ext_vorbis.h"
-
+#include "al_debug.h"
 #include "al_buffer.h"
 #include "al_ext.h"
-
 #include "alc/alc_context.h"
 
 #define MAX_VORBIS 64
@@ -29,10 +28,7 @@
 #ifdef ENABLE_EXTENSION_AL_EXT_VORBIS
 #include <vorbis/vorbisfile.h>
 
-#ifdef OPENAL_DLOPEN_VORBIS
-#include <dlfcn.h>
-#endif
-
+#include "al_dlopen.h"
 
 static size_t ovfd_read(void *ptr, size_t size, size_t nmemb, void *datasource);
 static int ovfd_seek(void *datasource, int64_t offset, int whence);
@@ -131,49 +127,59 @@ static int openal_load_vorbisfile_library(void);
  * vorbisfile library functions.
  */
 static int (*pov_clear)(OggVorbis_File *vf);
-static int (*pov_open_callbacks)(void *datasource, OggVorbis_File *vf,
-		char *initial, long ibytes, ov_callbacks callbacks);
-static vorbis_info* (*pov_info)(OggVorbis_File *vf,int link);
-static long (*pov_read)(OggVorbis_File *vf,char *buffer,int length,
-		    int bigendianp,int word,int sgned,int *bitstream);
+static int (*pov_open_callbacks)(void *datasource, OggVorbis_File *vf, char *initial, long ibytes, ov_callbacks callbacks);
+static vorbis_info *(*pov_info)(OggVorbis_File *vf, int link);
+static long (*pov_read)(OggVorbis_File *vf, char *buffer, int length, int bigendianp, int word, int sgned, int *bitstream);
 
-/*
- * vorbisfile library handle.
- */
-static void * vorbisfile_lib_handle = NULL;
+#define VORBISFILE_LIBRARY "libvorbisfile.so"
+
+#ifdef OPENAL_DLOPEN_VORBIS
+#define myDlopen(n) alDLOpen_(n)
+#define myDlerror() alDLError_()
+#define myDlsym(h,t,s) (t alDLFunSym_(h,#s))
+#define myDlclose(h) alDLClose_(h)
+#else
+#define myDlopen(n) ((AL_DLHandle)0xF00DF00D)
+#define myDlerror() ""
+#define myDlsym(h,t,s) (&s)
+#define myDlclose(h)
+#endif
+
+#define OPENAL_LOAD_VORBISFILE_SYMBOL(h,t,s)		\
+  p##s = myDlsym(h, t, s);			\
+  if (p##s == NULL) \
+    { \
+      _alDebug (ALD_CONTEXT, __FILE__, __LINE__, \
+                "could not resolve symbol '%s': %s", \
+                #s, myDlerror ()); \
+      myDlclose (h); \
+      h = NULL; \
+      return 0; \
+    }
 
 static int openal_load_vorbisfile_library(void)
 {
-#ifdef OPENAL_DLOPEN_VORBIS
-        char * error = NULL;
-#endif
+	static AL_DLHandle handle = (AL_DLHandle)0;
     
-	if (vorbisfile_lib_handle != NULL)
-		return 1;  /* already loaded. */
+	/* already loaded? */
+	if (handle != (AL_DLHandle)0)
+		return 1;
 
-	#ifdef OPENAL_DLOPEN_VORBIS
-		#define OPENAL_LOAD_VORBISFILE_SYMBOL(x) p##x = dlsym(vorbisfile_lib_handle, #x); \
-                                                   error = dlerror(); \
-                                                   if (p##x == NULL) { \
-                                                           fprintf(stderr,"Could not resolve vorbisfile symbol %s: %s\n", #x, ((error!=NULL)?(error):("(null)"))); \
-                                                           dlclose(vorbisfile_lib_handle); vorbisfile_lib_handle = NULL; \
-                                                           return 0; }
-                dlerror(); /* clear error state */
-		vorbisfile_lib_handle = dlopen("libvorbisfile.so", RTLD_LAZY | RTLD_GLOBAL);
-                error = dlerror();
-		if (vorbisfile_lib_handle == NULL) {
-                        fprintf(stderr,"Could not open vorbisfile library: %s\n",((error!=NULL)?(error):("(null)")));
+	/* clear error state */
+	(void) myDlerror ();
+
+	handle = myDlopen (VORBISFILE_LIBRARY);
+	if (handle == (AL_DLHandle) 0)
+		{
+			_alDebug (ALD_CONTEXT, __FILE__, __LINE__,
+				  "could not open '%s': %s", VORBISFILE_LIBRARY, myDlerror ());
 			return 0;
-                }
-	#else
-		#define OPENAL_LOAD_VORBISFILE_SYMBOL(x) p##x = x;
-		vorbisfile_lib_handle = (void *) 0xF00DF00D;
-	#endif
+		}
 
-        OPENAL_LOAD_VORBISFILE_SYMBOL(ov_clear);
-        OPENAL_LOAD_VORBISFILE_SYMBOL(ov_open_callbacks);
-        OPENAL_LOAD_VORBISFILE_SYMBOL(ov_info);
-        OPENAL_LOAD_VORBISFILE_SYMBOL(ov_read);
+	OPENAL_LOAD_VORBISFILE_SYMBOL(handle, (int (*)(OggVorbis_File*)), ov_clear);
+	OPENAL_LOAD_VORBISFILE_SYMBOL(handle, (int (*)(void*, OggVorbis_File*, char*, long, ov_callbacks)), ov_open_callbacks);
+	OPENAL_LOAD_VORBISFILE_SYMBOL(handle, (vorbis_info *(*)(OggVorbis_File*, int)), ov_info);
+	OPENAL_LOAD_VORBISFILE_SYMBOL(handle, (long (*)(OggVorbis_File*, char*, int, int, int, int, int*)), ov_read);
 
 	return 1;
 }

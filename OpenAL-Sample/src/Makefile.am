@@ -17,6 +17,8 @@ libopenal_la_SOURCES =			\
 	al_debug.h			\
 	al_distance.c			\
 	al_distance.h			\
+	al_dlopen.c			\
+	al_dlopen.h			\
 	al_error.c			\
 	al_error.h			\
 	al_ext.c			\

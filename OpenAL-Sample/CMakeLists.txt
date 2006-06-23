@@ -61,6 +61,7 @@ SET(AL_OBJS              src/al_bpool.c
                          src/al_buffer.c
                          src/config/al_config.c
                          src/al_distance.c
+                         src/al_dlopen.c
                          src/al_error.c
                          src/al_ext.c
                          src/al_filter.c

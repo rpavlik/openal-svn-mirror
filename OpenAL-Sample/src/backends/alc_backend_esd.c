@@ -61,21 +61,21 @@ static int (*pesd_close) (int esd);
 static int (*pesd_standby) (int esd);
 static int (*pesd_resume) (int esd);
 
+#include "al_dlopen.h"
 #ifdef OPENAL_DLOPEN_ESD
-#include <dlfcn.h>
-#define myDlopen(n,f) dlopen((n),(f))
-#define myDlerror() dlerror()
-#define myDlsym(h,s) dlsym((h),#s)
-#define myDlclose(h) dlclose(h)
+#define myDlopen(n) alDLOpen_(n)
+#define myDlerror() alDLError_()
+#define myDlsym(h,t,s) (t alDLFunSym_(h,#s))
+#define myDlclose(h) alDLClose_(h)
 #else
-#define myDlopen(n,f) ((void *)0xF00DF00D)
+#define myDlopen(n) ((AL_DLHandle)0xF00DF00D)
 #define myDlerror() ""
-#define myDlsym(h,s) (&s)
+#define myDlsym(h,t,s) (&s)
 #define myDlclose(h)
 #endif
 
-#define OPENAL_LOAD_ESD_SYMBOL(h,s)  \
-  p##s = myDlsym(h, s); \
+#define OPENAL_LOAD_ESD_SYMBOL(h,t,s)		\
+  p##s = myDlsym(h, t, s);			\
   if (p##s == NULL) \
     { \
       _alDebug (ALD_CONTEXT, __FILE__, __LINE__, \
@@ -89,10 +89,10 @@ static int (*pesd_resume) (int esd);
 static int
 loadLibraryESD (void)
 {
-  static void *handle = NULL;
+  static AL_DLHandle handle = (AL_DLHandle) 0;
 
   /* already loaded? */
-  if (handle != NULL)
+  if (handle != (AL_DLHandle) 0)
     {
       return 1;
     }
@@ -100,19 +100,19 @@ loadLibraryESD (void)
   /* clear error state */
   (void) myDlerror ();
 
-  handle = myDlopen (ESD_LIBRARY, RTLD_LAZY | RTLD_GLOBAL);
-  if (handle == NULL)
+  handle = myDlopen (ESD_LIBRARY);
+  if (handle == (AL_DLHandle) 0)
     {
       _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
                 "could not open '%s': %s", ESD_LIBRARY, myDlerror ());
       return 0;
     }
 
-  OPENAL_LOAD_ESD_SYMBOL (handle, esd_play_stream);
-  OPENAL_LOAD_ESD_SYMBOL (handle, esd_record_stream);
-  OPENAL_LOAD_ESD_SYMBOL (handle, esd_close);
-  OPENAL_LOAD_ESD_SYMBOL (handle, esd_standby);
-  OPENAL_LOAD_ESD_SYMBOL (handle, esd_resume);
+  OPENAL_LOAD_ESD_SYMBOL (handle, (int (*) (esd_format_t, int, const char *, const char *)), esd_play_stream);
+  OPENAL_LOAD_ESD_SYMBOL (handle, (int (*) (esd_format_t, int, const char *, const char *)), esd_record_stream);
+  OPENAL_LOAD_ESD_SYMBOL (handle, (int (*) (int)), esd_close);
+  OPENAL_LOAD_ESD_SYMBOL (handle, (int (*) (int)), esd_standby);
+  OPENAL_LOAD_ESD_SYMBOL (handle, (int (*) (int)), esd_resume);
 
   _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
             "%s successfully loaded", ESD_LIBRARY);

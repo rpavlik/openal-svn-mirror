@@ -32,10 +32,7 @@ alcBackendOpenARts_ (UNUSED(ALC_OpenMode mode), UNUSED(ALC_BackendOps **ops),
 #include <sys/types.h>
 #include <unistd.h>
 #include <artsc.h>
-
-#ifdef OPENAL_DLOPEN_ARTS
-#include <dlfcn.h>
-#endif
+#include "al_dlopen.h"
 
 #include "al_main.h"
 #include "al_debug.h"
@@ -70,51 +67,63 @@ static int (*parts_write)(arts_stream_t stream, const void *buffer, int count);
 static int (*parts_stream_set)(arts_stream_t stream, arts_parameter_t param, int value);
 static int (*parts_stream_get)(arts_stream_t stream, arts_parameter_t param);
 
-/*
- * aRts library handle.
- */
-static void * arts_lib_handle = NULL;
+#define ARTS_LIBRARY "libartsc.so"
+
+#ifdef OPENAL_DLOPEN_ARTS
+#define myDlopen(n) alDLOpen_(n)
+#define myDlerror() alDLError_()
+#define myDlsym(h,t,s) (t alDLFunSym_(h,#s))
+#define myDlclose(h) alDLClose_(h)
+#else
+#define myDlopen(n) ((AL_DLHandle)0xF00DF00D)
+#define myDlerror() ""
+#define myDlsym(h,t,s) (&s)
+#define myDlclose(h)
+#endif
+
+#define OPENAL_LOAD_ARTS_SYMBOL(h,t,s)		\
+  p##s = myDlsym(h, t, s);			\
+  if (p##s == NULL) \
+    { \
+      _alDebug (ALD_CONTEXT, __FILE__, __LINE__, \
+                "could not resolve symbol '%s': %s", \
+                #s, myDlerror ()); \
+      myDlclose (h); \
+      h = NULL; \
+      return 0; \
+    }
 
 static int openal_load_arts_library(void)
 {
-#ifdef OPENAL_DLOPEN_ARTS
-        char * error = NULL;
-#endif
+	static AL_DLHandle handle = (AL_DLHandle)0;
     
-	if (arts_lib_handle != NULL)
-		return 1;  /* already loaded. */
+	/* already loaded? */
+	if (handle != (AL_DLHandle)0)
+		return 1;
 
-	#ifdef OPENAL_DLOPEN_ARTS
-		#define OPENAL_LOAD_ARTS_SYMBOL(x) p##x = dlsym(arts_lib_handle, #x); \
-                                                   error = dlerror(); \
-                                                   if (p##x == NULL) { \
-                                                           fprintf(stderr,"Could not resolve aRts symbol %s: %s\n", #x, ((error!=NULL)?(error):("(null)"))); \
-                                                           dlclose(arts_lib_handle); arts_lib_handle = NULL; \
-                                                           return 0; }
-                dlerror(); /* clear error state */
-		arts_lib_handle = dlopen("libartsc.so", RTLD_LAZY | RTLD_GLOBAL);
-                error = dlerror();
-		if (arts_lib_handle == NULL) {
-                        fprintf(stderr,"Could not open aRts library: %s\n",((error!=NULL)?(error):("(null)")));
+	/* clear error state */
+	(void) myDlerror ();
+
+	handle = myDlopen (ARTS_LIBRARY);
+	if (handle == (AL_DLHandle) 0)
+		{
+			_alDebug (ALD_CONTEXT, __FILE__, __LINE__,
+				  "could not open '%s': %s", ARTS_LIBRARY, myDlerror ());
 			return 0;
-                }
-	#else
-		#define OPENAL_LOAD_ARTS_SYMBOL(x) p##x = x;
-		arts_lib_handle = (void *) 0xF00DF00D;
-	#endif
+		}
 
-        OPENAL_LOAD_ARTS_SYMBOL(arts_init);
-        OPENAL_LOAD_ARTS_SYMBOL(arts_free);
-        OPENAL_LOAD_ARTS_SYMBOL(arts_suspend);
-        OPENAL_LOAD_ARTS_SYMBOL(arts_suspended);
-        OPENAL_LOAD_ARTS_SYMBOL(arts_error_text);
-        OPENAL_LOAD_ARTS_SYMBOL(arts_play_stream);
-        OPENAL_LOAD_ARTS_SYMBOL(arts_record_stream);
-        OPENAL_LOAD_ARTS_SYMBOL(arts_close_stream);
-        OPENAL_LOAD_ARTS_SYMBOL(arts_read);
-        OPENAL_LOAD_ARTS_SYMBOL(arts_write);
-        OPENAL_LOAD_ARTS_SYMBOL(arts_stream_set);
-        OPENAL_LOAD_ARTS_SYMBOL(arts_stream_get);
+	OPENAL_LOAD_ARTS_SYMBOL(handle, (int (*)(void)), arts_init);
+	OPENAL_LOAD_ARTS_SYMBOL(handle, (void (*)(void)), arts_free);
+	OPENAL_LOAD_ARTS_SYMBOL(handle, (int (*)(void)), arts_suspend);
+	OPENAL_LOAD_ARTS_SYMBOL(handle, (int (*)(void)), arts_suspended);
+	OPENAL_LOAD_ARTS_SYMBOL(handle, (const char *(*)(int)), arts_error_text);
+	OPENAL_LOAD_ARTS_SYMBOL(handle, (arts_stream_t (*)(int, int, int, const char*)), arts_play_stream);
+	OPENAL_LOAD_ARTS_SYMBOL(handle, (arts_stream_t (*)(int, int, int, const char*)), arts_record_stream);
+	OPENAL_LOAD_ARTS_SYMBOL(handle, (void (*)(arts_stream_t)), arts_close_stream);
+	OPENAL_LOAD_ARTS_SYMBOL(handle, (int (*)(arts_stream_t, void*, int)), arts_read);
+	OPENAL_LOAD_ARTS_SYMBOL(handle, (int (*)(arts_stream_t, const void*, int)), arts_write);
+	OPENAL_LOAD_ARTS_SYMBOL(handle, (int (*)(arts_stream_t, arts_parameter_t, int)), arts_stream_set);
+	OPENAL_LOAD_ARTS_SYMBOL(handle, (int (*)(arts_stream_t, arts_parameter_t)), arts_stream_get);
 
 	return 1;
 }
