@@ -1,3 +1,7 @@
+2006-06-26  Sven Panne  <sven.panne@aedion.de>
+
+	* admin/autotools/.indent.pro: Added ALSA types.
+
 2006-06-23  Sven Panne  <sven.panne@aedion.de>
 
 	* CMakeLists.txt, src/Makefile.am, src/al_ext.c, src/al_main.c,

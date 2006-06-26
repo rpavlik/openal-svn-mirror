@@ -37,6 +37,9 @@
 -T ALCdevice
 -T ALCcontext
 
+/* ALSA types */
+-T snd_pcm_t
+
 /* Our own internal types */
 -T ALC_Backend
 -T ALC_BackendOps
