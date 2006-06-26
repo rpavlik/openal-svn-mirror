@@ -1657,6 +1657,11 @@ alCaptureInit_EXT( UNUSED(ALenum format), ALuint rate, ALsizei UNUSED(bufferSize
 			snprintf(spec, sizeof(spec), fmt, rate);
 			capture_device = alcOpenDevice((ALchar *)spec);
 			if ( capture_device ) {
+
+				/* This is a hack... */
+				capture_device->format = format;
+				capture_device->bufferSizeInBytes = bufferSize;
+
 				_alcSetContext(NULL, cid, capture_device);
 				alcDeviceSet_(capture_device);
 			}

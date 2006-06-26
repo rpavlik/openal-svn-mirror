@@ -1,5 +1,9 @@
 2006-06-26  Sven Panne  <sven.panne@aedion.de>
 
+	* src/alc/alc_context.c: Passed format and buffer size to capture
+	backend in a slightly hacky way. The capturing part really needs a
+	rewrite.
+
 	* admin/autotools/.indent.pro: Added ALSA types.
 
 2006-06-23  Sven Panne  <sven.panne@aedion.de>
