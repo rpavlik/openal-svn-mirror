@@ -1,5 +1,9 @@
 2006-06-26  Sven Panne  <sven.panne@aedion.de>
 
+	* src/backends/alc_backend_alsa.c: Reworked ALSA backend even more,
+	simplifying and cleaning it up quite a bit. Both playback and capture
+	should work again.
+
 	* src/alc/alc_context.c: Passed format and buffer size to capture
 	backend in a slightly hacky way. The capturing part really needs a
 	rewrite.
