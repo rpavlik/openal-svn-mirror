@@ -3,7 +3,7 @@
 	* src/backends/alc_backend_alsa.c: Renamed structure holding ALSA data
 	to something more consistent. Removed some debugging output which
 	belongs somewhere else. Close ALSA device when we run out of memory in
-	the "open" operation.
+	the "open" operation. Cleaned up private data type and casts.
 
 	* src/config/al_rctree.h: Make the header self-contained.
 

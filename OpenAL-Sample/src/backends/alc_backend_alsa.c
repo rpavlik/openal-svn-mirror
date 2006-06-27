@@ -186,9 +186,9 @@ ok (int error, const char *message)
 }
 
 static void
-closeALSA (void *privateData)
+closeALSA (ALC_BackendPrivateData *privateData)
 {
-  struct alsaData *ad = privateData;
+  struct alsaData *ad = (struct alsaData *) privateData;
   ok (psnd_pcm_close (ad->pcmHandle), "close");
   free (ad);
 }
@@ -212,10 +212,10 @@ convertFormatALToALSA (ALenum format)
 }
 
 static ALboolean
-setAttributesALSA (void *privateData, ALuint *bufferSizeInBytes,
-                   ALenum *format, ALuint *speed)
+setAttributesALSA (ALC_BackendPrivateData *privateData,
+                   ALuint *bufferSizeInBytes, ALenum *format, ALuint *speed)
 {
-  struct alsaData *ad = privateData;
+  struct alsaData *ad = (struct alsaData *) privateData;
   unsigned int periods = 2;
   snd_pcm_hw_params_t *p = NULL;
   ALboolean allOK;
@@ -281,9 +281,10 @@ setAttributesALSA (void *privateData, ALuint *bufferSizeInBytes,
 }
 
 static void
-writeALSA (void *privateData, const void *data, int bytesToWrite)
+writeALSA (ALC_BackendPrivateData *privateData, const void *data,
+           int bytesToWrite)
 {
-  struct alsaData *ad = privateData;
+  struct alsaData *ad = (struct alsaData *) privateData;
   const char *pdata = data;
   snd_pcm_uframes_t numFramesToWrite =
     (snd_pcm_uframes_t) bytesToWrite / ad->frameSizeInBytes;
@@ -332,9 +333,9 @@ writeALSA (void *privateData, const void *data, int bytesToWrite)
 
 /* capture data from the audio device */
 static ALsizei
-readALSA (void *privateData, void *data, int bytesToRead)
+readALSA (ALC_BackendPrivateData *privateData, void *data, int bytesToRead)
 {
-  struct alsaData *ad = privateData;
+  struct alsaData *ad = (struct alsaData *) privateData;
   char *captureData = data;
   snd_pcm_uframes_t numFramesToRead =
     (snd_pcm_uframes_t) bytesToRead / ad->frameSizeInBytes;
@@ -372,24 +373,25 @@ readALSA (void *privateData, void *data, int bytesToRead)
 }
 
 static void
-pauseALSA (UNUSED (void *privateData))
+pauseALSA (UNUSED (ALC_BackendPrivateData *privateData))
 {
 }
 
 static void
-resumeALSA (UNUSED (void *privateData))
+resumeALSA (UNUSED (ALC_BackendPrivateData *privateData))
 {
 }
 
 static ALfloat
-getAudioChannelALSA (UNUSED (void *privateData), UNUSED (ALuint channel))
+getAudioChannelALSA (UNUSED (ALC_BackendPrivateData *privateData),
+                     UNUSED (ALuint channel))
 {
   return 0.0;
 }
 
 static int
-setAudioChannelALSA (UNUSED (void *privateData), UNUSED (ALuint channel),
-                     UNUSED (ALfloat volume))
+setAudioChannelALSA (UNUSED (ALC_BackendPrivateData *privateData),
+                     UNUSED (ALuint channel), UNUSED (ALfloat volume))
 {
   return 0;
 }
