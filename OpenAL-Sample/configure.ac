@@ -748,6 +748,27 @@ fi
 OPENAL_ENABLE([native BSD/OSS backend], [openal_backend_bsd_support],
               [USE_BACKEND_NATIVE_BSD], [USEBACKENDNATIVEBSD])
 
+# check for OSS backend ########################################################
+
+AC_ARG_ENABLE([oss],
+[AS_HELP_STRING([--enable-oss],
+                [enable OSS backend @<:@default=auto@:>@])])
+
+if test "x$enable_oss" = xno; then
+  openal_backend_oss_support=disabled
+else
+  AC_CHECK_HEADER([sys/soundcard.h],
+    [openal_backend_oss_support=static],
+    [openal_backend_oss_support=none
+     if test "x$enable_oss" = xyes; then
+       AC_MSG_WARN([--enable-oss ignored because the OSS header could not be found.])
+     fi],
+    [AC_INCLUDES_DEFAULT([])])
+fi
+
+OPENAL_ENABLE([OSS backend], [openal_backend_oss_support],
+              [USE_BACKEND_OSS], [USEBACKENDOSS])
+
 # check for native Darwin backend ##############################################
 
 AC_ARG_ENABLE([darwin],

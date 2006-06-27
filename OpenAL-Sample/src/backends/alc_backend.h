@@ -91,6 +91,8 @@ void alcBackendOpen_ (ALC_OpenMode mode, ALC_BackendOps **ops,
 
 /******************************************************************************/
 
+void alcBackendOpenOSS_ (ALC_OpenMode mode, ALC_BackendOps **ops,
+                         ALC_BackendPrivateData **privateData);
 void alcBackendOpenNative_ (ALC_OpenMode mode, ALC_BackendOps **ops,
                             ALC_BackendPrivateData **privateData);
 void alcBackendOpenALSA_ (ALC_OpenMode mode, ALC_BackendOps **ops,

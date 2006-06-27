@@ -55,6 +55,9 @@ struct ALC_BackendNameAndOpen
 };
 
 struct ALC_BackendNameAndOpen backends[] = {
+#ifdef USE_BACKEND_OSS
+  {"oss", alcBackendOpenOSS_},
+#endif
 #ifndef USE_BACKEND_DMEDIA
   {"native", alcBackendOpenNative_},
 #endif

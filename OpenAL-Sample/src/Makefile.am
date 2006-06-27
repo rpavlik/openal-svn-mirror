@@ -105,6 +105,11 @@ libopenal_la_SOURCES +=			\
 	backends/alc_backend_morphos.c
 endif
 
+if USEBACKENDOSS
+libopenal_la_SOURCES +=			\
+	backends/alc_backend_oss.c
+endif
+
 if USEBACKENDNATIVESOLARIS
 libopenal_la_SOURCES +=			\
 	backends/alc_backend_solaris.c
