@@ -1,5 +1,10 @@
 2006-06-27  Sven Panne  <sven.panne@aedion.de>
 
+	* src/backends/alc_backend_alsa.c: Renamed structure holding ALSA data
+	to something more consistent. Removed some debugging output which
+	belongs somewhere else. Close ALSA device when we run out of memory in
+	the "open" operation.
+
 	* src/config/al_rctree.h: Make the header self-contained.
 
 	* configure.ac, src/Makefile.am, src/backends/alc_backend.c,

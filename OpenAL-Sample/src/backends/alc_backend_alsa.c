@@ -167,7 +167,7 @@ getAPIEntriesALSA (void)
   return AL_TRUE;
 }
 
-struct alsa_info
+struct alsaData
 {
   snd_pcm_t *pcmHandle;
   unsigned int frameSizeInBytes;
@@ -188,9 +188,9 @@ ok (int error, const char *message)
 static void
 closeALSA (void *privateData)
 {
-  struct alsa_info *ai = privateData;
-  ok (psnd_pcm_close (ai->pcmHandle), "close");
-  free (ai);
+  struct alsaData *ad = privateData;
+  ok (psnd_pcm_close (ad->pcmHandle), "close");
+  free (ad);
 }
 
 static snd_pcm_format_t
@@ -215,7 +215,7 @@ static ALboolean
 setAttributesALSA (void *privateData, ALuint *bufferSizeInBytes,
                    ALenum *format, ALuint *speed)
 {
-  struct alsa_info *ai = privateData;
+  struct alsaData *ad = privateData;
   unsigned int periods = 2;
   snd_pcm_hw_params_t *p = NULL;
   ALboolean allOK;
@@ -223,22 +223,18 @@ setAttributesALSA (void *privateData, ALuint *bufferSizeInBytes,
   unsigned int numChannels;
   snd_pcm_uframes_t bufferSizeInFrames;
   unsigned int rate;
-  snd_pcm_t *h = ai->pcmHandle;;
-
-  _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
-            "setAttributesALSA: requesting buffer size in bytes %u, format 0x%x, speed: %u",
-            *bufferSizeInBytes, *format, *speed);
+  snd_pcm_t *h = ad->pcmHandle;;
 
   alsaFormat = convertFormatALToALSA (*format);
   numChannels = (unsigned int) _alGetChannelsFromFormat (*format);
-  ai->frameSizeInBytes =
+  ad->frameSizeInBytes =
     (unsigned int) snd_pcm_format_size (alsaFormat, numChannels);
-  bufferSizeInFrames = *bufferSizeInBytes / ai->frameSizeInBytes;
+  bufferSizeInFrames = *bufferSizeInBytes / ad->frameSizeInBytes;
   rate = (unsigned int) *speed;
 
   _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
             "setAttributesALSA: requesting ALSA format %u, number of channels: %u, frame size in bytes: %u, buffer size in frames: %lu, rate: %u",
-            alsaFormat, numChannels, ai->frameSizeInBytes,
+            alsaFormat, numChannels, ad->frameSizeInBytes,
             bufferSizeInFrames, rate);
 
   allOK =
@@ -269,7 +265,7 @@ setAttributesALSA (void *privateData, ALuint *bufferSizeInBytes,
 
   if (allOK)
     {
-      *bufferSizeInBytes = bufferSizeInFrames * ai->frameSizeInBytes;
+      *bufferSizeInBytes = bufferSizeInFrames * ad->frameSizeInBytes;
       *speed = rate;
       _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
                 "setAttributesALSA: using buffer size in bytes %u, speed: %u",
@@ -287,13 +283,13 @@ setAttributesALSA (void *privateData, ALuint *bufferSizeInBytes,
 static void
 writeALSA (void *privateData, const void *data, int bytesToWrite)
 {
-  struct alsa_info *ai = privateData;
+  struct alsaData *ad = privateData;
   const char *pdata = data;
   snd_pcm_uframes_t numFramesToWrite =
-    (snd_pcm_uframes_t) bytesToWrite / ai->frameSizeInBytes;
+    (snd_pcm_uframes_t) bytesToWrite / ad->frameSizeInBytes;
   while (numFramesToWrite > 0)
     {
-      int ret = psnd_pcm_writei (ai->pcmHandle, pdata, numFramesToWrite);
+      int ret = psnd_pcm_writei (ad->pcmHandle, pdata, numFramesToWrite);
       switch (ret)
         {
         case -EAGAIN:
@@ -301,7 +297,7 @@ writeALSA (void *privateData, const void *data, int bytesToWrite)
         case -ESTRPIPE:
           do
             {
-              ret = psnd_pcm_resume (ai->pcmHandle);
+              ret = psnd_pcm_resume (ad->pcmHandle);
             }
           while (ret == -EAGAIN);
           break;
@@ -316,14 +312,14 @@ writeALSA (void *privateData, const void *data, int bytesToWrite)
             }
           else
             {
-              pdata += ret * ai->frameSizeInBytes;
+              pdata += ret * ad->frameSizeInBytes;
               numFramesToWrite -= ret;
             }
           break;
         }
       if (ret < 0)
         {
-          ret = psnd_pcm_prepare (ai->pcmHandle);
+          ret = psnd_pcm_prepare (ad->pcmHandle);
           if (ret < 0)
             {
               _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
@@ -338,14 +334,14 @@ writeALSA (void *privateData, const void *data, int bytesToWrite)
 static ALsizei
 readALSA (void *privateData, void *data, int bytesToRead)
 {
-  struct alsa_info *ai = privateData;
+  struct alsaData *ad = privateData;
   char *captureData = data;
   snd_pcm_uframes_t numFramesToRead =
-    (snd_pcm_uframes_t) bytesToRead / ai->frameSizeInBytes;
+    (snd_pcm_uframes_t) bytesToRead / ad->frameSizeInBytes;
 
   do
     {
-      int ret = psnd_pcm_readi (ai->pcmHandle, captureData, numFramesToRead);
+      int ret = psnd_pcm_readi (ad->pcmHandle, captureData, numFramesToRead);
       if (ret == -EAGAIN)
         {
           return 0;
@@ -354,7 +350,7 @@ readALSA (void *privateData, void *data, int bytesToRead)
         {
           _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
                     "readALSA: overrun occurred, trying to recover.");
-          ret = psnd_pcm_prepare (ai->pcmHandle);
+          ret = psnd_pcm_prepare (ad->pcmHandle);
           if (ret < 0)
             {
               _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
@@ -370,7 +366,7 @@ readALSA (void *privateData, void *data, int bytesToRead)
                     "readALSA: error occurred: %s", psnd_strerror (ret));
           return 0;
         }
-      return ret * ai->frameSizeInBytes;
+      return ret * ad->frameSizeInBytes;
     }
   while (1);
 }
@@ -463,24 +459,34 @@ alcBackendOpenALSA_ (ALC_OpenMode mode, ALC_BackendOps **ops,
 {
   char deviceName[256];
   snd_pcm_t *pcmHandle;
-  struct alsa_info *ai;
+  struct alsaData *ad;
 
-  getALSADeviceName (deviceName, sizeof (deviceName), mode);
-
-  if (!(getAPIEntriesALSA () &&
-        ok (pcmOpen (&pcmHandle, deviceName, mode), "open") &&
-        (ai = malloc (sizeof *ai)) != NULL))
+  if (!getAPIEntriesALSA ())
     {
       *privateData = NULL;
       return;
     }
 
-  ai->pcmHandle = pcmHandle;
-  ai->frameSizeInBytes = 0;
+  getALSADeviceName (deviceName, sizeof (deviceName), mode);
+  if (!ok (pcmOpen (&pcmHandle, deviceName, mode), "open"))
+    {
+      *privateData = NULL;
+      return;
+    }
+
+  ad = (struct alsaData *) malloc (sizeof *ad);
+  if (ad == NULL)
+    {
+      psnd_pcm_close (pcmHandle);
+      *privateData = NULL;
+      return;
+    }
+
+  ad->pcmHandle = pcmHandle;
+  ad->frameSizeInBytes = 0;
 
   *ops = &alsaOps;
-  *privateData = ai;
-
+  *privateData = (ALC_BackendPrivateData *) ad;
   _alDebug (ALD_MAXIMUS, __FILE__, __LINE__, "alcBackendOpenALSA_: using %s",
             deviceName);
 }
