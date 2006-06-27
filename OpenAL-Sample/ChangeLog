@@ -1,5 +1,7 @@
 2006-06-27  Sven Panne  <sven.panne@aedion.de>
 
+	* src/config/al_rctree.h: Make the header self-contained.
+
 	* configure.ac, src/Makefile.am, src/backends/alc_backend.c,
 	src/backends/alc_backend.h: Hooked in OSS backend stub, which needs to
 	be filled in later.

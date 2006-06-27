@@ -12,6 +12,7 @@
 #define ALRC_MAXSTRLEN 90
 
 #include "al_siteconfig.h"
+#include <stdlib.h>
 
 /*
  * Each AL_rctree has a type, which reflects how its data should be
