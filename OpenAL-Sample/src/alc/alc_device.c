@@ -219,17 +219,21 @@ alcDeviceResume_( AL_device *dev  )
  * actual values set where.
  */
 void
-alcDeviceSet_( AL_device *dev )
+alcDeviceSet_ (AL_device * dev)
 {
-	if( dev->ops->setAttributes(dev->privateData, &dev->bufferSizeInBytes, &dev->format, &dev->speed) != AL_TRUE ) {
-		_alDebug(ALD_CONTEXT, __FILE__, __LINE__, "alcDeviceSet_ failed.");
-		_alcSetError( ALC_INVALID_DEVICE );
-	}
-	_alDebug( ALD_CONVERT, __FILE__, __LINE__,
-		  "after set_audiodevice, f|s|b 0x%x|%d|%d",
-		  dev->format,
-		  dev->speed,
-		  dev->bufferSizeInBytes );
+  _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
+            "requesting device buffer size %d, format 0x%x, speed %d",
+            dev->bufferSizeInBytes, dev->format, dev->speed);
+
+  if (!dev->ops->setAttributes (dev->privateData, &dev->bufferSizeInBytes,
+                                &dev->format, &dev->speed))
+    {
+      _alDebug (ALD_CONVERT, __FILE__, __LINE__, "alcDeviceSet_ failed");
+      _alcSetError (ALC_INVALID_DEVICE);
+    }
+  _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
+            "got device buffer size %d, format 0x%x, speed %d",
+            dev->bufferSizeInBytes, dev->format, dev->speed);
 }
 
 void

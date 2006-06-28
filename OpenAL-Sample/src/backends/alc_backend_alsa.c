@@ -114,7 +114,7 @@ getAPIEntriesALSA (void)
   if (error != NULL)
     {
       _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
-                "Could not open ALSA library: %s", error);
+                "could not open ALSA library: %s", error);
       return AL_FALSE;
     }
 
@@ -178,8 +178,8 @@ ok (int error, const char *message)
 {
   if (error < 0)
     {
-      _alDebug (ALD_MAXIMUS, __FILE__, __LINE__, "ALSA backend %s: %s",
-                message, psnd_strerror (error));
+      _alDebug (ALD_MAXIMUS, __FILE__, __LINE__, "%s failed: %s", message,
+                psnd_strerror (error));
       return AL_FALSE;
     }
   return AL_TRUE;
@@ -232,11 +232,6 @@ setAttributesALSA (ALC_BackendPrivateData *privateData,
   bufferSizeInFrames = *bufferSizeInBytes / ad->frameSizeInBytes;
   rate = (unsigned int) *speed;
 
-  _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
-            "setAttributesALSA: requesting ALSA format %u, number of channels: %u, frame size in bytes: %u, buffer size in frames: %lu, rate: %u",
-            alsaFormat, numChannels, ad->frameSizeInBytes,
-            bufferSizeInFrames, rate);
-
   allOK =
     /* allocate HW parameter configuration */
     ok (psnd_pcm_hw_params_malloc (&p), "params malloc") &&
@@ -263,21 +258,19 @@ setAttributesALSA (ALC_BackendPrivateData *privateData,
     /* install and prepare hardware configuration */
     ok (psnd_pcm_hw_params (h, p), "set params");
 
-  if (allOK)
-    {
-      *bufferSizeInBytes = bufferSizeInFrames * ad->frameSizeInBytes;
-      *speed = rate;
-      _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
-                "setAttributesALSA: using buffer size in bytes %u, speed: %u",
-                *bufferSizeInBytes, *speed);
-    }
-
   if (p != NULL)
     {
       psnd_pcm_hw_params_free (p);
     }
 
-  return allOK ? AL_TRUE : AL_FALSE;
+  if (!allOK)
+    {
+      return AL_FALSE;
+    }
+
+  *bufferSizeInBytes = bufferSizeInFrames * ad->frameSizeInBytes;
+  *speed = rate;
+  return AL_TRUE;
 }
 
 static void
@@ -308,7 +301,7 @@ writeALSA (ALC_BackendPrivateData *privateData, const void *data,
           if (ret < 0)
             {
               _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
-                        "writeALSA: Could not write audio data to sound device: %s",
+                        "could not write audio data: %s",
                         psnd_strerror (ret));
             }
           else
@@ -324,7 +317,7 @@ writeALSA (ALC_BackendPrivateData *privateData, const void *data,
           if (ret < 0)
             {
               _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
-                        "writeALSA: %s", psnd_strerror (ret));
+                        "PCM prepare failed: %s", psnd_strerror (ret));
               return;
             }
         }
@@ -350,7 +343,7 @@ readALSA (ALC_BackendPrivateData *privateData, void *data, int bytesToRead)
       if (ret == -EPIPE)
         {
           _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
-                    "readALSA: overrun occurred, trying to recover.");
+                    "overrun occurred, trying to recover.");
           ret = psnd_pcm_prepare (ad->pcmHandle);
           if (ret < 0)
             {
@@ -364,7 +357,7 @@ readALSA (ALC_BackendPrivateData *privateData, void *data, int bytesToRead)
       if (ret < 0)
         {
           _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
-                    "readALSA: error occurred: %s", psnd_strerror (ret));
+                    "could not read audio data: %s", psnd_strerror (ret));
           return 0;
         }
       return ret * ad->frameSizeInBytes;
@@ -489,7 +482,7 @@ alcBackendOpenALSA_ (ALC_OpenMode mode, ALC_BackendOps **ops,
 
   *ops = &alsaOps;
   *privateData = (ALC_BackendPrivateData *) ad;
-  _alDebug (ALD_MAXIMUS, __FILE__, __LINE__, "alcBackendOpenALSA_: using %s",
+  _alDebug (ALD_MAXIMUS, __FILE__, __LINE__, "using device \"%s\"",
             deviceName);
 }
 
