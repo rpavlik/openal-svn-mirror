@@ -472,6 +472,8 @@ alcBackendOpenALSA_ (ALC_OpenMode mode, ALC_BackendOps **ops,
   ad = (struct alsaData *) malloc (sizeof *ad);
   if (ad == NULL)
     {
+      _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
+                "failed to allocate backend data");
       psnd_pcm_close (pcmHandle);
       *privateData = NULL;
       return;
