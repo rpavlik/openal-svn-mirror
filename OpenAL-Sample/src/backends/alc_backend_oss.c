@@ -4,6 +4,7 @@
 
 #include "al_siteconfig.h"
 #include "backends/alc_backend.h"
+#include <stdlib.h>
 
 #ifndef USE_BACKEND_OSS
 
@@ -19,7 +20,6 @@ alcBackendOpenOSS_ (UNUSED (ALC_OpenMode mode),
 
 #define DEFAULT_DEVICE "/dev/dsp"
 
-#include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
 #include <stropts.h>

@@ -1,5 +1,7 @@
 2006-06-28  Sven Panne  <sven.panne@aedion.de>
 
+	* src/backends/alc_backend_oss.c: Moved #include to the right place.
+
 	* admin/autotools/.indent.pro: Added SDL types.
 
 	* src/backends/alc_backend_sdl.c: Heavily cleaned up SDL backend.
