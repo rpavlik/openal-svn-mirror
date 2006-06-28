@@ -1,5 +1,7 @@
 2006-06-28  Sven Panne  <sven.panne@aedion.de>
 
+	* src/backends/alc_backend_oss.c: Implemented generic OSS backend.
+
 	* src/alc/alc_device.c, src/backends/alc_backend_alsa.c: Improved debug
 	output a bit.
 
