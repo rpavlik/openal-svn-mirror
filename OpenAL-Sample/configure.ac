@@ -724,30 +724,6 @@ fi
 OPENAL_ENABLE([aRts backend], [openal_backend_arts_support],
               [USE_BACKEND_ARTS], [USEBACKENDARTS])
 
-# check for native BSD/OSS backend #############################################
-
-# ToDo: Hmmm, OpenBSD/FreeBSD are using OSS, too, just like Linux. Perhaps some
-# re-use is possible?
-
-AC_ARG_ENABLE([bsd],
-[AS_HELP_STRING([--enable-bsd],
-                [enable native BSD/OSS backend @<:@default=auto@:>@])])
-
-if test "x$enable_bsd" = xno; then
-  openal_backend_bsd_support=disabled
-else
-  case "$target" in
-    *bsd*) openal_backend_bsd_support=static ;;
-    *) openal_backend_bsd_support=none
-       if test "x$enable_bsd" = xyes; then
-         AC_MSG_WARN([--enable-bsd ignored because this is no BSD build.])
-       fi ;;
-  esac
-fi
-
-OPENAL_ENABLE([native BSD/OSS backend], [openal_backend_bsd_support],
-              [USE_BACKEND_NATIVE_BSD], [USEBACKENDNATIVEBSD])
-
 # check for OSS backend ########################################################
 
 AC_ARG_ENABLE([oss],
@@ -899,27 +875,6 @@ fi
 
 OPENAL_ENABLE([native IRIX backend], [openal_backend_irix_support],
               [USE_BACKEND_DMEDIA], [USEBACKENDDMEDIA])
-
-# check for native Linux backend ###############################################
-
-AC_ARG_ENABLE([linux],
-[AS_HELP_STRING([--enable-linux],
-                [enable native Linux/OSS backend @<:@default=auto@:>@])])
-
-if test "x$enable_linux" = xno; then
-  openal_backend_linux_support=disabled
-else
-  AC_CHECK_HEADER([linux/soundcard.h],
-    [openal_backend_linux_support=static],
-    [openal_backend_linux_support=none
-     if test "x$enable_linux" = xyes; then
-       AC_MSG_WARN([--enable-linux ignored because the Linux OSS header could not be found.])
-     fi],
-    [AC_INCLUDES_DEFAULT([])])
-fi
-
-OPENAL_ENABLE([native Linux backend], [openal_backend_linux_support],
-              [USE_BACKEND_NATIVE_LINUX], [USEBACKENDNATIVELINUX])
 
 # check for native MorphOS backend #############################################
 

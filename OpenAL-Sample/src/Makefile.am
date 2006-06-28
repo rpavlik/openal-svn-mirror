@@ -82,32 +82,18 @@ libopenal_la_SOURCES +=			\
 	backends/alc_backend_esd.c	\
 	backends/alc_backend_irix.c	\
 	backends/alc_backend_null.c	\
+	backends/alc_backend_oss.c	\
 	backends/alc_backend_sdl.c	\
 	backends/alc_backend_wave.c
-
-if USEBACKENDNATIVEBSD
-libopenal_la_SOURCES +=			\
-	backends/alc_backend_bsd.c
-endif
 
 if USEBACKENDNATIVEDARWIN
 libopenal_la_SOURCES +=			\
 	backends/alc_backend_darwin.c
 endif
 
-if USEBACKENDNATIVELINUX
-libopenal_la_SOURCES +=			\
-	backends/alc_backend_linux.c
-endif
-
 if USEBACKENDNATIVEMORPHOS
 libopenal_la_SOURCES +=			\
 	backends/alc_backend_morphos.c
-endif
-
-if USEBACKENDOSS
-libopenal_la_SOURCES +=			\
-	backends/alc_backend_oss.c
 endif
 
 if USEBACKENDNATIVESOLARIS
