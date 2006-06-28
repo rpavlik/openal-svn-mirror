@@ -42,16 +42,6 @@ int _alLockPrintf( const char *str, const char *fn, int line );
 				    n)
 
 /*
- * Like memcpy, but copies to dst + offset instead of to dst.
- */
-#define offset_memcpy(d,o,s,l) memcpy(((char *)d) + o, s, l)
-
-/*
- * Like memcpy, but copies from src + offset instead of from src.
- */
-#define memcpy_offset(d,s,o,l) memcpy(d, (char *) s + o, l)
-
-/*
  * If DEBUG_STUB is defined, _alStub prints out a warning message.  If not, no
  * action is taken.
  *

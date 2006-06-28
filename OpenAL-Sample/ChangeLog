@@ -1,5 +1,7 @@
 2006-06-28  Sven Panne  <sven.panne@aedion.de>
 
+	* src/al_main.h: Removed unused offset_memcpy and memcpy_offset macros.
+
 	* src/backends/alc_backend_alsa.c: Added some debug output.
 
 	* src/backends/alc_backend_oss.c: Moved #include to the right place.
