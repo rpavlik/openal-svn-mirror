@@ -1,3 +1,7 @@
+2006-06-29  Prakash Punnoor <prakash@punnoor.de>
+
+	* CMakeLists.txt: remove linux/bsd oss backend, detect new oss backend
+	
 2006-06-28  Sven Panne  <sven.panne@aedion.de>
 
 	* src/al_main.h: Removed unused offset_memcpy and memcpy_offset macros.
