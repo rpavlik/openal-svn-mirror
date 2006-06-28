@@ -1,5 +1,7 @@
 2006-06-28  Sven Panne  <sven.panne@aedion.de>
 
+	* src/backends/alc_backend_sdl.c: Heavily cleaned up SDL backend.
+
 	* configure.ac, src/backends/alc_backend.c, src/Makefile.am: Replaced
 	BSD and Linux backends by the generic OSS backend. The fallback device
 	is "alsa"/"oss"/"dmedia"/"null" now, whichever is the first one
