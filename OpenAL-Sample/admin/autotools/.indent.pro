@@ -40,6 +40,11 @@
 /* ALSA types */
 -T snd_pcm_t
 
+/* SDL types */
+-T SDL_AudioSpec
+-T Uint8
+-T Uint16
+
 /* Our own internal types */
 -T ALC_Backend
 -T ALC_BackendOps

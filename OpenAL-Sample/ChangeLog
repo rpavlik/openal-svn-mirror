@@ -1,5 +1,7 @@
 2006-06-28  Sven Panne  <sven.panne@aedion.de>
 
+	* admin/autotools/.indent.pro: Added SDL types.
+
 	* src/backends/alc_backend_sdl.c: Heavily cleaned up SDL backend.
 
 	* configure.ac, src/backends/alc_backend.c, src/Makefile.am: Replaced
