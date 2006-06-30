@@ -379,14 +379,18 @@ static ALfloat
 getAudioChannelALSA (UNUSED (ALC_BackendPrivateData *privateData),
                      UNUSED (ALuint channel))
 {
-  return 0.0;
+  _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
+            "ALSA backend does not support getting the volume");
+  return -1.0f;
 }
 
 static int
 setAudioChannelALSA (UNUSED (ALC_BackendPrivateData *privateData),
                      UNUSED (ALuint channel), UNUSED (ALfloat volume))
 {
-  return 0;
+  _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
+            "ALSA backend does not support getting the volume");
+  return -1;
 }
 
 static ALC_BackendOps alsaOps = {

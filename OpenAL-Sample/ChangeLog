@@ -1,5 +1,7 @@
 2006-06-29  Sven Panne  <sven.panne@aedion.de>
 
+	* src/backends/alc_backend_alsa.c: Added some debug output.
+
 	* src/backends/alc_backend_sdl.c: Signal that we do not handle getting
 	and setting the volume in the SDL backend.
 
