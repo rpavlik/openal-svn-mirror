@@ -265,8 +265,8 @@ getAudioChannelSDL (UNUSED (ALC_BackendPrivateData *privateData),
                     UNUSED (ALuint channel))
 {
   _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
-            "SDL backend does not getting volume");
-  return 0.0f;
+            "SDL backend does not support getting the volume");
+  return -1.0f;
 }
 
 static int
@@ -274,8 +274,8 @@ setAudioChannelSDL (UNUSED (ALC_BackendPrivateData *privateData),
                     UNUSED (ALuint channel), UNUSED (ALfloat volume))
 {
   _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
-            "SDL backend does not setting volume");
-  return 0;
+            "SDL backend does not support setting the volume");
+  return -1;
 }
 
 static ALC_BackendOps sdlOps = {
