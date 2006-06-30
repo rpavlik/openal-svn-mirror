@@ -1,3 +1,7 @@
+2006-06-29  Sven Panne  <sven.panne@aedion.de>
+
+	* src/backends/alc_backend_oss.c: Use int constant when int is needed.
+
 2006-06-29  Prakash Punnoor <prakash@punnoor.de>
 
 	* CMakeLists.txt: remove linux/bsd oss backend, detect new oss backend

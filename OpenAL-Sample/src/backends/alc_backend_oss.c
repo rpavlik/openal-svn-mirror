@@ -303,7 +303,7 @@ setAudioChannelOSS (ALC_BackendPrivateData *privateData, ALuint channel,
         ok (ioctl (od->fd, SOUND_MIXER_WRITE (ossChannel), &ossVolume),
             "set volume")))
     {
-      return -1.0f;
+      return -1;
     }
 
   return 0;
