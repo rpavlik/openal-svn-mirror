@@ -1,3 +1,7 @@
+2006-07-01  Prakash Punnoor <prakash@punnoor.de>
+
+	* CMakeLists.txt: complete MorphOS support removal ;-)
+
 2006-06-30  Sven Panne  <sven.panne@aedion.de>
 
 	* src/backends/alc_backend.c: Changed the fallback device logic
