@@ -1,5 +1,9 @@
 2006-06-29  Sven Panne  <sven.panne@aedion.de>
 
+	* src/backends/alc_backend_null.c, src/backends/alc_backend_wave.c:
+	Cleanup. Removed sleeping. Note that the WAVE backend still has
+	portability issues and is not const-correct.
+
 	* src/backends/alc_backend_alsa.c: Added some debug output.
 
 	* src/backends/alc_backend_sdl.c: Signal that we do not handle getting

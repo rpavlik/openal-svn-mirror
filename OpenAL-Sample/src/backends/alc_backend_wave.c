@@ -1,10 +1,5 @@
-/* -*- mode: C; tab-width:8; c-basic-offset:8 -*-
- * vi:set ts=8:
- *
- * waveout.c
- *
- * WAVE file output.  Context writes, we save and sleep.
- *
+/*
+ * WAVE file output. 
  */
 #include "al_siteconfig.h"
 #include "backends/alc_backend.h"
@@ -13,18 +8,19 @@
 #ifndef USE_BACKEND_WAVEOUT
 
 void
-alcBackendOpenWAVE_ (UNUSED(ALC_OpenMode mode), UNUSED(ALC_BackendOps **ops),
-		     ALC_BackendPrivateData **privateData)
+alcBackendOpenWAVE_ (UNUSED (ALC_OpenMode mode),
+                     UNUSED (ALC_BackendOps **ops),
+                     ALC_BackendPrivateData **privateData)
 {
-	*privateData = NULL;
+  *privateData = NULL;
 }
 
 #else
 
-#include <AL/al.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <AL/al.h>
 
 #include "al_main.h"
 #include "al_debug.h"
@@ -33,7 +29,6 @@ alcBackendOpenWAVE_ (UNUSED(ALC_OpenMode mode), UNUSED(ALC_BackendOps **ops),
 #define WAVEOUT_NAMELEN 16
 #define HEADERSIZE      28
 #define DATAADJUSTMENT  44
-
 
 #ifdef WORDS_BIGENDIAN
 #define RIFFMAGIC       0x52494646
@@ -54,277 +49,99 @@ alcBackendOpenWAVE_ (UNUSED(ALC_OpenMode mode), UNUSED(ALC_BackendOps **ops),
 
 #define MAXNAMELEN      1024
 
-typedef struct waveout_s {
-	FILE *fh;
-
-	ALuint format;
-	ALuint speed;
-	ALuint channels;
-
-	ALuint length;
-
-	ALushort bitspersample;
-
-	char name[WAVEOUT_NAMELEN];
-	ALC_OpenMode mode;
-} waveout_t;
-
-static ALuint sleep_usec(ALuint speed, ALuint chunk);
-static void apply_header(waveout_t *wave);
-static const char *waveout_unique_name(char *template);
-
-/*
- * convert_to_little_endian( ALuint bps, void *data, int nbytes )
- *
- * Convert data in place to little endian format.  NOP on little endian
- * machines.
- */
-static void convert_to_little_endian( ALuint bps, void *data, int nbytes );
-
-static void *grab_write_waveout(void) {
-	FILE *fh;
-	waveout_t *retval = NULL;
-	char template[MAXNAMELEN] = "openal-";
-
-	if(waveout_unique_name(template) == NULL) {
-		perror("tmpnam");
-	}
-
-	fh = fopen(template, "w+b");
-	if(fh == NULL) {
-		fprintf(stderr,
-			"waveout grab audio %s failed\n", template);
-		return NULL;
-	}
-
-	retval = malloc(sizeof *retval);
-	if(retval == NULL) {
-		fclose(fh);
-		return NULL;
-	}
-
-	memset(retval, 0, sizeof *retval);
-
-	/* set to return params */
-	retval->fh = fh;
-	strncpy(retval->name, template, WAVEOUT_NAMELEN);
-
-	retval->length = 0;
-	retval->mode = ALC_OPEN_OUTPUT_;
-
-	fprintf(stderr, "waveout grab audio %s\n", template);
-
-	_alDebug(ALD_CONTEXT, __FILE__, __LINE__,
-		"waveout grab audio ok");
-
-	fseek(retval->fh, SEEK_SET, HEADERSIZE); /* leave room for header */
-        return retval;
-}
-
-static void *grab_read_waveout(void) {
-	return NULL;
-}
-
-static void waveout_blitbuffer(void *handle, const void *dataptr, int bytesToWrite) {
-	waveout_t *whandle = NULL;
-
-	if(handle == NULL) {
-		return;
-	}
-
-	whandle = handle;
-
-	if(whandle->fh == NULL) {
-		return;
-	}
-
-	whandle->length += bytesToWrite;
-
-	/*
-	 * WAV files expect their PCM data in LE format.  If we are on
-	 * big endian host, we need to convert the data in place.
-	 * TODO: THIS BREAKS THE CONST CORRECTNESS!!!!!!!!!!!!!!!
-	 *
-	 */
-	convert_to_little_endian( whandle->bitspersample,
-				  (void *)dataptr,
-				  bytesToWrite );
-
-	fwrite(dataptr, 1, bytesToWrite, whandle->fh);
-
-	_alMicroSleep(sleep_usec(whandle->speed, bytesToWrite));
-}
-
-/*
- *  close file, free data
- */
-static void release_waveout(void *handle) {
-	waveout_t *closer;
-
-	if(handle == NULL) {
-		return;
-	}
-
-	closer = handle;
-
-	fprintf(stderr, "releasing waveout file %s\n",
-		closer->name);
-
-	fflush( closer->fh );
-	apply_header( closer );
-
-	fclose( closer->fh );
-	free( closer );
-
-	return;
-}
-
-static ALuint sleep_usec(ALuint speed, ALuint chunk) {
-	ALuint retval;
-
-	retval = 1000000.0 * chunk / speed;
-
-#if 0
-	fprintf(stderr,
-		"(speed %d chunk %d retval = %d)\n",
-		speed,
-		chunk,
-		retval);
-#endif
-
-	return retval;
-}
-
-/*
- *  FIXME: make endian correct
- */
-static void apply_header(waveout_t *wave) {
-	ALushort writer16;
-	ALuint   writer32;
-
-	/* go to beginning */
-	if(fseek(wave->fh, SEEK_SET, 0) != 0) {
-		fprintf(stderr,
-			"Couldn't reset %s\n", wave->name);
-	}
-
-        /* 'RIFF' */
-	writer32 = RIFFMAGIC;
-	fwrite(&writer32, 1, sizeof writer32, wave->fh);
-
-	/* total length */
-	writer32 = swap32le(wave->length);
-	fwrite(&writer32, 1, sizeof writer32, wave->fh);
-
-        /* 'WAVE' */
-	writer32 = WAVEMAGIC;
-	fwrite(&writer32, 1, sizeof writer32, wave->fh);
-
-        /* 'fmt ' */
-	writer32 = FMTMAGIC;
-	fwrite(&writer32, 1, sizeof writer32, wave->fh);
-
-        /* fmt chunk length */
-	writer32 = swap32le(16);
-	fwrite(&writer32, 1, sizeof writer32, wave->fh);
-
-        /* ALushort encoding */
-	writer16 = swap16le(1);
-	fwrite(&writer16, 1, sizeof writer16, wave->fh);
-
-	/* Alushort channels */
-	writer16 = swap16le(wave->channels);
-	fwrite(&writer16, 1, sizeof writer16, wave->fh);
-
-	/* ALuint frequency */
-	writer32 = swap32le(wave->speed);
-	fwrite(&writer32, 1, sizeof writer32, wave->fh);
-
-	/* ALuint byterate  */
-	writer32 = swap32le(wave->speed / sizeof (ALshort)); /* FIXME */
-	fwrite(&writer32, 1, sizeof writer32, wave->fh);
-
-	/* ALushort blockalign */
-	writer16 = 0;
-	fwrite(&writer16, 1, sizeof writer16, wave->fh);
-
-	/* ALushort bitspersample */
-	writer16 = swap16le(wave->bitspersample);
-	fwrite(&writer16, 1, sizeof writer16, wave->fh);
-
-        /* 'data' */
-	writer32 = DATAMAGIC;
-	fwrite(&writer32, 1, sizeof writer32, wave->fh);
-
-	/* data length */
-	writer32 = swap32le(wave->length - DATAADJUSTMENT); /* samples */
-	fwrite(&writer32, 1, sizeof writer32, wave->fh);
-
-	fprintf(stderr, "waveout length %d\n", wave->length);
-
-	return;
-}
-
-static const char *waveout_unique_name(char *template) {
-	static char retval[MAXNAMELEN];
-	int template_offset;
-	static int sequence = 0;
-	struct stat buf;
-
-	strncpy(retval, template, MAXNAMELEN - 2);
-	retval[MAXNAMELEN - 1] = '\0';
-
-	template_offset = strlen(retval);
-
-	if(template_offset >= MAXNAMELEN - 28) { /* kludgey */
-		/* template too big */
-		return NULL;
-	}
-
-	do {
-		/* repeat until we have a unique name */
-		snprintf(&retval[template_offset], sizeof(retval) - template_offset, "%d.wav", sequence++);
-		strncpy(template, retval, MAXNAMELEN);
-	} while(stat(retval, &buf) == 0);
-
-	return retval;
-}
-
-static ALboolean set_write_waveout(void *handle,
-				   UNUSED(ALuint *deviceBufferSizeInBytes),
-				   ALenum *fmt,
-				   ALuint *speed) {
-	waveout_t *whandle;
-	ALuint chans = _alGetChannelsFromFormat( *fmt );
-
-	if(handle == NULL) {
-		return AL_FALSE;
-	}
-
-	whandle = handle;
-
-	whandle->speed    = *speed;
-	whandle->format   = *fmt;
-	whandle->channels = chans;
-	whandle->bitspersample = _alGetBitsFromFormat(*fmt);
-
-        return AL_TRUE;
-}
-
-static ALboolean set_read_waveout(UNUSED(void *handle),
-				  UNUSED(ALuint *deviceBufferSizeInBytes),
-				  UNUSED(ALenum *fmt),
-				  UNUSED(ALuint *speed)) {
-
-	return AL_FALSE;
-}
-
-static ALboolean
-alcBackendSetAttributesWAVE_(void *handle, ALuint *deviceBufferSizeInBytes, ALenum *fmt, ALuint *speed)
+struct waveData
 {
-	return ((waveout_t *)handle)->mode == ALC_OPEN_INPUT_ ?
-		set_read_waveout(handle, deviceBufferSizeInBytes, fmt, speed) :
-		set_write_waveout(handle, deviceBufferSizeInBytes, fmt, speed);
+  FILE *fh;
+  ALuint length;
+  ALuint speed;
+  ALuint channels;
+  ALushort bitspersample;
+};
+
+static void
+apply_header (struct waveData *wd)
+{
+  ALushort writer16;
+  ALuint writer32;
+
+  /* go to beginning */
+  if (fseek (wd->fh, SEEK_SET, 0) != 0)
+    {
+      _alDebug (ALD_MAXIMUS, __FILE__, __LINE__, "failed to rewind");
+      return;
+    }
+
+  /* 'RIFF' */
+  writer32 = RIFFMAGIC;
+  fwrite (&writer32, 1, sizeof writer32, wd->fh);
+
+  /* total length */
+  writer32 = swap32le (wd->length);
+  fwrite (&writer32, 1, sizeof writer32, wd->fh);
+
+  /* 'WAVE' */
+  writer32 = WAVEMAGIC;
+  fwrite (&writer32, 1, sizeof writer32, wd->fh);
+
+  /* 'fmt ' */
+  writer32 = FMTMAGIC;
+  fwrite (&writer32, 1, sizeof writer32, wd->fh);
+
+  /* fmt chunk length */
+  writer32 = swap32le (16);
+  fwrite (&writer32, 1, sizeof writer32, wd->fh);
+
+  /* ALushort encoding */
+  writer16 = swap16le (1);
+  fwrite (&writer16, 1, sizeof writer16, wd->fh);
+
+  /* Alushort channels */
+  writer16 = swap16le (wd->channels);
+  fwrite (&writer16, 1, sizeof writer16, wd->fh);
+
+  /* ALuint frequency */
+  writer32 = swap32le (wd->speed);
+  fwrite (&writer32, 1, sizeof writer32, wd->fh);
+
+  /* ALuint byterate  */
+  writer32 = swap32le (wd->speed / sizeof (ALshort));   /* FIXME */
+  fwrite (&writer32, 1, sizeof writer32, wd->fh);
+
+  /* ALushort blockalign */
+  writer16 = 0;
+  fwrite (&writer16, 1, sizeof writer16, wd->fh);
+
+  /* ALushort bitspersample */
+  writer16 = swap16le (wd->bitspersample);
+  fwrite (&writer16, 1, sizeof writer16, wd->fh);
+
+  /* 'data' */
+  writer32 = DATAMAGIC;
+  fwrite (&writer32, 1, sizeof writer32, wd->fh);
+
+  /* data length */
+  writer32 = swap32le (wd->length - DATAADJUSTMENT);    /* samples */
+  fwrite (&writer32, 1, sizeof writer32, wd->fh);
+}
+
+static void
+closeWave (ALC_BackendPrivateData *privateData)
+{
+  struct waveData *wd = (struct waveData *) privateData;
+  fflush (wd->fh);
+  apply_header (wd);
+  fclose (wd->fh);
+  free (wd);
+}
+
+static void
+pauseWave (UNUSED (ALC_BackendPrivateData *privateData))
+{
+}
+
+static void
+resumeWave (UNUSED (ALC_BackendPrivateData *privateData))
+{
 }
 
 /*
@@ -337,78 +154,181 @@ alcBackendSetAttributesWAVE_(void *handle, ALuint *deviceBufferSizeInBytes, ALen
  * FIXME:
  *	We only handle 16-bit signed formats for now.  Should fix this.
  */
-static void convert_to_little_endian( ALuint bps, void *data, int nbytes )
+static void
+convert_to_little_endian (ALuint bps, void *data, int nbytes)
 {
-	assert( data );
-	assert( nbytes > 0 );
-
-	if( bps == 8 ) {
-		/* 8-bit samples don't need to be converted */
-		return;
-	}
-
-	assert( bps == 16 );
+  if (bps == 8)
+    {
+      /* 8-bit samples don't need to be converted */
+      return;
+    }
 
 #ifdef WORDS_BIGENDIAN
-	/* do the conversion */
-	{
-		ALshort *outp = data;
-		ALuint i;
-		for( i = 0; i < nbytes/sizeof(ALshort); i++ ) {
-			outp[i] = swap16le( outp[i] );
-		}
-	}
+  /* do the conversion */
+  {
+    ALshort *outp = data;
+    ALuint i;
+    for (i = 0; i < nbytes / sizeof (ALshort); i++)
+      {
+        outp[i] = swap16le (outp[i]);
+      }
+  }
 #else
-	(void)data; (void)nbytes;
+  (void) data;
+  (void) nbytes;
 #endif /* WORDS_BIG_ENDIAN */
 }
 
 static void
-pause_waveout( UNUSED(void *handle) )
+writeWave (ALC_BackendPrivateData *privateData, const void *data,
+           int bytesToWrite)
 {
+  struct waveData *wd = (struct waveData *) privateData;
+  wd->length += bytesToWrite;
+
+  /*
+   * WAV files expect their PCM data in LE format.  If we are on
+   * big endian host, we need to convert the data in place.
+   * TODO: THIS BREAKS THE CONST CORRECTNESS!!!!!!!!!!!!!!!
+   *
+   */
+  convert_to_little_endian (wd->bitspersample, (void *) data, bytesToWrite);
+
+  fwrite (data, 1, bytesToWrite, wd->fh);
 }
 
-static void
-resume_waveout( UNUSED(void *handle) )
+static const char *
+waveout_unique_name (char *template)
 {
+  static char retval[MAXNAMELEN];
+  int template_offset;
+  static int sequence = 0;
+  struct stat buf;
+
+  strncpy (retval, template, MAXNAMELEN - 2);
+  retval[MAXNAMELEN - 1] = '\0';
+
+  template_offset = strlen (retval);
+
+  if (template_offset >= MAXNAMELEN - 28)
+    {                           /* kludgey */
+      /* template too big */
+      return NULL;
+    }
+
+  do
+    {
+      /* repeat until we have a unique name */
+      snprintf (&retval[template_offset], sizeof (retval) - template_offset,
+                "%d.wav", sequence++);
+      strncpy (template, retval, MAXNAMELEN);
+    }
+  while (stat (retval, &buf) == 0);
+
+  return retval;
+}
+
+static ALboolean
+setAttributesWave (ALC_BackendPrivateData *privateData,
+                   UNUSED (ALuint *deviceBufferSizeInBytes), ALenum *format,
+                   ALuint *speed)
+{
+  struct waveData *wd = (struct waveData *) privateData;
+  wd->speed = *speed;
+  wd->channels = _alGetChannelsFromFormat (*format);
+  wd->bitspersample = _alGetBitsFromFormat (*format);
+  return AL_TRUE;
 }
 
 static ALsizei
-capture_waveout( UNUSED(void *handle), UNUSED(void *capture_buffer), UNUSED(int bytesToRead) )
+readWave (UNUSED (ALC_BackendPrivateData *privateData), UNUSED (void *data),
+          UNUSED (int bytesToRead))
 {
-	return 0;
+  _alDebug (ALD_MAXIMUS, __FILE__, __LINE__, "should never happen");
+  return 0;
 }
 
 static ALfloat
-get_waveoutchannel( UNUSED(void *handle), UNUSED(ALuint channel) )
+getAudioChannelWave (UNUSED (ALC_BackendPrivateData *privateData),
+                     UNUSED (ALuint channel))
 {
-	return 0.0;
+  _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
+            "wave backend does not support getting the volume");
+  return -1.0f;
 }
 
 static int
-set_waveoutchannel( UNUSED(void *handle), UNUSED(ALuint channel), UNUSED(ALfloat volume) )
+setAudioChannelWave (UNUSED (ALC_BackendPrivateData *privateData),
+                     UNUSED (ALuint channel), UNUSED (ALfloat volume))
 {
-	return 0;
+  _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
+            "wave backend does not support setting the volume");
+  return -1;
 }
 
 static ALC_BackendOps waveOps = {
-	release_waveout,
-	pause_waveout,
-	resume_waveout,
-	alcBackendSetAttributesWAVE_,
-	waveout_blitbuffer,
-	capture_waveout,
-	get_waveoutchannel,
-	set_waveoutchannel
+  closeWave,
+  pauseWave,
+  resumeWave,
+  setAttributesWave,
+  writeWave,
+  readWave,
+  getAudioChannelWave,
+  setAudioChannelWave
 };
 
 void
-alcBackendOpenWAVE_ (ALC_OpenMode mode, ALC_BackendOps **ops, ALC_BackendPrivateData **privateData)
+alcBackendOpenWAVE_ (ALC_OpenMode mode, ALC_BackendOps **ops,
+                     ALC_BackendPrivateData **privateData)
 {
-	*privateData = (mode == ALC_OPEN_INPUT_) ? grab_read_waveout() : grab_write_waveout();
-	if (*privateData != NULL) {
-		*ops = &waveOps;
-	}
+  FILE *fh;
+  struct waveData *wd;
+  char fileName[MAXNAMELEN] = "openal-";
+
+  if (mode == ALC_OPEN_INPUT_)
+    {
+      _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
+                "wave backend does not support input");
+      *privateData = NULL;
+      return;
+    }
+
+  if (waveout_unique_name (fileName) == NULL)
+    {
+      _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
+                "failed to generate fresh filename");
+      *privateData = NULL;
+      return;
+    }
+
+  fh = fopen (fileName, "w+b");
+  if (fh == NULL)
+    {
+      _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
+                "failed to open \"%s\"", fileName);
+      *privateData = NULL;
+      return;
+    }
+
+  wd = (struct waveData *) malloc (sizeof *wd);
+  if (wd == NULL)
+    {
+      _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
+                "failed to allocate backend data");
+      fclose (fh);
+      *privateData = NULL;
+      return;
+    }
+
+  wd->fh = fh;
+  wd->length = 0;
+
+  /* leave room for header */
+  fseek (wd->fh, SEEK_SET, HEADERSIZE);
+
+  *ops = &waveOps;
+  *privateData = (ALC_BackendPrivateData *) wd;
+  _alDebug (ALD_MAXIMUS, __FILE__, __LINE__, "using file \"%s\"", fileName);
 }
 
 #endif /* USE_BACKEND_WAVEOUT */

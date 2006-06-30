@@ -1,6 +1,7 @@
 /*
- * null output. Context writes, we sleep.
+ * Null device. Does basically nothing.
 */
+
 #include "al_siteconfig.h"
 #include "backends/alc_backend.h"
 #include <stdlib.h>
@@ -8,130 +9,116 @@
 #ifndef USE_BACKEND_NULL
 
 void
-alcBackendOpenNull_ (UNUSED(ALC_OpenMode mode), UNUSED(ALC_BackendOps **ops),
-		     ALC_BackendPrivateData **privateData)
+alcBackendOpenNull_ (UNUSED (ALC_OpenMode mode),
+                     UNUSED (ALC_BackendOps **ops),
+                     ALC_BackendPrivateData **privateData)
 {
-	*privateData = NULL;
+  *privateData = NULL;
 }
 
 #else
 
 #include <AL/al.h>
 
-#include "al_main.h"
 #include "al_debug.h"
 
-
-static void *bogus_handle = (void *) 0x4ABAD1;
-static ALuint sleep_usec (ALuint speed, ALuint chunk);
-static ALint nullspeed;
-static ALC_OpenMode nullMode;
-
-static void *
-grab_write_null (void)
+/* private data for this backend */
+struct nullData
 {
-  nullMode = ALC_OPEN_OUTPUT_;
-  return bogus_handle;
+  ALC_OpenMode mode;
+};
+
+static void
+closeNull (ALC_BackendPrivateData *privateData)
+{
+  free (privateData);
 }
 
-static void *
-grab_read_null (void)
+static void
+pauseNull (UNUSED (ALC_BackendPrivateData *privateData))
 {
-  nullMode = ALC_OPEN_INPUT_;
-  return NULL;
+}
+
+static void
+resumeNull (UNUSED (ALC_BackendPrivateData *privateData))
+{
 }
 
 static ALboolean
-set_write_null (UNUSED (void *handle), UNUSED (ALuint *deviceBufferSizeInBytes),
-                UNUSED (ALenum *fmt), ALuint *speed)
+setAttributesNull (UNUSED (ALC_BackendPrivateData *privateData),
+                   UNUSED (ALuint *deviceBufferSizeInBytes),
+                   UNUSED (ALenum *format), UNUSED (ALuint *speed))
 {
-  nullspeed = *speed;
   return AL_TRUE;
 }
 
-static ALboolean
-set_read_null (UNUSED (void *handle), UNUSED (ALuint *deviceBufferSizeInBytes),
-               UNUSED (ALenum *fmt), UNUSED (ALuint *speed))
-{
-
-  return AL_TRUE;
-}
-
-static ALboolean
-alcBackendSetAttributesNull_ (void *handle, ALuint *deviceBufferSizeInBytes,
-                              ALenum *fmt, ALuint *speed)
-{
-  return nullMode == ALC_OPEN_INPUT_ ?
-    set_read_null (handle, deviceBufferSizeInBytes, fmt, speed) :
-    set_write_null (handle, deviceBufferSizeInBytes, fmt, speed);
-}
-
 static void
-null_blitbuffer (UNUSED (void *handle),
-                 UNUSED (const void *dataptr), int bytesToWrite)
+writeNull (ALC_BackendPrivateData *privateData,
+           UNUSED (const void *data), UNUSED (int bytesToWrite))
 {
-  _alMicroSleep (sleep_usec (nullspeed, bytesToWrite));
-}
-
-static void
-release_null (UNUSED (void *handle))
-{
-}
-
-static ALuint
-sleep_usec (ALuint speed, ALuint chunk)
-{
-  return 1000000.0 * chunk / speed;
-}
-
-static void
-pause_null (UNUSED (void *handle))
-{
-}
-
-static void
-resume_null (UNUSED (void *handle))
-{
+  struct nullData *nd = (struct nullData *) privateData;
+  if (nd->mode != ALC_OPEN_OUTPUT_)
+    {
+      _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
+                "device not opened for output");
+    }
 }
 
 static ALsizei
-capture_null (UNUSED (void *handle), UNUSED (void *capture_buffer),
-              UNUSED (int bytesToRead))
+readNull (ALC_BackendPrivateData *privateData,
+          UNUSED (void *data), UNUSED (int bytesToRead))
 {
+  struct nullData *nd = (struct nullData *) privateData;
+  if (nd->mode != ALC_OPEN_INPUT_)
+    {
+      _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
+                "device not opened for input");
+    }
   return 0;
 }
 
 static ALfloat
-get_nullchannel (UNUSED (void *handle), UNUSED (ALuint channel))
+getAudioChannelNull (UNUSED (ALC_BackendPrivateData *privateData),
+                     UNUSED (ALuint channel))
 {
-  return 0.0;
+  return 0.0f;
 }
 
 static int
-set_nullchannel (UNUSED (void *handle), UNUSED (ALuint channel),
-                 UNUSED (ALfloat volume))
+setAudioChannelNull (UNUSED (ALC_BackendPrivateData *privateData),
+                     UNUSED (ALuint channel), UNUSED (ALfloat volume))
 {
   return 0;
 }
 
 static ALC_BackendOps nullOps = {
-	release_null,
-	pause_null,
-	resume_null,
-	alcBackendSetAttributesNull_,
-	null_blitbuffer,
-	capture_null,
-	get_nullchannel,
-	set_nullchannel
+  closeNull,
+  pauseNull,
+  resumeNull,
+  setAttributesNull,
+  writeNull,
+  readNull,
+  getAudioChannelNull,
+  setAudioChannelNull
 };
 
 void
-alcBackendOpenNull_ (ALC_OpenMode mode, ALC_BackendOps **ops, ALC_BackendPrivateData **privateData)
+alcBackendOpenNull_ (ALC_OpenMode mode, ALC_BackendOps **ops,
+                     ALC_BackendPrivateData **privateData)
 {
-  *privateData =  (mode == ALC_OPEN_INPUT_) ? grab_read_null () : grab_write_null ();
-  if (*privateData != NULL) {
-    *ops = &nullOps;
-  }
+  struct nullData *nd = (struct nullData *) malloc (sizeof *nd);
+  if (nd == NULL)
+    {
+      _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
+                "failed to allocate backend data");
+      *privateData = NULL;
+      return;
+    }
+
+  nd->mode = mode;
+
+  *ops = &nullOps;
+  *privateData = (ALC_BackendPrivateData *) nd;
 }
 
 #endif /* USE_BACKEND_NULL */
