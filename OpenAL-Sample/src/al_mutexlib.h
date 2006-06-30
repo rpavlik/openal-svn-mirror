@@ -30,16 +30,11 @@ typedef pthread_mutex_t *MutexID;
 #include <windows.h>
 typedef LPCRITICAL_SECTION MutexID;
 
-#elif defined(USE_MORPHOSTHREADING)
-
-#include <exec/semaphores.h>
-typedef struct SignalSemaphore *MutexID;
-
-#else /* not defined(USE_MORPHOSTHREADING) */
+#else /* not defined(USE_WINDOWSTHREADING) */
 
 #error "No mutex package"
 
-#endif /* not defined(USE_MORPHOSTHREADING) */
+#endif /* not defined(USE_WINDOWSTHREADING) */
 
 /* Creates a new mutex. Returns NULL on error. */
 extern MutexID _alCreateMutex( void );

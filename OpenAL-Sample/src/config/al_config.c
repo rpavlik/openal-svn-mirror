@@ -25,11 +25,7 @@
 #include "al_error.h"
 #include "al_debug.h"
 
-#ifndef __MORPHOS__
 #define _AL_FNAME "openalrc"
-#else
-#define _AL_FNAME "OpenAL.prefs"
-#endif
 
 #ifndef PATH_MAX
 #define PATH_MAX 4096
@@ -337,14 +333,10 @@ static char *_alOpenRcFile( void ) {
 	unsigned long filelen = 0;
 	int i;
 
-#ifndef __MORPHOS__
 	/*
 	 * try home dir
 	 */
 	snprintf(pathname, sizeof(pathname), "%s/.%s", getenv("HOME"), _AL_FNAME);
-#else
-	snprintf(pathname, sizeof(pathname), "ENV:%s", _AL_FNAME);
-#endif
 	if(stat(pathname, &buf) != -1) {
 		fh = fopen(pathname, "rb");
 

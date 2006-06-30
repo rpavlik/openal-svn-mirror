@@ -1,5 +1,11 @@
 2006-06-29  Sven Panne  <sven.panne@aedion.de>
 
+	* CMakeLists.txt, configure.ac, src/Makefile.am, src/al_mutexlib.c,
+	src/al_mutexlib.h, src/al_threadlib.c, src/al_threadlib.h,
+	src/config/al_config.c: Removed MorphOS support.
+
+	* src/backends/alc_backend_morphos.c: Removed.
+
 	* src/backends/alc_backend_null.c, src/backends/alc_backend_wave.c:
 	Cleanup. Removed sleeping. Note that the WAVE backend still has
 	portability issues and is not const-correct.

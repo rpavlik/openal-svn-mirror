@@ -108,10 +108,7 @@ ACX_PTHREAD(
    AC_DEFINE([USE_POSIXTHREADING], [1], [Define to 1 if POSIX threading should be used.])],
   [AC_CHECK_HEADER([windows.h],
     [AC_DEFINE([USE_WINDOWSTHREADING], [1], [Define to 1 if Windows threading should be used.])],
-    [AC_CHECK_HEADER([dos/dosextens.h],
-      [AC_DEFINE([USE_MORPHOSTHREADING], [1], [Define to 1 if MorphOS threading should be used.])],
-      [AC_DEFINE([NO_THREADING], [1], [undocumented])],
-      [AC_INCLUDES_DEFAULT([])])],
+    [AC_DEFINE([NO_THREADING], [1], [undocumented])],
     [AC_INCLUDES_DEFAULT([])])])
 
 AC_FUNC_SELECT_ARGTYPES
@@ -875,27 +872,6 @@ fi
 
 OPENAL_ENABLE([native IRIX backend], [openal_backend_irix_support],
               [USE_BACKEND_DMEDIA], [USEBACKENDDMEDIA])
-
-# check for native MorphOS backend #############################################
-
-AC_ARG_ENABLE([morphos],
-[AS_HELP_STRING([--enable-morphos],
-                [enable native MorphOS backend @<:@default=auto@:>@])])
-
-if test "x$enable_morphos" = xno; then
-  openal_backend_morphos_support=disabled
-else
-  case "$target" in
-    *morphos*) openal_backend_morphos_support=static ;;
-    *) openal_backend_morphos_support=none
-       if test "x$enable_morphos" = xyes; then
-         AC_MSG_WARN([--enable-morphos ignored because this is no MorphOS build.])
-       fi ;;
-  esac
-fi
-
-OPENAL_ENABLE([native MorphOS backend], [openal_backend_morphos_support],
-              [USE_BACKEND_NATIVE_MORPHOS], [USEBACKENDNATIVEMORPHOS])
 
 # check for null backend #######################################################
 

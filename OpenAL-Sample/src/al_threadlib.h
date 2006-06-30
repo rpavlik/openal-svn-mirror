@@ -20,23 +20,11 @@ typedef pthread_t *ThreadID;
 #include <windows.h>
 typedef HANDLE ThreadID;
 
-#elif defined(USE_MORPHOSTHREADING)
-
-#include <exec/ports.h>
-#include <dos/dosextens.h>
-
-struct ThreadData {
-	struct Process *td_Thread;
-	struct MsgPort *td_MsgPort;
-};
-
-typedef struct ThreadData *ThreadID;
-
-#else /* not defined(USE_MORPHOSTHREADING) */
+#else /* not defined(USE_WINDOWSTHREADING) */
 
 #error "No thread package"
 
-#endif /* not defined(USE_MORPHOSTHREADING) */
+#endif /* not defined(USE_WINDOWSTHREADING) */
 
 /*
  * Creates a thread, which starts by running fn.

@@ -79,39 +79,4 @@ void _alUnlockMutex( MutexID mutex )
 {
 	LeaveCriticalSection( mutex );
 }
-
-#elif defined(USE_MORPHOSTHREADING)
-
-#include <proto/exec.h>
-
-MutexID _alCreateMutex( void )
-{
-	MutexID mutex = ( MutexID ) AllocVec( sizeof( *mutex ), MEMF_PUBLIC );
-	if( mutex == NULL ) {
-		return NULL;
-	}
-	InitSemaphore( mutex );
-	return mutex;
-}
-
-void _alDestroyMutex( MutexID mutex )
-{
-	FreeVec( mutex );
-}
-
-void _alLockMutex( MutexID mutex )
-{
-	ObtainSemaphore( mutex );
-}
-
-int _alTryLockMutex( MutexID mutex )
-{
-	return ( AttemptSemaphore( mutex ) != 0 ) ? 0 : -1;
-}
-
-void _alUnlockMutex( MutexID mutex )
-{
-	ReleaseSemaphore( mutex );
-}
-
 #endif
