@@ -14,16 +14,7 @@
 #include "al_main.h"
 #include "backends/alc_backend.h"
 
-/* ToDo: This belongs somewhere else... */
-#if defined(USE_BACKEND_ALSA)
-#define FALLBACK_DEVICE "alsa"
-#elif defined(USE_BACKEND_OSS)
-#define FALLBACK_DEVICE "oss"
-#elif defined(USE_BACKEND_DMEDIA)
-#define FALLBACK_DEVICE "dmedia"
-#else
-#define FALLBACK_DEVICE "null"
-#endif
+#define FALLBACK_DEVICE "native"
 
 struct ALC_BackendAliasAndName
 {
@@ -34,10 +25,14 @@ struct ALC_BackendAliasAndName
 static struct ALC_BackendAliasAndName aliases[] = {
   {"dsp", "oss"},
   {"waveout", "wave"},
-#ifdef USE_BACKEND_DMEDIA
+#if defined(USE_BACKEND_ALSA)
+  {"native", "alsa"},
+#elif defined(USE_BACKEND_OSS)
+  {"native", "oss"},
+#elif defined(USE_BACKEND_DMEDIA)
   {"native", "dmedia"},
 #else
-  {"native", "oss"},
+  {"native", "null"},
 #endif
   {NULL, NULL}
 };

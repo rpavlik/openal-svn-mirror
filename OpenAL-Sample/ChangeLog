@@ -1,4 +1,8 @@
-2006-06-29  Sven Panne  <sven.panne@aedion.de>
+2006-06-30  Sven Panne  <sven.panne@aedion.de>
+
+	* src/backends/alc_backend.c: Changed the fallback device logic
+	slightly, so it is always "native" now. This is turn is an alias for
+	"alsa"/"oss"/"dmedia"/"null" now, whichever is the first one supported.
 
 	* CMakeLists.txt, configure.ac, src/Makefile.am, src/al_mutexlib.c,
 	src/al_mutexlib.h, src/al_threadlib.c, src/al_threadlib.h,
