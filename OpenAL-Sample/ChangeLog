@@ -1,5 +1,14 @@
 2006-07-05  Sven Panne  <sven.panne@aedion.de>
 
+	* src/al_mixer.c, src/al_types.h, src/alc/alc_context.c,
+	src/backends/alc_backend.c, src/backends/alc_backend.h,
+	src/backends/alc_backend_alsa.c, src/backends/alc_backend_arts.c,
+	src/backends/alc_backend_esd.c, src/backends/alc_backend_irix.c,
+	src/backends/alc_backend_null.c, src/backends/alc_backend_oss.c,
+	src/backends/alc_backend_sdl.c, src/backends/alc_backend_wave.c,
+	src/extensions/al_ext_loki.c: Make the backend details abstract, so only
+	device handling and the backends themselves know the details.
+
 	* src/backends/alc_backend_wave.c: Open the output file without any race
 	conditions or security risks. General cleanup. Fixed endianess, sample
 	size and WAVE header issues.

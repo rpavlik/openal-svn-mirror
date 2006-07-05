@@ -52,7 +52,7 @@ lookupRealName (const char *deviceName)
 }
 
 typedef void (*ALC_BackendOpen) (ALC_OpenMode mode, ALC_BackendOps **ops,
-                                 ALC_BackendPrivateData **privateData);
+                                 struct ALC_BackendPrivateData **privateData);
 
 struct ALC_BackendNameAndOpen
 {
@@ -90,7 +90,8 @@ struct ALC_BackendNameAndOpen backends[] = {
 
 static void
 openNamedDevice (const char *deviceName, ALC_OpenMode mode,
-                 ALC_BackendOps **ops, ALC_BackendPrivateData **privateData)
+                 ALC_BackendOps **ops,
+                 struct ALC_BackendPrivateData **privateData)
 {
   struct ALC_BackendNameAndOpen *current;
   const char *realName = lookupRealName (deviceName);
@@ -99,7 +100,7 @@ openNamedDevice (const char *deviceName, ALC_OpenMode mode,
       if (strcmp (realName, current->name) == 0)
         {
           current->open (mode, ops, privateData);
-	  return;
+          return;
         }
     }
   *ops = NULL;
@@ -107,7 +108,7 @@ openNamedDevice (const char *deviceName, ALC_OpenMode mode,
 
 void
 alcBackendOpen_ (ALC_OpenMode mode, ALC_BackendOps **ops,
-                 ALC_BackendPrivateData **privateData)
+                 struct ALC_BackendPrivateData **privateData)
 {
   Rcvar device_params;
   Rcvar device_list;

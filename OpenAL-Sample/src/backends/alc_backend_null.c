@@ -11,7 +11,7 @@
 void
 alcBackendOpenNull_ (UNUSED (ALC_OpenMode mode),
                      UNUSED (ALC_BackendOps **ops),
-                     ALC_BackendPrivateData **privateData)
+                     struct ALC_BackendPrivateData **privateData)
 {
   *privateData = NULL;
 }
@@ -29,23 +29,23 @@ struct nullData
 };
 
 static void
-closeNull (ALC_BackendPrivateData *privateData)
+closeNull (struct ALC_BackendPrivateData *privateData)
 {
   free (privateData);
 }
 
 static void
-pauseNull (UNUSED (ALC_BackendPrivateData *privateData))
+pauseNull (UNUSED (struct ALC_BackendPrivateData *privateData))
 {
 }
 
 static void
-resumeNull (UNUSED (ALC_BackendPrivateData *privateData))
+resumeNull (UNUSED (struct ALC_BackendPrivateData *privateData))
 {
 }
 
 static ALboolean
-setAttributesNull (UNUSED (ALC_BackendPrivateData *privateData),
+setAttributesNull (UNUSED (struct ALC_BackendPrivateData *privateData),
                    UNUSED (ALuint *deviceBufferSizeInBytes),
                    UNUSED (ALenum *format), UNUSED (ALuint *speed))
 {
@@ -53,7 +53,7 @@ setAttributesNull (UNUSED (ALC_BackendPrivateData *privateData),
 }
 
 static void
-writeNull (ALC_BackendPrivateData *privateData,
+writeNull (struct ALC_BackendPrivateData *privateData,
            UNUSED (const void *data), UNUSED (int bytesToWrite))
 {
   struct nullData *nd = (struct nullData *) privateData;
@@ -65,7 +65,7 @@ writeNull (ALC_BackendPrivateData *privateData,
 }
 
 static ALsizei
-readNull (ALC_BackendPrivateData *privateData,
+readNull (struct ALC_BackendPrivateData *privateData,
           UNUSED (void *data), UNUSED (int bytesToRead))
 {
   struct nullData *nd = (struct nullData *) privateData;
@@ -78,14 +78,14 @@ readNull (ALC_BackendPrivateData *privateData,
 }
 
 static ALfloat
-getAudioChannelNull (UNUSED (ALC_BackendPrivateData *privateData),
+getAudioChannelNull (UNUSED (struct ALC_BackendPrivateData *privateData),
                      UNUSED (ALuint channel))
 {
   return 0.0f;
 }
 
 static int
-setAudioChannelNull (UNUSED (ALC_BackendPrivateData *privateData),
+setAudioChannelNull (UNUSED (struct ALC_BackendPrivateData *privateData),
                      UNUSED (ALuint channel), UNUSED (ALfloat volume))
 {
   return 0;
@@ -104,7 +104,7 @@ static ALC_BackendOps nullOps = {
 
 void
 alcBackendOpenNull_ (ALC_OpenMode mode, ALC_BackendOps **ops,
-                     ALC_BackendPrivateData **privateData)
+                     struct ALC_BackendPrivateData **privateData)
 {
   struct nullData *nd = (struct nullData *) malloc (sizeof *nd);
   if (nd == NULL)
@@ -118,7 +118,7 @@ alcBackendOpenNull_ (ALC_OpenMode mode, ALC_BackendOps **ops,
   nd->mode = mode;
 
   *ops = &nullOps;
-  *privateData = (ALC_BackendPrivateData *) nd;
+  *privateData = (struct ALC_BackendPrivateData *) nd;
 }
 
 #endif /* USE_BACKEND_NULL */

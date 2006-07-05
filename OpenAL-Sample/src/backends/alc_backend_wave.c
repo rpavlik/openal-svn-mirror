@@ -11,7 +11,7 @@
 void
 alcBackendOpenWAVE_ (UNUSED (ALC_OpenMode mode),
                      UNUSED (ALC_BackendOps **ops),
-                     ALC_BackendPrivateData **privateData)
+                     struct ALC_BackendPrivateData **privateData)
 {
   *privateData = NULL;
 }
@@ -116,7 +116,7 @@ writeWAVEHeader (struct waveData *wd)
 }
 
 static void
-closeWave (ALC_BackendPrivateData *privateData)
+closeWave (struct ALC_BackendPrivateData *privateData)
 {
   struct waveData *wd = (struct waveData *) privateData;
   fflush (wd->fh);
@@ -137,17 +137,17 @@ closeWave (ALC_BackendPrivateData *privateData)
 }
 
 static void
-pauseWave (UNUSED (ALC_BackendPrivateData *privateData))
+pauseWave (UNUSED (struct ALC_BackendPrivateData *privateData))
 {
 }
 
 static void
-resumeWave (UNUSED (ALC_BackendPrivateData *privateData))
+resumeWave (UNUSED (struct ALC_BackendPrivateData *privateData))
 {
 }
 
 static ALboolean
-setAttributesWave (ALC_BackendPrivateData *privateData,
+setAttributesWave (struct ALC_BackendPrivateData *privateData,
                    UNUSED (ALuint *deviceBufferSizeInBytes), ALenum *format,
                    ALuint *speed)
 {
@@ -212,7 +212,7 @@ endianess (void)
 }
 
 static void
-writeWave (ALC_BackendPrivateData *privateData, const void *data,
+writeWave (struct ALC_BackendPrivateData *privateData, const void *data,
            int bytesToWrite)
 {
   struct waveData *wd = (struct waveData *) privateData;
@@ -265,15 +265,15 @@ writeWave (ALC_BackendPrivateData *privateData, const void *data,
 }
 
 static ALsizei
-readWave (UNUSED (ALC_BackendPrivateData *privateData), UNUSED (void *data),
-          UNUSED (int bytesToRead))
+readWave (UNUSED (struct ALC_BackendPrivateData *privateData),
+          UNUSED (void *data), UNUSED (int bytesToRead))
 {
   _alDebug (ALD_MAXIMUS, __FILE__, __LINE__, "should never happen");
   return 0;
 }
 
 static ALfloat
-getAudioChannelWave (UNUSED (ALC_BackendPrivateData *privateData),
+getAudioChannelWave (UNUSED (struct ALC_BackendPrivateData *privateData),
                      UNUSED (ALuint channel))
 {
   _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
@@ -282,7 +282,7 @@ getAudioChannelWave (UNUSED (ALC_BackendPrivateData *privateData),
 }
 
 static int
-setAudioChannelWave (UNUSED (ALC_BackendPrivateData *privateData),
+setAudioChannelWave (UNUSED (struct ALC_BackendPrivateData *privateData),
                      UNUSED (ALuint channel), UNUSED (ALfloat volume))
 {
   _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
@@ -303,7 +303,7 @@ static ALC_BackendOps waveOps = {
 
 void
 alcBackendOpenWAVE_ (ALC_OpenMode mode, ALC_BackendOps **ops,
-                     ALC_BackendPrivateData **privateData)
+                     struct ALC_BackendPrivateData **privateData)
 {
   char fileName[32];
   int sequence, fd;
@@ -367,7 +367,7 @@ alcBackendOpenWAVE_ (ALC_OpenMode mode, ALC_BackendOps **ops,
     }
 
   *ops = &waveOps;
-  *privateData = (ALC_BackendPrivateData *) wd;
+  *privateData = (struct ALC_BackendPrivateData *) wd;
   _alDebug (ALD_MAXIMUS, __FILE__, __LINE__, "using file descriptor %d", fd);
 }
 

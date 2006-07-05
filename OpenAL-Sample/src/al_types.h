@@ -19,7 +19,6 @@
 #include <stddef.h>
 #include <sys/types.h>
 #include "al_mutexlib.h"
-#include "backends/alc_backend.h"
 
 #define _ALC_MAX_CHANNELS    6
 #define _ALC_MAX_FILTERS     9
@@ -279,15 +278,17 @@ typedef struct _time_filter_set {
 } time_filter_set;
 
 struct _AL_context;
+struct ALC_BackendOpsStruct;
+struct ALC_BackendPrivateData;
 
 typedef struct ALCdevice_struct {
 	struct _AL_context *cc;
 
 	/* a pointer to a function table for the backend in use for this device */
-	ALC_BackendOps *ops;
+	struct ALC_BackendOpsStruct *ops;
 
 	/* private data of the backend in use for this device */
-	ALC_BackendPrivateData *privateData;
+	struct ALC_BackendPrivateData *privateData;
 
 	/* device settings, not internal format */
 	ALenum format;

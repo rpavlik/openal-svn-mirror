@@ -13,7 +13,7 @@
 
 void
 alcBackendOpenARts_ (UNUSED(ALC_OpenMode mode), UNUSED(ALC_BackendOps **ops),
-		     ALC_BackendPrivateData **privateData)
+		     struct ALC_BackendPrivateData **privateData)
 {
 	*privateData = NULL;
 }
@@ -173,7 +173,7 @@ static void *grab_write_arts(void) {
         return ahandle;
 }
 
-static void arts_blitbuffer(void *handle, const void *data, int bytesToWrite)  {
+static void arts_blitbuffer(struct ALC_BackendPrivateData *handle, const void *data, int bytesToWrite)  {
 	t_arts_handle * ahandle = (t_arts_handle *) handle;
 
 	if ((ahandle == NULL)||(ahandle->stream == NULL)) {
@@ -183,7 +183,7 @@ static void arts_blitbuffer(void *handle, const void *data, int bytesToWrite)  {
 	parts_write(ahandle->stream, data, bytesToWrite);
 }
 
-static void release_arts(void *handle) {
+static void release_arts(struct ALC_BackendPrivateData *handle) {
 	t_arts_handle * ahandle = (t_arts_handle *) handle;
 
 	if ((ahandle == NULL)||(ahandle->stream == NULL)) {
@@ -209,7 +209,7 @@ static const char *genartskey(void) {
 	return retval;
 }
 
-static ALboolean set_write_arts(void *handle,
+static ALboolean set_write_arts(struct ALC_BackendPrivateData *handle,
 				ALuint *deviceBufferSizeInBytes,
 				ALenum *fmt,
 				ALuint *speed) {
@@ -250,7 +250,7 @@ static ALboolean set_write_arts(void *handle,
         return AL_TRUE;
 }
 
-static ALboolean set_read_arts(UNUSED(void *handle),
+static ALboolean set_read_arts(UNUSED(struct ALC_BackendPrivateData *handle),
 			       UNUSED(ALuint *deviceBufferSizeInBytes),
 			       UNUSED(ALenum *fmt),
 			       UNUSED(ALuint *speed)) {
@@ -258,7 +258,7 @@ static ALboolean set_read_arts(UNUSED(void *handle),
 }
 
 static ALboolean
-alcBackendSetAttributesARts_(void *handle, ALuint *deviceBufferSizeInBytes, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesARts_(struct ALC_BackendPrivateData *handle, ALuint *deviceBufferSizeInBytes, ALenum *fmt, ALuint *speed)
 {
 	return ((t_arts_handle *)handle)->mode == ALC_OPEN_INPUT_ ?
 		set_read_arts(handle, deviceBufferSizeInBytes, fmt, speed) :
@@ -266,30 +266,30 @@ alcBackendSetAttributesARts_(void *handle, ALuint *deviceBufferSizeInBytes, ALen
 }
 
 static void
-pause_arts( UNUSED(void *handle) )
+pause_arts( UNUSED(struct ALC_BackendPrivateData *handle) )
 {
 }
 
 static void
-resume_arts( UNUSED(void *handle) )
+resume_arts( UNUSED(struct ALC_BackendPrivateData *handle) )
 {
 }
 
 
 static ALsizei
-capture_arts( UNUSED(void *handle), UNUSED(void *capture_buffer), UNUSED(int bytesToRead) )
+capture_arts( UNUSED(struct ALC_BackendPrivateData *handle), UNUSED(void *capture_buffer), UNUSED(int bytesToRead) )
 {
 	return 0;
 }
 
 static ALfloat
-get_artschannel( UNUSED(void *handle), UNUSED(ALuint channel) )
+get_artschannel( UNUSED(struct ALC_BackendPrivateData *handle), UNUSED(ALuint channel) )
 {
 	return 0.0;
 }
 
 static int
-set_artschannel( UNUSED(void *handle), UNUSED(ALuint channel), UNUSED(ALfloat volume) )
+set_artschannel( UNUSED(struct ALC_BackendPrivateData *handle), UNUSED(ALuint channel), UNUSED(ALfloat volume) )
 {
 	return 0;
 }
@@ -306,7 +306,7 @@ static ALC_BackendOps artsOps = {
 };
 
 void
-alcBackendOpenARts_ (ALC_OpenMode mode, ALC_BackendOps **ops, ALC_BackendPrivateData **privateData)
+alcBackendOpenARts_ (ALC_OpenMode mode, ALC_BackendOps **ops, struct ALC_BackendPrivateData **privateData)
 {
 	*privateData = (mode == ALC_OPEN_INPUT_) ? grab_read_arts() : grab_write_arts();
 	if (*privateData != NULL) {

@@ -9,7 +9,7 @@
 
 void
 alcBackendOpenSDL_ (UNUSED (ALC_OpenMode mode), UNUSED (ALC_BackendOps **ops),
-                    ALC_BackendPrivateData **privateData)
+                    struct ALC_BackendPrivateData **privateData)
 {
   *privateData = NULL;
 }
@@ -106,17 +106,17 @@ struct sdlData
 };
 
 static void
-pauseSDL (UNUSED (ALC_BackendPrivateData *privateData))
+pauseSDL (UNUSED (struct ALC_BackendPrivateData *privateData))
 {
 }
 
 static void
-resumeSDL (UNUSED (ALC_BackendPrivateData *privateData))
+resumeSDL (UNUSED (struct ALC_BackendPrivateData *privateData))
 {
 }
 
 static void
-closeSDL (ALC_BackendPrivateData *privateData)
+closeSDL (struct ALC_BackendPrivateData *privateData)
 {
   struct sdlData *sd = (struct sdlData *) privateData;
   free (sd->ringBuffer);
@@ -181,7 +181,7 @@ fillAudio (void *userdata, Uint8 *stream, int len)
 }
 
 static ALboolean
-setAttributesSDL (ALC_BackendPrivateData *privateData,
+setAttributesSDL (struct ALC_BackendPrivateData *privateData,
                   ALuint *deviceBufferSizeInBytes, ALenum *format,
                   ALuint *speed)
 {
@@ -223,7 +223,7 @@ setAttributesSDL (ALC_BackendPrivateData *privateData,
 }
 
 static void
-writeSDL (ALC_BackendPrivateData *privateData, const void *data,
+writeSDL (struct ALC_BackendPrivateData *privateData, const void *data,
           int bytesToWrite)
 {
   struct sdlData *sd = (struct sdlData *) privateData;
@@ -253,7 +253,7 @@ writeSDL (ALC_BackendPrivateData *privateData, const void *data,
 }
 
 static ALsizei
-readSDL (UNUSED (ALC_BackendPrivateData *privateData),
+readSDL (UNUSED (struct ALC_BackendPrivateData *privateData),
          UNUSED (void *capture_buffer), UNUSED (int bytesToRead))
 {
   _alDebug (ALD_MAXIMUS, __FILE__, __LINE__, "should never happen");
@@ -261,7 +261,7 @@ readSDL (UNUSED (ALC_BackendPrivateData *privateData),
 }
 
 static ALfloat
-getAudioChannelSDL (UNUSED (ALC_BackendPrivateData *privateData),
+getAudioChannelSDL (UNUSED (struct ALC_BackendPrivateData *privateData),
                     UNUSED (ALuint channel))
 {
   _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
@@ -270,7 +270,7 @@ getAudioChannelSDL (UNUSED (ALC_BackendPrivateData *privateData),
 }
 
 static int
-setAudioChannelSDL (UNUSED (ALC_BackendPrivateData *privateData),
+setAudioChannelSDL (UNUSED (struct ALC_BackendPrivateData *privateData),
                     UNUSED (ALuint channel), UNUSED (ALfloat volume))
 {
   _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
@@ -291,7 +291,7 @@ static ALC_BackendOps sdlOps = {
 
 void
 alcBackendOpenSDL_ (ALC_OpenMode mode, ALC_BackendOps **ops,
-                    ALC_BackendPrivateData **privateData)
+                    struct ALC_BackendPrivateData **privateData)
 {
   struct sdlData *sd;
 
@@ -327,7 +327,7 @@ alcBackendOpenSDL_ (ALC_OpenMode mode, ALC_BackendOps **ops,
     }
 
   *ops = &sdlOps;
-  *privateData = (ALC_BackendPrivateData *) sd;
+  *privateData = (struct ALC_BackendPrivateData *) sd;
   _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
             "SDL backend opened successfully");
 }

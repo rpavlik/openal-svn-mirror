@@ -15,9 +15,9 @@ typedef enum
 } ALC_OpenMode;
 
 /*
- * Various data, the details depend on the backend in question.
+ * Various data, the details depend on the backend in question. Abstract.
  */
-typedef void ALC_BackendPrivateData;
+struct ALC_BackendPrivateData;
 
 typedef struct ALC_BackendOpsStruct
 {
@@ -26,19 +26,19 @@ typedef struct ALC_BackendOpsStruct
    * successful, AL_FALSE if the backend could not be closed for some
    * reason. This function is used to implement alcCloseDevice.
    */
-  void (*close) (ALC_BackendPrivateData *privateData);
+  void (*close) (struct ALC_BackendPrivateData *privateData);
 
   /*
    * Informs a backend that it is about to get paused. This function is used to
    * implement alcMakeContextCurrent(NULL).
    */
-  void (*pause) (ALC_BackendPrivateData *privateData);
+  void (*pause) (struct ALC_BackendPrivateData *privateData);
 
   /*
    * Informs a backend that it is about to get resumed. This function is used to
    * implement alcMakeContextCurrent(NON_NULL).
    */
-  void (*resume) (ALC_BackendPrivateData *privateData);
+  void (*resume) (struct ALC_BackendPrivateData *privateData);
 
   /*
    * Sets the parameters for a backend. Because we follow a meet-or-exceed
@@ -48,7 +48,7 @@ typedef struct ALC_BackendOpsStruct
    * parameters could not be matched or exceeded. This function is used to
    * implement alcMakeContextCurrent(NON_NULL).
    */
-  ALboolean (*setAttributes) (ALC_BackendPrivateData *privateData,
+  ALboolean (*setAttributes) (struct ALC_BackendPrivateData *privateData,
                               ALuint *deviceBufferSizeInBytes, ALenum *format,
                               ALuint *speed);
 
@@ -56,28 +56,28 @@ typedef struct ALC_BackendOpsStruct
    * Writes a given interleaved array of sound data to an output backend. This
    * function is used to implement (a)sync_mixer_iterate.
    */
-  void (*write) (ALC_BackendPrivateData *privateData, const void *data,
+  void (*write) (struct ALC_BackendPrivateData *privateData, const void *data,
                  int bytesToWrite);
 
   /*
    * Captures data from an input backend into the given buffer. This function is
    * used to implement capture functionality.
    */
-  ALsizei (*read) (ALC_BackendPrivateData *privateData, void *data,
+  ALsizei (*read) (struct ALC_BackendPrivateData *privateData, void *data,
                    int bytesToRead);
 
   /*
    * Returns the normalized volume for the given channel (main/PCM/CD) on an
    * output backend. This function is used to implement alcGetAudioChannel_LOKI.
    */
-  ALfloat (*getAudioChannel) (ALC_BackendPrivateData *privateData,
+  ALfloat (*getAudioChannel) (struct ALC_BackendPrivateData *privateData,
                               ALuint channel);
   /*
    * Sets the normalized volume for the given channel (main/PCM/CD) on an output
    * backend. This function is used to implement alcSetAudioChannel_LOKI.
    */
-  int (*setAudioChannel) (ALC_BackendPrivateData *privateData, ALuint channel,
-                          ALfloat volume);
+  int (*setAudioChannel) (struct ALC_BackendPrivateData *privateData,
+                          ALuint channel, ALfloat volume);
 } ALC_BackendOps;
 
 /*
@@ -87,27 +87,27 @@ typedef struct ALC_BackendOpsStruct
  * 2nd argument. This function is used to implement alcOpenDevice.
  */
 void alcBackendOpen_ (ALC_OpenMode mode, ALC_BackendOps **ops,
-                      ALC_BackendPrivateData **privateData);
+                      struct ALC_BackendPrivateData **privateData);
 
 /******************************************************************************/
 
 void alcBackendOpenOSS_ (ALC_OpenMode mode, ALC_BackendOps **ops,
-                         ALC_BackendPrivateData **privateData);
+                         struct ALC_BackendPrivateData **privateData);
 void alcBackendOpenNative_ (ALC_OpenMode mode, ALC_BackendOps **ops,
-                            ALC_BackendPrivateData **privateData);
+                            struct ALC_BackendPrivateData **privateData);
 void alcBackendOpenALSA_ (ALC_OpenMode mode, ALC_BackendOps **ops,
-                          ALC_BackendPrivateData **privateData);
+                          struct ALC_BackendPrivateData **privateData);
 void alcBackendOpenARts_ (ALC_OpenMode mode, ALC_BackendOps **ops,
-                          ALC_BackendPrivateData **privateData);
+                          struct ALC_BackendPrivateData **privateData);
 void alcBackendOpenDMedia_ (ALC_OpenMode mode, ALC_BackendOps **ops,
-                            ALC_BackendPrivateData **privateData);
+                            struct ALC_BackendPrivateData **privateData);
 void alcBackendOpenESD_ (ALC_OpenMode mode, ALC_BackendOps **ops,
-                         ALC_BackendPrivateData **privateData);
+                         struct ALC_BackendPrivateData **privateData);
 void alcBackendOpenSDL_ (ALC_OpenMode mode, ALC_BackendOps **ops,
-                         ALC_BackendPrivateData **privateData);
+                         struct ALC_BackendPrivateData **privateData);
 void alcBackendOpenNull_ (ALC_OpenMode mode, ALC_BackendOps **ops,
-                          ALC_BackendPrivateData **privateData);
+                          struct ALC_BackendPrivateData **privateData);
 void alcBackendOpenWAVE_ (ALC_OpenMode mode, ALC_BackendOps **ops,
-                          ALC_BackendPrivateData **privateData);
+                          struct ALC_BackendPrivateData **privateData);
 
 #endif /* AL_BACKENDS_ALC_BACKEND_H_ */

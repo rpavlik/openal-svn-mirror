@@ -11,7 +11,7 @@
 void
 alcBackendOpenOSS_ (UNUSED (ALC_OpenMode mode),
                     UNUSED (ALC_BackendOps **ops),
-                    ALC_BackendPrivateData **privateData)
+                    struct ALC_BackendPrivateData **privateData)
 {
   *privateData = NULL;
 }
@@ -206,18 +206,18 @@ ok (int error, const char *message)
 }
 
 static void
-closeOSS (ALC_BackendPrivateData *privateData)
+closeOSS (struct ALC_BackendPrivateData *privateData)
 {
-  struct ossData *od = privateData;
+  struct ossData *od = (struct ossData *) privateData;
   ok (close (od->fd), "close");
   free (od);
 }
 
 static ALboolean
-setAttributesOSS (ALC_BackendPrivateData *privateData,
+setAttributesOSS (struct ALC_BackendPrivateData *privateData,
                   ALuint *bufferSizeInBytes, ALenum *format, ALuint *speed)
 {
-  struct ossData *od = privateData;
+  struct ossData *od = (struct ossData *) privateData;
   int ossFormat;
   int numChannels;
   int ossSpeed = (int) *speed;
@@ -239,37 +239,39 @@ setAttributesOSS (ALC_BackendPrivateData *privateData,
 }
 
 static void
-writeOSS (ALC_BackendPrivateData *privateData, const void *data,
+writeOSS (struct ALC_BackendPrivateData *privateData, const void *data,
           int bytesToWrite)
 {
-  struct ossData *od = privateData;
+  struct ossData *od = (struct ossData *) privateData;
   write (od->fd, data, bytesToWrite);
 }
 
 static ALsizei
-readOSS (ALC_BackendPrivateData *privateData, void *data, int bytesToRead)
+readOSS (struct ALC_BackendPrivateData *privateData, void *data,
+         int bytesToRead)
 {
-  struct ossData *od = privateData;
+  struct ossData *od = (struct ossData *) privateData;
   return read (od->fd, data, bytesToRead);
 }
 
 static void
-pauseOSS (UNUSED (ALC_BackendPrivateData *privateData))
+pauseOSS (UNUSED (struct ALC_BackendPrivateData *privateData))
 {
 }
 
 static void
-resumeOSS (UNUSED (ALC_BackendPrivateData *privateData))
+resumeOSS (UNUSED (struct ALC_BackendPrivateData *privateData))
 {
 }
 
 static ALfloat
-getAudioChannelOSS (ALC_BackendPrivateData *privateData, ALuint channel)
+getAudioChannelOSS (struct ALC_BackendPrivateData *privateData,
+                    ALuint channel)
 {
   int ossChannel;
   int ossVolume;
   ALfloat alVolume;
-  struct ossData *od = privateData;
+  struct ossData *od = (struct ossData *) privateData;
 
   /*
    * Note that we use the file descriptor of our OSS device, which is
@@ -286,12 +288,12 @@ getAudioChannelOSS (ALC_BackendPrivateData *privateData, ALuint channel)
 }
 
 static int
-setAudioChannelOSS (ALC_BackendPrivateData *privateData, ALuint channel,
-                    ALfloat volume)
+setAudioChannelOSS (struct ALC_BackendPrivateData *privateData,
+                    ALuint channel, ALfloat volume)
 {
   int ossChannel;
   int ossVolume;
-  struct ossData *od = privateData;
+  struct ossData *od = (struct ossData *) privateData;
 
   /*
    * Note that we use the file descriptor of our OSS device, which is
@@ -341,7 +343,7 @@ getOSSDeviceName (char *retref, size_t retsize, ALC_OpenMode mode)
 
 void
 alcBackendOpenOSS_ (ALC_OpenMode mode, ALC_BackendOps **ops,
-                    ALC_BackendPrivateData **privateData)
+                    struct ALC_BackendPrivateData **privateData)
 {
   char deviceName[256];
   int fd;
@@ -368,7 +370,7 @@ alcBackendOpenOSS_ (ALC_OpenMode mode, ALC_BackendOps **ops,
   od->fd = fd;
 
   *ops = &ossOps;
-  *privateData = (ALC_BackendPrivateData *) od;
+  *privateData = (struct ALC_BackendPrivateData *) od;
   _alDebug (ALD_MAXIMUS, __FILE__, __LINE__, "using device \"%s\"",
             deviceName);
 }

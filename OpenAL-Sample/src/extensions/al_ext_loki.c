@@ -28,8 +28,6 @@
 
 #include "audioconvert/audioconvert.h"
 
-#include "backends/alc_backend.h"
-
 #ifndef elementsof
 #define elementsof(a) ((sizeof(a)) / (sizeof *(a)))
 #endif

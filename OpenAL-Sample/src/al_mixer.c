@@ -33,8 +33,6 @@
 #include "al_threadlib.h"
 #include "al_mutexlib.h"
 
-#include "backends/alc_backend.h"
-
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 

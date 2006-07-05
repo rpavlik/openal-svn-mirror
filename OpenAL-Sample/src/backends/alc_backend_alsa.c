@@ -25,7 +25,7 @@
 void
 alcBackendOpenALSA_ (UNUSED (ALC_OpenMode mode),
                      UNUSED (ALC_BackendOps **ops),
-                     ALC_BackendPrivateData **privateData)
+                     struct ALC_BackendPrivateData **privateData)
 {
   *privateData = NULL;
 }
@@ -186,7 +186,7 @@ ok (int error, const char *message)
 }
 
 static void
-closeALSA (ALC_BackendPrivateData *privateData)
+closeALSA (struct ALC_BackendPrivateData *privateData)
 {
   struct alsaData *ad = (struct alsaData *) privateData;
   ok (psnd_pcm_close (ad->pcmHandle), "close");
@@ -212,7 +212,7 @@ convertFormatALToALSA (ALenum format)
 }
 
 static ALboolean
-setAttributesALSA (ALC_BackendPrivateData *privateData,
+setAttributesALSA (struct ALC_BackendPrivateData *privateData,
                    ALuint *bufferSizeInBytes, ALenum *format, ALuint *speed)
 {
   struct alsaData *ad = (struct alsaData *) privateData;
@@ -274,7 +274,7 @@ setAttributesALSA (ALC_BackendPrivateData *privateData,
 }
 
 static void
-writeALSA (ALC_BackendPrivateData *privateData, const void *data,
+writeALSA (struct ALC_BackendPrivateData *privateData, const void *data,
            int bytesToWrite)
 {
   struct alsaData *ad = (struct alsaData *) privateData;
@@ -326,7 +326,8 @@ writeALSA (ALC_BackendPrivateData *privateData, const void *data,
 
 /* capture data from the audio device */
 static ALsizei
-readALSA (ALC_BackendPrivateData *privateData, void *data, int bytesToRead)
+readALSA (struct ALC_BackendPrivateData *privateData, void *data,
+          int bytesToRead)
 {
   struct alsaData *ad = (struct alsaData *) privateData;
   char *captureData = data;
@@ -366,17 +367,17 @@ readALSA (ALC_BackendPrivateData *privateData, void *data, int bytesToRead)
 }
 
 static void
-pauseALSA (UNUSED (ALC_BackendPrivateData *privateData))
+pauseALSA (UNUSED (struct ALC_BackendPrivateData *privateData))
 {
 }
 
 static void
-resumeALSA (UNUSED (ALC_BackendPrivateData *privateData))
+resumeALSA (UNUSED (struct ALC_BackendPrivateData *privateData))
 {
 }
 
 static ALfloat
-getAudioChannelALSA (UNUSED (ALC_BackendPrivateData *privateData),
+getAudioChannelALSA (UNUSED (struct ALC_BackendPrivateData *privateData),
                      UNUSED (ALuint channel))
 {
   _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
@@ -385,7 +386,7 @@ getAudioChannelALSA (UNUSED (ALC_BackendPrivateData *privateData),
 }
 
 static int
-setAudioChannelALSA (UNUSED (ALC_BackendPrivateData *privateData),
+setAudioChannelALSA (UNUSED (struct ALC_BackendPrivateData *privateData),
                      UNUSED (ALuint channel), UNUSED (ALfloat volume))
 {
   _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
@@ -454,7 +455,7 @@ pcmOpen (snd_pcm_t **pcmHandle, const char *deviceName, ALC_OpenMode mode)
 
 void
 alcBackendOpenALSA_ (ALC_OpenMode mode, ALC_BackendOps **ops,
-                     ALC_BackendPrivateData **privateData)
+                     struct ALC_BackendPrivateData **privateData)
 {
   char deviceName[256];
   snd_pcm_t *pcmHandle;
@@ -487,7 +488,7 @@ alcBackendOpenALSA_ (ALC_OpenMode mode, ALC_BackendOps **ops,
   ad->frameSizeInBytes = 0;
 
   *ops = &alsaOps;
-  *privateData = (ALC_BackendPrivateData *) ad;
+  *privateData = (struct ALC_BackendPrivateData *) ad;
   _alDebug (ALD_MAXIMUS, __FILE__, __LINE__, "using device \"%s\"",
             deviceName);
 }

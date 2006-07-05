@@ -31,8 +31,6 @@
 #include "alc/alc_speaker.h"
 #include "alc/alc_context.h"
 
-#include "backends/alc_backend.h"
-
 /*
  * CONTEXT_BASE is the number which we start at for context ids.
  */

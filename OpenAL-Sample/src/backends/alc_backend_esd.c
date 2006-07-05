@@ -9,10 +9,10 @@
 #ifndef USE_BACKEND_ESD
 
 void
-alcBackendOpenESD_ (UNUSED(ALC_OpenMode mode), UNUSED(ALC_BackendOps **ops),
-		    ALC_BackendPrivateData **privateData)
+alcBackendOpenESD_ (UNUSED (ALC_OpenMode mode), UNUSED (ALC_BackendOps **ops),
+                    struct ALC_BackendPrivateData **privateData)
 {
-	*privateData = NULL;
+  *privateData = NULL;
 }
 
 #else
@@ -108,11 +108,17 @@ loadLibraryESD (void)
       return 0;
     }
 
-  OPENAL_LOAD_ESD_SYMBOL (handle, (int (*) (esd_format_t, int, const char *, const char *)), esd_play_stream);
-  OPENAL_LOAD_ESD_SYMBOL (handle, (int (*) (esd_format_t, int, const char *, const char *)), esd_record_stream);
-  OPENAL_LOAD_ESD_SYMBOL (handle, (int (*) (int)), esd_close);
-  OPENAL_LOAD_ESD_SYMBOL (handle, (int (*) (int)), esd_standby);
-  OPENAL_LOAD_ESD_SYMBOL (handle, (int (*) (int)), esd_resume);
+  OPENAL_LOAD_ESD_SYMBOL (handle,
+                          (int (*)
+                           (esd_format_t, int, const char *, const char *)),
+                          esd_play_stream);
+  OPENAL_LOAD_ESD_SYMBOL (handle,
+                          (int (*)
+                           (esd_format_t, int, const char *, const char *)),
+                          esd_record_stream);
+  OPENAL_LOAD_ESD_SYMBOL (handle, (int (*)(int)), esd_close);
+  OPENAL_LOAD_ESD_SYMBOL (handle, (int (*)(int)), esd_standby);
+  OPENAL_LOAD_ESD_SYMBOL (handle, (int (*)(int)), esd_resume);
 
   _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
             "%s successfully loaded", ESD_LIBRARY);
@@ -135,7 +141,7 @@ typedef struct ALC_BackendDataESD_struct
  * of the data to come, so we can't actually do much in openESD itself. The real
  * work happens in setAttributesESD below.
  */
-static ALC_BackendPrivateData *
+static struct ALC_BackendPrivateData *
 openESD (ALC_OpenMode mode)
 {
   ALC_BackendDataESD *eh;
@@ -160,11 +166,11 @@ openESD (ALC_OpenMode mode)
 
   _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
             "ESD device '%s' successfully opened", eh->name);
-  return eh;
+  return (struct ALC_BackendPrivateData *) eh;
 }
 
 static void
-closeESD (void *privateData)
+closeESD (struct ALC_BackendPrivateData *privateData)
 {
   ALC_BackendDataESD *eh = (ALC_BackendDataESD *) privateData;
   _alDebug (ALD_CONTEXT, __FILE__, __LINE__, "closing ESD device '%s'",
@@ -174,7 +180,7 @@ closeESD (void *privateData)
 }
 
 static void
-pauseESD (void *privateData)
+pauseESD (struct ALC_BackendPrivateData *privateData)
 {
   ALC_BackendDataESD *eh = (ALC_BackendDataESD *) privateData;
   _alDebug (ALD_CONTEXT, __FILE__, __LINE__, "pausing ESD device '%s'",
@@ -184,7 +190,7 @@ pauseESD (void *privateData)
 }
 
 static void
-resumeESD (void *privateData)
+resumeESD (struct ALC_BackendPrivateData *privateData)
 {
   ALC_BackendDataESD *eh = (ALC_BackendDataESD *) privateData;
   _alDebug (ALD_CONTEXT, __FILE__, __LINE__, "resuming ESD device, '%s'",
@@ -194,8 +200,8 @@ resumeESD (void *privateData)
 }
 
 static ALboolean
-setAttributesESD (void *privateData, ALuint *bufferSizeInBytes, ALenum *format,
-                  ALuint *speed)
+setAttributesESD (struct ALC_BackendPrivateData *privateData,
+                  ALuint *bufferSizeInBytes, ALenum *format, ALuint *speed)
 {
   ALC_BackendDataESD *eh = (ALC_BackendDataESD *) privateData;
   esd_format_t esd_format;
@@ -253,7 +259,8 @@ setAttributesESD (void *privateData, ALuint *bufferSizeInBytes, ALenum *format,
 }
 
 static void
-writeESD (void *privateData, const void *data, int bytesToWrite)
+writeESD (struct ALC_BackendPrivateData *privateData, const void *data,
+          int bytesToWrite)
 {
   fd_set esd_fd_set;
   ALC_BackendDataESD *eh = (ALC_BackendDataESD *) privateData;
@@ -312,7 +319,8 @@ writeESD (void *privateData, const void *data, int bytesToWrite)
  * ToDo: Implement!
  */
 static ALsizei
-readESD (void *privateData, UNUSED (void *data), int bytesToRead)
+readESD (struct ALC_BackendPrivateData *privateData, UNUSED (void *data),
+         int bytesToRead)
 {
   ALC_BackendDataESD *eh = (ALC_BackendDataESD *) privateData;
   _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
@@ -325,7 +333,8 @@ readESD (void *privateData, UNUSED (void *data), int bytesToRead)
  * ToDo: Can this be implemented at all?
  */
 static ALfloat
-getAudioChannelESD (void *privateData, ALuint channel)
+getAudioChannelESD (struct ALC_BackendPrivateData *privateData,
+                    ALuint channel)
 {
   ALC_BackendDataESD *eh = (ALC_BackendDataESD *) privateData;
   _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
@@ -338,7 +347,8 @@ getAudioChannelESD (void *privateData, ALuint channel)
  * ToDo: Can this be implemented via esd_set_stream_pan?
  */
 static int
-setAudioChannelESD (void *privateData, ALuint channel, ALfloat volume)
+setAudioChannelESD (struct ALC_BackendPrivateData *privateData,
+                    ALuint channel, ALfloat volume)
 {
   ALC_BackendDataESD *eh = (ALC_BackendDataESD *) privateData;
   _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
@@ -359,12 +369,14 @@ static ALC_BackendOps esdOps = {
 };
 
 void
-alcBackendOpenESD_ (ALC_OpenMode mode, ALC_BackendOps **ops, ALC_BackendPrivateData **privateData)
+alcBackendOpenESD_ (ALC_OpenMode mode, ALC_BackendOps **ops,
+                    struct ALC_BackendPrivateData **privateData)
 {
   *privateData = openESD (mode);
-  if (*privateData != NULL) {
-    *ops = &esdOps;
-  }
+  if (*privateData != NULL)
+    {
+      *ops = &esdOps;
+    }
 }
 
 #endif /* USE_BACKEND_ESD */
