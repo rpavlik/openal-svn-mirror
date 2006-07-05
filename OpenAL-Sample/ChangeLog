@@ -1,7 +1,8 @@
 2006-07-05  Sven Panne  <sven.panne@aedion.de>
 
 	* src/backends/alc_backend_wave.c: Open the output file without any race
-	conditions or security risks. General cleanup.
+	conditions or security risks. General cleanup. Fixed endianess, sample
+	size and WAVE header issues.
 
 2006-07-01  Prakash Punnoor <prakash@punnoor.de>
 

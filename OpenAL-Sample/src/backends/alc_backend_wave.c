@@ -39,83 +39,80 @@ struct waveData
   int bytesPerSample;
 };
 
-#include "al_main.h"
-#include "audioconvert/ac_endian.h"
+static void
+writeInt16LE (FILE * fh, int16_t value)
+{
+  unsigned char buf[2];
+  buf[0] = (unsigned char) (value & 0xFF);
+  buf[1] = (unsigned char) ((value >> 8) & 0xFF);
+  fwrite (buf, 1, sizeof (buf), fh);
+}
 
-#ifdef WORDS_BIGENDIAN
-#define RIFFMAGIC       0x52494646
-#define WAVEMAGIC       0x57415645
-#define FMTMAGIC        0x666D7420
-#define DATAMAGIC	0x64617461
-#else
-#define RIFFMAGIC       0x46464952
-#define WAVEMAGIC       0x45564157
-#define FMTMAGIC        0x20746D66
-#define DATAMAGIC	0x61746164
-#endif /* WORDS_BIGENDIAN */
+static void
+writeInt32LE (FILE * fh, int32_t value)
+{
+  unsigned char buf[4];
+  buf[0] = (unsigned char) (value & 0xFF);
+  buf[1] = (unsigned char) ((value >> 8) & 0xFF);
+  buf[2] = (unsigned char) ((value >> 16) & 0xFF);
+  buf[3] = (unsigned char) ((value >> 24) & 0xFF);
+  fwrite (buf, 1, sizeof (buf), fh);
+}
 
-/*
- *  FIXME: make endian correct
- */
-static void writeWAVEHeader(struct waveData *wave) {
-	ALushort writer16;
-	ALuint   writer32;
+static ALboolean
+writeWAVEHeader (struct waveData *wd)
+{
+  /******** 8 + 4 bytes RIFF/WAVE intro ********/
 
-        /* 'RIFF' */
-	writer32 = RIFFMAGIC;
-	fwrite(&writer32, 1, sizeof writer32, wave->fh);
+  /* 'RIFF' */
+  writeInt32LE (wd->fh, 0x46464952);
 
-	/* total length */
-	writer32 = swap32le(wave->length);
-	fwrite(&writer32, 1, sizeof writer32, wave->fh);
+  /* total length */
+  writeInt32LE (wd->fh, 4 + 8 + 16 + 8 + wd->length);
 
-        /* 'WAVE' */
-	writer32 = WAVEMAGIC;
-	fwrite(&writer32, 1, sizeof writer32, wave->fh);
+  /* 'WAVE' */
+  writeInt32LE (wd->fh, 0x45564157);
 
-        /* 'fmt ' */
-	writer32 = FMTMAGIC;
-	fwrite(&writer32, 1, sizeof writer32, wave->fh);
+  /******** fmt chunk (8 bytes header, 16 bytes content) ********/
 
-        /* fmt chunk length */
-	writer32 = swap32le(16);
-	fwrite(&writer32, 1, sizeof writer32, wave->fh);
+  /* 'fmt ' */
+  writeInt32LE (wd->fh, 0x20746D66);
 
-        /* ALushort encoding */
-	writer16 = swap16le(1);
-	fwrite(&writer16, 1, sizeof writer16, wave->fh);
+  /* fmt chunk length */
+  writeInt32LE (wd->fh, 16);
 
-	/* Alushort channels */
-	writer16 = swap16le(wave->channels);
-	fwrite(&writer16, 1, sizeof writer16, wave->fh);
+  /* audio format = PCM */
+  writeInt16LE (wd->fh, 1);
 
-	/* ALuint frequency */
-	writer32 = swap32le(wave->speed);
-	fwrite(&writer32, 1, sizeof writer32, wave->fh);
+  /* number of channels */
+  writeInt16LE (wd->fh, wd->channels);
 
-	/* ALuint byterate  */
-	writer32 = swap32le(wave->speed / sizeof (ALshort)); /* FIXME */
-	fwrite(&writer32, 1, sizeof writer32, wave->fh);
+  /* sample frequency */
+  writeInt32LE (wd->fh, wd->speed);
 
-	/* ALushort blockalign */
-	writer16 = 0;
-	fwrite(&writer16, 1, sizeof writer16, wave->fh);
+  /* byte rate */
+  writeInt32LE (wd->fh, wd->speed * wd->channels * wd->bytesPerSample);
 
-	/* ALushort bitspersample */
-	writer16 = swap16le(wave->bytesPerSample * 8);
-	fwrite(&writer16, 1, sizeof writer16, wave->fh);
+  /* block align */
+  writeInt16LE (wd->fh, wd->channels * wd->bytesPerSample);
 
-        /* 'data' */
-	writer32 = DATAMAGIC;
-	fwrite(&writer32, 1, sizeof writer32, wave->fh);
+  /* bits per sample */
+  writeInt16LE (wd->fh, wd->bytesPerSample * 8);
 
-	/* data length */
-	writer32 = swap32le(wave->length - 44); /* samples */
-	fwrite(&writer32, 1, sizeof writer32, wave->fh);
+  /******** data chunk (8 bytes header, wd->length bytes content) ********/
 
-	fprintf(stderr, "waveout length %d\n", wave->length);
+  /* 'data' */
+  writeInt32LE (wd->fh, 0x61746164);
 
-	return;
+  /* data chunk length */
+  writeInt32LE (wd->fh, wd->length);
+
+  if (ferror (wd->fh))
+    {
+      _alDebug (ALD_MAXIMUS, __FILE__, __LINE__, "error writing WAVE header");
+      return AL_FALSE;
+    }
+  return AL_TRUE;
 }
 
 static void
@@ -133,6 +130,7 @@ closeWave (ALC_BackendPrivateData *privateData)
       return;
     }
 
+  /* ToDo: Check for errors */
   writeWAVEHeader (wd);
   fclose (wd->fh);
   free (wd);
@@ -191,62 +189,79 @@ setAttributesWave (ALC_BackendPrivateData *privateData,
   return AL_TRUE;
 }
 
-/*
- * convert_to_little_endian( ALuint bps, void *data, int nbytes )
- *
- * Convert data in place to little endian format.  bps is the bits per
- * sample in data, nbytes is the length of data in bytes.  If bps is 8,
- * or the machine is little endian, this is a nop.
- *
- * FIXME:
- *	We only handle 16-bit signed formats for now.  Should fix this.
- */
-static void convert_to_little_endian( ALuint bps, void *data, int nbytes )
+typedef enum
 {
-	assert( data );
-	assert( nbytes > 0 );
+  LittleEndian,
+  BigEndian,
+  UnknwonEndian                 /* has anybody still a PDP11? :-) */
+} Endianess;
 
-	if( bps == 8 ) {
-		/* 8-bit samples don't need to be converted */
-		return;
-	}
+/* test from Harbison & Steele, "C - A Reference Manual", section 6.1.2 */
+static Endianess
+endianess (void)
+{
+  union
+  {
+    long l;
+    char c[sizeof (long)];
+  } u;
 
-	assert( bps == 16 );
-
-#ifdef WORDS_BIGENDIAN
-	/* do the conversion */
-	{
-		ALshort *outp = data;
-		ALuint i;
-		for( i = 0; i < nbytes/sizeof(ALshort); i++ ) {
-			outp[i] = swap16le( outp[i] );
-		}
-	}
-#else
-	(void)data; (void)nbytes;
-#endif /* WORDS_BIG_ENDIAN */
+  u.l = 1;
+  return (u.c[0] == 1) ? LittleEndian :
+    ((u.c[sizeof (long) - 1] == 1) ? BigEndian : UnknwonEndian);
 }
 
 static void
 writeWave (ALC_BackendPrivateData *privateData, const void *data,
            int bytesToWrite)
 {
-	struct waveData *wd = (struct waveData *) privateData;
-	wd->length += bytesToWrite;
+  struct waveData *wd = (struct waveData *) privateData;
+  int samplesToWrite = bytesToWrite / wd->bytesPerSample;
 
-	/*
-	 * WAV files expect their PCM data in LE format.  If we are on
-	 * big endian host, we need to convert the data in place.
-	 * TODO: THIS BREAKS THE CONST CORRECTNESS!!!!!!!!!!!!!!!
-	 *
-	 */
-	convert_to_little_endian( wd->bytesPerSample * 8,
-				  (void *)data,
-				  bytesToWrite );
+  if ((bytesToWrite % wd->bytesPerSample) != 0)
+    {
+      _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
+                "%d bytes are not a multiple of %d", bytesToWrite,
+                wd->bytesPerSample);
+      return;
+    }
 
-	fwrite(data, 1, bytesToWrite, wd->fh);
+  wd->length += bytesToWrite;
 
-	_alMicroSleep(1000000.0 * bytesToWrite / wd->speed);
+  if ((wd->bytesPerSample == 1) || (endianess () == LittleEndian))
+    {
+      fwrite (data, 1, bytesToWrite, wd->fh);
+    }
+  else if (wd->bytesPerSample == 2)
+    {
+      const int16_t *p = (const int16_t *) data;
+      while (samplesToWrite > 0)
+        {
+          writeInt16LE (wd->fh, *p++);
+          samplesToWrite--;
+        }
+    }
+  else if (wd->bytesPerSample == 4)
+    {
+      const int32_t *p = (const int32_t *) data;
+      while (samplesToWrite > 0)
+        {
+          writeInt32LE (wd->fh, *p++);
+          samplesToWrite--;
+        }
+    }
+  else
+    {
+      _alDebug (ALD_MAXIMUS, __FILE__, __LINE__, "should never happen");
+      return;
+    }
+
+  if (ferror (wd->fh))
+    {
+      _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
+                "error writing to WAVE file");
+      return;
+    }
 }
 
 static ALsizei
@@ -343,7 +358,13 @@ alcBackendOpenWAVE_ (ALC_OpenMode mode, ALC_BackendOps **ops,
   wd->bytesPerSample = 0;
 
   /* write dummy header, will be patched on closing */
-  writeWAVEHeader (wd);
+  if (!writeWAVEHeader (wd))
+    {
+      fclose (fh);
+      free (wd);
+      *privateData = NULL;
+      return;
+    }
 
   *ops = &waveOps;
   *privateData = (ALC_BackendPrivateData *) wd;
