@@ -19,6 +19,7 @@ alcBackendOpenOSS_ (UNUSED (ALC_OpenMode mode),
 #else
 
 #define DEFAULT_DEVICE "/dev/dsp"
+#define NUM_FRAGMENTS 2
 
 #include <string.h>
 #include <fcntl.h>
@@ -45,6 +46,7 @@ alcBackendOpenOSS_ (UNUSED (ALC_OpenMode mode),
 struct ossData
 {
   int fd;                       /* file descriptor of the OSS device */
+  ALC_OpenMode mode;
 };
 
 static ALboolean
@@ -213,6 +215,18 @@ closeOSS (struct ALC_BackendPrivateData *privateData)
   free (od);
 }
 
+static int
+log2i (ALuint x)
+{
+  int y = 0;
+  while (x > 1)
+    {
+      x >>= 1;
+      y++;
+    }
+  return y;
+}
+
 static ALboolean
 setAttributesOSS (struct ALC_BackendPrivateData *privateData,
                   ALuint *bufferSizeInBytes, ALenum *format, ALuint *speed)
@@ -221,20 +235,38 @@ setAttributesOSS (struct ALC_BackendPrivateData *privateData,
   int ossFormat;
   int numChannels;
   int ossSpeed = (int) *speed;
+  int log2FragmentSize = log2i (*bufferSizeInBytes / NUM_FRAGMENTS);
+  int numFragmentsLogSize;
+  audio_buf_info info;
 
-  if (!(convertFormatFromAL (&ossFormat, &numChannels, *format) &&
+  if (log2FragmentSize < 4)
+    {
+      /* according to the OSS spec, 16 bytes are the minimum */
+      log2FragmentSize = 4;
+    }
+  numFragmentsLogSize = (NUM_FRAGMENTS << 16) | log2FragmentSize;
+
+  if (!(ok (ioctl (od->fd, SNDCTL_DSP_SETFRAGMENT, &numFragmentsLogSize),
+            "set fragment") &&
+        convertFormatFromAL (&ossFormat, &numChannels, *format) &&
         ok (ioctl (od->fd, SNDCTL_DSP_SETFMT, &ossFormat),
             "set format") &&
         ok (ioctl (od->fd, SNDCTL_DSP_CHANNELS, &numChannels),
             "set channels") &&
         ok (ioctl (od->fd, SNDCTL_DSP_SPEED, &ossSpeed),
             "set speed") &&
-        convertFormatFromOSS (format, ossFormat, numChannels)))
+        convertFormatFromOSS (format, ossFormat, numChannels) &&
+        ok (ioctl
+            (od->fd,
+             (od->mode ==
+              ALC_OPEN_INPUT_ ? SNDCTL_DSP_GETISPACE : SNDCTL_DSP_GETOSPACE),
+             &info), "get space")))
     {
       return AL_FALSE;
     }
 
   *speed = (ALuint) ossSpeed;
+  *bufferSizeInBytes = info.fragstotal * info.fragsize;
   return AL_TRUE;
 }
 
@@ -243,7 +275,18 @@ writeOSS (struct ALC_BackendPrivateData *privateData, const void *data,
           int bytesToWrite)
 {
   struct ossData *od = (struct ossData *) privateData;
-  write (od->fd, data, bytesToWrite);
+  while (bytesToWrite > 0)
+    {
+      ssize_t bytesWritten = write (od->fd, data, bytesToWrite);
+      if (bytesWritten == -1)
+        {
+          /* ToDo: Handle error */
+          _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
+                    "I/O error during write");
+          return;
+        }
+      bytesToWrite -= bytesWritten;
+    }
 }
 
 static ALsizei
@@ -251,7 +294,14 @@ readOSS (struct ALC_BackendPrivateData *privateData, void *data,
          int bytesToRead)
 {
   struct ossData *od = (struct ossData *) privateData;
-  return read (od->fd, data, bytesToRead);
+  ssize_t bytesRead = read (od->fd, data, bytesToRead);
+  if (bytesRead == -1)
+    {
+      /* ToDo: Handle error */
+      _alDebug (ALD_MAXIMUS, __FILE__, __LINE__, "I/O error during read");
+      return 0;
+    }
+  return bytesRead;
 }
 
 static void
@@ -350,7 +400,7 @@ alcBackendOpenOSS_ (ALC_OpenMode mode, ALC_BackendOps **ops,
   struct ossData *od = (struct ossData *) malloc (sizeof *od);
 
   getOSSDeviceName (deviceName, sizeof (deviceName), mode);
-  fd = open (deviceName, mode);
+  fd = open (deviceName, (mode == ALC_OPEN_INPUT_ ? O_RDONLY : O_WRONLY));
   if (!ok (fd, "open"))
     {
       *privateData = NULL;
@@ -368,6 +418,7 @@ alcBackendOpenOSS_ (ALC_OpenMode mode, ALC_BackendOps **ops,
     }
 
   od->fd = fd;
+  od->mode = mode;
 
   *ops = &ossOps;
   *privateData = (struct ALC_BackendPrivateData *) od;
