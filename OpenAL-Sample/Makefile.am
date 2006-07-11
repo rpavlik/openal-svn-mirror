@@ -23,9 +23,10 @@ EXTRA_DIST =							\
 	admin/CMakeModules/FindCompilerFlagsSet.cmake		\
 	admin/CMakeModules/FindCompilerVisibility.cmake		\
 	admin/CMakeModules/FindConfigHelper.cmake		\
-        admin/CMakeModules/FindPkgConfig.cmake			\
-        admin/CMakeModules/FindSelectArgtypes.cmake		\
+	admin/CMakeModules/FindPkgConfig.cmake			\
+	admin/CMakeModules/FindSelectArgtypes.cmake		\
 	admin/CMakeModules/FindSleepFunction.cmake		\
+	admin/CMakeModules/SelectArgtypes.c.in			\
 	admin/RPM/openal.spec					\
 	admin/RPM/openal.xpm					\
 	admin/autotools/.indent.pro				\

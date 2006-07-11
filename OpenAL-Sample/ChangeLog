@@ -1,5 +1,8 @@
 2006-07-11  Sven Panne  <sven.panne@aedion.de>
 
+	* Makefile.am: Include admin/CMakeModules/SelectArgtypes.c.in in source
+	distributions.
+
 	* src/backends/alc_backend_windows.c: MMSYSTEM backend fixes based on
 	patches from Brian Keener <bkeener@thesoftwaresource.com>. Not really
 	tested, but at least things compile under Cygwin.
