@@ -1345,7 +1345,11 @@ AL_rctree *_alEvalStr( const char *expression ) {
 	AL_rctree *retval = NULL;
 
 	while( offset < len ) {
-		retval = _alEval( buildExp( expression, &offset ) );
+		AL_rctree *retval1 = buildExp (expression, &offset);
+		if (retval1 == NULL) {
+			break;
+		}
+		retval = _alEval (retval1);
 	}
 
 	return retval;

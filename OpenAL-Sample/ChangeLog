@@ -1,3 +1,11 @@
+2006-07-11  Sven Panne  <sven.panne@aedion.de>
+
+	* src/alc/alc_device.c, src/config/al_config.c: Config file parsing
+	improvements based on patches from Brian Keener
+	<bkeener@thesoftwaresource.com>. Still not perfect (e.g. for config
+	files consisting of comments only), but a bit better. The whole
+	Scheme-like parsing/evaluation engine needs a rewrite.
+
 2006-07-10  Sven Panne  <sven.panne@aedion.de>
 
 	* src/backends/alc_backend_oss.c: Set preferred buffer size. Fixed open

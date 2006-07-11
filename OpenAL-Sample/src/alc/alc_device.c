@@ -30,7 +30,6 @@ static int num_devices = 0;
 ALCdevice *alcOpenDevice( const ALchar *deviceSpecifier ) {
 	ALCdevice *retval;
 	char dirstr[65];
-	Rcvar foo = NULL;
 	Rcvar direction = NULL;
 	Rcvar freq_sym = NULL;
 	Rcvar speakers = NULL;
@@ -53,11 +52,10 @@ ALCdevice *alcOpenDevice( const ALchar *deviceSpecifier ) {
 
 	/* get the attributes requested in the args */
 	if( deviceSpecifier ) {
-		foo = rc_eval( (const char *) deviceSpecifier );
+		Rcvar listOfLists = rc_eval( (const char *) deviceSpecifier );
+		/* define each attribute pair */
+		rc_foreach( listOfLists, rc_define_list );
 	}
-
-	/* define each attribute pair */
-	rc_foreach( foo, rc_define_list );
 
 	/* redefine the stuff we saved */
 	if( direction != NULL ) {
