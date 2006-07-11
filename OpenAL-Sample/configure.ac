@@ -86,7 +86,7 @@ PKG_CONFIG_LIBS=""
 # Checks for library functions.
 ################################################################################
 
-AC_CHECK_HEADERS([sys/time.h time.h windows.h])
+AC_CHECK_HEADERS([stropts.h sys/ioctl.h sys/time.h time.h windows.h])
 
 # Checks for library functions.
 ALUT_CHECK_FUNC([[@%:@include <time.h>]],

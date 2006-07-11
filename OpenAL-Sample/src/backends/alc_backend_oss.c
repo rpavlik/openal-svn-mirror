@@ -23,7 +23,12 @@ alcBackendOpenOSS_ (UNUSED (ALC_OpenMode mode),
 
 #include <string.h>
 #include <fcntl.h>
+#if HAVE_STROPTS_H
 #include <stropts.h>
+#endif
+#if HAVE_SYS_IOCTL_H
+#include <sys/ioctl.h>
+#endif
 #include <unistd.h>
 #include <sys/soundcard.h>
 #include <AL/alext.h>
