@@ -1,3 +1,7 @@
+2006-07-11  Prakash Punnoor <prakash@punnoor.de>
+
+	* CMakeLists.txt: added checks for Cygwin
+	
 2006-07-11  Sven Panne  <sven.panne@aedion.de>
 
 	* Makefile.am: Include admin/CMakeModules/SelectArgtypes.c.in in source
