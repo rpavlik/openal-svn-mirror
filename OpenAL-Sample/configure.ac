@@ -480,7 +480,7 @@ case "$target" in
             fi
 
             case "$target" in
-            *linux*)
+            *linux* | *bsd*)
                 NASM_FORMAT="-f elf"
                 ;;
             *cygwin* | *mingw*)
