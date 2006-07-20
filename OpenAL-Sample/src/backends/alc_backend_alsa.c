@@ -228,7 +228,7 @@ setAttributesALSA (struct ALC_BackendPrivateData *privateData,
   alsaFormat = convertFormatALToALSA (*format);
   numChannels = (unsigned int) _alGetChannelsFromFormat (*format);
   ad->frameSizeInBytes =
-    (unsigned int) snd_pcm_format_size (alsaFormat, numChannels);
+    (unsigned int) psnd_pcm_format_size (alsaFormat, numChannels);
   bufferSizeInFrames = *bufferSizeInBytes / ad->frameSizeInBytes;
   rate = (unsigned int) *speed;
 

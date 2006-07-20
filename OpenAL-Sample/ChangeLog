@@ -1,3 +1,9 @@
+2006-07-20  Prakash Punnoor <prakash@punnoor.de>
+
+	* src/backends/alc_backend_alsa.c: Chris: fixing a problem with the ALSA
+	backend using the snd_pcm_format_size function instead of the
+	psnd_pcm_format_size function pointer when dynamically loading the lib
+
 2006-07-11  Prakash Punnoor <prakash@punnoor.de>
 
 	* CMakeLists.txt: added checks for Cygwin
