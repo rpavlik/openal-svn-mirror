@@ -1,3 +1,6 @@
+# NOTE: Do not break long lines in conditionals, otherwise we are into CR/LF
+# vs. LF trouble! This is a buglet in automake IMHO, but easy to work around.
+
 # We want to build a libopeanl library with libtool.
 lib_LTLIBRARIES = libopenal.la
 
@@ -68,8 +71,7 @@ libopenal_la_SOURCES +=			\
 	config/al_rcvar.h
 
 if NEEDDEBUG
-libopenal_la_SOURCES +=			\
-	al_debug.c
+libopenal_la_SOURCES += al_debug.c
 endif
 
 # backend sources
@@ -87,36 +89,25 @@ libopenal_la_SOURCES +=			\
 	backends/alc_backend_wave.c
 
 if USEBACKENDNATIVEDARWIN
-libopenal_la_SOURCES +=			\
-	backends/alc_backend_darwin.c
+libopenal_la_SOURCES += backends/alc_backend_darwin.c
 endif
 
 if USEBACKENDNATIVESOLARIS
-libopenal_la_SOURCES +=			\
-	backends/alc_backend_solaris.c
+libopenal_la_SOURCES += backends/alc_backend_solaris.c
 endif
 
 if USEBACKENDNATIVEWINDOWS
-libopenal_la_SOURCES +=			\
-	backends/alc_backend_windows.c
+libopenal_la_SOURCES += backends/alc_backend_windows.c
 endif
 
 # processor-specific sources
 
 if X86ENABLED
-libopenal_la_SOURCES +=			\
-	arch/i386/x86_floatmul.c	\
-	arch/i386/x86_cpu_caps_prk.c	\
-	arch/i386/x86_cpu_caps_prk.h	\
-	arch/i386/x86_simd_support_prk.h
+libopenal_la_SOURCES += arch/i386/x86_floatmul.c arch/i386/x86_cpu_caps_prk.c arch/i386/x86_cpu_caps_prk.h arch/i386/x86_simd_support_prk.h
 
 if X86MMXENABLED
-libopenal_la_CPPFLAGS +=		\
-	-I$(top_srcdir)/src/arch/i386
-
-libopenal_la_SOURCES +=			\
-	arch/i386/mixaudio16_mmx_prk.c	\
-	arch/i386/mixaudio16_mmx_prk.h
+libopenal_la_CPPFLAGS += -I$(top_srcdir)/src/arch/i386
+libopenal_la_SOURCES += arch/i386/mixaudio16_mmx_prk.c arch/i386/mixaudio16_mmx_prk.h
 endif
 
 if X86NASMENABLED
@@ -127,9 +118,7 @@ endif
 
 else
 # no x86, so use portable stuff
-libopenal_la_SOURCES +=			\
-	arch/portable/floatmul.c	\
-	arch/portable/cpu_caps.c
+libopenal_la_SOURCES += arch/portable/floatmul.c arch/portable/cpu_caps.c
 endif
 
 # ALC sources
@@ -160,15 +149,11 @@ libopenal_la_SOURCES +=			\
 # extension sources
 
 if ENABLEEXTENSIONALEXTVORBIS
-libopenal_la_SOURCES +=			\
-	extensions/al_ext_vorbis.c	\
-	extensions/al_ext_vorbis.h
+libopenal_la_SOURCES += extensions/al_ext_vorbis.c extensions/al_ext_vorbis.h
 endif
 
 if ENABLEEXTENSIONALEXTMP3
-libopenal_la_SOURCES +=			\
-	extensions/al_ext_mp3.c		\
-	extensions/al_ext_mp3.h
+libopenal_la_SOURCES += extensions/al_ext_mp3.c extensions/al_ext_mp3.h
 endif
 
 libopenal_la_SOURCES +=			\

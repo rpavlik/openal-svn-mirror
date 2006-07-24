@@ -1,8 +1,9 @@
 #include "al_siteconfig.h"
 #include "al_dlopen.h"
-#include <dlfcn.h>
 
 #ifdef USE_DLOPEN
+
+#include <dlfcn.h>
 
 int
 alDLInit_ (void)
