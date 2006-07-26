@@ -46,6 +46,13 @@ else
   AC_SEARCH_LIBS([alutExit], [alut])
 fi
 
+
+# TODO: This is an evil hack, OpenGL support under Cygwin seems to work without
+# X only currently.
+if test "x$target_os" = xcygwin; then
+  no_x="yes"
+fi
+
 enable_opengl="yes"
 FP_CHECK_GLUT
 

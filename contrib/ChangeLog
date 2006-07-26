@@ -1,3 +1,7 @@
+2006-07-26  Pannes  <sven.panne@aedion.de>
+
+	* configure.ac: Added evil hack for using OpenGL under Cygwin.
+
 2006-05-23  Sven Panne  <sven.panne@aedion.de>
 
 	* examples/openal-info/openal-info.c: Print info about capture
