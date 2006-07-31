@@ -20,9 +20,19 @@ alcBackendOpenWAVE_ (UNUSED (ALC_OpenMode mode),
 
 #include <stdio.h>
 #include <string.h>
+
+#if HAVE_STDINT_H
 #include <stdint.h>
+#endif /* HAVE_STDINT_H */
+
+#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif /* HAVE_SYS_TYPES_H */
+
+#if HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif /* HAVE_SYS_STAT_H */
+
 #include <fcntl.h>
 #include <errno.h>
 #include <AL/al.h>

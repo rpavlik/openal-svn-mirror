@@ -1,8 +1,12 @@
 2006-07-31  Prakash Punnoor <prakash@punnoor.de>
 
-	* CMakeLists.txt: add -W flags only for GCC compatibe compilers
+	* CMakeLists.txt: add -W flags only for GCC compatible compilers,
+	check for more headers
 	
 	* src/al_siteconfig.h: some Windows fixes
+	
+	* src/backends/alc_backend_wave.c, src/alc/alc_context.c: check
+	for non-standard headers
 
 2006-07-24  Pannes  <sven.panne@aedion.de>
 

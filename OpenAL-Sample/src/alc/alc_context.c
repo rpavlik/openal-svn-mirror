@@ -12,7 +12,10 @@
 #include <AL/alext.h>
 #include <stdlib.h>
 #include <string.h>
+
+#if HAVE_STRINGS_H
 #include <strings.h>
+#endif
 
 #include "al_mixer.h"
 #include "al_main.h"
