@@ -12,10 +12,7 @@
 #include <AL/alext.h>
 #include <stdlib.h>
 #include <string.h>
-
-#if HAVE_STRINGS_H
-#include <strings.h>
-#endif
+#include <ctype.h>
 
 #include "al_mixer.h"
 #include "al_main.h"
@@ -1265,6 +1262,26 @@ ALboolean _alcIsContextSuspended( ALuint cid ) {
 	return cc->issuspended;
 }
 
+static int
+safeToLower (int c)
+{
+  return isupper (c) ? tolower (c) : c;
+}
+
+static int
+compareIgnoringCase (const char *s1, const char *s2)
+{
+  const unsigned char *p1 = (const unsigned char *) s1;
+  const unsigned char *p2 = (const unsigned char *) s2;
+  int result;
+  do
+    {
+      result = safeToLower (*p1++) - safeToLower (*p2++);
+    }
+  while ((result == 0) && p1[-1] != '\0');
+  return result;
+}
+
 /*
  * alcIsExtensionPresent( UNUSED(ALCdevice *device), ALCubyte *extName )
  *
@@ -1274,8 +1291,8 @@ ALboolean _alcIsContextSuspended( ALuint cid ) {
 ALCboolean
 alcIsExtensionPresent (UNUSED (ALCdevice *device), const ALCchar *extName)
 {
-  return strcasecmp (extName, "ALC_ENUMERATION_EXT") == 0 ||
-    strcasecmp (extName, "ALC_EXT_CAPTURE") == 0;
+  return compareIgnoringCase (extName, "ALC_ENUMERATION_EXT") == 0 ||
+    compareIgnoringCase (extName, "ALC_EXT_CAPTURE") == 0;
 }
 
 #define DEFINE_ALC_PROC(p) { #p, (AL_funcPtr)p }
