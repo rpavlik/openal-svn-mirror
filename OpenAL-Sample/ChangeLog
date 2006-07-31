@@ -7,6 +7,9 @@
 	
 	* src/backends/alc_backend_wave.c, src/alc/alc_context.c: check
 	for non-standard headers
+	
+	* admin/CMakeModules/FindSleepFunction.cmake: always check for
+	unistd.h on non-Windows
 
 2006-07-24  Pannes  <sven.panne@aedion.de>
 

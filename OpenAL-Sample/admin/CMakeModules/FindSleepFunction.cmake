@@ -28,11 +28,11 @@ IF(WIN32)
 ELSE(WIN32)
 
   CHECK_INCLUDE_FILE_DEFINE(time.h HAVE_TIME_H)
+  CHECK_INCLUDE_FILE_DEFINE(unistd.h HAVE_UNISTD_H)
   IF(HAVE_TIME_H)
     CHECK_FUNCTION_DEFINE("#include <time.h>" nanosleep "((struct timespec*)0, (struct timespec*)0)" HAVE_NANOSLEEP)
   ELSE(HAVE_TIME_H)
 
-    CHECK_INCLUDE_FILE_DEFINE(unistd.h HAVE_UNISTD_H)
     IF(HAVE_UNISTD_H)
       CHECK_FUNCTION_DEFINE("#include <unistd.h>" usleep "(0)" HAVE_USLEEP)
     ENDIF(HAVE_UNISTD_H)
