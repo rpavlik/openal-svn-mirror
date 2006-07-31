@@ -1,12 +1,5 @@
 #include "testlib.h"
 
-#include <AL/al.h>
-#include <AL/alc.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #define NUMSOURCES 4000
 
 int sid_compare( const void *sid1p, const void *sid2p );

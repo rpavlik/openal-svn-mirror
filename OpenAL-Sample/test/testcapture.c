@@ -1,14 +1,5 @@
 #include "testlib.h"
 
-#include <AL/al.h>
-#include <AL/alc.h>
-#include <AL/alut.h>
-
-#include <time.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-
 #define NUMCAPTURES   3
 #define WAVEFILE      "boom.wav"
 #define FREQ          22050

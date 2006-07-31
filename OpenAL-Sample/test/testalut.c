@@ -3,11 +3,6 @@
  * every 2 seconds. The LOKI_WAVE_format extension is used.
  */
 
-#include <AL/al.h>
-#include <AL/alc.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
 #include "testlib.h"
 
 #define DATA_BUFFER_SIZE (10 * (512 * 3) * 1024)

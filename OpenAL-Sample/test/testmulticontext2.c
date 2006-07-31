@@ -1,15 +1,5 @@
 #include "testlib.h"
 
-#include <AL/al.h>
-#include <AL/alc.h>
-
-#include <time.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
-
 #define DATABUFFERSIZE (10 * (512 * 3) * 1024)
 
 static void iterate( void );

@@ -1,13 +1,4 @@
-#include <AL/al.h>
-#include <AL/alc.h>
-#include <AL/alut.h>
-
-#include <time.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
+#include "testlib.h"
 
 int main( int argc, char *argv[] )
 {

@@ -1,21 +1,6 @@
 #include "testlib.h"
 
-#include <AL/al.h>
-#include <AL/alc.h>
-#include <AL/alut.h>
-
-#include <errno.h>
-#include <math.h>
-#include <time.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
-
 #define DATABUFSIZE 4098
-
 #define ADPCM_FILE "adpcm.adp"
 
 static void init( void );

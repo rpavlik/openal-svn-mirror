@@ -1,8 +1,3 @@
-#include <AL/al.h>
-#include <AL/alc.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "testlib.h"
 
 #define NUM_BUFFERS 4000

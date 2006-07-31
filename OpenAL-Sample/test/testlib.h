@@ -1,7 +1,39 @@
 #ifndef TEST_TESTLIB_H
 #define TEST_TESTLIB_H
 
+#include <AL/al.h>
+#include <AL/alc.h>
+#include <AL/alut.h>
 #include <AL/alext.h>
+
+#include "config.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <string.h>
+#include <time.h>
+#include <errno.h>
+
+#if HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif /* HAVE_SYS_TIME_H */
+
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif /* HAVE_SYS_TYPES_H */
+
+#if HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif /* HAVE_SYS_STAT_H */
+
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif /* HAVE_UNISTD_H */
+
+#ifndef M_PI
+# define M_PI 3.14159265358979323846
+#endif /* M_PI */
 
 #ifdef __cplusplus
 extern "C" {

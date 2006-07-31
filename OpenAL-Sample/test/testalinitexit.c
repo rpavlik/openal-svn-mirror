@@ -3,10 +3,6 @@
  * 0.8 seconds.
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <AL/al.h>
-#include <AL/alc.h>
 #include "testlib.h"
 
 #define NUM_CONTEXTS 75

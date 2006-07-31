@@ -6,12 +6,6 @@
  * Modified by Sven Panne <sven.panne@aedion.de>
  */
 
-#include <AL/al.h>
-#include <AL/alc.h>
-#include <AL/alut.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include "testlib.h"
 
 #define CAPTURE_FORMAT AL_FORMAT_MONO16

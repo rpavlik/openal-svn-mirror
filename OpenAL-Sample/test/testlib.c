@@ -1,14 +1,5 @@
 #include "testlib.h"
 
-#include <AL/al.h>
-#include <AL/alut.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -16,6 +7,11 @@
 void microSleep( unsigned int n )
 {
 	Sleep( n / 1000 );
+}
+
+void sleep( unsigned int n )
+{
+	Sleep( n );
 }
 
 #elif defined(__MORPHOS__)

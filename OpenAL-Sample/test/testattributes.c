@@ -2,10 +2,7 @@
  * This test creates 2 contexts and dumps all its attributes.
  */
 
-#include <AL/al.h>
-#include <AL/alc.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include "testlib.h"
 
 static void dumpContext( ALCdevice *device, const char *name )
 {

@@ -1,9 +1,4 @@
-#include <AL/al.h>
-#include <AL/alext.h>
-#include <AL/alc.h>
-
-#include <stdio.h>
-#include <stdlib.h>
+#include "testlib.h"
 
 #define FLOAT_VAL        0.65
 

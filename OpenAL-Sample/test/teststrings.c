@@ -1,7 +1,4 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <AL/al.h>
-#include <AL/alc.h>
+#include "testlib.h"
 
 int main( int argc, char *argv[] )
 {

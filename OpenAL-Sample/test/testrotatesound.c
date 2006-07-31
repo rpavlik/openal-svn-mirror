@@ -1,9 +1,4 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include <AL/al.h>
-#include <AL/alut.h>
-
+#include "testlib.h"
 
 ALuint Buffer;
 ALuint Source;
@@ -50,7 +45,7 @@ void KillALData()
 {
 	alDeleteBuffers(1, &Buffer);
 	alDeleteSources(1, &Source);
-	alutExit();
+	testExit();
 }
 
 #define PI 3.141592653589793f
@@ -61,7 +56,7 @@ int main()
 	float r = 1.00f;
 	float ang;
 	
-	alutInit(NULL,0);
+	testInit(NULL, 0);
 	atexit(KillALData);
 
 
