@@ -38,6 +38,10 @@ alcBackendOpenWAVE_ (UNUSED (ALC_OpenMode mode),
 #include <AL/al.h>
 #include <AL/alext.h>
 
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+
 #include "al_debug.h"
 
 struct waveData
@@ -332,7 +336,7 @@ alcBackendOpenWAVE_ (ALC_OpenMode mode, ALC_BackendOps **ops,
   do
     {
       snprintf (fileName, sizeof (fileName), "openal-%d.wav", sequence++);
-      fd = open (fileName, O_WRONLY | O_CREAT | O_EXCL, S_IRUSR);
+      fd = open (fileName, O_WRONLY | O_CREAT | O_EXCL | O_BINARY, S_IRUSR);
     }
   while ((fd == -1) && (errno == EEXIST));
 

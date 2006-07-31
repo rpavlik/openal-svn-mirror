@@ -1,19 +1,24 @@
+2006-07-31  Sven Panne  <sven.panne@aedion.de>
+
+	* src/backends/alc_backend_wave.c: If needed, open WAVE file in binary
+	mode.
+
 2006-07-31  Prakash Punnoor <prakash@punnoor.de>
 
-	* CMakeLists.txt: add -W flags only for GCC compatible compilers,
-	check for more headers
+	* CMakeLists.txt: add -W flags only for GCC compatible compilers, check
+	for more headers
 	
 	* src/al_siteconfig.h: some Windows fixes
 	
-	* src/backends/alc_backend_wave.c, src/alc/alc_context.c: check
-	for non-standard headers
+	* src/backends/alc_backend_wave.c, src/alc/alc_context.c: check for
+	non-standard headers
 	
-	* admin/CMakeModules/FindSleepFunction.cmake: always check for
-	unistd.h on non-Windows, fix CHECK_INCLUDE_FILE_DEFINE macro
+	* admin/CMakeModules/FindSleepFunction.cmake: always check for unistd.h
+	on non-Windows, fix CHECK_INCLUDE_FILE_DEFINE macro
 	
 	* test/test*: refactor headers into testlib.h, fix windows sleep
 
-2006-07-24  Pannes  <sven.panne@aedion.de>
+2006-07-24  Sven Panne  <sven.panne@aedion.de>
 
 	* src/Makefile.am, src/al_dlopen.c: Compilation fixes for MinGW.
 
