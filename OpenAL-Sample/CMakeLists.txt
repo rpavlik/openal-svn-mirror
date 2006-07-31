@@ -287,10 +287,6 @@ IF(CMAKE_SYSTEM MATCHES "Windows")
   SET(OS_OBJS ${WINDOWS_OBJS})
   # need winmm library for waveOutOpen etc.
   SET(ADD_LIBS ${ADD_LIBS} winmm)
-  # needed for TryEnterCriticalSection
-  ADD_DEFINITIONS(-D_WIN32_WINNT=0x0400)
-  # don't spit out deprecation warnings
-  ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE)
 ELSE(CMAKE_SYSTEM MATCHES "Windows")
 
 IF(CMAKE_SYSTEM MATCHES "Darwin")
@@ -328,6 +324,32 @@ CHECK_INCLUDE_FILE_DEFINE(stdint.h HAVE_STDINT_H)
 CHECK_INCLUDE_FILE_DEFINE(stropts.h HAVE_STROPTS_H)
 CHECK_INCLUDE_FILE_DEFINE(sys/ioctl.h HAVE_SYS_IOCTL_H)
 
+CHECK_FUNCTION_DEFINE("#include <stdio.h>" snprintf "((char *)0, 0, \"\")" HAVE_SNPRINTF)
+IF(NOT HAVE_SNPRINTF)
+  CHECK_FUNCTION_DEFINE("#include <stdio.h>" _snprintf "((char *)0, 0, \"\")" HAVE__SNPRINTF)
+ENDIF(NOT HAVE_SNPRINTF)
+
+IF(CMAKE_SYSTEM MATCHES "Windows")
+  # needed for TryEnterCriticalSection
+  ADD_DEFINITIONS(-D_WIN32_WINNT=0x0400)
+  # don't spit out deprecation warnings
+  ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE)
+
+  # check for __int8 type
+  SET(SOURCE
+"int main(){__int8 foo;return 0;}
+")
+  FILE(WRITE "${CMAKE_BINARY_DIR}/CMakeTmp/src.c" "${SOURCE}")
+
+  TRY_COMPILE(HAVE___INT8
+          ${CMAKE_BINARY_DIR}
+          ${CMAKE_BINARY_DIR}/CMakeTmp/src.c
+          CMAKE_FLAGS
+          OUTPUT_VARIABLE OUTPUT)
+  IF(HAVE___INT8)
+    ADD_DEFINE("HAVE___INT8 1")
+  ENDIF(HAVE___INT8)
+ENDIF(CMAKE_SYSTEM MATCHES "Windows")
 
 # sound backends
 FIND_PACKAGE(PkgConfig)

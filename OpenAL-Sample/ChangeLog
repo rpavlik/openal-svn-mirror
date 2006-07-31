@@ -19,7 +19,8 @@
 
 	* CMakeLists.txt: add -W flags only for GCC compatible compilers, check
 	for more headers, don't build static lib by default, don't work-around
-	nasm visibility detection anymore (requires cmake >=2.4)
+	nasm visibility detection anymore (requires cmake >=2.4), add checks
+	for snprintf and __int8
 	
 	* src/al_siteconfig.h: some Windows fixes
 	
