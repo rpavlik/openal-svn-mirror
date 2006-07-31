@@ -5,11 +5,7 @@
  * Wrap site specific config stuff
  */
 
-#ifdef DARWIN_PBBUILDER
-#include "config-osx.h"
-#else /* not DARWIN_PBBUILDER */
 #include "config.h"
-#endif /* not DARWIN_PBBUILDER */
 
 #if defined(_WIN32) || defined(__WIN32__)
 #define snprintf _snprintf

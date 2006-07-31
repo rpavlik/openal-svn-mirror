@@ -1,5 +1,9 @@
 2006-07-31  Sven Panne  <sven.panne@aedion.de>
 
+	* src/al_siteconfig.h: Nuked ancient Darwin stuff.
+
+	* config-osx.h: Removed.
+
 	* src/backends/alc_backend_wave.c: If needed, open WAVE file in binary
 	mode.
 
