@@ -728,12 +728,16 @@ IF(BUILD_TESTS)
     FOREACH(TEST ${TESTS})
       SET(TEST_SRC test/test${TEST}.c)
       # gets added at the beginning thus having no effect
-      SET_SOURCE_FILES_PROPERTIES(${TEST_SRC} PROPERTIES COMPILE_FLAGS "-Wno-unused")
+      IF(CMAKE_COMPILER_IS_GNUCC)
+        SET_SOURCE_FILES_PROPERTIES(${TEST_SRC} PROPERTIES COMPILE_FLAGS "-Wno-unused")
+      ENDIF(CMAKE_COMPILER_IS_GNUCC)
       ADD_EXECUTABLE(test${TEST} ${TEST_SRC})
       TARGET_LINK_LIBRARIES(test${TEST} testlib openal ${ALUT_LIB})
     ENDFOREACH(TEST)
 
-    SET_SOURCE_FILES_PROPERTIES(test/testcpp.cc PROPERTIES COMPILE_FLAGS "-Wno-unused")
+    IF(CMAKE_COMPILER_IS_GNUCC)
+      SET_SOURCE_FILES_PROPERTIES(test/testcpp.cc PROPERTIES COMPILE_FLAGS "-Wno-unused")
+    ENDIF(CMAKE_COMPILER_IS_GNUCC)
     ADD_EXECUTABLE(testcpp test/testcpp.cc)
     TARGET_LINK_LIBRARIES(testcpp testlib openal ${ALUT_LIB})
 
