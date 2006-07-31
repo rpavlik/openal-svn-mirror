@@ -23,6 +23,8 @@
 	on non-Windows, fix CHECK_INCLUDE_FILE_DEFINE macro
 	
 	* test/test*: refactor headers into testlib.h, fix windows sleep
+	
+	* test/testlib.c: fix Sleep tenfold error
 
 2006-07-24  Sven Panne  <sven.panne@aedion.de>
 

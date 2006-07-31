@@ -11,7 +11,7 @@ void microSleep( unsigned int n )
 
 void sleep( unsigned int n )
 {
-	Sleep( n );
+	Sleep( n * 1000 );
 }
 
 #elif defined(__MORPHOS__)
