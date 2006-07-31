@@ -1,24 +1,25 @@
 #ifndef AL_AL_SITECONFIG_H_
 #define AL_AL_SITECONFIG_H_
 
-/*
- * Wrap site specific config stuff
- */
-
 #include "config.h"
 
-#if defined(_WIN32) || defined(__WIN32__)
-#define snprintf _snprintf
-#define strcasecmp _stricmp
-#define strncasecmp _strnicmp
-#ifndef HAVE_STDINT_H
+#if HAVE_STDINT_H
+#include <stdint.h>
+#elif defined(_MSC_VER)
 typedef __int8 int8_t;
 typedef unsigned __int8 uint8_t;
 typedef __int16 int16_t;
 typedef unsigned __int16 uint16_t;
 typedef __int32 int32_t;
 typedef unsigned __int32 uint32_t;
-#endif /* HAVE_STDINT_H */
+#else
+#error Do not know sized types on this platform
+#endif
+
+#if defined(_WIN32) || defined(__WIN32__)
+#define snprintf _snprintf
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
 #endif
 
 #ifdef HAVE___ATTRIBUTE__
