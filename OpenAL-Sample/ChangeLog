@@ -26,6 +26,9 @@
 	* test/test*: refactor headers into testlib.h, fix windows sleep
 	
 	* test/testlib.c: fix Sleep tenfold error
+	
+	* src/extensions/al_ext_vorbis.c: cast data to (void*) to eliminate
+	warning
 
 2006-07-24  Sven Panne  <sven.panne@aedion.de>
 
