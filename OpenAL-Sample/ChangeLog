@@ -1,3 +1,9 @@
+2006-07-31  Prakash Punnoor <prakash@punnoor.de>
+
+	* CMakeLists.txt: add -W flags only for GCC compatibe compilers
+	
+	* src/al_siteconfig.h: some Windows fixes
+
 2006-07-24  Pannes  <sven.panne@aedion.de>
 
 	* src/Makefile.am, src/al_dlopen.c: Compilation fixes for MinGW.
