@@ -1,5 +1,5 @@
 # cmake project file by Prakash Punnoor
-CMAKE_MINIMUM_REQUIRED(VERSION 2.2)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
 
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/admin/CMakeModules")
 PROJECT(OpenAL C)
@@ -158,7 +158,7 @@ IF(CMAKE_WORDS_BIGENDIAN)
 ENDIF(CMAKE_WORDS_BIGENDIAN)
 
 
-OPTION(BUILD_STATIC "build static library too" ON)
+OPTION(BUILD_STATIC "build static library too" OFF)
 OPTION(BUILD_TESTS  "build the test-suite"     OFF)
 OPTION(PROFILE      "enable profile"           OFF)
 OPTION(OPTIMIZATION "enable optimization"      ON)
@@ -325,11 +325,9 @@ FIND_PACKAGE(SelectArgtypes)
 CHECK_INCLUDE_FILE_DEFINE(sys/stat.h HAVE_SYS_STAT_H)
 CHECK_INCLUDE_FILE_DEFINE(strings.h HAVE_STRINGS_H)
 CHECK_INCLUDE_FILE_DEFINE(stdint.h HAVE_STDINT_H)
+CHECK_INCLUDE_FILE_DEFINE(stropts.h HAVE_STROPTS_H)
+CHECK_INCLUDE_FILE_DEFINE(sys/ioctl.h HAVE_SYS_IOCTL_H)
 
-IF(CMAKE_SYSTEM MATCHES CYGWIN)
-  CHECK_INCLUDE_FILE_DEFINE(stropts.h HAVE_STROPTS_H)
-  CHECK_INCLUDE_FILE_DEFINE(sys/ioctl.h HAVE_SYS_IOCTL_H)
-ENDIF(CMAKE_SYSTEM MATCHES CYGWIN)
 
 # sound backends
 FIND_PACKAGE(PkgConfig)
@@ -514,39 +512,31 @@ IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
 
       # check nasm visibility support
       IF(CMAKE_SYSTEM MATCHES "Linux")
-        IF(NOT DEFINED NASM_HAS_NO_VISIBILITY)
-          MESSAGE(STATUS "Checking nasm symbol visibility support")
+        IF(NOT DEFINED HAVE_NASM_VISIBILITY)
+          MESSAGE(STATUS "Performing Test HAVE_NASM_VISIBILITY")
           SET(SOURCE "global _foo:function hidden\n_foo:")
           FILE(WRITE "${CMAKE_BINARY_DIR}/CMakeTmp/src.nasm" "${SOURCE}")
-          # cmake broken, fixed in cvs, so work-around for the time-being
-#        TRY_COMPILE(NASM_HAS_VISIBILITY
- #                 ${CMAKE_BINARY_DIR}
-  #                ${CMAKE_BINARY_DIR}/CMakeTmp/src.nasm
-   #               OUTPUT_VARIABLE OUTPUT)
 
-          EXEC_PROGRAM(${HAVE_NASM} ${CMAKE_BINARY_DIR}/CMakeTmp/
-            ARGS "-f elf src.nasm >/dev/null"
-            OUTPUT_VARIABLE OUTPUT
-            RETURN_VALUE NASM_HAS_NO_VISIBILITY)
-
-          SET(NASM_HAS_NO_VISIBILITY
-            "${NASM_HAS_NO_VISIBILITY}" CACHE INTERNAL "")
+        TRY_COMPILE(HAVE_NASM_VISIBILITY
+                  ${CMAKE_BINARY_DIR}
+                  ${CMAKE_BINARY_DIR}/CMakeTmp/src.nasm
+                  OUTPUT_VARIABLE OUTPUT)
 
           WRITE_FILE(${CMAKE_BINARY_DIR}/CMakeOutput.log
             "Performing nasm visibility test with the following output:\n"
             "${OUTPUT}\n"
             "Source file was:\n${SOURCE}\n" APPEND)
 
-          IF(NASM_HAS_NO_VISIBILITY)
-            MESSAGE(STATUS "Testing nasm symbol visibility support -- Failure")
-          ELSE(NASM_HAS_NO_VISIBILITY)
-            MESSAGE(STATUS "Testing nasm symbol visibility support -- Success")
-          ENDIF(NASM_HAS_NO_VISIBILITY)
-        ENDIF(NOT DEFINED NASM_HAS_NO_VISIBILITY)
+          IF(HAVE_NASM_VISIBILITY)
+            MESSAGE(STATUS "Performing Test HAVE_NASM_VISIBILITY -- Success")
+          ELSE(HAVE_NASM_VISIBILITY)
+            MESSAGE(STATUS "Performing Test HAVE_NASM_VISIBILITY -- Failure")
+          ENDIF(HAVE_NASM_VISIBILITY)
+        ENDIF(NOT DEFINED HAVE_NASM_VISIBILITY)
 
-        IF(NOT NASM_HAS_NO_VISIBILITY)
+        IF(HAVE_NASM_VISIBILITY)
           SET(CMAKE_ASM_FLAGS "-DHAVE_NASM_VISIBILITY")
-        ENDIF(NOT NASM_HAS_NO_VISIBILITY)
+        ENDIF(HAVE_NASM_VISIBILITY)
       ENDIF(CMAKE_SYSTEM MATCHES "Linux")
 
       ADD_DEFINE(HAVE_CPU_CAPS_DETECTION)

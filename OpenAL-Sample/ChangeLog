@@ -12,7 +12,8 @@
 2006-07-31  Prakash Punnoor <prakash@punnoor.de>
 
 	* CMakeLists.txt: add -W flags only for GCC compatible compilers, check
-	for more headers
+	for more headers, don't build static lib by default, don't work-around
+	nasm visibility detection anymore (requires cmake >=2.4)
 	
 	* src/al_siteconfig.h: some Windows fixes
 	
