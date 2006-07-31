@@ -226,7 +226,7 @@ ALboolean alutLoadVorbis_LOKI(ALuint bid,
 	vorb->fh.size   = size;
 
 	/* NOTE: Ogg Vorbis' header are not const-correct, so we cast */
-	err = pov_open_callbacks(vorb, &vorb->of, (void*)data, size, ov_fromdata);
+	err = pov_open_callbacks(vorb, &vorb->of, (ALvoid*)data, size, ov_fromdata);
 	if(err < 0) {
 		fprintf(stderr, "vorbis problems\n");
 		free(vorb->data);
