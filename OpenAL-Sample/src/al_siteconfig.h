@@ -16,8 +16,11 @@ typedef unsigned __int32 uint32_t;
 #error Do not know sized types on this platform
 #endif
 
-#if defined(_WIN32) || defined(__WIN32__)
+#if HAVE_SNPRINTF
+#elif HAVE__SNPRINTF
 #define snprintf _snprintf
+#else
+#error No snprintf-like function on this platform
 #endif
 
 #ifdef HAVE___ATTRIBUTE__

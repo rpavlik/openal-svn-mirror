@@ -1,5 +1,8 @@
 2006-07-31  Sven Panne  <sven.panne@aedion.de>
 
+	* configure.ac, src/al_siteconfig.h: Cleaned up snprintf detection
+	logic.
+
 	* src/al_siteconfig.h, src/alc/alc_context.c: To avoid portability
 	issues, use a home-grown case-insensitve string comparison function.
 

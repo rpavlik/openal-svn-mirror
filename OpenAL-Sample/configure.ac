@@ -98,6 +98,12 @@ ALUT_CHECK_FUNC([[@%:@include <unistd.h>]],
 ALUT_CHECK_FUNC([[@%:@include <windows.h>]],
                 [Sleep], [[(0)]])
 
+ALUT_CHECK_FUNC([[@%:@include <stdio.h>]],
+                [snprintf], [[((char *)0, 0, "")]])
+
+ALUT_CHECK_FUNC([[@%:@include <stdio.h>]],
+                [_snprintf], [[((char *)0, 0, "")]])
+
 AC_CHECK_LIBM
 AC_SUBST([LIBM])
 
