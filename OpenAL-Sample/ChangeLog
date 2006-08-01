@@ -1,3 +1,7 @@
+2006-08-01  Sven Panne  <sven.panne@aedion.de>
+
+	* src/al_filter.c: Avoid a (wrong) warning when using Visual C.
+
 2006-07-31  Sven Panne  <sven.panne@aedion.de>
 
 	* configure.ac, src/al_siteconfig.h: Cleaned up snprintf detection

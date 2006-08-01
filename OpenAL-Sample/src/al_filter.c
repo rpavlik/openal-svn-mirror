@@ -158,7 +158,7 @@ static ALfloat compute_sa( ALfloat *source_pos, ALfloat source_max,
 			   ALfloat source_ref, ALfloat source_gain,
 			   ALfloat source_rolloff,
 			   ALfloat *speaker_pos,
-			   ALfloat df( ALfloat dist, ALfloat rolloff, ALfloat ref, ALfloat max ));
+			   ALfloat (*df)( ALfloat dist, ALfloat rolloff, ALfloat ref, ALfloat max ));
 
 #if USE_TPITCH_LOOKUP
 /*
