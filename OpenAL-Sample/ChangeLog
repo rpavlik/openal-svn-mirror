@@ -2,6 +2,10 @@
 
 	* admin/CMakeModules/FindCompilerVisibility.cmake: use CMake
 	module
+	
+	* admin/CMakeModules/FindOpenALBackends.cmake: added
+	
+	* CMakeLists.txt: factor out backends detection macro
 
 2006-08-01  Sven Panne  <sven.panne@aedion.de>
 
