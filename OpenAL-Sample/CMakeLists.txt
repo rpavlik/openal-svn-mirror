@@ -386,12 +386,16 @@ IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
   INCLUDE_DIRECTORIES(${OpenAL_SOURCE_DIR}/src/arch/i386)
   SET(ARCH_OBJS ${x86_OBJS})
 
+  FIND_PACKAGE(CompilerMMXFlag)
+
   IF(CMAKE_SYSTEM MATCHES "Windows")
    # this should get fixed into a real detection
    ADD_DEFINITIONS(-D__MMX__)
    SET(HAVE_MMX)
   ELSE(CMAKE_SYSTEM MATCHES "Windows")
+    SET(CMAKE_REQUIRED_FLAGS "${ADD_CFLAGS}")
     MACRO_TEST(__MMX__ HAVE_MMX)
+    SET(CMAKE_REQUIRED_FLAGS)
   ENDIF(CMAKE_SYSTEM MATCHES "Windows")
 
   IF(HAVE_MMX)
@@ -400,9 +404,19 @@ IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
 
   IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86")
     # nasm stuff
+    OPTION(NO_NASM      "ignore missing NASM"      OFF)
     FIND_PROGRAM(HAVE_NASM nasm)
-
-    IF(NOT HAVE_NASM MATCHES "NOTFOUND")
+    IF(HAVE_NASM MATCHES "NOTFOUND")
+      IF(HAVE_MMX)
+        MESSAGE("Warning: MMX capability found, but NASM not found.")
+        MESSAGE("Without NASM you won't have run-time SIMD detection (MMX enabled by default) and no MMX memcopy.")
+        IF(NO_NASM)
+          MESSAGE("You chose to ignore missing NASM.")
+        ELSE(NO_NASM)
+          MESSAGE(FATAL_ERROR "Set NO_NASM to compile anyway.")
+        ENDIF(NO_NASM)
+      ENDIF(HAVE_MMX)
+    ELSE(HAVE_NASM MATCHES "NOTFOUND")
       PROJECT(OpenAL ASM)
       MESSAGE(STATUS "Using NASM")
 
@@ -442,12 +456,7 @@ IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
         SET(ARCH_OBJS ${ARCH_OBJS} ${x86_MMX_NASM_OBJS})
         ADD_DEFINE(HAVE_MMX_MEMCPY 1)
       ENDIF(HAVE_MMX)
-    ELSE(NOT HAVE_NASM MATCHES "NOTFOUND")
-
-      IF(HAVE_MMX)
-        MESSAGE("Warning: MMX capability found, but NASM not found. Without NASM no SIMD detection (MMX enabled by default) and no MMX memcopy is built.")
-      ENDIF(HAVE_MMX)
-    ENDIF(NOT HAVE_NASM MATCHES "NOTFOUND")
+    ENDIF(HAVE_NASM MATCHES "NOTFOUND")
   ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "i.86")
 
   IF(CMAKE_SYSTEM_MACHINE MATCHES "i686" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")

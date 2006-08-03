@@ -1,3 +1,10 @@
+2006-08-03  Prakash Punnoor <prakash@punnoor.de>
+
+	* admin/CMakeModules/FindCompilerMMXFlag.cmake: added
+
+	* CMakeLists.txt: try to enable MMX by setting compile
+	flag; error out on not finding NASM
+
 2006-08-02  Prakash Punnoor <prakash@punnoor.de>
 
 	* admin/CMakeModules/FindCompilerVisibility.cmake: use CMake
