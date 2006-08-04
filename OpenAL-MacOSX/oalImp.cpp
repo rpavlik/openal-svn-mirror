@@ -1,7 +1,7 @@
 /**********************************************************************************************************************************
 *
 *   OpenAL cross platform audio library
-*   Copyright © 2004, Apple Computer, Inc. All rights reserved.
+*   Copyright (c) 2004, Apple Computer, Inc. All rights reserved.
 *
 *   Redistribution and use in source and binary forms, with or without modification, are permitted provided 
 *   that the following conditions are met:
@@ -20,7 +20,6 @@
 *   USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 **********************************************************************************************************************************/
-
 /*
 	This source file contains all the entry points into the oal state via the defined OpenAL API set. 
 */
@@ -30,36 +29,81 @@
 #include "oalDevice.h"
 #include "oalSource.h"
 #include "oalBuffer.h"
+#include "oalCaptureDevice.h"
+#include "MacOSX_OALExtensions.h"
 
 // ~~~~~~~~~~~~~~~~~~~~~~
 // development build flags
-#define		LOG_API_USAGE	0
-#define		LOG_EXTRAS		0
-#define		LOG_ERRORS		0
+#define		LOG_API_USAGE		0
+#define		LOG_BUFFER_USAGE	0
+#define		LOG_SOURCE_USAGE	0
+#define		LOG_CAPTURE_USAGE	0
+#define		LOG_EXTRAS			0
+#define		LOG_ERRORS			0
+#define		LOG_ASA_USAGE		0
+
+#define		TEST_WORK_AROUND_ONE		0	// For a Game that insists on using Source ID 0 which doesn't exist
+
+#if TEST_WORK_AROUND_ONE
+ALuint		gTestSID = 0;
+#endif
 
 // ~~~~~~~~~~~~~~~~~~~~~~
+// VERSION
+const char *alVersion="1.1";
+#define		kMajorVersion	1
+#define		kMinorVersion	1
+
+const char *unknownImplementationError="Unknown Internal Error";
 
 // AL_STATE info
-const char *alVendor="Any";
-const char *alVersion="OpenAL 1.2";
+const char *alVendor="Apple Computer Inc.";
 const char *alRenderer="Software";
-const char *alExtensions="";
 
-const char *alNoError="No Error";
-const char *alErrInvalidName="Invalid Name";
-const char *alErrInvalidEnum="Invalid Enum";
-const char *alErrInvalidValue="Invalid Enum Value";
-const char *alErrInvalidOp="Invalid Operation";
-const char *alErrOutOfMemory="Out of Memory";
+#define	kALExtensionCount	5
+const char *alExtensions			= "AL_EXT_OFFSET AL_EXT_LINEAR_DISTANCE AL_EXT_EXPONENT_DISTANCE AL_EXT_float32 AL_EXT_STATIC_BUFFER";
+const char *alExtensionsList[kALExtensionCount] = {	"AL_EXT_OFFSET",
+													"AL_EXT_LINEAR_DISTANCE",
+													"AL_EXT_EXPONENT_DISTANCE",
+													"AL_EXT_float32",
+													"AL_EXT_STATIC_BUFFER"};
+
+
+#define	kALCExtensionCount	3
+const char *alcExtensions				= "ALC_EXT_CAPTURE ALC_ENUMERATION_EXT ALC_EXT_MAC_OSX";
+
+const char *alcExtensionsList[kALCExtensionCount] = {	"ALC_EXT_CAPTURE",
+														"ALC_ENUMERATION_EXT",
+														"ALC_EXT_MAC_OSX"};
+
+const char *alcExtensionsWithASA		= "ALC_EXT_CAPTURE ALC_ENUMERATION_EXT ALC_EXT_MAC_OSX ALC_EXT_ASA";
+
+const char *alNoError				= "No Error";
+const char *alErrInvalidName		= "Invalid Name";
+const char *alErrInvalidEnum		= "Invalid Enum";
+const char *alErrInvalidValue		= "Invalid Value";
+const char *alErrInvalidOp			= "Invalid Operation";
+const char *alErrOutOfMemory		= "Out of Memory";
+
+const char *alcErrInvalidDevice		= "ALC Invalid Device";
+const char *alcErrInvalidContext	= "ALC Invalid Context";
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // globals
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 // globals
-UInt32		gCurrentContext = 0;                                    // token for the current context
-UInt32		gCurrentDevice = 0;                                     // token for the device of the current context
+UInt32		gCurrentError = 0;										// globally stored error code
+uintptr_t	gCurrentContext = 0;                                    // token for the current context
+uintptr_t	gCurrentDevice = 0;                                     // token for the device of the current context
 UInt32      gMaximumMixerBusCount = kDefaultMaximumMixerBusCount;   // use gMaximumMixerBusCount for settinmg the bus count when a device is opened
+ALdouble	gMixerOutputRate = 0.0;
+ALint		gRenderChannelSetting = ALC_MAC_OSX_RENDER_CHANNEL_COUNT_MULTICHANNEL;	// default setting is multi channel
+					
+ALCchar 	gDefaultOutputDeviceName[maxLen];
+ALCchar 	gDefaultOutputDeviceNameList[maxLen];
+ALCchar		gDefaultInputDeviceName[maxLen];
+ALCchar 	gDefaultInputDeviceNameList[maxLen];
 
 // At this time, only mono CBR formats would work - no problem as only pcm formats are currently valid
 // The feature is turned on using ALC_CONVERT_DATA_UPON_LOADING and the alEnable()/alDisable() APIs
@@ -67,23 +111,247 @@ bool        gConvertBufferNow = false;                              // do not co
 
 // global object maps
 OALDeviceMap*				gOALDeviceMap = NULL;					// this map will be created upon the first call to alcOpenDevice()
-OALBufferMap*				gOALBufferMap = NULL;					// this map will be created upon the first call to alcGenBuffers()
 OALContextMap*				gOALContextMap = NULL;					// this map will be created upon the first call to alcCreateContext()
+OALBufferMap*				gOALBufferMap = NULL;					// this map will be created upon the first call to alcGenBuffers()
+OALBufferMap*				gDeadOALBufferMap = NULL;				// this map will be created upon the first call to alcGenBuffers()
+OALCaptureDeviceMap*		gOALCaptureDeviceMap = NULL;			// this map will be created upon the first call to alcCaptureOpenDevice()
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// utility functions
+#pragma mark ***** Support Methods *****
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-// Use this for getting a unique token when creating all new sources, contexts, devices and buffers
-UInt32	GetNewToken (void)
+void WaitOneRenderCycle()
 {
-	static	UInt32	currentToken = 1;
-	UInt32	returnedToken;
+	OALContext*		context = gOALContextMap->Get(gCurrentContext);
 	
-	returnedToken = currentToken;
-	currentToken++;
+	UInt32	microseconds = (UInt32)((context->GetFramesPerSlice() / (context->GetMixerRate()/1000)) * 1000);
+	usleep (microseconds * 2);
+
+	return;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+const char*	GetALCExtensionList()
+{
+	if (Get3DMixerVersion() >= k3DMixerVersion_2_2) 
+		return alcExtensionsWithASA;
+	else
+		return alcExtensions;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+UInt32 Get3DMixerVersion ()
+{
+	static	UInt32		mixerVersion = kUnknown3DMixerVersion;
 	
-	return (returnedToken);
+	if (mixerVersion == kUnknown3DMixerVersion)
+	{
+		ComponentDescription	mixerCD;
+		mixerCD.componentFlags = 0;        
+		mixerCD.componentFlagsMask = 0;     
+		mixerCD.componentType = kAudioUnitType_Mixer;          
+		mixerCD.componentSubType = kAudioUnitSubType_3DMixer;       
+		mixerCD.componentManufacturer = kAudioUnitManufacturer_Apple;  
+
+		ComponentInstance   mixerInstance = OpenComponent(FindNextComponent(0, &mixerCD));
+		long  version = CallComponentVersion(mixerInstance);
+		CloseComponent(mixerInstance);
+		
+		if (version < kMinimumMixerVersion)
+		{
+			mixerVersion = kUnsupported3DMixer;                           // we do not have a current enough 3DMixer to use
+		}
+		else if (version < 0x20000)
+		{
+			mixerVersion = k3DMixerVersion_1_3;
+		}
+		else if (version == 0x20000)
+		{
+			mixerVersion = k3DMixerVersion_2_0;
+		}
+		else if (version == 0x20100)
+		{
+			mixerVersion = k3DMixerVersion_2_1;
+		}
+		else if (version >= 0x20200)
+		{
+			mixerVersion = k3DMixerVersion_2_2;
+		}
+	}
+
+    return	mixerVersion;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ALdouble	GetMixerOutputRate()
+{
+	ALdouble	returnValue = 0.0;
+	
+	if (gMixerOutputRate > 0.0)
+		returnValue = gMixerOutputRate; // return the user's explicit setting
+	else 
+	{
+		OALDevice	*oalDevice = NULL;
+		if (gOALDeviceMap)
+			oalDevice = gOALDeviceMap->Get(gCurrentDevice);
+
+		if (oalDevice)
+		{
+			// there has been no explicit setting yet, but there is an open device, return it's sample rate
+			// as that will be the mixer setting as well, until gMixerOutputRate gets set before creating a context
+			returnValue = (ALdouble) oalDevice->GetDeviceSampleRate();
+
+		}
+		else
+		{
+			// The default device has not yet been opened, go get the sample rate of the default hw
+			AudioDeviceID	device;
+			UInt32			propSize = sizeof(device);
+			OSStatus	result = AudioHardwareGetProperty(kAudioHardwarePropertyDefaultOutputDevice, &propSize, &device);
+			if (result == noErr)
+			{
+				Float64		sr;
+				propSize = sizeof(sr);
+				result = AudioDeviceGetProperty(device, 0, false, kAudioDevicePropertyNominalSampleRate, &propSize, &sr);
+				if (result == noErr)
+					returnValue = sr;
+			}
+			else
+			{
+				returnValue	= 0.0;
+				throw (AL_INVALID_OPERATION);
+			}
+		}
+	}
+	return (returnValue);
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void alSetError (ALenum errorCode)
+{
+    // only set an error if we are in a no error state
+    if (gCurrentError == AL_NO_ERROR)
+		gCurrentError = errorCode;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void	CleanUpDeadBufferList()
+{
+	if (gDeadOALBufferMap)
+	{
+		UInt32	index = 0;
+		UInt32	count = gDeadOALBufferMap->Size();
+		for (UInt32 i = 0; i < count; i++)
+		{
+			OALBuffer*		buffer = gDeadOALBufferMap->GetBufferByIndex(index);
+			if (buffer)
+			{
+				if (buffer->IsPurgable())
+				{
+					gDeadOALBufferMap->Remove(buffer->GetToken());
+#if LOG_BUFFER_USAGE
+	DebugMessageN1("CleanUpDeadBufferList--> deleting buffers = %ld", (long int) buffer->GetToken());
+#endif
+					delete (buffer);
+				}
+				else
+					index++;
+			}
+			else
+				index++;
+		}
+	}
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+OALContext*		GetContextObjectByToken (uintptr_t	inContextToken)
+{
+	if (gOALContextMap == NULL)
+		throw ((OSStatus) AL_INVALID_OPERATION);
+
+	OALContext		*oalContext = gOALContextMap->Get(inContextToken);
+	if (oalContext == NULL)
+		throw ((OSStatus) ALC_INVALID_CONTEXT);
+	
+	return oalContext;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void	SetDeviceError(uintptr_t inDeviceToken, UInt32	inError)
+{
+	if (gOALDeviceMap != NULL)
+	{
+		OALDevice			*oalDevice = gOALDeviceMap->Get(inDeviceToken);	// get the requested oal device
+		if (oalDevice)
+			oalDevice->SetError(inError);
+	}
+	
+	if (gOALCaptureDeviceMap != NULL)
+	{
+		OALCaptureDevice			*oalCaptureDevice = gOALCaptureDeviceMap->Get(inDeviceToken);	// get the requested oal device
+		if (oalCaptureDevice)
+			oalCaptureDevice->SetError(inError);
+	}
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+OALDevice*		GetDeviceObjectByToken (uintptr_t inDeviceToken)
+{
+	if (gOALDeviceMap == NULL)
+		throw AL_INVALID_OPERATION;
+
+	OALDevice			*oalDevice = gOALDeviceMap->Get(inDeviceToken);	// get the requested oal device
+	if (oalDevice == NULL)
+		throw ((OSStatus) AL_INVALID_VALUE);
+	
+	return oalDevice;
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+OALCaptureDevice*		GetCaptureDeviceObjectByToken (uintptr_t inDeviceToken)
+{
+	if (gOALCaptureDeviceMap == NULL)
+		throw AL_INVALID_OPERATION;
+
+	OALCaptureDevice			*oalCaptureDevice = gOALCaptureDeviceMap->Get(inDeviceToken);	// get the requested oal device
+	if (oalCaptureDevice == NULL)
+		throw ((OSStatus) AL_INVALID_VALUE);
+	
+	return oalCaptureDevice;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+OALSource*	GetSourceObjectFromCurrentContext(ALuint	inSID)
+{
+#if TEST_WORK_AROUND_ONE
+	if (inSID == 0)
+	{
+		OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+		OALSource		*oalSource = oalContext->GetSource(gTestSID);
+		if (oalSource == NULL)
+			throw ((OSStatus) AL_INVALID_VALUE);
+		return oalSource;
+	}
+#endif
+
+	OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+	OALSource		*oalSource = oalContext->GetSource(inSID);
+	if (oalSource == NULL)
+		throw ((OSStatus) AL_INVALID_NAME);
+	return oalSource;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+OALBuffer*	GetBufferObjectFromToken(ALuint	inBID)
+{
+	if (gOALBufferMap == NULL)
+		throw ((OSStatus) AL_INVALID_OPERATION);
+
+	CleanUpDeadBufferList();	
+
+	OALBuffer	*oalBuffer = gOALBufferMap->Get(inBID);
+	if (oalBuffer == NULL)
+		throw ((OSStatus) AL_INVALID_NAME);
+
+	return oalBuffer;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -91,22 +359,18 @@ void	InitializeBufferMap()
 {
 	if (gOALBufferMap == NULL)
 	{
-		gOALBufferMap = new OALBufferMap ();					// create the buffer map since there isn't one yet
-		
-		// add the NONE buffer
-		OALBuffer	newBuffer;
-		
-		newBuffer.mData = NULL;
-		newBuffer.mDataSize = 0;
-		newBuffer.mAttachedCount = 0;
-										
-		gOALBufferMap->Add(0, &newBuffer);						// add the new buffer to the buffer map
+		gOALBufferMap = new OALBufferMap ();						// create the buffer map since there isn't one yet
+		gDeadOALBufferMap = new OALBufferMap ();					// create the buffer map since there isn't one yet
+
+		// populate the good buffer with the AL_NONE buffer, it should never be deleted
+		OALBuffer	*newBuffer = new OALBuffer (AL_NONE);
+		gOALBufferMap->Add(0, &newBuffer);							// add the new buffer to the buffer map
 	}
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // walk through the context map and find the ones that are linked to this device
-void	DeleteContextsOfThisDevice(UInt32 inDeviceToken)
+void	DeleteContextsOfThisDevice(uintptr_t inDeviceToken)
 {
 	try {
         if (gOALContextMap == NULL)
@@ -114,8 +378,8 @@ void	DeleteContextsOfThisDevice(UInt32 inDeviceToken)
 
 		for (UInt32	i = 0; i < gOALContextMap->Size(); i++)
 		{
-			UInt32		contextToken = 0;
-			OALContext	*oalContext = gOALContextMap->GetContextByIndex(i, contextToken);
+			uintptr_t		contextToken = 0;
+			OALContext		*oalContext = gOALContextMap->GetContextByIndex(i, contextToken);
 			
             if (oalContext == NULL)
                 throw ((OSStatus) AL_INVALID_OPERATION);
@@ -143,153 +407,25 @@ void	DeleteContextsOfThisDevice(UInt32 inDeviceToken)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-OSStatus	FillInASBD(CAStreamBasicDescription &inASBD, UInt32	inFormatID, UInt32 inSampleRate)
+// Walk through the context map and reconfigure the ones that are linked to this device.
+// They should all be disconnected right now so it is safe to do so - called from the device object
+void	ReconfigureContextsOfThisDevice(uintptr_t inDeviceToken)
 {
-	OSStatus	err = noErr;
-	
-	switch (inFormatID)
+	if (gOALContextMap == NULL)
+		return; // there aren't any contexts to configure
+
+	uintptr_t		contextToken;
+	OALContext		*oalContext = NULL;
+	for (UInt32	i = 0; i < gOALContextMap->Size(); i++)
 	{
-		case AL_FORMAT_STEREO16:
-			inASBD.mSampleRate = inSampleRate * 1.0;			
-			inASBD.mFormatID = kAudioFormatLinearPCM;
-			inASBD.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsBigEndian | kAudioFormatFlagIsPacked;
-			inASBD.mBytesPerPacket = 4;
-			inASBD.mBytesPerFrame = 4;
-			inASBD.mFramesPerPacket = 1;
-			inASBD.mBitsPerChannel = 16;
-			inASBD.mChannelsPerFrame = 2;
-			inASBD.mReserved = 0;
-			break;
-		case AL_FORMAT_MONO16: 
-			inASBD.mSampleRate = inSampleRate * 1.0;			
-			inASBD.mFormatID = kAudioFormatLinearPCM;
-			inASBD.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsBigEndian | kAudioFormatFlagIsPacked;
-			inASBD.mBytesPerPacket = 2;
-			inASBD.mBytesPerFrame = 2;
-			inASBD.mFramesPerPacket = 1;
-			inASBD.mBitsPerChannel = 16;
-			inASBD.mChannelsPerFrame = 1;
-			inASBD.mReserved = 0;
-			break;
-		case AL_FORMAT_STEREO8:
-			inASBD.mSampleRate = inSampleRate * 1.0;			
-			inASBD.mFormatID = kAudioFormatLinearPCM;
-			inASBD.mFormatFlags = kAudioFormatFlagIsPacked;
-			inASBD.mBytesPerPacket = 2;
-			inASBD.mBytesPerFrame = 2;
-			inASBD.mFramesPerPacket = 1;
-			inASBD.mBitsPerChannel = 8;
-			inASBD.mChannelsPerFrame = 2;
-			inASBD.mReserved = 0;
-			break;
-		case AL_FORMAT_MONO8 : 
-			inASBD.mSampleRate = inSampleRate * 1.0;			
-			inASBD.mFormatID = kAudioFormatLinearPCM;
-			inASBD.mFormatFlags = kAudioFormatFlagIsPacked;
-			inASBD.mBytesPerPacket = 1;
-			inASBD.mBytesPerFrame = 1;
-			inASBD.mFramesPerPacket = 1;
-			inASBD.mBitsPerChannel = 8;
-			inASBD.mChannelsPerFrame = 1;
-			inASBD.mReserved = 0;
-			break;
-		default: 
-			err = AL_INVALID_VALUE;
-			break;
+		oalContext = gOALContextMap->GetContextByIndex(i, contextToken);
+		if (oalContext != NULL && (oalContext->GetDeviceToken() == inDeviceToken))  {
+			// found a context that uses this device
+			oalContext->ConfigureMixerFormat();	// reconfigure the output format of the context's mixer
+		}
 	}
-	return (err);	
-}
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// This currently will only work for cbr formats
-OSStatus ConvertDataForBuffer(OALBuffer	*inOALBuffer, void *inData, UInt32 inDataSize, UInt32	inDataFormat, UInt32 inDataSampleRate)
-{
-	OSStatus					result = noErr;
-
-    try {
-
-        AudioConverterRef			converter;
-        CAStreamBasicDescription	destFormat;
-        UInt32						framesOfSource = 0;
-
-        if ((inOALBuffer == NULL) || (inData == NULL))
-            throw ((OSStatus) AL_INVALID_OPERATION);
-        
-        result = FillInASBD(inOALBuffer->mPreConvertedDataFormat, inDataFormat, inDataSampleRate);
-            THROW_RESULT
-
-        // we only should be here for mono sounds for now...
-        if (inOALBuffer->mPreConvertedDataFormat.NumberChannels() == 1)
-            inOALBuffer->mPreConvertedDataFormat.mFormatFlags |= kAudioFormatFlagIsNonInterleaved; 
-                    
-        destFormat.mChannelsPerFrame = inOALBuffer->mPreConvertedDataFormat.NumberChannels();
-        destFormat.mSampleRate = inOALBuffer->mPreConvertedDataFormat.mSampleRate;
-        destFormat.mFormatID = kAudioFormatLinearPCM;
-        
-        if (inOALBuffer->mPreConvertedDataFormat.NumberChannels() == 1)
-            destFormat.mFormatFlags = kAudioFormatFlagsNativeFloatPacked | kAudioFormatFlagIsNonInterleaved;
-        else
-            destFormat.mFormatFlags = kAudioFormatFlagsNativeFloatPacked; // leave stereo data interleaved, and an AC will be used for deinterleaving later on
-        
-        destFormat.mFramesPerPacket = 1;	
-        destFormat.mBitsPerChannel = sizeof (Float32) * 8;	
-        destFormat.mBytesPerPacket = sizeof (Float32) * destFormat.NumberChannels();	
-        destFormat.mBytesPerFrame = sizeof (Float32) * destFormat.NumberChannels();
-        
-        result = FillInASBD(inOALBuffer->mDataFormat, inDataFormat, UInt32(destFormat.mSampleRate));
-            THROW_RESULT
-            
-        result = AudioConverterNew(&inOALBuffer->mPreConvertedDataFormat, &destFormat, &converter);
-            THROW_RESULT
-
-        framesOfSource = inDataSize / inOALBuffer->mPreConvertedDataFormat.mBytesPerFrame; // THIS ONLY WORKS FOR CBR FORMATS
-        
-        UInt32		dataSize = framesOfSource * sizeof(Float32) * destFormat.NumberChannels();
-        inOALBuffer->mDataSize = (UInt32) dataSize;
-
-        if (inOALBuffer->mData != NULL)
-        {
-            if (inOALBuffer->mDataSize != dataSize)
-            {
-                inOALBuffer->mDataSize = dataSize;
-                void *newDataPtr = realloc(inOALBuffer->mData, inOALBuffer->mDataSize);
-                if (newDataPtr == NULL)
-                    throw ((OSStatus) AL_INVALID_OPERATION);
-                    
-                inOALBuffer->mData = (char *) newDataPtr;
-            }		
-        }
-        else
-        {
-            inOALBuffer->mDataSize = dataSize;
-            inOALBuffer->mData = (char *) malloc (inOALBuffer->mDataSize);
-            if (inOALBuffer->mData == NULL)
-                throw ((OSStatus) AL_INVALID_OPERATION);
-        }
-
-        if (inOALBuffer->mData != NULL)
-        {
-            result = AudioConverterConvertBuffer(converter, inDataSize, inData, &inOALBuffer->mDataSize, inOALBuffer->mData);
-            if (result == noErr)
-            {
-                inOALBuffer->mDataFormat.SetFrom(destFormat);
-                if (inOALBuffer->mPreConvertedDataFormat.NumberChannels() == 1)
-                    inOALBuffer->mDataHasBeenConverted = true;
-                else
-                    inOALBuffer->mDataHasBeenConverted = false;				
-            }
-        }
-        
-        AudioConverterDispose(converter);
-    }
-    catch (OSStatus     result) {
-        return (result);
-    }
-    catch (...) {
-        result = (OSStatus) AL_INVALID_OPERATION;
-    }
-    
-	return (result);
+	return;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -304,64 +440,194 @@ OSStatus ConvertDataForBuffer(OALBuffer	*inOALBuffer, void *inData, UInt32 inDat
 // Device APIs
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#pragma mark ***** Devices *****
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(ALCubyte *deviceName)
+#pragma mark ***** Capture Devices*****
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ALC_API ALCdevice*      ALC_APIENTRY alcCaptureOpenDevice( const ALCchar *devicename, ALCuint frequency, ALCenum format, ALCsizei buffersize )
 {
-	UInt32		newDeviceToken = 0;
-	OALDevice	*newDevice = NULL;
-
-#if LOG_API_USAGE
-	DebugMessage("alcOpenDevice called");
+#if LOG_CAPTURE_USAGE	
+	DebugMessageN3("alcCaptureOpenDevice:  format %s : sample rate = %ld : buffer size = %ld", GetFormatString(format), (long int) frequency, (long int) buffersize);
 #endif
+
+	uintptr_t			newDeviceToken = 0;
+	OALCaptureDevice	*newDevice = NULL;
 	
 	try {
-		if (gOALDeviceMap == NULL)
-			gOALDeviceMap = new OALDeviceMap ();                                        // create the device map if there isn't one yet
+		if(!IsFormatSupported(format))
+			throw ((OSStatus) AL_INVALID_VALUE);
+		
+		if (gOALCaptureDeviceMap == NULL)
+			gOALCaptureDeviceMap = new OALCaptureDeviceMap ();                          // create the device map if there isn't one yet
 		        
-        newDeviceToken = GetNewToken();                                                 // get a unique token
-        newDevice = new OALDevice((const char *) deviceName, newDeviceToken, gMaximumMixerBusCount);	// create a new device object
+        newDeviceToken = GetNewPtrToken();                                              // get a unique token
+        newDevice = new OALCaptureDevice((const char *) devicename, newDeviceToken, frequency, format, buffersize);	// create a new device object
         if (newDevice != NULL)
-            gOALDeviceMap->Add(newDeviceToken, &newDevice);                             // add the new device to the device map
+            gOALCaptureDeviceMap->Add(newDeviceToken, &newDevice);						// add the new device to the device map
 	}
 	catch (OSStatus result) {
-		DebugMessageN1("alcOpenDevice Failed - err = %ld\n", result);
-		if (newDevice) 
-			delete (newDevice);
-		newDeviceToken = 0;
-		alSetError(result);
-    }
+		DebugMessageN1("ERROR: alcCaptureOpenDevice FAILED = %s\n", alcGetString(NULL, result));
+		if (newDevice) delete (newDevice);
+		return NULL;
+	}
 	catch (...) {
-		DebugMessage("alcOpenDevice Failed");
-		if (newDevice) 
-			delete (newDevice);
-		newDeviceToken = 0;
-		alSetError(AL_INVALID_OPERATION);
+		DebugMessage("ERROR: alcCaptureOpenDevice FAILED");
+		if (newDevice) delete (newDevice);
+		return NULL;
 	}
 	
 	return ((ALCdevice *) newDeviceToken);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALCAPI ALCvoid    ALCAPIENTRY alcCloseDevice(ALCdevice *device)
+ALC_API ALCboolean	ALC_APIENTRY alcCaptureCloseDevice( ALCdevice *device )
 {
-#if LOG_API_USAGE
-	DebugMessage("alcCloseDevice called");
+#if LOG_CAPTURE_USAGE
+	DebugMessage("alcCaptureCloseDevice");
 #endif
 
 	try {										
-        if (gOALDeviceMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-            
-        OALDevice		*oalDevice = gOALDeviceMap->Get((UInt32) device);	// get the requested oal device
-        if (oalDevice == NULL) 
-            throw ((OSStatus) AL_INVALID_VALUE);                            // make sure it is a valid device token
-
-        gOALDeviceMap->Remove((UInt32) device);                             // remove the device from the map
+		OALCaptureDevice	*oalCaptureDevice = GetCaptureDeviceObjectByToken ((uintptr_t) device);
+		
+        gOALCaptureDeviceMap->Remove((uintptr_t) device);									// remove the device from the map
+        delete (oalCaptureDevice);															// destruct the device object
         
-        DeleteContextsOfThisDevice((UInt32) device);
-        delete (oalDevice);                                                 // destruct the device object
+        if (gOALCaptureDeviceMap->Empty())
+        {
+            // there are no more devices in the map, so delete the map and create again later if needed
+            delete (gOALCaptureDeviceMap);
+            gOALCaptureDeviceMap = NULL;
+        }
+	}
+	catch (OSStatus   result) {
+		DebugMessageN1("ERROR: alcCaptureCloseDevice FAILED = %s\n", alcGetString(NULL, result));
+	}
+    catch (...) {
+		DebugMessage("ERROR: alcCaptureCloseDevice FAILED");
+	}
+
+	return AL_TRUE;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ALC_API void   ALC_APIENTRY alcCaptureStart( ALCdevice *device )
+{
+#if LOG_CAPTURE_USAGE
+	DebugMessage("alcCaptureStart");
+#endif
+
+	try {										
+		OALCaptureDevice	*oalCaptureDevice = GetCaptureDeviceObjectByToken ((uintptr_t) device);
+        oalCaptureDevice->StartCapture();
+	}
+	catch (OSStatus   result) {
+		DebugMessageN1("ERROR: alcCaptureCloseDevice FAILED = %s\n", alcGetString(NULL, result));
+		SetDeviceError((uintptr_t) device, result);
+	}
+    catch (...) {
+		DebugMessage("ERROR: alcCaptureCloseDevice FAILED");
+		SetDeviceError((uintptr_t) device, AL_INVALID_OPERATION);
+	}
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ALC_API void	ALC_APIENTRY alcCaptureStop( ALCdevice *device )
+{
+#if LOG_CAPTURE_USAGE
+	DebugMessage("alcCaptureStop");
+#endif
+
+	try {										
+		OALCaptureDevice	*oalCaptureDevice = GetCaptureDeviceObjectByToken ((uintptr_t) device);
+        oalCaptureDevice->StopCapture();
+	}
+	catch (OSStatus   result) {
+		DebugMessageN1("ERROR: alcCaptureCloseDevice FAILED = %s\n", alcGetString(NULL, result));
+		SetDeviceError((uintptr_t) device, result);
+	}
+    catch (...) {
+		DebugMessage("ERROR: alcCaptureCloseDevice FAILED");
+		SetDeviceError((uintptr_t) device, AL_INVALID_OPERATION);
+	}
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ALC_API void	ALC_APIENTRY alcCaptureSamples( ALCdevice *device, ALCvoid *buffer, ALCsizei samples )
+{
+#if LOG_CAPTURE_USAGE
+	DebugMessage("alcCaptureSamples");
+#endif
+
+	try {										
+		OALCaptureDevice	*oalCaptureDevice = GetCaptureDeviceObjectByToken ((uintptr_t) device);
+        oalCaptureDevice->GetFrames(samples, (UInt8*) buffer);
+	}
+	catch (OSStatus   result) {
+		DebugMessageN1("ERROR: alcCaptureCloseDevice FAILED = %s\n", alcGetString(NULL, result));
+		SetDeviceError((uintptr_t) device, result);
+	}
+    catch (...) {
+		DebugMessage("ERROR: alcCaptureCloseDevice FAILED");
+		SetDeviceError((uintptr_t) device, AL_INVALID_OPERATION);
+	}
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#pragma mark ***** Devices *****
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ALC_API ALCdevice* ALC_APIENTRY alcOpenDevice(const ALchar *deviceName)
+{
+	uintptr_t	newDeviceToken = 0;
+	OALDevice	*newDevice = NULL;
+
+#if LOG_API_USAGE
+	DebugMessage("alcOpenDevice");
+#endif
+	
+	try {
+
+		if (gOALDeviceMap == NULL)
+			gOALDeviceMap = new OALDeviceMap ();                                // create the device map if there isn't one yet
+		        
+		if (Get3DMixerVersion() == kUnsupported3DMixer)
+			throw -1;
+		
+        newDeviceToken = GetNewPtrToken();																// get a unique token
+        newDevice = new OALDevice((const char *) deviceName, newDeviceToken, gRenderChannelSetting);	// create a new device object
+        if (newDevice != NULL)
+            gOALDeviceMap->Add(newDeviceToken, &newDevice);												// add the new device to the device map
+	}
+	catch (OSStatus result) {
+		DebugMessageN1("ERROR: alcOpenDevice FAILED = %s\n", alcGetString(NULL, result));
+		if (newDevice) delete (newDevice);
+		SetDeviceError(gCurrentDevice, result);
+		return NULL;
+    }
+	catch (...) {
+		DebugMessage("ERROR: alcOpenDevice FAILED");
+		if (newDevice) delete (newDevice);
+		SetDeviceError(gCurrentDevice, AL_INVALID_OPERATION);
+		return NULL;
+	}
+	
+	return ((ALCdevice *) newDeviceToken);
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ALC_API ALCboolean   ALC_APIENTRY alcCloseDevice(ALCdevice *device)
+{
+#if LOG_API_USAGE
+	DebugMessage("alcCloseDevice");
+#endif
+
+	try {										
+		OALDevice	*oalDevice = GetDeviceObjectByToken((uintptr_t) device);	// get the requested oal device
+
+        gOALDeviceMap->Remove((uintptr_t) device);								// remove the device from the map
+        
+        DeleteContextsOfThisDevice((uintptr_t) device);
+        delete (oalDevice);														// destruct the device object
         
         if (gOALDeviceMap->Empty())
         {
@@ -371,25 +637,52 @@ ALCAPI ALCvoid    ALCAPIENTRY alcCloseDevice(ALCdevice *device)
         }
 	}
 	catch (OSStatus   result) {
-		DebugMessageN1("alcCloseDevice Failed - err = %ld\n", result);
-        alSetError(result);
+		DebugMessageN1("ERROR: alcCloseDevice FAILED = %s\n", alcGetString(NULL, result));
+		SetDeviceError(gCurrentDevice, result);
+		return ALC_FALSE;
 	}
     catch (...) {
-		DebugMessage("alcCloseDevice Failed");
-        alSetError(AL_INVALID_OPERATION);
+		DebugMessage("ERROR: alcCloseDevice FAILED");
+		SetDeviceError(gCurrentDevice, AL_INVALID_OPERATION);
+		return ALC_FALSE;
 	}
 
-	return;
+	return ALC_TRUE; // success
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALCAPI ALCenum  ALCAPIENTRY alcGetError(ALCdevice *device)
+ALC_API ALCenum  ALC_APIENTRY alcGetError(ALCdevice *device)
 {
 #if LOG_API_USAGE
-	DebugMessage("alcGetError called");
+	DebugMessage("alcGetError");
 #endif
-	// NOTE: Ignore device parameter for now as this has been the common implementation so far
-	return (alGetError ());
+
+	try {
+		if (gOALDeviceMap)
+		{
+			OALDevice*		oalDevice = gOALDeviceMap->Get((uintptr_t) device);
+			if (oalDevice)
+				return (oalDevice->GetError());
+		}
+		
+		if (gOALCaptureDeviceMap)
+		{
+			OALCaptureDevice			*oalCaptureDevice = gOALCaptureDeviceMap->Get((uintptr_t) device);	// get the requested oal device
+			if (oalCaptureDevice)
+				return (oalCaptureDevice->GetError());
+		}
+
+		return ALC_INVALID_DEVICE;
+	} 
+	catch (OSStatus	result) {
+		DebugMessage("ERROR: alcGetError FAILED: ALC_INVALID_DEVICE");
+		return ALC_INVALID_DEVICE;
+	}
+	catch (...) {
+		DebugMessage("ERROR: alcGetError FAILED: ALC_INVALID_DEVICE");
+		return ALC_INVALID_DEVICE;
+	}
+	return noErr;	// don't know about this device
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -399,145 +692,129 @@ ALCAPI ALCenum  ALCAPIENTRY alcGetError(ALCdevice *device)
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #pragma mark ***** Contexts *****
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // There is no attribute support yet
-ALCAPI ALCcontext* 	ALCAPIENTRY alcCreateContext(ALCdevice *device,	ALCint *attrList)
+ALC_API ALCcontext* 	ALC_APIENTRY alcCreateContext(ALCdevice *device,	const ALCint *attrList)
 {
-	UInt32			newContextToken = 0;
+	uintptr_t		newContextToken = 0;
 	OALContext		*newContext = NULL;
 
 #if LOG_API_USAGE
-	DebugMessage("alcCreateContext called");
+	DebugMessageN1("alcCreateContext--> device = %ld", (long int) device);
 #endif
 	
 	try {
-        if (gOALDeviceMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-            
-        OALDevice		*oalDevice = gOALDeviceMap->Get((UInt32) device);
-        if (oalDevice == NULL)
-            throw ((OSStatus) AL_INVALID_VALUE);           // invalid device has been passed
+		OALDevice	*oalDevice = GetDeviceObjectByToken ((uintptr_t) device);
 
 		// create the context map if there isn't one yet
 		if (gOALContextMap == NULL)
 			gOALContextMap = new OALContextMap();
 	
-		newContextToken = GetNewToken();
-		newContext = new OALContext(newContextToken, oalDevice);
+		newContextToken = GetNewPtrToken();
+		
+		// use the attribute hint for mono/stereo sources to set gMaximumMixerBusCount
+		// will only grow gMaximumMixerBusCount not shrink it below the default mixer bus count of 64
+		UInt32	sourceCount = CalculateNeededMixerBusses(attrList, gMaximumMixerBusCount);
+		
+		// if the application has explicitly set a mixer output rate, use it,
+		// otherwise just use the device's sample rate
+		Float64		mixerOutputRate = gMixerOutputRate > 0.0 ? gMixerOutputRate : oalDevice->GetDeviceSampleRate();
+		newContext = new OALContext(newContextToken, oalDevice, attrList, sourceCount, mixerOutputRate);
 		
 		gOALContextMap->Add(newContextToken, &newContext);	
 	}
 	catch (OSStatus     result){
-		DebugMessageN1("alcCreateContext Failed - err = %ld\n", result);
-		if (newContext) 
-            delete (newContext);
-		alSetError(result);
+		DebugMessageN1("ERROR: alcCreateContext FAILED = %s\n", alcGetString(NULL, result));
+		if (newContext) delete (newContext);
+		SetDeviceError(gCurrentDevice, result);
 		return (NULL);
 	}
     catch (...) {
-		DebugMessage("alcCreateContext Failed");
-        alSetError(AL_INVALID_OPERATION);
+		DebugMessage("ERROR: alcCreateContext FAILED");
+		SetDeviceError(gCurrentDevice, AL_INVALID_OPERATION);
+		return (NULL);
 	}
 	
 	return ((ALCcontext *) newContextToken);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALCAPI ALCboolean  ALCAPIENTRY alcMakeContextCurrent(ALCcontext *context)
+ALC_API ALCboolean  ALC_APIENTRY alcMakeContextCurrent(ALCcontext *context)
 {
 #if LOG_API_USAGE
-	DebugMessage("alcMakeContextCurrent called");
+	DebugMessageN1("alcMakeContextCurrent--> context = %ld", (long int) context);
 #endif
 
-	if ((UInt32 ) context == gCurrentContext)
-		return AL_TRUE;								// no change necessary, already using this context
+	OALContext		*newContext = NULL;
+	OALContext		*oldContext = NULL;
 
+	if ((uintptr_t) context == gCurrentContext)
+		return AL_TRUE;								// no change necessary, already using this context
+	
 	try {	
-        if (gOALDeviceMap == NULL)
+		if ((gOALContextMap == NULL) || (gOALDeviceMap == NULL))
             throw ((OSStatus) AL_INVALID_OPERATION);
 
-		OALContext		*currentContext = NULL;
 		// get the current context if there is one
 		if (gCurrentContext != 0)
-			currentContext = gOALContextMap->Get(gCurrentContext);
+			oldContext = gOALContextMap->Get(gCurrentContext);
 			
 		if (context == 0)
 		{
 			// caller passed NULL, which means no context should be current
 			gCurrentDevice = 0;
 			gCurrentContext = 0;
-			// disable the current context if there is one
-			if (currentContext != NULL)
-				currentContext->DisableContext();
 		}
 		else
 		{
-			// find the device that owns this context
-			UInt32		newCurrentDeviceToken = gOALContextMap->GetDeviceTokenForContext((UInt32) context);
-			if (newCurrentDeviceToken != 0)
-			{
-				OALContext		*oalContext = gOALContextMap->Get((UInt32) context);
-				if (oalContext == NULL)
-                    throw ((OSStatus) AL_INVALID_VALUE);    // fail because the context is invalid
+			newContext = gOALContextMap->Get((uintptr_t) context);
+			if (newContext == NULL)
+				throw ((OSStatus) ALC_INVALID_CONTEXT);    // fail because the context is invalid
 
-                // new context is obtained so disable the old one now
-                if (currentContext)
-                    currentContext->DisableContext();
-            
-                // store the new current context and device
-                gCurrentDevice = newCurrentDeviceToken;
-                gCurrentContext = (UInt32) context;
-			}
+			// find the device that owns this context
+			uintptr_t		newCurrentDeviceToken = gOALContextMap->GetDeviceTokenForContext((uintptr_t) context);
+			
+			// store the new current context and device
+			gCurrentDevice = newCurrentDeviceToken;
+			gCurrentContext = (uintptr_t) context;
+				
+			newContext->ConnectMixerToDevice();
 		}
 		
+#if TEST_WORK_AROUND_ONE
+		if (!gTestSID)
+			alGenSources(1, &gTestSID);
+#endif
+
 		return AL_TRUE;
 	}
 	catch (OSStatus result) {
-		DebugMessageN1("alcMakeContextCurrent Failed - err = %ld\n", result);
-        alSetError(result);
+		DebugMessageN1("ERROR: alcMakeContextCurrent FAILED = %s\n", alcGetString(NULL, result));
+		// get the Device object for this context so we can set an error code
+		SetDeviceError(gCurrentDevice, result);
 	}
     catch (...) {
-		DebugMessage("alcMakeContextCurrent Failed");
-        alSetError(AL_INVALID_OPERATION);
+		DebugMessage("ERROR: alcMakeContextCurrent FAILED");
+		SetDeviceError(gCurrentDevice, AL_INVALID_OPERATION);
 	}
 	
 	return AL_FALSE;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALCAPI ALCvoid	  ALCAPIENTRY alcProcessContext(ALCcontext *context)
+ALC_API ALCvoid	  ALC_APIENTRY alcProcessContext(ALCcontext *context)
 {
 #if LOG_API_USAGE
-	DebugMessage("alcProcessContext called");
+	DebugMessageN1("alcProcessContext--> context = %ld", (long int) context);
 #endif
 
-	try {
-        if (gOALDeviceMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        OALContext		*oalContext = gOALContextMap->Get((UInt32) context);
-        if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-        
-        oalContext->ProcessContext();
-    }
-    catch (OSStatus result) {
-		DebugMessageN1("alcProcessContext Failed - err = %ld\n", result);
-        alSetError(result);        
-    }
-    catch (...) {
-		DebugMessage("alcProcessContext Failed");
-        alSetError(AL_INVALID_OPERATION);
-	}
-	
-    return;
+	return; // no op
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALCAPI ALCcontext* ALCAPIENTRY alcGetCurrentContext(ALCvoid)
+ALC_API ALCcontext* ALC_APIENTRY alcGetCurrentContext(ALCvoid)
 {
 #if LOG_API_USAGE
-	DebugMessage("alcGetCurrentContext called");
+	DebugMessage("alcGetCurrentContext");
 #endif
 
 	return ((ALCcontext *) gCurrentContext);
@@ -545,90 +822,97 @@ ALCAPI ALCcontext* ALCAPIENTRY alcGetCurrentContext(ALCvoid)
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // find out what device the context uses
-ALCAPI ALCdevice*  ALCAPIENTRY alcGetContextsDevice(ALCcontext *context)
+ALC_API ALCdevice*  ALC_APIENTRY alcGetContextsDevice(ALCcontext *context)
 {
 	UInt32	returnValue = 0;
 
 #if LOG_API_USAGE
-	DebugMessage("alcGetContextsDevice called");
+	DebugMessageN1("alcGetContextsDevice--> context = %ld", (long int) context);
 #endif
 	
 	try {
         if (gOALContextMap == NULL)
             throw ((OSStatus) AL_INVALID_OPERATION);
         
-        returnValue = gOALContextMap->GetDeviceTokenForContext((UInt32) context);
+        returnValue = gOALContextMap->GetDeviceTokenForContext((uintptr_t) context);
     }
     catch (OSStatus result) {
-		DebugMessageN1("alcGetContextsDevice Failed - err = %ld\n", result);
-        alSetError(result);
+		DebugMessageN1("ERROR: alcGetContextsDevice FAILED = %s\n", alcGetString(NULL, result));
+		SetDeviceError(gCurrentDevice, result);
     }
     catch (...) {
-		DebugMessage("alcGetContextsDevice Failed");
-        alSetError(AL_INVALID_OPERATION);
+		DebugMessage("ERROR: alcGetContextsDevice FAILED");
+		SetDeviceError(gCurrentDevice, AL_INVALID_OPERATION);
 	}
     
 	return ((ALCdevice*) returnValue);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALCAPI ALCvoid	  ALCAPIENTRY alcSuspendContext(ALCcontext *context)
+ALC_API ALCvoid	  ALC_APIENTRY alcSuspendContext(ALCcontext *context)
 {
 #if LOG_API_USAGE
-	DebugMessage("alcSuspendContext called");
+	DebugMessageN1("alcSuspendContext--> context = %ld", (long int) context);
 #endif
 
-    try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-        
-        OALContext		*oalContext = gOALContextMap->Get((UInt32) context);
-        if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_VALUE);
-            
-        oalContext->SuspendContext();
-    }
-    catch (OSStatus     result) {
-		DebugMessageN1("alcSuspendContext Failed - err = %ld\n", result);
-        alSetError(result);
-    }
-    catch (...) {
-		DebugMessage("alcSuspendContext Failed");
-        alSetError(AL_INVALID_OPERATION);
-	}
-    
-	return;
+	return; // no op
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALCAPI ALCvoid	ALCAPIENTRY alcDestroyContext (ALCcontext *context)
+ALC_API ALCvoid	ALC_APIENTRY alcDestroyContext (ALCcontext *context)
 {
 #if LOG_API_USAGE
-	DebugMessage("alcDestroyContext called");
+	DebugMessageN1("alcDestroyContext--> context = %ld", (long int) context);
 #endif
 
 	try {
-		if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-        
-        // make sure it is a valid device token
-		OALContext		*oalContext = gOALContextMap->Get((UInt32) context);
-		if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_VALUE);
-            
         // if this was the current context, set current context to NULL
-        if (gCurrentContext == (UInt32) context)
+        if (gCurrentContext == (uintptr_t) context)
             alcMakeContextCurrent(NULL);
 
-        gOALContextMap->Remove((UInt32) context);	// remove from the map
+		if (gOALContextMap)
+		{
+			bool			stopGraph = true;
+			OALContext		*deleteThisContext = gOALContextMap->Get((uintptr_t) context);
+			
+			if (!gOALContextMap->Remove((uintptr_t) context))	// remove from the map
+				throw ((OSStatus) ALC_INVALID_CONTEXT);
+
+			// if there are no other contexts that use the same device, the device graph can be stopped now
+			for (UInt32 i = 0; i < gOALContextMap->Size(); i++)
+			{
+				uintptr_t		token;
+				OALContext		*context = gOALContextMap->GetContextByIndex(i, token);
+				if (context)
+				{
+					if (context->GetDeviceToken() == deleteThisContext->GetDeviceToken())
+					{
+						// some other context still exists that uses this device, so leave it running
+						stopGraph = false;
+						break;
+					}
+				}
+			}
+			
+			if (stopGraph)
+			{
+				OALDevice		*owningDevice = GetDeviceObjectByToken(deleteThisContext->GetDeviceToken());
+				if (owningDevice)
+					owningDevice->StopGraph();	// if there are no context's there is no reason for the device's graph to be running
+			}
+			
+			delete(deleteThisContext);
+		}
+		else
+            throw ((OSStatus) AL_INVALID_OPERATION);
 	}
 	catch (OSStatus     result) {
-		DebugMessageN1("alcDestroyContext Failed - err = %ld\n", result);
-        alSetError (result);
+		DebugMessageN1("ERROR: alcDestroyContext FAILED = %s\n", alcGetString(NULL, result));
+		SetDeviceError(gCurrentDevice, result);
 	}
     catch (...) {
-		DebugMessage("alcDestroyContext Failed");
-        alSetError(AL_INVALID_OPERATION);
+		DebugMessage("ERROR: alcDestroyContext FAILED");
+		SetDeviceError(gCurrentDevice, AL_INVALID_OPERATION);
 	}
 	
 	return;
@@ -642,109 +926,284 @@ ALCAPI ALCvoid	ALCAPIENTRY alcDestroyContext (ALCcontext *context)
 #pragma mark ***** Other *****
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALCAPI ALCubyte*   ALCAPIENTRY alcGetString(ALCdevice *device, ALCenum param)
+ALC_API const ALCchar *	ALC_APIENTRY alcGetString(ALCdevice *device, ALCenum pname)
 {
 #if LOG_API_USAGE
-	DebugMessage("alcGetString called");
+	DebugMessageN1("alcGetString-->  %s", GetALCAttributeString(pname));
 #endif
 
-	switch (param)
-	{
-		default:
-			break;
+	try {
+
+		switch (pname)
+		{			
+			case ALC_DEFAULT_DEVICE_SPECIFIER:
+				GetDefaultDeviceName(gDefaultOutputDeviceName, false);
+				return gDefaultOutputDeviceName;
+				break;
+
+			case ALC_DEVICE_SPECIFIER:
+				// for now return an empty list instead of the default device name
+				// GetDefaultDeviceNameList(gDefaultOutputDeviceNameList, false);
+				gDefaultOutputDeviceNameList[0] = '\0';
+				gDefaultOutputDeviceNameList[1] = '\0';
+				return gDefaultOutputDeviceNameList;
+				break;
+
+			case ALC_EXTENSIONS:
+				// 1.1 doc: if deviceHandle is NULL for this, set error to ALC_INVALID_DEVICE
+				if (device == NULL)
+					throw (OSStatus) ALC_INVALID_DEVICE;
+				else
+					return (ALchar *) GetALCExtensionList();
+				break;
+
+			case ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER:
+				GetDefaultDeviceName(gDefaultInputDeviceName, true);
+				return gDefaultInputDeviceName;
+				break;
+
+			case ALC_CAPTURE_DEVICE_SPECIFIER:
+				// for now return an empty list instead of the default device name
+				//GetDefaultDeviceNameList(gDefaultInputDeviceName, true);
+				gDefaultInputDeviceNameList[0] = '\0';
+				gDefaultInputDeviceNameList[1] = '\0';
+				return gDefaultInputDeviceNameList;
+				break;
+
+			case ALC_NO_ERROR:
+				return (ALchar *) alNoError;
+				break;
+				
+			case ALC_INVALID_DEVICE:
+				return (ALchar *) alcErrInvalidDevice;
+				break;
+				
+			case ALC_INVALID_CONTEXT:
+				return (ALchar *) alcErrInvalidContext;
+				break;
+				
+			case ALC_INVALID_ENUM:
+				return (ALchar *) alErrInvalidEnum;
+				break;
+				
+			case ALC_INVALID_VALUE:
+				return (ALchar *) alErrInvalidValue;
+				break;
+
+			default:
+				throw (OSStatus) AL_INVALID_VALUE;
+				break;
+		}
 	}
+	catch (OSStatus		result) {
+		alSetError(result);
+ 		DebugMessageN2("ERROR: alcGetString FAILED - attribute = %s error = %s\n", GetALCAttributeString(pname), alcGetString(NULL, result));
+    }
+	catch (...) {
+ 		DebugMessageN1("ERROR: alcGetString FAILED - attribute = %s", GetALCAttributeString(pname));
+	}
+
 	return NULL;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALCAPI ALCvoid     ALCAPIENTRY alcGetIntegerv(ALCdevice *device,ALCenum param,ALCsizei size,ALCint *data)
-{	
+ALC_API ALCboolean ALC_APIENTRY alcIsExtensionPresent(ALCdevice *device, const ALCchar *extname)
+{
 #if LOG_API_USAGE
-	DebugMessage("alcGetIntegerv called");
+	DebugMessageN1("alcIsExtensionPresent-->  extension = %s", extname);
 #endif
 
-	switch (param)
+	if (extname == NULL)
 	{
-		default:
-			break;
+		if (device)
+			SetDeviceError((uintptr_t) device, ALC_INVALID_VALUE);
+		else
+			SetDeviceError(gCurrentDevice, ALC_INVALID_VALUE);
 	}
-
-	return;
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALCAPI ALboolean  ALCAPIENTRY alcIsExtensionPresent(ALCdevice *device, ALubyte *extName)
-{
-#if LOG_API_USAGE
-	DebugMessage("alcIsExtensionPresent called");
-#endif
-
-	return AL_FALSE;    // no extensions present in this implementation
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALCAPI ALvoid  *  ALCAPIENTRY alcGetProcAddress(ALCdevice *device, ALubyte *funcName)
-{
-#if LOG_API_USAGE
-	DebugMessage("alcGetProcAddress called");
-#endif
-
-	return 0;
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALCAPI ALenum  ALCAPIENTRY alcGetEnumValue(ALCdevice *device, ALubyte *enumName)
-{
-#if LOG_API_USAGE
-	DebugMessage("alcGetEnumValue called");
-#endif
-
-	// since the device name is ignored by always using the default output AU,
-    // alGetEnumValue() should return the same thing
-    return (alGetEnumValue (enumName));
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alGetIntegerv (ALenum pname, ALint *data)
-{
-#if LOG_API_USAGE
-	DebugMessage("alGetIntegerv called");
-#endif
-
-	try {
-		if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-		OALContext		*oalContext = gOALContextMap->Get((UInt32) gCurrentContext);
-		if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        switch (pname)
-        {
-            case AL_DISTANCE_MODEL:
-                *data = oalContext->GetDistanceModel();
-                break;
-                
-            default:
-                alSetError(AL_INVALID_ENUM);
-                break;
-        }
-	}
-	catch (OSStatus     result) {
-		DebugMessageN1("alGetIntegerv Failed - err = %ld\n", result);
-        alSetError(result);
-    }
-    catch (...) {
-		DebugMessage("alGetIntegerv Failed");
-        alSetError(AL_INVALID_OPERATION);
+	else
+	{
+		// look at the extensions that are always present first
+		for (UInt32	i = 0; i < kALCExtensionCount; i++)
+		{
+			if (strcmp(alcExtensionsList[i], (const char *) extname) == 0) return AL_TRUE;
+		}
+		
+		// see if the ASA extension is requested and return true if we have the right 3DMixer present at runtime
+		if (Get3DMixerVersion() >= k3DMixerVersion_2_2 && (strcmp("ALC_EXT_ASA", (const char *) extname) == 0)) return AL_TRUE;
 	}
 	
-	return;
+	return AL_FALSE;    // extension not present in this implementation
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid	ALAPIENTRY alHint( ALenum target, ALenum mode )
+ALC_API void*  ALC_APIENTRY alcGetProcAddress(ALCdevice *device, const ALCchar *funcname)
 {
+#if LOG_API_USAGE
+	DebugMessageN1("alcGetProcAddress--> function name = %s", funcname);
+#endif
+
+	return (alGetProcAddress(funcname));
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ALC_API ALenum  ALC_APIENTRY alcGetEnumValue(ALCdevice *device, const ALCchar *enumName)
+{
+#if LOG_API_USAGE
+	DebugMessageN1("alcGetEnumValue--> enum name = %s", enumName);
+#endif
+
+	return (alGetEnumValue (enumName));
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API ALint AL_APIENTRY alcGetInteger (ALCdevice *device, ALenum pname)
+{
+#if LOG_API_USAGE
+	DebugMessageN2("alcGetInteger--> device = %ld attribute name = %s", (long int) device, GetALCAttributeString(pname));
+#endif
+
+	UInt32				returnValue	= 0;
+	OALCaptureDevice	*oalCaptureDevice = NULL;
+	OALDevice			*oalDevice = NULL;
+	
+	if (gOALDeviceMap)
+		oalDevice = gOALDeviceMap->Get((uintptr_t) device);	// get the requested oal device
+	
+	if (!oalDevice && gOALCaptureDeviceMap != NULL)
+		oalCaptureDevice = gOALCaptureDeviceMap->Get((uintptr_t) device);		// it's not an output device, look for a capture device
+
+	try {
+
+		switch (pname)
+		{
+			case ALC_ATTRIBUTES_SIZE:
+				
+				if (device == NULL || !oalDevice || device != alcGetContextsDevice((ALCcontext*) gCurrentContext))
+					throw (OSStatus) ALC_INVALID_DEVICE;
+				else
+				{
+					OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+					returnValue = oalContext->GetAttributeListSize();
+				}
+				break;
+
+			case ALC_MAJOR_VERSION:
+				returnValue = kMajorVersion;
+				break;
+				
+			case ALC_MINOR_VERSION:
+				returnValue = kMinorVersion;
+				break;
+				
+			case ALC_CAPTURE_SAMPLES:
+				if (oalCaptureDevice == NULL)
+					throw (OSStatus) ALC_INVALID_DEVICE;
+				returnValue = oalCaptureDevice->AvailableFrames();
+				break;			
+				
+			default:
+				throw (OSStatus) AL_INVALID_VALUE;
+				break;
+		}
+	}
+	catch (OSStatus		result) {
+		if (oalDevice)
+			oalDevice->SetError(result);
+		else if(oalCaptureDevice)
+			oalCaptureDevice->SetError(result);
+		else 
+			alSetError(result);
+
+		DebugMessageN3("ERROR: alcGetInteger FAILED: device = %ld attribute name = %s error = %s", (long int) device, GetALCAttributeString(pname), alcGetString(NULL, result));
+    }
+	catch (...) {
+		DebugMessageN3("ERROR: alcGetInteger FAILED: device = %ld attribute name = %s error = %s", (long int) device, GetALCAttributeString(pname), "Unknown Error");
+	}
+	
+	return (returnValue);
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ALC_API ALCvoid     ALC_APIENTRY alcGetIntegerv(ALCdevice *device, ALCenum pname, ALCsizei size, ALCint *data)
+{	
+#if LOG_API_USAGE
+	DebugMessageN2("alcGetIntegerv--> device = %ld attribute name = %s", (long int) device, GetALCAttributeString(pname));
+#endif
+
+	// get the device
+	OALCaptureDevice	*oalCaptureDevice = NULL;
+	OALDevice			*oalDevice = NULL;
+	if (gOALDeviceMap)
+		oalDevice = gOALDeviceMap->Get((uintptr_t) device);	// get the requested oal device
+	
+	if (!oalDevice && gOALCaptureDeviceMap != NULL)
+		oalCaptureDevice = gOALCaptureDeviceMap->Get((uintptr_t) device);		// it's not an output device, look for a capture device
+
+	try {
+
+		if ((data == NULL) || (size == 0))
+			throw ALC_INVALID_VALUE;
+
+		switch (pname)
+		{			
+			case ALC_ATTRIBUTES_SIZE:
+				
+				if (device == NULL || !oalDevice || device != alcGetContextsDevice((ALCcontext*) gCurrentContext))
+					throw (OSStatus) ALC_INVALID_DEVICE;
+				else
+				{
+					OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+					*data = oalContext->GetAttributeListSize();
+				}
+				break;
+				
+			case ALC_ALL_ATTRIBUTES:
+				
+				if (device == NULL || !oalDevice || device != alcGetContextsDevice((ALCcontext*) gCurrentContext))
+					throw (OSStatus) ALC_INVALID_DEVICE;
+				else
+				{
+					OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+					if (size < (ALCsizei) oalContext->GetAttributeListSize())
+						throw (OSStatus) ALC_INVALID_VALUE;
+					
+					oalContext->CopyAttributeList(data);
+				}
+				break;
+				
+			case ALC_MAJOR_VERSION:
+				*data = kMajorVersion;
+				break;
+				
+			case ALC_MINOR_VERSION:
+				*data = kMinorVersion;
+				break;
+			case ALC_CAPTURE_SAMPLES:
+				if (oalCaptureDevice == NULL)
+					throw (OSStatus) ALC_INVALID_DEVICE;
+				*data = oalCaptureDevice->AvailableFrames();
+				break;
+
+			default:
+				throw (OSStatus) AL_INVALID_VALUE;
+				break;
+		}
+	}
+	catch (OSStatus		result) {
+		if (oalDevice)
+			oalDevice->SetError(result);
+		else if(oalCaptureDevice)
+			oalCaptureDevice->SetError(result);
+		else 
+			alSetError(result);
+
+		DebugMessageN3("ERROR: alcGetInteger FAILED: device = %ld attribute name = %s error = %s", (long int) device, GetALCAttributeString(pname), alcGetString(NULL, result));
+    }
+	catch (...) {
+		DebugMessageN3("ERROR: alcGetInteger FAILED: device = %ld attribute name = %s error = %s", (long int) device, GetALCAttributeString(pname), "Unknown Error");
+	}
+
+	return;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -754,44 +1213,33 @@ ALAPI ALvoid	ALAPIENTRY alHint( ALenum target, ALenum mode )
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #pragma mark ***** AL - METHODS *****
 
-UInt32		gCurrentError = 0;				// globally stored error code
-
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALenum ALAPIENTRY alGetError ()
+AL_API ALenum AL_APIENTRY alGetError ()
 {
     ALenum	error = AL_NO_ERROR;
 
 #if LOG_API_USAGE
-	DebugMessage("alGetError called");
+	DebugMessage("alGetError");
 #endif
 
 	if (gCurrentError != AL_NO_ERROR)
     {
 #if LOG_ERRORS
-		DebugMessageN1("alGetError: error = %ld\n", gCurrentError);
+		DebugMessageN1("alGetError: error = 0x%X\n", (uint) gCurrentError);
 #endif
 		error = gCurrentError;
 		gCurrentError = AL_NO_ERROR;
+
+		// this call should also clear the error on the current device as well
+    	if (gOALDeviceMap) 
+    	{
+			OALDevice		*device = gOALDeviceMap->Get((UInt32) gCurrentDevice);
+			if (device)
+				device->SetError(AL_NO_ERROR);
+		}
 	}
 	
 	return (error);
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alSetError (ALenum errorCode)
-{
-
-#if LOG_API_USAGE
-	DebugMessage("alSetError called");
-#endif
-
-#if LOG_ERRORS
-	DebugMessageN1("alSetError called: error #  %ld\n", errorCode);
-#endif
-
-    // only set an error if we are in a no error state
-    if (gCurrentError == AL_NO_ERROR)
-		gCurrentError = errorCode;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -802,201 +1250,130 @@ ALAPI ALvoid ALAPIENTRY alSetError (ALenum errorCode)
 #pragma mark ***** Buffers *****
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alGenBuffers(ALsizei n, ALuint *buffers)
+AL_API ALvoid AL_APIENTRY alGenBuffers(ALsizei n, ALuint *bids)
 {
-#if LOG_API_USAGE
-	DebugMessage("alGenBuffers called");
+#if LOG_BUFFER_USAGE
+	DebugMessageN1("alGenBuffers--> requested buffers = %ld", (long int) n);
 #endif
-
-	UInt32		newBufferToken = 0;
 	
 	try {
+		if (n < 0)
+            throw ((OSStatus) AL_INVALID_VALUE);
+
         InitializeBufferMap();
         if (gOALBufferMap == NULL)
             throw ((OSStatus) AL_INVALID_OPERATION);
+
+		CleanUpDeadBufferList();		// take the opportunity to clean up the dead list
 		
 		if ((n + gOALBufferMap->Size() > AL_MAXBUFFERS) || (n > AL_MAXBUFFERS))
+		{
+			DebugMessageN2("alGenBuffers ERROR --> requested buffers:gOALBufferMap->Size() = %ld:%ld", (long int) n, gOALBufferMap->Size());
             throw ((OSStatus) AL_INVALID_VALUE);
+		}
 		
-        for (UInt32	i = 0; i < n; i++)
+        for (UInt32	i = 0; i < (UInt32) n; i++)
         {
-            OALBuffer	newBuffer;
-            
-            // initialize some of the fields, others will be explicitly set later
-            newBuffer.mData = NULL;
-            newBuffer.mDataSize = 0;
-            newBuffer.mAttachedCount = 0;
-            newBuffer.mDataHasBeenConverted = false;
-            
-            newBufferToken = GetNewToken(); 						// get a unique token
-                                    
+			ALuint	newBufferToken = GetNewToken();		// get a unique token
+
+			OALBuffer	*newBuffer = new OALBuffer (newBufferToken);
+			
             gOALBufferMap->Add(newBufferToken, &newBuffer);			// add the new buffer to the buffer map
-            buffers[i] = newBufferToken;
+            bids[i] = newBufferToken;
         }
 	}
 	catch (OSStatus     result) {
-		DebugMessageN1("alGenBuffers Failed - err = %ld\n", result);
+		DebugMessageN2("ERROR: alGenBuffers FAILED: requested buffers = %ld error %s", (long int) n, alGetString(result));
         alSetError (result);
 	}
     catch (...) {
-		DebugMessage("alGenBuffers Failed");
+		DebugMessageN1("ERROR: alGenBuffers FAILED: requested buffers = %ld", (long int) n);
         alSetError(AL_INVALID_OPERATION);
 	}
+
+#if LOG_BUFFER_USAGE
+	printf("alGenBuffers--> (%ld) ", (long int) n);
+	for (UInt32	i = 0; i < (UInt32) n; i++) {
+		printf("%ld, ", (long int) bids[i]);
+	}
+	printf("\n");
+#endif
 	
 	return;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alGetBufferf (ALuint buffer, ALenum pname, ALfloat *value)
+AL_API void	AL_APIENTRY alDeleteBuffers( ALsizei n, const ALuint* bids )
 {
-#if LOG_API_USAGE
-	DebugMessage("alGetBufferf called");
-#endif
-
-    try {
-        if (gOALBufferMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        OALBuffer	*oalBuffer = gOALBufferMap->Get((UInt32) buffer);
-        if (oalBuffer == NULL)
-            throw ((OSStatus) AL_INVALID_VALUE);
-        
-        switch (pname)
-        {
-            case AL_FREQUENCY:
-                *value = oalBuffer->mDataFormat.mSampleRate;
-                break;
-            default:
-                alSetError(AL_INVALID_ENUM);
-                break;
-        }
-    }
-    catch (OSStatus result) {
-		DebugMessageN1("alGetBufferf Failed - err = %ld\n", result);
-        alSetError(result);
-    }
-    catch (...) {
-		DebugMessage("alGetBufferf Failed");
-        alSetError(AL_INVALID_OPERATION);
+#if LOG_BUFFER_USAGE
+	printf("alDeleteBuffers--> (%ld) ", (long int) n);
+	for (UInt32	i = 0; i < (UInt32) n; i++) {
+		printf("%ld, ", (long int) bids[i]);
 	}
-    
-	return;
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alGetBufferi(ALuint buffer, ALenum pname, ALint *value)
-{
-#if LOG_API_USAGE
-	DebugMessage("alGetBufferi called");
+	printf("\n");
 #endif
-
-    try {
-        if (gOALBufferMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        OALBuffer	*oalBuffer = gOALBufferMap->Get((UInt32) buffer);
-        if (oalBuffer == NULL)
-            throw ((OSStatus) AL_INVALID_VALUE);
-
-        switch (pname)
-        {
-            case AL_FREQUENCY:
-                *value = (UInt32) oalBuffer->mDataFormat.mSampleRate;
-                break;
-            case AL_BITS:
-                *value = oalBuffer->mPreConvertedDataFormat.mBitsPerChannel;
-                break;
-            case AL_CHANNELS:
-                *value = oalBuffer->mDataFormat.NumberChannels();
-                break;
-            case AL_SIZE:
-                *value = oalBuffer->mPreConvertedDataSize;
-                break;
-            default:
-                alSetError(AL_INVALID_ENUM);
-                break;
-        }        
-    }
-    catch (OSStatus result) {
-		DebugMessageN1("alGetBufferi Failed - err = %ld\n", result);
-		alSetError(result);
-    }
-    catch (...) {
-		DebugMessage("alGetBufferi Failed");
-        alSetError(AL_INVALID_OPERATION);
-	}
-    
-	return;
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alDeleteBuffers(ALsizei n, ALuint *buffers)
-{
-#if LOG_API_USAGE
-	DebugMessage("alDeleteBuffers called");
-#endif
-
+	if (n == 0)
+		return; // NOP
+	
 	try {
         if (gOALBufferMap == NULL)
         {
             DebugMessage("alDeleteBuffers: gOALBufferMap == NULL");
-            throw ((OSStatus) AL_INVALID_OPERATION);   
-        }
-        
-        if (gOALBufferMap->Empty())
-            return; // nothing to do
-            
-        if (n > gOALBufferMap->Size() - 1)
-        {
-            DebugMessage("alDeleteBuffers: n > gOALBufferMap->Size() - 1");
             throw ((OSStatus) AL_INVALID_VALUE);   
         }
-        else
-        {
-            UInt32	i;
-            // see if any of the buffers are attached to a source or are invalid names
-            for (i = 0; i < n; i++)
-            {
-                // don't bother verifying the NONE buffer, it won't be deleted anyway
-                if (buffers[i] != AL_NONE)
-                {
-                    OALBuffer	*oalBuffer = gOALBufferMap->Get(buffers[i]);
-                    if (oalBuffer == NULL)
-                    {
-                        DebugMessage("alDeleteBuffers: oalBuffer == NULL");
-                        throw ((OSStatus) AL_INVALID_VALUE);    // the buffer is invalid
-                    }
-                    else if (oalBuffer->mAttachedCount > 0)
-                    {
-                        DebugMessageN1("alDeleteBuffers: oalBuffer->mAttachedCount = %ld\n", oalBuffer->mAttachedCount);
-                        throw ((OSStatus) AL_INVALID_VALUE);    // the buffer is attached to a source so set an error and bail
-                    }
-                }
-            }
-        
-            // All the buffers are OK'd for deletion, so delete them now
-            for (i = 0; i < n; i++)
-            {
-                // do not delete the NONE buffer at the beginning of the map
-                if (buffers[i] != AL_NONE)
-                {
-                    OALBuffer	*buffer = gOALBufferMap->Get((UInt32) buffers[i]);
-                    if (buffer != NULL)
-                    {
-   	                	if (buffer->mData != NULL)
-                        	free(buffer->mData);
-                    }
-	            	gOALBufferMap->Remove((UInt32) buffers[i]);
-	            }
-            }
-        }
+
+		CleanUpDeadBufferList();		// take the opportunity to clean up the dead list
+        			
+		// see if any of the buffers are attached to a source or are invalid names
+		for (UInt32 i = 0; i < (UInt32) n; i++)
+		{
+			// don't bother verifying the NONE buffer, it won't be deleted anyway
+			if (bids[i] != AL_NONE)
+			{
+				OALBuffer	*oalBuffer = gOALBufferMap->Get(bids[i]);
+				if (oalBuffer == NULL)
+				{
+					DebugMessageN1("alDeleteBuffers: oalBuffer == NULL, bid = %ld", (long int) bids[i]);
+					throw ((OSStatus) AL_INVALID_NAME);			// the buffer is invalid
+				}
+				else if (!oalBuffer->CanBeRemovedFromBufferMap())
+				{
+					DebugMessageN1("alDeleteBuffers: oalBuffer cannot currently be removed, a source is still attached, bid = %ld", (long int) bids[i]);
+					throw ((OSStatus) AL_INVALID_OPERATION);    // the buffer is attached to a source so set an error and bail
+				}
+			}
+		}
+	
+		// All the buffers are OK'd for deletion, so delete them now
+		for (UInt32 i = 0; i < (UInt32) n; i++)
+		{
+			// do not delete the NONE buffer at the beginning of the map
+			if (bids[i] != AL_NONE)
+			{
+				OALBuffer	*buffer = gOALBufferMap->Get((UInt32) bids[i]);
+				if (buffer->IsPurgable())
+				{
+					// delete it right now, it's not attached
+					gOALBufferMap->Remove((UInt32) bids[i]);
+					delete (buffer);
+				}
+				else
+				{
+					// The buffer is currently attached to a source that is transitioning to stop
+					// it can be deleted later. By removing it from the map, it can't be attached to another source before
+					// it has a chance to be deleted
+					gDeadOALBufferMap->Add(buffer->GetToken(), &buffer);	// add this buffer object to a dead list that can be cleaned up later
+					gOALBufferMap->Remove((UInt32) bids[i]);				// remove it from the good list so it won't be used again
+				}
+			}
+		}
     }
     catch (OSStatus     result) {
-		DebugMessageN1("alDeleteBuffers Failed - err = %ld\n", result);
+		DebugMessageN1("ERROR: alDeleteBuffers FAILED = %s", alGetString(result));
         alSetError(result);
     }
     catch (...) {
-		DebugMessage("alDeleteBuffers Failed");
+		DebugMessage("ERROR: alDeleteBuffers FAILED");
         alSetError(AL_INVALID_OPERATION);
 	}
     
@@ -1004,89 +1381,21 @@ ALAPI ALvoid ALAPIENTRY alDeleteBuffers(ALsizei n, ALuint *buffers)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alBufferData(ALuint buffer, ALenum format, ALvoid *data, ALsizei size, ALsizei freq)
+AL_API ALboolean AL_APIENTRY alIsBuffer(ALuint bid)
 {
-#if LOG_API_USAGE
-	DebugMessage("alBufferData called");
+#if LOG_BUFFER_USAGE
+	//DebugMessageN1("alIsBuffer--> buffer %ld", (long int) bid);
 #endif
 
+	if (bid == 0) return true;	// 0 == AL_NONE which is valid
+    
 	try {
         if (gOALBufferMap == NULL)
             throw ((OSStatus) AL_INVALID_OPERATION);   
 
-        OALBuffer	*oalBuffer = gOALBufferMap->Get((UInt32) buffer);
-        if ((oalBuffer == NULL) || !IsFormatSupported(format))
-            throw ((OSStatus) AL_INVALID_VALUE);   // this is not a valid buffer token or is an invalid format
-	
-        // don't allow if the buffer is in a queue
-        if (oalBuffer->mAttachedCount > 0)
-        {
-            DebugMessage("alBufferData ATTACHMENT > 0");
-            throw ((OSStatus) AL_INVALID_OPERATION);   
-        }
-		
-        oalBuffer->mPreConvertedDataSize = (UInt32) size;
-        // do not pre-convert stereo sounds, let the AC do the deinterleaving	
-        OSStatus    result = noErr;
-        if (!gConvertBufferNow || ((format == AL_FORMAT_STEREO16) || (format == AL_FORMAT_STEREO8)))
-        {
-            if (oalBuffer->mData != NULL)
-            {
-                if (oalBuffer->mDataSize != (UInt32) size)
-                {
-                    oalBuffer->mDataSize = (UInt32) size;
-                    void *newDataPtr = realloc(oalBuffer->mData, oalBuffer->mDataSize);
-                    oalBuffer->mData = (char *) newDataPtr;
-                }		
-            }
-            else
-            {
-                oalBuffer->mDataSize = (UInt32) size;
-                oalBuffer->mData = (char *) malloc (oalBuffer->mDataSize);
-            }
-            
-            if (oalBuffer->mData)
-            {
-                result = FillInASBD(oalBuffer->mDataFormat, format, freq);
-                    THROW_RESULT
-                
-                oalBuffer->mPreConvertedDataFormat.SetFrom(oalBuffer->mDataFormat); //  make sure they are the same so original format info can be returned to caller
-                memcpy (oalBuffer->mData, data, oalBuffer->mDataSize);		
-            }
-        }
-        else
-        {
-    #if LOG_EXTRAS		
-        DebugMessage("alBufferData called: Converting Data Now");
-    #endif
-            result = ConvertDataForBuffer(oalBuffer, data, size, format, freq);	// convert the data to the mixer's format and copy to the buffer
-                THROW_RESULT
-        }
-    }
-    catch (OSStatus     result) {
-		DebugMessageN1("alBufferData Failed - err = %ld\n", result);
-        alSetError(result);
-    }
-    catch (...) {
-		DebugMessage("alBufferData Failed");
-        alSetError(AL_INVALID_OPERATION);
-	}
-	
-	return;
-}
+		CleanUpDeadBufferList();		// take the opportunity to clean up the dead list
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALboolean ALAPIENTRY alIsBuffer(ALuint buffer)
-{
-#if LOG_API_USAGE
-	DebugMessage("alIsBuffer called");
-#endif
-
-    try {
-        if (gOALBufferMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);   
-
-        OALBuffer	*oalBuffer = gOALBufferMap->Get((UInt32) buffer);
+        OALBuffer	*oalBuffer = gOALBufferMap->Get((UInt32) bid);
 
         if (oalBuffer != NULL)
             return AL_TRUE;
@@ -1094,15 +1403,244 @@ ALAPI ALboolean ALAPIENTRY alIsBuffer(ALuint buffer)
             return AL_FALSE;
     }
     catch (OSStatus     result) {
-		DebugMessageN1("alIsBuffer Failed - err = %ld\n", result);
+		DebugMessageN2("ERROR: alIsBuffer FAILED: buffer = %ld error = %s", (long int) bid, alGetString(result));
         alSetError(result);
     }
     catch (...) {
-		DebugMessage("alIsBuffer Failed");
+		DebugMessageN1("ERROR: alIsBuffer FAILED: buffer = %ld", (long int) bid);
         alSetError(AL_INVALID_OPERATION);
 	}
 
     return AL_FALSE;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API void	AL_APIENTRY alBufferData(	ALuint			bid,
+										ALenum			format,
+										const ALvoid*	data,
+										ALsizei			size,
+										ALsizei			freq )
+{
+#if LOG_BUFFER_USAGE
+	//DebugMessageN4("alBufferData-->  buffer %ld : %s : %ld bytes : %ldHz", (long int) bid, GetFormatString(format), (long int) size, (long int) freq);
+#endif
+
+	try {
+			OALBuffer	*oalBuffer = GetBufferObjectFromToken(bid);
+			oalBuffer->AddAudioData((char*)data, size, format, freq, gConvertBufferNow); // should also check for a valid format IsFormatSupported()
+    }
+    catch (OSStatus     result) {
+		DebugMessageN5("ERROR: alBufferData FAILED: buffer %ld : %s : %ld bytes : %ldHz error = %s", (long int) bid, GetFormatString(format), (long int) size, (long int) freq,  alGetString(result));
+        alSetError(result);
+    }
+    catch (...) {
+		DebugMessageN4("ERROR: alBufferData FAILED: buffer %ld : %s : %ld bytes : %ldHz", (long int) bid, GetFormatString(format), (long int) size, (long int) freq);
+        alSetError(AL_INVALID_OPERATION);
+	}
+	
+	return;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API void AL_APIENTRY alBufferf( ALuint bid, ALenum pname, ALfloat value )
+{
+#if LOG_BUFFER_USAGE
+	DebugMessage("alBufferf--> there are currently no valid enums for this API");
+#endif
+	// there are currently no valid enums for this API
+	alSetError(AL_INVALID_ENUM);
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API void AL_APIENTRY alBuffer3f( ALuint bid, ALenum pname, ALfloat value1, ALfloat value2, ALfloat value3 )
+{
+#if LOG_BUFFER_USAGE
+	DebugMessage("alBuffer3f--> there are currently no valid enums for this API");
+#endif
+	// there are currently no valid enums for this API
+	alSetError(AL_INVALID_ENUM);
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API void AL_APIENTRY alBufferfv( ALuint bid, ALenum pname, const ALfloat* values )
+{
+#if LOG_BUFFER_USAGE
+	DebugMessage("alBufferfv--> there are currently no valid enums for this API");
+#endif
+	// there are currently no valid enums for this API
+	alSetError(AL_INVALID_ENUM);
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API void AL_APIENTRY alBufferi( ALuint bid, ALenum pname, ALint value )
+{
+#if LOG_BUFFER_USAGE
+	DebugMessage("alBufferi--> there are currently no valid enums for this API");
+#endif
+	// there are currently no valid enums for this API
+	alSetError(AL_INVALID_ENUM);
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API void AL_APIENTRY alBuffer3i( ALuint bid, ALenum pname, ALint value1, ALint value2, ALint value3 )
+{
+#if LOG_BUFFER_USAGE
+	DebugMessage("alBuffer3i--> there are currently no valid enums for this API");
+#endif
+	// there are currently no valid enums for this API
+	alSetError(AL_INVALID_ENUM);
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API void AL_APIENTRY alBufferiv( ALuint bid, ALenum pname, const ALint* values )
+{
+#if LOG_BUFFER_USAGE
+	DebugMessage("alBufferiv--> there are currently no valid enums for this API");
+#endif
+	// there are currently no valid enums for this API
+	alSetError(AL_INVALID_ENUM);
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API ALvoid AL_APIENTRY alGetBufferf (ALuint bid, ALenum pname, ALfloat *value)
+{
+#if LOG_BUFFER_USAGE
+	DebugMessageN2("alGetBufferf--> buffer %ld : property = %s", (long int) bid, GetALAttributeString(pname));
+#endif
+
+    try {
+		OALBuffer	*oalBuffer = GetBufferObjectFromToken(bid);
+        switch (pname)
+        {
+            case AL_FREQUENCY:
+                *value = oalBuffer->GetSampleRate();
+                break;
+            default:
+                alSetError(AL_INVALID_ENUM);
+                break;
+        }
+    }
+    catch (OSStatus result) {
+		DebugMessageN3("ERROR: alGetBufferf FAILED: buffer %ld : property = %s error = %s", (long int) bid, GetALAttributeString(pname), alGetString(result));
+        alSetError(result);
+    }
+    catch (...) {
+		DebugMessageN2("ERROR: alGetBufferf FAILED: buffer %ld : property = %s", (long int) bid, GetALAttributeString(pname));
+        alSetError(AL_INVALID_OPERATION);
+	}
+    
+	return;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API void AL_APIENTRY alGetBuffer3f( ALuint bid, ALenum pname, ALfloat* value1, ALfloat* value2, ALfloat* value3)
+{
+#if LOG_BUFFER_USAGE
+	DebugMessageN2("alGetBuffer3f--> buffer %ld : property = %s", (long int) bid, GetALAttributeString(pname));
+#endif
+	// there are currently no valid enums for this API
+	alSetError(AL_INVALID_ENUM);
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API void AL_APIENTRY alGetBufferfv( ALuint bid, ALenum pname, ALfloat* values )
+{
+#if LOG_BUFFER_USAGE
+	DebugMessageN2("alGetBufferfv--> buffer %ld : property = %s", (long int) bid, GetALAttributeString(pname));
+#endif
+	// there are currently no valid enums for this API
+	alSetError(AL_INVALID_ENUM);
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API ALvoid AL_APIENTRY alGetBufferi(ALuint bid, ALenum pname, ALint *value)
+{
+#if LOG_BUFFER_USAGE
+	DebugMessageN2("alGetBufferi--> buffer %ld : property = %s", (long int) bid, GetALAttributeString(pname));
+#endif
+
+    try {
+		OALBuffer	*oalBuffer = GetBufferObjectFromToken(bid);
+        switch (pname)
+        {
+            case AL_FREQUENCY:
+                *value = (UInt32) oalBuffer->GetSampleRate();
+                break;
+            case AL_BITS:
+                *value = oalBuffer->GetPreConvertedBitsPerChannel();
+                break;
+            case AL_CHANNELS:
+                *value = oalBuffer->GetNumberChannels();
+                break;
+            case AL_SIZE:
+                *value = oalBuffer->GetPreConvertedDataSize();
+                break;
+            default:
+                *value = 0;
+				alSetError(AL_INVALID_ENUM);
+                break;
+        }        
+    }
+    catch (OSStatus result) {
+		DebugMessageN3("ERROR: alGetBufferi FAILED: buffer = %ld property = %s error = %s", (long int) bid, GetALAttributeString(pname), alGetString(result));
+		*value = 0;
+		alSetError(result);
+    }
+    catch (...) {
+		DebugMessageN2("ERROR: alGetBufferi FAILED: buffer = %ld property = %s", (long int) bid, GetALAttributeString(pname));
+		*value = 0;
+        alSetError(AL_INVALID_OPERATION);
+	}
+    
+	return;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API void AL_APIENTRY alGetBuffer3i( ALuint bid, ALenum pname, ALint* value1, ALint* value2, ALint* value3)
+{
+#if LOG_BUFFER_USAGE
+	DebugMessageN2("alGetBuffer3i--> buffer %ld : property = %s", (long int) bid, GetALAttributeString(pname));
+#endif
+	// there are currently no valid enums for this API
+	alSetError(AL_INVALID_ENUM);
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API void AL_APIENTRY alGetBufferiv( ALuint bid, ALenum pname, ALint* values )
+{
+#if LOG_BUFFER_USAGE
+	DebugMessageN2("alGetBufferi--> buffer %ld : property = %s", (long int) bid, GetALAttributeString(pname));
+#endif
+
+    try {
+		OALBuffer	*oalBuffer = GetBufferObjectFromToken(bid);
+        switch (pname)
+        {
+            case AL_FREQUENCY:
+                *values = (UInt32) oalBuffer->GetSampleRate();
+                break;
+            case AL_BITS:
+                *values = oalBuffer->GetPreConvertedBitsPerChannel();
+                break;
+            case AL_CHANNELS:
+                *values = oalBuffer->GetNumberChannels();
+                break;
+            case AL_SIZE:
+                *values = oalBuffer->GetPreConvertedDataSize();
+                break;
+            default:
+                *values = 0;
+				alSetError(AL_INVALID_ENUM);
+                break;
+        }        
+    }
+    catch (OSStatus result) {
+		DebugMessageN3("ERROR: alGetBufferiv FAILED: buffer = %ld property = %s error = %s", (long int) bid, GetALAttributeString(pname), alGetString(result));
+		*values = 0;
+		alSetError(result);
+    }
+    catch (...) {
+		DebugMessageN2("ERROR: alGetBufferiv FAILED: buffer = %ld property = %s", (long int) bid, GetALAttributeString(pname));
+		*values = 0;
+        alSetError(AL_INVALID_OPERATION);
+	}
+    
+	return;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1113,10 +1651,10 @@ ALAPI ALboolean ALAPIENTRY alIsBuffer(ALuint buffer)
 #pragma mark ***** Sources *****
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALCAPI ALvoid  ALAPIENTRY alGenSources(ALsizei n, ALuint *sources)
+ALC_API ALvoid  AL_APIENTRY alGenSources(ALsizei n, ALuint *sids)
 {
-#if LOG_API_USAGE
-	DebugMessage("alGenSources called");
+#if LOG_SOURCE_USAGE
+	DebugMessageN1("alGenSources--> requested sources = %ld", (long int) n);
 #endif
 
 	if (n == 0)
@@ -1125,73 +1663,74 @@ ALCAPI ALvoid  ALAPIENTRY alGenSources(ALsizei n, ALuint *sources)
 	UInt32      i = 0,
                 count = 0;
 	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
+		if (n < 0)
+            throw ((OSStatus) AL_INVALID_VALUE);
 
-        if ((n > AL_MAXSOURCES) || (sources == NULL))
+        if ((n > AL_MAXSOURCES) || (sids == NULL))
             throw ((OSStatus) AL_INVALID_VALUE);
         
-        OALContext		*oalContext = gOALContextMap->Get((UInt32) gCurrentContext);
-		if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        for (i = 0; i < n; i++)
+		OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+        for (i = 0; i < (UInt32) n; i++)
         {
-            UInt32	newToken = GetNewToken();		// get a unique token
+            ALuint	newToken = GetNewToken();		// get a unique token
             
             oalContext->AddSource(newToken);		// add this source to the context
-            sources[i] = newToken; 					// return the source token
+            sids[i] = newToken; 					// return the source token
             count++;
         }
 	}
 	catch (OSStatus     result){
-		DebugMessageN1("alGenSources Failed - err = %ld\n", result);
+		DebugMessageN2("ERROR: alGenSources FAILED: source count = %ld error = %s", (long int) n, alGetString(result));
 		// some of the sources could not be created, so delete the ones that were and return none
 		alSetError(result);
-		alDeleteSources(i, sources);
+		alDeleteSources(i, sids);
 		for (i = 0; i < count; i++)
-			sources[i] = 0;
+			sids[i] = 0;
 	}
     catch (...) {
-		DebugMessage("alGenSources Failed");
+		DebugMessageN1("ERROR: alGenSources FAILED: source count = %ld", (long int) n);
         alSetError(AL_INVALID_OPERATION);
+		// some of the sources could not be created, so delete the ones that were and return none
+		alDeleteSources(i, sids);
+		for (i = 0; i < count; i++)
+			sids[i] = 0;
 	}
 	
 	return;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALCAPI ALvoid ALAPIENTRY alDeleteSources (ALsizei n, ALuint *sources)
+AL_API void	AL_APIENTRY alDeleteSources( ALsizei n, const ALuint* sids )
 {
-#if LOG_API_USAGE
-	DebugMessage("alDeleteSources called");
+#if LOG_SOURCE_USAGE
+	//DebugMessageN1("alDeleteSources: count = %ld", (long int) n);
+	printf("alDeleteSources--> (%ld) ", (long int) n);
+	for (UInt32	i = 0; i < (UInt32) n; i++) {
+		printf("%ld, ", (long int) sids[i]);
+	}
+	printf("\n");
 #endif
 
 	if (n == 0)
 		return; // NOP
 
 	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
+		OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
 
-		OALContext		*oalContext = gOALContextMap->Get((UInt32) gCurrentContext);
-		if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        if (n > oalContext->GetSourceCount())
+        if ((UInt32) n > oalContext->GetSourceCount())
             throw ((OSStatus) AL_INVALID_VALUE);
         
-        for (UInt32 i = 0; i < n; i++)
+        for (UInt32 i = 0; i < (UInt32) n; i++)
         {
-            oalContext->RemoveSource(sources[i]);
+            oalContext->RemoveSource(sids[i]);
         }
 	}
 	catch (OSStatus     result) {
-		DebugMessageN1("alDeleteSources Failed - err = %ld\n", result);
+		DebugMessageN2("ERROR: alDeleteSources FAILED: source count = %ld error = %s", (long int) n, alGetString(result));
 		alSetError(result);
 	}
     catch (...) {
-		DebugMessage("alDeleteSources Failed");
+		DebugMessageN1("ERROR: alDeleteSources FAILED: source count = %ld", (long int) n);
         alSetError(AL_INVALID_OPERATION);
 	}
 	
@@ -1199,112 +1738,98 @@ ALCAPI ALvoid ALAPIENTRY alDeleteSources (ALsizei n, ALuint *sources)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALCAPI ALboolean  ALAPIENTRY alIsSource(ALuint source)
+ALC_API ALboolean  AL_APIENTRY alIsSource(ALuint sid)
 {
-#if LOG_API_USAGE
-	DebugMessage("alIsSource called");
+#if LOG_SOURCE_USAGE
+	DebugMessageN1("alIsSource--> source %ld", (long int) sid);
 #endif
 
-	ALboolean	returnValue = AL_FALSE;
 	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-		OALContext		*oalContext = gOALContextMap->Get((UInt32) gCurrentContext);
-		if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        OALSource	*oalSource = oalContext->GetSource((UInt32) source);
+		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
         if (oalSource != NULL)
             return AL_TRUE;
         else
             return AL_FALSE;
 	}
 	catch (OSStatus     result) {
-		DebugMessageN1("alIsSource Failed - err = %ld\n", result);
+		DebugMessageN2("ERROR: alIsSource FAILED: source = %ld error = %s", (long int) sid, alGetString(result));
 		alSetError(result);
 	}
     catch (...) {
-		DebugMessage("alIsSource Failed");
+		DebugMessageN1("ERROR: alIsSource FAILED: source = %ld", (long int) sid);
         alSetError(AL_INVALID_OPERATION);
 	}
 
-	return (returnValue);
+	return AL_FALSE;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alSourcef (ALuint source, ALenum pname, ALfloat value)
+AL_API ALvoid AL_APIENTRY alSourcef (ALuint sid, ALenum pname, ALfloat value)
 {
-#if LOG_API_USAGE
-	DebugMessage("alSourcef called");
+#if LOG_SOURCE_USAGE
+	DebugMessageN3("alSourcef--> source %ld : %s : value = %.2f", (long int) sid, GetALAttributeString(pname), value);
 #endif
 
 	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-		OALContext		*oalContext = gOALContextMap->Get((UInt32) gCurrentContext);
-		if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        OALSource	*oalSource = oalContext->GetSource((UInt32) source);
-		if (oalSource == NULL)
-            throw ((OSStatus) AL_INVALID_VALUE);
-
+		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
         switch (pname) 
         {
-            case AL_CONE_INNER_ANGLE:
-                oalSource->SetConeInnerAngle(value, false);
-                break;
-            case AL_CONE_OUTER_ANGLE:
-                oalSource->SetConeOuterAngle(value, false);
-                break;
-            case AL_CONE_OUTER_GAIN:
-                if (value >= 0.0 && value <= 1.0)
-                    oalSource->SetConeOuterGain(value, false);
-                break;
-            case AL_PITCH:
-                if (value < 0.0f)
-                    throw ((OSStatus) AL_INVALID_VALUE);
-                oalSource->SetPitch(value, false);
-                break;
-            case AL_GAIN:
-                oalSource->SetGain(value, false);
-                break;
-            case AL_MAX_DISTANCE:
-                oalSource->SetMaxDistance(value, false);
-                break;
+			// Source ONLY Attributes
             case AL_MIN_GAIN:
-                if ((value < 0.0f) && (value > 1.0f))
-                    throw ((OSStatus) AL_INVALID_VALUE);
-                oalSource->SetMinGain(value, false);
+                oalSource->SetMinGain(value);
                 break;
             case AL_MAX_GAIN:
-                if ((value < 0.0f) && (value > 1.0f))
-                    throw ((OSStatus) AL_INVALID_VALUE);
-                oalSource->SetMaxGain(value, false);
-                break;
-            case AL_ROLLOFF_FACTOR:
-                if (value < 0.0f) 
-                    throw ((OSStatus) AL_INVALID_VALUE);
-                oalSource->SetRollOffFactor(value, false);
+                oalSource->SetMaxGain(value);
                 break;
             case AL_REFERENCE_DISTANCE:
                 if (value <= 0.0f)
                     throw ((OSStatus) AL_INVALID_VALUE);
-                oalSource->SetReferenceDistance(value, false);
+                oalSource->SetReferenceDistance(value);
                 break;
+            case AL_ROLLOFF_FACTOR:
+                oalSource->SetRollOffFactor(value);
+                break;
+            case AL_MAX_DISTANCE:
+                oalSource->SetMaxDistance(value);
+                break;
+            case AL_PITCH:
+                oalSource->SetPitch(value);
+                break;
+            case AL_CONE_INNER_ANGLE:
+                oalSource->SetConeInnerAngle(value);
+                break;
+            case AL_CONE_OUTER_ANGLE:
+                oalSource->SetConeOuterAngle(value);
+                break;
+            case AL_CONE_OUTER_GAIN:
+				oalSource->SetConeOuterGain(value);
+                break;
+            case AL_SEC_OFFSET:
+                oalSource->SetQueueOffset(kSecondsOffset, value);
+                break;
+            case AL_SAMPLE_OFFSET:
+                oalSource->SetQueueOffset(kSampleOffset, value);
+                break;
+            case AL_BYTE_OFFSET:
+                oalSource->SetQueueOffset(kByteOffset, value);
+                break;
+
+			// Source & Listener Attributes
+            case AL_GAIN:
+                oalSource->SetGain(value);
+                break;
+			
             default:
                 alSetError(AL_INVALID_OPERATION);
                 break;
         }
 	}
 	catch (OSStatus     result) {
-		DebugMessageN1("alSourcef Failed - err = %ld\n", result);
+		DebugMessageN4("ERROR alSourcef FAILED: source %ld : property = %s : value = %.f2 : error = %s", (long int) sid, GetALAttributeString(pname), value, alGetString(result));
 		alSetError(result);
 	}
     catch (...) {
-		DebugMessage("alSourcef Failed");
+		DebugMessageN4("ERROR alSourcef FAILED: source %ld : property = %s : value = %.f2 : error = %s", (long int) sid, GetALAttributeString(pname), value, alGetString(-1));
         alSetError(AL_INVALID_OPERATION);
 	}
 	
@@ -1312,48 +1837,81 @@ ALAPI ALvoid ALAPIENTRY alSourcef (ALuint source, ALenum pname, ALfloat value)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alSourcefv (ALuint source, ALenum pname, ALfloat *values)
+AL_API ALvoid AL_APIENTRY alSourcefv (ALuint sid, ALenum pname, const ALfloat *values)
 {
-#if LOG_API_USAGE
-	DebugMessage("alSourcefv called");
+#if LOG_SOURCE_USAGE
+	DebugMessageN2("alSourcefv--> source %ld : %s", (long int) sid, GetALAttributeString(pname));
 #endif
 
 	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-		
-        OALContext		*oalContext = gOALContextMap->Get((UInt32) gCurrentContext);
-		if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        OALSource	*oalSource = oalContext->GetSource((UInt32) source);
-		if (oalSource == NULL)
-            throw ((OSStatus) AL_INVALID_VALUE);
-
+		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
         switch(pname) 
         {
-            case AL_POSITION:
-                if (isnan(values[0]) || isnan(values[1]) || isnan(values[2]))
+			// Source ONLY Attributes
+            case AL_MIN_GAIN:
+                oalSource->SetMinGain(*values);
+                break;
+            case AL_MAX_GAIN:
+                oalSource->SetMaxGain(*values);
+                break;
+            case AL_REFERENCE_DISTANCE:
+                oalSource->SetReferenceDistance(*values);
+                break;
+            case AL_ROLLOFF_FACTOR:
+                if (*values < 0.0f) 
                     throw ((OSStatus) AL_INVALID_VALUE);
-                oalSource->SetPosition(values[0], values[1], values[2], false);
+                oalSource->SetRollOffFactor(*values);
+                break;
+            case AL_MAX_DISTANCE:
+                oalSource->SetMaxDistance(*values);
+                break;
+            case AL_PITCH:
+                oalSource->SetPitch(*values);
                 break;
             case AL_DIRECTION:
-                oalSource->SetDirection(values[0], values[1], values[2], false);
+                oalSource->SetDirection(values[0], values[1], values[2]);
+                break;
+            case AL_CONE_INNER_ANGLE:
+                oalSource->SetConeInnerAngle(*values);
+                break;
+            case AL_CONE_OUTER_ANGLE:
+                oalSource->SetConeOuterAngle(*values);
+                break;
+            case AL_CONE_OUTER_GAIN:
+				oalSource->SetConeOuterGain(*values);
+                break;
+            case AL_SEC_OFFSET:
+                oalSource->SetQueueOffset(kSecondsOffset, values[0]);
+                break;
+            case AL_SAMPLE_OFFSET:
+                oalSource->SetQueueOffset(kSampleOffset, values[0]);
+                break;
+            case AL_BYTE_OFFSET:
+                oalSource->SetQueueOffset(kByteOffset, values[0]);
+                break;
+			
+			// Source & Listener Attributes
+            case AL_POSITION:
+                oalSource->SetPosition(values[0], values[1], values[2]);
                 break;
             case AL_VELOCITY:
-                oalSource->SetVelocity(values[0], values[1], values[2], false);
+                oalSource->SetVelocity(values[0], values[1], values[2]);
                 break;
+            case AL_GAIN:
+                oalSource->SetGain(*values);
+                break;
+
             default:
                 alSetError(AL_INVALID_ENUM);
                 break;
         }
 	}
 	catch(OSStatus      result) {
-		DebugMessageN1("alSourcefv Failed - err = %ld\n", result);
+		DebugMessageN3("ERROR alSourcefv FAILED: source = %ld property = %s result = %s\n", (long int) sid, GetALAttributeString(pname), alGetString(result));
 		alSetError(result);
 	}
     catch (...) {
-		DebugMessage("alSourcefv Failed");
+		DebugMessageN3("ERROR alSourcefv: FAILED : property : result %ld : %s : %s\n", (long int) sid, GetALAttributeString(pname), alGetString(-1));
         alSetError(AL_INVALID_OPERATION);
 	}
 	
@@ -1361,48 +1919,40 @@ ALAPI ALvoid ALAPIENTRY alSourcefv (ALuint source, ALenum pname, ALfloat *values
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alSource3f (ALuint source, ALenum pname, ALfloat v1, ALfloat v2, ALfloat v3)
+AL_API ALvoid AL_APIENTRY alSource3f (ALuint sid, ALenum pname, ALfloat v1, ALfloat v2, ALfloat v3)
 {
-#if LOG_API_USAGE
-	DebugMessage("alSource3f called");
+#if LOG_SOURCE_USAGE
+	DebugMessageN5("alSource3f--> source %ld : %s : values = %.2f:%.2f:%.2f", (long int) sid, GetALAttributeString(pname), v1, v2, v3);
 #endif
 
 	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-		
-        OALContext		*oalContext = gOALContextMap->Get((UInt32) gCurrentContext);
-		if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        OALSource	*oalSource = oalContext->GetSource((UInt32) source);
-		if (oalSource == NULL)
-            throw ((OSStatus) AL_INVALID_VALUE);
-
+		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
         switch (pname) 
         {
+			// Source ONLY Attributes
+            case AL_DIRECTION:
+                oalSource->SetDirection(v1, v2, v3);
+                break;
+
+			// Source & Listener Attributes
             case AL_POSITION:
-                if (isnan(v1) || isnan(v2) || isnan(v3))
-                    throw ((OSStatus) AL_INVALID_VALUE);
-                oalSource->SetPosition(v1, v2, v3, false);
+                oalSource->SetPosition(v1, v2, v3);
                 break;
             case AL_VELOCITY:
-                oalSource->SetVelocity(v1, v2, v3, false);
+                oalSource->SetVelocity(v1, v2, v3);
                 break;
-            case AL_DIRECTION:
-                oalSource->SetDirection(v1, v2, v3, false);
-                break;
+
             default:
                 alSetError(AL_INVALID_ENUM);
                 break;
         }
 	}
 	catch (OSStatus      result) {
-		DebugMessageN1("alSource3f Failed - err = %ld\n", result);
+		DebugMessageN6("ERROR: alSource3f FAILED: source %ld : %s : values = %.f2:%.f2:%.f2 error = %s", (long int) sid, GetALAttributeString(pname), v1, v2, v3, alGetString(result));
 		alSetError(result);
 	}
     catch (...) {
-		DebugMessage("alSource3f Failed");
+		DebugMessageN5("ERROR: alSource3f FAILED: source %ld : %s : values = %.f2:%.f2:%.f2", (long int) sid, GetALAttributeString(pname), v1, v2, v3);
         alSetError(AL_INVALID_OPERATION);
 	}
 	
@@ -1410,71 +1960,210 @@ ALAPI ALvoid ALAPIENTRY alSource3f (ALuint source, ALenum pname, ALfloat v1, ALf
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alSourcei (ALuint source, ALenum pname, ALint value)
+AL_API ALvoid AL_APIENTRY alSourcei (ALuint sid, ALenum pname, ALint value)
 {
-#if LOG_API_USAGE
-	DebugMessage("alSourcei called");
+#if LOG_SOURCE_USAGE
+	DebugMessageN3("alSourcei--> source %ld : %s : value = %ld", (long int) sid, GetALAttributeString(pname), (long int)value);
 #endif
 
 	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-		
-        OALContext		*oalContext = gOALContextMap->Get((UInt32) gCurrentContext);
-		if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        OALSource	*oalSource = oalContext->GetSource((UInt32) source);
-		if (oalSource == NULL)
-            throw ((OSStatus) AL_INVALID_VALUE);
-
+		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
         switch (pname) 
         {
-            case AL_CONE_INNER_ANGLE:
-                oalSource->SetConeInnerAngle(value, false);
-                break;
-            case AL_CONE_OUTER_ANGLE:
-                oalSource->SetConeOuterAngle(value, false);
-                break;
-            case AL_CONE_OUTER_GAIN:
-                if (value >= 0 && value <= 1)
-                    oalSource->SetConeOuterGain(value, false);
+			// Source ONLY Attributes
+            case AL_SOURCE_RELATIVE:
+				oalSource->SetSourceRelative(value);
                 break;
             case AL_LOOPING:
-                oalSource->SetLooping(value, false);
+                oalSource->SetLooping(value);
                 break;
             case AL_BUFFER:
-                if ((oalSource->GetState() == AL_STOPPED) || (oalSource->GetState() == AL_INITIAL))
                 {
-                    if (gOALBufferMap == NULL)
-                        throw ((OSStatus) AL_INVALID_OPERATION);   
+					// The source type must first be checked for static or streaming
+					if (oalSource->GetSourceType() == AL_STREAMING && value != 0)
+						throw ((OSStatus) AL_INVALID_OPERATION);
 
-                    if ((alIsBuffer(value)) || (value == 0))
-                        oalSource->SetBuffer(value, gOALBufferMap->Get((UInt32) value));
-                    else
+                    if (alIsBuffer(value))
+					{
+					    // if no buffers have been made yet but alIsBuffer() is true, then this is a AL_NONE buffer
+					    if (gOALBufferMap)
+							oalSource->SetBuffer(value, gOALBufferMap->Get((UInt32) value));
+					}
+					else
                         throw ((OSStatus) AL_INVALID_OPERATION);
                 } 
-                else
-                    throw ((OSStatus) AL_INVALID_OPERATION);
-    
                 break;
+            case AL_REFERENCE_DISTANCE:
+                oalSource->SetReferenceDistance(value);
+                break;
+            case AL_ROLLOFF_FACTOR:
+                oalSource->SetRollOffFactor(value);
+                break;
+            case AL_MAX_DISTANCE:
+                oalSource->SetMaxDistance(value);
+                break;
+			case AL_CONE_INNER_ANGLE:
+                oalSource->SetConeInnerAngle(value);
+                break;
+            case AL_CONE_OUTER_ANGLE:
+                oalSource->SetConeOuterAngle(value);
+                break;
+            case AL_CONE_OUTER_GAIN:
+				oalSource->SetConeOuterGain(value);
+                break;
+            case AL_SEC_OFFSET:
+                oalSource->SetQueueOffset(kSecondsOffset, value);
+                break;
+            case AL_SAMPLE_OFFSET:
+                oalSource->SetQueueOffset(kSampleOffset, value);
+                break;
+            case AL_BYTE_OFFSET:
+                oalSource->SetQueueOffset(kByteOffset, value);
+                break;
+            
+            default:
+                alSetError(AL_INVALID_ENUM);
+                break;
+        }
+	}
+	catch (OSStatus      result) {
+		DebugMessageN4("ERROR: alSourcei FAILED - sid:pname:value:result %ld:%s:%ld:%s", (long int) sid, GetALAttributeString( pname), (long int) value, alGetString(result));
+		alSetError(result);
+	}
+    catch (...) {
+		DebugMessageN3("ERROR: alSourcei FAILED - sid:pname:value %ld:%s:%ld", (long int) sid, GetALAttributeString( pname), (long int) value);
+        alSetError(AL_INVALID_OPERATION);
+	}
+	
+	return;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API void AL_APIENTRY alSourceiv( ALuint sid, ALenum pname, const ALint* values )
+{
+#if LOG_SOURCE_USAGE
+	DebugMessageN2("alSourceiv--> source %ld : %s", (long int) sid, GetALAttributeString(pname));
+#endif
+
+	try {
+		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+        switch (pname) 
+        {
+			// Source ONLY Attributes
             case AL_SOURCE_RELATIVE:
-                if ((value == AL_FALSE) || (value == AL_TRUE))
-                    oalSource->SetSourceRelative(value, false);
+                if ((*values == AL_FALSE) || (*values == AL_TRUE))
+                    oalSource->SetSourceRelative(*values);
                 else
                     throw ((OSStatus) AL_INVALID_VALUE);
                 break;
+            case AL_LOOPING:
+                oalSource->SetLooping(*values);
+                break;
+            case AL_BUFFER:
+			{
+				// The source type must first be checked for static or streaming
+				if (oalSource->GetSourceType() == AL_STREAMING)
+					throw ((OSStatus) AL_INVALID_OPERATION);
+
+				if (alIsBuffer(*values))
+				{
+					// if no buffers have been made yet but alIsBuffer() is true, then this is a AL_NONE buffer
+					if (gOALBufferMap)
+						oalSource->SetBuffer(*values, gOALBufferMap->Get((UInt32) *values));
+				}
+				else
+					throw ((OSStatus) AL_INVALID_OPERATION);
+			} 
+                break;
+			case AL_REFERENCE_DISTANCE:
+                oalSource->SetReferenceDistance(*values);
+                break;
+            case AL_ROLLOFF_FACTOR:
+                oalSource->SetRollOffFactor(*values);
+                break;
+            case AL_MAX_DISTANCE:
+                oalSource->SetMaxDistance(*values);
+                break;
+            case AL_DIRECTION:
+                oalSource->SetDirection(values[0], values[1], values[2]);
+                break;
+			case AL_CONE_INNER_ANGLE:
+                oalSource->SetConeInnerAngle(*values);
+                break;
+            case AL_CONE_OUTER_ANGLE:
+                oalSource->SetConeOuterAngle(*values);
+                break;
+			case AL_SEC_OFFSET:
+                oalSource->SetQueueOffset(kSecondsOffset, *values);
+                break;
+            case AL_SAMPLE_OFFSET:
+                oalSource->SetQueueOffset(kSampleOffset, *values);
+                break;
+            case AL_BYTE_OFFSET:
+                oalSource->SetQueueOffset(kByteOffset, *values);
+                break;
+			
+			// Source & Listener Attributes
+            case AL_POSITION:
+                oalSource->SetPosition(values[0], values[1], values[2]);
+                break;
+            case AL_VELOCITY:
+                oalSource->SetVelocity(values[0], values[1], values[2]);
+                break;
+
+            default:
+                alSetError(AL_INVALID_ENUM);
+                break;
+		}
+	}
+	catch (OSStatus      result) {
+		DebugMessageN3("ERROR: alSourcei FAILED: source %ld : %s error = %s", (long int) sid, GetALAttributeString(pname), alGetString(result));
+		alSetError(result);
+	}
+    catch (...) {
+		DebugMessageN2("ERROR: alSourcei FAILED: source %ld : %s", (long int) sid, GetALAttributeString(pname));
+        alSetError(AL_INVALID_OPERATION);
+	}
+	
+	return;
+
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API void AL_APIENTRY alSource3i( ALuint sid, ALenum pname, ALint v1, ALint v2, ALint v3 )
+{
+#if LOG_SOURCE_USAGE
+	DebugMessageN5("alSource3i--> source %ld : %s : values = %ld:%ld:%ld", (long int) sid, GetALAttributeString(pname), (long int)v1, (long int)v2, (long int)v3);
+#endif
+
+	try {
+		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+        switch (pname) 
+        {
+			// Source ONLY Attributes
+            case AL_DIRECTION:
+                oalSource->SetDirection(v1, v2, v3);
+                break;
+
+			// Source & Listener Attributes
+            case AL_POSITION:
+                oalSource->SetPosition(v1, v2, v3);
+                break;
+            case AL_VELOCITY:
+                oalSource->SetVelocity(v1, v2, v3);
+                break;
+
             default:
                 alSetError(AL_INVALID_ENUM);
                 break;
         }
 	}
 	catch (OSStatus      result) {
-		DebugMessageN1("alSourcei Failed - err = %ld\n", result);
+		DebugMessageN6("ERROR: alSource3f FAILED: source %ld : %s : values = %ld:%ld:%ld error = %s", (long int) sid, GetALAttributeString(pname), (long int)v1, (long int)v2, (long int)v3, alGetString(result));
 		alSetError(result);
 	}
     catch (...) {
-		DebugMessage("alSourcei Failed");
+		DebugMessageN5("ERROR: alSource3f FAILED: source %ld : %s : values = %ld:%ld:%ld", (long int) sid, GetALAttributeString(pname), (long int)v1, (long int)v2, (long int)v3);
         alSetError(AL_INVALID_OPERATION);
 	}
 	
@@ -1482,26 +2171,35 @@ ALAPI ALvoid ALAPIENTRY alSourcei (ALuint source, ALenum pname, ALint value)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alGetSourcef (ALuint source, ALenum pname, ALfloat *value)
+AL_API ALvoid AL_APIENTRY alGetSourcef (ALuint sid, ALenum pname, ALfloat *value)
 {
-#if LOG_API_USAGE
-	DebugMessage("alGetSourcef called");
+#if LOG_SOURCE_USAGE
+	DebugMessageN2("alGetSourcef--> source %ld : %s", (long int) sid, GetALAttributeString(pname));
 #endif
 
 	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-		
-        OALContext		*oalContext = gOALContextMap->Get((UInt32) gCurrentContext);
-		if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        OALSource	*oalSource = oalContext->GetSource((UInt32) source);
-		if (oalSource == NULL)
-            throw ((OSStatus) AL_INVALID_VALUE);
-
+		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
         switch (pname) 
         {
+			// Source ONLY Attributes
+            case AL_MIN_GAIN:
+                *value = oalSource->GetMinGain();
+                break;
+            case AL_MAX_GAIN:
+                *value = oalSource->GetMaxGain();
+                break;
+            case AL_REFERENCE_DISTANCE:
+                *value = oalSource->GetReferenceDistance();
+                break;
+            case AL_ROLLOFF_FACTOR:
+                *value = oalSource->GetRollOffFactor();
+                break;
+            case AL_MAX_DISTANCE:
+                *value = oalSource->GetMaxDistance();
+                break;
+            case AL_PITCH:
+                *value = oalSource->GetPitch();
+                break;
             case AL_CONE_INNER_ANGLE:
                 *value = oalSource->GetConeInnerAngle();
                 break;
@@ -1511,38 +2209,32 @@ ALAPI ALvoid ALAPIENTRY alGetSourcef (ALuint source, ALenum pname, ALfloat *valu
             case AL_CONE_OUTER_GAIN:
                 *value = oalSource->GetConeOuterGain();
                 break;
-            case AL_PITCH:
-                *value = oalSource->GetPitch();
+            case AL_SEC_OFFSET:
+                *value = oalSource->GetQueueOffset(kSecondsOffset);
                 break;
+            case AL_SAMPLE_OFFSET:
+                *value = oalSource->GetQueueOffset(kSampleOffset);
+                break;
+            case AL_BYTE_OFFSET:
+                *value = oalSource->GetQueueOffset(kByteOffset);
+                break;
+
+			// Source & Listener Attributes
             case AL_GAIN:
                 *value = oalSource->GetGain();
                 break;
-            case AL_MAX_DISTANCE:
-                *value = oalSource->GetMaxDistance();
-                break;
-            case AL_MIN_GAIN:
-                *value = oalSource->GetMinGain();
-                break;
-            case AL_MAX_GAIN:
-                *value = oalSource->GetMaxGain();
-                break;
-            case AL_ROLLOFF_FACTOR:
-                *value = oalSource->GetRollOffFactor();
-                break;
-            case AL_REFERENCE_DISTANCE:
-                *value = oalSource->GetReferenceDistance();
-                break;
+
             default:
                 alSetError(AL_INVALID_ENUM);
                 break;
         }
 	}
 	catch (OSStatus      result) {
-		DebugMessageN1("alGetSourcef Failed - err = %ld\n", result);
+		DebugMessageN1("ERROR: alGetSourcef FAILED = %s\n", alGetString(result));
 		alSetError(result);
 	}
     catch (...) {
-		DebugMessage("alGetSourcef Failed");
+		DebugMessage("ERROR: alGetSourcef FAILED");
         alSetError(AL_INVALID_OPERATION);
 	}
 	
@@ -1550,93 +2242,79 @@ ALAPI ALvoid ALAPIENTRY alGetSourcef (ALuint source, ALenum pname, ALfloat *valu
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alGetSource3f (ALuint source, ALenum pname, ALfloat *v1, ALfloat *v2, ALfloat *v3)
+AL_API ALvoid AL_APIENTRY alGetSourcefv (ALuint sid, ALenum pname, ALfloat *values)
 {
-#if LOG_API_USAGE
-	DebugMessage("alGetSource3f called");
+#if LOG_SOURCE_USAGE
+	DebugMessageN2("alGetSourcefv--> source %ld : %s", (long int) sid, GetALAttributeString(pname));
 #endif
 
 	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-		
-        OALContext		*oalContext = gOALContextMap->Get((UInt32) gCurrentContext);
-		if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        OALSource	*oalSource = oalContext->GetSource((UInt32) source);
-		if (oalSource == NULL)
-            throw ((OSStatus) AL_INVALID_VALUE);
-
-        switch (pname) 
-        {
-            case AL_POSITION:
-                oalSource->GetPosition(*v1, *v2, *v3, false);
-                break;
-            case AL_DIRECTION:
-                oalSource->GetDirection(*v1, *v2, *v3, false);
-                break;
-            case AL_VELOCITY:
-                oalSource->GetVelocity(*v1, *v2, *v3, false);
-                break;
-            default:
-                alSetError(AL_INVALID_ENUM);
-                break;
-        }
-	}
-	catch (OSStatus      result) {
-		DebugMessageN1("alGetSource3f Failed - err = %ld\n", result);
-		alSetError(result);
-	}
-    catch (...) {
-		DebugMessage("alGetSource3f Failed");
-        alSetError(AL_INVALID_OPERATION);
-	}
-	
-	return;
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alGetSourcefv (ALuint source, ALenum pname, ALfloat *values)
-{
-#if LOG_API_USAGE
-	DebugMessage("alGetSourcefv called");
-#endif
-
-	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-		
-        OALContext		*oalContext = gOALContextMap->Get((UInt32) gCurrentContext);
-		if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        OALSource	*oalSource = oalContext->GetSource((UInt32) source);
-		if (oalSource == NULL)
-            throw ((OSStatus) AL_INVALID_VALUE);
-
+		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
         switch(pname) 
         {
-            case AL_POSITION:
-                oalSource->GetPosition(values[0], values[1], values[2], false);
+			// Source ONLY Attributes
+            case AL_MIN_GAIN:
+                *values = oalSource->GetMinGain();
                 break;
-            case AL_VELOCITY:
-                oalSource->GetVelocity(values[0], values[1], values[2], false);
+            case AL_MAX_GAIN:
+                *values = oalSource->GetMaxGain();
+                break;
+            case AL_REFERENCE_DISTANCE:
+                *values = oalSource->GetReferenceDistance();
+                break;
+            case AL_ROLLOFF_FACTOR:
+                *values = oalSource->GetRollOffFactor();
+                break;
+            case AL_MAX_DISTANCE:
+                *values = oalSource->GetMaxDistance();
+                break;
+            case AL_PITCH:
+                *values = oalSource->GetPitch();
                 break;
             case AL_DIRECTION:
-                oalSource->GetDirection(values[0], values[1], values[2], false);
+                oalSource->GetDirection(values[0], values[1], values[2]);
                 break;
+            case AL_CONE_INNER_ANGLE:
+                *values = oalSource->GetConeInnerAngle();
+                break;
+            case AL_CONE_OUTER_ANGLE:
+                *values = oalSource->GetConeOuterAngle();
+                break;
+            case AL_CONE_OUTER_GAIN:
+                *values = oalSource->GetConeOuterGain();
+                break;
+            case AL_SEC_OFFSET:
+                *values = oalSource->GetQueueOffset(kSecondsOffset);
+                break;
+            case AL_SAMPLE_OFFSET:
+                *values = oalSource->GetQueueOffset(kSampleOffset);
+                break;
+            case AL_BYTE_OFFSET:
+                *values = oalSource->GetQueueOffset(kByteOffset);
+                break;
+
+			// Source & Listener Attributes
+            case AL_POSITION:
+                oalSource->GetPosition(values[0], values[1], values[2]);
+                break;
+            case AL_VELOCITY:
+                oalSource->GetVelocity(values[0], values[1], values[2]);
+                break;
+            case AL_GAIN:
+                *values = oalSource->GetGain();
+                break;
+
             default:
                 alSetError(AL_INVALID_ENUM);
                 break;
         }
 	}
 	catch (OSStatus      result) {
-		DebugMessageN1("alGetSourcefv Failed - err = %ld\n", result);
+		DebugMessageN1("ERROR: alGetSourcefv FAILED = %s\n", alGetString(result));
 		alSetError(result);
 	}
     catch (...) {
-		DebugMessage("alGetSourcefv Failed");
+		DebugMessage("ERROR: alGetSourcefv FAILED");
         alSetError(AL_INVALID_OPERATION);
 	}
 	
@@ -1644,26 +2322,86 @@ ALAPI ALvoid ALAPIENTRY alGetSourcefv (ALuint source, ALenum pname, ALfloat *val
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alGetSourcei (ALuint source, ALenum pname, ALint *value)
+AL_API ALvoid AL_APIENTRY alGetSource3f (ALuint sid, ALenum pname, ALfloat *v1, ALfloat *v2, ALfloat *v3)
 {
-#if LOG_API_USAGE
-	DebugMessage("alGetSourcei called");
+#if LOG_SOURCE_USAGE
+	DebugMessageN2("alGetSource3f--> source %ld : %s", (long int) sid, GetALAttributeString(pname));
 #endif
 
 	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-		
-        OALContext		*oalContext = gOALContextMap->Get((UInt32) gCurrentContext);
-		if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        OALSource	*oalSource = oalContext->GetSource((UInt32) source);
-		if (oalSource == NULL)
-            throw ((OSStatus) AL_INVALID_VALUE);
-
+		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
         switch (pname) 
         {
+			// Source ONLY Attributes
+            case AL_DIRECTION:
+                oalSource->GetDirection(*v1, *v2, *v3);
+                break;
+
+			// Source & Listener Attributes
+            case AL_POSITION:
+                oalSource->GetPosition(*v1, *v2, *v3);
+                break;
+            case AL_VELOCITY:
+                oalSource->GetVelocity(*v1, *v2, *v3);
+                break;
+
+            default:
+                alSetError(AL_INVALID_ENUM);
+                break;
+        }
+	}
+	catch (OSStatus      result) {
+		DebugMessageN1("ERROR: alGetSource3f FAILED = %s\n", alGetString(result));
+		alSetError(result);
+	}
+    catch (...) {
+		DebugMessage("ERROR: alGetSource3f FAILED");
+        alSetError(AL_INVALID_OPERATION);
+	}
+	
+	return;
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API ALvoid AL_APIENTRY alGetSourcei (ALuint sid, ALenum pname, ALint *value)
+{
+#if LOG_SOURCE_USAGE
+	DebugMessageN2("alGetSourcei--> source %ld : %s", (long int) sid, GetALAttributeString(pname));
+#endif
+
+	try {
+		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+        switch (pname) 
+        {
+			// Source ONLY Attributes
+            case AL_SOURCE_RELATIVE:
+                *value = oalSource->GetSourceRelative();
+                break;
+            case AL_SOURCE_TYPE:
+                *value = oalSource->GetSourceType();
+                break;
+            case AL_LOOPING:
+                *value = oalSource->GetLooping();
+                break;
+            case AL_BUFFER:
+                *value = oalSource->GetBuffer();
+                break;
+            case AL_BUFFERS_QUEUED:
+                *value = oalSource->GetQLength();
+                break;
+            case AL_BUFFERS_PROCESSED:
+                *value = oalSource->GetBuffersProcessed();
+                break;
+            case AL_REFERENCE_DISTANCE:
+                *value = (ALint) oalSource->GetReferenceDistance();
+                break;
+            case AL_ROLLOFF_FACTOR:
+                *value = (ALint) oalSource->GetRollOffFactor();
+                break;
+            case AL_MAX_DISTANCE:
+                *value = (ALint) oalSource->GetMaxDistance();
+                break;
             case AL_CONE_INNER_ANGLE:
                 *value = (UInt32) oalSource->GetConeInnerAngle();
                 break;
@@ -1673,35 +2411,116 @@ ALAPI ALvoid ALAPIENTRY alGetSourcei (ALuint source, ALenum pname, ALint *value)
             case AL_CONE_OUTER_GAIN:
                 *value = (UInt32) oalSource->GetConeOuterGain();
                 break;
-            case AL_LOOPING:
-                *value = oalSource->GetLooping();
+            case AL_SEC_OFFSET:
+                *value = oalSource->GetQueueOffset(kSecondsOffset);
                 break;
-            case AL_BUFFER:
-                *value = oalSource->GetBuffer();
+            case AL_SAMPLE_OFFSET:
+                *value = oalSource->GetQueueOffset(kSampleOffset);
                 break;
-            case AL_SOURCE_RELATIVE:
-                *value = oalSource->GetSourceRelative();
+            case AL_BYTE_OFFSET:
+                *value = oalSource->GetQueueOffset(kByteOffset);
                 break;
             case AL_SOURCE_STATE:
                 *value = oalSource->GetState();
                 break;
+            
+			default:
+                alSetError(AL_INVALID_ENUM);
+                break;
+        }
+	}
+	catch (OSStatus      result) {
+		DebugMessageN1("ERROR: alGetSourcei FAILED = %s\n", alGetString(result));
+		alSetError(result);
+	}
+    catch (...) {
+		DebugMessage("ERROR: alGetSourcei FAILED");
+        alSetError(AL_INVALID_OPERATION);
+	}
+	
+	return;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API void AL_APIENTRY alGetSourceiv( ALuint sid,  ALenum pname, ALint* values )
+{
+#if LOG_SOURCE_USAGE
+	DebugMessageN2("alGetSourceiv--> source %ld : %s", (long int) sid, GetALAttributeString(pname));
+#endif
+
+	try {
+		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+        switch(pname) 
+        {
+			// Source ONLY Attributes
+            case AL_SOURCE_RELATIVE:
+                *values = oalSource->GetSourceRelative();
+                break;
+            case AL_SOURCE_TYPE:
+                *values = oalSource->GetSourceType();
+                break;
+            case AL_LOOPING:
+                *values = oalSource->GetLooping();
+                break;
+            case AL_BUFFER:
+                *values = oalSource->GetBuffer();
+                break;
             case AL_BUFFERS_QUEUED:
-                *value = oalSource->GetQLength();
+                *values = oalSource->GetQLength();
                 break;
             case AL_BUFFERS_PROCESSED:
-                *value = oalSource->GetBuffersProcessed();
+                *values = oalSource->GetBuffersProcessed();
                 break;
+            case AL_REFERENCE_DISTANCE:
+                *values = (ALint) oalSource->GetReferenceDistance();
+                break;
+            case AL_ROLLOFF_FACTOR:
+                *values = (ALint) oalSource->GetRollOffFactor();
+                break;
+            case AL_MAX_DISTANCE:
+                *values = (ALint) oalSource->GetMaxDistance();
+                break;
+            case AL_DIRECTION:
+                oalSource->GetDirection((Float32&) values[0], (Float32&) values[1], (Float32&) values[2]);
+                break;
+            case AL_CONE_INNER_ANGLE:
+                *values = (UInt32) oalSource->GetConeInnerAngle();
+                break;
+            case AL_CONE_OUTER_ANGLE:
+                *values = (UInt32) oalSource->GetConeOuterAngle();
+                break;
+            case AL_SEC_OFFSET:
+                *values = oalSource->GetQueueOffset(kSecondsOffset);
+                break;
+            case AL_SAMPLE_OFFSET:
+                *values = oalSource->GetQueueOffset(kSampleOffset);
+                break;
+            case AL_BYTE_OFFSET:
+                *values = oalSource->GetQueueOffset(kByteOffset);
+                break;
+            case AL_SOURCE_STATE:
+                *values = oalSource->GetState();
+                break;
+
+			// Source & Listener Attributes
+            case AL_POSITION:
+                oalSource->GetPosition((Float32&) values[0], (Float32&) values[1], (Float32&) values[2]);
+                break;
+            case AL_VELOCITY:
+                oalSource->GetVelocity((Float32&) values[0], (Float32&) values[1], (Float32&) values[2]);
+                break;
+
             default:
                 alSetError(AL_INVALID_ENUM);
                 break;
         }
 	}
 	catch (OSStatus      result) {
-		DebugMessageN1("alGetSourcei Failed - err = %ld\n", result);
+		DebugMessageN1("ERROR: alGetSourcefv FAILED = %s\n", alGetString(result));
 		alSetError(result);
 	}
     catch (...) {
-		DebugMessage("alGetSourcei Failed");
+		DebugMessage("ERROR: alGetSourcefv FAILED");
         alSetError(AL_INVALID_OPERATION);
 	}
 	
@@ -1709,53 +2528,41 @@ ALAPI ALvoid ALAPIENTRY alGetSourcei (ALuint source, ALenum pname, ALint *value)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alSourcePlay(ALuint source)
-{	
-#if LOG_API_USAGE
-	DebugMessage("alSourcePlay called");
+AL_API void AL_APIENTRY alGetSource3i( ALuint sid, ALenum pname, ALint* v1, ALint*  v2, ALint*  v3)
+{
+#if LOG_SOURCE_USAGE
+	DebugMessageN2("alGetSource3i--> source %ld : %s", (long int) sid, GetALAttributeString(pname));
 #endif
 
+
 	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-		
-        OALContext		*oalContext = gOALContextMap->Get((UInt32) gCurrentContext);
-		if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        OALSource	*oalSource = oalContext->GetSource((UInt32) source);
-		if (oalSource == NULL)
-            throw ((OSStatus) AL_INVALID_NAME);
-
-        if (oalSource->GetQLength() != 0)
+		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+        switch (pname) 
         {
-            UInt32		state = oalSource->GetState();
-            switch (state)
-            {
-                case AL_INITIAL:
-                    oalSource->Play();					// start playing the queue
-                    break;
-                case AL_PLAYING:
-                    oalSource->Stop();					// stop playing the queue
-                    oalSource->Play();					// start playing the queue
-                    break;
-                case AL_PAUSED:
-                    oalSource->Resume();				// continue playing again from somewhere in the buffer queue
-                    break;
-                case AL_STOPPED:
-                    oalSource->Play();					// start playing the queue
-                    break;
-                default:
-                    break;
-            }
-        }		
+			// Source ONLY Attributes
+            case AL_DIRECTION:
+                oalSource->GetDirection((Float32&) *v1, (Float32&)*v2, (Float32&)*v3);
+                break;
+				
+			// Source & Listener Attributes
+            case AL_POSITION:
+                oalSource->GetPosition((Float32&) *v1, (Float32&)*v2, (Float32&)*v3);
+                break;
+            case AL_VELOCITY:
+                oalSource->GetVelocity((Float32&) *v1, (Float32&)*v2, (Float32&)*v3);
+                break;
+
+            default:
+                alSetError(AL_INVALID_ENUM);
+                break;
+        }
 	}
 	catch (OSStatus      result) {
-		DebugMessageN1("alSourcePlay Failed - err = %ld\n", result);
+		DebugMessageN1("ERROR: alGetSource3f FAILED = %s\n", alGetString(result));
 		alSetError(result);
 	}
     catch (...) {
-		DebugMessage("alSourcePlay Failed");
+		DebugMessage("ERROR: alGetSource3f FAILED");
         alSetError(AL_INVALID_OPERATION);
 	}
 	
@@ -1763,32 +2570,22 @@ ALAPI ALvoid ALAPIENTRY alSourcePlay(ALuint source)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alSourcePause (ALuint source)
-{
-#if LOG_API_USAGE
-	DebugMessage("alSourcePause called");
+AL_API ALvoid AL_APIENTRY alSourcePlay(ALuint sid)
+{	
+#if LOG_SOURCE_USAGE
+	DebugMessageN1("alSourcePlay--> source %ld", (long int) sid);
 #endif
 
 	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-		
-        OALContext		*oalContext = gOALContextMap->Get((UInt32) gCurrentContext);
-		if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        OALSource	*oalSource = oalContext->GetSource((UInt32) source);
-		if (oalSource == NULL)
-            throw ((OSStatus) AL_INVALID_NAME);
-
-        oalSource->Pause();
+		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+		oalSource->Play();					// start playing the queue
 	}
 	catch (OSStatus      result) {
-		DebugMessageN1("alSourcePause Failed - err = %ld\n", result);
+		DebugMessageN1("ERROR: alSourcePlay FAILED = %s\n", alGetString(result));
 		alSetError(result);
 	}
     catch (...) {
-		DebugMessage("alSourcePause Failed");
+		DebugMessage("ERROR: alSourcePlay FAILED");
         alSetError(AL_INVALID_OPERATION);
 	}
 	
@@ -1796,32 +2593,45 @@ ALAPI ALvoid ALAPIENTRY alSourcePause (ALuint source)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alSourceStop (ALuint source)
+AL_API ALvoid AL_APIENTRY alSourcePause (ALuint sid)
 {
-#if LOG_API_USAGE
-	DebugMessage("alSourceStop called");
+#if LOG_SOURCE_USAGE
+	DebugMessageN1("alSourcePause--> source %ld", (long int) sid);
 #endif
 
 	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-		
-        OALContext		*oalContext = gOALContextMap->Get((UInt32) gCurrentContext);
-		if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
+		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+		oalSource->Pause();
+	}
+	catch (OSStatus      result) {
+		DebugMessageN1("ERROR: alSourcePause FAILED = %s\n", alGetString(result));
+		alSetError(result);
+	}
+    catch (...) {
+		DebugMessage("ERROR: alSourcePause FAILED");
+        alSetError(AL_INVALID_OPERATION);
+	}
+	
+	return;
+}
 
-        OALSource	*oalSource = oalContext->GetSource((UInt32) source);
-		if (oalSource == NULL)
-            throw ((OSStatus) AL_INVALID_NAME);
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API ALvoid AL_APIENTRY alSourceStop (ALuint sid)
+{
+#if LOG_SOURCE_USAGE
+	DebugMessageN1("alSourceStop--> source %ld", (long int) sid);
+#endif
 
+	try {
+		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
         oalSource->Stop();
 	}
 	catch (OSStatus      result) {
-		DebugMessageN1("alSourceStop Failed - err = %ld\n", result);
+		DebugMessageN1("ERROR: alSourceStop FAILED = %s\n", alGetString(result));
 		alSetError(result);
 	}
     catch (...) {
-		DebugMessage("alSourceStop Failed");
+		DebugMessage("ERROR: alSourceStop FAILED");
         alSetError(AL_INVALID_OPERATION);
 	}
 	
@@ -1829,33 +2639,22 @@ ALAPI ALvoid ALAPIENTRY alSourceStop (ALuint source)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alSourceRewind (ALuint source)
+AL_API ALvoid AL_APIENTRY alSourceRewind (ALuint sid)
 {
-#if LOG_API_USAGE
-	DebugMessage("alSourceRewind called");
+#if LOG_SOURCE_USAGE
+	DebugMessageN1("alSourceRewind--> source %ld", (long int) sid);
 #endif
 
 	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-		
-        OALContext		*oalContext = gOALContextMap->Get((UInt32) gCurrentContext);
-		if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        OALSource	*oalSource = oalContext->GetSource((UInt32) source);
-		if (oalSource == NULL)
-            throw ((OSStatus) AL_INVALID_NAME);
-
-        oalSource->Stop();
-        oalSource->Play();
+		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+        oalSource->Rewind();
 	}
 	catch (OSStatus      result) {
-		DebugMessageN1("alSourceRewind Failed - err = %ld\n", result);
+		DebugMessageN1("ERROR: alSourceRewind FAILED = %s\n", alGetString(result));
 		alSetError(result);
 	}
     catch (...) {
-		DebugMessage("alSourceRewind Failed");
+		DebugMessage("ERROR: alSourceRewind FAILED");
         alSetError(AL_INVALID_OPERATION);
 	}
 	
@@ -1863,29 +2662,26 @@ ALAPI ALvoid ALAPIENTRY alSourceRewind (ALuint source)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alSourcePlayv(ALsizei n, ALuint *ID)
+AL_API void	AL_APIENTRY alSourcePlayv( ALsizei ns, const ALuint *sids )
 {
-#if LOG_API_USAGE
-	DebugMessage("alSourcePlayv called");
+#if LOG_SOURCE_USAGE
+	DebugMessage("alSourcePlayv--> sources = ");
+	for (UInt32	i = 0; i < (UInt32) ns; i++) {
+		printf("%ld ", (long int) sids[i]);
+	}
+	printf("\n");
 #endif
 
 	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-		
-        OALContext		*oalContext = gOALContextMap->Get((UInt32) gCurrentContext);
-		if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        for (UInt32	i = 0; i < n; i++)
-            alSourcePlay(ID[i]);
+        for (UInt32	i = 0; i < (UInt32) ns; i++)
+            alSourcePlay(sids[i]);
     }
 	catch (OSStatus      result) {
-		DebugMessageN1("alSourcePlayv Failed - err = %ld\n", result);
+		DebugMessageN1("ERROR: alSourcePlayv FAILED = %s\n", alGetString(result));
 		alSetError(result);
 	}
     catch (...) {
-		DebugMessage("alSourcePlayv Failed");
+		DebugMessage("ERROR: alSourcePlayv FAILED");
         alSetError(AL_INVALID_OPERATION);
 	}
 	
@@ -1893,29 +2689,26 @@ ALAPI ALvoid ALAPIENTRY alSourcePlayv(ALsizei n, ALuint *ID)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alSourcePausev(ALsizei n, ALuint *ID)
+AL_API void	AL_APIENTRY alSourcePausev( ALsizei ns, const ALuint *sids )
 {
-#if LOG_API_USAGE
-	DebugMessage("alSourcePausev called");
+#if LOG_SOURCE_USAGE
+	DebugMessage("alSourcePausev--> sources = ");
+	for (UInt32	i = 0; i < (UInt32) ns; i++) {
+		printf("%ld ", (long int) sids[i]);
+	}
+	printf("\n");
 #endif
 
 	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-		
-        OALContext		*oalContext = gOALContextMap->Get((UInt32) gCurrentContext);
-		if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        for (UInt32	i = 0; i < n; i++)
-            alSourcePause(ID[i]);
+        for (UInt32	i = 0; i < (UInt32) ns; i++)
+            alSourcePause(sids[i]);
     }
 	catch (OSStatus      result) {
-		DebugMessageN1("alSourcePausev Failed - err = %ld\n", result);
+		DebugMessageN1("ERROR: alSourcePausev FAILED = %s\n", alGetString(result));
 		alSetError(result);
 	}
     catch (...) {
-		DebugMessage("alSourcePausev Failed");
+		DebugMessage("ERROR: alSourcePausev FAILED");
         alSetError(AL_INVALID_OPERATION);
 	}
 	
@@ -1923,29 +2716,26 @@ ALAPI ALvoid ALAPIENTRY alSourcePausev(ALsizei n, ALuint *ID)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alSourceStopv(ALsizei n, ALuint *ID)
+AL_API void	AL_APIENTRY alSourceStopv( ALsizei ns, const ALuint *sids )
 {
-#if LOG_API_USAGE
-	DebugMessage("alSourceStopv called");
+#if LOG_SOURCE_USAGE
+	DebugMessage("alSourceStopv--> sources = ");
+	for (UInt32	i = 0; i < (UInt32) ns; i++) {
+		printf("%ld ", (long int) sids[i]);
+	}
+	printf("\n");
 #endif
 
 	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-		
-        OALContext		*oalContext = gOALContextMap->Get((UInt32) gCurrentContext);
-		if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        for (UInt32	i = 0; i < n; i++)
-            alSourceStop(ID[i]);
+        for (UInt32	i = 0; i < (UInt32) ns; i++)
+            alSourceStop(sids[i]);
     }
 	catch (OSStatus      result) {
-		DebugMessageN1("alSourceStopv Failed - err = %ld\n", result);
+		DebugMessageN1("ERROR: alSourceStopv FAILED = %s\n", alGetString(result));
 		alSetError(result);
 	}
     catch (...) {
-		DebugMessage("alSourceStopv Failed");
+		DebugMessage("ERROR: alSourceStopv FAILED");
         alSetError(AL_INVALID_OPERATION);
 	}
 	
@@ -1953,29 +2743,26 @@ ALAPI ALvoid ALAPIENTRY alSourceStopv(ALsizei n, ALuint *ID)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alSourceRewindv (ALsizei n, ALuint *ID)
+AL_API void	AL_APIENTRY alSourceRewindv(ALsizei ns, const ALuint *sids)
 {
-#if LOG_API_USAGE
-	DebugMessage("alSourceRewindv called");
+#if LOG_SOURCE_USAGE
+	DebugMessage("alSourceRewindv--> sources = ");
+	for (UInt32	i = 0; i < (UInt32) ns; i++) {
+		printf("%ld ", (long int) sids[i]);
+	}
+	printf("\n");
 #endif
 
 	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-		
-        OALContext		*oalContext = gOALContextMap->Get((UInt32) gCurrentContext);
-		if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        for (UInt32	i = 0; i < n; i++)
-            alSourceRewind(ID[i]);
+        for (UInt32	i = 0; i < (UInt32) ns; i++)
+            alSourceRewind(sids[i]);
     }
 	catch (OSStatus      result) {
-		DebugMessageN1("alSourceRewindv Failed - err = %ld\n", result);
+		DebugMessageN1("ERROR: alSourceRewindv FAILED = %s\n", alGetString(result));
 		alSetError(result);
 	}
     catch (...) {
-		DebugMessage("alSourceRewindv Failed");
+		DebugMessage("ERROR: alSourceRewindv FAILED");
         alSetError(AL_INVALID_OPERATION);
 	}
 	
@@ -1983,58 +2770,76 @@ ALAPI ALvoid ALAPIENTRY alSourceRewindv (ALsizei n, ALuint *ID)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alSourceQueueBuffers (ALuint source, ALsizei n, ALuint *buffers)
+AL_API void	AL_APIENTRY alSourceQueueBuffers( ALuint sid, ALsizei numEntries, const ALuint* bids )
 {
-#if LOG_API_USAGE
-	DebugMessage("alSourceQueueBuffers called");
+#if LOG_SOURCE_USAGE
+	DebugMessageN2("alSourceQueueBuffers--> source %ld : numEntries = %ld", (long int) sid, (long int) numEntries);
 #endif
 
-	if (n == 0)
+#if LOG_BUFFER_USAGE
+	printf("alSourceQueueBuffers--> (%ld) ", (long int) numEntries);
+	for (UInt32	i = 0; i < (UInt32) numEntries; i++) {
+		printf("%ld, ", (long int) bids[i]);
+	}
+	printf("\n");
+#endif
+	
+
+	if (numEntries == 0)
 		return;	// no buffers were actually requested for queueing
 		
 	try {
         if (gOALBufferMap == NULL)
             throw ((OSStatus) AL_INVALID_OPERATION);   
 
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-		
-        OALContext		*oalContext = gOALContextMap->Get((UInt32) gCurrentContext);
-		if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        OALSource	*oalSource = oalContext->GetSource((UInt32) source);
-		if (oalSource == NULL)
-            throw ((OSStatus) AL_INVALID_NAME);
+		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
                         
-        // verify that buffers provided are valid before queueing them.
-        for (UInt32	i = 0; i < n; i++)
+		// The source type must first be checked for static or streaming
+		if (oalSource->GetSourceType() == AL_STATIC)
         {
-            if (buffers[i] != AL_NONE)
+			// if the source is Static but is transitioning to flushing the Q, then waity a render cycle and see if things are ok
+			// otherwise, it is illegal to append buffers to a Q, because a Ststoic designation means it only can use 1 buffer
+			if (!oalSource->IsSourceTransitioningToFlushQ())
+			{
+				DebugMessage("ERROR: alSourceQueueBuffers FAILED oalSource->GetSourceType() == AL_STATIC");
+				throw ((OSStatus) AL_INVALID_OPERATION);
+			}
+			else
+			{
+				DebugMessage("WAITING: alSourceQueueBuffers ---> WaitOneRenderCycle");
+				// wait until q has been flushed
+				WaitOneRenderCycle();
+				if (oalSource->GetSourceType() == AL_STATIC)
+            		throw ((OSStatus) AL_INVALID_OPERATION);
+			}
+		}
+        // verify that buffers provided are valid before queueing them.
+        for (UInt32	i = 0; i < (UInt32) numEntries; i++)
+        {
+            if (bids[i] != AL_NONE)
             {
                 // verify that this is a valid buffer
-                OALBuffer *oalBuffer = gOALBufferMap->Get(buffers[i]);
+                OALBuffer *oalBuffer = gOALBufferMap->Get(bids[i]);
                 if (oalBuffer == NULL)
-                    throw ((OSStatus) AL_INVALID_VALUE);				// an invalid buffer id has been provided
-            }
-            else
-            {
-                // NONE is a valid buffer parameter - do nothing it's valid
+                {
+					DebugMessage("ERROR: alSourceQueueBuffers FAILED oalBuffer == NULL");
+					throw ((OSStatus) AL_INVALID_VALUE);				// an invalid buffer id has been provided
+				}
             }
         }
 
         // all valid buffers, so append them to the queue
-        for (UInt32	i = 0; i < n; i++)
+        for (UInt32	i = 0; i < (UInt32) numEntries; i++)
         {
-            oalSource->AppendBufferToQueue(buffers[i], gOALBufferMap->Get(buffers[i]));
+			oalSource->AddToQueue(bids[i], gOALBufferMap->Get(bids[i]));
         }
 	}
 	catch (OSStatus		result) {
-		DebugMessageN1("alSourceQueueBuffers Failed - err = %ld\n", result);
+		DebugMessageN1("ERROR: alSourceQueueBuffers FAILED = %s\n", alGetString(result));
 		alSetError(result);
 	}
 	catch (...) {
-		DebugMessage("alSourceQueueBuffers Failed");
+		DebugMessage("ERROR: alSourceQueueBuffers FAILED");
         alSetError(AL_INVALID_OPERATION);
 	}
 
@@ -2042,10 +2847,10 @@ ALAPI ALvoid ALAPIENTRY alSourceQueueBuffers (ALuint source, ALsizei n, ALuint *
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alSourceUnqueueBuffers (ALuint source, ALsizei n, ALuint *buffers)
+AL_API ALvoid AL_APIENTRY alSourceUnqueueBuffers (ALuint sid, ALsizei n, ALuint *buffers)
 {
-#if LOG_API_USAGE
-	DebugMessage("alSourceUnqueueBuffers called");
+#if LOG_SOURCE_USAGE
+	DebugMessageN2("alSourceUnqueueBuffers--> source %ld : count = %ld", (long int) sid, (long int) n);
 #endif
 
 	if (n == 0)
@@ -2058,162 +2863,243 @@ ALAPI ALvoid ALAPIENTRY alSourceUnqueueBuffers (ALuint source, ALsizei n, ALuint
         if (gOALBufferMap == NULL)
             throw ((OSStatus) AL_INVALID_OPERATION);   
 
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-		
-        OALContext		*oalContext = gOALContextMap->Get((UInt32) gCurrentContext);
-		if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
+		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
 
-        OALSource	*oalSource = oalContext->GetSource((UInt32) source);
-		if (oalSource == NULL)
-            throw ((OSStatus) AL_INVALID_NAME);
-
-        if (oalSource->GetQLength() < n)
+        if (oalSource->GetQLength() < (UInt32) n)
             throw (OSStatus) AL_INVALID_VALUE;				// n is greater than the source's Q length
         
-        oalSource->RemoveBuffersFromQueue(n, (UInt32 *) buffers);
+        oalSource->RemoveBuffersFromQueue(n, buffers);
 
 	}
 	catch (OSStatus		result) {
-		DebugMessageN1("alSourceUnqueueBuffers Failed - err = %ld\n", result);
+		DebugMessageN1("ERROR: alSourceUnqueueBuffers FAILED = %s\n", alGetString(result));
 		// reinitialize the elements in the buffers array
 		if (buffers)
 		{
-			for (UInt32	i = 0; i < n; i++)
+			for (UInt32	i = 0; i < (UInt32) n; i++)
 				buffers[i] = 0;
 		}
 		// this would be real bad, as now we have a buffer queue in an unknown state
 		alSetError(result);
 	}
 	catch (...){
-		DebugMessage("alSourceUnqueueBuffers Failed");
+		DebugMessage("ERROR: alSourceUnqueueBuffers FAILED");
         alSetError(AL_INVALID_OPERATION);
 	}
 
+#if LOG_BUFFER_USAGE
+	printf("sid = %ld alSourceUnqueueBuffers--> (%ld) ", (long int) sid, (long int) n);
+	for (UInt32	i = 0; i < (UInt32) n; i++) {
+		printf("%ld, ", (long int) buffers[i]);
+	}
+	printf("\n");
+#endif
+
 	return;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY	alDistanceModel (ALenum value)
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#pragma mark ***** Listeners *****
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API ALvoid AL_APIENTRY alListenerf (ALenum pname, ALfloat value)
 {
 #if LOG_API_USAGE
-	DebugMessage("alDistanceModel called");
+	DebugMessageN2("alListenerf--> attribute = %s : value %.2f", GetALAttributeString(pname), value);
 #endif
 
 	try {
-        switch (value)
+        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+        switch (pname) 
         {
-            case AL_NONE:			
-            case AL_INVERSE_DISTANCE:
-            case AL_INVERSE_DISTANCE_CLAMPED:
-            {
-                if (gOALContextMap == NULL)
-                    throw ((OSStatus) AL_INVALID_OPERATION);
-                    
-                OALContext		*oalContext = gOALContextMap->Get(gCurrentContext);
-                if (oalContext == NULL)
-                    throw ((OSStatus) AL_INVALID_OPERATION);
-
-                oalContext->SetDistanceModel(value);
-            } 
-            break;
+            case AL_GAIN:
+				oalContext->SetListenerGain((Float32) value);     //gListener.Gain=value;
+                break;
             
-            default:
-                alSetError(AL_INVALID_VALUE);
+			default:
+                alSetError(AL_INVALID_ENUM);
                 break;
         }
-    }
-	catch (OSStatus		result) {
-		DebugMessageN1("alDistanceModel Failed - err = %ld\n", result);
-        alSetError(result);
-    }
-    catch (...) {
-		DebugMessage("alDistanceModel Failed");
-        alSetError(AL_INVALID_OPERATION);   // by default
-    }
-    return;
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alDopplerFactor (ALfloat value)
-{	
-#if LOG_API_USAGE
-	DebugMessage("alDopplerFactor called");
-#endif
-
-	try {
-        if (value < 0.0f)
-            throw ((OSStatus) AL_INVALID_VALUE);
-
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-            
-        OALContext		*oalContext = gOALContextMap->Get(gCurrentContext);
-        if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        oalContext->SetDopplerFactor(value, false);
 	}
 	catch (OSStatus		result) {
-		DebugMessageN1("alDopplerFactor Failed - err = %ld\n", result);
+ 		DebugMessageN1("ERROR: alListenerf FAILED = %s\n", alGetString(result));
         alSetError(result);
     }
-    catch (...) {
-		DebugMessage("alDopplerFactor Failed");
+	catch (...) {
+ 		DebugMessage("ERROR: alListenerf FAILED");
         alSetError(AL_INVALID_OPERATION);   // by default
-    }
+	}
 	
 	return;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alDopplerVelocity (ALfloat value)
+AL_API ALvoid AL_APIENTRY alListenerfv (ALenum pname, const ALfloat *values)
 {
 #if LOG_API_USAGE
-	DebugMessage("alDopplerVelocity called");
+	DebugMessageN1("alListenerfv--> attribute = %s", GetALAttributeString(pname));
 #endif
 
 	try {
-        if (value <= 0.0f)
-            throw ((OSStatus) AL_INVALID_VALUE);
-
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-            
-        OALContext		*oalContext = gOALContextMap->Get(gCurrentContext);
-        if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        oalContext->SetDopplerVelocity(value, false);
+        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+        switch(pname) 
+        {
+            case AL_POSITION:
+                oalContext->SetListenerPosition(values[0], values[1], values[2]);
+                break;
+            case AL_VELOCITY:
+                oalContext->SetListenerVelocity(values[0], values[1], values[2]);
+                break;
+            case AL_GAIN:
+                oalContext->SetListenerGain((Float32) *values);
+                break;
+            case AL_ORIENTATION:
+                oalContext->SetListenerOrientation(	values[0], values[1], values[2],
+                                                    values[3], values[4], values[5]);
+                break;
+            default:
+                alSetError(AL_INVALID_ENUM);
+                break;
+        }
 	}
 	catch (OSStatus		result) {
-		DebugMessageN1("alDopplerVelocity Failed - err = %ld\n", result);
-        alSetError(result);
+ 		DebugMessageN1("ERROR: alListenerfv FAILED = %s\n", alGetString(result));
+       alSetError(result);
     }
-    catch (...) {
-		DebugMessage("alDopplerVelocity Failed");
+	catch (...) {
+ 		DebugMessage("ERROR: alListenerfv FAILED");
         alSetError(AL_INVALID_OPERATION);   // by default
-    }
+	}
 	
 	return;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alGetListenerf( ALenum pname, ALfloat* value )
+AL_API ALvoid AL_APIENTRY alListener3f (ALenum pname, ALfloat v1, ALfloat v2, ALfloat v3)
 {
 #if LOG_API_USAGE
-	DebugMessage("alGetListenerf called");
+	DebugMessageN4("alListener3f--> attribute = %s : %.2f : %.2f : %.2f", GetALAttributeString(pname), v1, v2, v3);
 #endif
 
 	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-            
-        OALContext		*oalContext = gOALContextMap->Get(gCurrentContext);
-        if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
+        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+        switch (pname) 
+        {
+            case AL_POSITION:
+                oalContext->SetListenerPosition(v1, v2, v3);
+                break;
+            case AL_VELOCITY:
+                oalContext->SetListenerVelocity(v1, v2, v3);
+                break;
+            default:
+                alSetError(AL_INVALID_ENUM);
+                break;
+        }
+	}
+	catch (OSStatus		result) {
+		DebugMessageN1("ERROR: alListener3f FAILED = %s\n", alGetString(result));
+        alSetError(result);
+    }
+	catch (...) {
+		DebugMessage("ERROR: alListener3f FAILED");
+        alSetError(AL_INVALID_OPERATION);   // by default
+	}
+	
+	return;
+}
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API ALvoid AL_APIENTRY alListeneri (ALenum pname, ALint value)
+{		
+#if LOG_API_USAGE
+	DebugMessage("***** alListeneri");
+#endif
+	alSetError(AL_INVALID_ENUM);
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API void AL_APIENTRY alListeneriv( ALenum pname, const ALint* values )
+{
+#if LOG_API_USAGE
+	DebugMessageN1("alListeneriv--> attribute = %s", GetALAttributeString(pname));
+#endif
+
+	try {
+        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+        switch(pname) 
+        {
+            case AL_POSITION:
+                oalContext->SetListenerPosition(values[0], values[1], values[2]);
+                break;
+            case AL_VELOCITY:
+                oalContext->SetListenerVelocity(values[0], values[1], values[2]);
+                break;
+            case AL_ORIENTATION:
+                oalContext->SetListenerOrientation(	values[0], values[1], values[2],
+                                                    values[3], values[4], values[5]);
+                break;
+            default:
+                alSetError(AL_INVALID_ENUM);
+                break;
+        }
+	}
+	catch (OSStatus		result) {
+ 		DebugMessageN1("ERROR: alListeneriv FAILED = %s\n", alGetString(result));
+       alSetError(result);
+    }
+	catch (...) {
+ 		DebugMessage("ERROR: alListeneriv FAILED");
+        alSetError(AL_INVALID_OPERATION);   // by default
+	}
+	
+	return;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API void AL_APIENTRY alListener3i( ALenum pname, ALint v1, ALint v2, ALint v3 )
+{
+#if LOG_API_USAGE
+	DebugMessageN4("alListener3i--> attribute = %s : %ld : %ld : %ld", GetALAttributeString(pname), (long int) v1, (long int) v2, (long int) v3);
+#endif
+
+	try {
+        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+        switch (pname) 
+        {
+            case AL_POSITION:
+                oalContext->SetListenerPosition(v1, v2, v3);
+                break;
+            case AL_VELOCITY:
+                oalContext->SetListenerVelocity(v1, v2, v3);
+                break;
+            default:
+                alSetError(AL_INVALID_ENUM);
+                break;
+        }
+	}
+	catch (OSStatus		result) {
+		DebugMessageN1("ERROR: alListener3f FAILED = %s\n", alGetString(result));
+        alSetError(result);
+    }
+	catch (...) {
+		DebugMessage("ERROR: alListener3f FAILED");
+        alSetError(AL_INVALID_OPERATION);   // by default
+	}
+	
+	return;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API ALvoid AL_APIENTRY alGetListenerf( ALenum pname, ALfloat* value )
+{
+#if LOG_API_USAGE
+	DebugMessageN1("alGetListenerf--> attribute = %s", GetALAttributeString(pname));
+#endif
+
+	try {
+        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
         switch(pname) 
         {
             case AL_GAIN:
@@ -2225,11 +3111,11 @@ ALAPI ALvoid ALAPIENTRY alGetListenerf( ALenum pname, ALfloat* value )
         }
 	}
 	catch (OSStatus		result) {
-		DebugMessageN1("alGetListenerf Failed - err = %ld\n", result);
+		DebugMessageN1("ERROR: alGetListenerf FAILED = %s\n", alGetString(result));
         alSetError(result);
     }
 	catch (...) {
-		DebugMessage("alGetListenerf Failed");
+		DebugMessage("ERROR: alGetListenerf FAILED");
         alSetError(AL_INVALID_OPERATION);   // by default
 	}
 	
@@ -2237,20 +3123,55 @@ ALAPI ALvoid ALAPIENTRY alGetListenerf( ALenum pname, ALfloat* value )
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alGetListener3f( ALenum pname, ALfloat* v1, ALfloat* v2, ALfloat* v3 )
+AL_API ALvoid AL_APIENTRY alGetListenerfv( ALenum pname, ALfloat* values )
 {
 #if LOG_API_USAGE
-	DebugMessage("alGetListener3f called");
+	DebugMessageN1("alGetListenerfv--> attribute = %s", GetALAttributeString(pname));
 #endif
 
 	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-            
-        OALContext		*oalContext = gOALContextMap->Get(gCurrentContext);
-        if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
+        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+        switch (pname) 
+        {
+            case AL_POSITION:
+                oalContext->GetListenerPosition(&values[0], &values[1], &values[2]);
+                break;
+            case AL_VELOCITY:
+                oalContext->GetListenerVelocity(&values[0], &values[1], &values[2]);
+                break;
+            case AL_GAIN:
+                *values = oalContext->GetListenerGain();
+                break;
+            case AL_ORIENTATION:
+                oalContext->GetListenerOrientation( &values[0], &values[1], &values[2],
+                                                    &values[3], &values[4], &values[5]);
+                break;
+            default:
+                alSetError(AL_INVALID_ENUM);
+                break;
+        }
+	}
+	catch (OSStatus		result) {
+		DebugMessageN1("ERROR: alGetListenerfv FAILED = %s\n", alGetString(result));
+        alSetError(result);
+    }
+	catch (...) {
+		DebugMessage("ERROR: alGetListenerfv FAILED");
+        alSetError(AL_INVALID_OPERATION);   // by default
+	}
+	
+	return;
+}
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API ALvoid AL_APIENTRY alGetListener3f( ALenum pname, ALfloat* v1, ALfloat* v2, ALfloat* v3 )
+{
+#if LOG_API_USAGE
+	DebugMessageN1("alGetListener3f--> attribute = %s", GetALAttributeString(pname));
+#endif
+
+	try {
+        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
         switch(pname) 
         {
             case AL_POSITION:
@@ -2265,11 +3186,11 @@ ALAPI ALvoid ALAPIENTRY alGetListener3f( ALenum pname, ALfloat* v1, ALfloat* v2,
         }
 	}
 	catch (OSStatus		result) {
-		DebugMessageN1("alGetListener3f Failed - err = %ld\n", result);
+		DebugMessageN1("ERROR: alGetListener3f FAILED = %s\n", alGetString(result));
         alSetError(result);
     }
 	catch (...) {
-		DebugMessage("alGetListener3f Failed");
+		DebugMessage("ERROR: alGetListener3f FAILED");
         alSetError(AL_INVALID_OPERATION);   // by default
 	}
 	
@@ -2277,31 +3198,50 @@ ALAPI ALvoid ALAPIENTRY alGetListener3f( ALenum pname, ALfloat* v1, ALfloat* v2,
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alGetListenerfv( ALenum pname, ALfloat* values )
+AL_API ALvoid AL_APIENTRY alGetListeneri( ALenum pname, ALint* value )
 {
 #if LOG_API_USAGE
-	DebugMessage("alGetListenerfv called");
+	DebugMessageN1("alGetListeneri--> attribute = %s", GetALAttributeString(pname));
+#endif
+
+	*value = 0;
+
+	try {
+		switch (pname)
+		{
+			default:
+				alSetError(AL_INVALID_VALUE);
+				break;
+		}
+	}
+	catch (...) {
+ 		DebugMessage("ERROR: alGetListeneri FAILED");
+        alSetError(AL_INVALID_OPERATION); // not available yet as the device is not setup
+	}
+	
+	return;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API void AL_APIENTRY alGetListeneriv( ALenum pname, ALint* values )
+{
+#if LOG_API_USAGE
+	DebugMessageN1("alGetListeneriv--> attribute = %s", GetALAttributeString(pname));
 #endif
 
 	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-            
-        OALContext		*oalContext = gOALContextMap->Get(gCurrentContext);
-        if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
+        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
         switch (pname) 
         {
             case AL_POSITION:
-                oalContext->GetListenerPosition(&values[0], &values[1], &values[2]);
+                oalContext->GetListenerPosition((Float32*) &values[0], (Float32*) &values[1], (Float32*) &values[2]);
                 break;
             case AL_VELOCITY:
-                oalContext->GetListenerVelocity(&values[0], &values[1], &values[2]);
+                oalContext->GetListenerVelocity((Float32*) &values[0], (Float32*) &values[1], (Float32*) &values[2]);
                 break;
             case AL_ORIENTATION:
-                oalContext->GetListenerOrientation( &values[0], &values[1], &values[2],
-                                                    &values[3], &values[4], &values[5]);
+                oalContext->GetListenerOrientation( (Float32*) &values[0], (Float32*) &values[1], (Float32*) &values[2],
+                                                    (Float32*) &values[3], (Float32*) &values[4], (Float32*) &values[5]);
                 break;
             default:
                 alSetError(AL_INVALID_ENUM);
@@ -2309,11 +3249,11 @@ ALAPI ALvoid ALAPIENTRY alGetListenerfv( ALenum pname, ALfloat* values )
         }
 	}
 	catch (OSStatus		result) {
-		DebugMessageN1("alGetListenerfv Failed - err = %ld\n", result);
+		DebugMessageN1("ERROR: alGetListenerfv FAILED = %s\n", alGetString(result));
         alSetError(result);
     }
 	catch (...) {
-		DebugMessage("alGetListenerfv Failed");
+		DebugMessage("ERROR: alGetListenerfv FAILED");
         alSetError(AL_INVALID_OPERATION);   // by default
 	}
 	
@@ -2321,84 +3261,21 @@ ALAPI ALvoid ALAPIENTRY alGetListenerfv( ALenum pname, ALfloat* values )
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alListener3f (ALenum pname, ALfloat v1, ALfloat v2, ALfloat v3)
+AL_API void AL_APIENTRY alGetListener3i( ALenum pname, ALint *v1, ALint *v2, ALint *v3 )
 {
 #if LOG_API_USAGE
-	DebugMessage("alListener3f called");
+	DebugMessageN1("alGetListener3i--> attribute = %s", GetALAttributeString(pname));
 #endif
 
 	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-            
-        OALContext		*oalContext = gOALContextMap->Get(gCurrentContext);
-        if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        switch (pname) 
-        {
-            case AL_POSITION:
-                if (isnan(v1) || isnan(v2) || isnan(v3))
-                    throw ((OSStatus) AL_INVALID_VALUE);
-                oalContext->SetListenerPosition(v1, v2, v3);
-                break;
-            case AL_VELOCITY:
-                oalContext->SetListenerVelocity(v1, v2, v3);
-                break;
-            default:
-                alSetError(AL_INVALID_ENUM);
-                break;
-        }
-	}
-	catch (OSStatus		result) {
-		DebugMessageN1("alListener3f Failed - err = %ld\n", result);
-        alSetError(result);
-    }
-	catch (...) {
-		DebugMessage("alListener3f Failed");
-        alSetError(AL_INVALID_OPERATION);   // by default
-	}
-	
-	return;
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alListenerfv (ALenum pname, ALfloat *values)
-{
-#if LOG_API_USAGE
-	DebugMessage("alListenerfv called");
-#endif
-
-	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-            
-        OALContext		*oalContext = gOALContextMap->Get(gCurrentContext);
-        if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
+        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
         switch(pname) 
         {
             case AL_POSITION:
-				#if LOG_API_USAGE
-					DebugMessage("          AL_POSITION");
-				#endif
-                if (isnan(values[0]) || isnan(values[1]) || isnan(values[2]))
-                    throw ((OSStatus) AL_INVALID_VALUE);                        
-                oalContext->SetListenerPosition(values[0], values[1], values[2]);
+                oalContext->GetListenerPosition((Float32*) v1, (Float32*) v2, (Float32*) v3);
                 break;
             case AL_VELOCITY:
-				#if LOG_API_USAGE
-					DebugMessage("          AL_VELOCITY");
-				#endif
-                oalContext->SetListenerVelocity(values[0], values[1], values[2]);
-                break;
-            case AL_ORIENTATION:
-				#if LOG_API_USAGE
-					DebugMessage("          AL_ORIENTATION");
-				#endif
-                oalContext->SetListenerOrientation(	values[0], values[1], values[2],
-                                                    values[3], values[4], values[5]);
+                oalContext->GetListenerVelocity((Float32*) v1, (Float32*) v2, (Float32*) v3);
                 break;
             default:
                 alSetError(AL_INVALID_ENUM);
@@ -2406,11 +3283,11 @@ ALAPI ALvoid ALAPIENTRY alListenerfv (ALenum pname, ALfloat *values)
         }
 	}
 	catch (OSStatus		result) {
- 		DebugMessageN1("alListenerfv Failed - err = %ld\n", result);
-       alSetError(result);
+		DebugMessageN1("ERROR: alGetListener3f FAILED = %s\n", alGetString(result));
+        alSetError(result);
     }
 	catch (...) {
- 		DebugMessage("alListenerfv Failed");
+		DebugMessage("ERROR: alGetListener3f FAILED");
         alSetError(AL_INVALID_OPERATION);   // by default
 	}
 	
@@ -2418,100 +3295,178 @@ ALAPI ALvoid ALAPIENTRY alListenerfv (ALenum pname, ALfloat *values)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alListenerf (ALenum pname, ALfloat value)
-{
-#if LOG_API_USAGE
-	DebugMessage("alListenerf called");
-#endif
-
-	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-            
-        OALContext		*oalContext = gOALContextMap->Get(gCurrentContext);
-        if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        switch (pname) 
-        {
-            case AL_GAIN:
-                oalContext->SetListenerGain((Float32) value);     //gListener.Gain=value;
-                break;
-            default:
-                alSetError(AL_INVALID_ENUM);
-                break;
-        }
-	}
-	catch (OSStatus		result) {
- 		DebugMessageN1("alListenerf Failed - err = %ld\n", result);
-        alSetError(result);
-    }
-	catch (...) {
- 		DebugMessage("alListenerf Failed");
-        alSetError(AL_INVALID_OPERATION);   // by default
-	}
-	
-	return;
-}
-
+#pragma mark ***** Global Settings *****
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alGetFloatv (ALenum pname, ALfloat *data)
+AL_API ALvoid AL_APIENTRY	alDistanceModel (ALenum value)
 {
 #if LOG_API_USAGE
-	DebugMessage("alGetFloatv called");
+	DebugMessageN1("alDistanceModel--> model = %s", GetALAttributeString(value));
 #endif
 
 	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-            
-        OALContext		*oalContext = gOALContextMap->Get(gCurrentContext);
-        if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        switch(pname)
+        switch (value)
         {
-            case AL_DOPPLER_FACTOR:
-                *data = oalContext->GetDopplerFactor();
-                break;
-            case AL_DOPPLER_VELOCITY:
-                *data = oalContext->GetDopplerVelocity();
-                break;
+            case AL_NONE:			
+            case AL_INVERSE_DISTANCE:
+            case AL_INVERSE_DISTANCE_CLAMPED:
+            case AL_LINEAR_DISTANCE:
+            case AL_LINEAR_DISTANCE_CLAMPED:
+            case AL_EXPONENT_DISTANCE:
+            case AL_EXPONENT_DISTANCE_CLAMPED:
+            {
+				OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+				oalContext->SetDistanceModel(value);
+            } 
+            break;
+            
             default:
-                alSetError(AL_INVALID_ENUM);
+                alSetError(AL_INVALID_VALUE);
                 break;
         }
-	}
+    }
 	catch (OSStatus		result) {
- 		DebugMessageN1("alGetFloatv Failed - err = %ld\n", result);
+		DebugMessageN1("ERROR: alDistanceModel FAILED = %s\n", alGetString(result));
         alSetError(result);
     }
-	catch (...) {
- 		DebugMessage("alGetFloatv Failed");
+    catch (...) {
+		DebugMessage("ERROR: alDistanceModel FAILED");
         alSetError(AL_INVALID_OPERATION);   // by default
-	}
-	
+    }
     return;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-ALAPI ALenum ALAPIENTRY alGetEnumValue (ALubyte *ename)
-{
+AL_API ALvoid AL_APIENTRY alDopplerFactor (ALfloat value)
+{	
 #if LOG_API_USAGE
-	DebugMessageN1("alGetEnumValue called", *ename);
+	DebugMessageN1("alDopplerFactor---> setting = %.f2", value);
 #endif
 
+	try {
+        if (value < 0.0f)
+            throw ((OSStatus) AL_INVALID_VALUE);
+
+        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+		oalContext->SetDopplerFactor(value);
+	}
+	catch (OSStatus		result) {
+		DebugMessageN1("ERROR: alDopplerFactor FAILED = %s\n", alGetString(result));
+        alSetError(result);
+    }
+    catch (...) {
+		DebugMessage("ERROR: alDopplerFactor FAILED");
+        alSetError(AL_INVALID_OPERATION);   // by default
+    }
+	
+	return;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API ALvoid AL_APIENTRY alDopplerVelocity (ALfloat value)
+{
+#if LOG_API_USAGE
+	DebugMessageN1("alDopplerVelocity---> setting = %.f2", value);
+#endif
+
+	try {
+        if (value <= 0.0f)
+            throw ((OSStatus) AL_INVALID_VALUE);
+
+        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+		oalContext->SetDopplerVelocity(value);
+	}
+	catch (OSStatus		result) {
+		DebugMessageN1("ERROR: alDopplerVelocity FAILED = %s\n", alGetString(result));
+        alSetError(result);
+    }
+    catch (...) {
+		DebugMessage("ERROR: alDopplerVelocity FAILED");
+        alSetError(AL_INVALID_OPERATION);   // by default
+    }
+	
+	return;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API void AL_APIENTRY alSpeedOfSound( ALfloat value )
+{
+#if LOG_API_USAGE
+	DebugMessageN1("alSpeedOfSound---> setting = %.f2", value);
+#endif
+
+	try {
+		if (value <= 0.0f)
+			throw ((OSStatus) AL_INVALID_VALUE);
+
+        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+		oalContext->SetSpeedOfSound(value);
+	}
+	catch (OSStatus		result) {
+		DebugMessageN1("ERROR: alSpeedOfSound FAILED = %s\n", alGetString(result));
+        alSetError(result);
+    }
+    catch (...) {
+		DebugMessage("ERROR: alSpeedOfSound FAILED");
+        alSetError(AL_INVALID_OPERATION);   // by default
+    }
+	
+	return;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API const ALchar* AL_APIENTRY alGetString( ALenum pname )
+{
+#if LOG_API_USAGE
+	DebugMessageN1("alGetString = %s", GetALAttributeString(pname));
+#endif
+
+	switch (pname)
+	{
+		case AL_VENDOR:
+			return (ALchar *)alVendor;
+		case AL_VERSION:
+			return (ALchar *)alVersion;
+		case AL_RENDERER:
+			return (ALchar *)alRenderer;
+		case AL_EXTENSIONS:
+			return (ALchar *)alExtensions;
+		case AL_NO_ERROR:
+			return (ALchar *)alNoError;
+		case AL_INVALID_NAME:
+			return (ALchar *)alErrInvalidName;
+		case AL_INVALID_ENUM:
+			return (ALchar *)alErrInvalidEnum;
+		case AL_INVALID_VALUE:
+			return (ALchar *)alErrInvalidValue;
+		case AL_INVALID_OPERATION:
+			return (ALchar *)alErrInvalidOp;
+		case AL_OUT_OF_MEMORY:
+			return (ALchar *)alErrOutOfMemory;
+		case -1:
+			return (ALchar *)unknownImplementationError;
+		default:
+			alSetError(AL_INVALID_ENUM);
+			break;
+	}
+	return NULL;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API ALenum	AL_APIENTRY alGetEnumValue( const ALchar* ename )
+{
+#if LOG_API_USAGE
+	DebugMessageN1("alGetEnumValue: %s", ename);
+#endif
+
+	// AL
 	if (strcmp("AL_INVALID", (const char *)ename) == 0) { return AL_INVALID; }
-	if (strcmp("ALC_INVALID", (const char *)ename) == 0) { return ALC_INVALID; }
 	if (strcmp("AL_NONE", (const char *)ename) == 0) { return AL_NONE; }
 	if (strcmp("AL_FALSE", (const char *)ename) == 0) { return AL_FALSE; }
-	if (strcmp("ALC_FALSE", (const char *)ename) == 0) { return ALC_FALSE; }
 	if (strcmp("AL_TRUE", (const char *)ename) == 0) { return AL_TRUE; }
-	if (strcmp("ALC_TRUE", (const char *)ename) == 0) { return ALC_TRUE; }
 	if (strcmp("AL_SOURCE_RELATIVE", (const char *)ename) == 0) { return AL_SOURCE_RELATIVE; }
 	if (strcmp("AL_CONE_INNER_ANGLE", (const char *)ename) == 0) { return AL_CONE_INNER_ANGLE; }
 	if (strcmp("AL_CONE_OUTER_ANGLE", (const char *)ename) == 0) { return AL_CONE_OUTER_ANGLE; }
+	if (strcmp("AL_CONE_OUTER_GAIN", (const char *)ename) == 0) { return AL_CONE_OUTER_GAIN; }
 	if (strcmp("AL_PITCH", (const char *)ename) == 0) { return AL_PITCH; }
 	if (strcmp("AL_POSITION", (const char *)ename) == 0) { return AL_POSITION; }
 	if (strcmp("AL_DIRECTION", (const char *)ename) == 0) { return AL_DIRECTION; }
@@ -2524,7 +3479,6 @@ ALAPI ALenum ALAPIENTRY alGetEnumValue (ALubyte *ename)
 	if (strcmp("AL_ORIENTATION", (const char *)ename) == 0) { return AL_ORIENTATION; }
 	if (strcmp("AL_REFERENCE_DISTANCE", (const char *)ename) == 0) { return AL_REFERENCE_DISTANCE; }
 	if (strcmp("AL_ROLLOFF_FACTOR", (const char *)ename) == 0) { return AL_ROLLOFF_FACTOR; }
-	if (strcmp("AL_CONE_OUTER_GAIN", (const char *)ename) == 0) { return AL_CONE_OUTER_GAIN; }
 	if (strcmp("AL_MAX_DISTANCE", (const char *)ename) == 0) { return AL_MAX_DISTANCE; }
 	if (strcmp("AL_SOURCE_STATE", (const char *)ename) == 0) { return AL_SOURCE_STATE; }
 	if (strcmp("AL_INITIAL", (const char *)ename) == 0) { return AL_INITIAL; }
@@ -2542,6 +3496,31 @@ ALAPI ALenum ALAPIENTRY alGetEnumValue (ALubyte *ename)
 	if (strcmp("AL_UNUSED", (const char *)ename) == 0) { return AL_UNUSED; }
 	if (strcmp("AL_PENDING", (const char *)ename) == 0) { return AL_PENDING; }
 	if (strcmp("AL_PROCESSED", (const char *)ename) == 0) { return AL_PROCESSED; }
+	if (strcmp("AL_NO_ERROR", (const char *)ename) == 0) { return AL_NO_ERROR; }
+	if (strcmp("AL_INVALID_NAME", (const char *)ename) == 0) { return AL_INVALID_NAME; }
+	if (strcmp("AL_INVALID_ENUM", (const char *)ename) == 0) { return AL_INVALID_ENUM; }
+	if (strcmp("AL_INVALID_VALUE", (const char *)ename) == 0) { return AL_INVALID_VALUE; }
+	if (strcmp("AL_INVALID_OPERATION", (const char *)ename) == 0) { return AL_INVALID_OPERATION; }
+	if (strcmp("AL_OUT_OF_MEMORY", (const char *)ename) == 0) { return AL_OUT_OF_MEMORY; }
+	if (strcmp("AL_VENDOR", (const char *)ename) == 0) { return AL_VENDOR; }
+	if (strcmp("AL_VERSION", (const char *)ename) == 0) { return AL_VERSION; }
+	if (strcmp("AL_RENDERER", (const char *)ename) == 0) { return AL_RENDERER; }
+	if (strcmp("AL_EXTENSIONS", (const char *)ename) == 0) { return AL_EXTENSIONS; }
+	if (strcmp("AL_DOPPLER_FACTOR", (const char *)ename) == 0) { return AL_DOPPLER_FACTOR; }
+	if (strcmp("AL_DOPPLER_VELOCITY", (const char *)ename) == 0) { return AL_DOPPLER_VELOCITY; }
+	if (strcmp("AL_DISTANCE_MODEL", (const char *)ename) == 0) { return AL_DISTANCE_MODEL; }
+	if (strcmp("AL_INVERSE_DISTANCE", (const char *)ename) == 0) { return AL_INVERSE_DISTANCE; }
+	if (strcmp("AL_INVERSE_DISTANCE_CLAMPED", (const char *)ename) == 0) { return AL_INVERSE_DISTANCE_CLAMPED; }
+	if (strcmp("AL_LINEAR_DISTANCE", (const char *)ename) == 0) { return AL_LINEAR_DISTANCE; }
+	if (strcmp("AL_LINEAR_DISTANCE_CLAMPED", (const char *)ename) == 0) { return AL_LINEAR_DISTANCE_CLAMPED; }
+	if (strcmp("AL_EXPONENT_DISTANCE", (const char *)ename) == 0) { return AL_EXPONENT_DISTANCE; }
+	if (strcmp("AL_EXPONENT_DISTANCE_CLAMPED", (const char *)ename) == 0) { return AL_EXPONENT_DISTANCE_CLAMPED; }
+	if (strcmp("AL_SPEED_OF_SOUND", (const char *)ename) == 0) { return AL_SPEED_OF_SOUND; }
+	if (strcmp("AL_SOURCE_TYPE", (const char *)ename) == 0) { return AL_SOURCE_TYPE; }
+	// ALC
+	if (strcmp("ALC_INVALID", (const char *)ename) == 0) { return ALC_INVALID; }
+	if (strcmp("ALC_FALSE", (const char *)ename) == 0) { return ALC_FALSE; }
+	if (strcmp("ALC_TRUE", (const char *)ename) == 0) { return ALC_TRUE; }
 	if (strcmp("ALC_MAJOR_VERSION", (const char *)ename) == 0) { return ALC_MAJOR_VERSION; }
 	if (strcmp("ALC_MINOR_VERSION", (const char *)ename) == 0) { return ALC_MINOR_VERSION; }
 	if (strcmp("ALC_ATTRIBUTES_SIZE", (const char *)ename) == 0) { return ALC_ATTRIBUTES_SIZE; }
@@ -2552,86 +3531,111 @@ ALAPI ALenum ALAPIENTRY alGetEnumValue (ALubyte *ename)
 	if (strcmp("ALC_FREQUENCY", (const char *)ename) == 0) { return ALC_FREQUENCY; }
 	if (strcmp("ALC_REFRESH", (const char *)ename) == 0) { return ALC_REFRESH; }
 	if (strcmp("ALC_SYNC", (const char *)ename) == 0) { return ALC_SYNC; }
-	if (strcmp("AL_NO_ERROR", (const char *)ename) == 0) { return AL_NO_ERROR; }
-	if (strcmp("AL_INVALID_NAME", (const char *)ename) == 0) { return AL_INVALID_NAME; }
-	if (strcmp("AL_INVALID_ENUM", (const char *)ename) == 0) { return AL_INVALID_ENUM; }
-	if (strcmp("AL_INVALID_VALUE", (const char *)ename) == 0) { return AL_INVALID_VALUE; }
-	if (strcmp("AL_INVALID_OPERATION", (const char *)ename) == 0) { return AL_INVALID_OPERATION; }
-	if (strcmp("AL_OUT_OF_MEMORY", (const char *)ename) == 0) { return AL_OUT_OF_MEMORY; }
 	if (strcmp("ALC_NO_ERROR", (const char *)ename) == 0) { return ALC_NO_ERROR; }
 	if (strcmp("ALC_INVALID_DEVICE", (const char *)ename) == 0) { return ALC_INVALID_DEVICE; }
 	if (strcmp("ALC_INVALID_CONTEXT", (const char *)ename) == 0) { return ALC_INVALID_CONTEXT; }
 	if (strcmp("ALC_INVALID_ENUM", (const char *)ename) == 0) { return ALC_INVALID_ENUM; }
 	if (strcmp("ALC_INVALID_VALUE", (const char *)ename) == 0) { return ALC_INVALID_VALUE; }
 	if (strcmp("ALC_OUT_OF_MEMORY", (const char *)ename) == 0) { return ALC_OUT_OF_MEMORY; }
-	if (strcmp("AL_VENDOR", (const char *)ename) == 0) { return AL_VENDOR; }
-	if (strcmp("AL_VERSION", (const char *)ename) == 0) { return AL_VERSION; }
-	if (strcmp("AL_RENDERER", (const char *)ename) == 0) { return AL_RENDERER; }
-	if (strcmp("AL_EXTENSIONS", (const char *)ename) == 0) { return AL_EXTENSIONS; }
-	if (strcmp("AL_DOPPLER_FACTOR", (const char *)ename) == 0) { return AL_DOPPLER_FACTOR; }
-	if (strcmp("AL_DOPPLER_VELOCITY", (const char *)ename) == 0) { return AL_DOPPLER_VELOCITY; }
-	if (strcmp("AL_DISTANCE_MODEL", (const char *)ename) == 0) { return AL_DISTANCE_MODEL; }
-	if (strcmp("AL_INVERSE_DISTANCE", (const char *)ename) == 0) { return AL_INVERSE_DISTANCE; }
-	if (strcmp("AL_INVERSE_DISTANCE_CLAMPED", (const char *)ename) == 0) { return AL_INVERSE_DISTANCE_CLAMPED; }
+	if (strcmp("ALC_MONO_SOURCES", (const char *)ename) == 0) { return ALC_MONO_SOURCES; }
+	if (strcmp("ALC_STEREO_SOURCES", (const char *)ename) == 0) { return ALC_STEREO_SOURCES; }
+	// AL_EXT_OFFSET
+	if (strcmp("AL_SEC_OFFSET", (const char *)ename) == 0) { return AL_SEC_OFFSET; }
+	if (strcmp("AL_SAMPLE_OFFSET", (const char *)ename) == 0) { return AL_SAMPLE_OFFSET; }
+	if (strcmp("AL_BYTE_OFFSET", (const char *)ename) == 0) { return AL_BYTE_OFFSET; }
+	// ALC_EXT_CAPTURE
+	if (strcmp("ALC_CAPTURE_DEVICE_SPECIFIER", (const char *)ename) == 0) { return ALC_CAPTURE_DEVICE_SPECIFIER; }
+	if (strcmp("ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER", (const char *)ename) == 0) { return ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER; }
+	if (strcmp("ALC_CAPTURE_SAMPLES", (const char *)ename) == 0) { return ALC_CAPTURE_SAMPLES; }
+	// ALC_EXT_float32
+	if (strcmp("AL_FORMAT_MONO_FLOAT32", (const char *)ename) == 0) { return AL_FORMAT_MONO_FLOAT32; }
+	if (strcmp("AL_FORMAT_STEREO_FLOAT32", (const char *)ename) == 0) { return AL_FORMAT_STEREO_FLOAT32; }
+	// ALC_EXT_MAC_OSX
+	// 1.0 implementation names (remains for backward compatibility)
+	if (strcmp("ALC_SPATIAL_RENDERING_QUALITY", (const char *)ename) == 0) { return ALC_SPATIAL_RENDERING_QUALITY; }
+	if (strcmp("ALC_MIXER_OUTPUT_RATE", (const char *)ename) == 0) { return ALC_MIXER_OUTPUT_RATE; }
+	if (strcmp("ALC_MIXER_MAXIMUM_BUSSES", (const char *)ename) == 0) { return ALC_MIXER_MAXIMUM_BUSSES; }
+	if (strcmp("ALC_RENDER_CHANNEL_COUNT", (const char *)ename) == 0) { return ALC_RENDER_CHANNEL_COUNT; }
 	
+	if (strcmp("ALC_CONVERT_DATA_UPON_LOADING", (const char *)ename) == 0) { return ALC_MAC_OSX_CONVERT_DATA_UPON_LOADING; }	
+	if (strcmp("ALC_SPATIAL_RENDERING_QUALITY_HIGH", (const char *)ename) == 0) { return ALC_MAC_OSX_SPATIAL_RENDERING_QUALITY_HIGH; }
+	if (strcmp("ALC_SPATIAL_RENDERING_QUALITY_LOW", (const char *)ename) == 0) { return ALC_MAC_OSX_SPATIAL_RENDERING_QUALITY_LOW; }
+	if (strcmp("ALC_RENDER_CHANNEL_COUNT_STEREO", (const char *)ename) == 0) { return ALC_MAC_OSX_RENDER_CHANNEL_COUNT_STEREO; }
+	if (strcmp("ALC_RENDER_CHANNEL_COUNT_MULTICHANNEL", (const char *)ename) == 0) { return ALC_MAC_OSX_RENDER_CHANNEL_COUNT_MULTICHANNEL; }
+	// 1.1 implementation names
+	if (strcmp("ALC_MAC_OSX_CONVERT_DATA_UPON_LOADING", (const char *)ename) == 0) { return ALC_MAC_OSX_CONVERT_DATA_UPON_LOADING; }
+	if (strcmp("ALC_MAC_OSX_SPATIAL_RENDERING_QUALITY_HIGH", (const char *)ename) == 0) { return ALC_MAC_OSX_SPATIAL_RENDERING_QUALITY_HIGH; }
+	if (strcmp("ALC_MAC_OSX_SPATIAL_RENDERING_QUALITY_LOW", (const char *)ename) == 0) { return ALC_MAC_OSX_SPATIAL_RENDERING_QUALITY_LOW; }
+	if (strcmp("ALC_MAC_OSX_RENDER_CHANNEL_COUNT_STEREO", (const char *)ename) == 0) { return ALC_MAC_OSX_RENDER_CHANNEL_COUNT_STEREO; }
+	if (strcmp("ALC_MAC_OSX_RENDER_CHANNEL_COUNT_MULTICHANNEL", (const char *)ename) == 0) { return ALC_MAC_OSX_RENDER_CHANNEL_COUNT_MULTICHANNEL; }
+	
+	if (strcmp("ALC_ASA_REVERB_ON", (const char *)ename) == 0) { return ALC_ASA_REVERB_ON; }
+	if (strcmp("ALC_ASA_REVERB_EQ_GAIN", (const char *)ename) == 0) { return ALC_ASA_REVERB_EQ_GAIN; }
+	if (strcmp("ALC_ASA_REVERB_EQ_BANDWITH", (const char *)ename) == 0) { return ALC_ASA_REVERB_EQ_BANDWITH; }
+	if (strcmp("ALC_ASA_REVERB_EQ_FREQ", (const char *)ename) == 0) { return ALC_ASA_REVERB_EQ_FREQ; }
+	if (strcmp("ALC_ASA_REVERB_PRESET", (const char *)ename) == 0) { return ALC_ASA_REVERB_PRESET; }
+	if (strcmp("ALC_ASA_REVERB_ROOM_TYPE", (const char *)ename) == 0) { return ALC_ASA_REVERB_ROOM_TYPE; }
+	if (strcmp("ALC_ASA_REVERB_SEND_LEVEL", (const char *)ename) == 0) { return ALC_ASA_REVERB_SEND_LEVEL; }
+	if (strcmp("ALC_ASA_REVERB_GLOBAL_LEVEL", (const char *)ename) == 0) { return ALC_ASA_REVERB_GLOBAL_LEVEL; }
+	if (strcmp("ALC_ASA_REVERB_QUALITY", (const char *)ename) == 0) { return ALC_ASA_REVERB_QUALITY; }
+	if (strcmp("ALC_ASA_OCCLUSION", (const char *)ename) == 0) { return ALC_ASA_OCCLUSION; }
+	if (strcmp("ALC_ASA_OBSTRUCTION", (const char *)ename) == 0) { return ALC_ASA_OBSTRUCTION; }
+
+	if (strcmp("ALC_ASA_REVERB_ROOM_TYPE_SmallRoom", (const char *)ename) == 0) { return ALC_ASA_REVERB_ROOM_TYPE_SmallRoom; }
+	if (strcmp("ALC_ASA_REVERB_ROOM_TYPE_MediumRoom", (const char *)ename) == 0) { return ALC_ASA_REVERB_ROOM_TYPE_MediumRoom; }
+	if (strcmp("ALC_ASA_REVERB_ROOM_TYPE_LargeRoom", (const char *)ename) == 0) { return ALC_ASA_REVERB_ROOM_TYPE_LargeRoom; }
+	if (strcmp("ALC_ASA_REVERB_ROOM_TYPE_MediumHall", (const char *)ename) == 0) { return ALC_ASA_REVERB_ROOM_TYPE_MediumHall; }
+	if (strcmp("ALC_ASA_REVERB_ROOM_TYPE_LargeHall", (const char *)ename) == 0) { return ALC_ASA_REVERB_ROOM_TYPE_LargeHall; }
+	if (strcmp("ALC_ASA_REVERB_ROOM_TYPE_Plate", (const char *)ename) == 0) { return ALC_ASA_REVERB_ROOM_TYPE_Plate; }
+	if (strcmp("ALC_ASA_REVERB_ROOM_TYPE_MediumChamber", (const char *)ename) == 0) { return ALC_ASA_REVERB_ROOM_TYPE_MediumChamber; }
+	if (strcmp("ALC_ASA_REVERB_ROOM_TYPE_LargeChamber", (const char *)ename) == 0) { return ALC_ASA_REVERB_ROOM_TYPE_LargeChamber; }
+	if (strcmp("ALC_ASA_REVERB_ROOM_TYPE_Cathedral", (const char *)ename) == 0) { return ALC_ASA_REVERB_ROOM_TYPE_Cathedral; }
+	if (strcmp("ALC_ASA_REVERB_ROOM_TYPE_LargeRoom2", (const char *)ename) == 0) { return ALC_ASA_REVERB_ROOM_TYPE_LargeRoom2; }
+	if (strcmp("ALC_ASA_REVERB_ROOM_TYPE_MediumHall2", (const char *)ename) == 0) { return ALC_ASA_REVERB_ROOM_TYPE_MediumHall2; }
+	if (strcmp("ALC_ASA_REVERB_ROOM_TYPE_MediumHall3", (const char *)ename) == 0) { return ALC_ASA_REVERB_ROOM_TYPE_MediumHall3; }
+	if (strcmp("ALC_ASA_REVERB_ROOM_TYPE_LargeHall2", (const char *)ename) == 0) { return ALC_ASA_REVERB_ROOM_TYPE_LargeHall2; }
+
+	if (strcmp("ALC_ASA_REVERB_QUALITY_Max", (const char *)ename) == 0) { return ALC_ASA_REVERB_QUALITY_Max; }
+	if (strcmp("ALC_ASA_REVERB_QUALITY_High", (const char *)ename) == 0) { return ALC_ASA_REVERB_QUALITY_High; }
+	if (strcmp("ALC_ASA_REVERB_QUALITY_Medium", (const char *)ename) == 0) { return ALC_ASA_REVERB_QUALITY_Medium; }
+	if (strcmp("ALC_ASA_REVERB_QUALITY_Low", (const char *)ename) == 0) { return ALC_ASA_REVERB_QUALITY_Low; }
+	if (strcmp("ALC_ASA_REVERB_QUALITY_Min", (const char *)ename) == 0) { return ALC_ASA_REVERB_QUALITY_Min; }
+		
 	return -1;
 }
-
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALubyte * ALAPIENTRY alGetString (ALenum pname)
+AL_API ALboolean AL_APIENTRY alGetBoolean (ALenum pname)
 {
 #if LOG_API_USAGE
-	DebugMessage("alGetString called");
+	DebugMessage("***** alGetBoolean");
 #endif
-
-	switch (pname)
-	{
-		case AL_VENDOR:
-			return (ALubyte *)alVendor;
-		case AL_VERSION:
-			return (ALubyte *)alVersion;
-		case AL_RENDERER:
-			return (ALubyte *)alRenderer;
-		case AL_EXTENSIONS:
-			return (ALubyte *)alExtensions;
-		case AL_NO_ERROR:
-			return (ALubyte *)alNoError;
-		case AL_INVALID_NAME:
-			return (ALubyte *)alErrInvalidName;
-		case AL_INVALID_ENUM:
-			return (ALubyte *)alErrInvalidEnum;
-		case AL_INVALID_VALUE:
-			return (ALubyte *)alErrInvalidValue;
-		case AL_INVALID_OPERATION:
-			return (ALubyte *)alErrInvalidOp;
-		case AL_OUT_OF_MEMORY:
-			return (ALubyte *)alErrOutOfMemory;
-		default:
-			alSetError(AL_INVALID_ENUM);
-			break;
-	}
-	return NULL;
+	return AL_FALSE;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALfloat ALAPIENTRY alGetFloat (ALenum pname)
+AL_API ALvoid AL_APIENTRY alGetBooleanv (ALenum pname, ALboolean *data)
+{
+#if LOG_API_USAGE
+	DebugMessage("***** alGetBooleanv");
+#endif
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API ALfloat AL_APIENTRY alGetFloat (ALenum pname)
 {
 	Float32			returnValue = 0.0f;
 
 #if LOG_API_USAGE
-	DebugMessage("alGetFloat called");
+	DebugMessageN1("alGetFloat ---> attribute = %s", GetALAttributeString(pname));
 #endif
 
 	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-            
-        OALContext		*oalContext = gOALContextMap->Get(gCurrentContext);
-        if (oalContext == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
+        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
         switch (pname)
         {
+            case AL_SPEED_OF_SOUND:
+                returnValue = oalContext->GetSpeedOfSound();
+                break;
             case AL_DOPPLER_FACTOR:
                 returnValue = oalContext->GetDopplerFactor();
                 break;
@@ -2643,11 +3647,11 @@ ALAPI ALfloat ALAPIENTRY alGetFloat (ALenum pname)
         }
 	}
 	catch (OSStatus		result) {
- 		DebugMessageN1("alGetFloat Failed - err = %ld\n", result);
+ 		DebugMessageN1("ERROR: alGetFloat FAILED = %s\n", alGetString(result));
         alSetError(result);
     }
 	catch (...) {
- 		DebugMessage("alGetFloat Failed");
+ 		DebugMessage("ERROR: alGetFloat FAILED");
         alSetError(AL_INVALID_OPERATION);   // by default
 	}
 	
@@ -2655,38 +3659,379 @@ ALAPI ALfloat ALAPIENTRY alGetFloat (ALenum pname)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALboolean ALAPIENTRY alIsExtensionPresent(ALubyte *extName)
+AL_API ALvoid AL_APIENTRY alGetFloatv (ALenum pname, ALfloat *data)
 {
 #if LOG_API_USAGE
-	DebugMessage("alIsExtensionPresent called");
+	DebugMessageN1("alGetFloatv ---> attribute = %s", GetALAttributeString(pname));
 #endif
 
-    return AL_FALSE;
+	try {
+        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+        switch(pname)
+        {
+            case AL_SPEED_OF_SOUND:
+                *data = oalContext->GetSpeedOfSound();
+                break;
+            case AL_DOPPLER_FACTOR:
+                *data = oalContext->GetDopplerFactor();
+                break;
+            case AL_DOPPLER_VELOCITY:
+                *data = oalContext->GetDopplerVelocity();
+                break;
+            default:
+                alSetError(AL_INVALID_ENUM);
+                break;
+        }
+	}
+	catch (OSStatus		result) {
+ 		DebugMessageN1("ERROR: alGetFloatv FAILED = %s\n", alGetString(result));
+        alSetError(result);
+    }
+	catch (...) {
+ 		DebugMessage("ERROR: alGetFloatv FAILED");
+        alSetError(AL_INVALID_OPERATION);   // by default
+	}
+	
+    return;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-ALAPI ALvoid ALAPIENTRY alDeleteEnvironmentIASIG (ALsizei n, ALuint *environments)
+AL_API ALdouble AL_APIENTRY alGetDouble (ALenum pname)
 {
 #if LOG_API_USAGE
-	DebugMessage("***** alDeleteEnvironmentIASIG called");
+	DebugMessageN1("alGetDouble ---> attribute = %s", GetALCAttributeString(pname));
 #endif
+
+    double      returnValue = 0.0;
+
+	try {
+		switch (pname)
+		{			
+			case ALC_MIXER_OUTPUT_RATE:
+				returnValue = GetMixerOutputRate();
+				break;
+			
+			default:
+				alSetError(AL_INVALID_VALUE);
+				break;
+		}
+	}
+	catch (OSStatus		result) {
+ 		DebugMessageN1("ERROR: alGetDouble FAILED = %s\n", alGetString(result));
+        alSetError(result);
+    }
+	catch (...) {
+ 		DebugMessage("ERROR: alGetDouble FAILED");
+        alSetError(AL_INVALID_OPERATION);   // by default
+	}
+	
+	return (returnValue);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alDisable (ALenum capability)
+AL_API ALvoid AL_APIENTRY alGetDoublev (ALenum pname, ALdouble *data)
 {
 #if LOG_API_USAGE
-	DebugMessage("***** alDisable called");
+	DebugMessageN1("alGetDoublev ---> attribute = %s", GetALCAttributeString(pname));
+#endif
+
+	try {
+		switch (pname)
+		{			
+			case ALC_MIXER_OUTPUT_RATE:
+				*data = GetMixerOutputRate();
+				break;
+			
+			default:
+				alSetError(AL_INVALID_VALUE);
+				break;
+		}
+	}
+	catch (OSStatus		result) {
+ 		DebugMessageN1("ERROR: alGetDoublev FAILED = %s\n", alGetString(result));
+        alSetError(result);
+    }
+	catch (...) {
+ 		DebugMessage("ERROR: alGetDoublev FAILED");
+        alSetError(AL_INVALID_OPERATION);   // by default
+	}
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API ALint AL_APIENTRY alGetInteger (ALenum pname)
+{
+#if LOG_API_USAGE
+	DebugMessageN1("alGetInteger ---> attribute = 0x%X", pname);
+#endif
+
+	UInt32			returnValue	= 0;
+	OALContext		*oalContext = NULL;
+	
+	try {
+		switch (pname)
+		{
+            case AL_DISTANCE_MODEL:
+				oalContext = GetContextObjectByToken(gCurrentContext);
+				returnValue = oalContext->GetDistanceModel();
+                break;
+
+			case ALC_SPATIAL_RENDERING_QUALITY:
+				oalContext = GetContextObjectByToken(gCurrentContext);
+				returnValue = oalContext->GetRenderQuality();
+				break;
+
+			case ALC_RENDER_CHANNEL_COUNT:
+			{
+				OALDevice* oalDevice = GetDeviceObjectByToken (gCurrentDevice);
+				returnValue = oalDevice->GetRenderChannelSetting();
+			}
+				break;
+                
+            case ALC_MIXER_MAXIMUM_BUSSES:
+				oalContext = GetContextObjectByToken(gCurrentContext);
+				if (oalContext)
+					returnValue = oalContext->GetBusCount();
+				else
+					returnValue = gMaximumMixerBusCount;
+                break;
+			
+			default:
+				alSetError(AL_INVALID_VALUE);
+				break;
+		}
+	}
+	catch (OSStatus		result) {
+ 		DebugMessageN1("ERROR: alGetInteger FAILED = %s\n", alGetString(result));
+    }
+	catch (...) {
+ 		DebugMessage("ERROR: alGetInteger FAILED");
+	}
+	
+	return (returnValue);
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API ALvoid AL_APIENTRY alGetIntegerv (ALenum pname, ALint *data)
+{
+#if LOG_API_USAGE
+	DebugMessageN1("alGetIntegerv ---> attribute = 0x%X", pname);
+#endif
+
+	try {
+		OALContext		*oalContext = NULL;
+        switch (pname)
+        {
+            case AL_DISTANCE_MODEL:
+				oalContext = GetContextObjectByToken(gCurrentContext);
+				*data = oalContext->GetDistanceModel();
+                break;
+                
+			case ALC_SPATIAL_RENDERING_QUALITY:
+				oalContext = GetContextObjectByToken(gCurrentContext);
+				*data = oalContext->GetRenderQuality();
+				break;
+
+			case ALC_RENDER_CHANNEL_COUNT:
+			{
+				OALDevice* oalDevice = GetDeviceObjectByToken (gCurrentDevice);
+				*data = oalDevice->GetRenderChannelSetting();
+			}
+				break;
+                
+            case ALC_MIXER_MAXIMUM_BUSSES:
+				oalContext = GetContextObjectByToken(gCurrentContext);
+				if (oalContext)
+					*data = oalContext->GetBusCount();
+				else
+					*data = gMaximumMixerBusCount;
+                break;
+
+            default:
+                alSetError(AL_INVALID_ENUM);
+                break;
+        }
+	}
+	catch (OSStatus     result) {
+		DebugMessageN1("ERROR: alGetIntegerv FAILED = %s\n", alGetString(result));
+        alSetError(result);
+    }
+    catch (...) {
+		DebugMessage("ERROR: alGetIntegerv FAILED");
+        alSetError(AL_INVALID_OPERATION);
+	}
+	
+	return;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API void*	AL_APIENTRY alGetProcAddress( const ALchar* fname )
+{
+#if LOG_API_USAGE
+	DebugMessageN1("alGetProcAddress function name = %s", fname);
+#endif
+
+	if (fname == NULL)
+		SetDeviceError(gCurrentDevice, ALC_INVALID_VALUE);
+	else
+	{
+		// core APIs
+		if (strcmp("alcOpenDevice", (const char *)fname) == 0) { return (void*) alcOpenDevice; }
+		if (strcmp("alcCloseDevice", (const char *)fname) == 0) { return (void*) alcCloseDevice; }
+		if (strcmp("alcGetError", (const char *)fname) == 0) { return (void*) alcGetError; }
+		if (strcmp("alcCreateContext", (const char *)fname) == 0) { return (void*) alcCreateContext; }
+		if (strcmp("alcMakeContextCurrent", (const char *)fname) == 0) { return (void*) alcMakeContextCurrent; }
+		if (strcmp("alcProcessContext", (const char *)fname) == 0) { return (void*) alcProcessContext; }
+		if (strcmp("alcGetCurrentContext", (const char *)fname) == 0) { return (void*) alcGetCurrentContext; }
+		if (strcmp("alcGetContextsDevice", (const char *)fname) == 0) { return (void*) alcGetContextsDevice; }
+		if (strcmp("alcSuspendContext", (const char *)fname) == 0) { return (void*) alcSuspendContext; }
+		if (strcmp("alcDestroyContext", (const char *)fname) == 0) { return (void*)alcDestroyContext; }
+		if (strcmp("alcGetString", (const char *)fname) == 0) { return (void*) alcGetString; }
+		if (strcmp("alcIsExtensionPresent", (const char *)fname) == 0) { return (void*) alcIsExtensionPresent; }
+		if (strcmp("alcGetProcAddress", (const char *)fname) == 0) { return (void*) alcGetProcAddress; }
+		if (strcmp("alcGetEnumValue", (const char *)fname) == 0) { return (void*) alcGetEnumValue; }
+		if (strcmp("alcGetInteger", (const char *)fname) == 0) { return (void*) alcGetInteger; }
+		if (strcmp("alcGetIntegerv", (const char *)fname) == 0) { return (void*) alcGetIntegerv; }
+		if (strcmp("alGetError", (const char *)fname) == 0) { return (void*) alGetError; }
+		if (strcmp("alGenBuffers", (const char *)fname) == 0) { return (void*) alGenBuffers; }
+		if (strcmp("alDeleteBuffers", (const char *)fname) == 0) { return (void*) alDeleteBuffers; }
+		if (strcmp("alIsBuffer", (const char *)fname) == 0) { return (void*) alIsBuffer; }
+		if (strcmp("alBufferData", (const char *)fname) == 0) { return (void*) alBufferData; }
+		if (strcmp("alBufferf", (const char *)fname) == 0) { return (void*) alBufferf; }
+		if (strcmp("alBuffer3f", (const char *)fname) == 0) { return (void*) alBuffer3f; }
+		if (strcmp("alBufferfv", (const char *)fname) == 0) { return (void*) alBufferfv; }
+		if (strcmp("alBufferi", (const char *)fname) == 0) { return (void*) alBufferi; }
+		if (strcmp("alBuffer3i", (const char *)fname) == 0) { return (void*) alBuffer3i; }
+		if (strcmp("alBufferiv", (const char *)fname) == 0) { return (void*) alBufferiv; }
+		if (strcmp("alGetBufferf", (const char *)fname) == 0) { return (void*) alGetBufferf; }
+		if (strcmp("alGetBuffer3f", (const char *)fname) == 0) { return (void*) alGetBuffer3f; }
+		if (strcmp("alGetBufferfv", (const char *)fname) == 0) { return (void*) alGetBufferfv; }
+		if (strcmp("alGetBufferi", (const char *)fname) == 0) { return (void*) alGetBufferi; }
+		if (strcmp("alGetBuffer3i", (const char *)fname) == 0) { return (void*) alGetBuffer3i; }
+		if (strcmp("alGetBufferiv", (const char *)fname) == 0) { return (void*) alGetBufferiv; }
+		if (strcmp("alGenSources", (const char *)fname) == 0) { return (void*) alGenSources; }
+		if (strcmp("alDeleteSources", (const char *)fname) == 0) { return (void*) alDeleteSources; }
+		if (strcmp("alIsSource", (const char *)fname) == 0) { return (void*) alIsSource; }
+		if (strcmp("alSourcef", (const char *)fname) == 0) { return (void*) alSourcef; }
+		if (strcmp("alSourcefv", (const char *)fname) == 0) { return (void*) alSourcefv; }
+		if (strcmp("alSource3f", (const char *)fname) == 0) { return (void*) alSource3f; }
+		if (strcmp("alSourcei", (const char *)fname) == 0) { return (void*) alSourcei; }
+		if (strcmp("alSourceiv", (const char *)fname) == 0) { return (void*) alSourceiv; }
+		if (strcmp("alSource3i", (const char *)fname) == 0) { return (void*) alSource3i; }
+		if (strcmp("alGetSourcef", (const char *)fname) == 0) { return (void*) alGetSourcef; }
+		if (strcmp("alGetSourcefv", (const char *)fname) == 0) { return (void*) alGetSourcefv; }
+		if (strcmp("alGetSource3f", (const char *)fname) == 0) { return (void*) alGetSource3f; }
+		if (strcmp("alGetSourcei", (const char *)fname) == 0) { return (void*) alGetSourcei; }
+		if (strcmp("alGetSourceiv", (const char *)fname) == 0) { return (void*) alGetSourceiv; }
+		if (strcmp("alGetSource3i", (const char *)fname) == 0) { return (void*) alGetSource3i; }
+		if (strcmp("alSourcePlay", (const char *)fname) == 0) { return (void*) alSourcePlay; }
+		if (strcmp("alSourcePause", (const char *)fname) == 0) { return (void*) alSourcePause; }
+		if (strcmp("alSourceStop", (const char *)fname) == 0) { return (void*) alSourceStop; }
+		if (strcmp("alSourceRewind", (const char *)fname) == 0) { return (void*) alSourceRewind; }
+		if (strcmp("alSourcePlayv", (const char *)fname) == 0) { return (void*) alSourcePlayv; }
+		if (strcmp("alSourcePausev", (const char *)fname) == 0) { return (void*) alSourcePausev; }
+		if (strcmp("alSourceStopv", (const char *)fname) == 0) { return (void*) alSourceStopv; }
+		if (strcmp("alSourceRewindv", (const char *)fname) == 0) { return (void*) alSourceRewindv; }
+		if (strcmp("alSourceQueueBuffers", (const char *)fname) == 0) { return (void*) alSourceQueueBuffers; }
+		if (strcmp("alSourceUnqueueBuffers", (const char *)fname) == 0) { return (void*) alSourceUnqueueBuffers; }
+		if (strcmp("alListenerf", (const char *)fname) == 0) { return (void*) alListenerf; }
+		if (strcmp("alListenerfv", (const char *)fname) == 0) { return (void*) alListenerfv; }
+		if (strcmp("alListener3f", (const char *)fname) == 0) { return (void*) alListener3f; }
+		if (strcmp("alListeneri", (const char *)fname) == 0) { return (void*) alListeneri; }
+		if (strcmp("alListeneriv", (const char *)fname) == 0) { return (void*) alListeneriv; }
+		if (strcmp("alListener3i", (const char *)fname) == 0) { return (void*) alListener3i; }
+		if (strcmp("alGetListenerf", (const char *)fname) == 0) { return (void*) alGetListenerf; }
+		if (strcmp("alGetListenerfv", (const char *)fname) == 0) { return (void*) alGetListenerfv; }
+		if (strcmp("alGetListener3f", (const char *)fname) == 0) { return (void*) alGetListener3f; }
+		if (strcmp("alGetListeneri", (const char *)fname) == 0) { return (void*) alGetListeneri; }
+		if (strcmp("alGetListeneriv", (const char *)fname) == 0) { return (void*) alGetListeneriv; }
+		if (strcmp("alGetListener3i", (const char *)fname) == 0) { return (void*) alGetListener3i; }
+		if (strcmp("alDistanceModel", (const char *)fname) == 0) { return (void*) alDistanceModel; }
+		if (strcmp("alDopplerFactor", (const char *)fname) == 0) { return (void*) alDopplerFactor; }
+		if (strcmp("alDopplerVelocity", (const char *)fname) == 0) { return (void*) alDopplerVelocity; }
+		if (strcmp("alSpeedOfSound", (const char *)fname) == 0) { return (void*) alSpeedOfSound; }
+		if (strcmp("alGetString", (const char *)fname) == 0) { return (void*) alGetString; }
+		if (strcmp("alGetEnumValue", (const char *)fname) == 0) { return (void*) alGetEnumValue; }
+		if (strcmp("alGetBoolean", (const char *)fname) == 0) { return (void*) alGetBoolean; }
+		if (strcmp("alGetBooleanv", (const char *)fname) == 0) { return (void*) alGetBooleanv; }
+		if (strcmp("alGetFloat", (const char *)fname) == 0) { return (void*) alGetFloat; }
+		if (strcmp("alGetFloatv", (const char *)fname) == 0) { return (void*) alGetFloatv; }
+		if (strcmp("alGetDouble", (const char *)fname) == 0) { return (void*) alGetDouble; }
+		if (strcmp("alGetDoublev", (const char *)fname) == 0) { return (void*) alGetDoublev; }
+		if (strcmp("alGetInteger", (const char *)fname) == 0) { return (void*) alGetInteger; }
+		if (strcmp("alGetIntegerv", (const char *)fname) == 0) { return (void*) alGetIntegerv; }
+		if (strcmp("alGetProcAddress", (const char *)fname) == 0) { return (void*) alGetProcAddress; }
+		if (strcmp("alIsExtensionPresent", (const char *)fname) == 0) { return (void*) alIsExtensionPresent; }
+		if (strcmp("alDisable", (const char *)fname) == 0) { return (void*) alDisable; }
+		if (strcmp("alEnable", (const char *)fname) == 0) { return (void*) alEnable; }
+		if (strcmp("alIsEnabled", (const char *)fname) == 0) { return (void*) alIsEnabled; }
+
+		// Capture Extension
+		if (strcmp("alcCaptureOpenDevice", (const char *)fname) == 0) { return (void*) alcCaptureOpenDevice; }
+		if (strcmp("alcCaptureCloseDevice", (const char *)fname) == 0) { return (void*) alcCaptureCloseDevice; }
+		if (strcmp("alcCaptureStart", (const char *)fname) == 0) { return (void*) alcCaptureStart; }
+		if (strcmp("alcCaptureStop", (const char *)fname) == 0) { return (void*) alcCaptureStop; }
+		if (strcmp("alcCaptureSamples", (const char *)fname) == 0) { return (void*) alcCaptureSamples; }
+
+		// OSX Extension
+		if (strcmp("alcMacOSXRenderingQuality", (const char *)fname) == 0) { return (void*) alcMacOSXRenderingQuality; }
+		if (strcmp("alMacOSXRenderChannelCount", (const char *)fname) == 0) { return (void*) alMacOSXRenderChannelCount; }
+		if (strcmp("alcMacOSXMixerMaxiumumBusses", (const char *)fname) == 0) { return (void*) alcMacOSXMixerMaxiumumBusses; }
+		if (strcmp("alcMacOSXMixerOutputRate", (const char *)fname) == 0) { return (void*) alcMacOSXMixerOutputRate; }
+		if (strcmp("alcMacOSXGetRenderingQuality", (const char *)fname) == 0) { return (void*) alcMacOSXGetRenderingQuality; }
+		if (strcmp("alMacOSXGetRenderChannelCount", (const char *)fname) == 0) { return (void*) alMacOSXGetRenderChannelCount; }
+		if (strcmp("alcMacOSXGetMixerMaxiumumBusses", (const char *)fname) == 0) { return (void*) alcMacOSXGetMixerMaxiumumBusses; }
+		if (strcmp("alcMacOSXGetMixerOutputRate", (const char *)fname) == 0) { return (void*) alcMacOSXGetMixerOutputRate; }
+
+		// Buffer Static Extension
+		if (strcmp("alBufferDataStatic", (const char *)fname) == 0) { return (void*) alBufferDataStatic; }
+
+		if (strcmp("alcASASetListener", (const char *)fname) == 0) { return (void*) alcASASetListener; }
+		if (strcmp("alcASAGetListener", (const char *)fname) == 0) { return (void*) alcASAGetListener; }
+		if (strcmp("alcASASetSource", (const char *)fname) == 0) { return (void*) alcASASetSource; }
+		if (strcmp("alcASAGetSource", (const char *)fname) == 0) { return (void*) alcASAGetSource; }
+	}
+
+	return NULL;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API ALboolean AL_APIENTRY alIsEnvironmentIASIG (ALuint environment)
+{
+#if LOG_API_USAGE
+	DebugMessage("***** alIsEnvironmentIASIG");
+#endif
+	return AL_FALSE;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API ALboolean AL_APIENTRY alIsExtensionPresent( const ALchar* extname )
+{
+#if LOG_API_USAGE
+	DebugMessageN1("alIsExtensionPresent function name = %s", extname);
+#endif
+
+	if (extname == NULL)
+		SetDeviceError(gCurrentDevice, ALC_INVALID_VALUE);
+	else
+	{
+		for (UInt32	i = 0; i < kALExtensionCount; i++)
+		{
+			if (strcmp(alExtensionsList[i], (const char *) extname) == 0) return AL_TRUE;
+		}
+	}
+		
+	return AL_FALSE;    // extension not present in this implementation
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API ALvoid AL_APIENTRY alDisable (ALenum capability)
+{
+#if LOG_API_USAGE
+	DebugMessageN1("alDisable--> capability = 0x%X", capability);
 #endif
 	switch (capability)
 	{
-		case ALC_CONVERT_DATA_UPON_LOADING:
+		case ALC_MAC_OSX_CONVERT_DATA_UPON_LOADING:
 			gConvertBufferNow = false;
 			break;
 		default:
@@ -2696,31 +4041,14 @@ ALAPI ALvoid ALAPIENTRY alDisable (ALenum capability)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alDistanceScale (ALfloat value)
+AL_API ALvoid AL_APIENTRY alEnable (ALenum capability)
 {
 #if LOG_API_USAGE
-	DebugMessage("***** alDistanceScale called");
-#endif
-
-	if (value > 0.0f)
-	{
-		// gDistanceScale = value;
-	} 
-    else
-	{
-		alSetError(AL_INVALID_VALUE);
-	}
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alEnable (ALenum capability)
-{
-#if LOG_API_USAGE
-	DebugMessage("***** alEnable called");
+	DebugMessageN1("alEnable--> capability = 0x%X", capability);
 #endif
 	switch(capability)
 	{
-		case ALC_CONVERT_DATA_UPON_LOADING:
+		case ALC_MAC_OSX_CONVERT_DATA_UPON_LOADING:
 			gConvertBufferNow = true;
 			break;
 		default:
@@ -2730,117 +4058,469 @@ ALAPI ALvoid ALAPIENTRY alEnable (ALenum capability)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alEnviromentiIASIG (ALuint environment, ALenum pname, ALint value)
+AL_API ALboolean AL_APIENTRY alIsEnabled(ALenum capability)
 {
 #if LOG_API_USAGE
-	DebugMessage("***** alEnviromentiIASIG called");
+	DebugMessageN1("alIsEnabled--> capability = 0x%X", capability);
 #endif
+	switch(capability)
+	{
+		case ALC_MAC_OSX_CONVERT_DATA_UPON_LOADING:
+			return (gConvertBufferNow);
+			break;
+		default:
+			break;
+	}
+	return (false);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alEnvironmentfIASIG (ALuint environment, ALenum pname, ALfloat value)
+// ALC_EXT_MAC_OSX
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#pragma mark ***** OSX Extension *****
+ALC_API ALvoid alcMacOSXRenderingQuality (const ALint value)
 {
 #if LOG_API_USAGE
-	DebugMessage("***** alEnvironmentfIASIG called");
+	DebugMessageN1("alcOSXRenderingQuality--> value = %ld", (long int) value);
 #endif
+
+	alSetInteger(ALC_SPATIAL_RENDERING_QUALITY, value);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALsizei ALAPIENTRY alGenEnvironmentIASIG (ALsizei n, ALuint *environments)
+ALC_API ALvoid alMacOSXRenderChannelCount (const ALint value)
 {
 #if LOG_API_USAGE
-	DebugMessage("***** alGenEnvironmentIASIG called");
+	DebugMessageN1("alcOSXRenderChannelCount--> value = %ld", (long int) value);
 #endif
-	return 0;
+	alSetInteger(ALC_RENDER_CHANNEL_COUNT, value);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALboolean ALAPIENTRY alGetBoolean (ALenum pname)
+ALC_API ALvoid alcMacOSXMixerMaxiumumBusses (const ALint value)
 {
 #if LOG_API_USAGE
-	DebugMessage("***** alGetBoolean called");
+	DebugMessageN1("alcOSXMixerMaxiumumBusses--> value = %ld", (long int) value);
 #endif
-	return AL_FALSE;
+	alSetInteger(ALC_MIXER_MAXIMUM_BUSSES, value);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alGetBooleanv (ALenum pname, ALboolean *data)
+ALC_API ALvoid alcMacOSXMixerOutputRate(const ALdouble value)
 {
 #if LOG_API_USAGE
-	DebugMessage("***** alGetBooleanv called");
+	DebugMessageN1("alcOSXMixerOutputRate--> value = %.f2", value);
 #endif
+	alSetDouble(ALC_MIXER_OUTPUT_RATE, value);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALdouble ALAPIENTRY alGetDouble (ALenum pname)
+ALC_API ALint alcMacOSXGetRenderingQuality ()
 {
 #if LOG_API_USAGE
-	DebugMessage("***** alGetDouble called");
+	DebugMessage("alcOSXGetRenderingQuality-->");
 #endif
+	return alGetInteger(ALC_SPATIAL_RENDERING_QUALITY);
+}
 
-    double      returnValue = 0.0;
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ALC_API ALint alMacOSXGetRenderChannelCount ()
+{
+#if LOG_API_USAGE
+	DebugMessage("alOSXGetRenderChannelCount-->");
+#endif
+	return alGetInteger(ALC_RENDER_CHANNEL_COUNT);
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ALC_API ALint alcMacOSXGetMixerMaxiumumBusses ()
+{
+#if LOG_API_USAGE
+	DebugMessage("alcOSXGetMixerMaxiumumBusses-->");
+#endif
+	return alGetInteger(ALC_MIXER_MAXIMUM_BUSSES);
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ALC_API ALdouble alcMacOSXGetMixerOutputRate ()
+{
+#if LOG_API_USAGE
+	DebugMessage("alcMacOSXGetMixerOutputRate-->");
+#endif
+	return alGetDouble(ALC_MIXER_OUTPUT_RATE);
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API ALvoid	AL_APIENTRY	alBufferDataStatic (const ALint bid, ALenum format, ALvoid* data, ALsizei size, ALsizei freq)
+{
+#if LOG_BUFFER_USAGE
+	DebugMessageN4("alBufferDataStatic-->  buffer %ld : %s : %ld bytes : %ldHz", (long int) bid, GetFormatString(format), (long int) size, (long int) freq);
+#endif
 
 	try {
-        if (gOALDeviceMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
+			OALBuffer	*oalBuffer = GetBufferObjectFromToken(bid);
+			oalBuffer->AddAudioDataStatic((char*)data, size, format, freq);
+    }
+    catch (OSStatus     result) {
+		DebugMessageN5("ERROR: alBufferDataStatic FAILED: buffer %ld : %s : %ld bytes : %ldHz error = %s", (long int) bid, GetFormatString(format), (long int) size, (long int) freq,  alGetString(result));
+        alSetError(result);
+    }
+    catch (...) {
+		DebugMessageN4("ERROR: alBufferDataStatic FAILED: buffer %ld : %s : %ld bytes : %ldHz", (long int) bid, GetFormatString(format), (long int) size, (long int) freq);
+        alSetError(AL_INVALID_OPERATION);
+	}
+	
+	return;
+}
 
-        OALDevice	*oalDevice = gOALDeviceMap->Get(gCurrentDevice);
-        if (oalDevice == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// APPLE ENVIRONMENTAL AUDIO
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	
+#pragma mark ***** ASA Extension *****
+ALC_API ALenum  alcASAGetSource(const ALuint property, ALuint sid, ALvoid *data, ALuint* dataSize)
+{
+#if LOG_ASA_USAGE
+	DebugMessageN2("ASAGetSource--> source %ld : property %s", (long int) sid, GetALCAttributeString(property));
+#endif
 
-		switch (pname)
-		{			
-			case ALC_MIXER_OUTPUT_RATE:
-				returnValue = (ALdouble) oalDevice->GetMixerRate();
+	if (Get3DMixerVersion() < k3DMixerVersion_2_2)
+		return  AL_INVALID_OPERATION;
+
+	try {
+		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+        switch (property) 
+        {
+            case ALC_ASA_REVERB_SEND_LEVEL:
+				if (*dataSize < sizeof(ALfloat))
+					throw AL_INVALID_OPERATION;
+				*dataSize = sizeof(ALfloat);
+                *(ALfloat*)data = oalSource->GetReverbSendLevel();
+                break;
+
+            case ALC_ASA_OCCLUSION:
+				if (*dataSize < sizeof(ALfloat))
+					throw AL_INVALID_OPERATION;
+				*dataSize = sizeof(ALfloat);
+                *(ALfloat*)data =  oalSource->GetOcclusion();
+                break;
+
+            case ALC_ASA_OBSTRUCTION:
+				if (*dataSize < sizeof(ALfloat))
+					throw AL_INVALID_OPERATION;
+				*dataSize = sizeof(ALfloat);
+                *(ALfloat*)data =  oalSource->GetObstruction();
+                break;
+			
+            default:
+				return AL_INVALID_NAME;
+                break;
+        }
+	}
+	catch (OSStatus     result) {
+		DebugMessageN3("ERROR ASAGetSource FAILED--> source %ld : property %s : error = %s", (long int) sid, GetALCAttributeString(property), alGetString(result));
+		return (result);
+	}
+    catch (...) {
+		DebugMessageN3("ERROR ASAGetSource FAILED--> source %ld : property %s : error = %s", (long int) sid, GetALCAttributeString(property), alGetString(-1));
+		return AL_INVALID_OPERATION;
+	}
+	
+	return AL_NO_ERROR;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ALC_API ALenum  alcASASetSource(const ALuint property, ALuint sid, ALvoid *data, ALuint dataSize)
+{
+#if LOG_ASA_USAGE
+	DebugMessageN2("ASASetSource--> source %ld : property %s", (long int) sid, GetALCAttributeString(property));
+#endif
+
+	if (Get3DMixerVersion() < k3DMixerVersion_2_2)
+		return  AL_INVALID_OPERATION;
+
+	try {
+		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+        switch (property) 
+        {
+			// Source & Listener Attributes
+            case ALC_ASA_REVERB_SEND_LEVEL:
+				if (dataSize < sizeof(ALfloat))
+					throw AL_INVALID_OPERATION;
+                oalSource->SetReverbSendLevel(*(ALfloat*)data);
+                break;
+
+            case ALC_ASA_OCCLUSION:
+				if (dataSize < sizeof(ALfloat))
+					throw AL_INVALID_OPERATION;
+                oalSource->SetOcclusion(*(ALfloat*)data);
+                break;
+
+            case ALC_ASA_OBSTRUCTION:
+				if (dataSize < sizeof(ALfloat))
+					throw AL_INVALID_OPERATION;
+                oalSource->SetObstruction(*(ALfloat*)data);
+                break;
+			
+            default:
+				return AL_INVALID_NAME;
+                break;
+        }
+	}
+	catch (OSStatus     result) {
+		DebugMessageN3("ERROR ASASetSource FAILED--> source %ld : property %s : error = %s", (long int) sid, GetALCAttributeString(property), alGetString(result));
+		return (result);
+	}
+    catch (...) {
+		DebugMessageN3("ERROR ASASetSource FAILED--> source %ld : property %s : error = %s", (long int) sid, GetALCAttributeString(property), alGetString(-1));
+		return AL_INVALID_OPERATION;
+	}
+	
+	return AL_NO_ERROR;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ALC_API ALenum  alcASAGetListener(const ALuint property, ALvoid *data, ALuint* dataSize)
+{
+#if LOG_ASA_USAGE
+	DebugMessageN1("ASAGetListener--> property %s", GetALCAttributeString(property));
+#endif
+
+	if (Get3DMixerVersion() < k3DMixerVersion_2_2)
+		return  AL_INVALID_OPERATION;
+
+	try {
+        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+        switch (property) 
+        {
+			case ALC_ASA_REVERB_ON:
+				if (*dataSize < sizeof(UInt32))
+					throw AL_INVALID_OPERATION;
+				*dataSize = sizeof(UInt32);
+                *(UInt32*)data = oalContext->GetReverbState();
+			
+            case ALC_ASA_REVERB_ROOM_TYPE:
+				if (*dataSize < sizeof(ALint))
+					throw AL_INVALID_OPERATION;
+				*dataSize = sizeof(ALint);
+                *(ALint*)data =  oalContext->GetReverbRoomType();
+                break;
+
+            case ALC_ASA_REVERB_GLOBAL_LEVEL:
+				if (*dataSize < sizeof(ALfloat))
+					throw AL_INVALID_OPERATION;
+				*dataSize = sizeof(ALfloat);
+                *(ALfloat*) data =  oalContext->GetReverbLevel();
+                break;
+			
+            case ALC_ASA_REVERB_QUALITY:
+				if (*dataSize < sizeof(ALint))
+					throw AL_INVALID_OPERATION;
+				*dataSize = sizeof(ALint);
+				*(ALint*) data =  oalContext->GetReverbQuality();
+				break;
+
+            case ALC_ASA_REVERB_EQ_GAIN:
+				if (*dataSize < sizeof(ALfloat))
+					throw AL_INVALID_OPERATION;
+				*dataSize = sizeof(ALfloat);
+					 *(ALfloat*) data =  oalContext->GetReverbEQGain();
+				break;
+
+            case ALC_ASA_REVERB_EQ_BANDWITH:
+				if (*dataSize < sizeof(ALfloat))
+					throw AL_INVALID_OPERATION;
+				*dataSize = sizeof(ALfloat);
+				*(ALfloat*) data =  oalContext->GetReverbEQBandwidth();
+				break;
+
+            case ALC_ASA_REVERB_EQ_FREQ:
+				if (*dataSize < sizeof(ALfloat))
+					throw AL_INVALID_OPERATION;
+				*dataSize = sizeof(ALfloat);
+				*(ALfloat*) data =  oalContext->GetReverbEQFrequency();
 				break;
 			
 			default:
-				alSetError(AL_INVALID_VALUE);
-				break;
-		}
+				return AL_INVALID_NAME;
+                break;
+        }
 	}
-	catch (OSStatus		result) {
- 		DebugMessageN1("alGetDouble Failed - err = %ld\n", result);
-        alSetError(result);
-    }
-	catch (...) {
- 		DebugMessage("alGetDouble Failed");
-        alSetError(AL_INVALID_OPERATION);   // by default
+	catch (OSStatus     result) {
+		DebugMessageN2("ERROR ASAGetListener FAILED--> property %s : error = %s", GetALCAttributeString(property), alGetString(result));
+		return (result);
+	}
+    catch (...) {
+		DebugMessageN2("ERROR ASAGetListener FAILED--> property %s : error = %s", GetALCAttributeString(property), alGetString(-1));
+        return AL_INVALID_OPERATION;
 	}
 	
-	return (returnValue);
+	return AL_NO_ERROR;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alGetDoublev (ALenum pname, ALdouble *data)
+ALC_API ALenum  alcASASetListener(const ALuint property, ALvoid *data, ALuint dataSize)
 {
-#if LOG_API_USAGE
-	DebugMessage("***** alGetDoublev called");
+#if LOG_ASA_USAGE
+	DebugMessageN1("ASAGetListener--> property %s", GetALCAttributeString(property));
 #endif
+
+	if (data == NULL)
+		return AL_INVALID_VALUE;
+		
+	if (Get3DMixerVersion() < k3DMixerVersion_2_2)
+		return  AL_INVALID_OPERATION;
+
+	try {
+        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+        switch (property) 
+        {
+            case ALC_ASA_REVERB_ON:
+				if (dataSize < sizeof(UInt32))
+					throw AL_INVALID_OPERATION;
+                oalContext->SetReverbState(*(UInt32*)data);
+                break;
+
+            case ALC_ASA_REVERB_ROOM_TYPE:
+				if (dataSize < sizeof(ALint))
+					throw AL_INVALID_OPERATION;
+                oalContext->SetReverbRoomType(*(ALint *)data);
+                break;
+
+            case ALC_ASA_REVERB_GLOBAL_LEVEL:
+			{
+				if (dataSize < sizeof(ALfloat))
+					throw AL_INVALID_OPERATION;
+			
+				Float32		level = *(ALfloat *) data;
+                oalContext->SetReverbLevel(level);
+            }
+			    break;
+
+            case ALC_ASA_REVERB_PRESET:
+			{
+				if (dataSize == 0)
+					throw AL_INVALID_OPERATION;
+				if (data == NULL)
+					throw AL_INVALID_OPERATION;
+				
+				FSRef	nuRef;
+				if (FSPathMakeRef((UInt8 *) data , &nuRef, NULL))
+					throw AL_INVALID_OPERATION;
+						
+				oalContext->SetReverbPreset(&nuRef);
+			}
+				break;
+
+            case ALC_ASA_REVERB_QUALITY:
+			{
+				UInt32		quality = *(ALint *) data;
+				oalContext->SetReverbQuality(quality);
+			}
+				break;
+
+            case ALC_ASA_REVERB_EQ_GAIN:
+			{
+				// check range of -18.0 - 18.0 or pin it anyway
+				Float32		gain = *(ALfloat *) data;	
+				if ((gain < -18.0) || (gain > 18.0))
+					return AL_INVALID_VALUE;
+				oalContext->SetReverbEQGain(gain);
+			}
+				break;
+
+            case ALC_ASA_REVERB_EQ_BANDWITH:
+			{
+				// check range of 0.5 - 4.0 or pin it anyway
+				Float32		bandwidth = *(ALfloat *) data;	
+				if ((bandwidth < 0.5) || (bandwidth > 4.0))
+					return AL_INVALID_VALUE;
+				oalContext->SetReverbEQBandwidth(bandwidth);
+			}
+				break;
+
+            case ALC_ASA_REVERB_EQ_FREQ:
+			{
+				// check range of 10.0 - 20000.0 or pin it anyway
+				Float32		frequency = *(ALfloat *) data;	
+				if ((frequency < 10.0) || (frequency > 20000.0))
+					return AL_INVALID_VALUE;
+				oalContext->SetReverbEQFrequency(frequency);
+			}
+				break;
+			
+            default:
+				return AL_INVALID_NAME;
+                break;
+        }
+	}
+	catch (OSStatus     result) {
+		DebugMessageN2("ERROR ASAGetListener FAILED--> property %s : error = %s", GetALCAttributeString(property), alGetString(result));
+		return (result);
+	}
+    catch (...) {
+		DebugMessageN2("ERROR ASAGetListener FAILED--> property %s : error = %s", GetALCAttributeString(property), alGetString(-1));
+        return AL_INVALID_OPERATION;
+	}
+	
+	return AL_NO_ERROR;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alSetInteger (ALenum pname, ALint value)
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#pragma mark ***** DEPRECATED for 1.1 *****
+AL_API void	AL_APIENTRY alHint( ALenum target, ALenum mode )
+{
+	// Removed from headers for 1.1 but left in to avoid runtime link errors
+	// Prototype has been removed from the public headers
+	return;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Never actually in official OpenAL headers because no tokens were defined to use it
+// keep building for 1.0 released binary compatibility
+AL_API ALvoid AL_APIENTRY alSetInteger (ALenum pname, const ALint value)
 {	
 #if LOG_API_USAGE
-	DebugMessage("***** alSetIntegeri called");
+	DebugMessage("***** alSetIntegeri");
 #endif
 	try {
-        if (gOALDeviceMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        OALDevice	*oalDevice = gOALDeviceMap->Get(gCurrentDevice);
-        if (oalDevice == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
 		switch(pname)
 		{			
 			case ALC_SPATIAL_RENDERING_QUALITY:
-				oalDevice->SetRenderQuality ((UInt32) value);
+				if (IsValidRenderQuality ((UInt32) value))
+				{
+					OALContext		*oalContext = gOALContextMap->Get(gCurrentContext);
+					if (oalContext)
+						oalContext->SetRenderQuality ((UInt32) value);
+				}
 				break;
 
 			case ALC_RENDER_CHANNEL_COUNT:
-				oalDevice->SetRenderChannelCount ((UInt32) value);
+			{
+				if (value != gRenderChannelSetting)
+				{				
+					// it's a new setting, so make sure all open devices now use it
+					// if there are no open devices, then all subsequent device creations will use this setting to start with
+					uintptr_t	token;
+					OALDevice	*oalDevice = NULL;
+					gRenderChannelSetting = (UInt32) value;
+					for (UInt32 i = 0; i < gOALDeviceMap->Size(); i++)
+					{
+						oalDevice = gOALDeviceMap->GetDeviceByIndex(i, token);
+						if (oalDevice)
+						{
+							// this device may already be using this setting
+							if ((ALint) oalDevice->GetRenderChannelSetting() != gRenderChannelSetting)
+								oalDevice->SetRenderChannelSetting (gRenderChannelSetting); // SetRenderChannelSetting tells the library to walk the context list and adjust all context's for this device
+						}
+					}
+				}
+			}
 				break;
 
             case ALC_MIXER_MAXIMUM_BUSSES:
@@ -2853,11 +4533,11 @@ ALAPI ALvoid ALAPIENTRY alSetInteger (ALenum pname, ALint value)
 		}
 	}
 	catch (OSStatus		result) {
- 		DebugMessageN1("alSetInteger Failed - err = %ld\n", result);
+ 		DebugMessageN1("ERROR: alSetInteger FAILED = %s\n", alGetString(result));
         alSetError(result);
     }
 	catch (...) {
- 		DebugMessage("alSetInteger Failed");
+ 		DebugMessage("ERROR: alSetInteger FAILED");
 		alSetError(AL_INVALID_OPERATION); 
 	}
 	
@@ -2865,23 +4545,18 @@ ALAPI ALvoid ALAPIENTRY alSetInteger (ALenum pname, ALint value)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alSetDouble (ALenum pname, ALdouble value)
+// Never actually in official OpenAL headers because no tokens were defined to use it
+// deprecated, keep building for 1.0 released binary compatibility
+AL_API ALvoid AL_APIENTRY alSetDouble (ALenum pname, const ALdouble value)
 {	
 #if LOG_API_USAGE
-	DebugMessage("***** alSetDouble called");
+	DebugMessage("***** alSetDouble");
 #endif
 	try {
-        if (gOALDeviceMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        OALDevice	*oalDevice = gOALDeviceMap->Get(gCurrentDevice);
-        if (oalDevice == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
 		switch (pname)
 		{			
 			case ALC_MIXER_OUTPUT_RATE:
-				oalDevice->SetMixerRate ((Float64) value);
+				gMixerOutputRate = value;
 				break;
 			
 			default:
@@ -2890,11 +4565,11 @@ ALAPI ALvoid ALAPIENTRY alSetDouble (ALenum pname, ALdouble value)
 		}
 	}
 	catch (OSStatus		result) {
- 		DebugMessageN1("alSetDouble Failed - err = %ld\n", result);
+ 		DebugMessageN1("ERROR: alSetDouble FAILED = %s\n", alGetString(result));
         alSetError(result);
     }
 	catch (...) {
- 		DebugMessage("alSetDouble Failed");
+ 		DebugMessage("ERROR: alSetDouble FAILED");
 		alSetError(AL_INVALID_OPERATION); 
 	}
 	
@@ -2902,185 +4577,162 @@ ALAPI ALvoid ALAPIENTRY alSetDouble (ALenum pname, ALdouble value)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALint ALAPIENTRY alGetInteger (ALenum pname)
+AL_API ALvoid AL_APIENTRY alPropagationSpeed (ALfloat value)
 {
 #if LOG_API_USAGE
-	DebugMessage("***** alGetInteger called");
-#endif
-
-	UInt32		returnValue	= 0;
-
-	try {
-        if (gOALDeviceMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-        OALDevice	*oalDevice = gOALDeviceMap->Get(gCurrentDevice);
-        if (oalDevice == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
-		switch (pname)
-		{
-			case ALC_SPATIAL_RENDERING_QUALITY:
-                returnValue = oalDevice->GetRenderQuality();
-				break;
-
-			case ALC_RENDER_CHANNEL_COUNT:
-                returnValue = oalDevice->GetRenderChannelCount();
-				break;
-                
-            case ALC_MIXER_MAXIMUM_BUSSES:
-                returnValue = oalDevice->GetBusCount();
-                break;
-			
-			default:
-				alSetError(AL_INVALID_VALUE);
-				break;
-		}
-	}
-	catch (OSStatus		result) {
- 		DebugMessageN1("alGetInteger Failed - err = %ld\n", result);
-        // special case this property for now, it can return a valid value if there is no device open
-        if (pname == ALC_MIXER_MAXIMUM_BUSSES)
-            returnValue = gMaximumMixerBusCount;
-        else
-			alSetError(AL_INVALID_OPERATION); // not available yet as the device is not setup
-    }
-	catch (...) {
- 		DebugMessage("alGetInteger Failed");
-        // special case this property for now, it can return a valid value if there is no device open
-        if (pname == ALC_MIXER_MAXIMUM_BUSSES)
-            returnValue = gMaximumMixerBusCount;
-        else
-			alSetError(AL_INVALID_OPERATION); // not available yet as the device is not setup
-	}
-	
-	return (returnValue);
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alGetListeneri( ALenum pname, ALint* value )
-{
-#if LOG_API_USAGE
-	DebugMessage("***** alGetListeneri called");
-#endif
-
-	*value = 0;
-
-	try {
-		switch (pname)
-		{
-			default:
-				alSetError(AL_INVALID_VALUE);
-				break;
-		}
-	}
-	catch (...) {
- 		DebugMessage("alGetListeneri Failed");
-        alSetError(AL_INVALID_OPERATION); // not available yet as the device is not setup
-	}
-	
-	return;
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid * ALAPIENTRY alGetProcAddress(ALubyte *fname)
-{
-#if LOG_API_USAGE
-	DebugMessage("***** alGetProcAddress called");
-#endif
-	return NULL;
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALboolean ALAPIENTRY alIsEnabled(ALenum capability)
-{
-#if LOG_API_USAGE
-	DebugMessage("***** alIsEnabled called");
-#endif
-	switch(capability)
-	{
-		case ALC_CONVERT_DATA_UPON_LOADING:
-			return (gConvertBufferNow);
-			break;
-		default:
-			break;
-	}
-	return (false);
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALboolean ALAPIENTRY alIsEnvironmentIASIG (ALuint environment)
-{
-#if LOG_API_USAGE
-	DebugMessage("***** alIsEnvironmentIASIG called");
-#endif
-	return AL_FALSE;
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alListeneri (ALenum pname, ALint value)
-{		
-#if LOG_API_USAGE
-	DebugMessage("***** alListeneri called");
-#endif
-	alSetError(AL_INVALID_ENUM);
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alPropagationSpeed (ALfloat value)
-{
-#if LOG_API_USAGE
-	DebugMessage("***** alPropagationSpeed called");
+	DebugMessage("***** alPropagationSpeed");
 #endif
 	if (value > 0.0f)
 	{
-		// gPropagationSpeed = value;
 	} 
     else
 	{
         alSetError(AL_INVALID_VALUE);
 	}
 }
-
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alQueuef (ALuint source, ALenum param, ALfloat value)
+AL_API ALvoid AL_APIENTRY alDistanceScale (ALfloat value)
 {
 #if LOG_API_USAGE
-	DebugMessage("***** alQueuef called");
+	DebugMessage("***** alDistanceScale");
 #endif
-	if (alIsSource(source))
+
+	if (value > 0.0f)
 	{
-		switch(param) 
-		{
-			case AL_PITCH:
-				if ((value>=0.5f)&&(value<=2.0f))
-				{	
-					// ***** gSource[source].pitch = value;
-				}
-				else
-					alSetError(AL_INVALID_VALUE);
-				break;
-			case AL_GAIN:
-				if (value <= 1.0f)
-				{
-					// ***** smSetSourceVolume (source, (value * kFullVolume), (value * kFullVolume));
-				}	
-				break;
-			default:
-				alSetError(AL_INVALID_OPERATION);
-				break;
-		}
+		// gDistanceScale = value;
 	} 
     else
 	{
-		alSetError(AL_INVALID_NAME);
+		alSetError(AL_INVALID_VALUE);
 	}
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API ALvoid AL_APIENTRY alEnviromentiIASIG (ALuint environment, ALenum pname, ALint value)
+{
+#if LOG_API_USAGE
+	DebugMessage("***** alEnviromentiIASIG");
+#endif
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALAPI ALvoid ALAPIENTRY alQueuei (ALuint source, ALenum param, ALint value)
+AL_API ALvoid AL_APIENTRY alEnvironmentfIASIG (ALuint environment, ALenum pname, ALfloat value)
 {
 #if LOG_API_USAGE
-	DebugMessage("***** alQueuei called");
+	DebugMessage("***** alEnvironmentfIASIG");
 #endif
 }
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API ALsizei AL_APIENTRY alGenEnvironmentIASIG (ALsizei n, ALuint *environments)
+{
+#if LOG_API_USAGE
+	DebugMessage("***** alGenEnvironmentIASIG");
+#endif
+	return 0;
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AL_API ALvoid AL_APIENTRY alDeleteEnvironmentIASIG (ALsizei n, ALuint *environments)
+{
+#if LOG_API_USAGE
+	DebugMessage("***** alDeleteEnvironmentIASIG");
+#endif
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// MAYBE LATER
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/*
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ALCchar 					gOutputDeviceList[maxLen*2];
+ALCchar 					gInputDeviceList[maxLen*2];
+
+void	GetDefaultDeviceNameList(ALCchar*		outDeviceNameList, bool	isInput)
+{
+	UInt32		size = 0;
+	OSStatus	result = noErr;
+	UInt32		deviceProperty = isInput ? kAudioHardwarePropertyDefaultInputDevice : kAudioHardwarePropertyDefaultOutputDevice;
+	
+	try {
+		AudioDeviceID	defaultDevice = 0;
+		// Get the default output device
+		size = sizeof(defaultDevice);
+		result = AudioHardwareGetProperty(deviceProperty, &size, &defaultDevice);
+			THROW_RESULT
+
+		result = AudioDeviceGetPropertyInfo( defaultDevice, 0, false, kAudioDevicePropertyDeviceName, &size, NULL);
+			THROW_RESULT
+
+		if (size > maxLen)
+			throw -1;
+		
+		size = maxLen;
+		result = AudioDeviceGetProperty(defaultDevice, 0, false, kAudioDevicePropertyDeviceName, &size, outDeviceNameList);
+			THROW_RESULT
+			
+		outDeviceNameList[size] = '\0'; // double terminator
+			
+	} catch (...) {
+		outDeviceNameList[0] = '\0'; // failure case, make it a zero length string
+		outDeviceNameList[1] = '\0'; // failure case, make it a zero length string
+	}
+	return;
+}
+
+void	GetDeviceList(ALCchar*		outDeviceName, bool	inMakeInputDeviceList)
+{
+	UInt32		size = 0;
+	OSStatus	result = noErr;
+	UInt32		deviceCount = 0;
+	ALCchar		*curStrPtr = outDeviceName;
+	UInt32		charCount = 0;
+
+	result = AudioHardwareGetPropertyInfo(kAudioHardwarePropertyDevices, &size, NULL);
+		THROW_RESULT
+	deviceCount = size / sizeof(AudioDeviceID);
+
+	AudioDeviceID	*ids = (AudioDeviceID*) calloc(1, size);
+	result = AudioHardwareGetProperty(kAudioHardwarePropertyDevices, &size, ids);
+		THROW_RESULT
+	
+	bool deviceDoesInput;
+	bool deviceDoesOutput;
+	
+	for (UInt32	i; i < deviceCount; i++)
+	{
+		size = 0;
+		AudioDeviceGetPropertyInfo( ids[i], 0, true, kAudioDevicePropertyStreams, &size, NULL);
+		deviceDoesInput = size > 0 ? true : false;
+
+		size = 0;
+		AudioDeviceGetPropertyInfo( ids[i], 0, false, kAudioDevicePropertyStreams, &size, NULL);
+		deviceDoesOutput = size > 0 ? true : false;
+
+		if ((inMakeInputDeviceList && deviceDoesInput) || (!inMakeInputDeviceList && deviceDoesOutput))
+		{
+			size = 0;
+			result = AudioDeviceGetPropertyInfo( ids[i], 0, inMakeInputDeviceList, kAudioDevicePropertyDeviceName, &size, NULL);
+				THROW_RESULT
+			if (charCount + size > maxLen*2)
+				throw -1;
+			
+			// get name
+			result = AudioDeviceGetProperty(ids[i], 0, inMakeInputDeviceList, kAudioDevicePropertyDeviceName, &size, curStrPtr);
+				THROW_RESULT
+
+			curStrPtr +=size;
+			charCount +=size;
+		}
+	}
+
+	*curStrPtr = '\0';
+	if(charCount == 0)
+	{
+		curStrPtr++;
+		*curStrPtr = '\0';
+	}
+
+}
+*/
+

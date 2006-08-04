@@ -1,7 +1,7 @@
 /**********************************************************************************************************************************
 *
 *   OpenAL cross platform audio library
-*   Copyright © 2004, Apple Computer, Inc. All rights reserved.
+*   Copyright (c) 2004, Apple Computer, Inc. All rights reserved.
 *
 *   Redistribution and use in source and binary forms, with or without modification, are permitted provided 
 *   that the following conditions are met:
@@ -26,10 +26,71 @@
 
 #include "al.h"
 #include "alc.h"
-#include "altypes.h"
 #include "oalOSX.h"
 #include <Carbon/Carbon.h>
 #include <map>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// added for OSX Extension 
+ALC_API ALvoid alcMacOSXRenderingQuality (const ALint value);
+ALC_API ALvoid alMacOSXRenderChannelCount (const ALint value);
+ALC_API ALvoid alcMacOSXMixerMaxiumumBusses (const ALint value);
+ALC_API ALvoid alcMacOSXMixerOutputRate(const ALdouble value);
+
+ALC_API ALint alcMacOSXGetRenderingQuality ();
+ALC_API ALint alMacOSXGetRenderChannelCount ();
+ALC_API ALint alcMacOSXGetMixerMaxiumumBusses ();
+ALC_API ALdouble alcMacOSXGetMixerOutputRate();
+
+AL_API ALvoid AL_APIENTRY alSetInteger (ALenum pname, const ALint value);
+AL_API ALvoid AL_APIENTRY alSetDouble (ALenum pname, const ALdouble value);
+
+AL_API ALvoid	AL_APIENTRY	alBufferDataStatic (const ALint bid, ALenum format, ALvoid* data, ALsizei size, ALsizei freq);
+
+// added for ASA (Apple Environmental Audio) 
+
+ALC_API ALenum  alcASAGetSource(const ALuint property, ALuint source, ALvoid *data, ALuint* dataSize);
+ALC_API ALenum  alcASASetSource(const ALuint property, ALuint source, ALvoid *data, ALuint dataSize);
+ALC_API ALenum  alcASAGetListener(const ALuint property, ALvoid *data, ALuint* dataSize);
+ALC_API ALenum  alcASASetListener(const ALuint property, ALvoid *data, ALuint dataSize);
+
+// Used internally but no longer available via a header file. Some OpenAL applications may have been built with a header
+// that defined these constants so keep defining them.
+
+#define ALC_SPATIAL_RENDERING_QUALITY        0xF002
+#define ALC_MIXER_OUTPUT_RATE		         0xF003
+#define ALC_MIXER_MAXIMUM_BUSSES             0xF004
+#define ALC_RENDER_CHANNEL_COUNT             0xF005
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#define AL_FORMAT_MONO_FLOAT32               0x10010
+#define AL_FORMAT_STEREO_FLOAT32             0x10011
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Continue exporting these deprectaed APIs to prevent runtime link errors
+
+#ifdef TARGET_OS_MAC
+   #if TARGET_OS_MAC
+       #pragma export on
+   #endif
+#endif
+
+
+AL_API ALvoid	AL_APIENTRY alHint( ALenum target, ALenum mode );
+
+#ifdef TARGET_OS_MAC
+   #if TARGET_OS_MAC
+      #pragma export off
+   #endif
+#endif
+
+#ifdef __cplusplus
+}
+#endif
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // development build flags
@@ -52,23 +113,19 @@
 
 #define	THROW_RESULT		if(result != noErr) throw static_cast<OSStatus>(result);
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/* 
-	The OALEnvironmentInfo struct will define a set of parameters that should be applied to the 3DMixer 
-    on a per context basis. i.e. Reverb setting, doppler, etc etc. These settings will be stored as a 
-    member of the OALContext class. Upon context switching, they will be passed to the context's 
-    owning OALDevice to reset the mixer.
-*/
-
-struct	OALEnvironmentInfo {
-	// currently unused
+enum {
+		kUnknown3DMixerVersion	= 0,
+		kUnsupported3DMixer		= 1,
+		k3DMixerVersion_1_3		= 13,
+		k3DMixerVersion_2_0,
+		k3DMixerVersion_2_1,
+		k3DMixerVersion_2_2
 };
-
+		
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-UInt32	GetNewToken (void);
-
-ALAPI ALvoid ALAPIENTRY alSetError (ALenum errorCode);
+void	alSetError (ALenum errorCode);
+UInt32	Get3DMixerVersion ();
 
 #endif
 
