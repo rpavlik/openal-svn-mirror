@@ -1,3 +1,7 @@
+2006-08-04  Prakash Punnoor <prakash@punnoor.de>
+
+	* Makefile.am: add new CMake modules to distribution
+
 2006-08-04  Sven Panne  <sven.panne@aedion.de>
 
 	* Makefile.am: Synched files to distribute with reality.
