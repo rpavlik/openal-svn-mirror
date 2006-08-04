@@ -32,8 +32,7 @@ EXTRA_DIST =							\
 	admin/autotools/.indent.pro				\
 	autogen.sh						\
 	common/specification/OpenAL1-1Spec.pdf			\
-	common/specification/OpenAL1-1Spec.sxw			\
-	config-osx.h
+	common/specification/OpenAL1-1Spec.odt
 
 # Automatically rebuild libtool if it becomes out-of-date.
 libtool: $(LIBTOOL_DEPS)
