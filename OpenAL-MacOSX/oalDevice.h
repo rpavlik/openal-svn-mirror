@@ -1,7 +1,7 @@
 /**********************************************************************************************************************************
 *
 *   OpenAL cross platform audio library
-*   Copyright © 2004, Apple Computer, Inc. All rights reserved.
+*   Copyright (c) 2004, Apple Computer, Inc. All rights reserved.
 *
 *   Redistribution and use in source and binary forms, with or without modification, are permitted provided 
 *   that the following conditions are met:
@@ -32,7 +32,8 @@
 #include <map>
 #include  "CAStreamBasicDescription.h"
 
-#define LOG_BUS_CONNECTIONS  	0
+
+class OALContext;        // forward declaration
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Some build flags for gathering performance and data flow information
@@ -53,34 +54,8 @@
 // Device Constants
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-#define kDefaultReferenceDistance   1.0
-#define kDefaultMaximumDistance     1000000.0
-#define kDefaultRolloff             1.0
-
-#define kPreferredMixerVersion 		0x21000 
-#define kMinimumMixerVersion 		0x10300
-
 // Default Mixer Output Sample Rate Setting:
 #define	kDefaultMixerRate       44100.0
-
-// Default Low Quality Stereo Spatial Setting:
-#define	kDefaultLowQuality      kSpatializationAlgorithm_EqualPowerPanning
-
-// Default High Quality Stereo Spatial Setting:
-#define	kDefaultHighQuality     kSpatializationAlgorithm_HRTF
-
-// Default MultiChannel Spatial Setting:
-#define	kDefaultMultiChannelQuality kSpatializationAlgorithm_SoundField
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Device Structs
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-struct BusInfo {
-					bool		mIsAvailable;       // is an OALSource using this bus?
-					UInt32		mNumberChannels;    // mono/stereo setting of the bus
-                    UInt32      mReverbSetting;     // unused until Reverb extension is added to the implementation
-};
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -88,51 +63,34 @@ struct BusInfo {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+#pragma mark _____OALDevice_____
 class OALDevice
 {
 	public:
 
-	OALDevice(const char* 	 inDeviceName, UInt32   inSelfToken, UInt32  &inBusCount);
+	OALDevice(const char* 	 inDeviceName, uintptr_t   inSelfToken, UInt32	inRenderChannelSetting);
 	~OALDevice();
 	
-	// graph methods
-	void 			InitializeGraph (const char* 	inDeviceName);
-	void			SetupGraph();
-	void			TeardownGraph();
-	void			ConfigureGraphForChannelLayout();
-
-    // bus methods
-	UInt32 			GetAvailableMonoBus ();
-	UInt32 			GetAvailableStereoBus ();
-	UInt32 			GetBusCount() const { return mBusCount; }
-	void			SetBusAsAvailable (UInt32 inBusIndex) const;
-	void 			InitRenderQualityOnBusses(UInt32	&inRenderQuality);
+	void			ConnectContext (OALContext*	inContext);
+	void			DisconnectContext (OALContext*	inContext);
+	void			StopGraph();
 
 	// set info
-	void			SetEnvironment(OALEnvironmentInfo	&inEnvironment);
-	void			SetMixerRate (Float64	inSampleRate);
-	void 			SetRenderQuality (UInt32 inRenderQuality);
-	void 			SetRenderChannelCount (UInt32 inRenderChannelCount);
-    void            SetReverb(UInt32  inReverbSetting);
-    void            SetDistanceAttenuation(UInt32    inBusIndex, Float64 inRefDist, Float64 inMaxDist, Float64 inRolloff);
+	void 			SetRenderChannelSetting (UInt32 inRenderChannelSetting);
+	void			SetError(ALenum errorCode);
 
 	// get info
-	UInt32          GetDeviceToken () const { return mSelfToken; }
-	Float64			GetMixerRate () const { return mMixerOutputRate; }
-	UInt32			GetRenderQuality() {return mRenderQuality;}
-	UInt32			GetRenderChannelCount() {return  mRenderChannelCount; }
-	UInt32 			GetReverbSetting() const { return mReverbSetting; }
-	AudioUnit		GetMixerUnit() { return mMixerUnit;}
-	UInt32 			GetDesiredRenderChannelCount ();
-	bool            IsDistanceScalingRequired() { return mDistanceScalingRequired;}
-	Float32         GetDefaultReferenceDistance() { return mDefaultReferenceDistance;}
-	Float32         GetDefaultMaxDistance() { return mDefaultMaxDistance;}
+	uintptr_t       GetDeviceToken () const { return mSelfToken; }
+	Float64			GetDeviceSampleRate () const { return mDeviceSampleRate; }
+	UInt32			GetRenderChannelSetting() {return  mRenderChannelSetting; }
+	ALenum			GetError();
+	UInt32			GetFramesPerSlice() { return mFramesPerSlice;}
+	AUGraph			GetGraph () {return mAUGraph;}
+	AudioUnit		GetOutputAU(){return mOutputUnit;}
+	UInt32			GetDesiredRenderChannelCount ();
 
 	// misc.
-    bool            IsPreferredMixerAvailable() { return mPreferred3DMixerExists; }
-	bool 			IsPlayable () { return mCanScheduleEvents; }
 	bool 			IsValidRenderQuality (UInt32 inRenderQuality);
-	void            ResetChannelLayout();
     static void     GraphFormatPropertyListener 	(	void 					*inRefCon, 
                                                         AudioUnit 				ci, 
                                                         AudioUnitPropertyID 	inID, 
@@ -154,34 +112,21 @@ class OALDevice
 #endif
 	}
 
-
-#pragma mark __________ Private_Class_Members
-
 	private:
-		UInt32          mSelfToken;
+		uintptr_t       mSelfToken;
+		ALenum			mCurrentError;
         AudioDeviceID   mHALDevice;                     // the HAL device used to render audio to the user		
-        bool            mPreferred3DMixerExists;
         bool            mDistanceScalingRequired;
-        Float32         mDefaultReferenceDistance;
-        Float32         mDefaultMaxDistance;
-        AUGraph 		mAUGraph;
-        UInt32          mBusCount;
-        BusInfo			*mBusInfo;
+		bool			mGraphInitialized;
+		AUGraph 		mAUGraph;
         AUNode			mOutputNode;
         AudioUnit 		mOutputUnit;
         AUNode			mMixerNode;
-        AudioUnit 		mMixerUnit;
-        bool 			mCanScheduleEvents;
-        Float64		 	mMixerOutputRate;
-        UInt32			mCurrentMixerChannelCount;
-        UInt32          mRenderChannelCount;         // currently either stereo or multichannel
-        UInt32			mRenderQuality;                 // Hi or Lo for now
-        UInt32			mSpatialSetting;
-        UInt32          mReverbSetting;
-#if LOG_BUS_CONNECTIONS
-        UInt32			mMonoSourcesConnected;
-        UInt32			mStereoSourcesConnected;
-#endif
+		OALContext*		mConnectedContext;
+		Float64			mDeviceSampleRate;
+        UInt32			mRenderChannelCount;
+        UInt32          mRenderChannelSetting;			// currently either stereo or multichannel
+		UInt32			mFramesPerSlice;
 #if AUHAL_LOG_OUTPUT
         AudioLogger     mLogger;
 #endif
@@ -189,26 +134,42 @@ class OALDevice
         AUTracer		mAUTracer;
 #endif
 
+	void			InitializeGraph (const char* 		inDeviceName);
+	void			TeardownGraph();
+	void            ResetRenderChannelSettings();
+	UInt32			GetChannelLayoutTag();
 };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #pragma mark _____OALDeviceMap_____
-class OALDeviceMap : std::multimap<UInt32, OALDevice*, std::less<UInt32> > {
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+class OALDeviceMap : std::multimap<uintptr_t, OALDevice*, std::less<uintptr_t> > {
 public:
     
-    void Add (const	UInt32	inDeviceToken, OALDevice **inDevice)  {
+    void Add (const	uintptr_t	inDeviceToken, OALDevice **inDevice)  {
 		iterator it = upper_bound(inDeviceToken);
 		insert(it, value_type (inDeviceToken, *inDevice));
 	}
 
-    OALDevice* Get(UInt32	inDeviceToken) {
+    OALDevice* Get(uintptr_t	inDeviceToken) {
         iterator	it = find(inDeviceToken);
         if (it != end())
             return ((*it).second);
 		return (NULL);
     }
+
+	OALDevice* GetDeviceByIndex(UInt32	inIndex, uintptr_t	&outDeviceToken) {
+		iterator	it = begin();		
+        std::advance(it, inIndex);		
+		if (it != end())
+		{
+			outDeviceToken = (*it).first;
+			return (*it).second;
+		}
+		return (NULL);
+	}
     
-    void Remove (const	UInt32	inDeviceToken) {
+    void Remove (const	uintptr_t	inDeviceToken) {
         iterator 	it = find(inDeviceToken);
         if (it != end())
             erase(it);
