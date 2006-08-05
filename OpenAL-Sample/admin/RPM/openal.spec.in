@@ -9,7 +9,7 @@
 #
 
 # norootforbuild
-# usedforbuild    SDL SDL-devel aaa_base aalib aalib-devel acl alsa alsa-devel attr audiofile audiofile-devel audit-libs autoconf automake bash bind-libs bind-utils binutils bison bzip2 coreutils cpio cpp cracklib cvs cyrus-sasl db diffutils e2fsprogs esound esound-devel expat file filesystem fillup findutils flex fontconfig fontconfig-devel gawk gcc gcc-c++ gdbm gdbm-devel gettext gettext-devel glibc glibc-devel glibc-locale gpm grep groff gzip info insserv klogd less libacl libattr libcom_err libgcc libnscd libstdc++ libstdc++-devel libtool libxcrypt libzio m4 make man mktemp module-init-tools nasm ncurses ncurses-devel net-tools netcfg openldap2-client openssl pam pam-modules patch perl permissions popt procinfo procps psmisc pwdutils rcs readline resmgr rpm sed slang slang-devel strace sysvinit tar tcpd texinfo timezone unzip util-linux vim xorg-x11-devel xorg-x11-libs zlib zlib-devel
+# usedforbuild    SDL SDL-devel aaa_base aalib aalib-devel acl alsa alsa-devel arts arts-devel attr audiofile audiofile-devel audit-libs autoconf automake bash bind-libs bind-utils binutils bison bzip2 coreutils cpio cpp cracklib cvs cyrus-sasl db diffutils e2fsprogs esound esound-devel expat file filesystem fillup findutils flex fontconfig fontconfig-devel gawk gcc gcc-c++ gdbm gdbm-devel gettext gettext-devel glibc glibc-devel glibc-locale gpm grep groff gzip info insserv klogd less libacl libattr libcom_err libgcc libnscd libstdc++ libstdc++-devel libtool libxcrypt libzio m4 make man mktemp module-init-tools nasm ncurses ncurses-devel net-tools netcfg openldap2-client openssl pam pam-modules patch perl permissions popt procinfo procps psmisc pwdutils rcs readline resmgr rpm sed slang slang-devel strace sysvinit tar tcpd texinfo timezone unzip util-linux vim xorg-x11-devel xorg-x11-libs zlib zlib-devel
 
 Name:           openal
 BuildRequires:  SDL-devel esound-devel nasm
@@ -144,6 +144,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/pkgconfig/openal.pc
 
 %changelog -n openal
+* Sat Aug 05 2006 - sven.panne@aedion.de
+- We need aRts packages for a complete build.
 * Wed Apr 19 2006 - sven.panne@aedion.de
 - Handle version via configure
 * Thu Jan 05 2006 - sven.panne@aedion.de

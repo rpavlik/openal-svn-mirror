@@ -1,3 +1,7 @@
+2006-08-05  Sven Panne  <sven.panne@aedion.de>
+
+	* admin/RPM/openal.spec.in: We need aRts packages for a complete build.
+
 2006-08-04  Prakash Punnoor <prakash@punnoor.de>
 
 	* Makefile.am: add new CMake modules to distribution
@@ -10,13 +14,12 @@
 
 	* admin/CMakeModules/FindCompilerMMXFlag.cmake: added
 
-	* CMakeLists.txt: try to enable MMX by setting compile
-	flag; error out on not finding NASM
+	* CMakeLists.txt: try to enable MMX by setting compile flag; error out
+	on not finding NASM
 
 2006-08-02  Prakash Punnoor <prakash@punnoor.de>
 
-	* admin/CMakeModules/FindCompilerVisibility.cmake: use CMake
-	module
+	* admin/CMakeModules/FindCompilerVisibility.cmake: use CMake module
 	
 	* admin/CMakeModules/FindOpenALBackends.cmake: added
 	
