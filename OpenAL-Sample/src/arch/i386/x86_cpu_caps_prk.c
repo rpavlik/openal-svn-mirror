@@ -33,6 +33,7 @@ int _alDetectx86CPUCaps(uint* caps1, uint* caps2, uint* caps3);
 
 	/* caps2 */
 #define SSE3_BIT             0
+#define SSE4_BIT             9
 
 	/* caps3 */
 #define	AMD_3DNOW_BIT       31
@@ -41,8 +42,8 @@ int _alDetectx86CPUCaps(uint* caps1, uint* caps2, uint* caps3);
 #define CYRIX_MMXEXT_BIT    24
 
 
-struct x86cpu_caps_s x86cpu_caps = { 0, 0, 0, 0, 0, 0, 0, 0};
-struct x86cpu_caps_s x86cpu_caps_use = { 1, 1, 1, 1, 1, 1, 1, 1};
+struct x86cpu_caps_s x86cpu_caps = { 0, 0, 0, 0, 0, 0, 0, 0, 0};
+struct x86cpu_caps_s x86cpu_caps_use = { 1, 1, 1, 1, 1, 1, 1, 1, 1};
 
 void _alDetectCPUCaps(void)
 {
@@ -58,6 +59,9 @@ void _alDetectCPUCaps(void)
 #endif
 #ifdef __SSE3__
 	x86cpu_caps.sse3 = 1;
+#endif
+#ifdef __SSE4__
+	x86cpu_caps.sse4 = 1;
 #endif
 #ifdef __3dNOW__
 	x86cpu_caps.amd_3dnow = 1;
@@ -82,6 +86,7 @@ void _alDetectCPUCaps(void)
 			x86cpu_caps.sse2 &= (caps1 >> SSE2_BIT) & 1;
 			
 			x86cpu_caps.sse3 &= (caps2 >> SSE3_BIT) & 1;
+			x86cpu_caps.sse4 &= (caps2 >> SSE4_BIT) & 1;
 			
 			x86cpu_caps.amd_3dnow &= (caps3 >> AMD_3DNOW_BIT) & 1;
 			x86cpu_caps.amd_3dnowext &= (caps3 >> AMD_3DNOWEXT_BIT) & 1;
@@ -119,6 +124,11 @@ void _alDetectCPUCaps(void)
 			x86cpu_caps_use.sse3 = !atoi(env);
 		x86cpu_caps_use.sse3 &= x86cpu_caps.sse3;
 		
+		env = getenv("OPENAL_DISABLE_SSE4");
+		if (env)
+			x86cpu_caps_use.sse4 = !atoi(env);
+		x86cpu_caps_use.sse4 &= x86cpu_caps.sse4;
+		
 		env = getenv("OPENAL_DISABLE_3DNOW");
 		if (env)
 			x86cpu_caps_use.amd_3dnow = !atoi(env);
@@ -148,6 +158,8 @@ void _alDetectCPUCaps(void)
 	         x86cpu_caps.sse2, x86cpu_caps_use.sse2);
 	_alDebug(ALD_CONFIG, __FILE__, __LINE__,"sse3 found %i  use %i",
 	         x86cpu_caps.sse3, x86cpu_caps_use.sse3);
+	_alDebug(ALD_CONFIG, __FILE__, __LINE__,"sse4 found %i  use %i",
+			 x86cpu_caps.sse4, x86cpu_caps_use.sse4);
 	_alDebug(ALD_CONFIG, __FILE__, __LINE__,"amd_3dnow found %i  use %i",
 	         x86cpu_caps.amd_3dnow, x86cpu_caps_use.amd_3dnow);
 	_alDebug(ALD_CONFIG, __FILE__, __LINE__,"amd_3dnowext found %i  use %i",
