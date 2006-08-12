@@ -75,3 +75,11 @@ ret
 %ifidn __OUTPUT_FORMAT__,elf
 section .note.GNU-stack noalloc noexec nowrite progbits
 %endif
+
+%ifidn __YASM_OBJFMT__,elf
+section ".note.GNU-stack" noalloc noexec nowrite progbits
+%endif
+
+%ifidn __YASM_OBJFMT__,elf32
+section ".note.GNU-stack" noalloc noexec nowrite progbits
+%endif

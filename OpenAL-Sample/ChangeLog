@@ -1,11 +1,16 @@
 2006-08-12  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/arch/i386/x86_64_linux_cpu_caps_detect_prk.yasm: added
-	
+
 	* CMakeLists.txt, admin/CMakeModules/CMakeASMCompiler.cmake.in,
     admin/CMakeModules/CMakeASMInformation.cmake,
     admin/CMakeModules/CMakeDetermineASMCompiler.cmake: added yasm
     support and x86_64 Linux CPU features detection
+
+    * src/arch/i386/x86_cpu_caps_detect_prk.nasm,
+    src/arch/i386/memcpy_mmx_prk.nasm,
+    src/arch/i386/x86_64_linux_cpu_caps_detect_prk.yasm: prevent
+    executable stacks when building with yasm
 
 2006-08-11  Prakash Punnoor <prakash@punnoor.de>
 
