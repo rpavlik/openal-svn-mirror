@@ -120,6 +120,7 @@ SET(x86_OBJS             src/arch/i386/x86_floatmul.c
                          src/arch/i386/x86_cpu_caps_prk.c)
 SET(x86_MMX_OBJS         src/arch/i386/mixaudio16_mmx_prk.c)
 SET(x86_NASM_OBJS        src/arch/i386/x86_cpu_caps_detect_prk.nasm)
+SET(x86_64_LINUX_NASM_OBJS src/arch/i386/x86_64_linux_cpu_caps_detect_prk.yasm)
 SET(x86_MMX_NASM_OBJS    src/arch/i386/memcpy_mmx_prk.nasm)
 
 SET(PORTABLE_OBJS        src/arch/portable/floatmul.c
@@ -402,10 +403,11 @@ IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
     SET(ARCH_OBJS ${ARCH_OBJS} ${x86_MMX_OBJS})
   
 
-  IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86")
-    # nasm stuff
+  IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR UNIX)
+    # yasm/nasm stuff, on x86_64 only for Unix,
+    # as Windows has other calling convention
     OPTION(NO_NASM      "ignore missing NASM"      OFF)
-    FIND_PROGRAM(HAVE_NASM nasm)
+    FIND_PROGRAM(HAVE_NASM NAMES yasm nasm)
     IF(HAVE_NASM MATCHES "NOTFOUND")
       IF(HAVE_MMX)
         MESSAGE("Warning: MMX capability found, but NASM not found.")
@@ -413,12 +415,16 @@ IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
         IF(NO_NASM)
           MESSAGE("You chose to ignore missing NASM.")
         ELSE(NO_NASM)
-          MESSAGE(FATAL_ERROR "Set NO_NASM to compile anyway.")
+          IF(CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
+            MESSAGE("It's currently safe for you to not detect MMX, as x86_64 will have it.")
+          ELSE(CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
+            MESSAGE(FATAL_ERROR "Set NO_NASM to compile anyway.")
+          ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
         ENDIF(NO_NASM)
       ENDIF(HAVE_MMX)
     ELSE(HAVE_NASM MATCHES "NOTFOUND")
       PROJECT(OpenAL ASM)
-      MESSAGE(STATUS "Using NASM")
+      MESSAGE(STATUS "Using YASM/NASM")
 
       # check nasm visibility support
       IF(CMAKE_SYSTEM MATCHES "Linux")
@@ -450,14 +456,19 @@ IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
       ENDIF(CMAKE_SYSTEM MATCHES "Linux")
 
       ADD_DEFINE(HAVE_CPU_CAPS_DETECTION)
-      SET(ARCH_OBJS ${ARCH_OBJS} ${x86_NASM_OBJS})
+      IF(CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
+        SET(ARCH_OBJS ${ARCH_OBJS} ${x86_64_LINUX_NASM_OBJS})
+      ELSE(CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
 
-      IF(HAVE_MMX)
-        SET(ARCH_OBJS ${ARCH_OBJS} ${x86_MMX_NASM_OBJS})
-        ADD_DEFINE(HAVE_MMX_MEMCPY 1)
-      ENDIF(HAVE_MMX)
+        SET(ARCH_OBJS ${ARCH_OBJS} ${x86_NASM_OBJS})
+
+        IF(HAVE_MMX)
+          SET(ARCH_OBJS ${ARCH_OBJS} ${x86_MMX_NASM_OBJS})
+          ADD_DEFINE(HAVE_MMX_MEMCPY 1)
+        ENDIF(HAVE_MMX)
+      ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
     ENDIF(HAVE_NASM MATCHES "NOTFOUND")
-  ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "i.86")
+  ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR UNIX)
 
   IF(CMAKE_SYSTEM_MACHINE MATCHES "i686" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
     OPTION(OPTIM_GENERIC "enable full generic mixing despite MMX optimized routines" OFF)
