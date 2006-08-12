@@ -444,9 +444,9 @@ IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
             "Source file was:\n${SOURCE}\n" APPEND)
 
           IF(HAVE_NASM_VISIBILITY)
-            MESSAGE(STATUS "Performing Test HAVE_NASM_VISIBILITY -- Success")
+            MESSAGE(STATUS "Performing Test HAVE_NASM_VISIBILITY - Success")
           ELSE(HAVE_NASM_VISIBILITY)
-            MESSAGE(STATUS "Performing Test HAVE_NASM_VISIBILITY -- Failure")
+            MESSAGE(STATUS "Performing Test HAVE_NASM_VISIBILITY - Failure")
           ENDIF(HAVE_NASM_VISIBILITY)
         ENDIF(NOT DEFINED HAVE_NASM_VISIBILITY)
 

@@ -39,7 +39,7 @@ WRITE_FILE(${CMAKE_BINARY_DIR}/CMakeFiles/CMakeOutput.log
   "${OUTPUT}\n" APPEND)
 
 IF(SELECT_ARGTYPES_FOUND)
-  MESSAGE(STATUS "Determining select arguments -- found")
+  MESSAGE(STATUS "Determining select arguments - found")
   SET(SELECT_TYPE_ARG1 ${CUR_ARG1} CACHE INTERNAL "")
   SET(SELECT_TYPE_ARG234 ${CUR_ARG234} CACHE INTERNAL "")
   SET(SELECT_TYPE_ARG5 ${CUR_ARG5} CACHE INTERNAL "")
@@ -53,7 +53,7 @@ ENDIF(NOT SELECT_ARGTYPES_FOUND)
 ENDFOREACH(CUR_ARG234)
 
 IF(NOT SELECT_ARGTYPES_FOUND)
-  MESSAGE(STATUS "Determining select arguments -- using fallback")
+  MESSAGE(STATUS "Determining select arguments - using fallback")
   SET(SELECT_TYPE_ARG1 "int" CACHE INTERNAL "")
   SET(SELECT_TYPE_ARG234 "int *" CACHE INTERNAL "")
   SET(SELECT_TYPE_ARG5 "struct timeval *" CACHE INTERNAL "")

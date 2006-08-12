@@ -12,6 +12,9 @@
     src/arch/i386/x86_64_linux_cpu_caps_detect_prk.yasm: prevent
     executable stacks when building with yasm
 
+    * CMakeLists.txt, admin/CMakeModules/FindPkgConfig.cmake,
+    admin/CMakeModules/FindSelectArgtypes.cmake: minor cosmetics
+
 2006-08-11  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/arch/i386/x86_cpu_caps_prk.h, src/arch/i386/x86_cpu_caps_prk.c:
