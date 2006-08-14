@@ -16,15 +16,24 @@
 #include "mixaudio16_mmx_prk.h"
 #endif /* __MMX__ */
 
+#ifdef __SSE2__
+#include "mixaudio16_sse2_prk.h"
+#endif /* __MMX__ */
+
+
 /*
  * max_audioval is the maximum value of a signed short.
  */
+#ifndef max_audioval
 #define max_audioval ((1<<(16-1))-1)
+#endif /* max_audioval */
 
 /*
  * min_audioval is the minimum value of a signed short.
  */
+#ifndef min_audioval
 #define min_audioval -(1<<(16-1))
+#endif /* min_audioval */
 
 /*
  * Mix a numents number of streams into dst, clamping above by max_audioval

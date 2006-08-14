@@ -119,6 +119,7 @@ SET(WAVEOUT_OBJS         src/backends/alc_backend_wave.c)
 SET(x86_OBJS             src/arch/i386/x86_floatmul.c
                          src/arch/i386/x86_cpu_caps_prk.c)
 SET(x86_MMX_OBJS         src/arch/i386/mixaudio16_mmx_prk.c)
+SET(x86_SSE2_OBJS        src/arch/i386/mixaudio16_sse2_prk.c)
 SET(x86_NASM_OBJS        src/arch/i386/x86_cpu_caps_detect_prk.nasm)
 SET(x86_64_LINUX_NASM_OBJS src/arch/i386/x86_64_linux_cpu_caps_detect_prk.yasm)
 SET(x86_MMX_NASM_OBJS    src/arch/i386/memcpy_mmx_prk.nasm)
@@ -401,7 +402,13 @@ IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
   ENDIF(CMAKE_SYSTEM MATCHES "Windows")
 
   IF(HAVE_MMX OR HAVE_SSE2)
-    SET(ARCH_OBJS ${ARCH_OBJS} ${x86_MMX_OBJS})
+    IF(HAVE_MMX)
+      SET(ARCH_OBJS ${ARCH_OBJS} ${x86_MMX_OBJS})
+    ENDIF(HAVE_MMX)
+
+    IF(HAVE_SSE2)
+      SET(ARCH_OBJS ${ARCH_OBJS} ${x86_SSE2_OBJS})
+    ENDIF(HAVE_SSE2)
 
     IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR UNIX)
       # yasm/nasm stuff, on x86_64 only for Unix,

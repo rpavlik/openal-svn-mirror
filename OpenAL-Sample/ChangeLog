@@ -5,6 +5,13 @@
 	* CMakeLists.txt, src/arch/i386/x86_simd_support_prk.h,
 	admin/CMakeModules/FindCompilerMMXFlag.cmake: preliminary SSE2
 	support, currently only with GCC 4.x and 3.4.x
+	
+	* src/al_mixfunc.c, src/mixaudio16.h,
+	src/arch/i386/x86_simd_support_prk.h,
+	src/arch/i386/mixaudio16_sse2_prk.c,
+	src/arch/i386/mixaudio16_sse2_prk.h,
+	src/al_mixer.h, CMakeLists.txt: add SSE2 mixing routines
+
 
 2006-08-12  Prakash Punnoor <prakash@punnoor.de>
 

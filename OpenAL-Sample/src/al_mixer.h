@@ -22,22 +22,22 @@
  */
 #ifdef USE_LIGHT_GEN_MIXING
 #define GENMIXSOURCES 8
-#else /* not USE_LIGHT_GEN_MIXING */
+#else /* USE_LIGHT_GEN_MIXING */
 #define GENMIXSOURCES 64
-#endif /* not USE_LIGHT_GEN_MIXING */
+#endif /* USE_LIGHT_GEN_MIXING */
 
-#ifdef __MMX__
+#if defined(__MMX__) || defined(__SSE2__)
 #define MMXMIXSOURCES 32
-#else /* not __MMX__ */
+#else /* __MMX__ || __SSE2__*/
 #define MMXMIXSOURCES 0
-#endif /* not __MMX__ */
+#endif /* __MMX__ || __SSE2__ */
 
 /* set MAXMIXSOURCES to MAX */
 #if GENMIXSOURCES<MMXMIXSOURCES
 #define MAXMIXSOURCES MMXMIXSOURCES
-#else /* not GENMIXSOURCES<MMXMIXSOURCES */
+#else /* GENMIXSOURCES<MMXMIXSOURCES */
 #define MAXMIXSOURCES GENMIXSOURCES
-#endif /* not GENMIXSOURCES<MMXMIXSOURCES */
+#endif /* GENMIXSOURCES<MMXMIXSOURCES */
 
 
 /*

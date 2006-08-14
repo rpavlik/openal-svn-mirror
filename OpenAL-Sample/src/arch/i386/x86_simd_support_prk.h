@@ -35,6 +35,7 @@ typedef int   v2si __attribute__ ((__mode__(__V2SI__)));
 typedef int   di   __attribute__ ((__mode__(__DI__)));
 
 typedef short v8hi __attribute__ ((__mode__(__V8HI__)));
+typedef int   v4si __attribute__ ((__mode__(__V4SI__)));
 typedef int   v2di __attribute__ ((__mode__(__V2DI__)));
 #else /* __GNUC__ >= 4 */
 typedef short v4hi __attribute__ ((vector_size (8)));
@@ -42,6 +43,7 @@ typedef int   v2si __attribute__ ((vector_size (8)));
 typedef int   di   __attribute__ ((vector_size (8)));
 
 typedef short   v8hi __attribute__ ((vector_size (16)));
+typedef int     v4si __attribute__ ((vector_size (16)));
 typedef long long v2di __attribute__ ((vector_size (16)));
 #endif /* __GNUC__ >= 4 */
 
@@ -49,6 +51,10 @@ typedef long long v2di __attribute__ ((vector_size (16)));
 #define to_v4hi(X) (v4hi)X
 #define to_v2si(X) (v2si)X
 #define to_di(X)   (di)X
+
+#define to_v8hi(X) (v8hi)X
+#define to_v4si(X) (v4si)X
+#define to_v2di(X) (v2di)X
 
 #define ALIGN16(x) x __attribute__((aligned(16)))
 typedef unsigned long aint;
@@ -64,6 +70,10 @@ typedef __m64 di;
 #define to_v4hi(X) X
 #define to_v2si(X) X
 #define to_di(X)   X
+
+#define to_v8hi(X) X
+#define to_v4si(X) X
+#define to_v2di(X) X
 
 #define __builtin_ia32_pand(X,Y)	_mm_and_si64(X,Y)
 #define __builtin_ia32_pcmpeqw(X,Y)	_mm_cmpeq_pi16(X,Y)

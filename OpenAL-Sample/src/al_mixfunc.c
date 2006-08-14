@@ -37,6 +37,53 @@ ALboolean _alMixFuncInit( ALMixFunc *mf, ALuint size ) {
 	if(size > MAXMIXSOURCES) {
 		return AL_FALSE;
 	}
+	
+#ifdef __SSE2__
+	if (_alHaveSSE2()) {
+		/* FIXME: we really ignore size. */
+		mf->max      = MMXMIXSOURCES;
+		mf->funcs[0] = MixAudio16_SSE2_0;
+		mf->funcs[1] = MixAudio16_SSE2_1;
+		mf->funcs[2] = MixAudio16_SSE2_2;
+		mf->funcs[3] = MixAudio16_SSE2_3;
+		mf->funcs[4] = MixAudio16_SSE2_4;
+		mf->funcs[5] = MixAudio16_SSE2_5;
+		mf->funcs[6] = MixAudio16_SSE2_6;
+		mf->funcs[7] = MixAudio16_SSE2_7;
+		mf->funcs[8] = MixAudio16_SSE2_8;
+		mf->funcs[9] = MixAudio16_SSE2_9;
+		
+		mf->funcs[10] = MixAudio16_SSE2_10;
+		mf->funcs[11] = MixAudio16_SSE2_11;
+		mf->funcs[12] = MixAudio16_SSE2_12;
+		mf->funcs[13] = MixAudio16_SSE2_13;
+		mf->funcs[14] = MixAudio16_SSE2_14;
+		mf->funcs[15] = MixAudio16_SSE2_15;
+		mf->funcs[16] = MixAudio16_SSE2_16;
+		mf->funcs[17] = MixAudio16_SSE2_17;
+		mf->funcs[18] = MixAudio16_SSE2_18;
+		mf->funcs[19] = MixAudio16_SSE2_19;
+		
+		mf->funcs[20] = MixAudio16_SSE2_20;
+		mf->funcs[21] = MixAudio16_SSE2_21;
+		mf->funcs[22] = MixAudio16_SSE2_22;
+		mf->funcs[23] = MixAudio16_SSE2_23;
+		mf->funcs[24] = MixAudio16_SSE2_24;
+		mf->funcs[25] = MixAudio16_SSE2_25;
+		mf->funcs[26] = MixAudio16_SSE2_26;
+		mf->funcs[27] = MixAudio16_SSE2_27;
+		mf->funcs[28] = MixAudio16_SSE2_28;
+		mf->funcs[29] = MixAudio16_SSE2_29;
+		
+		mf->funcs[30] = MixAudio16_SSE2_30;
+		mf->funcs[31] = MixAudio16_SSE2_31;
+		mf->funcs[32] = MixAudio16_SSE2_32;
+		
+		mf->func_n = MixAudio16_SSE2_n;
+		
+		return AL_TRUE;
+	}
+#endif /* __SSE2__ */
 
 #ifdef __MMX__
 	if (_alHaveMMX()) {
