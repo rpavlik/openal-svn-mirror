@@ -1,5 +1,13 @@
 2006-08-12  Prakash Punnoor <prakash@punnoor.de>
 
+	* src/arch/i386/x86_floatmul.c: add SSE2 routine
+	
+	* CMakeLists.txt, src/arch/i386/x86_simd_support_prk.h,
+	admin/CMakeModules/FindCompilerMMXFlag.cmake: preliminary SSE2
+	support, currently only with GCC 4.x and 3.4.x
+
+2006-08-12  Prakash Punnoor <prakash@punnoor.de>
+
 	* src/arch/i386/x86_64_linux_cpu_caps_detect_prk.yasm: added
 
 	* CMakeLists.txt, admin/CMakeModules/CMakeASMCompiler.cmake.in,
