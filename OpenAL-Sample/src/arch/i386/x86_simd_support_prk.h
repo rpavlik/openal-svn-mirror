@@ -22,7 +22,7 @@
 
 #include "al_siteconfig.h"
 
-#ifdef __MMX__
+#if defined(__MMX__) || defined(__SSE2__)
 /*
  * We use built-ins for gcc instead of Intel/MSVC style intrinsics
  * as (older) gccs are slower with them
@@ -33,10 +33,16 @@
 typedef short v4hi __attribute__ ((__mode__(__V4HI__)));
 typedef int   v2si __attribute__ ((__mode__(__V2SI__)));
 typedef int   di   __attribute__ ((__mode__(__DI__)));
+
+typedef short v8hi __attribute__ ((__mode__(__V8HI__)));
+typedef int   v2di __attribute__ ((__mode__(__V2DI__)));
 #else /* __GNUC__ >= 4 */
 typedef short v4hi __attribute__ ((vector_size (8)));
 typedef int   v2si __attribute__ ((vector_size (8)));
 typedef int   di   __attribute__ ((vector_size (8)));
+
+typedef short   v8hi __attribute__ ((vector_size (16)));
+typedef long long v2di __attribute__ ((vector_size (16)));
 #endif /* __GNUC__ >= 4 */
 
 /* GCC 3.4 needs some explicit casts */
@@ -47,7 +53,7 @@ typedef int   di   __attribute__ ((vector_size (8)));
 #define ALIGN16(x) x __attribute__((aligned(16)))
 typedef unsigned long aint;
 
-#else /* !__GNUC__ || __INTEL_COMPILER */
+#else /* __GNUC__ && !__INTEL_COMPILER */
 
 #include <mmintrin.h>
 typedef __m64 v4hi;
@@ -75,10 +81,11 @@ typedef __m64 di;
 /* FIXME: msvc++'s long in x86_64 isn't 8bytes? */
 typedef unsigned long aint;
 
-#endif /* !__GNUC__ || __INTEL_COMPILER */
+#endif /* __GNUC__ && !__INTEL_COMPILER */
 
 #define MMX_ALIGN 8
+#define SSE2_ALIGN 16
 
-#endif /* __MMX__ */
+#endif /* __MMX__ || __SSE2__*/
 
 #endif /* not AL_ARCH_I386_X86_SIMD_SUPPORT_PRK_H_ */

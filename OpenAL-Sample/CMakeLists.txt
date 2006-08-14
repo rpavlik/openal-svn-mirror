@@ -396,91 +396,97 @@ IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
   ELSE(CMAKE_SYSTEM MATCHES "Windows")
     SET(CMAKE_REQUIRED_FLAGS "${ADD_CFLAGS}")
     MACRO_TEST(__MMX__ HAVE_MMX)
+    MACRO_TEST(__SSE2__ HAVE_SSE2)
     SET(CMAKE_REQUIRED_FLAGS)
   ENDIF(CMAKE_SYSTEM MATCHES "Windows")
 
-  IF(HAVE_MMX)
+  IF(HAVE_MMX OR HAVE_SSE2)
     SET(ARCH_OBJS ${ARCH_OBJS} ${x86_MMX_OBJS})
-  
 
-  IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR UNIX)
-    # yasm/nasm stuff, on x86_64 only for Unix,
-    # as Windows has other calling convention
-    OPTION(NO_NASM      "ignore missing NASM"      OFF)
-    FIND_PROGRAM(HAVE_NASM NAMES yasm nasm)
-    IF(HAVE_NASM MATCHES "NOTFOUND")
-      IF(HAVE_MMX)
-        MESSAGE("Warning: MMX capability found, but NASM not found.")
-        MESSAGE("Without NASM you won't have run-time SIMD detection (MMX enabled by default) and no MMX memcopy.")
+    IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR UNIX)
+      # yasm/nasm stuff, on x86_64 only for Unix,
+      # as Windows has other calling convention
+      OPTION(NO_NASM      "ignore missing YASM/NASM"      OFF)
+      FIND_PROGRAM(HAVE_NASM NAMES yasm nasm)
+
+      IF(HAVE_NASM MATCHES "NOTFOUND")
+        IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86")
+          MESSAGE("Warning: MMX and/or SSE2 capability found, but YASM/NASM not found.")
+          MESSAGE("Without YASM/NASM you won't have run-time SIMD detection (SIMD enabled by default) and no MMX memcopy.")
+        ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "i.86")
+
         IF(NO_NASM)
-          MESSAGE("You chose to ignore missing NASM.")
+          MESSAGE("You chose to ignore missing YASM/NASM.")
         ELSE(NO_NASM)
+
           IF(CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
-            MESSAGE("It's currently safe for you to not detect MMX, as x86_64 will have it.")
+            MESSAGE("It's currently safe for you to not detect MMX nor SSE2, as x86_64 will have both.")
           ELSE(CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
+
             MESSAGE(FATAL_ERROR "Set NO_NASM to compile anyway.")
           ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
         ENDIF(NO_NASM)
-      ENDIF(HAVE_MMX)
-    ELSE(HAVE_NASM MATCHES "NOTFOUND")
-      PROJECT(OpenAL ASM)
-      MESSAGE(STATUS "Using YASM/NASM")
+      ELSE(HAVE_NASM MATCHES "NOTFOUND")
 
-      # check nasm visibility support
-      IF(CMAKE_SYSTEM MATCHES "Linux")
-        IF(NOT DEFINED HAVE_NASM_VISIBILITY)
-          MESSAGE(STATUS "Performing Test HAVE_NASM_VISIBILITY")
-          SET(SOURCE "global _foo:function hidden\n_foo:")
-          FILE(WRITE "${CMAKE_BINARY_DIR}/CMakeTmp/src.nasm" "${SOURCE}")
+        PROJECT(OpenAL ASM)
+        MESSAGE(STATUS "Using YASM/NASM")
 
-        TRY_COMPILE(HAVE_NASM_VISIBILITY
+        # check nasm visibility support
+        IF(CMAKE_SYSTEM MATCHES "Linux")
+          IF(NOT DEFINED HAVE_NASM_VISIBILITY)
+            MESSAGE(STATUS "Performing Test HAVE_NASM_VISIBILITY")
+            SET(SOURCE "global _foo:function hidden\n_foo:")
+            FILE(WRITE "${CMAKE_BINARY_DIR}/CMakeTmp/src.nasm" "${SOURCE}")
+
+            TRY_COMPILE(HAVE_NASM_VISIBILITY
                   ${CMAKE_BINARY_DIR}
                   ${CMAKE_BINARY_DIR}/CMakeTmp/src.nasm
                   OUTPUT_VARIABLE OUTPUT)
 
-          WRITE_FILE(${CMAKE_BINARY_DIR}/CMakeOutput.log
-            "Performing nasm visibility test with the following output:\n"
-            "${OUTPUT}\n"
-            "Source file was:\n${SOURCE}\n" APPEND)
+            WRITE_FILE(${CMAKE_BINARY_DIR}/CMakeOutput.log
+              "Performing nasm visibility test with the following output:\n"
+              "${OUTPUT}\n"
+              "Source file was:\n${SOURCE}\n" APPEND)
+
+            IF(HAVE_NASM_VISIBILITY)
+              MESSAGE(STATUS "Performing Test HAVE_NASM_VISIBILITY - Success")
+            ELSE(HAVE_NASM_VISIBILITY)
+              MESSAGE(STATUS "Performing Test HAVE_NASM_VISIBILITY - Failure")
+            ENDIF(HAVE_NASM_VISIBILITY)
+          ENDIF(NOT DEFINED HAVE_NASM_VISIBILITY)
 
           IF(HAVE_NASM_VISIBILITY)
-            MESSAGE(STATUS "Performing Test HAVE_NASM_VISIBILITY - Success")
-          ELSE(HAVE_NASM_VISIBILITY)
-            MESSAGE(STATUS "Performing Test HAVE_NASM_VISIBILITY - Failure")
+            SET(CMAKE_ASM_FLAGS "-DHAVE_NASM_VISIBILITY")
           ENDIF(HAVE_NASM_VISIBILITY)
-        ENDIF(NOT DEFINED HAVE_NASM_VISIBILITY)
+        ENDIF(CMAKE_SYSTEM MATCHES "Linux")
 
-        IF(HAVE_NASM_VISIBILITY)
-          SET(CMAKE_ASM_FLAGS "-DHAVE_NASM_VISIBILITY")
-        ENDIF(HAVE_NASM_VISIBILITY)
-      ENDIF(CMAKE_SYSTEM MATCHES "Linux")
+        ADD_DEFINE(HAVE_CPU_CAPS_DETECTION)
 
-      ADD_DEFINE(HAVE_CPU_CAPS_DETECTION)
-      IF(CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
-        SET(ARCH_OBJS ${ARCH_OBJS} ${x86_64_LINUX_NASM_OBJS})
-      ELSE(CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
+        IF(CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
+          SET(ARCH_OBJS ${ARCH_OBJS} ${x86_64_LINUX_NASM_OBJS})
+        ELSE(CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
 
-        SET(ARCH_OBJS ${ARCH_OBJS} ${x86_NASM_OBJS})
+          SET(ARCH_OBJS ${ARCH_OBJS} ${x86_NASM_OBJS})
 
-        IF(HAVE_MMX)
-          SET(ARCH_OBJS ${ARCH_OBJS} ${x86_MMX_NASM_OBJS})
-          ADD_DEFINE(HAVE_MMX_MEMCPY 1)
-        ENDIF(HAVE_MMX)
-      ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
-    ENDIF(HAVE_NASM MATCHES "NOTFOUND")
-  ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR UNIX)
+          IF(HAVE_MMX)
+            SET(ARCH_OBJS ${ARCH_OBJS} ${x86_MMX_NASM_OBJS})
+            ADD_DEFINE(HAVE_MMX_MEMCPY 1)
+          ENDIF(HAVE_MMX)
+        ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
+      ENDIF(HAVE_NASM MATCHES "NOTFOUND")
+    ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR UNIX)
 
-  IF(CMAKE_SYSTEM_MACHINE MATCHES "i686" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
-    OPTION(OPTIM_GENERIC "enable full generic mixing despite MMX optimized routines" OFF)
-  ELSE(CMAKE_SYSTEM_MACHINE MATCHES "i686" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
+    IF(CMAKE_SYSTEM_MACHINE MATCHES "i686" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
+      OPTION(OPTIM_GENERIC "enable full generic mixing despite MMX optimized routines" OFF)
+    ELSE(CMAKE_SYSTEM_MACHINE MATCHES "i686" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
 
-    OPTION(OPTIM_GENERIC "enable full generic mixing" ON)
-  ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "i686" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
+      OPTION(OPTIM_GENERIC "enable full generic mixing" ON)
+    ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "i686" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
 
-  IF(NOT OPTIM_GENERIC)
-    ADD_DEFINE(USE_LIGHT_GEN_MIXING)
-  ENDIF(NOT OPTIM_GENERIC)
-  ENDIF(HAVE_MMX)
+    IF(NOT OPTIM_GENERIC)
+      ADD_DEFINE(USE_LIGHT_GEN_MIXING)
+    ENDIF(NOT OPTIM_GENERIC)
+  ENDIF(HAVE_MMX OR HAVE_SSE2)
 ELSE(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
 
   SET(ARCH_OBJS ${PORTABLE_OBJS})
