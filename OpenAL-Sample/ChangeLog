@@ -11,6 +11,8 @@
 	src/arch/i386/mixaudio16_sse2_prk.c,
 	src/arch/i386/mixaudio16_sse2_prk.h,
 	src/al_mixer.h, CMakeLists.txt: add SSE2 mixing routines
+	
+	* src/arch/i386/mixaudio16_sse2_prk.c: make GCC 3.4.x compatible
 
 
 2006-08-12  Prakash Punnoor <prakash@punnoor.de>

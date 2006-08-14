@@ -34,7 +34,7 @@ void _alMMXmemcpy(void* dst, void* src, unsigned int n);
 
 /* prepare sign-extension from 16bit to 32 bit for stream ST */
 #define GET_SIGNMASK(ST)							\
-	indata   = __builtin_ia32_loaddqu((char*)((ALshort*)entries[ST].data + offset));\
+	indata   = to_v8hi(__builtin_ia32_loaddqu((char*)((ALshort*)entries[ST].data + offset)));\
 	signmask = __builtin_ia32_psrawi128(indata, num_shift);
 
 /* mix stream 0 */
@@ -132,13 +132,13 @@ void _alMMXmemcpy(void* dst, void* src, unsigned int n);
 	return;
 
 #define MixAudio16_SSE2_TAIL(STREAMS)						\
-		*(v8hi*)dst = __builtin_ia32_packssdw128(loout, hiout);		\
+		*(v8hi*)dst = to_v8hi(__builtin_ia32_packssdw128(loout, hiout));\
 		dst += 8;							\
 		MixAudio16_SSE2_N_TAIL(STREAMS);
 
 /* sign-extension and mix stream; for generic function */
 #define MIX_N									\
-	indata   = __builtin_ia32_loaddqu((char*)((ALshort*)src->data + offset));\
+	indata   = to_v8hi(__builtin_ia32_loaddqu((char*)((ALshort*)src->data + offset)));\
 	signmask = __builtin_ia32_psrawi128(indata, num_shift);			\
 	temp  = to_v4si(__builtin_ia32_punpcklwd128(indata, signmask));		\
 	loout = __builtin_ia32_paddd128(loout, temp);				\
@@ -174,7 +174,7 @@ void MixAudio16_SSE2_n(ALshort *dst, alMixEntry *entries, ALuint numents)
 			++src;
 		} while (st < numents);
 	}
-	*(v8hi*)dst = __builtin_ia32_packssdw128(loout, hiout);
+	*(v8hi*)dst = to_v8hi(__builtin_ia32_packssdw128(loout, hiout));
 	dst += 8;
 	MixAudio16_SSE2_N_TAIL(numents);
 }
@@ -227,8 +227,8 @@ void MixAudio16_SSE2_2(ALshort *dst, alMixEntry *entries)
 	samples_main = samples - samples_post;
 
 #define PADDSW128								\
-	v1 = __builtin_ia32_loaddqu((char*)src1);				\
-	v2 = __builtin_ia32_loaddqu((char*)src2);				\
+	v1 = to_v8hi(__builtin_ia32_loaddqu((char*)src1));				\
+	v2 = to_v8hi(__builtin_ia32_loaddqu((char*)src2));				\
 	*(v8hi*)dst = __builtin_ia32_paddsw128(v1, v2);				\
 	src1 += 8;								\
 	src2 += 8;								\
