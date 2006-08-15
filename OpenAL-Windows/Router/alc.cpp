@@ -1481,25 +1481,9 @@ ALCAPI ALboolean ALCAPIENTRY alcMakeContextCurrent(ALCcontext* context)
     }
 
     //
-    // Notify a third party OpenAL implementation of a change in contexts.
+    // Try the new context.
     //
-    if(alCurrentContext)
-    {
-        if(context)
-        {
-            contextSwitched = alCurrentContext->Device->AlcApi.alcMakeContextCurrent(context->DllContext);
-        }
-
-        else
-        {
-            contextSwitched = alCurrentContext->Device->AlcApi.alcMakeContextCurrent(0);
-        }
-    }
-
-    //
-    // Try the new context.  If both are 0, then we really aren't changing the context are we.
-    //
-    else if(context)
+    if(context)
     {
         contextSwitched = context->Device->AlcApi.alcMakeContextCurrent(context->DllContext);
 
@@ -1531,6 +1515,8 @@ ALCAPI ALboolean ALCAPIENTRY alcMakeContextCurrent(ALCcontext* context)
                 }
             }
         }
+	} else {
+        contextSwitched = alCurrentContext->Device->AlcApi.alcMakeContextCurrent(0);
     }
 
     //
