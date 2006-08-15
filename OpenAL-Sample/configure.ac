@@ -470,39 +470,62 @@ case "$target" in
 #endif
       ],, [openal_x86_mmx_support_yn=yes], [openal_x86_mmx_support_yn=no])
     AC_MSG_RESULT([$openal_x86_mmx_support_yn])
-    ;;
-esac
 
-if test "x$openal_x86_mmx_support_yn" = xyes; then
-case "$target" in
-    *i386* | *i486* | *i586* | *i686*)
-        AC_PATH_PROG([NASM], [nasm], [no])
+    AC_MSG_CHECKING([for SSE2 support])
+    AC_TRY_COMPILE([
+#ifndef __SSE2__
+#error no SSE2 support
+#endif
+      ],, [openal_x86_sse2_support_yn=yes], [openal_x86_sse2_support_yn=no])
+    AC_MSG_RESULT([$openal_x86_sse2_support_yn])
 
-        if test "x$NASM" != xno; then
-            AC_DEFINE([HAVE_CPU_CAPS_DETECTION], [1], [detect cpu capabilities])
-            openal_x86_nasm_support_yn=yes
-
-            if test "x$openal_x86_mmx_support_yn" = xyes; then
-                AC_DEFINE([HAVE_MMX_MEMCPY], [1], [mmx memcpy])
-                openal_x86_nasm_mmx_support_yn=yes
-            fi
-
+    if test "x$openal_x86_mmx_support_yn" = xyes || test "x$openal_x86_sse2_support_yn" = xyes; then
+        AC_PATH_PROG([YASM], [yasm], [no])
+        NASM=$YASM
+        # yasm not found, search for nasm on x86
+        if test "x$NASM" = xno; then
             case "$target" in
-            *linux* | *bsd*)
-                NASM_FORMAT="-f elf"
-                ;;
-            *cygwin* | *mingw*)
-                NASM_FORMAT="-f win32 -DWIN32"
+                *i386* | *i486* | *i586* | *i686* )
+                AC_PATH_PROG([NASM], [nasm], [no])
+                if test "x$NASM" = xno; then
+                    AC_MSG_ERROR([You need YASM or NASM if SIMD code is enabled.])
+                fi
                 ;;
             esac
         fi
-        ;;
-    *x86_64*)
-        ;;
-    *)
-        ;;
-esac
+        if test "x$NASM" != xno; then
+            AC_DEFINE([HAVE_CPU_CAPS_DETECTION], [1], [detect cpu capabilities])
 
+            case "$target" in
+                *i386* | *i486* | *i586* | *i686*)
+                openal_x86_nasm_support_yn=yes
+                if test "x$openal_x86_mmx_support_yn" = xyes; then
+                    AC_DEFINE([HAVE_MMX_MEMCPY], [1], [mmx memcpy])
+                    openal_x86_nasm_mmx_support_yn=yes
+                fi
+
+                case "$target" in
+                    *linux* | *bsd*)
+                    NASM_FORMAT="-f elf"
+                    ;;
+                    *cygwin* | *mingw*)
+                    NASM_FORMAT="-f win32 -DWIN32"
+                    ;;
+                esac
+                ;;
+                *x86_64*)
+                openal_x86_64_yasm_support_yn=yes
+                case "$target" in
+                    *linux* | *bsd*)
+                    NASM_FORMAT="-f elf64"
+                    ;;
+                esac
+                ;;
+            esac
+        fi
+    fi
+    ;;
+esac
 
 AC_ARG_ENABLE([optim-generic],
 [AS_HELP_STRING([--enable-optim-generic],
@@ -526,11 +549,12 @@ if test "x$openal_x86_mmx_support_yn" = xyes; then
         AC_DEFINE([USE_LIGHT_GEN_MIXING], [1], [build light generic mixing routines])
     fi
 fi
-fi
 
 AM_CONDITIONAL([X86ENABLED], [test "x$openal_x86_support_yn" = xyes])
 AM_CONDITIONAL([X86MMXENABLED], [test "x$openal_x86_mmx_support_yn" = xyes])
+AM_CONDITIONAL([X86SSE2ENABLED], [test "x$openal_x86_sse2_support_yn" = xyes])
 AM_CONDITIONAL([X86NASMENABLED], [test "x$openal_x86_nasm_support_yn" = xyes])
+AM_CONDITIONAL([X8664YASMENABLED], [test "x$openal_x86_64_yasm_support_yn" = xyes])
 AM_CONDITIONAL([X86NASMMMXENABLED], [test "x$openal_x86_nasm_mmx_support_yn" = xyes])
 
 # Note that -fvisibility=... support implies __attribute__((visibility(...))) 

@@ -110,11 +110,23 @@ libopenal_la_CPPFLAGS += -I$(top_srcdir)/src/arch/i386
 libopenal_la_SOURCES += arch/i386/mixaudio16_mmx_prk.c arch/i386/mixaudio16_mmx_prk.h
 endif
 
+if X86SSE2ENABLED
+libopenal_la_CPPFLAGS += -I$(top_srcdir)/src/arch/i386
+libopenal_la_SOURCES += arch/i386/mixaudio16_sse2_prk.c arch/i386/mixaudio16_sse2_prk.h
+endif
+
+
 if X86NASMENABLED
 # autotools suck hard; this is the only way I got it working
 X86_SUBDIR = arch
 asm_ldadd = $(top_builddir)/src/arch/i386/libx86_asm_routines.la
 endif
+
+if X8664YASMENABLED
+X86_SUBDIR = arch
+asm_ldadd = $(top_builddir)/src/arch/i386/libx86_asm_routines.la
+endif
+
 
 else
 # no x86, so use portable stuff

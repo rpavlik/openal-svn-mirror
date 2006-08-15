@@ -1,4 +1,9 @@
-2006-08-12  Prakash Punnoor <prakash@punnoor.de>
+2006-08-15  Prakash Punnoor <prakash@punnoor.de>
+
+	* src/arch/i386/Makefile.am, src/Makefile.am, configure.ac:
+	add YASM and SSE support and CPU features detection for x86_64
+
+2006-08-14  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/arch/i386/x86_floatmul.c: add SSE2 routine
 	
