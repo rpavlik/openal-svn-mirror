@@ -529,9 +529,9 @@ esac
 
 AC_ARG_ENABLE([optim-generic],
 [AS_HELP_STRING([--enable-optim-generic],
-                [x86(_64): even if mmx enabled, build optimized instead of light generic mixing routines  @<:@i686/x86_64:default=no@:>@])])
+                [x86(_64): even if mmx/sse2 enabled, build optimized instead of light generic mixing routines  @<:@i686/x86_64:default=no@:>@])])
 
-if test "x$openal_x86_mmx_support_yn" = xyes; then
+if test "x$openal_x86_mmx_support_yn" = xyes || test "x$openal_x86_sse2_support_yn" = xyes; then
     case "$target" in
     *i686* | *x86_64*)
         if test "x$enable_optim_generic" != xyes; then

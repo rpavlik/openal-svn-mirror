@@ -2,6 +2,9 @@
 
 	* src/arch/i386/Makefile.am, src/Makefile.am, configure.ac:
 	add YASM and SSE support and CPU features detection for x86_64
+	
+	* configure.ac: build light generic routines only too, if SSE2
+	alone is enabled
 
 2006-08-14  Prakash Punnoor <prakash@punnoor.de>
 
