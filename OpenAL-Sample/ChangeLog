@@ -1,4 +1,12 @@
-2006-08-16 Prakash Punnoor <prakash@punnoor.de>
+2006-08-16  Prakash Punnoor <prakash@punnoor.de>
+
+	* src/arch/i386/x86_simd_support_prk.h,
+	src/arch/i386/mixaudio16_sse2_prk.c, src/arch/i386/x86_floatmul.c:
+	make icc 9.1 compatible
+	
+	* src/arch/i386/x86_simd_support_prk.h,
+	src/arch/i386/x86_floatmul.c: simplification
+
 
 2006-08-15  Prakash Punnoor <prakash@punnoor.de>
 

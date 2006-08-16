@@ -57,6 +57,7 @@ typedef long long v2di __attribute__ ((vector_size (16)));
 #define to_v2di(X) (v2di)X
 
 typedef char *psse2loadtype;
+#define setw(X) (__extension__(v4hi){X, X, X, X})
 #define setw128(X) (__extension__(v8hi){X, X, X, X, X, X, X, X})
 
 #define ALIGN16(x) x __attribute__((aligned(16)))
@@ -84,6 +85,8 @@ typedef __m64 di;
 #define __builtin_ia32_psllw(X,Y)	_mm_slli_pi16(X,Y)
 #define __builtin_ia32_psraw(X,Y)	_mm_srai_pi16(X,Y)
 #define __builtin_ia32_emms() 		_mm_empty()
+
+#define setw(X)	_mm_set_pi16(X, X, X, X)
 #endif /* __MMX__ */
 
 #ifdef __SSE2__

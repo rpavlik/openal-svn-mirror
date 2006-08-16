@@ -91,14 +91,10 @@ void _alFloatMul(ALshort *bpt, ALfloat sa, ALuint len) {
 #endif /* __SSE2__ */
 #ifdef __MMX__
 	if (_alHaveMMX()) {
-		union {
-			short s[4];
-			v4hi v;
-		} ALIGN16(v_sa);
+		v4hi v_sa;
 		ALuint samples_main;
 		ALuint samples_pre;
 		ALuint samples_post;
-		v4hi temp;
 		
 		
 		samples_pre = MMX_ALIGN - (aint)bpt % MMX_ALIGN;
@@ -118,32 +114,28 @@ void _alFloatMul(ALshort *bpt, ALfloat sa, ALuint len) {
 		
 		if (scaled_sa < (1 << 15)) {
 			/* we do signed multiplication, so 1 << 15 is the max */
-			v_sa.s[0] = scaled_sa;
-			v_sa.s[1] = v_sa.s[0];
-			v_sa.s[2] = scaled_sa;
-			v_sa.s[3] = v_sa.s[0];
+			v_sa = setw(scaled_sa);
 			
 			while (samples_main--) {
-				*(v4hi*)bpt = __builtin_ia32_pmulhw(*(v4hi*)bpt, v_sa.v);
+				*(v4hi*)bpt = __builtin_ia32_pmulhw(*(v4hi*)bpt, v_sa);
 				bpt += 4;
-				*(v4hi*)bpt = __builtin_ia32_pmulhw(*(v4hi*)bpt, v_sa.v);
+				*(v4hi*)bpt = __builtin_ia32_pmulhw(*(v4hi*)bpt, v_sa);
 				bpt += 4;
 			}
 		} else {
 			/* we lose 1 bit here, but well... */
-			v_sa.s[0] = scaled_sa >> 1;
-			v_sa.s[1] = v_sa.s[0];
-			v_sa.s[2] = v_sa.s[0];
-			v_sa.s[3] = v_sa.s[0];
+			v4hi temp;
+			short sa2 = scaled_sa >> 1;
+			v_sa = setw(sa2);
 			
 			while (samples_main--) {
 				/* work-around gcc 3.3.x bug */
 				const long num_shift = 1L;
 				
-				temp = __builtin_ia32_pmulhw(*(v4hi*)bpt, v_sa.v);
+				temp = __builtin_ia32_pmulhw(*(v4hi*)bpt, v_sa);
 				*(v4hi*)bpt = __builtin_ia32_psllw(temp, num_shift);
 				bpt += 4;
-				temp = __builtin_ia32_pmulhw(*(v4hi*)bpt, v_sa.v);
+				temp = __builtin_ia32_pmulhw(*(v4hi*)bpt, v_sa);
 				*(v4hi*)bpt = __builtin_ia32_psllw(temp, num_shift);
 				bpt += 4;
 			}
