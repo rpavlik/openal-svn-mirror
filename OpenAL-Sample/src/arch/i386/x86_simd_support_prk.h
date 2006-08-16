@@ -56,11 +56,15 @@ typedef long long v2di __attribute__ ((vector_size (16)));
 #define to_v4si(X) (v4si)X
 #define to_v2di(X) (v2di)X
 
+typedef char *psse2loadtype;
+#define setw128(X) (__extension__(v8hi){X, X, X, X, X, X, X, X})
+
 #define ALIGN16(x) x __attribute__((aligned(16)))
 typedef unsigned long aint;
 
 #else /* __GNUC__ && !__INTEL_COMPILER */
 
+#ifdef __MMX__
 #include <mmintrin.h>
 typedef __m64 v4hi;
 typedef __m64 v2si;
@@ -71,12 +75,6 @@ typedef __m64 di;
 #define to_v2si(X) X
 #define to_di(X)   X
 
-#define to_v8hi(X) X
-#define to_v4si(X) X
-#define to_v2di(X) X
-
-#define __builtin_ia32_pand(X,Y)	_mm_and_si64(X,Y)
-#define __builtin_ia32_pcmpeqw(X,Y)	_mm_cmpeq_pi16(X,Y)
 #define __builtin_ia32_packssdw(X,Y)	_mm_packs_pi32(X,Y)
 #define __builtin_ia32_punpcklwd(X,Y)	_mm_unpacklo_pi16(X,Y)
 #define __builtin_ia32_punpckhwd(X,Y)	_mm_unpackhi_pi16(X,Y)
@@ -84,7 +82,36 @@ typedef __m64 di;
 #define __builtin_ia32_paddsw(X,Y)	_mm_adds_pi16(X,Y)
 #define __builtin_ia32_pmulhw(X,Y)	_mm_mulhi_pi16(X,Y)
 #define __builtin_ia32_psllw(X,Y)	_mm_slli_pi16(X,Y)
+#define __builtin_ia32_psraw(X,Y)	_mm_srai_pi16(X,Y)
 #define __builtin_ia32_emms() 		_mm_empty()
+#endif /* __MMX__ */
+
+#ifdef __SSE2__
+#include <emmintrin.h>
+typedef __m128i v8hi;
+typedef __m128i v4si;
+typedef __m128i v2di;
+typedef __m128i *psse2loadtype;
+
+
+
+/* MSVC++ forbids explicit casts */
+#define to_v8hi(X) X
+#define to_v4si(X) X
+#define to_v2di(X) X
+
+#define __builtin_ia32_loaddqu(X)	_mm_loadu_si128(X)
+#define __builtin_ia32_packssdw128(X,Y)	_mm_packs_epi32(X,Y)
+#define __builtin_ia32_punpcklwd128(X,Y)	_mm_unpacklo_epi16(X,Y)
+#define __builtin_ia32_punpckhwd128(X,Y)	_mm_unpackhi_epi16(X,Y)
+#define __builtin_ia32_paddd128(X,Y)	_mm_add_epi32(X,Y)
+#define __builtin_ia32_paddsw128(X,Y)	_mm_adds_epi16(X,Y)
+#define __builtin_ia32_pmulhw128(X,Y)	_mm_mulhi_epi16(X,Y)
+#define __builtin_ia32_psllwi128(X,Y)	_mm_slli_epi16(X,Y)
+#define __builtin_ia32_psrawi128(X,Y)	_mm_srai_epi16(X,Y)
+
+#define setw128(X)	_mm_set_epi16(X, X, X, X, X, X, X, X)
+#endif /* __SSE2__ */
 
 #define ALIGN16(x) __declspec(align(16)) x
 

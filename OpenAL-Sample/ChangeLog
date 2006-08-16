@@ -1,3 +1,5 @@
+2006-08-16 Prakash Punnoor <prakash@punnoor.de>
+
 2006-08-15  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/arch/i386/Makefile.am, src/Makefile.am, configure.ac:

@@ -58,9 +58,7 @@ void _alFloatMul(ALshort *bpt, ALfloat sa, ALuint len) {
 		}
 		if (scaled_sa < (1 << 15)) {
 			/* we do signed multiplication, so 1 << 15 is the max */
-			/* FIXME: NON-GCC probably doesn't know __extension__ */
-			v_sa = __extension__(v8hi){scaled_sa, scaled_sa, scaled_sa, scaled_sa,
-									scaled_sa, scaled_sa, scaled_sa, scaled_sa};
+			v_sa = setw128(scaled_sa);
 			
 			while (samples_main--) {
 				*(v8hi*)bpt = __builtin_ia32_pmulhw128(*(v8hi*)bpt, v_sa);
@@ -72,8 +70,7 @@ void _alFloatMul(ALshort *bpt, ALfloat sa, ALuint len) {
 			/* we lose 1 bit here, but well... */
 			v8hi temp;
 			short sa2 = scaled_sa >> 1;
-			v_sa = __extension__(v8hi){sa2, sa2, sa2, sa2,
-				sa2, sa2, sa2, sa2};
+			v_sa = setw128(sa2);
 			
 			while (samples_main--) {
 				/* work-around gcc 3.3.x bug */
