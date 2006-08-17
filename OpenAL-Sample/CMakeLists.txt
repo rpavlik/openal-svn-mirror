@@ -388,7 +388,7 @@ IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
   INCLUDE_DIRECTORIES(${OpenAL_SOURCE_DIR}/src/arch/i386)
   SET(ARCH_OBJS ${x86_OBJS})
 
-  FIND_PACKAGE(CompilerMMXFlag)
+  FIND_PACKAGE(CompilerSIMDFlags)
 
   IF(CMAKE_SYSTEM MATCHES "Windows")
    # this should get fixed into a real detection
