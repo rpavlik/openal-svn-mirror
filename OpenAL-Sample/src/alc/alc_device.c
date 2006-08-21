@@ -203,18 +203,6 @@ alcCloseDevice( ALCdevice *dev )
 	return ALC_TRUE;
 }
 
-void
-alcDevicePause_( AL_device *dev  )
-{
-	dev->ops->pause( dev->privateData );
-}
-
-void
-alcDeviceResume_( AL_device *dev  )
-{
-	dev->ops->resume( dev->privateData );
-}
-
 /*
  * Sets the attributes for the device from the settings in the device. The
  * library is free to change the parameters associated with the device, but

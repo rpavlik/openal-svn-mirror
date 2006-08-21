@@ -1,5 +1,12 @@
 2006-08-21  Sven Panne  <sven.panne@aedion.de>
 
+	* src/alc/alc_device.c, src/alc/alc_device.h, src/alc/alc_context.c,
+	src/backends/alc_backend.h: Setting the current context to NULL has
+	nothing to with pausing the context (the pause/resume backend function
+	are still there for now, they should probably be used from
+	alcSuspendContext/alcProcessContext). Moved mixer initialization to
+	_alInit. ALCCONTEXTP_TO_ALUINT returns an ALuint, not an int.
+
 	* src/alc/alc_device.c, src/alc/alc_context.c: _alInit is now called
 	when the first device is created, not the first context, same for
 	_alExit and the destruction of the last device. This should cut down

@@ -110,6 +110,10 @@ ALboolean _alInit( void ) {
 		return AL_FALSE;
 	}
 
+	if( _alInitMixer() == AL_FALSE ) {
+		return AL_FALSE;
+	}
+
 	/* extension initilizations */
 	err = _alInitExtensions();
 	if(err == AL_FALSE) {

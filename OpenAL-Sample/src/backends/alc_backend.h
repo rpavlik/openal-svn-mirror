@@ -29,14 +29,14 @@ typedef struct ALC_BackendOpsStruct
   void (*close) (struct ALC_BackendPrivateData *privateData);
 
   /*
-   * Informs a backend that it is about to get paused. This function is used to
-   * implement alcMakeContextCurrent(NULL).
+   * Informs a backend that it is about to get paused. This function is
+   * currently unused, but should probably be used by alcSuspendContext.
    */
   void (*pause) (struct ALC_BackendPrivateData *privateData);
 
   /*
-   * Informs a backend that it is about to get resumed. This function is used to
-   * implement alcMakeContextCurrent(NON_NULL).
+   * Informs a backend that it is about to get resumed. This function is
+   * currently unused, but should probably be used by alcProcessContext.
    */
   void (*resume) (struct ALC_BackendPrivateData *privateData);
 

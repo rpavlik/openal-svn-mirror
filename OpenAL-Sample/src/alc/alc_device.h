@@ -12,10 +12,6 @@
 #include <AL/al.h>
 #include "al_types.h"
 
-void alcDevicePause_( AL_device *dev );
-
-void alcDeviceResume_( AL_device *dev );
-
 /*
  * Sets the attributes for the device from the settings in the device. The
  * library is free to change the parameters associated with the device, but

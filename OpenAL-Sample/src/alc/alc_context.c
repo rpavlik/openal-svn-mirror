@@ -141,81 +141,25 @@ static ALuint _alcIndexToCid( int cindex );
 ALCboolean alcMakeContextCurrent( ALCcontext *handle )
 {
 	AL_context *cc;
-	int cid;
-	static ALboolean ispaused = AL_FALSE;
-	ALboolean should_init_mixer = AL_FALSE;
+	ALuint cid;
 
-	if(handle == NULL) {
-		/* NULL handle means pause */
-		if(ispaused == AL_FALSE) {
-			if(al_contexts.items != 0) {
-				/* only lock if a context has been
-				 * created.  Otherwise, don't.
-				 */
+	_alcLockAllContexts();
 
-				/* Give mixer thread chance to catch up */
-
-				_alLockMixerPause();
-
-				_alcLockAllContexts();
-
-				cc = _alcDCGetContext();
-				if( cc == NULL ) {
-					/* I don't even want to think about it */
-
-					/* FIXME: wrong error */
-					_alcSetError( ALC_INVALID_CONTEXT );
-					_alcUnlockAllContexts();
-					return ALC_FALSE;
-				}
-
-				/*
-				 * inform current audio device about
-				 * impending stall.
-				 */
-				if( cc->write_device ) {
-					alcDevicePause_( cc->write_device );
-				}
-				if( cc->read_device ) {
-					alcDevicePause_( cc->read_device );
-				}
-
-				_alcCCId = (ALuint) -1;
-				_alcUnlockAllContexts();
-			}
-
-			ispaused = AL_TRUE;
-		}
-
+	if (handle == NULL) {
+		_alcCCId = (ALuint) -1;
+		_alcUnlockAllContexts();
 		return ALC_TRUE;
 	}
 
 	cid = ALCCONTEXTP_TO_ALUINT( handle );
-
-	_alcLockAllContexts();
-
-	if( _alcIsContext( _alcCCId ) == AL_FALSE ) {
-		should_init_mixer = AL_TRUE;
-	}
-
-	_alcCCId = cid;
-
 	cc = _alcGetContext( cid );
 	if( cc == NULL ) {
-		/* I don't even want to think about it */
-
-		/* FIXME: wrong error */
+		/* strange error, but there is no better one */
 		_alcSetError( ALC_INVALID_CONTEXT );
 		_alcUnlockAllContexts( );
 		return ALC_FALSE;
 	}
-
-	if( should_init_mixer == AL_TRUE ) {
-		/* Set up mixer thread */
-		if(_alInitMixer() == AL_FALSE) {
-			/* do something */
-		}
-	}
+	_alcCCId = cid;
 
 	/* set device's current context */
 	if(cc->write_device) {
@@ -230,21 +174,7 @@ ALCboolean alcMakeContextCurrent( ALCcontext *handle )
 		alcDeviceSet_( cc->read_device );
 	}
 
-
-	if(ispaused == AL_TRUE) {
-		/* someone unpaused us */
-		ispaused = AL_FALSE;
-
-		alcDeviceResume_( cc->write_device );
-		alcDeviceResume_( cc->read_device );
-
-		_alcUnlockAllContexts();
-		_alUnlockMixerPause();
-	} else {
-		/* just unlock contexts */
-		_alcUnlockAllContexts();
-	}
-
+	_alcUnlockAllContexts();
 	return ALC_TRUE;
 }
 
@@ -256,7 +186,7 @@ ALCboolean alcMakeContextCurrent( ALCcontext *handle )
 void alcDestroyContext( ALCcontext *handle )
 {
 	AL_context *cc;
-	int cid;
+	ALuint cid;
 
 	if( handle == NULL ) {
 		_alcSetError( ALC_INVALID_CONTEXT );
@@ -318,7 +248,7 @@ void alcProcessContext( ALCcontext *alcHandle )
 {
 	AL_context *cc;
 	ALboolean should_sync;
-	int cid;
+	ALuint cid;
 
 	if( alcHandle == NULL ) {
 		/*
