@@ -1,3 +1,7 @@
+2006-08-21  Sven Panne  <sven.panne@aedion.de>
+
+	* src/backends/alc_backend_oss.c: Fixed tiny memory leak in OSS backend.
+
 2006-08-17  Prakash Punnoor <prakash@punnoor.de>
 
 	* admin/CMakeModules/FindCompilerMMXFlag.cmake:
@@ -8,34 +12,34 @@
 2006-08-16  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/arch/i386/x86_simd_support_prk.h,
-	src/arch/i386/mixaudio16_sse2_prk.c, src/arch/i386/x86_floatmul.c:
-	make icc 9.1 compatible
+	src/arch/i386/mixaudio16_sse2_prk.c, src/arch/i386/x86_floatmul.c: make
+	icc 9.1 compatible
 	
-	* src/arch/i386/x86_simd_support_prk.h,
-	src/arch/i386/x86_floatmul.c: simplification
+	* src/arch/i386/x86_simd_support_prk.h, src/arch/i386/x86_floatmul.c:
+	simplification
 
 
 2006-08-15  Prakash Punnoor <prakash@punnoor.de>
 
-	* src/arch/i386/Makefile.am, src/Makefile.am, configure.ac:
-	add YASM and SSE support and CPU features detection for x86_64
+	* src/arch/i386/Makefile.am, src/Makefile.am, configure.ac: add YASM and
+	SSE support and CPU features detection for x86_64
 	
-	* configure.ac: build light generic routines only too, if SSE2
-	alone is enabled
+	* configure.ac: build light generic routines only too, if SSE2 alone is
+	enabled
 
 2006-08-14  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/arch/i386/x86_floatmul.c: add SSE2 routine
 	
 	* CMakeLists.txt, src/arch/i386/x86_simd_support_prk.h,
-	admin/CMakeModules/FindCompilerMMXFlag.cmake: preliminary SSE2
-	support, currently only with GCC 4.x and 3.4.x
+	admin/CMakeModules/FindCompilerMMXFlag.cmake: preliminary SSE2 support,
+	currently only with GCC 4.x and 3.4.x
 	
 	* src/al_mixfunc.c, src/mixaudio16.h,
 	src/arch/i386/x86_simd_support_prk.h,
 	src/arch/i386/mixaudio16_sse2_prk.c,
-	src/arch/i386/mixaudio16_sse2_prk.h,
-	src/al_mixer.h, CMakeLists.txt: add SSE2 mixing routines
+	src/arch/i386/mixaudio16_sse2_prk.h, src/al_mixer.h, CMakeLists.txt: add
+	SSE2 mixing routines
 	
 	* src/arch/i386/mixaudio16_sse2_prk.c: make GCC 3.4.x compatible
 
@@ -45,17 +49,17 @@
 	* src/arch/i386/x86_64_linux_cpu_caps_detect_prk.yasm: added
 
 	* CMakeLists.txt, admin/CMakeModules/CMakeASMCompiler.cmake.in,
-    admin/CMakeModules/CMakeASMInformation.cmake,
-    admin/CMakeModules/CMakeDetermineASMCompiler.cmake: added yasm
-    support and x86_64 Linux CPU features detection
+	admin/CMakeModules/CMakeASMInformation.cmake,
+	admin/CMakeModules/CMakeDetermineASMCompiler.cmake: added yasm support
+	and x86_64 Linux CPU features detection
 
-    * src/arch/i386/x86_cpu_caps_detect_prk.nasm,
-    src/arch/i386/memcpy_mmx_prk.nasm,
-    src/arch/i386/x86_64_linux_cpu_caps_detect_prk.yasm: prevent
-    executable stacks when building with yasm
+	* src/arch/i386/x86_cpu_caps_detect_prk.nasm,
+	src/arch/i386/memcpy_mmx_prk.nasm,
+	src/arch/i386/x86_64_linux_cpu_caps_detect_prk.yasm: prevent executable
+	stacks when building with yasm
 
-    * CMakeLists.txt, admin/CMakeModules/FindPkgConfig.cmake,
-    admin/CMakeModules/FindSelectArgtypes.cmake: minor cosmetics
+	* CMakeLists.txt, admin/CMakeModules/FindPkgConfig.cmake,
+	admin/CMakeModules/FindSelectArgtypes.cmake: minor cosmetics
 
 2006-08-11  Prakash Punnoor <prakash@punnoor.de>
 

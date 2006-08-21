@@ -402,7 +402,7 @@ alcBackendOpenOSS_ (ALC_OpenMode mode, ALC_BackendOps **ops,
 {
   char deviceName[256];
   int fd;
-  struct ossData *od = (struct ossData *) malloc (sizeof *od);
+  struct ossData *od;
 
   getOSSDeviceName (deviceName, sizeof (deviceName), mode);
   fd = open (deviceName, (mode == ALC_OPEN_INPUT_ ? O_RDONLY : O_WRONLY));
