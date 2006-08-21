@@ -84,8 +84,8 @@ static AL_extension exts[] = {
 /*
  * _alInit( void )
  *
- * _alInit is called when the "first" context is created.  If all
- * contexts are deleted, and then one is created, it is called again.
+ * _alInit is called when the "first" device is created.  If all
+ * devices are deleted, and then one is created, it is called again.
  *
  * Returns AL_TRUE unless some weird sort of memory allocation problem occurs,
  * in which case AL_FALSE is returned.
@@ -94,6 +94,8 @@ ALboolean _alInit( void ) {
 	ALboolean err;
 	ALuint i;
 
+	_alDebug( ALD_MAXIMUS, __FILE__, __LINE__, "_alInit called" );
+	
 	alDLInit_ ();
 
 	for(i = 0; i < _ALC_MAX_CHANNELS; i++) {
@@ -154,13 +156,15 @@ ALboolean _alInit( void ) {
 /*
  * _alExit( void )
  *
- * Finalizes things when the last context is deleted.
+ * Finalizes things when the last device is deleted.
  *
  * FIXME: we can probably clean a lot of this up now that we have
  * alc{Open,Close}Device.
  */
 void _alExit( void ) {
 	int i;
+
+	_alDebug( ALD_MAXIMUS, __FILE__, __LINE__, "_alExit called" );
 
 #ifndef NO_THREADING
 	/* we could be sync, so we check mixthread for a valid ID */

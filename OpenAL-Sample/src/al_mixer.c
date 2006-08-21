@@ -425,6 +425,8 @@ static ALuint _alAddDataToMixer( void *dataptr, ALuint bytes_to_write )
  */
 void _alDestroyMixer( void )
 {
+	_alDebug( ALD_MAXIMUS, __FILE__, __LINE__, "_alDestroyMixer called" );
+
 	if( mix_mutex != NULL )
 	{
 		_alDestroyMutex( mix_mutex );
@@ -607,6 +609,8 @@ static void _alDestroyMixSource( void *ms )
  */
 ALboolean _alInitMixer( void )
 {
+	_alDebug( ALD_MAXIMUS, __FILE__, __LINE__, "_alInitMixer called" );
+
 	deviceBufferSizeInBytes = _alcDCGetWriteDeviceBufferSizeInBytes();
 
 	mix_mutex = _alCreateMutex();
