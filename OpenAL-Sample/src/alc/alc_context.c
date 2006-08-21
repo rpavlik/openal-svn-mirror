@@ -540,10 +540,7 @@ void _alcSetContext(const ALCint *attrlist, ALuint cid, AL_device *dev ) {
 		void *t = 0;
 
 		rdr.key = *attrlist++;
-		if(rdr.key != 0)
-		{
-			rdr.val = *attrlist++;
-		}
+		rdr.val = (rdr.key != 0) ? *attrlist++ : 0;
 
 		t = realloc(cc->Flags,
 				  (2 + cc->NumFlags) * 2 * sizeof *cc->Flags);

@@ -1,5 +1,7 @@
 2006-08-21  Sven Panne  <sven.panne@aedion.de>
 
+	* src/alc/alc_context.c: Avoid access to undefined memory.
+
 	* src/alc/alc_device.c, src/alc/alc_device.h, src/alc/alc_context.c,
 	src/backends/alc_backend.h: Setting the current context to NULL has
 	nothing to with pausing the context (the pause/resume backend function
