@@ -1,5 +1,12 @@
 2006-08-21  Sven Panne  <sven.panne@aedion.de>
 
+	* src/alc/alc_device.c, src/alc/alc_context.c: _alInit is now called
+	when the first device is created, not the first context, same for
+	_alExit and the destruction of the last device. This should cut down
+	useless (de-)initializations and is a bit more logical.
+
+	* src/al_mixer.c, src/al_main.c: Added debug output.
+
 	* src/backends/alc_backend_oss.c: Fixed tiny memory leak in OSS backend.
 
 2006-08-17  Prakash Punnoor <prakash@punnoor.de>

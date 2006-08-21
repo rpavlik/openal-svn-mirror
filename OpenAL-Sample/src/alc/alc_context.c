@@ -281,9 +281,6 @@ void alcDestroyContext( ALCcontext *handle )
 		/* unlock context for final time */
 		_alcUnlockContext( cid );
 
-		/* cleanup */
-		_alExit();
-
 		/*
 		 * Set NumContexts to 0
 		 */
@@ -452,9 +449,6 @@ ALCcontext *alcCreateContext( ALCdevice *dev, const ALCint *attrlist )
 
 		/* get a context name for the new context */
 		cid = _alcGetNewContextId();
-
-		/* misc library initialization */
-		_alInit();
 
 		/* set the context attributes */
 		_alcLockContext( cid );

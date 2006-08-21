@@ -42,6 +42,10 @@ ALCdevice *alcOpenDevice( const ALchar *deviceSpecifier ) {
 			_alDebug(ALD_CONFIG, __FILE__, __LINE__,
 				"Couldn't parse config file.");
 		}
+		if( _alInit() == AL_FALSE ) {
+			_alDebug(ALD_CONFIG, __FILE__, __LINE__,
+				"Couldn't initialize OpenAL.");
+		}
 	}
 
 	/* see if the user defined devices, sampling-rate, or direction */
@@ -191,6 +195,10 @@ alcCloseDevice( ALCdevice *dev )
 	free( dev );
 
 	num_devices--;
+
+	if( num_devices == 0 ) {
+		_alExit ();
+	}
 
 	return ALC_TRUE;
 }
