@@ -28,12 +28,16 @@
 #define SCALING_POWER  16
 #define SCALING_FACTOR (1 << SCALING_POWER)
 
+#define MIN_ENTER_SIMD_LEN 48
+
 void _alFloatMul(ALshort *bpt, ALfloat sa, ALuint len);
 
 void _alFloatMul(ALshort *bpt, ALfloat sa, ALuint len) {
 	ALint scaled_sa = sa * SCALING_FACTOR;
 	ALint iter;
 	
+	if (len < MIN_ENTER_SIMD_LEN)
+		goto skip_simd;
 #ifdef __SSE2__
 	if (_alHaveSSE2()) {
 		v8hi v_sa;
@@ -143,6 +147,7 @@ void _alFloatMul(ALshort *bpt, ALfloat sa, ALuint len) {
 		__builtin_ia32_emms();
 	}
 #endif /* __MMX__ */
+skip_simd:
 
 	while(len--) {
 		iter = *bpt;
