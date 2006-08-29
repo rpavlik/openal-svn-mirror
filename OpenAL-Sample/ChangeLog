@@ -1,3 +1,15 @@
+2006-08-29  Prakash Punnoor <prakash@punnoor.de>
+
+	* Makefile.am: renamed FindCompilerMMXFlag.cmake to
+	FindCompilerSIMDFlags.cmake
+
+2006-08-27  Prakash Punnoor <prakash@punnoor.de>
+
+	* src/arch/i386/x86_floatmul.c: don't use SIMD routines for few
+	samples (bug spotted by Ivan Dubrov)
+	
+	* src/arch/i386/x86_64_linux_cpu_caps_detect_prk.yasm: typo
+
 2006-08-21  Sven Panne  <sven.panne@aedion.de>
 
 	* src/alc/alc_context.c: Avoid access to undefined memory.
