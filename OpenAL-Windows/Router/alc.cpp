@@ -19,6 +19,7 @@
  */
 
 #define _CRT_SECURE_NO_DEPRECATE // get rid of sprintf security warnings on VS2005
+//#define HAVE_VISTA_HEADERS
 
 #include <stdlib.h>
 #include <memory.h>
@@ -27,6 +28,11 @@
 #include <stdio.h>
 #include <tchar.h>
 #include <assert.h>
+
+#ifdef HAVE_VISTA_HEADERS
+#include "Mmdeviceapi.h"
+#include "functiondiscoverykeys.h"
+#endif
 
 #include <stddef.h>
 #include <windows.h>
@@ -1703,6 +1709,58 @@ ALCAPI ALCvoid ALCAPIENTRY alcSuspendContext(ALCcontext* context)
     return;
 }
 
+void getDeviceName(char *name, unsigned int len)
+{
+	bool bVistaName = false;
+
+#ifdef HAVE_VISTA_HEADERS
+	// try to grab device name through Vista Core Audio...
+	HRESULT hr;
+	IMMDeviceEnumerator *pEnumerator;
+
+	CoInitialize(NULL);
+	hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL,CLSCTX_INPROC_SERVER, 
+		__uuidof(IMMDeviceEnumerator),(void**)&pEnumerator);
+	if SUCCEEDED(hr) {
+		IMMDevice* pDevice = NULL;
+		hr = pEnumerator->GetDefaultAudioEndpoint(eRender, eMultimedia, &pDevice);
+		if SUCCEEDED(hr) {
+			IPropertyStore *pPropertyStore;
+			hr = pDevice->OpenPropertyStore(STGM_READ, &pPropertyStore);
+			if SUCCEEDED(hr) {
+				PROPVARIANT pv;
+				PropVariantInit(&pv);
+				pPropertyStore->GetValue(PKEY_DeviceInterface_FriendlyName, &pv);
+				sprintf(name, "%S", pv.pwszVal);
+				bVistaName = true;
+				pPropertyStore->Release();
+			}
+			pDevice->Release();
+		}
+		pEnumerator->Release();
+	}
+	CoUninitialize();
+#endif
+
+	if (bVistaName == false) {
+		// figure out name via mmsystem...
+		UINT uDeviceID;
+		DWORD dwFlags=1;
+		WAVEOUTCAPS info;
+
+		#if !defined(_WIN64)
+		__asm pusha; // workaround for register destruction caused by these wavOutMessage calls (weird but true)
+		#endif // !defined(_WIN64)
+		waveOutMessage((HWAVEOUT)(UINT_PTR)WAVE_MAPPER,0x2000+0x0015,(LPARAM)&uDeviceID,(WPARAM)&dwFlags);
+		waveOutGetDevCaps(uDeviceID,&info,sizeof(info));
+		#if !defined(_WIN64)
+		__asm popa;
+		#endif // !defined(_WIN64)
+		if (strlen(info.szPname) <= len) {
+			strcpy(name, T2A(info.szPname));
+		}
+	}
+}
 
 //*****************************************************************************
 // alcGetString
@@ -1762,12 +1820,9 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
                 //
                 const char* specifier = 0;
                 HINSTANCE dll = 0;
-				char mixerDevice[32];
+				char mixerDevice[256];
 				bool acceptPartial = false;
 				char actualName[32];
-				UINT uDeviceID;
-				DWORD dwFlags=1;
-				WAVEOUTCAPS info;
 
 				if (waveInGetNumDevs() == 0)
 				{
@@ -1777,20 +1832,16 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
 
 				// two issues here --
 				// 1) whatever device is in the control panel as the preferred device should be accepted
-				// 2) if the preferred device is an Audigy, then the name won't match the hardware DLL, so
-				//    allow a partial match in this case
-                #if !defined(_WIN64)
-                __asm pusha; // workaround for register destruction caused by these wavOutMessage calls (weird but true)
-                #endif // !defined(_WIN64)
-                waveOutMessage((HWAVEOUT)(UINT_PTR)WAVE_MAPPER,0x2000+0x0015,(LPARAM)&uDeviceID,(WPARAM)&dwFlags);
-				waveOutGetDevCaps(uDeviceID,&info,sizeof(info));
-                #if !defined(_WIN64)
-                __asm popa;
-                #endif // !defined(_WIN64)
-				strcpy(mixerDevice, T2A(info.szPname));
+				// 2) if the preferred device is an Audigy or an X-Fi, then the name might not match the 
+				// hardware DLL, so allow a partial match in this case
+                getDeviceName(mixerDevice, 256);
 				if (strstr(mixerDevice, T2A("Audigy")) != NULL) {
 					acceptPartial = true;
 					strcpy(mixerDevice, T2A("Audigy"));
+				}
+				if (strstr(mixerDevice, T2A("X-Fi")) != NULL) {
+					acceptPartial = true;
+					strcpy(mixerDevice, T2A("X-Fi"));
 				}
                 dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), mixerDevice, acceptPartial, actualName);
                 if(!dll)
@@ -1800,7 +1851,7 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
 
                 if(dll)
                 {
-					if (acceptPartial == true) { // legacy Audigy issue again...
+					if (acceptPartial == true) {
 						strcpy(mixerDevice, actualName);
 					}
                     strcpy((char*)alcDefaultDeviceSpecifier, mixerDevice);
