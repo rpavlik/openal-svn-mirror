@@ -949,126 +949,123 @@ HINSTANCE FindDllWithMatchingSpecifier(TCHAR* dllSearchPattern, char* specifier,
     ++numDirs;
 
     //
-    // Begin searching for additional OpenAL implementations.  Start with the current directory, but check if
-    // the current directory is the same as the application directory so we don't search it twice.
+    // Begin searching for additional OpenAL implementations.
     //
-    for(i = 0; i < numDirs && !found; i++)
+	for(i = (numDirs > 3)?0:1; i < numDirs && !found; i++)
     {
-		if (((_tcsicmp(dir[1], dir[2]) == 0) && (i = 2)) == false) { // filter out app dir == current dir case...
-			_tcscpy(searchName, dir[i]);
-			_tcscat(searchName, dllSearchPattern);
-			searchHandle = FindFirstFile(searchName, &findData);
-			if(searchHandle != INVALID_HANDLE_VALUE)
+		_tcscpy(searchName, dir[i]);
+		_tcscat(searchName, dllSearchPattern);
+		searchHandle = FindFirstFile(searchName, &findData);
+		if(searchHandle != INVALID_HANDLE_VALUE)
+		{
+			while(TRUE)
 			{
-				while(TRUE)
+				//
+				// if this is an OpenAL32.dll, skip it -- it's probably a router and shouldn't be enumerated regardless
+				//
+				_tcscpy(searchName, dir[i]);
+				_tcscat(searchName, findData.cFileName);
+				TCHAR cmpName[MAX_PATH];
+				_tcscpy(cmpName, searchName);
+				_tcsupr(cmpName);
+				if ((strstr(cmpName, "OPENAL32.DLL") == 0) && notOldNVIDIALib(cmpName))
 				{
 					//
-					// if this is an OpenAL32.dll, skip it -- it's probably a router and shouldn't be enumerated regardless
+					// Its not, so load it and see if the name matches.
 					//
-					_tcscpy(searchName, dir[i]);
-					_tcscat(searchName, findData.cFileName);
-					TCHAR cmpName[MAX_PATH];
-					_tcscpy(cmpName, searchName);
-					_tcsupr(cmpName);
-					if ((strstr(cmpName, "OPENAL32.DLL") == 0) && notOldNVIDIALib(cmpName))
+					dll = LoadLibrary(searchName);
+					if(dll)
 					{
-						//
-						// Its not, so load it and see if the name matches.
-						//
-						dll = LoadLibrary(searchName);
-						if(dll)
-						{
-							alcOpenDeviceFxn = (ALCAPI_OPEN_DEVICE)GetProcAddress(dll, "alcOpenDevice");
-							alcCreateContextFxn = (ALCAPI_CREATE_CONTEXT)GetProcAddress(dll, "alcCreateContext");
-							alcMakeContextCurrentFxn = (ALCAPI_MAKE_CONTEXT_CURRENT)GetProcAddress(dll, "alcMakeContextCurrent");
+						alcOpenDeviceFxn = (ALCAPI_OPEN_DEVICE)GetProcAddress(dll, "alcOpenDevice");
+						alcCreateContextFxn = (ALCAPI_CREATE_CONTEXT)GetProcAddress(dll, "alcCreateContext");
+						alcMakeContextCurrentFxn = (ALCAPI_MAKE_CONTEXT_CURRENT)GetProcAddress(dll, "alcMakeContextCurrent");
+						alcGetStringFxn = (ALCAPI_GET_STRING)GetProcAddress(dll, "alcGetString");
+						alcDestroyContextFxn = (ALCAPI_DESTROY_CONTEXT)GetProcAddress(dll, "alcDestroyContext");
+						alcCloseDeviceFxn = (ALCAPI_CLOSE_DEVICE)GetProcAddress(dll, "alcCloseDevice");
+						alcIsExtensionPresentFxn = (ALCAPI_IS_EXTENSION_PRESENT)GetProcAddress(dll, "alcIsExtensionPresent");
+
+						if ((alcOpenDeviceFxn != 0) &&
+							(alcCreateContextFxn != 0) &&
+							(alcMakeContextCurrentFxn != 0) &&
+							(alcGetStringFxn != 0) &&
+							(alcDestroyContextFxn != 0) &&
+							(alcCloseDeviceFxn != 0) &&
+							(alcIsExtensionPresentFxn != 0)) {
+
 							alcGetStringFxn = (ALCAPI_GET_STRING)GetProcAddress(dll, "alcGetString");
-							alcDestroyContextFxn = (ALCAPI_DESTROY_CONTEXT)GetProcAddress(dll, "alcDestroyContext");
-							alcCloseDeviceFxn = (ALCAPI_CLOSE_DEVICE)GetProcAddress(dll, "alcCloseDevice");
-							alcIsExtensionPresentFxn = (ALCAPI_IS_EXTENSION_PRESENT)GetProcAddress(dll, "alcIsExtensionPresent");
-
-							if ((alcOpenDeviceFxn != 0) &&
-								(alcCreateContextFxn != 0) &&
-								(alcMakeContextCurrentFxn != 0) &&
-								(alcGetStringFxn != 0) &&
-								(alcDestroyContextFxn != 0) &&
-								(alcCloseDeviceFxn != 0) &&
-								(alcIsExtensionPresentFxn != 0)) {
-
-								alcGetStringFxn = (ALCAPI_GET_STRING)GetProcAddress(dll, "alcGetString");
-								if(alcGetStringFxn)
-								{
-									if (alcIsExtensionPresentFxn(0, (ALCchar *)"ALC_ENUMERATION_EXT")) {
-										// have an enumeratable DLL here, so check all available devices
-										deviceSpecifier = alcGetStringFxn(0, ALC_DEVICE_SPECIFIER);
-										if (deviceSpecifier)
-										{
-											do {
-												if (deviceSpecifier != NULL) {
-													if (partialName == false) {
-														found = strcmp((char*)deviceSpecifier, specifier) == 0;
-													} else {
-														found = strstr((char*)deviceSpecifier, specifier) != 0;
-														strcpy(actualName, (char *)deviceSpecifier);
-													}
+							if(alcGetStringFxn)
+							{
+								if (alcIsExtensionPresentFxn(0, (ALCchar *)"ALC_ENUMERATION_EXT")) {
+									// have an enumeratable DLL here, so check all available devices
+									deviceSpecifier = alcGetStringFxn(0, ALC_DEVICE_SPECIFIER);
+									if (deviceSpecifier)
+									{
+										do {
+											if (deviceSpecifier != NULL) {
+												if (partialName == false) {
+													found = strcmp((char*)deviceSpecifier, specifier) == 0;
 												} else {
-													found = false;
+													found = strstr((char*)deviceSpecifier, specifier) != 0;
+													strcpy(actualName, (char *)deviceSpecifier);
 												}
-												deviceSpecifier += strlen((char *)deviceSpecifier) + 1;
-											} while (!found && (strlen((char *)deviceSpecifier) > 0));
-										}
-									} else {
-										// no enumeration ability
-										device = alcOpenDeviceFxn(NULL);
-										if (device != NULL) {
-											context = alcCreateContextFxn(device, NULL);
-											alcMakeContextCurrentFxn((ALCcontext *)context);
-											if (context != NULL) {
-												deviceSpecifier = alcGetStringFxn(device, ALC_DEFAULT_DEVICE_SPECIFIER);
-												if (deviceSpecifier != NULL) {
-													if (partialName == false) {
-														found = strcmp((char*)deviceSpecifier, specifier) == 0;
-													} else {
-														found = strstr((char*)deviceSpecifier, specifier) != 0;
-														strcpy(actualName, (char *)deviceSpecifier);
-													}
-												} else {
-													found = false;
-												}
-
-												alcMakeContextCurrentFxn((ALCcontext *)NULL);
-												alcDestroyContextFxn((ALCcontext *)context);
-												alcCloseDeviceFxn(device);
+											} else {
+												found = false;
 											}
+											deviceSpecifier += strlen((char *)deviceSpecifier) + 1;
+										} while (!found && (strlen((char *)deviceSpecifier) > 0));
+									}
+								} else {
+									// no enumeration ability
+									device = alcOpenDeviceFxn(NULL);
+									if (device != NULL) {
+										context = alcCreateContextFxn(device, NULL);
+										alcMakeContextCurrentFxn((ALCcontext *)context);
+										if (context != NULL) {
+											deviceSpecifier = alcGetStringFxn(device, ALC_DEFAULT_DEVICE_SPECIFIER);
+											if (deviceSpecifier != NULL) {
+												if (partialName == false) {
+													found = strcmp((char*)deviceSpecifier, specifier) == 0;
+												} else {
+													found = strstr((char*)deviceSpecifier, specifier) != 0;
+													strcpy(actualName, (char *)deviceSpecifier);
+												}
+											} else {
+												found = false;
+											}
+
+											alcMakeContextCurrentFxn((ALCcontext *)NULL);
+											alcDestroyContextFxn((ALCcontext *)context);
+											alcCloseDeviceFxn(device);
 										}
 									}
 								}
 							}
-
-							if(found)
-							{
-								break;
-							}
-
-							else
-							{
-								FreeLibrary(dll);
-								dll = 0;
-							}
 						}
-					}
 
-					if(!FindNextFile(searchHandle, &findData))
-					{
-						if(GetLastError() == ERROR_NO_MORE_FILES)
+						if(found)
 						{
 							break;
+						}
+
+						else
+						{
+							FreeLibrary(dll);
+							dll = 0;
 						}
 					}
 				}
 
-				FindClose(searchHandle);
-				searchHandle = INVALID_HANDLE_VALUE;
+				if(!FindNextFile(searchHandle, &findData))
+				{
+					if(GetLastError() == ERROR_NO_MORE_FILES)
+					{
+						break;
+					}
+				}
 			}
+
+			FindClose(searchHandle);
+			searchHandle = INVALID_HANDLE_VALUE;
 		}
     }
 
