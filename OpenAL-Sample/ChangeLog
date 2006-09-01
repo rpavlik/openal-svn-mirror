@@ -1,3 +1,8 @@
+2006-09-01  Prakash Punnoor <prakash@punnoor.de>
+
+	* src/al_filter.c: prevent extra memory reallocation, as sizes
+	are in bytes, not samples (bug spotted by Ivan Dubrov)
+
 2006-08-29  Prakash Punnoor <prakash@punnoor.de>
 
 	* Makefile.am: renamed FindCompilerMMXFlag.cmake to

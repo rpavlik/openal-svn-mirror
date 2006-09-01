@@ -309,7 +309,7 @@ void _alApplyFilters( ALuint cid, ALuint sid ) {
 	 * about to be split.  We allocate more space in case of a
 	 * multichannel source.
 	 */
-	if(f_buffers.len < len / sizeof (ALshort))
+	if(f_buffers.len < len)
 	{
 		void *temp;
 		ALuint newlen = len * _alGetChannelsFromFormat(samp->format);
