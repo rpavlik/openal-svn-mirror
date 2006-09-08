@@ -24,6 +24,88 @@
 #include <al\alc.h>
 #include "OpenAL32.h"
 
+typedef struct ALfunction_struct
+{
+	ALchar		*funcName;
+	ALvoid		*address;
+} ALfunction;
+
+static ALfunction  function[]=   {	
+	{ "alEnable",                   (ALvoid *) alEnable                  },
+	{ "alDisable",                  (ALvoid *) alDisable                 },
+	{ "alIsEnabled",                (ALvoid *) alIsEnabled               },
+	{ "alGetString",                (ALvoid *) alGetString               },
+	{ "alGetBooleanv",              (ALvoid *) alGetBooleanv             },
+	{ "alGetIntegerv",              (ALvoid *) alGetIntegerv             },
+	{ "alGetFloatv",                (ALvoid *) alGetFloatv               },
+	{ "alGetDoublev",               (ALvoid *) alGetDoublev              },
+	{ "alGetBoolean",               (ALvoid *) alGetBoolean              },
+	{ "alGetInteger",               (ALvoid *) alGetInteger              },
+	{ "alGetFloat",                 (ALvoid *) alGetFloat                },
+	{ "alGetDouble",                (ALvoid *) alGetDouble               },
+	{ "alGetError",                 (ALvoid *) alGetError                },
+	{ "alIsExtensionPresent",       (ALvoid *) alIsExtensionPresent      },
+	{ "alGetProcAddress",           (ALvoid *) alGetProcAddress          },
+	{ "alGetEnumValue",             (ALvoid *) alGetEnumValue            },
+	{ "alListenerf",                (ALvoid *) alListenerf               },
+	{ "alListener3f",               (ALvoid *) alListener3f              },
+	{ "alListenerfv",               (ALvoid *) alListenerfv              },
+	{ "alListeneri",                (ALvoid *) alListeneri               },
+	{ "alListener3i",               (ALvoid *) alListener3i              },
+	{ "alListeneriv",               (ALvoid *) alListeneriv              },
+	{ "alGetListenerf",             (ALvoid *) alGetListenerf            },
+	{ "alGetListener3f",            (ALvoid *) alGetListener3f           },
+	{ "alGetListenerfv",            (ALvoid *) alGetListenerfv           },
+	{ "alGetListeneri",             (ALvoid *) alGetListeneri            },
+	{ "alGetListener3i",            (ALvoid *) alGetListener3i           },
+	{ "alGetListeneriv",            (ALvoid *) alGetListeneriv           },
+	{ "alGenSources",               (ALvoid *) alGenSources              },
+	{ "alDeleteSources",            (ALvoid *) alDeleteSources           },
+	{ "alIsSource",                 (ALvoid *) alIsSource                },
+	{ "alSourcef",                  (ALvoid *) alSourcef                 },
+	{ "alSource3f",                 (ALvoid *) alSource3f                },
+	{ "alSourcefv",                 (ALvoid *) alSourcefv                },
+	{ "alSourcei",                  (ALvoid *) alSourcei                 },
+	{ "alSource3i",                 (ALvoid *) alSource3i                },
+	{ "alSourceiv",                 (ALvoid *) alSourceiv                },
+	{ "alGetSourcef",               (ALvoid *) alGetSourcef              },
+	{ "alGetSource3f",              (ALvoid *) alGetSource3f             },
+	{ "alGetSourcefv",              (ALvoid *) alGetSourcefv             },
+	{ "alGetSourcei",               (ALvoid *) alGetSourcei              },
+	{ "alGetSource3i",              (ALvoid *) alGetSource3i             },
+	{ "alGetSourceiv",              (ALvoid *) alGetSourceiv             },
+	{ "alSourcePlayv",              (ALvoid *) alSourcePlayv             },
+	{ "alSourceStopv",              (ALvoid *) alSourceStopv             },
+	{ "alSourceRewindv",            (ALvoid *) alSourceRewindv           },
+	{ "alSourcePausev",             (ALvoid *) alSourcePausev            },
+	{ "alSourcePlay",               (ALvoid *) alSourcePlay              },
+	{ "alSourceStop",               (ALvoid *) alSourceStop              },
+	{ "alSourceRewind",             (ALvoid *) alSourceRewind            },
+	{ "alSourcePause",              (ALvoid *) alSourcePause             },
+	{ "alSourceQueueBuffers",       (ALvoid *) alSourceQueueBuffers      },
+	{ "alSourceUnqueueBuffers",     (ALvoid *) alSourceUnqueueBuffers    },
+	{ "alGenBuffers",               (ALvoid *) alGenBuffers              },
+	{ "alDeleteBuffers",            (ALvoid *) alDeleteBuffers           },
+	{ "alIsBuffer",                 (ALvoid *) alIsBuffer                },
+	{ "alBufferData",               (ALvoid *) alBufferData              },
+	{ "alBufferf",                  (ALvoid *) alBufferf                 },
+	{ "alBuffer3f",                 (ALvoid *) alBuffer3f                },
+	{ "alBufferfv",                 (ALvoid *) alBufferfv                },
+	{ "alBufferi",                  (ALvoid *) alBufferi                 },
+	{ "alBuffer3i",                 (ALvoid *) alBuffer3i                },
+	{ "alBufferiv",                 (ALvoid *) alBufferiv                },
+	{ "alGetBufferf",               (ALvoid *) alGetBufferf              },
+	{ "alGetBuffer3f",              (ALvoid *) alGetBuffer3f             },
+	{ "alGetBufferfv",              (ALvoid *) alGetBufferfv             },
+	{ "alGetBufferi",               (ALvoid *) alGetBufferi              },
+	{ "alGetBuffer3i",              (ALvoid *) alGetBuffer3i             },
+	{ "alGetBufferiv",              (ALvoid *) alGetBufferiv             },
+	{ "alDopplerFactor",            (ALvoid *) alDopplerFactor           },
+	{ "alDopplerVelocity",          (ALvoid *) alDopplerVelocity         },
+	{ "alSpeedOfSound",             (ALvoid *) alSpeedOfSound            },
+	{ "alDistanceModel",            (ALvoid *) alDistanceModel           },
+	{ NULL,							(ALvoid *) NULL                      } };
+
 
 //*****************************************************************************
 //*****************************************************************************
@@ -425,7 +507,22 @@ ALAPI ALenum ALAPIENTRY alGetError(ALvoid)
 //
 ALAPI ALvoid* ALAPIENTRY alGetProcAddress(const ALCchar* fname)
 {
-    AL_RESULT_FXN(alGetProcAddress(fname), ALvoid*, 0);
+	// return router's address if available
+	ALsizei i=0;
+	ALvoid *pAddress;
+
+	while ((function[i].funcName)&&(strcmp((char *)function[i].funcName,(char *)fname)))
+		i++;
+	pAddress = function[i].address;
+
+	if (pAddress != NULL) {
+		return pAddress;
+	}
+
+	// router doesn't have this entry point, so go to the device...
+	AL_RESULT_FXN(alGetProcAddress(fname), ALvoid*, 0);
+
+	return pAddress;
 }
 
 
