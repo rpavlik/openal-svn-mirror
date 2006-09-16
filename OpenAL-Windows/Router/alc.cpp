@@ -1856,7 +1856,7 @@ void getDeviceNames(char *outputName, char *inputName, unsigned int len)
 				PROPVARIANT pv;
 				PropVariantInit(&pv);
 				pPropertyStore->GetValue(PKEY_DeviceInterface_FriendlyName, &pv);
-				if (outputName != NULL) {
+				if (inputName != NULL) {
 					sprintf(inputName, "%S", pv.pwszVal);
 				}
 				bVistaName = true;
