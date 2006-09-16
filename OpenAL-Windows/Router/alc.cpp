@@ -19,7 +19,7 @@
  */
 
 #define _CRT_SECURE_NO_DEPRECATE // get rid of sprintf security warnings on VS2005
-//#define HAVE_VISTA_HEADERS
+#define HAVE_VISTA_HEADERS
 
 #include <stdlib.h>
 #include <memory.h>
@@ -185,6 +185,8 @@ static const ALCchar alcErrInvalidValue[] = "Invalid Value";
 // Context strings
 static ALCchar alcDefaultDeviceSpecifier[MAX_PATH] = "\0";
 static ALCchar alcDeviceSpecifierList[MAX_PATH] = "\0";
+static ALCchar alcCaptureDefaultDeviceSpecifier[MAX_PATH] = "\0";
+static ALCchar alcCaptureDeviceSpecifierList[MAX_PATH] = "\0";
 static ALCchar alcExtensionList[] = "";
 
 static ALint alcMajorVersion = 1;
@@ -207,6 +209,24 @@ static ALint alcMinorVersion = 1;
 ALboolean NewSpecifierCheck(const ALCchar* specifier)
 {
 	const ALCchar* list = alcDeviceSpecifierList;
+
+	while (*list != 0) {
+		if (strcmp((char *)list, (char *)specifier) == 0) {
+			return AL_FALSE;
+		}
+		list += strlen((char *)list) + 1;
+	}
+
+	return AL_TRUE;
+}
+
+//*****************************************************************************
+// NewCaptureSpecifierCheck
+//*****************************************************************************
+//
+ALboolean NewCaptureSpecifierCheck(const ALCchar* specifier)
+{
+	const ALCchar* list = alcCaptureDeviceSpecifierList;
 
 	while (*list != 0) {
 		if (strcmp((char *)list, (char *)specifier) == 0) {
@@ -313,12 +333,12 @@ ALvoid BuildDeviceSpecifierList()
     const ALCchar* specifier = 0;
     ALuint specifierSize = 0;
     const ALCchar* list = alcDeviceSpecifierList;
-    ALuint listSize = 0;
+	const ALCchar* captureList = alcCaptureDeviceSpecifierList;
 	ALCdevice *device;
 	void *context;
 
 
-	if (list[0] == 0) { // don't re-build list if it's already been done once...
+	if (list[0] == 0) { // don't re-build lists if it's already been done once...
 
 		//
 		// Directory[0] is the system directory
@@ -405,6 +425,7 @@ ALvoid BuildDeviceSpecifierList()
 									(alcCloseDeviceFxn != 0) &&
 									(alcIsExtensionPresentFxn != 0)) {
 
+									// add to output device list
 									if (alcIsExtensionPresentFxn(NULL, "ALC_ENUMERATION_EXT")) {
 										// this DLL can enumerate devices -- so add complete list of devices
 										specifier = alcGetStringFxn(0, ALC_DEVICE_SPECIFIER);
@@ -414,11 +435,8 @@ ALvoid BuildDeviceSpecifierList()
 												specifierSize = strlen((char*)specifier);
 
 												if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
-													if(specifierSize + listSize + 1 < MAX_PATH - 1)
-													{
-														strcpy((char*)list, (char*)specifier);
-														list += specifierSize + 1;
-													}
+													strcpy((char*)list, (char*)specifier);
+													list += specifierSize + 1;
 												}
 												specifier += strlen((char *)specifier) + 1;
 											} while (strlen((char *)specifier) > 0);
@@ -436,17 +454,31 @@ ALvoid BuildDeviceSpecifierList()
 													specifierSize = strlen((char*)specifier);
 
 													if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
-														if(specifierSize + listSize + 1 < MAX_PATH - 1)
-														{
-															strcpy((char*)list, (char*)specifier);
-															list += specifierSize + 1;
-														}
+														strcpy((char*)list, (char*)specifier);
+														list += specifierSize + 1;
 													}
 												}
 												alcMakeContextCurrentFxn((ALCcontext *)NULL);
 												alcDestroyContextFxn((ALCcontext *)context);
 												alcCloseDeviceFxn(device);
 											}
+										}
+									}
+
+									// add to capture device list
+									if (alcIsExtensionPresentFxn(NULL, "ALC_CAPTURE_EXT")) {
+										// this DLL supports capture -- so add complete list of capture devices
+										specifier = alcGetStringFxn(0, ALC_CAPTURE_DEVICE_SPECIFIER);
+										if ((specifier) && strlen(specifier))
+										{
+											do {
+												specifierSize = strlen((char*)specifier);
+												if (NewCaptureSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
+													strcpy((char*)captureList, (char*)specifier);
+													captureList += specifierSize + 1;
+												}
+												specifier += strlen((char *)specifier) + 1;
+											} while (strlen((char *)specifier) > 0);
 										}
 									}
 								}
@@ -525,11 +557,8 @@ ALvoid BuildDeviceSpecifierList()
 												specifierSize = strlen((char*)specifier);
 
 												if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
-													if(specifierSize + listSize + 1 < MAX_PATH - 1)
-													{
-														strcpy((char*)list, (char*)specifier);
-														list += specifierSize + 1;
-													}
+													strcpy((char*)list, (char*)specifier);
+													list += specifierSize + 1;
 												}
 												specifier += strlen((char *)specifier) + 1;
 											} while (strlen((char *)specifier) > 0);
@@ -547,17 +576,31 @@ ALvoid BuildDeviceSpecifierList()
 													specifierSize = strlen((char*)specifier);
 
 													if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
-														if(specifierSize + listSize + 1 < MAX_PATH - 1)
-														{
-															strcpy((char*)list, (char*)specifier);
-															list += specifierSize + 1;
-														}
+														strcpy((char*)list, (char*)specifier);
+														list += specifierSize + 1;
 													}
 												}
 												alcMakeContextCurrentFxn((ALCcontext *)NULL);
 												alcDestroyContextFxn((ALCcontext *)context);
 												alcCloseDeviceFxn(device);
 											}
+										}
+									}
+
+									// add to capture device list
+									if (alcIsExtensionPresentFxn(NULL, "ALC_EXT_CAPTURE")) {
+										// this DLL supports capture -- so add complete list of capture devices
+										specifier = alcGetStringFxn(0, ALC_CAPTURE_DEVICE_SPECIFIER);
+										if ((specifier) && strlen(specifier))
+										{
+											do {
+												specifierSize = strlen((char*)specifier);
+												if (NewCaptureSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
+													strcpy((char*)captureList, (char*)specifier);
+													captureList += specifierSize + 1;
+												}
+												specifier += strlen((char *)specifier) + 1;
+											} while (strlen((char *)specifier) > 0);
 										}
 									}
 								}
@@ -594,6 +637,7 @@ ALvoid BuildDeviceSpecifierList()
 
 //*****************************************************************************
 // CleanDeviceSpecifierList
+//    Gets rid of functionally duplicate names (DS3D is Generic Hardware, for instance)
 //*****************************************************************************
 //
 ALvoid CleanDeviceSpecifierList()
@@ -655,7 +699,6 @@ ALvoid CleanDeviceSpecifierList()
 	free(copyList);
 	return;
 }
-
 
 
 //*****************************************************************************
@@ -1037,6 +1080,27 @@ HINSTANCE FindDllWithMatchingSpecifier(TCHAR* dllSearchPattern, char* specifier,
 											alcDestroyContextFxn((ALCcontext *)context);
 											alcCloseDeviceFxn(device);
 										}
+									}
+								}
+
+								if (alcIsExtensionPresentFxn(0, (ALCchar *)"ALC_EXT_CAPTURE")) {
+									// so check all available capture devices
+									deviceSpecifier = alcGetStringFxn(0, ALC_CAPTURE_DEVICE_SPECIFIER);
+									if (deviceSpecifier)
+									{
+										do {
+											if (deviceSpecifier != NULL) {
+												if (partialName == false) {
+													found = strcmp((char*)deviceSpecifier, specifier) == 0;
+												} else {
+													found = strstr((char*)deviceSpecifier, specifier) != 0;
+													strcpy(actualName, (char *)deviceSpecifier);
+												}
+											} else {
+												found = false;
+											}
+											deviceSpecifier += strlen((char *)deviceSpecifier) + 1;
+										} while (!found && (strlen((char *)deviceSpecifier) > 0));
 									}
 								}
 							}
@@ -1752,7 +1816,7 @@ ALCAPI ALCvoid ALCAPIENTRY alcSuspendContext(ALCcontext* context)
     return;
 }
 
-void getDeviceName(char *name, unsigned int len)
+void getDeviceNames(char *outputName, char *inputName, unsigned int len)
 {
 	bool bVistaName = false;
 
@@ -1766,6 +1830,7 @@ void getDeviceName(char *name, unsigned int len)
 		__uuidof(IMMDeviceEnumerator),(void**)&pEnumerator);
 	if SUCCEEDED(hr) {
 		IMMDevice* pDevice = NULL;
+		// get output info
 		hr = pEnumerator->GetDefaultAudioEndpoint(eRender, eMultimedia, &pDevice);
 		if SUCCEEDED(hr) {
 			IPropertyStore *pPropertyStore;
@@ -1774,7 +1839,26 @@ void getDeviceName(char *name, unsigned int len)
 				PROPVARIANT pv;
 				PropVariantInit(&pv);
 				pPropertyStore->GetValue(PKEY_DeviceInterface_FriendlyName, &pv);
-				sprintf(name, "%S", pv.pwszVal);
+				if (outputName != NULL) {
+					sprintf(outputName, "%S", pv.pwszVal);
+				}
+				bVistaName = true;
+				pPropertyStore->Release();
+			}
+			pDevice->Release();
+		}
+		// get input info
+		hr = pEnumerator->GetDefaultAudioEndpoint(eCapture, eMultimedia, &pDevice);
+		if SUCCEEDED(hr) {
+			IPropertyStore *pPropertyStore;
+			hr = pDevice->OpenPropertyStore(STGM_READ, &pPropertyStore);
+			if SUCCEEDED(hr) {
+				PROPVARIANT pv;
+				PropVariantInit(&pv);
+				pPropertyStore->GetValue(PKEY_DeviceInterface_FriendlyName, &pv);
+				if (outputName != NULL) {
+					sprintf(inputName, "%S", pv.pwszVal);
+				}
 				bVistaName = true;
 				pPropertyStore->Release();
 			}
@@ -1789,18 +1873,23 @@ void getDeviceName(char *name, unsigned int len)
 		// figure out name via mmsystem...
 		UINT uDeviceID;
 		DWORD dwFlags=1;
-		WAVEOUTCAPS info;
+		WAVEOUTCAPS outputInfo;
+		WAVEINCAPS inputInfo;
 
 		#if !defined(_WIN64)
 		__asm pusha; // workaround for register destruction caused by these wavOutMessage calls (weird but true)
 		#endif // !defined(_WIN64)
 		waveOutMessage((HWAVEOUT)(UINT_PTR)WAVE_MAPPER,0x2000+0x0015,(LPARAM)&uDeviceID,(WPARAM)&dwFlags);
-		waveOutGetDevCaps(uDeviceID,&info,sizeof(info));
+		waveOutGetDevCaps(uDeviceID,&outputInfo,sizeof(outputInfo));
+		waveInGetDevCaps(uDeviceID, &inputInfo, sizeof(inputInfo));
 		#if !defined(_WIN64)
 		__asm popa;
 		#endif // !defined(_WIN64)
-		if (strlen(info.szPname) <= len) {
-			strcpy(name, T2A(info.szPname));
+		if ((strlen(outputInfo.szPname) <= len) && (outputName != NULL)) {
+			strcpy(outputName, T2A(outputInfo.szPname));
+		}
+		if ((strlen(inputInfo.szPname) <= len) && (inputName != NULL)) {
+			strcpy(inputName, T2A(inputInfo.szPname));
 		}
 	}
 }
@@ -1811,7 +1900,6 @@ void getDeviceName(char *name, unsigned int len)
 //
 ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
 {
-	ALCcontext *context;
     const ALCchar* value = 0;
 
     if(device)
@@ -1867,7 +1955,8 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
 				bool acceptPartial = false;
 				char actualName[32];
 
-				if (waveInGetNumDevs() == 0)
+				// if there aren't any devices, then bail...
+				if (waveOutGetNumDevs() == 0)
 				{
 					memset(alcDefaultDeviceSpecifier, 0, MAX_PATH * sizeof(ALCchar));
 					return alcDefaultDeviceSpecifier;
@@ -1877,7 +1966,7 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
 				// 1) whatever device is in the control panel as the preferred device should be accepted
 				// 2) if the preferred device is an Audigy or an X-Fi, then the name might not match the 
 				// hardware DLL, so allow a partial match in this case
-                getDeviceName(mixerDevice, 256);
+                getDeviceNames(mixerDevice, NULL, 256);
 				if (strstr(mixerDevice, T2A("Audigy")) != NULL) {
 					acceptPartial = true;
 					strcpy(mixerDevice, T2A("Audigy"));
@@ -1986,14 +2075,69 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
         }
         break;
 
-		case ALC_CAPTURE_DEVICE_SPECIFIER:
 		case ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER:
-			context = (ALCcontext *)alCurrentContext;
-			if ((context) && (context->DllContext))
-			{
-				value = context->Device->AlcApi.alcGetString(device, param);
-			}
-			break;
+		{
+            while(TRUE)
+            {
+                //
+                // find an implementation for the user's current input device
+                //
+                const char* specifier = 0;
+                HINSTANCE dll = 0;
+				char mixerDevice[256];
+				bool acceptPartial = false;
+				char actualName[32];
+
+				// if there aren't any devices, then bail...
+				if (waveInGetNumDevs() == 0)
+				{
+					memset(alcCaptureDefaultDeviceSpecifier, 0, MAX_PATH * sizeof(ALCchar));
+					return alcCaptureDefaultDeviceSpecifier;
+				}
+
+				// two issues here --
+				// 1) whatever device is in the control panel as the preferred device should be accepted
+				// 2) if the preferred device is an Audigy or an X-Fi, then the name might not match the 
+				// hardware DLL, so allow a partial match in this case
+                getDeviceNames(NULL, mixerDevice, 256);
+				if (strstr(mixerDevice, T2A("Audigy")) != NULL) {
+					acceptPartial = true;
+					strcpy(mixerDevice, T2A("Audigy"));
+				}
+				if (strstr(mixerDevice, T2A("X-Fi")) != NULL) {
+					acceptPartial = true;
+					strcpy(mixerDevice, T2A("X-Fi"));
+				}
+                dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), mixerDevice, acceptPartial, actualName);
+                if(!dll)
+                {
+                    dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), mixerDevice, acceptPartial, actualName);
+                }
+
+                if(dll)
+                {
+					if (acceptPartial == true) {
+						strcpy(mixerDevice, actualName);
+					}
+                    strcpy((char*)alcCaptureDefaultDeviceSpecifier, mixerDevice);
+                    FreeLibrary(dll);
+                    break;
+                }
+
+                memset((char*)alcCaptureDefaultDeviceSpecifier, 0, MAX_PATH * sizeof(char));
+                break;
+            }
+
+            return alcCaptureDefaultDeviceSpecifier;
+        }
+		break;
+
+		case ALC_CAPTURE_DEVICE_SPECIFIER:
+		{
+			BuildDeviceSpecifierList();
+			return alcCaptureDeviceSpecifierList;
+		}
+		break;
 
         default:
             LastError = ALC_INVALID_ENUM;
@@ -2008,36 +2152,50 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
 // alcCaptureOpenDevice
 //*****************************************************************************
 //
-ALCAPI ALCdevice * ALCAPIENTRY alcCaptureOpenDevice(const ALCchar *devicename, ALCuint frequency, ALCenum format, ALCsizei buffersize)
+ALCAPI ALCdevice * ALCAPIENTRY alcCaptureOpenDevice(const ALCchar *deviceName, ALCuint frequency, ALCenum format, ALCsizei buffersize)
 {
-	ALCdevice * device = 0;
-	ALCcontext * context = 0;
+	char newDeviceName[256];
 
-	// TEMPORARY SOLUTION : Capture Device can only come from a Playback Device previously created
-    context = (ALCcontext *)alCurrentContext;
-	if (context)
-	{
-		EnterCriticalSection(&context->Lock);
+	if (!g_CaptureDevice) {
+		g_CaptureDevice = (ALCdevice*)malloc(sizeof(ALCdevice));
 
-		//
-		// Initialize the OpenAL device structure
-		//
-		if (!g_CaptureDevice)
+		if (g_CaptureDevice)
 		{
-			g_CaptureDevice = (ALCdevice*)malloc(sizeof(ALCdevice));
-			if (g_CaptureDevice)
-			{
-				memcpy(g_CaptureDevice, context->Device, sizeof(ALCdevice));
-				g_CaptureDevice->LastError = AL_NO_ERROR;
-				g_CaptureDevice->InUse = 0;
-				g_CaptureDevice->CaptureDevice = g_CaptureDevice->AlcApi.alcCaptureOpenDevice(devicename, frequency, format, buffersize);
+			// clear
+			memset(g_CaptureDevice, 0, sizeof(ALCdevice));
+
+			// make sure we have a device name
+			if (!deviceName) {
+				strncpy(newDeviceName, alcGetString(0, ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER), 256);
+			} else {
+				strncpy(newDeviceName, deviceName, 256);
+			}
+
+			g_CaptureDevice->Dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), (char *)newDeviceName);
+			if (!g_CaptureDevice->Dll) {
+				g_CaptureDevice->Dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), (char *)newDeviceName);
+			}
+
+			if (g_CaptureDevice->Dll) {
+				if(FillOutAlcFunctions(g_CaptureDevice)) {
+					g_CaptureDevice->CaptureDevice = g_CaptureDevice->AlcApi.alcCaptureOpenDevice(newDeviceName, frequency, format, buffersize);
+					g_CaptureDevice->LastError = AL_NO_ERROR;
+					g_CaptureDevice->InUse = 0;
+				}
 			}
 		}
-
-		LeaveCriticalSection(&context->Lock);
+	} else {
+		// already open
+		g_CaptureDevice->LastError = ALC_INVALID_VALUE;
 	}
 
-	return g_CaptureDevice;
+	if (g_CaptureDevice->CaptureDevice) {
+		return g_CaptureDevice;
+	} else {
+		free(g_CaptureDevice);
+		g_CaptureDevice = NULL;
+		return NULL;
+	}
 }
 
 //*****************************************************************************
