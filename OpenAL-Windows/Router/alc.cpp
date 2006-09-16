@@ -367,7 +367,6 @@ ALvoid BuildDeviceSpecifierList()
 		++numDirs;
 
 		GetLoadedModuleDirectory(NULL, dir[1], MAX_PATH);
-		_tcscat(dir[1], _T("\\"));
 		++numDirs;
 
 		dirSize = GetCurrentDirectory(MAX_PATH, dir[2]);
@@ -375,7 +374,6 @@ ALvoid BuildDeviceSpecifierList()
 		++numDirs;
 
         if (GetLoadedModuleDirectory("OpenAL32.dll", dir[3], MAX_PATH)) {
-            _tcscat(dir[3], _T("\\"));
             ++numDirs;
         }
 
@@ -385,7 +383,7 @@ ALvoid BuildDeviceSpecifierList()
 		//
 		for(i =  0; i < numDirs; i++)
 		{
-			if (((_tcsicmp(dir[1], dir[2]) == 0) && (i = 2)) == false) { // filter out app dir == current dir case...
+			if (((_tcsicmp(dir[1], dir[2]) == 0) && (i == 2)) == false) { // filter out app dir == current dir case...
 				_tcscpy(searchName, dir[i]);
 				_tcscat(searchName, _T("nvopenal.dll"));  // looking for NVIDIA libraries
 				searchHandle = FindFirstFile(searchName, &findData);
@@ -508,7 +506,7 @@ ALvoid BuildDeviceSpecifierList()
 		//
 		for(i = 0; i < numDirs; i++)
 		{
-			if (((_tcsicmp(dir[1], dir[2]) == 0) && (i = 2)) == false) { // filter out app dir == current dir case...
+			if (((_tcsicmp(dir[1], dir[2]) == 0) && (i == 2)) == false) { // filter out app dir == current dir case...
 				_tcscpy(searchName, dir[i]);
 				_tcscat(searchName, _T("*oal.dll"));
 				searchHandle = FindFirstFile(searchName, &findData);
@@ -975,20 +973,18 @@ HINSTANCE FindDllWithMatchingSpecifier(TCHAR* dllSearchPattern, char* specifier,
     // the system directory, and the directory containing OpenAL32.dll, if we can find it.
     //
 	if (GetLoadedModuleDirectory("OpenAL32.dll", dir[0], MAX_PATH)) {
-        _tcscat(dir[3], _T("\\"));
         ++numDirs;
     }
 
     dirSize = GetCurrentDirectory(MAX_PATH, dir[1]);
-    _tcscat(dir[0], _T("\\"));
-    ++numDirs;
-
-    GetLoadedModuleDirectory(NULL, dir[2], MAX_PATH);
     _tcscat(dir[1], _T("\\"));
     ++numDirs;
 
+    GetLoadedModuleDirectory(NULL, dir[2], MAX_PATH);
+    ++numDirs;
+
     dirSize = GetSystemDirectory(dir[3], MAX_PATH);
-    _tcscat(dir[2], _T("\\"));
+    _tcscat(dir[3], _T("\\"));
     ++numDirs;
 
     //
