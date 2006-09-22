@@ -428,7 +428,7 @@ ALvoid BuildDeviceSpecifierList()
 									if ((specifier) && strlen(specifier))
 									{
 										do {
-											specifierSize = strlen((char*)specifier);
+											specifierSize = (ALuint)strlen((char*)specifier);
 
 											if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
 												strcpy((char*)list, (char*)specifier);
@@ -447,7 +447,7 @@ ALvoid BuildDeviceSpecifierList()
 											specifier = alcGetStringFxn(device, ALC_DEVICE_SPECIFIER);
 											if ((specifier) && strlen(specifier))
 											{
-												specifierSize = strlen((char*)specifier);
+												specifierSize = (ALuint)strlen((char*)specifier);
 
 												if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
 													strcpy((char*)list, (char*)specifier);
@@ -468,7 +468,7 @@ ALvoid BuildDeviceSpecifierList()
 									if ((specifier) && strlen(specifier))
 									{
 										do {
-											specifierSize = strlen((char*)specifier);
+											specifierSize = (ALuint)strlen((char*)specifier);
 											if (NewCaptureSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
 												strcpy((char*)captureList, (char*)specifier);
 												captureList += specifierSize + 1;
@@ -548,7 +548,7 @@ ALvoid BuildDeviceSpecifierList()
 									if ((specifier) && strlen(specifier))
 									{
 										do {
-											specifierSize = strlen((char*)specifier);
+											specifierSize = (ALuint)strlen((char*)specifier);
 
 											if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
 												strcpy((char*)list, (char*)specifier);
@@ -567,7 +567,7 @@ ALvoid BuildDeviceSpecifierList()
 											specifier = alcGetStringFxn(device, ALC_DEVICE_SPECIFIER);
 											if ((specifier) && strlen(specifier))
 											{
-												specifierSize = strlen((char*)specifier);
+												specifierSize = (ALuint)strlen((char*)specifier);
 
 												if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
 													strcpy((char*)list, (char*)specifier);
@@ -588,7 +588,7 @@ ALvoid BuildDeviceSpecifierList()
 									if ((specifier) && strlen(specifier))
 									{
 										do {
-											specifierSize = strlen((char*)specifier);
+											specifierSize = (ALuint)strlen((char*)specifier);
 											if (NewCaptureSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
 												strcpy((char*)captureList, (char*)specifier);
 												captureList += specifierSize + 1;
@@ -653,7 +653,7 @@ ALvoid CleanDeviceSpecifierList()
 	// dump new terminator into copy list, so that string searches are easier
 	int len;
 	while (strlen((const char *)copyList) > 0) {
-		len = strlen(copyList);
+		len = (int)strlen(copyList);
 		copyList[len] = ';';
 		copyList += len + 1;
 	}

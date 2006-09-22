@@ -1564,7 +1564,7 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(const ALCchar *deviceName)
 											}
 											if (IDirectSoundBuffer_Play(device->DSsbuffer,0,0,DSBPLAY_LOOPING)==DS_OK)
 											{
-                                                device->ulDSTimerID = timeSetEvent(25,0,DirectSoundProc,(DWORD_PTR)device,TIME_CALLBACK_FUNCTION|TIME_PERIODIC);
+                                                device->ulDSTimerID = timeSetEvent(25,0,(LPTIMECALLBACK)DirectSoundProc,(DWORD)device,(UINT)TIME_CALLBACK_FUNCTION|TIME_PERIODIC);
 												device->MaxNoOfSources = 256;
 
 												if ((deviceName) && (!strcmp(deviceName,"DirectSound")))
@@ -2541,7 +2541,7 @@ void UpdateSource(ALCcontext *ALContext, ALsource *ALSource)
 
 					// Start multimedia timer (if not already in progress)
 					if (ALContext->Device->ulDS3DTimerID == 0)
-                        ALContext->Device->ulDS3DTimerID = timeSetEvent(ALContext->Device->ulDS3DTimerInterval, 0, &DirectSound3DProc, (DWORD_PTR)ALContext->Device, TIME_CALLBACK_FUNCTION | TIME_PERIODIC);
+                        ALContext->Device->ulDS3DTimerID = timeSetEvent(ALContext->Device->ulDS3DTimerInterval, 0, (LPTIMECALLBACK)&DirectSound3DProc, (DWORD)ALContext->Device, (UINT)TIME_CALLBACK_FUNCTION | TIME_PERIODIC);
 
 					// Update current buffer variable
 					BufferID = ALBufferListItem->buffer;
