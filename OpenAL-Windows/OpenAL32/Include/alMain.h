@@ -76,7 +76,13 @@ typedef struct ALCdevice_struct
 	LPDIRECTSOUND3DLISTENER lpDS3DListener;
 	ALuint					ulDS3DTimerInterval;
 	ALuint					ulDS3DTimerID;
+#ifdef __MINGW32__
+} WINdevice;
+#undef ALCdevice
+#define ALCdevice WINdevice
+#else
 } ALCdevice;
+#endif
 
 typedef struct ALCcontext_struct
 {
@@ -109,7 +115,14 @@ typedef struct ALCcontext_struct
 
 	struct ALCcontext_struct *previous;
 	struct ALCcontext_struct *next;
+	
+#ifdef __MINGW32__
+}  WINcontext;
+#undef ALCcontext
+#define ALCcontext WINcontext
+#else
 }  ALCcontext;
+#endif
 
 ALCvoid UpdateContext(ALCcontext *context,ALuint type,ALuint name);
 ALint LinearGainToMB(float flGain);

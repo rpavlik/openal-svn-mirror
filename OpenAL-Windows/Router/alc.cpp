@@ -18,8 +18,10 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
 
+#ifndef __MINGW32__
 #define _CRT_SECURE_NO_DEPRECATE // get rid of sprintf security warnings on VS2005
 #define HAVE_VISTA_HEADERS
+#endif
 
 #include <stdlib.h>
 #include <memory.h>
@@ -36,9 +38,18 @@
 
 #include <stddef.h>
 #include <windows.h>
+#if defined(_MSC_VER)
 #include <crtdbg.h>
+#else
+#define _malloc_dbg(s,x,f,l)     malloc(s)
+#define _realloc_dbg(p,s,x,f,l)  realloc(p,s)
+#endif
 #include <objbase.h>
+#ifndef __MINGW32__
 #include <atlconv.h>
+#else
+#define T2A(x) x
+#endif
 #include <mmsystem.h>
 
 #include "OpenAL32.h"
@@ -1872,13 +1883,21 @@ void getDefaultDeviceNames(char *outputName, char *inputName, unsigned int len)
 		WAVEINCAPS inputInfo;
 
 		#if !defined(_WIN64)
+		#ifdef __GNUC__
+		  __asm__ ("pusha;");
+        #else
 		__asm pusha; // workaround for register destruction caused by these wavOutMessage calls (weird but true)
+		#endif
 		#endif // !defined(_WIN64)
 		waveOutMessage((HWAVEOUT)(UINT_PTR)WAVE_MAPPER,0x2000+0x0015,(LPARAM)&uDeviceID,(WPARAM)&dwFlags);
 		waveOutGetDevCaps(uDeviceID,&outputInfo,sizeof(outputInfo));
 		waveInGetDevCaps(uDeviceID, &inputInfo, sizeof(inputInfo));
 		#if !defined(_WIN64)
+		#ifdef __GNUC__
+		  __asm__ ("popa;");
+        #else
 		__asm popa;
+		#endif
 		#endif // !defined(_WIN64)
 		if ((outputName != NULL) && (strlen(outputInfo.szPname) <= len) && (bFoundOutputName == false)) {
 			strcpy(outputName, T2A(outputInfo.szPname));

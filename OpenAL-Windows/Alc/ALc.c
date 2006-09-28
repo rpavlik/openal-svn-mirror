@@ -18,8 +18,10 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
 
+#ifndef __MINGW32__
 #define _CRT_SECURE_NO_DEPRECATE // get rid of sprintf security warnings on VS2005
 #pragma comment(lib, "winmm.lib")
+#endif
 
 #include <math.h>
 #include <stdlib.h>

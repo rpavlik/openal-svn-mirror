@@ -115,6 +115,46 @@ static ALfunction  function[]=   {
 //*****************************************************************************
 //*****************************************************************************
 
+
+#ifdef __MINGW32__
+// fix for Mingw32.
+#define AL_VOID_FXN(fxn)                                                    \
+    ALCcontext* context;                                                     \
+                                                                            \
+    alListAcquireLock(alContextList);                                       \
+    if(!alCurrentContext)                                                   \
+    {                                                                       \
+        alListReleaseLock(alContextList);                                   \
+        return;                                                             \
+    }                                                                       \
+                                                                            \
+    context = alCurrentContext;                                             \
+    EnterCriticalSection(&context->Lock);                                   \
+    alListReleaseLock(alContextList);                                       \
+                                                                            \
+    context->AlApi.fxn;                                                   \
+    LeaveCriticalSection(&context->Lock);                                   \
+    return
+#define AL_RESULT_FXN(fxn, resultType, resultDefVal)                        \
+    resultType result = resultDefVal;                                       \
+    ALCcontext* context;                                                     \
+                                                                            \
+    alListAcquireLock(alContextList);                                       \
+    if(!alCurrentContext)                                                   \
+    {                                                                       \
+        alListReleaseLock(alContextList);                                   \
+        return result;                                                      \
+    }                                                                       \
+                                                                            \
+    context = alCurrentContext;                                             \
+    EnterCriticalSection(&context->Lock);                                   \
+    alListReleaseLock(alContextList);                                       \
+                                                                            \
+    result = context->AlApi.fxn;                                          \
+    LeaveCriticalSection(&context->Lock);                                   \
+    return result	
+
+#else
 #define AL_RESULT_FXN(fxn, resultType, resultDefVal)                        \
     resultType result = resultDefVal;                                       \
     ALCcontext* context;                                                     \
@@ -133,7 +173,7 @@ static ALfunction  function[]=   {
     result = context->AlApi.##fxn;                                          \
     LeaveCriticalSection(&context->Lock);                                   \
     return result
-
+#endif
 
 #define AL_VOID_FXN(fxn)                                                    \
     ALCcontext* context;                                                     \

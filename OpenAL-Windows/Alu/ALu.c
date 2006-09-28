@@ -25,6 +25,14 @@
 #include "AL/al.h"
 #include "AL/alc.h"
 
+// fixes for mingw32.
+#if defined(max) && !defined(__max)
+#define __max max
+#endif
+#if defined(min) && !defined(__min)
+#define __min min
+#endif
+
 ALUAPI ALint ALUAPIENTRY aluF2L(ALfloat Value)
 {
 	double temp;
