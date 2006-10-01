@@ -173,7 +173,6 @@ static ALfunction  function[]=   {
     result = context->AlApi.##fxn;                                          \
     LeaveCriticalSection(&context->Lock);                                   \
     return result
-#endif
 
 #define AL_VOID_FXN(fxn)                                                    \
     ALCcontext* context;                                                     \
@@ -192,8 +191,7 @@ static ALfunction  function[]=   {
     context->AlApi.##fxn;                                                   \
     LeaveCriticalSection(&context->Lock);                                   \
     return
-
-
+#endif
 
 
 //*****************************************************************************
