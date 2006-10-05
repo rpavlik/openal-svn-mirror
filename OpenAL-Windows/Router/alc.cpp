@@ -186,7 +186,7 @@ static ALCextension alcExtensions[] =
 
 
 // Error strings
-static ALenum  LastError = AL_NO_ERROR;
+static ALenum  LastError = ALC_NO_ERROR;
 static const ALCchar alcNoError[] = "No Error";
 static const ALCchar alcErrInvalidDevice[] = "Invalid Device";
 static const ALCchar alcErrInvalidContext[] = "Invalid Context";
@@ -946,7 +946,7 @@ ALboolean FillOutAlFunctions(ALCcontext* context)
 // FindDllWithMatchingSpecifier
 //*****************************************************************************
 //
-HINSTANCE FindDllWithMatchingSpecifier(TCHAR* dllSearchPattern, char* specifier, bool partialName = false, char *actualName = NULL)
+HINSTANCE FindDllWithMatchingSpecifier(TCHAR* dllSearchPattern, char* specifier, bool partialName = false, char *actualName = NULL, bool captureDevice = false)
 {
     WIN32_FIND_DATA findData;
     HANDLE searchHandle = INVALID_HANDLE_VALUE;
@@ -1041,52 +1041,52 @@ HINSTANCE FindDllWithMatchingSpecifier(TCHAR* dllSearchPattern, char* specifier,
 							alcGetStringFxn = (ALCAPI_GET_STRING)GetProcAddress(dll, "alcGetString");
 							if(alcGetStringFxn)
 							{
-								if (alcIsExtensionPresentFxn(0, (ALCchar *)"ALC_ENUMERATION_EXT")) {
-									// have an enumeratable DLL here, so check all available devices
-									deviceSpecifier = alcGetStringFxn(0, ALC_DEVICE_SPECIFIER);
-									if (deviceSpecifier)
-									{
-										do {
-											if (deviceSpecifier != NULL) {
-												if (partialName == false) {
-													found = strcmp((char*)deviceSpecifier, specifier) == 0;
+								if (captureDevice == false) {
+									if (alcIsExtensionPresentFxn(0, (ALCchar *)"ALC_ENUMERATION_EXT")) {
+										// have an enumeratable DLL here, so check all available devices
+										deviceSpecifier = alcGetStringFxn(0, ALC_DEVICE_SPECIFIER);
+										if (deviceSpecifier)
+										{
+											do {
+												if (deviceSpecifier != NULL) {
+													if (partialName == false) {
+														found = strcmp((char*)deviceSpecifier, specifier) == 0;
+													} else {
+														found = strstr((char*)deviceSpecifier, specifier) != 0;
+														strcpy(actualName, (char *)deviceSpecifier);
+													}
 												} else {
-													found = strstr((char*)deviceSpecifier, specifier) != 0;
-													strcpy(actualName, (char *)deviceSpecifier);
+													found = false;
 												}
-											} else {
-												found = false;
-											}
-											deviceSpecifier += strlen((char *)deviceSpecifier) + 1;
-										} while (!found && (strlen((char *)deviceSpecifier) > 0));
-									}
-								} else {
-									// no enumeration ability
-									device = alcOpenDeviceFxn(NULL);
-									if (device != NULL) {
-										context = alcCreateContextFxn(device, NULL);
-										alcMakeContextCurrentFxn((ALCcontext *)context);
-										if (context != NULL) {
-											deviceSpecifier = alcGetStringFxn(device, ALC_DEFAULT_DEVICE_SPECIFIER);
-											if (deviceSpecifier != NULL) {
-												if (partialName == false) {
-													found = strcmp((char*)deviceSpecifier, specifier) == 0;
+												deviceSpecifier += strlen((char *)deviceSpecifier) + 1;
+											} while (!found && (strlen((char *)deviceSpecifier) > 0));
+										}
+									} else {
+										// no enumeration ability
+										device = alcOpenDeviceFxn(NULL);
+										if (device != NULL) {
+											context = alcCreateContextFxn(device, NULL);
+											alcMakeContextCurrentFxn((ALCcontext *)context);
+											if (context != NULL) {
+												deviceSpecifier = alcGetStringFxn(device, ALC_DEFAULT_DEVICE_SPECIFIER);
+												if (deviceSpecifier != NULL) {
+													if (partialName == false) {
+														found = strcmp((char*)deviceSpecifier, specifier) == 0;
+													} else {
+														found = strstr((char*)deviceSpecifier, specifier) != 0;
+														strcpy(actualName, (char *)deviceSpecifier);
+													}
 												} else {
-													found = strstr((char*)deviceSpecifier, specifier) != 0;
-													strcpy(actualName, (char *)deviceSpecifier);
+													found = false;
 												}
-											} else {
-												found = false;
-											}
 
-											alcMakeContextCurrentFxn((ALCcontext *)NULL);
-											alcDestroyContextFxn((ALCcontext *)context);
-											alcCloseDeviceFxn(device);
+												alcMakeContextCurrentFxn((ALCcontext *)NULL);
+												alcDestroyContextFxn((ALCcontext *)context);
+												alcCloseDeviceFxn(device);
+											}
 										}
 									}
-								}
-
-								if (found == false) {
+								} else {
 									if (alcIsExtensionPresentFxn(0, (ALCchar *)"ALC_EXT_CAPTURE")) {
 										// so check all available capture devices
 										deviceSpecifier = alcGetStringFxn(0, ALC_CAPTURE_DEVICE_SPECIFIER);
@@ -1259,7 +1259,7 @@ ALCAPI ALCcontext* ALCAPIENTRY alcCreateContext(ALCdevice* device, const ALint* 
     memset(context, 0, sizeof(ALCcontext));
     context->Device = device;
     context->Suspended = FALSE;
-    context->LastError = AL_NO_ERROR;
+    context->LastError = ALC_NO_ERROR;
     InitializeCriticalSection(&context->Lock);
 
     //
@@ -1409,7 +1409,7 @@ ALCAPI ALenum ALCAPIENTRY alcGetEnumValue(ALCdevice* device, const ALCchar* enam
 //
 ALCAPI ALenum ALCAPIENTRY alcGetError(ALCdevice* device)
 {
-    ALenum errorCode = AL_NO_ERROR;
+    ALenum errorCode = ALC_NO_ERROR;
 
     // Try to get a valid device.
     if(!device)
@@ -1417,7 +1417,7 @@ ALCAPI ALenum ALCAPIENTRY alcGetError(ALCdevice* device)
 		if (g_CaptureDevice == device)
 			return 
         errorCode = LastError;
-        LastError = AL_NO_ERROR;
+        LastError = ALC_NO_ERROR;
         return errorCode;
     }
 
@@ -1555,7 +1555,7 @@ ALCAPI ALboolean ALCAPIENTRY alcIsExtensionPresent(ALCdevice* device, const ALCc
 
     if(alcExtensions[i].ename)
     {
-        return AL_TRUE;
+        return ALC_TRUE;
     }
 
     //
@@ -1576,7 +1576,7 @@ ALCAPI ALboolean ALCAPIENTRY alcIsExtensionPresent(ALCdevice* device, const ALCc
     }
 
     LastError = ALC_INVALID_ENUM;
-    return AL_FALSE;
+    return ALC_FALSE;
 }
 
 
@@ -1595,7 +1595,7 @@ ALCAPI ALboolean ALCAPIENTRY alcMakeContextCurrent(ALCcontext* context)
     if(!alListMatchData(alContextList, context) && context != 0)
     {
         alListReleaseLock(alContextList);
-        return AL_FALSE;
+        return ALC_FALSE;
     }
 
     //
@@ -1634,7 +1634,9 @@ ALCAPI ALboolean ALCAPIENTRY alcMakeContextCurrent(ALCcontext* context)
             }
         }
 	} else {
-        contextSwitched = alCurrentContext->Device->AlcApi.alcMakeContextCurrent(0);
+		if ((alCurrentContext) && (alCurrentContext->Device) && (alCurrentContext->Device->AlcApi.alcMakeContextCurrent)) {
+			contextSwitched = alCurrentContext->Device->AlcApi.alcMakeContextCurrent(0);
+		}
     }
 
     //
@@ -1670,7 +1672,7 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(const ALCchar* deviceName)
     }
 
     memset(device, 0, sizeof(ALCdevice));
-    device->LastError = AL_NO_ERROR;
+	device->LastError = ALC_NO_ERROR;
     device->InUse = 0;
 
     //
@@ -2122,10 +2124,10 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
 					acceptPartial = true;
 					strcpy(mixerDevice, T2A("X-Fi"));
 				}
-                dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), mixerDevice, acceptPartial, actualName);
+                dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), mixerDevice, acceptPartial, actualName, true);
                 if(!dll)
                 {
-                    dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), mixerDevice, acceptPartial, actualName);
+                    dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), mixerDevice, acceptPartial, actualName, true);
                 }
 
                 if(dll)
@@ -2186,16 +2188,20 @@ ALCAPI ALCdevice * ALCAPIENTRY alcCaptureOpenDevice(const ALCchar *deviceName, A
 				strncpy(newDeviceName, deviceName, 256);
 			}
 
-			g_CaptureDevice->Dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), (char *)newDeviceName);
+			g_CaptureDevice->Dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), (char *)newDeviceName, false, NULL, true);
 			if (!g_CaptureDevice->Dll) {
-				g_CaptureDevice->Dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), (char *)newDeviceName);
+				g_CaptureDevice->Dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), (char *)newDeviceName, false, NULL, true);
 			}
 
 			if (g_CaptureDevice->Dll) {
 				if(FillOutAlcFunctions(g_CaptureDevice)) {
-					g_CaptureDevice->CaptureDevice = g_CaptureDevice->AlcApi.alcCaptureOpenDevice(newDeviceName, frequency, format, buffersize);
-					g_CaptureDevice->LastError = AL_NO_ERROR;
-					g_CaptureDevice->InUse = 0;
+					if (g_CaptureDevice->AlcApi.alcCaptureOpenDevice) {
+						g_CaptureDevice->CaptureDevice = g_CaptureDevice->AlcApi.alcCaptureOpenDevice(newDeviceName, frequency, format, buffersize);
+						g_CaptureDevice->LastError = ALC_NO_ERROR;
+						g_CaptureDevice->InUse = 0;
+					} else {
+						g_CaptureDevice->LastError = ALC_INVALID_DEVICE;
+					}
 				}
 			}
 		}
@@ -2204,11 +2210,15 @@ ALCAPI ALCdevice * ALCAPIENTRY alcCaptureOpenDevice(const ALCchar *deviceName, A
 		g_CaptureDevice->LastError = ALC_INVALID_VALUE;
 	}
 
-	if (g_CaptureDevice->CaptureDevice) {
-		return g_CaptureDevice;
+	if (g_CaptureDevice != NULL) {
+		if (g_CaptureDevice->CaptureDevice) {
+			return g_CaptureDevice;
+		} else {
+			free(g_CaptureDevice);
+			g_CaptureDevice = NULL;
+			return NULL;
+		}
 	} else {
-		free(g_CaptureDevice);
-		g_CaptureDevice = NULL;
 		return NULL;
 	}
 }
@@ -2219,13 +2229,19 @@ ALCAPI ALCdevice * ALCAPIENTRY alcCaptureOpenDevice(const ALCchar *deviceName, A
 //
 ALCAPI ALCboolean ALCAPIENTRY alcCaptureCloseDevice(ALCdevice *device)
 {
-	ALCboolean bReturn = AL_FALSE;
+	ALCboolean bReturn = ALC_FALSE;
 
 	if (device == g_CaptureDevice)
 	{
-		bReturn = g_CaptureDevice->AlcApi.alcCaptureCloseDevice(g_CaptureDevice->CaptureDevice);
-		delete g_CaptureDevice;
-		g_CaptureDevice = NULL;
+		if (g_CaptureDevice != NULL) {
+			if (g_CaptureDevice->AlcApi.alcCaptureCloseDevice) {
+				bReturn = g_CaptureDevice->AlcApi.alcCaptureCloseDevice(g_CaptureDevice->CaptureDevice);
+				delete g_CaptureDevice;
+				g_CaptureDevice = NULL;
+			} else {
+				g_CaptureDevice->LastError = ALC_INVALID_DEVICE;
+			}
+		}
 	}
 
     return bReturn;
@@ -2239,7 +2255,13 @@ ALCAPI ALCvoid ALCAPIENTRY alcCaptureStart(ALCdevice *device)
 {
 	if (device == g_CaptureDevice)
 	{
-		g_CaptureDevice->AlcApi.alcCaptureStart(g_CaptureDevice->CaptureDevice);
+		if (g_CaptureDevice != NULL) {
+			if (g_CaptureDevice->AlcApi.alcCaptureStart) {
+				g_CaptureDevice->AlcApi.alcCaptureStart(g_CaptureDevice->CaptureDevice);
+			} else {
+				g_CaptureDevice->LastError = ALC_INVALID_DEVICE;
+			}
+		}
 	}
 
     return;
@@ -2253,7 +2275,13 @@ ALCAPI ALCvoid ALCAPIENTRY alcCaptureStop(ALCdevice *device)
 {
 	if (device == g_CaptureDevice)
 	{
-		g_CaptureDevice->AlcApi.alcCaptureStop(g_CaptureDevice->CaptureDevice);
+		if (g_CaptureDevice != NULL) {
+			if (g_CaptureDevice->AlcApi.alcCaptureStop) {
+				g_CaptureDevice->AlcApi.alcCaptureStop(g_CaptureDevice->CaptureDevice);
+			} else {
+				g_CaptureDevice->LastError = ALC_INVALID_DEVICE;
+			}
+		}
 	}
 
     return;
@@ -2267,7 +2295,13 @@ ALCAPI ALCvoid ALCAPIENTRY alcCaptureSamples(ALCdevice *device, ALCvoid *buffer,
 {
 	if (device == g_CaptureDevice)
 	{
-		g_CaptureDevice->AlcApi.alcCaptureSamples(g_CaptureDevice->CaptureDevice, buffer, samples);
+		if (g_CaptureDevice != NULL) {
+			if (g_CaptureDevice->AlcApi.alcCaptureSamples) {
+				g_CaptureDevice->AlcApi.alcCaptureSamples(g_CaptureDevice->CaptureDevice, buffer, samples);
+			} else {
+				g_CaptureDevice->LastError = ALC_INVALID_DEVICE;
+			}
+		}
 	}
 
     return;
