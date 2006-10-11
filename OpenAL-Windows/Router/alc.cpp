@@ -1918,13 +1918,15 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
 {
     const ALCchar* value = 0;
 
-    if(device)
-    {
-		if (device == g_CaptureDevice)
-			return g_CaptureDevice->AlcApi.alcGetString(g_CaptureDevice->CaptureDevice, param);
+	if ((param != ALC_DEFAULT_DEVICE_SPECIFIER) && (param != ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER)) {
+		if(device)
+		{
+			if (device == g_CaptureDevice)
+				return g_CaptureDevice->AlcApi.alcGetString(g_CaptureDevice->CaptureDevice, param);
 
-        return device->AlcApi.alcGetString(device->DllDevice, param);
-    }
+			return device->AlcApi.alcGetString(device->DllDevice, param);
+		}
+	}
 
     switch(param)
     {
