@@ -19,7 +19,7 @@
 ;***************************************************************************
 
 ; int _alDetectx86CPUCaps(uint* caps1, uint* caps2, uint* caps3);
-; gcc linux amd64 calling convention: rdi, rdi, rdx
+; gcc linux amd64 calling convention: rdi, rsi, rdx
 ; derived from loki_cpuinfo.c, 1997-98 by H. Dietz and R. Fisher
 ; using infos from sandpile.org
 
