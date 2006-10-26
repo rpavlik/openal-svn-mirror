@@ -20,8 +20,7 @@ SET(PACKAGE_STRING "openal")
 SET(PACKAGE_BUGREPORT "openal-devel@opensource.creative.com")
 SET(OPERATING_SYSTEM "${CMAKE_SYSTEM_NAME}")
 
-FIND_PACKAGE(ConfigHelper)
-
+INCLUDE(${CMAKE_MODULE_PATH}/ConfigHelper.cmake)
 INCLUDE(${CMAKE_ROOT}/Modules/CheckCSourceCompiles.cmake)
 INCLUDE(${CMAKE_ROOT}/Modules/CheckIncludeFile.cmake)
 INCLUDE(${CMAKE_ROOT}/Modules/CheckLibraryExists.cmake)
