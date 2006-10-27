@@ -57,8 +57,31 @@ typedef long long v2di __attribute__ ((vector_size (16)));
 #define to_v2di(X) (v2di)X
 
 typedef char *psse2loadtype;
-#define setw(X) (__extension__(v4hi){X, X, X, X})
+
+#if __GNUC__ < 4
+static __inline v4hi setw(short X)
+{
+	union {
+		short s[4];
+		v4hi v;
+	} u = {{X, X, X, X}};
+
+	return u.v;
+}
+
+static __inline v8hi setw128(short X)
+{
+	union {
+		short s[8];
+		v8hi v;
+	} u = {{X, X, X, X, X, X, X, X}};
+
+	return u.v;
+}
+#else
+#define setw(X) (__builtin_ia32_vec_init_v4hi(X, X, X, X))
 #define setw128(X) (__extension__(v8hi){X, X, X, X, X, X, X, X})
+#endif
 
 #define ALIGN16(x) x __attribute__((aligned(16)))
 typedef unsigned long aint;
