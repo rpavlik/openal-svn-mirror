@@ -1,11 +1,11 @@
-SET(VAR HAVE_ATTRIBUTE)
-
+MACRO(TEST_COMPILER_ATTRIBUTE)
 CHECK_C_SOURCE_COMPILES(
 "void  foo (int bar __attribute__((unused)) ) { }
 static void baz (void) __attribute__((unused));
 static void baz (void) { }
 int main(){}
-" ${VAR})
-IF(${VAR})
+" HAVE_ATTRIBUTE)
+IF(HAVE_ATTRIBUTE)
   ADD_DEFINE(HAVE___ATTRIBUTE__)
-ENDIF(${VAR})
+ENDIF(HAVE_ATTRIBUTE)
+ENDMACRO(TEST_COMPILER_ATTRIBUTE)
