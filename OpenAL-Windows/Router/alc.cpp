@@ -1050,7 +1050,8 @@ HINSTANCE FindDllWithMatchingSpecifier(TCHAR* dllSearchPattern, char* specifier,
 											do {
 												if (deviceSpecifier != NULL) {
 													if (partialName == false) {
-														found = strcmp((char*)deviceSpecifier, specifier) == 0;
+														found = strncmp(deviceSpecifier, specifier, 31) == 0;
+														// note -- specifier may be a non-truncated version of deviceSpecifier, which is why strncmp is being used
 													} else {
 														found = strstr((char*)deviceSpecifier, specifier) != 0;
 														strcpy(actualName, (char *)deviceSpecifier);
@@ -1071,7 +1072,8 @@ HINSTANCE FindDllWithMatchingSpecifier(TCHAR* dllSearchPattern, char* specifier,
 												deviceSpecifier = alcGetStringFxn(device, ALC_DEFAULT_DEVICE_SPECIFIER);
 												if (deviceSpecifier != NULL) {
 													if (partialName == false) {
-														found = strcmp((char*)deviceSpecifier, specifier) == 0;
+														found = strncmp(deviceSpecifier, specifier, 31) == 0;
+														// note -- specifier may be a non-truncated version of deviceSpecifier; hence the use of strncmp
 													} else {
 														found = strstr((char*)deviceSpecifier, specifier) != 0;
 														strcpy(actualName, (char *)deviceSpecifier);
@@ -1095,7 +1097,8 @@ HINSTANCE FindDllWithMatchingSpecifier(TCHAR* dllSearchPattern, char* specifier,
 											do {
 												if (deviceSpecifier != NULL) {
 													if (partialName == false) {
-														found = strcmp((char*)deviceSpecifier, specifier) == 0;
+														found = strncmp(deviceSpecifier, specifier, 31) == 0;
+														// note -- specifier may be a non-truncated version of deviceSpecifier; hence the use of strncmp
 													} else {
 														found = strstr((char*)deviceSpecifier, specifier) != 0;
 														strcpy(actualName, (char *)deviceSpecifier);
@@ -1147,7 +1150,7 @@ HINSTANCE FindDllWithMatchingSpecifier(TCHAR* dllSearchPattern, char* specifier,
 //
 // ALC API Entry Points
 //
-//*****************************************************************************
+//*****************************************************************************ALC_
 //*****************************************************************************
 
 //*****************************************************************************
@@ -1823,10 +1826,13 @@ ALCAPI ALCvoid ALCAPIENTRY alcSuspendContext(ALCcontext* context)
     return;
 }
 
-void getDefaultDeviceNames(char *outputName, char *inputName, unsigned int len)
+void getDefaultPlaybackDeviceNames(char *longName, char *shortName, unsigned int len)
 {
 	bool bFoundOutputName = false;
-	bool bFoundInputName = false;
+
+	// clear names
+	strcpy(longName, "");
+	strcpy(shortName, "");
 
 #ifdef HAVE_VISTA_HEADERS
 	// try to grab device name through Vista Core Audio...
@@ -1846,15 +1852,70 @@ void getDefaultDeviceNames(char *outputName, char *inputName, unsigned int len)
 			if SUCCEEDED(hr) {
 				PROPVARIANT pv;
 				PropVariantInit(&pv);
+				pPropertyStore->GetValue(PKEY_Device_FriendlyName, &pv);
+				if (longName != NULL) {
+					sprintf(longName, "%S", pv.pwszVal);
+				}
 				pPropertyStore->GetValue(PKEY_DeviceInterface_FriendlyName, &pv);
-				if (outputName != NULL) {
-					sprintf(outputName, "%S", pv.pwszVal);
+				if (shortName != NULL) {
+					sprintf(shortName, "%S", pv.pwszVal);
 				}
 				bFoundOutputName = true;
 				pPropertyStore->Release();
 			}
 			pDevice->Release();
 		}
+		pEnumerator->Release();
+	}
+	CoUninitialize();
+#endif
+
+	if (bFoundOutputName == false) {
+		// figure out name via mmsystem...
+		UINT uDeviceID;
+		DWORD dwFlags=1;
+		WAVEOUTCAPS outputInfo;
+
+		#if !defined(_WIN64)
+		#ifdef __GNUC__
+		  __asm__ ("pusha;");
+        #else
+		__asm pusha; // workaround for register destruction caused by these wavOutMessage calls (weird but true)
+		#endif
+		#endif // !defined(_WIN64)
+		waveOutMessage((HWAVEOUT)(UINT_PTR)WAVE_MAPPER,0x2000+0x0015,(LPARAM)&uDeviceID,(WPARAM)&dwFlags);
+		waveOutGetDevCaps(uDeviceID,&outputInfo,sizeof(outputInfo));
+		#if !defined(_WIN64)
+		#ifdef __GNUC__
+		  __asm__ ("popa;");
+        #else
+		__asm popa;
+		#endif
+		#endif // !defined(_WIN64)
+		if ((shortName != NULL) && (strlen(outputInfo.szPname) <= len)) {
+			strcpy(shortName, T2A(outputInfo.szPname));
+		}
+	}
+}
+
+void getDefaultCaptureDeviceNames(char *longName, char *shortName, unsigned int len)
+{
+	bool bFoundInputName = false;
+
+	// clear names
+	strcpy(longName, "");
+	strcpy(shortName, "");
+
+#ifdef HAVE_VISTA_HEADERS
+	// try to grab device name through Vista Core Audio...
+	HRESULT hr;
+	IMMDeviceEnumerator *pEnumerator;
+
+	CoInitialize(NULL);
+	hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL,CLSCTX_INPROC_SERVER, 
+		__uuidof(IMMDeviceEnumerator),(void**)&pEnumerator);
+	if SUCCEEDED(hr) {
+		IMMDevice* pDevice = NULL;
 		// get input info
 		hr = pEnumerator->GetDefaultAudioEndpoint(eCapture, eMultimedia, &pDevice);
 		if SUCCEEDED(hr) {
@@ -1863,9 +1924,13 @@ void getDefaultDeviceNames(char *outputName, char *inputName, unsigned int len)
 			if SUCCEEDED(hr) {
 				PROPVARIANT pv;
 				PropVariantInit(&pv);
+				pPropertyStore->GetValue(PKEY_Device_FriendlyName, &pv);
+				if (longName != NULL) {
+					sprintf(longName, "%S", pv.pwszVal);
+				}
 				pPropertyStore->GetValue(PKEY_DeviceInterface_FriendlyName, &pv);
-				if (inputName != NULL) {
-					sprintf(inputName, "%S", pv.pwszVal);
+				if (shortName != NULL) {
+					sprintf(shortName, "%S", pv.pwszVal);
 				}
 				bFoundInputName = true;
 				pPropertyStore->Release();
@@ -1877,11 +1942,10 @@ void getDefaultDeviceNames(char *outputName, char *inputName, unsigned int len)
 	CoUninitialize();
 #endif
 
-	if ((bFoundInputName == false) || (bFoundOutputName == false)) {
+	if (bFoundInputName == false) {
 		// figure out name via mmsystem...
 		UINT uDeviceID;
 		DWORD dwFlags=1;
-		WAVEOUTCAPS outputInfo;
 		WAVEINCAPS inputInfo;
 
 		#if !defined(_WIN64)
@@ -1892,7 +1956,6 @@ void getDefaultDeviceNames(char *outputName, char *inputName, unsigned int len)
 		#endif
 		#endif // !defined(_WIN64)
 		waveOutMessage((HWAVEOUT)(UINT_PTR)WAVE_MAPPER,0x2000+0x0015,(LPARAM)&uDeviceID,(WPARAM)&dwFlags);
-		waveOutGetDevCaps(uDeviceID,&outputInfo,sizeof(outputInfo));
 		waveInGetDevCaps(uDeviceID, &inputInfo, sizeof(inputInfo));
 		#if !defined(_WIN64)
 		#ifdef __GNUC__
@@ -1901,11 +1964,8 @@ void getDefaultDeviceNames(char *outputName, char *inputName, unsigned int len)
 		__asm popa;
 		#endif
 		#endif // !defined(_WIN64)
-		if ((outputName != NULL) && (strlen(outputInfo.szPname) <= len) && (bFoundOutputName == false)) {
-			strcpy(outputName, T2A(outputInfo.szPname));
-		}
-		if ((inputName != NULL) && (strlen(inputInfo.szPname) <= len) && (bFoundInputName == false)) {
-			strcpy(inputName, T2A(inputInfo.szPname));
+		if ((shortName != NULL) && (strlen(inputInfo.szPname) <= len)) {
+			strcpy(shortName, T2A(inputInfo.szPname));
 		}
 	}
 }
@@ -1969,6 +2029,7 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
                 //
                 const char* specifier = 0;
                 HINSTANCE dll = 0;
+				char longDevice[256];
 				char mixerDevice[256];
 				bool acceptPartial = false;
 				char actualName[32];
@@ -1980,34 +2041,47 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
 					return alcDefaultDeviceSpecifier;
 				}
 
-				// two issues here --
-				// 1) whatever device is in the control panel as the preferred device should be accepted
-				// 2) if the preferred device is an Audigy or an X-Fi, then the name might not match the 
-				// hardware DLL, so allow a partial match in this case
-                getDefaultDeviceNames(mixerDevice, NULL, 256);
-				if (strstr(mixerDevice, T2A("Audigy")) != NULL) {
-					acceptPartial = true;
-					strcpy(mixerDevice, T2A("Audigy"));
-				}
-				if (strstr(mixerDevice, T2A("X-Fi")) != NULL) {
-					acceptPartial = true;
-					strcpy(mixerDevice, T2A("X-Fi"));
-				}
-                dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), mixerDevice, acceptPartial, actualName);
-                if(!dll)
-                {
-                    dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), mixerDevice, acceptPartial, actualName);
-                }
-
-                if(dll)
-                {
-					if (acceptPartial == true) {
-						strcpy(mixerDevice, actualName);
+				// try to find whatever device is the "preferred audio device" --
+				// 1) use the long device name if available (normally it would be from Vista Core Audio)
+				// 2) if #1 fails to find a match, then use the short device name
+			    //       - if the preferred device is an Audigy or an X-Fi, then the name might not match the 
+				//          hardware DLL, so allow a partial match in this case
+				// 3) if #2 fails to find a match, try the generic names as the ultimate fallback
+                getDefaultPlaybackDeviceNames(longDevice, mixerDevice, 256);
+				if (strlen(longDevice)) { // test long device name first
+					dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), longDevice, false, actualName);
+					if(dll)
+					{
+						strcpy((char*)alcDefaultDeviceSpecifier, longDevice);
+						FreeLibrary(dll);
+						break;
 					}
-                    strcpy((char*)alcDefaultDeviceSpecifier, mixerDevice);
-                    FreeLibrary(dll);
-                    break;
-                }
+				}
+				if (strlen(mixerDevice)) { // test short device name (mixerDevice) next, with partial matches potentially...
+					if (strstr(mixerDevice, T2A("Audigy")) != NULL) {
+						acceptPartial = true;
+						strcpy(mixerDevice, T2A("Audigy"));
+					}
+					if (strstr(mixerDevice, T2A("X-Fi")) != NULL) {
+						acceptPartial = true;
+						strcpy(mixerDevice, T2A("X-Fi"));
+					}
+					dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), mixerDevice, acceptPartial, actualName);
+					if(!dll)
+					{
+						dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), mixerDevice, acceptPartial, actualName);
+					}
+
+					if(dll)
+					{
+						if (acceptPartial == true) {
+							strcpy(mixerDevice, actualName);
+						}
+						strcpy((char*)alcDefaultDeviceSpecifier, mixerDevice);
+						FreeLibrary(dll);
+						break;
+					}
+				}
 
                 //
                 // Try to find a default version.
@@ -2102,6 +2176,7 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
                 //
                 const char* specifier = 0;
                 HINSTANCE dll = 0;
+				char longDevice[256];
 				char mixerDevice[256];
 				bool acceptPartial = false;
 				char actualName[32];
@@ -2113,35 +2188,49 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
 					return alcCaptureDefaultDeviceSpecifier;
 				}
 
-				// two issues here --
-				// 1) whatever device is in the control panel as the preferred device should be accepted
-				// 2) if the preferred device is an Audigy or an X-Fi, then the name might not match the 
-				// hardware DLL, so allow a partial match in this case
-                getDefaultDeviceNames(NULL, mixerDevice, 256);
-				if (strstr(mixerDevice, T2A("Audigy")) != NULL) {
-					acceptPartial = true;
-					strcpy(mixerDevice, T2A("Audigy"));
-				}
-				if (strstr(mixerDevice, T2A("X-Fi")) != NULL) {
-					acceptPartial = true;
-					strcpy(mixerDevice, T2A("X-Fi"));
-				}
-                dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), mixerDevice, acceptPartial, actualName, true);
-                if(!dll)
-                {
-                    dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), mixerDevice, acceptPartial, actualName, true);
-                }
-
-                if(dll)
-                {
-					if (acceptPartial == true) {
-						strcpy(mixerDevice, actualName);
+				// try to find whatever device is the "preferred audio device" --
+				// 1) use the long device name if available (normally it would be from Vista Core Audio)
+				// 2) if #1 fails to find a match, then use the short device name
+			    //       - if the preferred device is an Audigy or an X-Fi, then the name might not match the 
+				//          hardware DLL, so allow a partial match in this case
+				// 3) if #2 fails, use the first available capture device name
+                getDefaultCaptureDeviceNames(longDevice, mixerDevice, 256);
+				if (strlen(longDevice)) { // look for long device
+					dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), longDevice, false, actualName, true);
+					if(dll)
+					{
+						strcpy((char*)alcCaptureDefaultDeviceSpecifier, longDevice);
+						FreeLibrary(dll);
+						break;
 					}
-                    strcpy((char*)alcCaptureDefaultDeviceSpecifier, mixerDevice);
-                    FreeLibrary(dll);
-                    break;
-                }
+				}
+				if (strlen(mixerDevice)) { // look for short device (mixerDevice)
+					if (strstr(mixerDevice, T2A("Audigy")) != NULL) {
+						acceptPartial = true;
+						strcpy(mixerDevice, T2A("Audigy"));
+					}
+					if (strstr(mixerDevice, T2A("X-Fi")) != NULL) {
+						acceptPartial = true;
+						strcpy(mixerDevice, T2A("X-Fi"));
+					}
+					dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), mixerDevice, acceptPartial, actualName, true);
+					if(!dll)
+					{
+						dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), mixerDevice, acceptPartial, actualName, true);
+					}
 
+					if(dll)
+					{
+						if (acceptPartial == true) {
+							strcpy(mixerDevice, actualName);
+						}
+						strcpy((char*)alcCaptureDefaultDeviceSpecifier, mixerDevice);
+						FreeLibrary(dll);
+						break;
+					}
+				}
+
+				// fall back to first capture device available
 				BuildDeviceSpecifierList();
 				strcpy(alcCaptureDefaultDeviceSpecifier, alcCaptureDeviceSpecifierList);
                 break;
