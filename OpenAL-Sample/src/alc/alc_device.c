@@ -13,6 +13,7 @@
 
 #include "config/al_config.h"
 #include "al_main.h"
+#include "al_mixer.h"
 #include "al_debug.h"
 
 #include "alc/alc_device.h"
@@ -187,8 +188,10 @@ alcCloseDevice( ALCdevice *dev )
 {
 	/* ToDo: Is this test really necessary? */
 	if ( dev->ops != NULL) {
+		_alLockMixerPause();
 		/* ToDo: Use return value */
 		dev->ops->close(dev->privateData);
+		_alUnlockMixerPause();
 	}
 
 	free( dev->specifier );
