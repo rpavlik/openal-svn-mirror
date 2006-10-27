@@ -33,6 +33,12 @@ typedef unsigned __int32 uint32_t;
 #define AL_ATTRIBUTE_NORETURN_
 #endif /* not HAVE___ATTRIBUTE__ */
 
+#ifdef _WIN32
+#define CDECL __cdecl
+#else /* _WIN32 */
+#define CDECL
+#endif /* _WIN32 */
+
 #define USE_LRINT 0 /* icculus look here JIV FIXME */
 
 #if USE_LRINT

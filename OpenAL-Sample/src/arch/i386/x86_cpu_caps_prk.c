@@ -24,7 +24,7 @@
 #include "al_debug.h"
 
 typedef unsigned int uint;
-int _alDetectx86CPUCaps(uint* caps1, uint* caps2, uint* caps3);
+int CDECL _alDetectx86CPUCaps(uint* caps1, uint* caps2, uint* caps3);
 
 /* caps1 */
 #define MMX_BIT             23
