@@ -28,16 +28,8 @@ INCLUDE(${CMAKE_MODULE_PATH}/ConfigHelper.cmake)
 INCLUDE(${CMAKE_MODULE_PATH}/CompilerVisibility.cmake)
 INCLUDE(${CMAKE_MODULE_PATH}/CompilerAttribute.cmake)
 INCLUDE(${CMAKE_MODULE_PATH}/CompilerFlagsSet.cmake)
+INCLUDE(${CMAKE_MODULE_PATH}/CompilerSIMD.cmake)
 INCLUDE(${CMAKE_MODULE_PATH}/DetectCompiler.cmake)
-
-MACRO(MACRO_TEST ARG VAR)
-CHECK_C_SOURCE_COMPILES(
-"#ifndef ${ARG}
-#error ${ARG} macro not defined
-#endif
-int main(){}
-" ${VAR})
-ENDMACRO(MACRO_TEST ARG VAR)
 
 
 ADD_DEFINE("PACKAGE_VERSION \"${PACKAGE_VERSION}\"")
@@ -390,88 +382,45 @@ ENDIF(NULLOUT)
 
 # Special objs for architectures
 IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
-  INCLUDE_DIRECTORIES(${OpenAL_SOURCE_DIR}/src/arch/i386)
-  SET(ARCH_OBJS ${x86_OBJS})
-
-  FIND_PACKAGE(CompilerSIMDFlags)
-
-  IF(CMAKE_SYSTEM MATCHES "Windows")
-   # this should get fixed into a real detection
-   ADD_DEFINITIONS(-D__MMX__)
-   SET(HAVE_MMX)
-  ELSE(CMAKE_SYSTEM MATCHES "Windows")
-    SET(CMAKE_REQUIRED_FLAGS "${ADD_CFLAGS}")
-    MACRO_TEST(__MMX__ HAVE_MMX)
-    MACRO_TEST(__SSE2__ HAVE_SSE2)
-    SET(CMAKE_REQUIRED_FLAGS)
-  ENDIF(CMAKE_SYSTEM MATCHES "Windows")
+  CHECK_MMX()
+  IF(HAVE_MMX)
+    CHECK_SSE2()
+  ENDIF(HAVE_MMX)
 
   IF(HAVE_MMX OR HAVE_SSE2)
+    INCLUDE_DIRECTORIES(${OpenAL_SOURCE_DIR}/src/arch/i386)
+    SET(ARCH_OBJS ${x86_OBJS})
+
     IF(HAVE_MMX)
       SET(ARCH_OBJS ${ARCH_OBJS} ${x86_MMX_OBJS})
+      FOREACH(SRC ${x86_MMX_OBJS})
+        SET_SOURCE_FILES_PROPERTIES(${SRC} PROPERTIES COMPILE_FLAGS "${MMX_FLAGS}")
+      ENDFOREACH(SRC)
+      ADD_DEFINE(HAVE_MMX)
     ENDIF(HAVE_MMX)
 
     IF(HAVE_SSE2)
       SET(ARCH_OBJS ${ARCH_OBJS} ${x86_SSE2_OBJS})
+      FOREACH(SRC ${x86_SSE2_OBJS})
+        SET_SOURCE_FILES_PROPERTIES(${SRC} PROPERTIES COMPILE_FLAGS "${SSE2_FLAGS}")
+      ENDFOREACH(SRC)
+      ADD_DEFINE(HAVE_SSE2)
     ENDIF(HAVE_SSE2)
 
     IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR UNIX)
-      # yasm/nasm stuff, on x86_64 only for Unix,
-      # as Windows has other calling convention
-      OPTION(NO_NASM      "ignore missing YASM/NASM"      OFF)
       FIND_PROGRAM(HAVE_NASM NAMES yasm nasm)
 
       IF(HAVE_NASM MATCHES "NOTFOUND")
-        IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86")
-          MESSAGE("Warning: MMX and/or SSE2 capability found, but YASM/NASM not found.")
-          MESSAGE("Without YASM/NASM you won't have run-time SIMD detection (SIMD enabled by default) and no MMX memcopy.")
-        ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "i.86")
-
-        IF(NO_NASM)
-          MESSAGE("You chose to ignore missing YASM/NASM.")
-        ELSE(NO_NASM)
-
           IF(CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
-            MESSAGE("It's currently safe for you to not detect MMX nor SSE2, as x86_64 will have both.")
+            MESSAGE("It's safe for you to not detect MMX nor SSE2, as x86_64 will have both.")
           ELSE(CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
 
-            MESSAGE(FATAL_ERROR "Set NO_NASM to compile anyway.")
+            MESSAGE(FATAL_ERROR "Neither yasm nor nasm found - needed for SIMD detection")
           ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
-        ENDIF(NO_NASM)
       ELSE(HAVE_NASM MATCHES "NOTFOUND")
 
         PROJECT(OpenAL ASM)
         MESSAGE(STATUS "Using YASM/NASM")
-
-        # check nasm visibility support
-        IF(CMAKE_SYSTEM MATCHES "Linux")
-          IF(NOT DEFINED HAVE_NASM_VISIBILITY)
-            MESSAGE(STATUS "Performing Test HAVE_NASM_VISIBILITY")
-            SET(SOURCE "global _foo:function hidden\n_foo:")
-            FILE(WRITE "${CMAKE_BINARY_DIR}/CMakeTmp/src.nasm" "${SOURCE}")
-
-            TRY_COMPILE(HAVE_NASM_VISIBILITY
-                  ${CMAKE_BINARY_DIR}
-                  ${CMAKE_BINARY_DIR}/CMakeTmp/src.nasm
-                  OUTPUT_VARIABLE OUTPUT)
-
-            WRITE_FILE(${CMAKE_BINARY_DIR}/CMakeOutput.log
-              "Performing nasm visibility test with the following output:\n"
-              "${OUTPUT}\n"
-              "Source file was:\n${SOURCE}\n" APPEND)
-
-            IF(HAVE_NASM_VISIBILITY)
-              MESSAGE(STATUS "Performing Test HAVE_NASM_VISIBILITY - Success")
-            ELSE(HAVE_NASM_VISIBILITY)
-              MESSAGE(STATUS "Performing Test HAVE_NASM_VISIBILITY - Failure")
-            ENDIF(HAVE_NASM_VISIBILITY)
-          ENDIF(NOT DEFINED HAVE_NASM_VISIBILITY)
-
-          IF(HAVE_NASM_VISIBILITY)
-            SET(CMAKE_ASM_FLAGS "-DHAVE_NASM_VISIBILITY")
-          ENDIF(HAVE_NASM_VISIBILITY)
-        ENDIF(CMAKE_SYSTEM MATCHES "Linux")
-
         ADD_DEFINE(HAVE_CPU_CAPS_DETECTION)
 
         IF(CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
@@ -485,6 +434,8 @@ IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
             ADD_DEFINE(HAVE_MMX_MEMCPY 1)
           ENDIF(HAVE_MMX)
         ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
+
+        TEST_NASM_COMPILER_VISIBILITY()
       ENDIF(HAVE_NASM MATCHES "NOTFOUND")
     ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR UNIX)
 
