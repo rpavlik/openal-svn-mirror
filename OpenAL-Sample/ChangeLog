@@ -15,6 +15,9 @@
 	* src/al_siteconfig.h, src/arch/i386/x86_cpu_caps_prk.c: correct
 	calling convention for ASM
 	
+	* src/arch/i386/x86_simd_support_prk.h: optimize setw functions, gcc 3.4
+	still sucks
+	
 2006-10-26  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/arch/i386/x86_64_linux_cpu_caps_detect_prk.yasm: typo
