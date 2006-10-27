@@ -1,3 +1,8 @@
+2006-10-27  Sven Panne  <sven.panne@aedion.de>
+
+	* src/alc/alc_device.c: Fixed a race condition in alcCloseDevice
+	(pointed out by Elias Naur).
+
 2006-10-27  Prakash Punnoor <prakash@punnoor.de>
 
 	* CMakeLists.txt: detect more compilers; more FIND_PACKAGE conversions,
