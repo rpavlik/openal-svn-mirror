@@ -36,6 +36,9 @@
 	* README: updated infos on SIMD compilation
 	
 	* configure.ac, src/Makefile.am: revamp SIMD support
+	
+	* src/al_main.c, src/alc/alc_context.c: move SIMD init into _alInit and
+	fix missing assignment
 
 2006-10-26  Prakash Punnoor <prakash@punnoor.de>
 
