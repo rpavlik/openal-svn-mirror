@@ -3,35 +3,43 @@
 	* CMakeLists.txt: detect more compilers; more FIND_PACKAGE conversions,
 	revamp SIMD enabling to ensure portable code production, x86 objects
 	should be compiled even if no SIMD found
-	
+
 	* admin/CMakeModules/DetectCompiler.cmake: added
-	
+
 	* admin/CMakeModules/CompilerSIMD.cmake: added
-	
+
 	* src/al_mixfunc.c, src/mixaudio16.h, src/arch/i386/x86_cpu_caps_prk.c
 	src/arch/i386/x86_simd_support_prk.h, src/arch/i386/mixaudio16_sse2_prk.c
 	src/arch/i386/mixaudio16_mmx_prk.c, src/arch/i386/mixaudio16_sse2_prk.h
 	src/arch/i386/mixaudio16_mmx_prk.h, src/arch/i386/x86_floatmul.c
 	src/al_mixer.h: manually enable SIMD
-	
+
 	* src/al_siteconfig.h, src/arch/i386/x86_cpu_caps_prk.c: correct
 	calling convention for ASM
-	
+
 	* src/arch/i386/x86_simd_support_prk.h: optimize setw functions, gcc 3.4
 	still sucks
-	
+
 	* src/arch/portable/cpu_caps.c : deleted
-	
+
 	* src/arch/i386/x86_cpu_caps_prk.h, src/al_cpu_caps.h, src/Makefile.am,
 	CMakeLists.txt: get rid of dummy cpu_caps.c
+
+	* src/arch/i386/x86_floatmul.h, src/arch/i386/x86_floatmul_sse2.c,
+	src/arch/i386/x86_floatmul_mmx.c: added
+
+	* src/arch/portable/floatmul.c, src/arch/i386/x86_floatmul.c
+	src/al_main.h, src/alc/alc_context.c, src/al_cpu_caps.h,
+	src/Makefile.am, configure.ac, CMakeLists.txt: use specialized floatmul
+	functions for clean SIMD seperation
 
 2006-10-26  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/arch/i386/x86_64_linux_cpu_caps_detect_prk.yasm: typo
-	
+
 	* /admin/CMakeModules/FindConfigHelper.cmake: renamed to
 	ConfigHelper.cmake
-	
+
 	* CMakeLists.txt: Don't use FIND_PACKAGE for ConfigHelper
 
 2006-09-01  Prakash Punnoor <prakash@punnoor.de>

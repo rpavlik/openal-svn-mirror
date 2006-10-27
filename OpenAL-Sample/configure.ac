@@ -462,6 +462,7 @@ dnl Special objs for architectures
 case "$target" in
     *i386* | *i486* | *i586* | *i686* | *x86_64*)
     openal_x86_support_yn=yes
+    AC_DEFINE([HAVE_X86], [1], [Set to 1 if x86 platform found])
 
     AC_MSG_CHECKING([for MMX support])
     AC_TRY_COMPILE([

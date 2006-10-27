@@ -113,8 +113,10 @@ SET(WAVEOUT_OBJS         src/backends/alc_backend_wave.c)
 
 SET(x86_OBJS             src/arch/i386/x86_floatmul.c
                          src/arch/i386/x86_cpu_caps_prk.c)
-SET(x86_MMX_OBJS         src/arch/i386/mixaudio16_mmx_prk.c)
-SET(x86_SSE2_OBJS        src/arch/i386/mixaudio16_sse2_prk.c)
+SET(x86_MMX_OBJS         src/arch/i386/mixaudio16_mmx_prk.c
+                         src/arch/i386/x86_floatmul_mmx.c)
+SET(x86_SSE2_OBJS        src/arch/i386/mixaudio16_sse2_prk.c
+                         src/arch/i386/x86_floatmul_sse2.c)
 SET(x86_NASM_OBJS        src/arch/i386/x86_cpu_caps_detect_prk.nasm)
 SET(x86_64_LINUX_NASM_OBJS src/arch/i386/x86_64_linux_cpu_caps_detect_prk.yasm)
 SET(x86_MMX_NASM_OBJS    src/arch/i386/memcpy_mmx_prk.nasm)
@@ -383,6 +385,7 @@ ENDIF(NULLOUT)
 IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
   INCLUDE_DIRECTORIES(${OpenAL_SOURCE_DIR}/src/arch/i386)
   SET(ARCH_OBJS ${x86_OBJS})
+  ADD_DEFINE(HAVE_X86)
 
   CHECK_MMX()
   IF(HAVE_MMX)

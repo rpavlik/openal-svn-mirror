@@ -116,7 +116,7 @@ ALboolean _al_RAWFORMAT( ALenum format );
  * Multiplies each ALshort in bpt (len bytes long) by sa, clamped above
  * by 32767 and below by -32768.  Only appropriate for 0.0 <= sa <= 1.0.
  */
-void _alFloatMul( ALshort *bpt, ALfloat sa, ALuint len );
+void (*_alFloatMul)( ALshort *bpt, ALfloat sa, ALuint len );
 
 /*
  * Starts the mixer thread.

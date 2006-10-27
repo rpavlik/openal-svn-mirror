@@ -4,7 +4,7 @@
 
 #include "al_main.h"
 
-void _alFloatMul( ALshort *bpt, ALfloat sa, ALuint len) {
+void _alFloatMul_portable( ALshort *bpt, ALfloat sa, ALuint len) {
 	while(len--) {
 #if USE_LRINT
 		bpt[len] = lrintf(bpt[len] * sa);

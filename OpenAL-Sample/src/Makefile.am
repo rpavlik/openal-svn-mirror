@@ -103,16 +103,16 @@ endif
 # processor-specific sources
 
 if X86ENABLED
-libopenal_la_SOURCES += arch/i386/x86_floatmul.c arch/i386/x86_cpu_caps_prk.c arch/i386/x86_cpu_caps_prk.h arch/i386/x86_simd_support_prk.h
+libopenal_la_SOURCES += arch/i386/x86_floatmul.c arch/i386/x86_floatmul.h arch/i386/x86_cpu_caps_prk.c arch/i386/x86_cpu_caps_prk.h arch/i386/x86_simd_support_prk.h
 
 if X86MMXENABLED
 libopenal_la_CPPFLAGS += -I$(top_srcdir)/src/arch/i386
-libopenal_la_SOURCES += arch/i386/mixaudio16_mmx_prk.c arch/i386/mixaudio16_mmx_prk.h
+libopenal_la_SOURCES += arch/i386/mixaudio16_mmx_prk.c arch/i386/mixaudio16_mmx_prk.h arch/i386/x86_floatmul_mmx.c
 endif
 
 if X86SSE2ENABLED
 libopenal_la_CPPFLAGS += -I$(top_srcdir)/src/arch/i386
-libopenal_la_SOURCES += arch/i386/mixaudio16_sse2_prk.c arch/i386/mixaudio16_sse2_prk.h
+libopenal_la_SOURCES += arch/i386/mixaudio16_sse2_prk.c arch/i386/mixaudio16_sse2_prk.h arch/i386/x86_floatmul_sse2.c
 endif
 
 

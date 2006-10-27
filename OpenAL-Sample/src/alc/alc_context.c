@@ -370,6 +370,20 @@ ALCcontext *alcCreateContext( ALCdevice *dev, const ALCint *attrlist )
 	}
 	
 	_alDetectCPUCaps();
+
+	/* set up SIMD FloatMul */
+#ifdef HAVE_SSE2
+	if (_alHaveSSE2())
+		_alFloatMul = _alFloatMul_SSE2;
+	else
+#endif /* HAVE_SSE2 */
+#ifdef HAVE_MMX
+	if (_alHaveMMX())
+		_alFloatMul = _alFloatMul_MMX;
+	else
+#endif /* HAVE_MMX */
+	_alFloatMul_portable;
+
 	
 	if( al_contexts.items == 0 ) {
 		/*
