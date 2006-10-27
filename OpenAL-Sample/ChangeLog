@@ -1,7 +1,8 @@
 2006-10-27  Prakash Punnoor <prakash@punnoor.de>
 
 	* CMakeLists.txt: detect more compilers; more FIND_PACKAGE conversions,
-	revamp SIMD enabling to ensure portable code production
+	revamp SIMD enabling to ensure portable code production, x86 objects
+	should be compiled even if no SIMD found
 	
 	* admin/CMakeModules/DetectCompiler.cmake: added
 	
