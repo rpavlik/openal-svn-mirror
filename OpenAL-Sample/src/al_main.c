@@ -36,6 +36,7 @@
 #include "al_ext.h"
 #include "config/al_config.h"
 #include "al_vector.h"
+#include "al_cpu_caps.h"
 #include "alc/alc_context.h"
 
 #include "al_threadlib.h"
@@ -97,6 +98,21 @@ ALboolean _alInit( void ) {
 	_alDebug( ALD_MAXIMUS, __FILE__, __LINE__, "_alInit called" );
 	
 	alDLInit_ ();
+	
+	_alDetectCPUCaps();
+
+	/* set up SIMD FloatMul */
+#ifdef HAVE_SSE2
+	if (_alHaveSSE2())
+		_alFloatMul = _alFloatMul_SSE2;
+	else
+#endif /* HAVE_SSE2 */
+#ifdef HAVE_MMX
+	if (_alHaveMMX())
+		_alFloatMul = _alFloatMul_MMX;
+	else
+#endif /* HAVE_MMX */
+	_alFloatMul = _alFloatMul_portable;
 
 	for(i = 0; i < _ALC_MAX_CHANNELS; i++) {
 		f_buffers.data[i]   = NULL;

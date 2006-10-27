@@ -24,7 +24,6 @@
 #include "al_buffer.h"
 #include "al_filter.h"
 #include "al_distance.h"
-#include "al_cpu_caps.h"
 
 #include "alc/alc_error.h"
 #include "alc/alc_device.h"
@@ -368,23 +367,7 @@ ALCcontext *alcCreateContext( ALCdevice *dev, const ALCint *attrlist )
 
 		return NULL;
 	}
-	
-	_alDetectCPUCaps();
 
-	/* set up SIMD FloatMul */
-#ifdef HAVE_SSE2
-	if (_alHaveSSE2())
-		_alFloatMul = _alFloatMul_SSE2;
-	else
-#endif /* HAVE_SSE2 */
-#ifdef HAVE_MMX
-	if (_alHaveMMX())
-		_alFloatMul = _alFloatMul_MMX;
-	else
-#endif /* HAVE_MMX */
-	_alFloatMul_portable;
-
-	
 	if( al_contexts.items == 0 ) {
 		/*
 		 * This is the first context to be created.  Initialize the
