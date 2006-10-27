@@ -36,6 +36,7 @@ struct x86cpu_caps_s {
 
 extern struct x86cpu_caps_s x86cpu_caps_use;
 
+void _alDetectCPUCaps(void);
 static __inline int _alHaveMMX(void);
 static __inline int _alHaveSSE(void);
 static __inline int _alHaveSSE2(void);

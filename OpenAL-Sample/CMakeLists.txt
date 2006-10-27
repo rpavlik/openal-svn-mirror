@@ -119,8 +119,7 @@ SET(x86_NASM_OBJS        src/arch/i386/x86_cpu_caps_detect_prk.nasm)
 SET(x86_64_LINUX_NASM_OBJS src/arch/i386/x86_64_linux_cpu_caps_detect_prk.yasm)
 SET(x86_MMX_NASM_OBJS    src/arch/i386/memcpy_mmx_prk.nasm)
 
-SET(PORTABLE_OBJS        src/arch/portable/floatmul.c
-                         src/arch/portable/cpu_caps.c)
+SET(PORTABLE_OBJS        src/arch/portable/floatmul.c)
 
 
 SET(ADD_CFLAGS "")

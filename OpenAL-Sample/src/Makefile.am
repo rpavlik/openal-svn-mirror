@@ -130,7 +130,7 @@ endif
 
 else
 # no x86, so use portable stuff
-libopenal_la_SOURCES += arch/portable/floatmul.c arch/portable/cpu_caps.c
+libopenal_la_SOURCES += arch/portable/floatmul.c
 endif
 
 # ALC sources

@@ -1,4 +1,5 @@
 2006-10-27  Prakash Punnoor <prakash@punnoor.de>
+
 	* CMakeLists.txt: detect more compilers; more FIND_PACKAGE conversions,
 	revamp SIMD enabling to ensure portable code production
 	
@@ -18,6 +19,11 @@
 	* src/arch/i386/x86_simd_support_prk.h: optimize setw functions, gcc 3.4
 	still sucks
 	
+	* src/arch/portable/cpu_caps.c : deleted
+	
+	* src/arch/i386/x86_cpu_caps_prk.h, src/al_cpu_caps.h, src/Makefile.am,
+	CMakeLists.txt: get rid of dummy cpu_caps.c
+
 2006-10-26  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/arch/i386/x86_64_linux_cpu_caps_detect_prk.yasm: typo
