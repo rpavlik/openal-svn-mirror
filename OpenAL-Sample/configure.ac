@@ -464,21 +464,15 @@ case "$target" in
     openal_x86_support_yn=yes
     AC_DEFINE([HAVE_X86], [1], [Set to 1 if x86 platform found])
 
-    AC_MSG_CHECKING([for MMX support])
-    AC_TRY_COMPILE([
-#ifndef __MMX__
-#error no MMX support
-#endif
-      ],, [openal_x86_mmx_support_yn=yes], [openal_x86_mmx_support_yn=no])
-    AC_MSG_RESULT([$openal_x86_mmx_support_yn])
-
-    AC_MSG_CHECKING([for SSE2 support])
-    AC_TRY_COMPILE([
-#ifndef __SSE2__
-#error no SSE2 support
-#endif
-      ],, [openal_x86_sse2_support_yn=yes], [openal_x86_sse2_support_yn=no])
-    AC_MSG_RESULT([$openal_x86_sse2_support_yn])
+    #FIXME: This will only properly work with GCC
+    ALUT_CHECK_FLAG([-mmmx],
+        [openal_x86_mmx_support_yn=yes
+        MMX_FLAGS="-mmmx"
+        AC_DEFINE([HAVE_MMX], [1], [compile in MMX support])])
+    ALUT_CHECK_FLAG([-mmmx -msse -msse2],
+        [openal_x86_sse2_support_yn=yes
+        SSE2_FLAGS="-mmmx -msse -msse2"
+        AC_DEFINE([HAVE_SSE2], [1], [compile in SSE2 support])])
 
     if test "x$openal_x86_mmx_support_yn" = xyes || test "x$openal_x86_sse2_support_yn" = xyes; then
         AC_PATH_PROG([YASM], [yasm], [no])
@@ -1241,6 +1235,8 @@ AC_SUBST([PROFILINGLDFLAGS])
 AC_SUBST([RANLIB])
 AC_SUBST([SIZEOF_VOID_P])
 AC_SUBST([WARNINGCFLAGS])
+AC_SUBST([MMX_FLAGS])
+AC_SUBST([SSE2_FLAGS])
 
 # Generate output.
 # NOTE: Do not break the following line, otherwise we are into CR/LF vs. LF

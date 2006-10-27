@@ -32,6 +32,10 @@
 	src/al_main.h, src/alc/alc_context.c, src/al_cpu_caps.h,
 	src/Makefile.am, configure.ac, CMakeLists.txt: use specialized floatmul
 	functions for clean SIMD seperation
+	
+	* README: updated infos on SIMD compilation
+	
+	* configure.ac, src/Makefile.am: revamp SIMD support
 
 2006-10-26  Prakash Punnoor <prakash@punnoor.de>
 

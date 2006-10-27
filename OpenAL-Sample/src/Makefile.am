@@ -103,16 +103,23 @@ endif
 # processor-specific sources
 
 if X86ENABLED
+libopenal_la_CPPFLAGS += -I$(top_srcdir)/src/arch/i386
 libopenal_la_SOURCES += arch/i386/x86_floatmul.c arch/i386/x86_floatmul.h arch/i386/x86_cpu_caps_prk.c arch/i386/x86_cpu_caps_prk.h arch/i386/x86_simd_support_prk.h
 
 if X86MMXENABLED
-libopenal_la_CPPFLAGS += -I$(top_srcdir)/src/arch/i386
-libopenal_la_SOURCES += arch/i386/mixaudio16_mmx_prk.c arch/i386/mixaudio16_mmx_prk.h arch/i386/x86_floatmul_mmx.c
+noinst_LTLIBRARIES = libx86_mmx_routines.la
+libx86_mmx_routines_la_SOURCES = arch/i386/mixaudio16_mmx_prk.c arch/i386/mixaudio16_mmx_prk.h arch/i386/x86_floatmul_mmx.c
+libx86_mmx_routines_la_CFLAGS = $(WARNINGCFLAGS) $(OPTIMIZATIONCFLAGS) $(FEATURECFLAGS) $(MMX_FLAGS)
+libx86_mmx_routines_la_LDFLAGS = $(PROFILINGLDFLAGS)
+mmx_ldadd = libx86_mmx_routines.la
 endif
 
 if X86SSE2ENABLED
-libopenal_la_CPPFLAGS += -I$(top_srcdir)/src/arch/i386
-libopenal_la_SOURCES += arch/i386/mixaudio16_sse2_prk.c arch/i386/mixaudio16_sse2_prk.h arch/i386/x86_floatmul_sse2.c
+noinst_LTLIBRARIES = libx86_sse2_routines.la
+libx86_sse2_routines_la_SOURCES = arch/i386/mixaudio16_sse2_prk.c arch/i386/mixaudio16_sse2_prk.h arch/i386/x86_floatmul_sse2.c
+libx86_sse2_routines_la_CFLAGS = $(WARNINGCFLAGS) $(OPTIMIZATIONCFLAGS) $(FEATURECFLAGS) $(SSE2_FLAGS)
+libx86_sse2_routines_la_LDFLAGS = $(PROFILINGLDFLAGS)
+sse2_ldadd = libx86_sse2_routines.la
 endif
 
 
@@ -183,6 +190,6 @@ libopenal_la_LDFLAGS = -no-undefined $(PROFILINGLDFLAGS)
 libopenal_la_LDFLAGS += -version-info @VERSIONINFO@
 
 # We use sin and friends, so we might need -lm, autoconf takes care of this.
-libopenal_la_LIBADD = $(LIBM) $(asm_ldadd)
+libopenal_la_LIBADD = $(LIBM) $(asm_ldadd) $(mmx_ldadd) $(sse2_ldadd)
 
 SUBDIRS = $(X86_SUBDIR)
