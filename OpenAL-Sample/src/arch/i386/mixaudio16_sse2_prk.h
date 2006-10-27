@@ -22,7 +22,7 @@
 
 #include "al_siteconfig.h"
 
-#ifdef __SSE2__
+#ifdef HAVE_SSE2
 #include <AL/al.h>
 #include "al_main.h"
 #include "al_types.h"
@@ -72,6 +72,6 @@ void MixAudio16_SSE2_30( ALshort *dst, alMixEntry *entries );
 void MixAudio16_SSE2_31( ALshort *dst, alMixEntry *entries );
 void MixAudio16_SSE2_32( ALshort *dst, alMixEntry *entries );
 
-#endif /* __SSE2__ */
+#endif /* HAVE_SSE2 */
 
 #endif /* not AL_ARCH_I386_MIXAUDIO16_SSE2_PRK_H_ */

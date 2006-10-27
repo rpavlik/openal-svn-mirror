@@ -22,7 +22,7 @@
 
 #include "al_siteconfig.h"
 
-#ifdef __MMX__
+#ifdef HAVE_MMX
 #include <AL/al.h>
 #include "al_main.h"
 #include "al_types.h"
@@ -72,6 +72,6 @@ void MixAudio16_MMX_30( ALshort *dst, alMixEntry *entries );
 void MixAudio16_MMX_31( ALshort *dst, alMixEntry *entries );
 void MixAudio16_MMX_32( ALshort *dst, alMixEntry *entries );
 
-#endif /* __MMX__ */
+#endif /* HAVE_MMX */
 
 #endif /* not AL_ARCH_I386_MIXAUDIO16_MMX_PRK_H_ */

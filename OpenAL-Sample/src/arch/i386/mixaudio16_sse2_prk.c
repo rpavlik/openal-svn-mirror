@@ -21,11 +21,11 @@
 #include "al_siteconfig.h"
 #include "mixaudio16_sse2_prk.h"
 
-#ifdef __SSE2__
+#ifdef HAVE_SSE2
 #include <string.h>
 #include "x86_simd_support_prk.h"
 
-#if defined(HAVE_MMX_MEMCPY) && defined(__MMX__)
+#if defined(HAVE_MMX_MEMCPY) && defined(HAVE_MMX)
 void _alMMXmemcpy(void* dst, void* src, unsigned int n);
 #endif /* HAVE_MMX_MEMCPY */
 
@@ -188,7 +188,7 @@ void MixAudio16_SSE2_1(ALshort *dst, alMixEntry *entries)
 {
 	unsigned int len = entries->bytes;
 	
-#if defined(HAVE_MMX_MEMCPY) && defined(__MMX__)
+#if defined(HAVE_MMX_MEMCPY) && defined(HAVE_MMX)
 	if (len < 300) {
 		memcpy(dst, entries->data, len);
 		return;
@@ -922,4 +922,4 @@ void MixAudio16_SSE2_32(ALshort *dst, alMixEntry *entries)
 	MIX(31);
 	MixAudio16_SSE2_TAIL(32);
 }
-#endif /* __SSE2__ */
+#endif /* HAVE_SSE2 */

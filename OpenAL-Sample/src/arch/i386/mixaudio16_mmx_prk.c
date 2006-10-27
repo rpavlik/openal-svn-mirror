@@ -21,7 +21,7 @@
 #include "al_siteconfig.h"
 #include "mixaudio16_mmx_prk.h"
 
-#ifdef __MMX__
+#ifdef HAVE_MMX
 #include <string.h>
 #include "x86_simd_support_prk.h"
 
@@ -924,4 +924,4 @@ void MixAudio16_MMX_32(ALshort *dst, alMixEntry *entries)
 	MIX(31);
 	MixAudio16_MMX_TAIL(32);
 }
-#endif /* __MMX__ */
+#endif /* HAVE_MMX */

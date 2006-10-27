@@ -26,11 +26,11 @@
 #define GENMIXSOURCES 64
 #endif /* USE_LIGHT_GEN_MIXING */
 
-#if defined(__MMX__) || defined(__SSE2__)
+#if defined(HAVE_MMX) || defined(HAVE_SSE2)
 #define MMXMIXSOURCES 32
-#else /* __MMX__ || __SSE2__*/
+#else /* HAVE_MMX || HAVE_SSE2*/
 #define MMXMIXSOURCES 0
-#endif /* __MMX__ || __SSE2__ */
+#endif /* HAVE_MMX || HAVE_SSE2 */
 
 /* set MAXMIXSOURCES to MAX */
 #if GENMIXSOURCES<MMXMIXSOURCES

@@ -26,16 +26,16 @@
 typedef unsigned int uint;
 int _alDetectx86CPUCaps(uint* caps1, uint* caps2, uint* caps3);
 
-	/* caps1 */
+/* caps1 */
 #define MMX_BIT             23
 #define SSE_BIT             25
 #define SSE2_BIT            26
 
-	/* caps2 */
+/* caps2 */
 #define SSE3_BIT             0
 #define SSE4_BIT             9
 
-	/* caps3 */
+/* caps3 */
 #define	AMD_3DNOW_BIT       31
 #define	AMD_3DNOWEXT_BIT    30
 #define AMD_SSE_MMX_BIT     22
@@ -47,32 +47,32 @@ struct x86cpu_caps_s x86cpu_caps_use = { 1, 1, 1, 1, 1, 1, 1, 1, 1};
 
 void _alDetectCPUCaps(void)
 {
-	/* compile time detection */
-#ifdef __MMX__
+	/* compiled in SIMD routines */
+#ifdef HAVE_MMX
 	x86cpu_caps.mmx = 1;
 #endif
-#ifdef __SSE__
+#ifdef HAVE_SSE
 	x86cpu_caps.sse = 1;
 #endif
-#ifdef __SSE2__
+#ifdef HAVE_SSE2
 	x86cpu_caps.sse2 = 1;
 #endif
-#ifdef __SSE3__
+#ifdef HAVE_SSE3
 	x86cpu_caps.sse3 = 1;
 #endif
-#ifdef __SSE4__
+#ifdef HAVE_SSE4
 	x86cpu_caps.sse4 = 1;
 #endif
-#ifdef __3dNOW__
+#ifdef HAVE_3DNOW
 	x86cpu_caps.amd_3dnow = 1;
-#ifdef __athlon__
+#endif
+#ifdef HAVE_SSE_MMX
 	x86cpu_caps.amd_sse_mmx = 1;
 #endif
-#endif
-#ifdef __3dNOW_A__
+#ifdef HAVE_3DNOWEXT
 	x86cpu_caps.amd_3dnowext = 1;
 #endif
-	/* end compile time detection */
+	/* compiled in SIMD routines */
 	
 	/* runtime detection */
 #ifdef HAVE_CPU_CAPS_DETECTION

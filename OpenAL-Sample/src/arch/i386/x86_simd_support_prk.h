@@ -22,7 +22,7 @@
 
 #include "al_siteconfig.h"
 
-#if defined(__MMX__) || defined(__SSE2__)
+#if defined(HAVE_MMX) || defined(HAVE_SSE2)
 /*
  * We use built-ins for gcc instead of Intel/MSVC style intrinsics
  * as (older) gccs are slower with them
@@ -65,7 +65,7 @@ typedef unsigned long aint;
 
 #else /* __GNUC__ && !__INTEL_COMPILER */
 
-#ifdef __MMX__
+#ifdef HAVE_MMX
 #include <mmintrin.h>
 typedef __m64 v4hi;
 typedef __m64 v2si;
@@ -87,9 +87,9 @@ typedef __m64 di;
 #define __builtin_ia32_emms() 		_mm_empty()
 
 #define setw(X)	_mm_set_pi16(X, X, X, X)
-#endif /* __MMX__ */
+#endif /* HAVE_MMX */
 
-#ifdef __SSE2__
+#ifdef HAVE_SSE2
 #include <emmintrin.h>
 typedef __m128i v8hi;
 typedef __m128i v4si;
@@ -114,7 +114,7 @@ typedef __m128i *psse2loadtype;
 #define __builtin_ia32_psrawi128(X,Y)	_mm_srai_epi16(X,Y)
 
 #define setw128(X)	_mm_set_epi16(X, X, X, X, X, X, X, X)
-#endif /* __SSE2__ */
+#endif /* HAVE_SSE2 */
 
 #define ALIGN16(x) __declspec(align(16)) x
 
@@ -126,6 +126,6 @@ typedef unsigned long aint;
 #define MMX_ALIGN 8
 #define SSE2_ALIGN 16
 
-#endif /* __MMX__ || __SSE2__*/
+#endif /* HAVE_MMX || HAVE_SSE2*/
 
 #endif /* not AL_ARCH_I386_X86_SIMD_SUPPORT_PRK_H_ */

@@ -12,13 +12,13 @@
 #include <AL/al.h>
 #include "al_types.h"
 
-#ifdef __MMX__
+#ifdef HAVE_MMX
 #include "mixaudio16_mmx_prk.h"
-#endif /* __MMX__ */
+#endif /* HAVE_MMX */
 
-#ifdef __SSE2__
+#ifdef HAVE_SSE2
 #include "mixaudio16_sse2_prk.h"
-#endif /* __MMX__ */
+#endif /* HAVE_MMX */
 
 
 /*

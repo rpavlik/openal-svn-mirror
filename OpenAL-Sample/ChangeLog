@@ -1,3 +1,17 @@
+2006-10-27  Prakash Punnoor <prakash@punnoor.de>
+	* CMakeLists.txt: detect more compilers; more FIND_PACKAGE conversions,
+	revamp SIMD enabling to ensure portable code production
+	
+	* admin/CMakeModules/DetectCompiler.cmake: added
+	
+	* admin/CMakeModules/CompilerSIMD.cmake: added
+	
+	* src/al_mixfunc.c, src/mixaudio16.h, src/arch/i386/x86_cpu_caps_prk.c
+	src/arch/i386/x86_simd_support_prk.h, src/arch/i386/mixaudio16_sse2_prk.c
+	src/arch/i386/mixaudio16_mmx_prk.c, src/arch/i386/mixaudio16_sse2_prk.h
+	src/arch/i386/mixaudio16_mmx_prk.h, src/arch/i386/x86_floatmul.c
+	src/al_mixer.h: manually enable SIMD
+	
 2006-10-26  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/arch/i386/x86_64_linux_cpu_caps_detect_prk.yasm: typo

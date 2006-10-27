@@ -38,7 +38,7 @@ ALboolean _alMixFuncInit( ALMixFunc *mf, ALuint size ) {
 		return AL_FALSE;
 	}
 	
-#ifdef __SSE2__
+#ifdef HAVE_SSE2
 	if (_alHaveSSE2()) {
 		/* FIXME: we really ignore size. */
 		mf->max      = MMXMIXSOURCES;
@@ -83,9 +83,9 @@ ALboolean _alMixFuncInit( ALMixFunc *mf, ALuint size ) {
 		
 		return AL_TRUE;
 	}
-#endif /* __SSE2__ */
+#endif /* HAVE_SSE2 */
 
-#ifdef __MMX__
+#ifdef HAVE_MMX
 	if (_alHaveMMX()) {
 		/* FIXME: we really ignore size. */
 		mf->max      = MMXMIXSOURCES;
@@ -130,7 +130,7 @@ ALboolean _alMixFuncInit( ALMixFunc *mf, ALuint size ) {
 	
 		return AL_TRUE;
 	}
-#endif /* __MMX__ */
+#endif /* HAVE_MMX */
 
 	/* FIXME: we really ignore size. */
 	mf->max      = GENMIXSOURCES;

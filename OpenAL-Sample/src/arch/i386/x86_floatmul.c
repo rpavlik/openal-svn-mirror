@@ -38,7 +38,7 @@ void _alFloatMul(ALshort *bpt, ALfloat sa, ALuint len) {
 	
 	if (len < MIN_ENTER_SIMD_LEN)
 		goto skip_simd;
-#ifdef __SSE2__
+#ifdef HAVE_SSE2
 	if (_alHaveSSE2()) {
 		v8hi v_sa;
 		ALuint samples_main;
@@ -89,11 +89,11 @@ void _alFloatMul(ALshort *bpt, ALfloat sa, ALuint len) {
 			}
 		}
 	}
-#ifdef __MMX__
+#ifdef HAVE_MMX
 	else
-#endif /* __MMX__ */
-#endif /* __SSE2__ */
-#ifdef __MMX__
+#endif /* HAVE_MMX */
+#endif /* HAVE_SSE2 */
+#ifdef HAVE_MMX
 	if (_alHaveMMX()) {
 		v4hi v_sa;
 		ALuint samples_main;
@@ -146,7 +146,7 @@ void _alFloatMul(ALshort *bpt, ALfloat sa, ALuint len) {
 		}
 		__builtin_ia32_emms();
 	}
-#endif /* __MMX__ */
+#endif /* HAVE_MMX */
 skip_simd:
 
 	while(len--) {
