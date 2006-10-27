@@ -12,6 +12,9 @@
 	src/arch/i386/mixaudio16_mmx_prk.h, src/arch/i386/x86_floatmul.c
 	src/al_mixer.h: manually enable SIMD
 	
+	* src/al_siteconfig.h, src/arch/i386/x86_cpu_caps_prk.c: correct
+	calling convention for ASM
+	
 2006-10-26  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/arch/i386/x86_64_linux_cpu_caps_detect_prk.yasm: typo
