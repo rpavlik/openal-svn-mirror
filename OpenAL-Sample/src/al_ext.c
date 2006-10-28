@@ -379,17 +379,23 @@ _alGetExtensionProcAddress( AL_funcPtr *procAddress, const ALchar *funcName )
  * Obtain the address of a function (usually an extension) with the name
  * fname. All addresses are context-independent.
  */
-void *
-alGetProcAddress( const ALchar *funcName )
+AL_DLFunPtr
+_alGetProcAddress( const ALchar *funcName )
 {
 	AL_funcPtr value = NULL;
 	if ((getStandardProcAddress(&value, funcName) == AL_FALSE) &&
             (_alGetExtensionProcAddress(&value, funcName) == AL_FALSE)) {
 		    _alDCSetError( AL_INVALID_VALUE );
 	}
-	return (void *)value; /* NOTE: The cast is not valid ISO C! */
+	return value;
 }
 
+void *
+alGetProcAddress( const ALchar *funcName )
+{
+	/* NOTE: The cast is not valid ISO C! */
+	return (void *)_alGetProcAddress(funcName);
+}
 
 /*
  * _alRegisterExtension is called to register an extension in our tree.

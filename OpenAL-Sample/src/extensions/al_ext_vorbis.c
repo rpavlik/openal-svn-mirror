@@ -160,7 +160,7 @@ static long (*pov_read)(OggVorbis_File *vf, char *buffer, int length, int bigend
 static int openal_load_vorbisfile_library(void)
 {
 	static AL_DLHandle handle = (AL_DLHandle)0;
-    
+
 	/* already loaded? */
 	if (handle != (AL_DLHandle)0)
 		return 1;
@@ -169,12 +169,11 @@ static int openal_load_vorbisfile_library(void)
 	(void) myDlerror ();
 
 	handle = myDlopen (VORBISFILE_LIBRARY);
-	if (handle == (AL_DLHandle) 0)
-		{
-			_alDebug (ALD_CONTEXT, __FILE__, __LINE__,
-				  "could not open '%s': %s", VORBISFILE_LIBRARY, myDlerror ());
-			return 0;
-		}
+	if (handle == (AL_DLHandle) 0) {
+		_alDebug (ALD_CONTEXT, __FILE__, __LINE__,
+			  "could not open '%s': %s", VORBISFILE_LIBRARY, myDlerror ());
+		return 0;
+	}
 
 	OPENAL_LOAD_VORBISFILE_SYMBOL(handle, (int (*)(OggVorbis_File*)), ov_clear);
 	OPENAL_LOAD_VORBISFILE_SYMBOL(handle, (int (*)(void*, OggVorbis_File*, char*, long, ov_callbacks)), ov_open_callbacks);
@@ -195,7 +194,7 @@ ALboolean alutLoadVorbis_LOKI(ALuint bid,
 
 	if(palBufferi_LOKI == NULL) {
 		palBufferi_LOKI = (void (*)(ALuint, ALenum, ALint))
-			alGetProcAddress((const ALchar *) "alBufferi_LOKI");
+		_alGetProcAddress((const ALchar *) "alBufferi_LOKI");
 
 		if(palBufferi_LOKI == NULL) {
 			fprintf(stderr, "Need alBufferi_LOKI\n");

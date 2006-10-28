@@ -11,6 +11,7 @@
 #include "al_siteconfig.h"
 #include "al_types.h"
 #include "al_filter.h"
+#include "al_dlopen.h"
 
 /*
  * the LAL... defines are used in conjunction with plugins, to determine the
@@ -74,6 +75,16 @@ ALboolean _alGetExtensionStrings( ALchar *buffer, size_t size );
 
 /* TODO: exporting this is a HACK */
 ALboolean _alGetExtensionProcAddress( AL_funcPtr *procAddress, const ALchar *funcName );
+
+/*
+ * _alGetProcAddress( const ALubyte *fname )
+ *
+ * Obtain the address of a function (usually an extension) with the name
+ * fname. All addresses are context-independent. Internal version to avoid
+ * compiler warnings.
+ */
+AL_DLFunPtr
+_alGetProcAddress( const ALchar *funcName );
 
 /*
  * Adds a function to the available extension registry.  Before registration,

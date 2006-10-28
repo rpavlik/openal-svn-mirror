@@ -183,16 +183,15 @@ ALboolean alutLoadMP3_LOKI(ALuint bid, ALvoid *data, ALint size) {
 
 	if(palBufferi_LOKI == NULL) {
 		palBufferi_LOKI = (void (*)(ALuint, ALenum, ALint))
-			    alGetProcAddress((const ALchar *) "alBufferi_LOKI");
+		_alGetProcAddress((const ALchar *) "alBufferi_LOKI");
 
 		if(palBufferi_LOKI == NULL) {
 			fprintf(stderr, "Need alBufferi_LOKI\n");
 			return AL_FALSE;
 		}
-		
+
 		if (!openal_load_smpeg_library())
 			return AL_FALSE;
-
 	}
 
 	newMpeg = pSMPEG_new_data( data, size, NULL, 0 );

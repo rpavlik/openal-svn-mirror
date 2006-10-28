@@ -1,3 +1,18 @@
+2006-10-28  Prakash Punnoor <prakash@punnoor.de>
+
+	* src/al_filter.c: use unsigned for len to silence warning
+
+	* src/arch/i386/x86_simd_support_prk.h: remove unneeded types
+
+	* src/arch/i386/mixaudio16_mmx_prk.c src/arch/i386/mixaudio16_sse2_prk.c:
+	correct calling convention
+
+	* src/extensions/al_ext_mp3.c: use new dlopen framework
+
+	* src/al_ext.c, src/al_ext.h, src/extensions/al_ext_mp3.c,
+	src/extensions/al_ext_vorbis.c: add and use internal _alGetProcAddress
+	to silence warnings
+
 2006-10-27  Sven Panne  <sven.panne@aedion.de>
 
 	* src/alc/alc_device.c: Fixed a race condition in alcCloseDevice
