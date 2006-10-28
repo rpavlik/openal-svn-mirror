@@ -26,7 +26,7 @@
 #include "x86_simd_support_prk.h"
 
 #if defined(HAVE_MMX_MEMCPY) && defined(HAVE_MMX)
-void _alMMXmemcpy(void* dst, void* src, unsigned int n);
+void CDECL _alMMXmemcpy(void* dst, void* src, unsigned int n);
 #endif /* HAVE_MMX_MEMCPY */
 
 /* GCC 3.4 doesn't perform well with static inlines and intrinsics
