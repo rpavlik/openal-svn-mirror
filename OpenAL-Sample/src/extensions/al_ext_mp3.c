@@ -13,7 +13,7 @@
 
 #include "al_ext_needed.h"
 #include "al_ext_mp3.h"
-
+#include "al_debug.h"
 #include "al_buffer.h"
 #include "al_ext.h"
 #include "alc/alc_context.h"
@@ -26,9 +26,7 @@
 #include <SDL/SDL.h>
 #include <smpeg.h>
 
-#ifdef OPENAL_DLOPEN_MP3
-#include <dlfcn.h>
-#endif
+#include "al_dlopen.h"
 
 
 /* maximum MAX_MP3 simultaneous sid/offset */
@@ -60,51 +58,66 @@ static SMPEG* (*pSMPEG_new_data)(void *data, int size, SMPEG_Info* info, int sdl
 static void (*pSMPEG_play)( SMPEG* mpeg );
 static void (*pSMPEG_delete)( SMPEG* mpeg );
 
+#define SMPEG_LIBRARY "libsmpeg.so"
+
+#ifdef OPENAL_DLOPEN_MP3
+#define myDlopen(n) alDLOpen_(n)
+#define myDlerror() alDLError_()
+#define myDlsym(h,t,s) (t alDLFunSym_(h,#s))
+#define myDlclose(h) alDLClose_(h)
+#else
+#define myDlopen(n) ((AL_DLHandle)0xF00DF00D)
+#define myDlerror() ""
+#define myDlsym(h,t,s) (&s)
+#define myDlclose(h)
+#endif
+
+#define OPENAL_LOAD_SMPEG_SYMBOL(h,t,s)		\
+  p##s = myDlsym(h, t, s);			\
+  if (p##s == NULL) \
+    { \
+      _alDebug (ALD_CONTEXT, __FILE__, __LINE__, \
+                "could not resolve symbol '%s': %s", \
+                #s, myDlerror ()); \
+      myDlclose (h); \
+      h = NULL; \
+      return 0; \
+    }
+
 /*
  * smpeg library handle.
  */
-static void * smpeg_lib_handle = NULL;
-
 static int openal_load_smpeg_library(void)
 {
-#ifdef OPENAL_DLOPEN_MP3
-        char * error = NULL;
-#endif
-    
-	if (smpeg_lib_handle != NULL)
-		return 1;  /* already loaded. */
+	static AL_DLHandle handle = (AL_DLHandle)0;
 
-	#ifdef OPENAL_DLOPEN_MP3
-		#define OPENAL_LOAD_SMPEG_SYMBOL(x) p##x = dlsym(smpeg_lib_handle, #x); \
-                                                   error = dlerror(); \
-                                                   if (p##x == NULL) { \
-                                                           fprintf(stderr,"Could not resolve smpeg symbol %s: %s\n", #x, ((error!=NULL)?(error):("(null)"))); \
-                                                           dlclose(smpeg_lib_handle); smpeg_lib_handle = NULL; \
-                                                           return 0; }
-                dlerror(); /* clear error state */
-		smpeg_lib_handle = dlopen("libsmpeg.so", RTLD_LAZY | RTLD_GLOBAL);
-                error = dlerror();
-		if (smpeg_lib_handle == NULL) {
-                        fprintf(stderr,"Could not open smpeg library: %s\n",((error!=NULL)?(error):("(null)")));
+	/* already loaded? */
+	if (handle != (AL_DLHandle)0)
+		return 1;
+
+	/* clear error state */
+	(void) myDlerror ();
+
+	handle = myDlopen (SMPEG_LIBRARY);
+	if (handle == (AL_DLHandle) 0)
+		{
+			_alDebug (ALD_CONTEXT, __FILE__, __LINE__,
+				  "could not open '%s': %s", SMPEG_LIBRARY, myDlerror ());
 			return 0;
-                }
-	#else
-		#define OPENAL_LOAD_SMPEG_SYMBOL(x) p##x = x;
-		smpeg_lib_handle = (void *) 0xF00DF00D;
-	#endif
+		}
 
-        OPENAL_LOAD_SMPEG_SYMBOL(SMPEG_enablevideo);
-        OPENAL_LOAD_SMPEG_SYMBOL(SMPEG_status);
-        OPENAL_LOAD_SMPEG_SYMBOL(SMPEG_wantedSpec);
-        OPENAL_LOAD_SMPEG_SYMBOL(SMPEG_enableaudio);
-        OPENAL_LOAD_SMPEG_SYMBOL(SMPEG_actualSpec);
-        OPENAL_LOAD_SMPEG_SYMBOL(SMPEG_rewind);
-        OPENAL_LOAD_SMPEG_SYMBOL(SMPEG_playAudio);
-        OPENAL_LOAD_SMPEG_SYMBOL(SMPEG_stop);
-        OPENAL_LOAD_SMPEG_SYMBOL(SMPEG_new_data);
-        OPENAL_LOAD_SMPEG_SYMBOL(SMPEG_play);
-        OPENAL_LOAD_SMPEG_SYMBOL(SMPEG_delete);
-
+	OPENAL_LOAD_SMPEG_SYMBOL(handle, (void (*)(SMPEG*, int)), SMPEG_enablevideo);
+	OPENAL_LOAD_SMPEG_SYMBOL(handle, (SMPEGstatus (*)(SMPEG*)), SMPEG_status);
+	OPENAL_LOAD_SMPEG_SYMBOL(handle, (int (*)(SMPEG*, SDL_AudioSpec*)), SMPEG_wantedSpec);
+	OPENAL_LOAD_SMPEG_SYMBOL(handle, (void (*)(SMPEG*, int)), SMPEG_enableaudio);
+	OPENAL_LOAD_SMPEG_SYMBOL(handle, (void (*)(SMPEG*, SDL_AudioSpec*)), SMPEG_actualSpec);
+	OPENAL_LOAD_SMPEG_SYMBOL(handle, (void (*)(SMPEG*)), SMPEG_rewind);
+	OPENAL_LOAD_SMPEG_SYMBOL(handle, (int (*)(SMPEG* ,Uint8*, int)), SMPEG_playAudio);
+	OPENAL_LOAD_SMPEG_SYMBOL(handle, (void (*)(SMPEG*)), SMPEG_stop);
+	OPENAL_LOAD_SMPEG_SYMBOL(handle, (SMPEG* (*)(void*, int, SMPEG_Info*, int)), SMPEG_new_data);
+	OPENAL_LOAD_SMPEG_SYMBOL(handle, (void (*)(SMPEG*)), SMPEG_play);
+	OPENAL_LOAD_SMPEG_SYMBOL(handle, (void (*)(SMPEG*)), SMPEG_delete);
+	
 	return 1;
 }
 
