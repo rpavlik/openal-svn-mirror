@@ -275,7 +275,7 @@ void _alApplyFilters( ALuint cid, ALuint sid ) {
 	time_filter_set *cc_tfilters;
 	time_filter *tf;
 	ALuint mixbuflen; /* byte size of total data to compose (all channels) */
-	ALint len;        /* byte size of one channel's worth of data to compose */
+	ALuint len;        /* byte size of one channel's worth of data to compose */
 	ALint filterlen;  /* filterlen is adjusted below to take into account looping, etc */
 	int ic;           /* internal (canon) chans   */
 	int mc;           /* mixer chans (==speakers) */
