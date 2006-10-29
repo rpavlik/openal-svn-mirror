@@ -63,6 +63,7 @@ static __inline v4hi setw(short X)
 	return u.v;
 }
 
+#ifdef __SSE__
 static __inline v8hi setw128(short X)
 {
 	union {
@@ -72,6 +73,7 @@ static __inline v8hi setw128(short X)
 
 	return u.v;
 }
+#endif /* __SSE__ */
 #else
 #define setw(X) (__builtin_ia32_vec_init_v4hi(X, X, X, X))
 #define setw128(X) (__extension__(v8hi){X, X, X, X, X, X, X, X})
