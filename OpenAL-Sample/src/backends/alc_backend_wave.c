@@ -42,6 +42,11 @@ alcBackendOpenWAVE_ (UNUSED (ALC_OpenMode mode),
 #define O_BINARY 0
 #endif
 
+#ifdef _WIN32
+#include <io.h>
+#define open(X,Y,Z) _open(X,Y)
+#endif
+
 #include "al_debug.h"
 
 struct waveData
