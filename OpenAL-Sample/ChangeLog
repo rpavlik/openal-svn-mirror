@@ -1,3 +1,9 @@
+2006-10-30  Sven Panne  <sven.panne@aedion.de>
+
+	* src/Makefile.am: Use local headers when compiling convenience library,
+	this unbreaks the compilation when no/old OpenAL headers are already
+	installed on the system.
+
 2006-10-29  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/backends/alc_backend_wave.c: fix MSVC compilation
@@ -10,8 +16,8 @@
 
 	* src/arch/i386/x86_simd_support_prk.h: remove unneeded types
 
-	* src/arch/i386/mixaudio16_mmx_prk.c src/arch/i386/mixaudio16_sse2_prk.c:
-	correct calling convention
+	* src/arch/i386/mixaudio16_mmx_prk.c,
+	src/arch/i386/mixaudio16_sse2_prk.c: correct calling convention
 
 	* src/extensions/al_ext_mp3.c: use new dlopen framework
 

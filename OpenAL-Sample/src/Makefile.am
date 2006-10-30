@@ -109,6 +109,7 @@ libopenal_la_SOURCES += arch/i386/x86_floatmul.c arch/i386/x86_floatmul.h arch/i
 if X86MMXENABLED
 noinst_LTLIBRARIES = libx86_mmx_routines.la
 libx86_mmx_routines_la_SOURCES = arch/i386/mixaudio16_mmx_prk.c arch/i386/mixaudio16_mmx_prk.h arch/i386/x86_floatmul_mmx.c
+libx86_mmx_routines_la_CPPFLAGS = -I$(top_srcdir)/common/include -I$(top_srcdir)/include
 libx86_mmx_routines_la_CFLAGS = $(WARNINGCFLAGS) $(OPTIMIZATIONCFLAGS) $(FEATURECFLAGS) $(MMX_FLAGS)
 libx86_mmx_routines_la_LDFLAGS = $(PROFILINGLDFLAGS)
 mmx_ldadd = libx86_mmx_routines.la
@@ -117,6 +118,7 @@ endif
 if X86SSE2ENABLED
 noinst_LTLIBRARIES = libx86_sse2_routines.la
 libx86_sse2_routines_la_SOURCES = arch/i386/mixaudio16_sse2_prk.c arch/i386/mixaudio16_sse2_prk.h arch/i386/x86_floatmul_sse2.c
+libx86_sse2_routines_la_CPPFLAGS = -I$(top_srcdir)/common/include -I$(top_srcdir)/include
 libx86_sse2_routines_la_CFLAGS = $(WARNINGCFLAGS) $(OPTIMIZATIONCFLAGS) $(FEATURECFLAGS) $(SSE2_FLAGS)
 libx86_sse2_routines_la_LDFLAGS = $(PROFILINGLDFLAGS)
 sse2_ldadd = libx86_sse2_routines.la
