@@ -38,7 +38,11 @@ alDLDataSym_ (AL_DLHandle handle, const char *name)
 AL_DLFunPtr
 alDLFunSym_ (AL_DLHandle handle, const char *name)
 {
-  return (AL_DLFunPtr) dlsym (handle, name);
+  /*
+   * The dlsym type sucks, there should be different API entries for
+   * data/function pointers
+   */
+  return alDLDataPtrAsFunPtr_ (dlsym (handle, name));
 }
 
 const char *
@@ -92,3 +96,15 @@ alDLError_ (void)
 }
 
 #endif /* USE_DLOPEN */
+
+AL_DLFunPtr
+alDLDataPtrAsFunPtr_ (AL_DLDataPtr p)
+{
+  return (void *) p; /* NOTE: The cast is not valid ISO C! */
+}
+
+AL_DLDataPtr
+alDLFunPtrAsDataPtr_ (AL_DLFunPtr p)
+{
+  return (void *) p; /* NOTE: The cast is not valid ISO C! */
+}

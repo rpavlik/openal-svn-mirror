@@ -1289,10 +1289,10 @@ alcGetProcAddress( ALCdevice *device, const ALCchar *funcName )
 {
 	AL_funcPtr value;
 	if (getStandardProcAddress(&value, funcName) == ALC_TRUE) {
-		return (void *)value; /* NOTE: The cast is not valid ISO C! */
+		return alDLFunPtrAsDataPtr_ ((AL_DLFunPtr) value);
 	}
 	if (getExtensionProcAddress(&value, device, funcName) == ALC_TRUE) {
-		return (void *)value; /* NOTE: The cast is not valid ISO C! */
+		return alDLFunPtrAsDataPtr_ ((AL_DLFunPtr) value);
 	}
 	_alcSetError( ALC_INVALID_VALUE );
 	return NULL;

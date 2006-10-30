@@ -394,7 +394,7 @@ void *
 alGetProcAddress( const ALchar *funcName )
 {
 	/* NOTE: The cast is not valid ISO C! */
-	return (void *)_alGetProcAddress(funcName);
+	return (void *) alDLFunPtrAsDataPtr_ (_alGetProcAddress(funcName));
 }
 
 /*
