@@ -1629,7 +1629,7 @@ getBufferAttribute( ALuint bid, ALenum param, ALfloat *values, ALint numValues )
 		break;
 
 	case AL_SIZE:
-		values[0] = (ALfloat)buf->size;
+		values[0] = (ALfloat)(buf->size * _alGetChannelsFromFormat(buf->format));
 		ok = AL_TRUE;
 		break;
 
