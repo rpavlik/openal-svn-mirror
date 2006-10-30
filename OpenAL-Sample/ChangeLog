@@ -1,5 +1,7 @@
 2006-10-30  Sven Panne  <sven.panne@aedion.de>
 
+	* src/al_threadlib.c: Simplified POSIX threading a bit.
+
 	* src/al_dlopen.c, src/al_dlopen.h: Reverted changes to dlopen stuff.
 
 	* src/arch/i386/x86_simd_support_prk.h: Warning police.

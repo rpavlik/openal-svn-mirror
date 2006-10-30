@@ -10,20 +10,6 @@
 
 #if defined(USE_POSIXTHREADING)
 
-typedef int ( *ptfunc ) ( void * );
-
-static void *runThread( void *data ) AL_ATTRIBUTE_NORETURN_;
-
-static void *runThread( void *data )
-{
-	ptfunc fn = ( ptfunc ) data;
-	fn( NULL );
-	pthread_exit( NULL );
-#ifndef HAVE___ATTRIBUTE__
-	return NULL;
-#endif
-}
-
 ThreadID _alCreateThread( int ( *fn ) ( void * ) )
 {
 	pthread_attr_t type;
@@ -39,7 +25,7 @@ ThreadID _alCreateThread( int ( *fn ) ( void * ) )
 
 	pthread_attr_setdetachstate( &type, PTHREAD_CREATE_JOINABLE );
 
-	if( pthread_create( thread, &type, runThread, ( void * ) fn ) != 0 ) {
+	if( pthread_create( thread, &type, (void *(*) (void *)) fn, NULL ) != 0 ) {
 		free( thread );
 		return NULL;
 	}
