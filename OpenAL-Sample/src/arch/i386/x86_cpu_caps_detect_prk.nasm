@@ -32,6 +32,7 @@ global __alDetectx86CPUCaps
 global _alDetectx86CPUCaps
 %endif
 
+segment .txt
 __alDetectx86CPUCaps:
 _alDetectx86CPUCaps:
 

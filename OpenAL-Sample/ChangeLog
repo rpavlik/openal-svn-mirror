@@ -1,10 +1,13 @@
-2006-10-26  Prakash Punnoor <prakash@punnoor.de>
+2006-10-30  Prakash Punnoor <prakash@punnoor.de>
 
 	* admin/CMakeModules/FindCompilerSIMDFlags.cmake: deleted
 	
 	* Makefile.am: update extra files
 	
 	* src/al_debug.c: prevent warning if _GNU_SOURCE was alread defined
+	
+	* src/arch/i386/x86_cpu_caps_detect_prk.nasm: fix nasm not generating
+	symbol
 
 2006-10-30  Sven Panne  <sven.panne@aedion.de>
 
