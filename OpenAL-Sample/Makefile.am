@@ -19,11 +19,12 @@ EXTRA_DIST =							\
 	admin/CMakeModules/CMakeASMInformation.cmake		\
 	admin/CMakeModules/CMakeDetermineASMCompiler.cmake	\
 	admin/CMakeModules/CMakeTestASMCompiler.cmake		\
-	admin/CMakeModules/FindCompilerAttribute.cmake		\
-	admin/CMakeModules/FindCompilerFlagsSet.cmake		\
-	admin/CMakeModules/FindCompilerSIMDFlags.cmake		\
-	admin/CMakeModules/FindCompilerVisibility.cmake		\
-	admin/CMakeModules/FindConfigHelper.cmake		\
+	admin/CMakeModules/CompilerAttribute.cmake			\
+	admin/CMakeModules/CompilerFlagsSet.cmake			\
+	admin/CMakeModules/CompilerSIMD.cmake				\
+	admin/CMakeModules/CompilerVisibility.cmake			\
+	admin/CMakeModules/ConfigHelper.cmake				\
+	admin/CMakeModules/DetectCompiler.cmake				\
 	admin/CMakeModules/FindOpenALBackends.cmake		\
 	admin/CMakeModules/FindPkgConfig.cmake			\
 	admin/CMakeModules/FindSelectArgtypes.cmake		\
