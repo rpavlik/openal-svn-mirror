@@ -1,5 +1,7 @@
 2006-10-30  Sven Panne  <sven.panne@aedion.de>
 
+	* src/arch/i386/x86_simd_support_prk.h: Warning police.
+
 	* src/Makefile.am: Use local headers when compiling convenience library,
 	this unbreaks the compilation when no/old OpenAL headers are already
 	installed on the system.

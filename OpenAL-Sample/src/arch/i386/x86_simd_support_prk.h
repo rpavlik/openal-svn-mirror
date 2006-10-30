@@ -27,7 +27,7 @@
  * We use built-ins for gcc instead of Intel/MSVC style intrinsics
  * as (older) gccs are slower with them
  */
-#if __GNUC__ && !__INTEL_COMPILER
+#if defined(__GNUC__) && !defined(__INTEL_COMPILER)
 
 #if __GNUC__ < 4
 typedef short v4hi __attribute__ ((__mode__(__V4HI__)));
