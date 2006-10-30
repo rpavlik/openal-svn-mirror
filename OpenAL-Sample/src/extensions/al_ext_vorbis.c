@@ -127,7 +127,8 @@ static int openal_load_vorbisfile_library(void);
  * vorbisfile library functions.
  */
 static int (*pov_clear)(OggVorbis_File *vf);
-static int (*pov_open_callbacks)(void *datasource, OggVorbis_File *vf, char *initial, long ibytes, ov_callbacks callbacks);
+/* NOTE: The Ogg Vorbis headers are not const-correct, but we use "const" for "initial", anyway, as it *is* const. */
+static int (*pov_open_callbacks)(void *datasource, OggVorbis_File *vf, const char *initial, long ibytes, ov_callbacks callbacks);
 static vorbis_info *(*pov_info)(OggVorbis_File *vf, int link);
 static long (*pov_read)(OggVorbis_File *vf, char *buffer, int length, int bigendianp, int word, int sgned, int *bitstream);
 
@@ -176,7 +177,7 @@ static int openal_load_vorbisfile_library(void)
 	}
 
 	OPENAL_LOAD_VORBISFILE_SYMBOL(handle, (int (*)(OggVorbis_File*)), ov_clear);
-	OPENAL_LOAD_VORBISFILE_SYMBOL(handle, (int (*)(void*, OggVorbis_File*, char*, long, ov_callbacks)), ov_open_callbacks);
+	OPENAL_LOAD_VORBISFILE_SYMBOL(handle, (int (*)(void*, OggVorbis_File*, const char*, long, ov_callbacks)), ov_open_callbacks);
 	OPENAL_LOAD_VORBISFILE_SYMBOL(handle, (vorbis_info *(*)(OggVorbis_File*, int)), ov_info);
 	OPENAL_LOAD_VORBISFILE_SYMBOL(handle, (long (*)(OggVorbis_File*, char*, int, int, int, int, int*)), ov_read);
 
@@ -224,8 +225,7 @@ ALboolean alutLoadVorbis_LOKI(ALuint bid,
 	vorb->fh.offset = 0;
 	vorb->fh.size   = size;
 
-	/* NOTE: Ogg Vorbis' header are not const-correct, so we cast */
-	err = pov_open_callbacks(vorb, &vorb->of, (ALvoid*)data, size, ov_fromdata);
+	err = pov_open_callbacks(vorb, &vorb->of, data, size, ov_fromdata);
 	if(err < 0) {
 		fprintf(stderr, "vorbis problems\n");
 		free(vorb->data);

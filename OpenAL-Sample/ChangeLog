@@ -1,5 +1,8 @@
 2006-10-30  Sven Panne  <sven.panne@aedion.de>
 
+	* src/extensions/al_ext_vorbis.c: Added a workaround for incorrect Ogg
+	Vorbis headers, avoiding a harmless GCC warning.
+
 	* src/al_dlopen.c, src/al_dlopen.h, src/al_ext.c, src/alc/alc_context.c:
 	Centralized casts which are not allowed in ISO C. They are necessary,
 	anyway, due to API bugs in POSIX and OpenAL.
