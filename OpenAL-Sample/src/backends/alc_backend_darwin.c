@@ -68,7 +68,7 @@ static OSStatus GetAudioDevices (void **devices /*Dev IDs*/, short	*devicesAvail
 
 int sync_mixer_iterate( void *dummy );
 
-static void playABuffer(void *realdata);
+static void playABuffer(const void *realdata);
 
 /************************************** UTILITIES *********************************/
 
@@ -257,9 +257,9 @@ Crash :
     return NULL;
 }
 
-static ALboolean set_write_native(UNUSED(void *handle),
+static ALboolean set_write_native(UNUSED(struct ALC_BackendPrivateData *handle),
 				  unsigned int *deviceBufferSizeInBytes,
-				  unsigned int *fmt,
+				  ALenum *fmt,
 				  unsigned int *speed)
 {
     OSStatus		error = 0;
@@ -305,21 +305,21 @@ static ALboolean set_write_native(UNUSED(void *handle),
 }
 
 
-static ALboolean set_read_native(UNUSED(void *handle), UNUSED(unsigned int *deviceBufferSizeInBytes), UNUSED(unsigned int *fmt), UNUSED(unsigned int *speed))
+static ALboolean set_read_native(UNUSED(struct ALC_BackendPrivateData *handle), UNUSED(unsigned int *deviceBufferSizeInBytes), UNUSED(ALenum *fmt), UNUSED(unsigned int *speed))
 {
     implement_me("ALboolean set_read_native()");
     return AL_FALSE;
 }
 
 static ALboolean
-alcBackendSetAttributesNative_(void *handle, ALuint *deviceBufferSizeInBytes, ALenum *fmt, ALuint *speed)
+alcBackendSetAttributesNative_(struct ALC_BackendPrivateData *handle, ALuint *deviceBufferSizeInBytes, ALenum *fmt, ALuint *speed)
 {
 	return libGlobals.mode == ALC_OPEN_INPUT_ ?
 		set_read_native(handle, deviceBufferSizeInBytes, fmt, speed) :
 		set_write_native(handle, deviceBufferSizeInBytes, fmt, speed);
 }
 
-static void  native_blitbuffer(void *handle, const void *data, int bytesToWrite)
+static void  native_blitbuffer(struct ALC_BackendPrivateData *handle, const void *data, int bytesToWrite)
 {
     stillToPlay = bytesToWrite / nativePreferedBuffSize;
 
@@ -337,13 +337,13 @@ static void  native_blitbuffer(void *handle, const void *data, int bytesToWrite)
     playABuffer(data);
 }
 
-static void playABuffer(void *realdata)
+static void playABuffer(const void *realdata)
 {
     register unsigned int 	count;
     register Float32	*outDataPtr = coreAudioDestination;
     register SInt16	*inDataPtr16;
     register SInt8	*inDataPtr8;
-    static void * data;
+    static const void * data;
 
     if (realdata!=NULL) data = realdata;
 
@@ -419,7 +419,7 @@ static void playABuffer(void *realdata)
 
 
 
-void  release_native(void *handle)
+void  release_native(struct ALC_BackendPrivateData *handle)
 {
     if (libGlobals.deviceW == *(AudioDeviceID*)handle)
     {
@@ -428,31 +428,31 @@ void  release_native(void *handle)
     }
 }
 
-static ALfloat get_nativechannel(UNUSED(void *handle), UNUSED(ALuint channel))
+static ALfloat get_nativechannel(UNUSED(struct ALC_BackendPrivateData *handle), UNUSED(ALuint channel))
 {
     implement_me("float get_nativechannel()");
     return 0;
 }
 
-static int set_nativechannel(UNUSED(void *handle),UNUSED(ALuint channel),UNUSED(ALfloat volume))
+static int set_nativechannel(UNUSED(struct ALC_BackendPrivateData *handle),UNUSED(ALuint channel),UNUSED(ALfloat volume))
 {
     implement_me("int set_nativechannel()");
     return 0;
 }
 
-static void pause_nativedevice(void *handle) /* Not tested :-( */
+static void pause_nativedevice(struct ALC_BackendPrivateData *handle) /* Not tested :-( */
 {
     if (libGlobals.deviceW == *(AudioDeviceID*)handle)
 	AudioDeviceStop(libGlobals.deviceW, deviceFillingProc);
 }
 
-static void resume_nativedevice(void *handle) /* Not tested :-( */
+static void resume_nativedevice(struct ALC_BackendPrivateData *handle) /* Not tested :-( */
 {
     if (libGlobals.deviceW == *(AudioDeviceID*)handle)
 	AudioDeviceStart(libGlobals.deviceW, deviceFillingProc);
 }
 
-static ALsizei capture_nativedevice(UNUSED(void *handle), UNUSED(void *capture_buffer), UNUSED(int bytesToRead))
+static ALsizei capture_nativedevice(UNUSED(struct ALC_BackendPrivateData *handle), UNUSED(void *capture_buffer), UNUSED(int bytesToRead))
 {
     implement_me("void capture_nativedevice()");
     return 0;
@@ -470,7 +470,7 @@ static ALC_BackendOps nativeOps = {
 };
 
 void
-alcBackendOpenNative_ (ALC_OpenMode mode, ALC_BackendOps **ops, ALC_BackendPrivateData **privateData)
+alcBackendOpenNative_ (ALC_OpenMode mode, ALC_BackendOps **ops, struct ALC_BackendPrivateData **privateData)
 {
 	*privateData = (mode == ALC_OPEN_INPUT_) ? grab_read_native() : grab_write_native();
 	if (*privateData != NULL) {
