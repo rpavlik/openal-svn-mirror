@@ -258,7 +258,7 @@ ALint Vorbis_Callback(UNUSED(ALuint sid),
 		UNUSED(ALint freq),
 		ALint samples) {
 	VorbHandle *vorb;
-	int index;
+	int vindex;
 	ALuint offset;
 	long ret = 0;
 	int bps = _alGetBitsFromFormat(format)>>3; /* bytes per sample */
@@ -269,16 +269,16 @@ ALint Vorbis_Callback(UNUSED(ALuint sid),
 
 	datap = (char *) outdata;
 
-	index = vorbid_get(bid, &vorb);
-	if(index == -1) {
+	vindex = vorbid_get(bid, &vorb);
+	if(vindex == -1) {
 		fprintf(stderr, "weird vorbid_get\n");
 		return -1;
 	}
 
-	index = vorbmap_get(sid, &offset, &current_section);
-	if(index == -1) {
+	vindex = vorbmap_get(sid, &offset, &current_section);
+	if(vindex == -1) {
 		/* first time */
-		index = vorbmap_insert(sid);
+		vindex = vorbmap_insert(sid);
 
 		offset = 0;
 		current_section = 0;
@@ -307,7 +307,7 @@ ALint Vorbis_Callback(UNUSED(ALuint sid),
 
 		if(ret <= 0) {
 			/* eof or error */
-			vorbmap_update(index, 0, 0);
+			vorbmap_update(vindex, 0, 0);
 			return 0;
 		}
 
@@ -316,7 +316,7 @@ ALint Vorbis_Callback(UNUSED(ALuint sid),
 		datap       += ret;
 	}
 
-	vorbmap_update(index, vorb->fh.offset, current_section);
+	vorbmap_update(vindex, vorb->fh.offset, current_section);
 
 	return retval / bps;
 }
