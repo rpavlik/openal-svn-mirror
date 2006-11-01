@@ -56,6 +56,8 @@
 #define M_PI		3.14159265358979323846	/* pi */
 #endif /* M_PI */
 
+void (*_alFloatMul)( ALshort *bpt, ALfloat sa, ALuint len ) = NULL;
+
 /*
  * mixer thread's ID, if it needs one
  */
