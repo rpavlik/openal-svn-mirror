@@ -506,6 +506,9 @@ case "$target" in
                     *cygwin* | *mingw*)
                     NASM_FORMAT="-f win32 -DWIN32"
                     ;;
+                    *darwin*)
+                    NASM_FORMAT="-f macho"
+                    ;;
                 esac
                 ;;
                 *x86_64*)

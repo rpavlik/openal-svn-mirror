@@ -1,3 +1,19 @@
+2006-11-01  Prakash Punnoor <prakash@punnoor.de>
+
+	* src/backends/alc_backend_darwin.c: make it compilable and
+	mostly warning-free
+	
+	* src/al_main.h, src/al_main.c: put _alFloatMul pointer into
+	object and initialise to make it compilable on Darwin
+	
+	* src/audioconvert/ac_misc.c: simplify and get rid of some
+	warnings
+	
+	* src/extensions/al_ext_vorbis.c: rename shadowed var
+	
+	* configure.ac, admin/CMakeModules/CMakeASMInformation.cmake:
+	pass correct ASM flags for Intel Macs
+
 2006-10-30  Prakash Punnoor <prakash@punnoor.de>
 
 	* admin/CMakeModules/FindCompilerSIMDFlags.cmake: deleted
