@@ -69,19 +69,19 @@ static int ac_isWAVEadpcm(void *data, ALuint size, int encoding);
 
 /* read riff chunk */
 static void ReadChunk(const void *srcp, int *offset, Chunk *chunk) {
-	ALuint reader;
 	const ALubyte *src = srcp;
+	ALuint reader;
 
 	src += *offset;
 
-	memcpy((void *) &reader, (void *) src, 4);
+	reader = *(const ALuint*)src;
 	chunk->magic    = swap32le(reader);
 
-	memcpy((void *) &reader, (void *) (src+4), 4);
+	reader = *(const ALuint*)(src+4);
 	chunk->length   = swap32le(reader);
 	*offset += chunk->length + 8;
 
-	chunk->data     = (void *) (src+8);
+	chunk->data     = src+8;
 }
 
 void *ac_guess_info(void *data, ALuint *size,
