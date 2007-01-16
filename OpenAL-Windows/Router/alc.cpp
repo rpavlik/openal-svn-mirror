@@ -63,6 +63,9 @@
 //*****************************************************************************
 //*****************************************************************************
 
+#define MAX_DEVICE_STRINGS 4096
+
+
 typedef struct ALCextension_struct
 {
 
@@ -194,10 +197,10 @@ static const ALCchar alcErrInvalidEnum[] = "Invalid Enum";
 static const ALCchar alcErrInvalidValue[] = "Invalid Value";
 
 // Context strings
-static ALCchar alcDefaultDeviceSpecifier[MAX_PATH] = "\0";
-static ALCchar alcDeviceSpecifierList[MAX_PATH] = "\0";
-static ALCchar alcCaptureDefaultDeviceSpecifier[MAX_PATH] = "\0";
-static ALCchar alcCaptureDeviceSpecifierList[MAX_PATH] = "\0";
+static ALCchar alcDefaultDeviceSpecifier[MAX_DEVICE_STRINGS] = "\0";
+static ALCchar alcDeviceSpecifierList[MAX_DEVICE_STRINGS] = "\0";
+static ALCchar alcCaptureDefaultDeviceSpecifier[MAX_DEVICE_STRINGS] = "\0";
+static ALCchar alcCaptureDeviceSpecifierList[MAX_DEVICE_STRINGS] = "\0";
 static ALCchar alcExtensionList[] = "";
 
 static ALint alcMajorVersion = 1;
