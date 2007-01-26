@@ -252,46 +252,6 @@ ALboolean NewCaptureSpecifierCheck(const ALCchar* specifier)
 	return AL_TRUE;
 }
 
-/* Note: Semantically the parameter has type LPCSTR, but VC6 headers lack the 'C'. :-( */
-ALboolean notOldNVIDIALib(LPSTR fileName)
-{
-	DWORD handle;
-	DWORD size;
-	void *data;
-	VS_FIXEDFILEINFO *versionInfoPtr;
-	unsigned int versionInfoLen;
-	DWORD ms, ls;
-	WORD V0 = 6;
-	WORD V1 = 14;
-	WORD V2 = 365;
-	WORD V3 = 2;
-
-	if (_tcsstr(fileName, __TEXT("NVOPENAL.DLL")) != 0) {
-		ms = V3 * 65536 + V2;
-		ls = V1 * 65536 + V0;
-
-		size = GetFileVersionInfoSize(fileName, &handle);
-		if (size > 0) {
-			data = malloc(size);
-			if (data != NULL) {
-				if (GetFileVersionInfo(fileName, NULL, size, data)) {
-					if (VerQueryValue(data, "\\", (void **)&versionInfoPtr, &versionInfoLen)) {
-						if ((versionInfoPtr->dwFileVersionMS < ms) ||
-							(versionInfoPtr->dwFileVersionMS == ms) && (versionInfoPtr->dwProductVersionLS <= ls)) {
-							return false;
-						}
-					}
-				}
-				free(data);
-			}
-		} else {
-			return true;
-		}
-	}
-
-	return true;
-}
-
 //*****************************************************************************
 // GetLoadedModuleDirectory
 //*****************************************************************************
@@ -393,139 +353,6 @@ ALvoid BuildDeviceSpecifierList()
 
 		//
 		// Begin searching for additional OpenAL implementations.
-		//
-		for(i =  0; i < numDirs; i++)
-		{
-			_tcscpy(searchName, dir[i]);
-			_tcscat(searchName, _T("nvopenal.dll"));  // looking for NVIDIA libraries
-			searchHandle = FindFirstFile(searchName, &findData);
-			if(searchHandle != INVALID_HANDLE_VALUE)
-			{
-				while(TRUE)
-				{
-					//
-					// if this is an OpenAL32.dll, skip it -- it's probably a router and shouldn't be enumerated regardless
-					//
-					_tcscpy(searchName, dir[i]);
-					_tcscat(searchName, findData.cFileName);
-					TCHAR cmpName[MAX_PATH];
-					_tcscpy(cmpName, searchName);
-					_tcsupr(cmpName);
-					if ((strstr(cmpName, "OPENAL32.DLL") == 0) && notOldNVIDIALib(cmpName))
-					{
-						// enforce search-order rules and make sure duplicate searches aren't done
-						boolean skipSearch = false;
-						if ((i == 0) && (strcmp(dir[0], dir[3]) == 0)) { // if searching router dir and router dir is sys dir, skip search
-							skipSearch = true;
-						}
-						if ((i == 2) && (strcmp(dir[2], dir[1]) == 0)) { // if searching app dir and app dir is current dir, skip search
-							skipSearch = true;
-						}
-						if ((i == 3) && ((strcmp(dir[3], dir[2]) == 0) || (strcmp(dir[3], dir[1]) == 0))) {
-							// if searching sys dir and sys dir is either current or app directory, skip search
-							skipSearch = true;
-						}
-
-						if (skipSearch == false) {
-							dll = LoadLibrary(searchName);
-							if(dll)
-							{
-								alcOpenDeviceFxn = (ALCAPI_OPEN_DEVICE)GetProcAddress(dll, "alcOpenDevice");
-								alcCreateContextFxn = (ALCAPI_CREATE_CONTEXT)GetProcAddress(dll, "alcCreateContext");
-								alcMakeContextCurrentFxn = (ALCAPI_MAKE_CONTEXT_CURRENT)GetProcAddress(dll, "alcMakeContextCurrent");
-								alcGetStringFxn = (ALCAPI_GET_STRING)GetProcAddress(dll, "alcGetString");
-								alcDestroyContextFxn = (ALCAPI_DESTROY_CONTEXT)GetProcAddress(dll, "alcDestroyContext");
-								alcCloseDeviceFxn = (ALCAPI_CLOSE_DEVICE)GetProcAddress(dll, "alcCloseDevice");
-								alcIsExtensionPresentFxn = (ALCAPI_IS_EXTENSION_PRESENT)GetProcAddress(dll, "alcIsExtensionPresent");
-
-								if ((alcOpenDeviceFxn != 0) &&
-									(alcCreateContextFxn != 0) &&
-									(alcMakeContextCurrentFxn != 0) &&
-									(alcGetStringFxn != 0) &&
-									(alcDestroyContextFxn != 0) &&
-									(alcCloseDeviceFxn != 0) &&
-									(alcIsExtensionPresentFxn != 0)) {
-
-									// add to output device list
-									if (alcIsExtensionPresentFxn(NULL, "ALC_ENUMERATION_EXT")) {
-										// this DLL can enumerate devices -- so add complete list of devices
-										specifier = alcGetStringFxn(0, ALC_DEVICE_SPECIFIER);
-										if ((specifier) && strlen(specifier))
-										{
-											do {
-												specifierSize = (ALuint)strlen((char*)specifier);
-
-												if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
-													strcpy((char*)list, (char*)specifier);
-													list += specifierSize + 1;
-												}
-												specifier += strlen((char *)specifier) + 1;
-											} while (strlen((char *)specifier) > 0);
-										}
-									} else {
-										// no enumeration ability, -- so just add default device to the list
-										device = alcOpenDeviceFxn(NULL);
-										if (device != NULL) {
-											context = alcCreateContextFxn(device, NULL);
-											alcMakeContextCurrentFxn((ALCcontext *)context);
-											if (context != NULL) {
-												specifier = alcGetStringFxn(device, ALC_DEVICE_SPECIFIER);
-												if ((specifier) && strlen(specifier))
-												{
-													specifierSize = (ALuint)strlen((char*)specifier);
-
-													if (NewSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
-														strcpy((char*)list, (char*)specifier);
-														list += specifierSize + 1;
-													}
-												}
-												alcMakeContextCurrentFxn((ALCcontext *)NULL);
-												alcDestroyContextFxn((ALCcontext *)context);
-												alcCloseDeviceFxn(device);
-											}
-										}
-									}
-
-									// add to capture device list
-									if (alcIsExtensionPresentFxn(NULL, "ALC_CAPTURE_EXT")) {
-										// this DLL supports capture -- so add complete list of capture devices
-										specifier = alcGetStringFxn(0, ALC_CAPTURE_DEVICE_SPECIFIER);
-										if ((specifier) && strlen(specifier))
-										{
-											do {
-												specifierSize = (ALuint)strlen((char*)specifier);
-												if (NewCaptureSpecifierCheck(specifier)) { // make sure we're not creating a duplicate device
-													strcpy((char*)captureList, (char*)specifier);
-													captureList += specifierSize + 1;
-												}
-												specifier += strlen((char *)specifier) + 1;
-											} while (strlen((char *)specifier) > 0);
-										}
-									}
-								}
-
-								FreeLibrary(dll);
-								dll = 0;
-							}
-						}
-					}
-
-					if(!FindNextFile(searchHandle, &findData))
-					{
-						if(GetLastError() == ERROR_NO_MORE_FILES)
-						{
-							break;
-						}
-					}
-				}
-
-				FindClose(searchHandle);
-				searchHandle = INVALID_HANDLE_VALUE;
-			}
-		}
-
-		//
-		// And again for the other DLL pattern match.
 		//
 		for(i = 0; i < numDirs; i++)
 		{
@@ -1041,7 +868,7 @@ HINSTANCE FindDllWithMatchingSpecifier(TCHAR* dllSearchPattern, char* specifier,
 				TCHAR cmpName[MAX_PATH];
 				_tcscpy(cmpName, searchName);
 				_tcsupr(cmpName);
-				if ((strstr(cmpName, "OPENAL32.DLL") == 0) && notOldNVIDIALib(cmpName))
+				if (strstr(cmpName, "OPENAL32.DLL") == 0)
 				{
 					// enforce search-order rules and make sure duplicate searches aren't done
 					boolean skipSearch = false;
@@ -1743,27 +1570,19 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(const ALCchar* deviceName)
 	//
     // Find the device to open.
     //
-    dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), (char*)newDeviceName);
+    dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), (char*)newDeviceName);
     if(!dll)
     {
-        dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), (char*)newDeviceName);
+        //
+        // If we still don't have a match for these default names, try the default string.
+        //
         if(!dll)
         {
-            //
-            // If we still don't have a match for these default names, try the default string.
-            //
+            strncpy(newDeviceName, alcGetString(0, ALC_DEFAULT_DEVICE_SPECIFIER), 256);
+            dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), (char*)newDeviceName);
             if(!dll)
             {
-                strncpy(newDeviceName, alcGetString(0, ALC_DEFAULT_DEVICE_SPECIFIER), 256);
-                dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), (char*)newDeviceName);
-                if(!dll)
-                {
-                    dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), (char*)newDeviceName);
-                    if(!dll)
-                    {
-                        goto NoDll;
-                    }
-                }
+                goto NoDll;
             }
         }
     }
@@ -2105,12 +1924,8 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
 						acceptPartial = true;
 						strcpy(mixerDevice, T2A("X-Fi"));
 					}
-					dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), mixerDevice, acceptPartial, actualName);
-					if(!dll)
-					{
-						dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), mixerDevice, acceptPartial, actualName);
-					}
 
+					dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), mixerDevice, acceptPartial, actualName);
 					if(dll)
 					{
 						if (acceptPartial == true) {
@@ -2125,12 +1940,8 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
                 //
                 // Try to find a default version.
                 //
-				dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), T2A("Generic Hardware"));
-                if(!dll)
-                {
-                    dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), T2A("Generic Hardware"));
-                }
 
+                dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), T2A("Generic Hardware"));
 				if(dll)
                 {
                     strcpy((char*)alcDefaultDeviceSpecifier, T2A("Generic Hardware"));
@@ -2138,12 +1949,7 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
                     break;
                 }
 
-				dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), T2A("Generic Software"));
-                if(!dll)
-                {
-                    dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), T2A("Generic Software"));
-                }
-
+				dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), T2A("Generic Software"));
 				if(dll)
                 {
                     strcpy((char*)alcDefaultDeviceSpecifier, T2A("Generic Software"));
@@ -2151,12 +1957,7 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
                     break;
                 }
 
-                dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), T2A("DirectSound3D"));
-                if(!dll)
-                {
-                    dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), T2A("DirectSound3D"));
-                }
-
+                dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), T2A("DirectSound3D"));
                 if(dll)
                 {
                     strcpy((char*)alcDefaultDeviceSpecifier, T2A("DirectSound3D"));
@@ -2164,12 +1965,7 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
                     break;
                 }
 
-                dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), T2A("DirectSound"));
-                if(!dll)
-                {
-                    dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), T2A("DirectSound"));
-                }
-
+                dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), T2A("DirectSound"));
                 if(dll)
                 {
                     strcpy((char*)alcDefaultDeviceSpecifier, "DirectSound");
@@ -2177,12 +1973,7 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
                     break;
                 }
 
-                dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), T2A("MMSYSTEM"));
-                if(!dll)
-                {
-                    dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), T2A("MMSYSTEM"));
-                }
-
+                dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), T2A("MMSYSTEM"));
                 if(dll)
                 {
                     strcpy((char*)alcDefaultDeviceSpecifier, "MMSYSTEM");
@@ -2252,12 +2043,7 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
 						acceptPartial = true;
 						strcpy(mixerDevice, T2A("X-Fi"));
 					}
-					dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), mixerDevice, acceptPartial, actualName, true);
-					if(!dll)
-					{
-						dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), mixerDevice, acceptPartial, actualName, true);
-					}
-
+					dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), mixerDevice, acceptPartial, actualName, true);
 					if(dll)
 					{
 						if (acceptPartial == true) {
@@ -2318,10 +2104,7 @@ ALCAPI ALCdevice * ALCAPIENTRY alcCaptureOpenDevice(const ALCchar *deviceName, A
 				strncpy(newDeviceName, deviceName, 256);
 			}
 
-			g_CaptureDevice->Dll = FindDllWithMatchingSpecifier(_T("nvopenal.dll"), (char *)newDeviceName, false, NULL, true);
-			if (!g_CaptureDevice->Dll) {
-				g_CaptureDevice->Dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), (char *)newDeviceName, false, NULL, true);
-			}
+			g_CaptureDevice->Dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), (char *)newDeviceName, false, NULL, true);
 
 			if (g_CaptureDevice->Dll) {
 				if(FillOutAlcFunctions(g_CaptureDevice)) {
