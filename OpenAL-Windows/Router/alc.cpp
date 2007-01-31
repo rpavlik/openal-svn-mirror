@@ -919,7 +919,9 @@ HINSTANCE FindDllWithMatchingSpecifier(TCHAR* dllSearchPattern, char* specifier,
 															// note -- specifier may be a non-truncated version of deviceSpecifier, which is why strncmp is being used
 														} else {
 															found = strstr((char*)deviceSpecifier, specifier) != 0;
-															strcpy(actualName, (char *)deviceSpecifier);
+															if (actualName) {
+																strcpy(actualName, (char *)deviceSpecifier);
+															}
 														}
 													} else {
 														found = false;
@@ -941,7 +943,9 @@ HINSTANCE FindDllWithMatchingSpecifier(TCHAR* dllSearchPattern, char* specifier,
 															// note -- specifier may be a non-truncated version of deviceSpecifier; hence the use of strncmp
 														} else {
 															found = strstr((char*)deviceSpecifier, specifier) != 0;
-															strcpy(actualName, (char *)deviceSpecifier);
+															if (actualName) {
+																strcpy(actualName, (char *)deviceSpecifier);
+															}
 														}
 													} else {
 														found = false;
@@ -966,7 +970,9 @@ HINSTANCE FindDllWithMatchingSpecifier(TCHAR* dllSearchPattern, char* specifier,
 															// note -- specifier may be a non-truncated version of deviceSpecifier; hence the use of strncmp
 														} else {
 															found = strstr((char*)deviceSpecifier, specifier) != 0;
-															strcpy(actualName, (char *)deviceSpecifier);
+															if (actualName) {
+																strcpy(actualName, (char *)deviceSpecifier);
+															}
 														}
 													} else {
 														found = false;
@@ -990,6 +996,113 @@ HINSTANCE FindDllWithMatchingSpecifier(TCHAR* dllSearchPattern, char* specifier,
 								dll = 0;
 							}
 						}
+					}
+				}
+
+				if(!FindNextFile(searchHandle, &findData))
+				{
+					if(GetLastError() == ERROR_NO_MORE_FILES)
+					{
+						break;
+					}
+				}
+			}
+
+			FindClose(searchHandle);
+			searchHandle = INVALID_HANDLE_VALUE;
+		}
+    }
+
+    return dll;
+}
+
+//*****************************************************************************
+// FindWrapper
+//*****************************************************************************
+//
+HINSTANCE FindWrapper()
+{
+    WIN32_FIND_DATA findData;
+    HANDLE searchHandle = INVALID_HANDLE_VALUE;
+    TCHAR searchName[MAX_PATH + 1];
+    BOOL found = FALSE;
+    const ALCchar* deviceSpecifier = 0;
+
+    //
+	// Directory[0] is the directory containing OpenAL32.dll
+    // Directory[1] is the current directory
+    // Directory[2] is the current app directory
+    // Directory[3] is the system directory.
+    //
+    TCHAR dir[4][MAX_PATH + 1];
+    int numDirs = 0;
+    DWORD dirSize = 0;
+    int i;
+    HINSTANCE dll = 0;
+    ALCAPI_GET_STRING alcGetStringFxn = 0;
+	ALCAPI_IS_EXTENSION_PRESENT alcIsExtensionPresentFxn = 0;
+	ALCAPI_OPEN_DEVICE alcOpenDeviceFxn = 0;
+	ALCAPI_CREATE_CONTEXT alcCreateContextFxn = 0;
+	ALCAPI_MAKE_CONTEXT_CURRENT alcMakeContextCurrentFxn = 0;
+	ALCAPI_DESTROY_CONTEXT alcDestroyContextFxn = 0;
+	ALCAPI_CLOSE_DEVICE alcCloseDeviceFxn = 0;
+
+    //
+    // Construct our search paths.  We will search the current directory, the app directory,
+    // the system directory, and the directory containing OpenAL32.dll, if we can find it.
+    //
+	if (GetLoadedModuleDirectory("OpenAL32.dll", dir[0], MAX_PATH)) {
+        ++numDirs;
+    }
+
+    dirSize = GetCurrentDirectory(MAX_PATH, dir[1]);
+    _tcscat(dir[1], _T("\\"));
+    ++numDirs;
+
+    GetLoadedModuleDirectory(NULL, dir[2], MAX_PATH);
+    ++numDirs;
+
+    dirSize = GetSystemDirectory(dir[3], MAX_PATH);
+    _tcscat(dir[3], _T("\\"));
+    ++numDirs;
+
+    //
+    // Begin searching for additional OpenAL implementations.
+    //
+	for(i = (numDirs > 3)?0:1; i < numDirs && !found; i++)
+    {
+		_tcscpy(searchName, dir[i]);
+		_tcscat(searchName, "wrap_oal.dll");
+		searchHandle = FindFirstFile(searchName, &findData);
+		if(searchHandle != INVALID_HANDLE_VALUE)
+		{
+			while(TRUE)
+			{
+				//
+				// if this is an OpenAL32.dll, skip it -- it's probably a router and shouldn't be enumerated regardless
+				//
+				_tcscpy(searchName, dir[i]);
+				_tcscat(searchName, findData.cFileName);
+				TCHAR cmpName[MAX_PATH];
+				_tcscpy(cmpName, searchName);
+				_tcsupr(cmpName);
+				if (strstr(cmpName, "OPENAL32.DLL") == 0)
+				{
+					// enforce search-order rules and make sure duplicate searches aren't done
+					boolean skipSearch = false;
+					if ((i == 0) && (strcmp(dir[0], dir[3]) == 0)) { // if searching router dir and router dir is sys dir, skip search
+						skipSearch = true;
+					}
+					if ((i == 2) && (strcmp(dir[2], dir[1]) == 0)) { // if searching app dir and app dir is current dir, skip search
+						skipSearch = true;
+					}
+					if ((i == 3) && ((strcmp(dir[3], dir[2]) == 0) || (strcmp(dir[3], dir[1]) == 0))) {
+						// if searching sys dir and sys dir is either current or app directory, skip search
+						skipSearch = true;
+					}
+
+					if (skipSearch == false) {
+						dll = LoadLibrary(searchName);
 					}
 				}
 
@@ -1563,28 +1676,35 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(const ALCchar* deviceName)
 	if (strcmp(newDeviceName, T2A("DirectSound")) == 0) {
 		strcpy(newDeviceName, T2A("Generic Software"));
 	}
-	if (strcmp(newDeviceName, T2A("MMSYSTEM")) == 0) {
-		strcpy(newDeviceName, T2A("Generic Software Fallback"));
-	}
 
 	//
     // Find the device to open.
     //
     dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), (char*)newDeviceName);
+    
+	// if device name is "Generic Software" and a device wasn't found, try to find a wrapper...
+	if ((!dll) && (strcmp(newDeviceName, "Generic Software") == 0))
+    {
+        dll = FindWrapper();
+    }
+
+	// if device name is "Generic Hardware" and a device wasn't found, try to find a wrapper...
+	if ((!dll) && (strcmp(newDeviceName, "Generic Hardware") == 0))
+    {
+        dll = FindWrapper();
+    }
+
+    // If we still don't have a match for these default names, try the default device
     if(!dll)
     {
-        //
-        // If we still don't have a match for these default names, try the default string.
-        //
-        if(!dll)
-        {
-            strncpy(newDeviceName, alcGetString(0, ALC_DEFAULT_DEVICE_SPECIFIER), 256);
-            dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), (char*)newDeviceName);
-            if(!dll)
-            {
-                goto NoDll;
-            }
-        }
+        strncpy(newDeviceName, alcGetString(0, ALC_DEFAULT_DEVICE_SPECIFIER), 256);
+        dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), (char*)newDeviceName);
+        
+    }
+
+	if(!dll)
+    {
+        goto NoDll;
     }
 
     device->Dll = dll;
@@ -1941,22 +2061,6 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
                 // Try to find a default version.
                 //
 
-                dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), T2A("Generic Hardware"));
-				if(dll)
-                {
-                    strcpy((char*)alcDefaultDeviceSpecifier, T2A("Generic Hardware"));
-                    FreeLibrary(dll);
-                    break;
-                }
-
-				dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), T2A("Generic Software"));
-				if(dll)
-                {
-                    strcpy((char*)alcDefaultDeviceSpecifier, T2A("Generic Software"));
-                    FreeLibrary(dll);
-                    break;
-                }
-
                 dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), T2A("DirectSound3D"));
                 if(dll)
                 {
@@ -1977,6 +2081,22 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
                 if(dll)
                 {
                     strcpy((char*)alcDefaultDeviceSpecifier, "MMSYSTEM");
+                    FreeLibrary(dll);
+                    break;
+                }
+
+				 dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), T2A("Generic Hardware"), true);
+				if(dll)
+                {
+                    strcpy((char*)alcDefaultDeviceSpecifier, T2A("Generic Hardware"));
+                    FreeLibrary(dll);
+                    break;
+                }
+
+				dll = FindDllWithMatchingSpecifier(_T("*oal.dll"), T2A("Generic Software"), true);
+				if(dll)
+                {
+                    strcpy((char*)alcDefaultDeviceSpecifier, T2A("Generic Software"));
                     FreeLibrary(dll);
                     break;
                 }
