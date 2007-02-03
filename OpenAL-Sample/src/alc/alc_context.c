@@ -601,13 +601,36 @@ void _alcSetContext(const ALCint *attrlist, ALuint cid, AL_device *dev ) {
 		refresh_rate = canon_speed;
 	}
 
-	/* ToDo: Shouldn't we include the number of channels and format here? */
-	deviceBufferSizeInBytes = _alSmallestPowerOfTwo(
-				(ALuint) ((float) canon_speed / refresh_rate));
+        /* 
+         * Figure out the size of buffer to request from the device based
+         * on the bytes per sample and speed vs. the refresh rate
+         */
         if (dev->flags & ALCD_WRITE)
+        {
+		deviceBufferSizeInBytes = _alSmallestPowerOfTwo(
+			(ALuint) ((float) canon_speed / refresh_rate));
+		deviceBufferSizeInBytes *=
+			_alGetChannelsFromFormat(cc->write_device->format);
+		deviceBufferSizeInBytes *=
+			_alGetBitsFromFormat(cc->write_device->format) / 8;
 		cc->write_device->bufferSizeInBytes = deviceBufferSizeInBytes;
+        }
         if (dev->flags & ALCD_READ)
+        {
+                /* 
+                 * Use the device's speed instead of the canonical speed,
+                 * since the canonical speed doesn't mean anything on the
+                 * capture side 
+                 */
+		deviceBufferSizeInBytes = _alSmallestPowerOfTwo(
+			(ALuint) ((float) cc->read_device->speed /
+				refresh_rate));
+		deviceBufferSizeInBytes *= 
+			_alGetChannelsFromFormat(cc->read_device->format);
+		deviceBufferSizeInBytes *= 
+			_alGetBitsFromFormat(cc->read_device->format) / 8;
 		cc->read_device->bufferSizeInBytes = deviceBufferSizeInBytes;
+        }
 
 	_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
 		"new device buffer size in bytes = %d", deviceBufferSizeInBytes);
