@@ -2,6 +2,9 @@
 
 	* admin/CMakeModules/CMakeASMInformation.cmake: sync to
 	aften version
+	
+	* src/arch/i386/x86_cpu_caps_detect_prk.nasm: fix segment
+	label
 
 2006-11-01  Prakash Punnoor <prakash@punnoor.de>
 
