@@ -351,6 +351,7 @@ void alBufferData( ALuint  bid,
 	ALuint retsize;
 	ALenum tformat;
 	ALint tfreq;
+	ALubyte tchannels;
 
 	if((data == NULL) || (size == 0))
 	{
@@ -457,25 +458,27 @@ void alBufferData( ALuint  bid,
 	if(buf->size < retsize)
 	{
 		void *temp_copies[_ALC_MAX_CHANNELS] = { NULL };
-		ALboolean success = AL_TRUE;
+		ALubyte channels;
 
 		/* don't use realloc */
 		_alBufferFreeOrigBuffers(buf);
 
-		for(i = 0; i < _alGetChannelsFromFormat(buf->format); i++)
+		channels = _alGetChannelsFromFormat(buf->format);
+
+		for(i = 0; i < channels; i++)
 		{
 			temp_copies[i] = malloc(retsize);
-			success = (temp_copies[i] != NULL) ? AL_TRUE : AL_FALSE;
+			if (!temp_copies[i])
+				break;
 		}
 
-		if(!success)
+		if(i != channels)
 		{
+			int j;
 			free(cdata);
 
-			for(i = 0; i < _alGetChannelsFromFormat(buf->format); i++)
-			{
-				free(temp_copies[i]);
-			}
+			for(j = 0; j < i; j++)
+				free(temp_copies[j]);
 
 			/* JIV FIXME: lock context */
 			_alcDCLockContext();
@@ -487,7 +490,7 @@ void alBufferData( ALuint  bid,
 			return;
 		}
 
-		switch(_alGetChannelsFromFormat(buf->format))
+		switch(channels)
 		{
 			case 1:
 			  for(i = 0; i < elementsof(buf->orig_buffers); i++)
@@ -534,12 +537,13 @@ void alBufferData( ALuint  bid,
 		}
 	}
 
+	tchannels = _alGetChannelsFromFormat(tformat);
 	_alMonoify((ALshort **) buf->orig_buffers,
 		   cdata,
-		   retsize / _alGetChannelsFromFormat(tformat),
-		   buf->num_buffers, _alGetChannelsFromFormat(tformat));
+		   retsize / tchannels,
+	       buf->num_buffers, tchannels);
 
-	buf->size = retsize / _alGetChannelsFromFormat(tformat);
+	buf->size = retsize / tchannels;
 
 	_alUnlockBuffer();
 
