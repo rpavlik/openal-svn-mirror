@@ -216,7 +216,7 @@ setAttributesALSA (struct ALC_BackendPrivateData *privateData,
                    ALuint *bufferSizeInBytes, ALenum *format, ALuint *speed)
 {
   struct alsaData *ad = (struct alsaData *) privateData;
-  unsigned int periods = 2;
+  unsigned int periods = 4;
   snd_pcm_hw_params_t *p = NULL;
   ALboolean allOK;
   snd_pcm_format_t alsaFormat;
