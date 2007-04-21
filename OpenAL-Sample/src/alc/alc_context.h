@@ -16,7 +16,7 @@
 /*
  * _ALC_DEF_FREQ is the default internal mixing frequency.
  */
-#define _ALC_DEF_FREQ        44100
+#define _ALC_DEF_FREQ        48000
 
 /*
  * ALC_DEFAULT_DEVICE_BUFFER_SIZE_IN_BYTES is the default length of chunks mixed

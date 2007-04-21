@@ -1,3 +1,11 @@
+2007-04-21  Prakash Punnoor <prakash@punnoor.de>
+
+	* src/backends/alc_backend_alsa: set periods to 4 to fix
+	statics in 4ch mode
+	
+	* alc/alc_context.h: set canon speed to 48kHz to match most
+	soundcards
+
 2007-04-14  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/al_buffer.c : optimization and correct error handling
