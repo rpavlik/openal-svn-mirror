@@ -314,6 +314,25 @@ typedef struct ALCcontext_struct
 extern ALlist* alContextList;
 extern ALCcontext* alCurrentContext;
 
+// Device Enumeration structures, strings and variables
+typedef struct _ALDEVICE
+{
+	ALchar				*pszDeviceName;
+	TCHAR				*pszHostDLLFilename;
+	struct _ALDEVICE	*pNextDevice;
+} ALDEVICE;
+
+extern ALchar *pszDefaultDeviceSpecifier;
+extern ALchar *pszDeviceSpecifierList;
+extern ALchar *pszDefaultCaptureDeviceSpecifier;
+extern ALchar *pszCaptureDeviceSpecifierList;
+extern ALchar *pszDefaultAllDevicesSpecifier;
+extern ALchar *pszAllDevicesSpecifierList;
+
+extern ALDEVICE *g_pDeviceList;
+extern ALDEVICE *g_pCaptureDeviceList;
+extern ALDEVICE *g_pAllDevicesList;
+
 #ifdef __cplusplus
 }
 #endif

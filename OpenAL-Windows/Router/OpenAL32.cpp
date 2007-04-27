@@ -25,6 +25,9 @@
 #include "OpenAL32.h"
 
 
+void CleanDeviceEnumeration();
+void CleanDeviceList(ALDEVICE *pDeviceList);
+
 //*****************************************************************************
 // DllMain
 //*****************************************************************************
@@ -51,6 +54,7 @@ BOOL APIENTRY DllMain(HANDLE module, DWORD reason, LPVOID reserved)
 
         case DLL_PROCESS_DETACH:
             // Perform any necessary cleanup.
+			CleanDeviceEnumeration();
             alListFree(alContextList);
             alContextList = 0;
             break;
@@ -59,3 +63,73 @@ BOOL APIENTRY DllMain(HANDLE module, DWORD reason, LPVOID reserved)
     return TRUE;
 }
 
+
+void CleanDeviceEnumeration()
+{
+	if (pszDefaultDeviceSpecifier)
+	{
+		free(pszDefaultDeviceSpecifier);
+		pszDefaultDeviceSpecifier = NULL;
+	}
+
+	if (pszDeviceSpecifierList)
+	{
+		free(pszDeviceSpecifierList);
+		pszDeviceSpecifierList = NULL;
+	}
+
+	if (pszDefaultCaptureDeviceSpecifier)
+	{
+		free(pszDefaultCaptureDeviceSpecifier);
+		pszDefaultCaptureDeviceSpecifier = NULL;
+	}
+
+	if (pszCaptureDeviceSpecifierList)
+	{
+		free(pszCaptureDeviceSpecifierList);
+		pszCaptureDeviceSpecifierList = NULL;
+	}
+
+	if (pszDefaultAllDevicesSpecifier)
+	{
+		free(pszDefaultAllDevicesSpecifier);
+		pszDefaultAllDevicesSpecifier = NULL;
+	}
+
+	if (pszAllDevicesSpecifierList)
+	{
+		free(pszAllDevicesSpecifierList);
+		pszAllDevicesSpecifierList = NULL;
+	}
+
+	CleanDeviceList(g_pDeviceList);
+	g_pDeviceList = NULL;
+
+	CleanDeviceList(g_pCaptureDeviceList);
+	g_pCaptureDeviceList = NULL;
+
+	CleanDeviceList(g_pAllDevicesList);
+	g_pAllDevicesList = NULL;
+}
+
+void CleanDeviceList(ALDEVICE *pDeviceList)
+{
+	ALDEVICE *pDevice, *pNextDevice;
+
+	pDevice = pDeviceList;
+	
+	while (pDevice)
+	{
+		pNextDevice = pDevice->pNextDevice;
+
+		if (pDevice->pszHostDLLFilename)
+			free(pDevice->pszHostDLLFilename);
+
+		if (pDevice->pszDeviceName)
+			free(pDevice->pszDeviceName);
+
+		free(pDevice);
+
+		pDevice = pNextDevice;
+	}
+}
