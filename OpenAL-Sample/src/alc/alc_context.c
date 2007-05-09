@@ -1440,12 +1440,12 @@ alcGetString (ALCdevice *dev, ALCenum token)
   switch (token)
     {
     case ALC_DEFAULT_DEVICE_SPECIFIER:
-      return (const ALCchar *) "'((sampling-rate 44100) (device '(native))";
+      /* The first entry in the device list specifies the default */
+      return _alcDeviceNames;
     case ALC_DEVICE_SPECIFIER:
       if (dev == NULL)
         {
-          /* fake device enumeration for now */
-          return (const ALCchar *) "'((sampling-rate 44100) (device '(native))\0'((sampling-rate 44100) (device '(wave))\0'((sampling-rate 44100) (device '(null))\0";
+          return _alcDeviceNames;
         }
       else
         {

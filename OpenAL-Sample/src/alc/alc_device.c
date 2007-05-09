@@ -23,6 +23,156 @@
 
 static int num_devices = 0;
 
+static const struct {
+    ALCchar *description;
+    ALCchar *drvname;
+} DeviceList[] = {
+#define DEFAULT_NAME "Default\0"
+    { DEFAULT_NAME, "" },
+
+#ifdef USE_BACKEND_ALSA
+#define ALSA_NAME "Advanced Linux Sound Architecture (ALSA)\0"
+    { ALSA_NAME, "alsa" },
+#else
+#define ALSA_NAME
+#endif
+
+#ifdef USE_BACKEND_OSS
+#define OSS_NAME "Open Sound System (OSS)\0"
+    { OSS_NAME, "oss" },
+#else
+#define OSS_NAME
+#endif
+
+#ifdef USE_BACKEND_DMEDIA
+#define DMEDIA_NAME "DMedia\0"
+    { DMEDIA_NAME, "dmedia" },
+#else
+#define DMEDIA_NAME
+#endif
+
+#ifdef USE_BACKEND_NATIVE_DARWIN
+#define DARWIN_NAME "Darwin Native\0"
+    { DARWIN_NAME, "darwin" },
+#else
+#define DARWIN_NAME
+#endif
+
+#ifdef USE_BACKEND_NATIVE_SOLARIS
+#define SOLARIS_NAME "Solaris Native\0"
+    { SOLARIS_NAME, "solaris" },
+#else
+#define SOLARIS_NAME
+#endif
+
+#ifdef USE_BACKEND_NATIVE_WINDOWS
+#define WINDOWS_NAME "Windows Native\0"
+    { WINDOWS_NAME, "windows" },
+#else
+#define WINDOWS_NAME
+#endif
+
+#ifdef USE_BACKEND_ESD
+#define ESD_NAME "Enlightened Sound Daemon (ESD)\0"
+    { ESD_NAME, "esd" },
+#else
+#define ESD_NAME
+#endif
+
+#ifdef USE_BACKEND_ARTS
+#define ARTS_NAME "Analog Realtime Synthesizer (aRts)\0"
+    { ARTS_NAME, "arts" },
+#else
+#define ARTS_NAME
+#endif
+
+#ifdef USE_BACKEND_SDL
+#define SDL_NAME "Simple DirectMedia Layer (SDL)\0"
+    { SDL_NAME, "sdl" },
+#else
+#define SDL_NAME
+#endif
+
+#ifdef USE_BACKEND_WAVEOUT
+#define WAVE_NAME "Wave Writer\0"
+    { WAVE_NAME, "wave" },
+#else
+#define WAVE_NAME
+#endif
+
+#ifdef USE_BACKEND_NULL
+#define NULL_NAME "Null Output\0"
+    { NULL_NAME, "null" },
+#else
+#define NULL_NAME
+#endif
+
+    { NULL, NULL }
+};
+
+const ALCchar *_alcDeviceNames =
+    DEFAULT_NAME
+    ALSA_NAME
+    OSS_NAME
+    DMEDIA_NAME
+    DARWIN_NAME
+    SOLARIS_NAME
+    WINDOWS_NAME
+    ESD_NAME
+    ARTS_NAME
+    SDL_NAME
+    WAVE_NAME
+    NULL_NAME
+"\0";
+
+
+static __inline void eval_config(const ALCchar *cfg)
+{
+	Rcvar listOfLists = rc_eval( cfg );
+	/* define each attribute pair */
+	rc_foreach( listOfLists, rc_define_list );
+}
+
+static int set_config_from_name(const ALCchar *name)
+{
+	int i;
+
+	/* First name in the list is the default, which behaves like NULL and
+	 * uses no special settings */
+	if(name == NULL || strcmp(name, DeviceList[0].description) == 0)
+		return 0;
+
+	/* If the name starts with a ', then it's a device configuration */
+	if(name[0] == '\'')
+	{
+		eval_config(name);
+		return 0;
+	}
+
+	for(i = 1;DeviceList[i].description != NULL;i++)
+	{
+		if(strcmp(name, DeviceList[i].description) == 0)
+		{
+			ALCchar *str = malloc(strlen("'((devices '(") +
+			                      strlen(DeviceList[i].drvname) +
+			                      strlen("))") + 1);
+			if(!str)
+				return 1;
+
+			strcpy(str, "'((devices '(");
+			strcat(str, DeviceList[i].drvname);
+			strcat(str, "))");
+
+			eval_config(str);
+
+			free(str);
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
 /*
  * Opens a device, using the alrc expression deviceSpecifier to specify
  * attributes for the device.  Returns the device if successful, NULL
@@ -55,12 +205,8 @@ ALCdevice *alcOpenDevice( const ALchar *deviceSpecifier ) {
 	freq_sym  = rc_lookup( "sampling-rate" );
 	speakers  = rc_lookup( "speaker-num" );
 
-	/* get the attributes requested in the args */
-	if( deviceSpecifier ) {
-		Rcvar listOfLists = rc_eval( (const char *) deviceSpecifier );
-		/* define each attribute pair */
-		rc_foreach( listOfLists, rc_define_list );
-	}
+	if(set_config_from_name(deviceSpecifier))
+		return NULL;
 
 	/* redefine the stuff we saved */
 	if( direction != NULL ) {

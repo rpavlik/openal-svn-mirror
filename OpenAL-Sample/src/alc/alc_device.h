@@ -12,6 +12,8 @@
 #include <AL/al.h>
 #include "al_types.h"
 
+extern const ALCchar *_alcDeviceNames;
+
 /*
  * Sets the attributes for the device from the settings in the device. The
  * library is free to change the parameters associated with the device, but
