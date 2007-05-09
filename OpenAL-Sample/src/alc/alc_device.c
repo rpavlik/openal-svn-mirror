@@ -153,15 +153,20 @@ static int set_config_from_name(const ALCchar *name)
 	{
 		if(strcmp(name, DeviceList[i].description) == 0)
 		{
-			ALCchar *str = malloc(strlen("'((devices '(") +
-			                      strlen(DeviceList[i].drvname) +
-			                      strlen("))") + 1);
+			const ALCchar* str_pre = "'((devices '(";
+			const ALCchar* str_post = "))";
+			int str_pre_length = strlen(str_pre);
+			int drvname_length = strlen(DeviceList[i].drvname);
+			
+			ALCchar *str = malloc(str_pre_length +
+			                      drvname_length +
+			                      strlen(str_post) + 1);
 			if(!str)
 				return 1;
 
-			strcpy(str, "'((devices '(");
-			strcat(str, DeviceList[i].drvname);
-			strcat(str, "))");
+			strcpy(str, str_pre);
+			strcpy(str + str_pre_length, DeviceList[i].drvname);
+			strcpy(str + str_pre_length + drvname_length, str_post);
 
 			eval_config(str);
 

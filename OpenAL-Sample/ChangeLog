@@ -2,7 +2,8 @@
 
 	* src/alc/alc_device.c, src/alc/alc_device.h,
 	src/alc/alc_context.c: proper Device enumeration
-	(patch by Chris Robinson <chris.kcat@gmail.com>)
+	(patch by Chris Robinson <chris.kcat@gmail.com>);
+	minor clean-up and optimization
 
 2007-04-21  Prakash Punnoor <prakash@punnoor.de>
 
