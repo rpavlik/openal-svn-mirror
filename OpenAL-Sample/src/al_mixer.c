@@ -1094,6 +1094,7 @@ int async_mixer_iterate(UNUSED(void *dummy)) {
 				 * most likely we're just early.
 				 * Don't sweat it.
 				 */
+				_alUnlockMixerPause();
 				continue;
 			}
 
