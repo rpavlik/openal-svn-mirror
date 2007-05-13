@@ -19,93 +19,7 @@
 /*
  * alcErrorIndex is a simple index referring to an error.
  */
-static int alcErrorIndex = 0;
-
-/*
- * _alcErrorStr is a table of string representations of ALC errors.
- *
- * 0 -> ALC_NO_ERROR
- * 1 -> ALC_INVALID_DEVICE
- * 2 -> ALC_INVALID_CONTEXT
- * 3 -> ALC_INVALID_ENUM
- * 4 -> ALC_INVALID_VALUE
- */
-static const char *_alcErrorStr[] = {
-	"No alc error.",
-	"There is no accessible sound device/driver/server",
-	"The Context argument does not name a valid context",
-	"Illegal paramater",
-	"Invalid enum parameter value"
-};
-
-/*
- * ErrorNo2index( ALenum error_number )
- *
- * Returns a simple index from an alc error.
- */
-static int ErrorNo2index( ALenum error_number );
-
-/*
- * index2ErrorNo( int index )
- *
- * Returns an alc error from a simple index.
- */
-static int index2ErrorNo( int ind );
-
-/*
- * ErrorNo2index( ALenum error_number )
- *
- * Returns a simple index from an alc error.
- */
-static int ErrorNo2index( ALenum error_number ) {
-	switch( error_number ) {
-		case ALC_NO_ERROR:
-			return 0;
-		case ALC_INVALID_DEVICE:
-			return 1;
-		case ALC_INVALID_CONTEXT:
-			return 2;
-		case ALC_INVALID_ENUM:
-			return 3;
-		case ALC_INVALID_VALUE:
-			return 4;
-		default:
-			_alDebug( ALD_ERROR, __FILE__, __LINE__,
-				  "Unknown error condition: 0x%x", error_number );
-			return -1;
-	}
-}
-
-/*
- * index2ErrorNo( int index )
- *
- * Returns an alc error from a simple index.
- */
-static int index2ErrorNo(int ind) {
-	switch(ind) {
- 		case 0:
-		  return ALC_NO_ERROR;
-		  break;
-		case 1:
-		  return ALC_INVALID_DEVICE;
-		  break;
-		case 2:
-		  return ALC_INVALID_CONTEXT;
-		  break;
-		case 3:
-		  return ALC_INVALID_ENUM;
-		  break;
-		case 4:
-		  return ALC_INVALID_VALUE;
-		  break;
-		default:
-		  _alDebug(ALD_ERROR, __FILE__, __LINE__,
-		  	"Unknown error index: %d", ind);
-		  break;
-	}
-
-	return -1;
-}
+static ALCenum lastError = ALC_NO_ERROR;
 
 /**
  * Error support.
@@ -119,15 +33,12 @@ static int index2ErrorNo(int ind) {
  */
 ALCenum alcGetError( UNUSED(ALCdevice *dev) )
 {
-	ALCenum retval;
-
-	retval = index2ErrorNo( alcErrorIndex );
-
+	ALCenum retval = lastError;
 	/*
 	 * In deference to the new spec, GetError clears the error
 	 * after reading it.
 	 */
-	alcErrorIndex = 0;
+	lastError = ALC_NO_ERROR;
 
 	return retval;
 }
@@ -138,62 +49,8 @@ ALCenum alcGetError( UNUSED(ALCdevice *dev) )
  * Sets the alc error, if unset.
  */
 void _alcSetError( ALenum param ) {
-	int setval;
-
-	setval = ErrorNo2index( param );
-	if(setval == -1) {
-		/* invalid param*/
-		return;
+	if( lastError == ALC_NO_ERROR ) {
+		/* Only set error if no previous error has been recorded. */
+		lastError = param;
 	}
-
-	if( alcErrorIndex == 0 ) {
-		/*
-		 * Only set error if no previous error has been recorded.
-		 */
-
-		alcErrorIndex = setval;
-	}
-
-	return;
-}
-
-/*
- * _alcGetErrorString( ALenum param )
- *
- * This function returns the string corresponding to the
- * error in question.  It doesn't validate that the passed
- * param, so calling functions should ensure that _alcIsError(param)
- * return AL_TRUE before passing it to this function.
- */
-const ALubyte *_alcGetErrorString(ALenum param) {
-	int offset;
-
-	offset = ErrorNo2index( param );
-
-	if(offset >= 0) {
-		return (const ALubyte *) _alcErrorStr[ offset ];
-	}
-
-	return NULL;
-}
-
-/*
- * alcIsError( ALenum param )
- *
- * Returns AL_TRUE if param is an alc error, AL_FALSE otherwise.
- */
-ALboolean alcIsError( ALenum param ) {
-	switch( param ) {
-		case ALC_NO_ERROR:
-		case ALC_INVALID_DEVICE:
-		case ALC_INVALID_CONTEXT:
-		case ALC_INVALID_ENUM:
-		case ALC_INVALID_VALUE:
-			return AL_TRUE;
-			break;
-		default:
-			break;
-	}
-
-	return AL_FALSE;
 }

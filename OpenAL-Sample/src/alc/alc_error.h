@@ -11,21 +11,7 @@
 #include "al_siteconfig.h"
 #include <AL/alc.h>
 
-/*
- * Returns AL_TRUE if param specifies a valid alc error, AL_FALSE otherwise.
- */
-ALboolean alcIsError( ALCenum param );
-
-/*
- * Sets the context-independant error to param, if param is a valid context
- * error.
- */
+/* Sets the context-independant error to param */
 void _alcSetError( ALCenum param );
-
-/*
- * Returns a const ALubyte * string giving a readable representation of the
- * error param, or NULL if param is not an alc error.
- */
-const ALubyte *_alcGetErrorString( ALCenum param );
 
 #endif /* not AL_ALC_ALC_ERROR_H_ */

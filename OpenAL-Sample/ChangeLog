@@ -5,6 +5,10 @@
 	
 	* src/al_mixer.c: unlock mixer_pause mutex when nothing
 	converted (patch by Chris Robinson <chris.kcat@gmail.com>)
+	
+	* src/alc/alc_error.h, src/alc/alc_error.c: simplify ALC
+	error handling (patch by Chris Robinson
+	<chris.kcat@gmail.com>)
 
 2007-05-09  Prakash Punnoor <prakash@punnoor.de>
 
