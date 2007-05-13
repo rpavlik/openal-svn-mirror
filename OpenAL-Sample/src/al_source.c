@@ -412,6 +412,79 @@ void alSourcei( ALuint sid, ALenum param, ALint i1 )
 }
 
 /*
+ * alSource3i( ALuint sid, ALenum param, ALint i1, ALint i2, ALint i3 )
+ *
+ * Sets a 3 int parameter for a source.
+ *
+ * If sid does not name a valid source, AL_INVALID_NAME.
+ * If param does not specify a source attribute, AL_INVALID_ENUM.
+ * If i1, i2, or i3 is out of range for the attribute, AL_INVALID_VALUE.
+ *
+ */
+void alSource3i( ALuint sid, ALenum param, ALint i1, ALint i2, ALint i3 )
+{
+    ALint iv[3];
+
+    iv[0] = i1;
+    iv[1] = i2;
+    iv[2] = i3;
+
+    alSourceiv( sid, param, iv );
+}
+
+
+/*
+ * alSourceiv( ALuint sid, ALenum param, ALint iv )
+ *
+ * Sets an int vector parameter for a source.
+ *
+ * If sid does not name a valid source, AL_INVALID_NAME.
+ * If param does not specify a source attribute, AL_INVALID_ENUM.
+ * If any member of iv is out of range for the attribute, AL_INVALID_VALUE.
+ *
+ */
+void alSourceiv( ALuint sid, ALenum param, const ALint *iv1 )
+{
+    /*
+     * If param refers to a integer attribute, delegate it to alSourcei.
+     * If it refers to a float attribute, delegate it to alSourcef.
+     */
+    switch( param ) {
+        case AL_BUFFER:
+        case AL_LOOPING:
+        case AL_SOURCE_RELATIVE:
+            alSourcei( sid, param, iv1[0] );
+            return;
+        case AL_CONE_INNER_ANGLE:
+        case AL_CONE_OUTER_ANGLE:
+        case AL_CONE_OUTER_GAIN:
+        case AL_REFERENCE_DISTANCE:
+        case AL_ROLLOFF_FACTOR:
+        case AL_MAX_DISTANCE:
+            {
+                ALfloat ftemp = (ALfloat)iv1[0];
+                alSourcef( sid, param, ftemp );
+                return;
+            }
+        case AL_POSITION:
+        case AL_VELOCITY:
+        case AL_DIRECTION:
+            {
+                ALfloat ftemp[3] = { (ALfloat)iv1[0], (ALfloat)iv1[1],
+                                     (ALfloat)iv1[2] };
+                alSourcefv( sid, param, ftemp );
+                return;
+            }
+        default:
+            _alcDCLockContext();
+            _alDCSetError( AL_INVALID_ENUM );
+            _alcDCUnlockContext();
+            return;
+    }
+}
+
+
+/*
  * alSourcef( ALuint sid, ALenum param, ALfloat f1 )
  *
  * Sets an attribute for a source.
@@ -725,6 +798,39 @@ void alGetSourcei( ALuint sid, ALenum param, ALint *retref )
 	*retref = safety_first[0];
 
 	return;
+}
+
+/*
+ * alGetSource3i( ALuint sid, ALenum param,
+ *                ALint *value1, ALint *value2, ALint *value3)
+ *
+ * Retrieve the value of a (potentially) 3-tuple valued source attribute.
+ *
+ * If sid does not name a valid source, AL_INVALID_NAME.
+ * If param does not specify a source attribute, AL_INVALID_ENUM.
+ */
+void alGetSource3i( ALuint sid, ALenum param,
+            ALint *value1, ALint *value2, ALint *value3)
+{
+    ALint safety_first[6];
+
+    if(( value1 == NULL ) && ( value2 == NULL ) && ( value3 == NULL ))
+    {
+        /* silently ignore */
+        _alDebug( ALD_SOURCE, __FILE__, __LINE__,
+                  "alGetSource3i: value passed is NULL" );
+
+        return;
+    }
+
+    alGetSourceiv( sid, param, safety_first );
+
+    if(value1)
+        *value1 = safety_first[0];
+    if(value2)
+        *value2 = safety_first[1];
+    if(value3)
+        *value3 = safety_first[2];
 }
 
 /*

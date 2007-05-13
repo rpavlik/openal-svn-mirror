@@ -1,3 +1,8 @@
+2007-05-13  Prakash Punnoor <prakash@punnoor.de>
+
+	* src/al_source.c: implement some missing 1.1 functions
+	(patch by Chris Robinson <chris.kcat@gmail.com>)
+
 2007-05-09  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/alc/alc_device.c, src/alc/alc_device.h,
