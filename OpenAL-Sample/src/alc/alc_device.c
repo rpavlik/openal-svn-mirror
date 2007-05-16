@@ -79,13 +79,6 @@ static const struct {
 #define ESD_NAME
 #endif
 
-#ifdef USE_BACKEND_ARTS
-#define ARTS_NAME "Analog Realtime Synthesizer (aRts)\0"
-    { ARTS_NAME, "arts" },
-#else
-#define ARTS_NAME
-#endif
-
 #ifdef USE_BACKEND_SDL
 #define SDL_NAME "Simple DirectMedia Layer (SDL)\0"
     { SDL_NAME, "sdl" },
@@ -119,7 +112,6 @@ const ALCchar *_alcDeviceNames =
     SOLARIS_NAME
     WINDOWS_NAME
     ESD_NAME
-    ARTS_NAME
     SDL_NAME
     WAVE_NAME
     NULL_NAME

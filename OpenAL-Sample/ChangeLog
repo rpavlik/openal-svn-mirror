@@ -1,3 +1,10 @@
+2007-05-16  Prakash Punnoor <prakash@punnoor.de>
+
+	* configure.ac, CMakeLists.txt, src/alc/alc_device.c:
+	remove arts support
+	
+	* src/backends/alc_backend_arts.c: deleted
+
 2007-05-13  Prakash Punnoor <prakash@punnoor.de>
 
 	* src/al_source.c: implement some missing 1.1 functions
