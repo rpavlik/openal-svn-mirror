@@ -1,7 +1,8 @@
 2007-05-16  Prakash Punnoor <prakash@punnoor.de>
 
 	* configure.ac, CMakeLists.txt, src/alc/alc_device.c:
-	remove arts support
+	remove arts support (patch by Chris Robinson
+	<chris.kcat@gmail.com>)
 	
 	* src/backends/alc_backend_arts.c: deleted
 
