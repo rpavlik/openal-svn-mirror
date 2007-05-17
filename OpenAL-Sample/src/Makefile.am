@@ -80,7 +80,6 @@ libopenal_la_SOURCES +=			\
 	backends/alc_backend.c		\
 	backends/alc_backend.h		\
 	backends/alc_backend_alsa.c	\
-	backends/alc_backend_arts.c	\
 	backends/alc_backend_esd.c	\
 	backends/alc_backend_irix.c	\
 	backends/alc_backend_null.c	\

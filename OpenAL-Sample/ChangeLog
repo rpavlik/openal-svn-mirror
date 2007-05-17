@@ -1,3 +1,9 @@
+2007-05-17  Prakash Punnoor <prakash@punnoor.de>
+
+	* src/backends/alc_backend.c, src/Makefile.am:
+	remove last traces of arts (based on patch by
+	Chris Robinson <chris.kcat@gmail.com>)
+
 2007-05-16  Prakash Punnoor <prakash@punnoor.de>
 
 	* configure.ac, CMakeLists.txt, src/alc/alc_device.c:

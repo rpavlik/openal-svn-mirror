@@ -67,9 +67,6 @@ struct ALC_BackendNameAndOpen backends[] = {
 #ifdef USE_BACKEND_ALSA
   {"alsa", alcBackendOpenALSA_},
 #endif
-#ifdef USE_BACKEND_ARTS
-  {"arts", alcBackendOpenARts_},
-#endif
 #ifdef USE_BACKEND_DMEDIA
   {"dmedia", alcBackendOpenDMedia_},
 #endif
