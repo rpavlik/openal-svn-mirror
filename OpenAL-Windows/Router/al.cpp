@@ -1,4 +1,4 @@
-/** 
+/**
  * OpenAL cross platform audio library
  * Copyright (C) 1999-2003 by authors.
  * This library is free software; you can redistribute it and/or
