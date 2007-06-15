@@ -1272,11 +1272,6 @@ ALCAPI ALCboolean ALCAPIENTRY alcCloseDevice(ALCdevice* device)
         return ALC_FALSE;
     }
 
-    if(IsBadReadPtr(device, sizeof(ALCdevice)))
-    {
-        return ALC_FALSE;
-    }
-
 	if (device == g_CaptureDevice)
 		return g_CaptureDevice->AlcApi.alcCloseDevice(g_CaptureDevice->CaptureDevice);
 
@@ -1378,18 +1373,6 @@ ALCAPI ALCcontext* ALCAPIENTRY alcCreateContext(ALCdevice* device, const ALint* 
 	ALCcontext* context = 0;
 
     if(!device)
-    {
-        LastError = ALC_INVALID_DEVICE;
-        return 0;
-    }
-
-    if(IsBadReadPtr(device, sizeof(ALCdevice)))
-    {
-        LastError = ALC_INVALID_DEVICE;
-        return 0;
-    }
-
-    if(IsBadWritePtr(device, sizeof(ALCdevice)))
     {
         LastError = ALC_INVALID_DEVICE;
         return 0;
@@ -1549,12 +1532,6 @@ ALCAPI ALenum ALCAPIENTRY alcGetEnumValue(ALCdevice* device, const ALCchar* enam
 
     if(device)
     {
-        if(IsBadReadPtr(device, sizeof(ALCdevice)))
-        {
-            LastError = ALC_INVALID_DEVICE;
-            return 0;
-        }
-
 		if (device == g_CaptureDevice)
 			return g_CaptureDevice->AlcApi.alcGetEnumValue(g_CaptureDevice->CaptureDevice, ename);
 
@@ -1585,12 +1562,6 @@ ALCAPI ALenum ALCAPIENTRY alcGetError(ALCdevice* device)
         errorCode = LastError;
         LastError = ALC_NO_ERROR;
         return errorCode;
-    }
-
-    if(IsBadReadPtr(device, sizeof(ALCdevice)))
-    {
-        LastError = ALC_INVALID_DEVICE;
-        return 0;
     }
 
     //
@@ -1663,12 +1634,6 @@ ALCAPI ALvoid ALCAPIENTRY alcGetIntegerv(ALCdevice* device, ALenum param, ALsize
 
 	if(device)
     {
-        if(IsBadReadPtr(device, sizeof(ALCdevice)))
-        {
-            LastError = ALC_INVALID_DEVICE;
-            return;
-        }
-
 		if (device == g_CaptureDevice)
 		{
 			g_CaptureDevice->AlcApi.alcGetIntegerv(g_CaptureDevice->CaptureDevice, param, size, data);
@@ -1683,7 +1648,7 @@ ALCAPI ALvoid ALCAPIENTRY alcGetIntegerv(ALCdevice* device, ALenum param, ALsize
     {
         case ALC_MAJOR_VERSION:
         {
-            if(size < sizeof(ALint) || IsBadReadPtr(data, sizeof(ALint)))
+            if((size < sizeof(ALint)) || (data == 0))
             {
                 LastError = ALC_INVALID;
                 return;
@@ -1695,7 +1660,7 @@ ALCAPI ALvoid ALCAPIENTRY alcGetIntegerv(ALCdevice* device, ALenum param, ALsize
 
         case ALC_MINOR_VERSION:
         {
-            if(size < sizeof(ALint) || IsBadReadPtr(data, sizeof(ALint)))
+            if((size < sizeof(ALint)) || (data == 0))
             {
                 LastError = ALC_INVALID;
                 return;
@@ -1739,12 +1704,6 @@ ALCAPI ALvoid* ALCAPIENTRY alcGetProcAddress(ALCdevice* device, const ALCchar* f
 
     if(device)
     {
-        if(IsBadReadPtr(device, sizeof(ALCdevice)))
-        {
-            LastError = ALC_INVALID_DEVICE;
-            return 0;
-        }
-
 		if (device == g_CaptureDevice)
 			return g_CaptureDevice->AlcApi.alcGetProcAddress(g_CaptureDevice->CaptureDevice, fname);
 
@@ -1785,12 +1744,6 @@ ALCAPI ALboolean ALCAPIENTRY alcIsExtensionPresent(ALCdevice* device, const ALCc
     //
     if(device)
     {
-        if(IsBadReadPtr(device, sizeof(ALCdevice)))
-        {
-            LastError = ALC_INVALID_DEVICE;
-            return 0;
-        }
-
 		if (device == g_CaptureDevice)
 			return g_CaptureDevice->AlcApi.alcIsExtensionPresent(g_CaptureDevice->CaptureDevice, ename);
 
