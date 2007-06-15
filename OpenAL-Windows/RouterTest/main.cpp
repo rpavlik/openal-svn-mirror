@@ -27,7 +27,19 @@ int main(int argc, char* argv[])
 		{
 			while (szNames && *szNames)
 			{
-				printf("%s\n", szNames);
+				printf("%s ", szNames);
+				// Try opening each device
+				ALCdevice *pDevice = alcOpenDevice(szNames);
+				if (pDevice)
+				{
+					printf("- Opened Successfully\n");
+					alcCloseDevice(pDevice);
+				}
+				else
+				{
+					printf("- FAILED to open\n");
+					lErrorCount++;
+				}
 				szNames += (strlen(szNames) + 1);
 			}
 		}
@@ -83,7 +95,19 @@ int main(int argc, char* argv[])
 		{
 			while (szNames && *szNames)
 			{
-				printf("%s\n", szNames);
+				printf("%s ", szNames);
+				// Try opening each device
+				ALCdevice *pDevice = alcCaptureOpenDevice(szNames, 11025, AL_FORMAT_STEREO16, 8192);
+				if (pDevice)
+				{
+					printf("- Opened Successfully\n");
+					alcCaptureCloseDevice(pDevice);
+				}
+				else
+				{
+					printf("- FAILED to open\n");
+					lErrorCount++;
+				}
 				szNames += (strlen(szNames) + 1);
 			}
 		}
@@ -139,7 +163,21 @@ int main(int argc, char* argv[])
 		{
 			while (szNames && *szNames)
 			{
-				printf("%s\n", szNames);
+				printf("%s ", szNames);
+
+				// Try opening each device
+				ALCdevice *pDevice = alcOpenDevice(szNames);
+				if (pDevice)
+				{
+					printf("- Opened Successfully\n");
+					alcCloseDevice(pDevice);
+				}
+				else
+				{
+					printf("- FAILED to open\n");
+					lErrorCount++;
+				}
+
 				szNames += (strlen(szNames) + 1);
 			}
 		}
