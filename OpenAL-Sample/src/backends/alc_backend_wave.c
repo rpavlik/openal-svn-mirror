@@ -51,6 +51,7 @@ alcBackendOpenWAVE_ (UNUSED (ALC_OpenMode mode),
 
 struct waveData
 {
+  char fileName[32];
   FILE *fh;
   ALuint length;
   int channels;
@@ -152,6 +153,12 @@ closeWave (struct ALC_BackendPrivateData *privateData)
   /* ToDo: Check for errors */
   writeWAVEHeader (wd);
   fclose (wd->fh);
+
+  if(wd->length == 0)
+    {
+      remove(wd->fileName);
+    }
+
   free (wd);
 }
 
@@ -341,7 +348,7 @@ alcBackendOpenWAVE_ (ALC_OpenMode mode, ALC_BackendOps **ops,
   do
     {
       snprintf (fileName, sizeof (fileName), "openal-%d.wav", sequence++);
-      fd = open (fileName, O_WRONLY | O_CREAT | O_EXCL | O_BINARY, S_IRUSR);
+      fd = open (fileName, O_WRONLY | O_CREAT | O_EXCL | O_BINARY, S_IRUSR | S_IWUSR);
     }
   while ((fd == -1) && (errno == EEXIST));
 
@@ -370,6 +377,7 @@ alcBackendOpenWAVE_ (ALC_OpenMode mode, ALC_BackendOps **ops,
       return;
     }
 
+  strncpy(wd->fileName, fileName, sizeof(wd->fileName));
   wd->fh = fh;
   wd->length = 0;
   wd->channels = 0;
