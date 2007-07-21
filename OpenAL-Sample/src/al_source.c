@@ -250,6 +250,65 @@ void alGenSources( ALsizei n, ALuint *buffer ) {
 
 
 /*
+ * GetSourceByteOffset(AL_source *src)
+ *
+ * Traverses the source's buffer queue, getting the number of bytes from the
+ * beginning of the queue to soundpos of the current read_index.
+ *
+ * The returned offset is in bytes-per-channel.
+ *
+ */
+static ALuint GetSourceByteOffset(AL_source *Src)
+{
+    ALuint CurPos = 0;
+    int idx;
+
+    _alLockBuffer();
+    for(idx = 0;idx < Src->bid_queue.read_index;idx++) {
+        AL_buffer *Buf = _alGetBuffer(Src->bid_queue.queue[idx]);
+        CurPos += Buf->size;
+    }
+    CurPos += Src->srcParams.soundpos;
+
+    _alUnlockBuffer();
+    return CurPos;
+}
+
+/*
+ * SetSourceByteOffset(AL_source *src)
+ *
+ * Traverses the buffer queue setting the right indices amd sourcepos for the
+ * given bytes-per-channel offset.
+ *
+ */
+static void SetSourceByteOffset(AL_source *Src, ALuint Offset)
+{
+    int idx;
+
+    _alLockBuffer();
+    for(idx = 0;idx < Src->bid_queue.size;idx++) {
+        AL_buffer *Buf = _alGetBuffer(Src->bid_queue.queue[idx]);
+        if(Buf && Offset < Buf->size)
+            break;
+        /* If bid 0 was in the queue, we'll get a NULL buffer pointer. This is
+         * fine and simply means the end of the list (and also means the offset
+         * is out of range) */
+        if(!Buf || idx+1 == Src->bid_queue.size) {
+            _alDCSetError(AL_INVALID_VALUE);
+
+            _alUnlockBuffer();
+            return;
+        }
+        Offset -= Buf->size;
+    }
+
+    Src->bid_queue.read_index = idx;
+    Src->srcParams.soundpos = Offset;
+    _alUnlockBuffer();
+}
+
+
+/*
  * alSourcei( ALuint sid, ALenum param, ALint i1 )
  *
  * Sets an attribute for a source.
@@ -277,6 +336,8 @@ void alSourcei( ALuint sid, ALenum param, ALint i1 )
 	 * INVALID_OPERATION.  This is probably a spec violation.
 	 */
 	switch( param ) {
+		case AL_BYTE_OFFSET:
+		case AL_SAMPLE_OFFSET:
 		case AL_BUFFER:
 		case AL_LOOPING:
 		case AL_SOURCE_RELATIVE:
@@ -295,6 +356,7 @@ void alSourcei( ALuint sid, ALenum param, ALint i1 )
 		case AL_REFERENCE_DISTANCE:
 		case AL_ROLLOFF_FACTOR:
 		case AL_MAX_DISTANCE:
+		case AL_SEC_OFFSET:
 			temp = i1;
 
 			alSourcef( sid, param, temp );
@@ -336,6 +398,34 @@ void alSourcei( ALuint sid, ALenum param, ALint i1 )
 	 * set error if that's the case.
 	 */
 	switch( param ) {
+        case AL_BYTE_OFFSET:
+        case AL_SAMPLE_OFFSET:
+            /* All buffers in the queue need the same format, so we just use
+             * the first buffer */
+            if(src->bid_queue.size > 0 && src->bid_queue.queue[0] > 0) {
+                AL_buffer *buf = _alGetBuffer(src->bid_queue.queue[0]);
+
+                if(param == AL_SAMPLE_OFFSET) {
+                    /* Convert the user-specified frame offset to the internal
+                     * representation (bytes-per-channel) */
+                    i1 *= _alGetBytesFromFormat(buf->format);
+                }
+                else {
+                    /* Byte offsets are in relation to the AL_SIZE setting,
+                     * which for uncompressed formats is bytes per channel */
+                    i1 /= _alGetChannelsFromFormat(buf->format);
+                }
+
+                /* Assume in-range for positive values. SetSourceByteOffset
+                 * will set an error if needed */
+                if(i1 >= 0)
+                    inrange = AL_TRUE;
+                else
+                    inrange = AL_FALSE;
+            }
+            else
+                inrange = AL_FALSE;
+            break;
 		case AL_LOOPING:
 		case AL_SOURCE_RELATIVE:
 			inrange = _alCheckRangeb( i1 );
@@ -369,6 +459,12 @@ void alSourcei( ALuint sid, ALenum param, ALint i1 )
 
 	switch(param)
 	{
+        case AL_BYTE_OFFSET:
+        case AL_SAMPLE_OFFSET:
+            /* The offset was previously converted to the internal bytes-per-
+             * channel offset, so just set it */
+            SetSourceByteOffset(src, i1);
+            break;
 		case AL_BUFFER:
 			switch( src->state )
 			{
@@ -453,6 +549,8 @@ void alSourceiv( ALuint sid, ALenum param, const ALint *iv1 )
         case AL_BUFFER:
         case AL_LOOPING:
         case AL_SOURCE_RELATIVE:
+        case AL_BYTE_OFFSET:
+        case AL_SAMPLE_OFFSET:
             alSourcei( sid, param, iv1[0] );
             return;
         case AL_CONE_INNER_ANGLE:
@@ -461,6 +559,7 @@ void alSourceiv( ALuint sid, ALenum param, const ALint *iv1 )
         case AL_REFERENCE_DISTANCE:
         case AL_ROLLOFF_FACTOR:
         case AL_MAX_DISTANCE:
+        case AL_SEC_OFFSET:
             {
                 ALfloat ftemp = (ALfloat)iv1[0];
                 alSourcef( sid, param, ftemp );
@@ -507,6 +606,8 @@ void alSourcef( ALuint sid, ALenum param, ALfloat f1 ) {
 		case AL_BUFFER:
 		case AL_LOOPING:
 		case AL_SOURCE_RELATIVE:
+		case AL_BYTE_OFFSET:
+		case AL_SAMPLE_OFFSET:
 			alSourcei( sid, param, (ALint) f1 );
 			return;
 		case AL_PITCH:
@@ -520,6 +621,7 @@ void alSourcef( ALuint sid, ALenum param, ALfloat f1 ) {
 		case AL_REFERENCE_DISTANCE:
 		case AL_ROLLOFF_FACTOR:
 		case AL_MAX_DISTANCE:
+		case AL_SEC_OFFSET:
 			alSourcefv( sid, param, &f1 );
 			return;
 		case AL_POSITION:
@@ -568,6 +670,7 @@ void alSource3f( ALuint sid, ALenum param,
  */
 void alSourcefv( ALuint sid, ALenum param, const ALfloat *fv1 )
 {
+	AL_buffer *buf;
 	AL_source *source;
 	ALboolean inrange = AL_TRUE;
 
@@ -579,6 +682,8 @@ void alSourcefv( ALuint sid, ALenum param, const ALfloat *fv1 )
 		case AL_BUFFER:
 		case AL_LOOPING:
 		case AL_SOURCE_RELATIVE:
+		case AL_BYTE_OFFSET:
+		case AL_SAMPLE_OFFSET:
 			alSourcei( sid, param, (ALint) fv1[0] );
 			return;
 		case AL_PITCH:
@@ -592,6 +697,7 @@ void alSourcefv( ALuint sid, ALenum param, const ALfloat *fv1 )
 		case AL_REFERENCE_DISTANCE:
 		case AL_ROLLOFF_FACTOR:
 		case AL_MAX_DISTANCE:
+		case AL_SEC_OFFSET:
 		case AL_POSITION:
 		case AL_VELOCITY:
 		case AL_DIRECTION:
@@ -651,6 +757,16 @@ void alSourcefv( ALuint sid, ALenum param, const ALfloat *fv1 )
 		case AL_ROLLOFF_FACTOR:
 		  inrange = _alCheckRangef( fv1[0], 0.0, FLT_MAX );
 		  break;
+        case AL_SEC_OFFSET:
+            if(source->bid_queue.size > 0 && source->bid_queue.queue[0] > 0) {
+                buf = _alGetBuffer(source->bid_queue.queue[0]);
+                inrange = _alCheckRangef(fv1[0], 0.0, buf->size /
+                                  (ALfloat)(_alGetBytesFromFormat(buf->format)*
+                                            buf->frequency));
+            }
+            else
+                inrange = AL_FALSE;
+            break;
 		case AL_POSITION:
 		case AL_DIRECTION:
 		  inrange = inrange && ( _alIsFinite( fv1[0] ) == AL_TRUE );
@@ -680,6 +796,10 @@ void alSourcefv( ALuint sid, ALenum param, const ALfloat *fv1 )
 	}
 
 	switch( param ) {
+        case AL_SEC_OFFSET:
+            SetSourceByteOffset(source, (fv1[0] * (ALfloat)buf->frequency) *
+                                        _alGetBytesFromFormat(buf->format));
+            break;
 		case AL_POSITION:
 		  source->position.isset = AL_TRUE;
 		  memcpy( &source->position.data, fv1, SIZEOFVECTOR );
@@ -861,6 +981,7 @@ void alGetSourceiv( ALuint sid, ALenum param, ALint *retref )
 		case AL_REFERENCE_DISTANCE:
 		case AL_ROLLOFF_FACTOR:
 		case AL_MAX_DISTANCE:
+		case AL_SEC_OFFSET:
 			/* float conversion */
 			do {
 				ALfloat ftemp = 0.0f;
@@ -1022,6 +1143,29 @@ void alGetSourceiv( ALuint sid, ALenum param, ALint *retref )
 		  }
 		  break;
 #endif
+        case AL_SAMPLE_OFFSET:
+        case AL_BYTE_OFFSET:
+            if(src->bid_queue.size > 0 && src->bid_queue.queue[0] > 0) {
+                AL_buffer *buf = _alGetBuffer(src->bid_queue.queue[0]);
+                ALuint pos = GetSourceByteOffset(src);
+
+                if(param == AL_SAMPLE_OFFSET) {
+                    pos /= _alGetBytesFromFormat(buf->format);
+                }
+                else {
+                    /* NOTE: The value returned is in relation to the AL_SIZE
+                     * setting, which is in the stored-format scale */
+                    pos *= _alGetChannelsFromFormat(buf->format);
+                }
+
+                *retref = pos;
+            }
+            else {
+                /* We need a buffer to get the offset, but this source has no
+                 * queued buffers. What to do? */
+                _alDCSetError( AL_INVALID_OPERATION );
+            }
+            break;
 		case AL_SOURCE_STATE:
 		  *retref = src->state;
 		  break;
@@ -1160,6 +1304,7 @@ void alGetSourcefv( ALuint sid, ALenum param, ALfloat *values ) {
 		case AL_REFERENCE_DISTANCE:
 		case AL_MAX_DISTANCE:
 		case AL_ROLLOFF_FACTOR:
+		case AL_SEC_OFFSET:
 			/* scalar param, only copy 1 value */
 			numvalues = 1;
 			break;
@@ -1170,6 +1315,8 @@ void alGetSourcefv( ALuint sid, ALenum param, ALfloat *values ) {
 #ifdef AL_SUPPORT_BYTE_LOKI_SOURCE_ATTR_
 		case AL_BYTE_LOKI:
 #endif
+		case AL_BYTE_OFFSET:
+		case AL_SAMPLE_OFFSET:
 		case AL_SOURCE_STATE:
 		case AL_BUFFER:
 			/* conversion to integer */
@@ -1240,6 +1387,19 @@ void alGetSourcefv( ALuint sid, ALenum param, ALfloat *values ) {
 	 * set the default, or set error.
 	 */
 	switch( param ) {
+        case AL_SEC_OFFSET:
+            if(src->bid_queue.queue && src->bid_queue.queue[0] > 0) {
+                AL_buffer *buf = _alGetBuffer(src->bid_queue.queue[0]);
+                ALuint pos = GetSourceByteOffset(src);
+                *values = pos / (ALfloat)(_alGetBytesFromFormat(buf->format) *
+                                          buf->frequency);
+            }
+            else {
+                /* We need a buffer format to get the bytes per second, but
+                 * this source has no queued buffers. What to do? */
+                _alDCSetError( AL_INVALID_OPERATION );
+            }
+            break;
 		/* scalars */
 		case AL_GAIN:
 		case AL_GAIN_LINEAR_LOKI:

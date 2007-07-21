@@ -132,7 +132,7 @@ typedef struct {
 	 */
 	ALuint frequency;
 	ALuint size;
-	ALshort format;
+	ALenum format;
 
 	ALuint bid;         /* unique identifier */
 

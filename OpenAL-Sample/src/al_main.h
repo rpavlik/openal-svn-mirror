@@ -92,6 +92,12 @@ ALubyte  _alGetChannelsFromFormat(ALenum alformat);
 ALbyte _alGetBitsFromFormat( ALenum format );
 
 /*
+ * Returns the number of bytes per sample for the given format.
+ */
+#define _alGetBytesFromFormat(fmt) \
+	(_alGetBitsFromFormat((fmt))/8)
+
+/*
  * Returns the openal format that is identical to format, but with sufficient
  * channel width to accomedate new_channel_num channels.
  */
