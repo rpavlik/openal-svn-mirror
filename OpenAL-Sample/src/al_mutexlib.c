@@ -13,15 +13,28 @@
 
 MutexID _alCreateMutex( void )
 {
-	MutexID mutex = ( MutexID ) malloc( sizeof( *mutex ) );
-	if( mutex == NULL ) {
+	pthread_mutexattr_t attrib;
+	MutexID mutex = (MutexID)malloc(sizeof(*mutex));
+	if(mutex == NULL)
+		return NULL;
+
+	if(pthread_mutexattr_init(&attrib) != 0) {
+		free(mutex);
 		return NULL;
 	}
-	if( pthread_mutex_init( mutex, NULL ) != 0 ) {
-		free( mutex );
-		return NULL;
-	}
+
+	if(pthread_mutexattr_settype(&attrib, PTHREAD_MUTEX_RECURSIVE) != 0)
+		goto error;
+	if(pthread_mutex_init(mutex, &attrib) != 0)
+		goto error;
+
+	pthread_mutexattr_destroy(&attrib);
 	return mutex;
+
+error:
+	pthread_mutexattr_destroy(&attrib);
+	free(mutex);
+	return NULL;
 }
 
 void _alDestroyMutex( MutexID mutex )
