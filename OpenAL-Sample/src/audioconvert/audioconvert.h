@@ -16,13 +16,15 @@ typedef struct _acAudioCVT {
 	int needed;			/* Set to 1 if conversion possible */
 	ALushort src_format;		/* Source audio format */
 	ALushort dst_format;		/* Target audio format */
+	ALushort src_channels;		/* Source channel count */
+	ALushort dst_channels;		/* Target channel count */
 	double rate_incr;		/* Rate conversion increment */
 	void   *buf;			/* Buffer to hold entire audio data */
 	int    len;			/* Length of original audio buffer */
 	int    len_cvt;			/* Length of converted audio buffer */
 	int    len_mult;		/* buffer must be len*len_mult big */
 	double len_ratio; 	/* Given len, final size is len*len_ratio */
-	void (*filters[10])(struct _acAudioCVT *cvt, ALushort format);
+	void (*filters[10])(struct _acAudioCVT *cvt, ALushort format, ALushort channels);
 	int filter_index;		/* Current audio conversion function */
 } acAudioCVT;
 
@@ -47,18 +49,18 @@ typedef struct _acAudioCVT {
 #define acFormatBits(fmt)           (fmt & 0xff)
 
 /* bit changes */
-void acConvert16MSB(acAudioCVT *cvt, ALushort format);
-void acConvert16LSB(acAudioCVT *cvt, ALushort format);
-void acConvert8(acAudioCVT *cvt, ALushort format);
+void acConvert16MSB(acAudioCVT *cvt, ALushort format, ALushort channels);
+void acConvert16LSB(acAudioCVT *cvt, ALushort format, ALushort channels);
+void acConvert8(acAudioCVT *cvt, ALushort format, ALushort channels);
 
 /* frequency changes */
-void acFreqMUL2(acAudioCVT *cvt, ALushort format);
-void acFreqDIV2(acAudioCVT *cvt, ALushort format);
-void acFreqSLOW(acAudioCVT *cvt, ALushort format);
+void acFreqMUL2(acAudioCVT *cvt, ALushort format, ALushort channels);
+void acFreqDIV2(acAudioCVT *cvt, ALushort format, ALushort channels);
+void acFreqSLOW(acAudioCVT *cvt, ALushort format, ALushort channels);
 
 /* channel changes */
-void acConvertStereo(acAudioCVT *cvt, ALushort format);
-void acConvertMono(acAudioCVT *cvt, ALushort format);
+void acConvertStereo(acAudioCVT *cvt, ALushort format, ALushort channels);
+void acConvertMono(acAudioCVT *cvt, ALushort format, ALushort channels);
 
 /* misc */
 int   ac_is_wave(void *data);

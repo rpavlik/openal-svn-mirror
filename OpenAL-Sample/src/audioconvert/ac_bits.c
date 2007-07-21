@@ -13,7 +13,8 @@
 #include "audioconvert/audioconvert.h"
 
 /* Convert 8-bit to 16-bit - LSB */
-void acConvert16LSB( acAudioCVT *cvt, ALushort format ) {
+void acConvert16LSB(acAudioCVT *cvt, ALushort format, ALushort channels)
+{
 	int i;
 	ALubyte *src, *dst;
 
@@ -30,12 +31,13 @@ void acConvert16LSB( acAudioCVT *cvt, ALushort format ) {
 	cvt->len_cvt *= 2;
 
 	if ( cvt->filters[++cvt->filter_index] ) {
-		cvt->filters[cvt->filter_index](cvt, format);
+		cvt->filters[cvt->filter_index](cvt, format, channels);
 	}
 }
 
 /* Convert 8-bit to 16-bit - MSB */
-void acConvert16MSB(acAudioCVT *cvt, ALushort format) {
+void acConvert16MSB(acAudioCVT *cvt, ALushort format, ALushort channels)
+{
 	int i;
 	ALubyte *src, *dst;
 
@@ -52,12 +54,13 @@ void acConvert16MSB(acAudioCVT *cvt, ALushort format) {
 	cvt->len_cvt *= 2;
 
 	if ( cvt->filters[++cvt->filter_index] ) {
-		cvt->filters[cvt->filter_index](cvt, format);
+		cvt->filters[cvt->filter_index](cvt, format, channels);
 	}
 }
 
 /* Convert 16-bit to 8-bit */
-void acConvert8(acAudioCVT *cvt, ALushort format) {
+void acConvert8(acAudioCVT *cvt, ALushort format, ALushort channels)
+{
 	int i;
 	ALubyte *src, *dst;
 
@@ -78,6 +81,6 @@ void acConvert8(acAudioCVT *cvt, ALushort format) {
 	cvt->len_cvt /= 2;
 
 	if ( cvt->filters[++cvt->filter_index] ) {
-		cvt->filters[cvt->filter_index](cvt, format);
+		cvt->filters[cvt->filter_index](cvt, format, channels);
 	}
 }

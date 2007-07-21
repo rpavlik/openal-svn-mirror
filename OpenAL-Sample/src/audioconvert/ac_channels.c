@@ -14,7 +14,8 @@
 #include "audioconvert/audioconvert.h"
 
 /* Duplicate a mono channel to both stereo channels */
-void acConvertStereo(acAudioCVT *cvt, ALushort format) {
+void acConvertStereo(acAudioCVT *cvt, ALushort format, ALushort channels)
+{
 	int i;
 
 	if((format & 0xFF) == 16) {
@@ -44,15 +45,17 @@ void acConvertStereo(acAudioCVT *cvt, ALushort format) {
 		}
 	}
 
+	channels *= 2;
 	cvt->len_cvt *= 2;
 
 	if ( cvt->filters[++cvt->filter_index] ) {
-		cvt->filters[cvt->filter_index](cvt, format);
+		cvt->filters[cvt->filter_index](cvt, format, channels);
 	}
 }
 
 /* Effectively mix right and left channels into a single channel */
-void acConvertMono(acAudioCVT *cvt, ALushort format) {
+void acConvertMono(acAudioCVT *cvt, ALushort format, ALushort channels)
+{
 	int i;
 	ALint sample;
 
@@ -194,9 +197,11 @@ void acConvertMono(acAudioCVT *cvt, ALushort format) {
 		}
 		break;
 	}
+
+	channels /= 2;
 	cvt->len_cvt /= 2;
 
 	if ( cvt->filters[++cvt->filter_index] ) {
-		cvt->filters[cvt->filter_index](cvt, format);
+		cvt->filters[cvt->filter_index](cvt, format, channels);
 	}
 }

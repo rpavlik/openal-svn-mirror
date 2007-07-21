@@ -21,11 +21,12 @@
 
 #include "audioconvert/audioconvert.h"
 
-void acConvertSign(acAudioCVT *cvt, ALushort format);
-void acConvertEndian(acAudioCVT *cvt, ALushort format);
+void acConvertSign(acAudioCVT *cvt, ALushort format, ALushort channels);
+void acConvertEndian(acAudioCVT *cvt, ALushort format, ALushort channels);
 
 /* Toggle signed/unsigned */
-void acConvertSign(acAudioCVT *cvt, ALushort format) {
+void acConvertSign(acAudioCVT *cvt, ALushort format, ALushort channels)
+{
 	int i;
 	ALubyte *data;
 
@@ -48,12 +49,13 @@ void acConvertSign(acAudioCVT *cvt, ALushort format) {
 	format = (format ^ 0x8000);
 
 	if (cvt->filters[++cvt->filter_index] ) {
-		cvt->filters[cvt->filter_index](cvt, format);
+		cvt->filters[cvt->filter_index](cvt, format, channels);
 	}
 }
 
 /* Toggle endianness */
-void acConvertEndian(acAudioCVT *cvt, ALushort format) {
+void acConvertEndian(acAudioCVT *cvt, ALushort format, ALushort channels)
+{
 	int i;
 	ALubyte *data, tmp;
 
@@ -68,7 +70,7 @@ void acConvertEndian(acAudioCVT *cvt, ALushort format) {
 	format = (format ^ 0x1000);
 
 	if (cvt->filters[++cvt->filter_index] ) {
-		cvt->filters[cvt->filter_index](cvt, format);
+		cvt->filters[cvt->filter_index](cvt, format, channels);
 	}
 }
 
@@ -88,6 +90,10 @@ int acBuildAudioCVT(acAudioCVT *cvt,
 	cvt->filters[0]   = NULL;
 	cvt->len_mult     = 1;
 	cvt->len_ratio    = 1.0;
+	cvt->src_format   = src_format;
+	cvt->dst_format   = dst_format;
+	cvt->src_channels = src_channels;
+	cvt->dst_channels = dst_channels;
 
 	/* First filter:  Endian conversion from src to dst */
 	if((( src_format & 0x1000) != (dst_format & 0x1000)) &&
@@ -159,7 +165,7 @@ int acBuildAudioCVT(acAudioCVT *cvt,
 		ALuint hi_rate, lo_rate;
 		int len_mult;
 		double len_ratio;
-		void (*rate_cvt)(acAudioCVT *, ALushort );
+		void (*rate_cvt)(acAudioCVT *, ALushort, ALushort);
 
 		assert(src_rate != 0);
 
@@ -210,11 +216,9 @@ int acBuildAudioCVT(acAudioCVT *cvt,
 
 	/* Set up the filter information */
 	if(cvt->filter_index != 0) {
-		cvt->needed     = 1;
-		cvt->len        = 0;
-		cvt->buf        = NULL;
-		cvt->src_format = src_format;
-		cvt->dst_format = dst_format;
+		cvt->needed = 1;
+		cvt->len    = 0;
+		cvt->buf    = NULL;
 		cvt->filters[cvt->filter_index] = NULL;
 	}
 
@@ -241,7 +245,7 @@ int acConvertAudio(acAudioCVT *cvt) {
 
 	/* Set up the conversion and go! */
 	cvt->filter_index = 0;
-	cvt->filters[0](cvt, cvt->src_format);
+	cvt->filters[0](cvt, cvt->src_format, cvt->src_channels);
 
 	return 0;
 }
