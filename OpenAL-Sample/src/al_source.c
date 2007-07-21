@@ -412,8 +412,10 @@ void alSourcei( ALuint sid, ALenum param, ALint i1 )
                 }
                 else {
                     /* Byte offsets are in relation to the AL_SIZE setting,
-                     * which for uncompressed formats is bytes per channel */
+                     * which for uncompressed formats is total bytes */
                     i1 /= _alGetChannelsFromFormat(buf->format);
+                    /* Make sure the value is sample-aligned */
+                    i1 -= i1%_alGetBytesFromFormat(buf->format);
                 }
 
                 /* Assume in-range for positive values. SetSourceByteOffset
@@ -797,7 +799,7 @@ void alSourcefv( ALuint sid, ALenum param, const ALfloat *fv1 )
 
 	switch( param ) {
         case AL_SEC_OFFSET:
-            SetSourceByteOffset(source, (fv1[0] * (ALfloat)buf->frequency) *
+            SetSourceByteOffset(source, (ALuint)(fv1[0]*(ALfloat)buf->frequency) *
                                         _alGetBytesFromFormat(buf->format));
             break;
 		case AL_POSITION:
@@ -1388,7 +1390,7 @@ void alGetSourcefv( ALuint sid, ALenum param, ALfloat *values ) {
 	 */
 	switch( param ) {
         case AL_SEC_OFFSET:
-            if(src->bid_queue.queue && src->bid_queue.queue[0] > 0) {
+            if(src->bid_queue.size > 0 && src->bid_queue.queue[0] > 0) {
                 AL_buffer *buf = _alGetBuffer(src->bid_queue.queue[0]);
                 ALuint pos = GetSourceByteOffset(src);
                 *values = pos / (ALfloat)(_alGetBytesFromFormat(buf->format) *
