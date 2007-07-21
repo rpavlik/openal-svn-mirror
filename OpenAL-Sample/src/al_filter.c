@@ -1252,7 +1252,6 @@ void alf_tpitch( UNUSED(ALuint cid),
 	ALuint i;
 	int *offsets;        /* pointer to set of offsets in lookup table */
 	float *fractionals;  /* pointer to set of fractionals in lookup table */
-	int bufchans;
 	ALfloat pitch;
 
 	pitch = src->mixrate;
@@ -1264,13 +1263,6 @@ void alf_tpitch( UNUSED(ALuint cid),
 		return;
 	}
 
-	bufchans = _alGetChannelsFromFormat(samp->format); /* we need bufchans to
-						      * scale our increment
-						      * of the soundpos,
-						      * because of
-						      * multichannel format
-						      * buffers.
-						      */
 	/*
 	 * if pitch is out of range, return.
 	 */
@@ -1447,7 +1439,7 @@ void alf_tpitch( UNUSED(ALuint cid),
 	 *  must reset the src's soundpos to something reasonable.
 	 */
 	ipos = (int) (len * pitch);
-	src->srcParams.soundpos += bufchans * ipos * sizeof(ALshort);
+	src->srcParams.soundpos += ipos * sizeof(ALshort);
 
 	if(src->srcParams.soundpos > samp->size)
 	{
@@ -1511,7 +1503,6 @@ void alf_tpitch( UNUSED(ALuint cid),
 	ALint ipos = 0;   /* used to store offsets temporarily */
 	ALuint i;
 	ALuint clen;
-	int bufchans;
 	ALfloat pitch;
 
 	pitch = src->mixrate;
@@ -1523,13 +1514,6 @@ void alf_tpitch( UNUSED(ALuint cid),
 		return;
 	}
 
-	bufchans = _alGetChannelsFromFormat(samp->format); /* we need bufchans to
-						      * scale our increment
-						      * of the soundpos,
-						      * because of
-						      * multichannel format
-						      * buffers.
-						      */
 	/*
 	 * if pitch is out of range, clamp.
 	 */
@@ -1629,7 +1613,7 @@ void alf_tpitch( UNUSED(ALuint cid),
 	 *  must reset the src's soundpos to something reasonable.
 	 */
 	ipos = (int) (len * pitch);
-	src->srcParams.soundpos += bufchans * ipos * sizeof(ALshort);
+	src->srcParams.soundpos += ipos * sizeof(ALshort);
 
 	if(src->srcParams.soundpos > samp->size)
 	{
