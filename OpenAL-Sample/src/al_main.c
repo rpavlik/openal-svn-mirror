@@ -162,6 +162,7 @@ ALboolean _alInit( void ) {
 
 	_alRegisterExtensionGroup( (const ALubyte*) "AL_EXT_capture" );
 	_alRegisterExtensionGroup( (const ALubyte*) "ALC_EXT_capture" );
+	_alRegisterExtensionGroup( (const ALubyte*) "AL_EXT_offset" );
 
 	for(i = 0; exts[i].addr != NULL; i++) {
 		_alRegisterExtension(exts[i].name, exts[i].addr);

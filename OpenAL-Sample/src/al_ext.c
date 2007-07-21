@@ -158,9 +158,9 @@ ALboolean alIsExtensionPresent( const ALchar* gname ) {
 
 	while( group ) {
 
-		if( strncmp( (const char*) group->name,
-			     (const char*) gname,
-			     _AL_EXT_GROUPLEN ) == 0 ) {
+		if( strncasecmp( (const char*) group->name,
+			         (const char*) gname,
+			         _AL_EXT_GROUPLEN ) == 0 ) {
 			return AL_TRUE;
 		}
 
