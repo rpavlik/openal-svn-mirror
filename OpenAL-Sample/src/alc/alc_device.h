@@ -23,7 +23,7 @@ extern const ALCchar *_alcDeviceNames;
  * this function, the caller should check the members in dev is see what the
  * actual values set where.
  */
-void alcDeviceSet_( AL_device *dev );
+ALCboolean _alcDeviceSet( AL_device *dev );
 
 void alcDeviceWrite_( AL_device *dev, ALvoid *dataptr, ALuint bytes_to_write );
 

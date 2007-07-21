@@ -163,14 +163,12 @@ ALCboolean alcMakeContextCurrent( ALCcontext *handle )
 	/* set device's current context */
 	if(cc->write_device) {
 		cc->write_device->cc = cc;
-		alcDeviceSet_( cc->write_device );
 	}
 
 	_alSetMixer( cc->should_sync ); /* set mixing stats */
 
 	if(cc->read_device) {
 		cc->read_device->cc = cc;
-		alcDeviceSet_( cc->read_device );
 	}
 
 	_alcUnlockAllContexts();
@@ -361,6 +359,7 @@ void alcSuspendContext( ALCcontext *alcHandle )
 ALCcontext *alcCreateContext( ALCdevice *dev, const ALCint *attrlist )
 {
 	ALint cid;
+	ALCboolean ret;
 
 	if( dev == NULL ) {
 		_alcSetError( ALC_INVALID_DEVICE );
@@ -379,30 +378,37 @@ ALCcontext *alcCreateContext( ALCdevice *dev, const ALCint *attrlist )
 
 		/* set the context attributes */
 		_alcLockContext( cid );
-		_alcSetContext( attrlist, cid, dev );
+		ret = _alcSetContext( attrlist, cid, dev );
 		_alcUnlockContext( cid );
-
-		return ALUINT_TO_ALCCONTEXTP( cid );
 	}
+	else
+	{
+		_alcLockAllContexts();
+		cid = _alcGetNewContextId();
+		if(cid == -1) {
+			_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
+				  "alcCreateContext failed." );
 
-	_alcLockAllContexts();
-	cid = _alcGetNewContextId();
-	if(cid == -1) {
-		_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
-			  "alcCreateContext failed." );
+			_alcSetError( ALC_INVALID_DEVICE );
+			_alcUnlockAllContexts();
 
-		_alcSetError( ALC_INVALID_DEVICE );
+			return NULL;
+		}
+
 		_alcUnlockAllContexts();
 
-		return NULL;
+		_alcLockContext( cid );
+		ret = _alcSetUse( cid, ALC_TRUE );
+		if(ret == ALC_TRUE)
+			ret = _alcSetContext( attrlist, cid, dev );
+		_alcUnlockContext( cid );
 	}
 
-	_alcUnlockAllContexts();
-
-	_alcLockContext( cid );
-	_alcSetUse( cid, AL_TRUE );
-	_alcSetContext( attrlist, cid, dev );
-	_alcUnlockContext( cid );
+	if(ret == ALC_FALSE)
+	{
+		alcDestroyContext( ALUINT_TO_ALCCONTEXTP( cid ) );
+		return NULL;
+	}
 
 	return ALUINT_TO_ALCCONTEXTP( cid );
 }
@@ -504,16 +510,14 @@ AL_context *_alcGetContext( ALuint cid ) {
  * Sets context id paramaters according to an attribute list and device.
  *
  */
-void _alcSetContext(const ALCint *attrlist, ALuint cid, AL_device *dev ) {
+ALCboolean _alcSetContext(const ALCint *attrlist, ALuint cid, AL_device *dev ) {
 	AL_context *cc;
 	ALboolean reading_keys = AL_TRUE;
 	struct { int key; int val; } rdr;
-	ALuint refresh_rate = 15;
-        ALuint deviceBufferSizeInBytes;
 
 	cc = _alcGetContext( cid );
 	if(cc == NULL) {
-		return;
+		return ALC_FALSE;
 	}
 
 	/* get ready to copy attrlist */
@@ -553,14 +557,14 @@ void _alcSetContext(const ALCint *attrlist, ALuint cid, AL_device *dev ) {
 
 		switch(rdr.key) {
 			case ALC_FREQUENCY:
-				canon_speed = rdr.val;
+				if(rdr.val != dev->speed)
+					return ALC_FALSE;
 
 				_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
 					"cc->external_speed = %d", rdr.val );
 				break;
 			case ALC_REFRESH:
-			        refresh_rate = rdr.val;
-				break;
+				return ALC_FALSE;
 			case ALC_SOURCES_LOKI:
 				spool_resize(&cc->source_pool, rdr.val);
 
@@ -591,51 +595,7 @@ void _alcSetContext(const ALCint *attrlist, ALuint cid, AL_device *dev ) {
 		}
 	}
 
-	/* okay, now post process */
-
-	if( refresh_rate > canon_speed ) {
-		/*
-		 * We don't accept refresh rates greater than the
-		 * sampling rate.
-		 */
-		refresh_rate = canon_speed;
-	}
-
-        /* 
-         * Figure out the size of buffer to request from the device based
-         * on the bytes per sample and speed vs. the refresh rate
-         */
-        if (dev->flags & ALCD_WRITE)
-        {
-		deviceBufferSizeInBytes = _alSmallestPowerOfTwo(
-			(ALuint) ((float) canon_speed / refresh_rate));
-		deviceBufferSizeInBytes *=
-			_alGetChannelsFromFormat(cc->write_device->format);
-		deviceBufferSizeInBytes *=
-			_alGetBitsFromFormat(cc->write_device->format) / 8;
-		cc->write_device->bufferSizeInBytes = deviceBufferSizeInBytes;
-        }
-        if (dev->flags & ALCD_READ)
-        {
-                /* 
-                 * Use the device's speed instead of the canonical speed,
-                 * since the canonical speed doesn't mean anything on the
-                 * capture side 
-                 */
-		deviceBufferSizeInBytes = _alSmallestPowerOfTwo(
-			(ALuint) ((float) cc->read_device->speed /
-				refresh_rate));
-		deviceBufferSizeInBytes *= 
-			_alGetChannelsFromFormat(cc->read_device->format);
-		deviceBufferSizeInBytes *= 
-			_alGetBitsFromFormat(cc->read_device->format) / 8;
-		cc->read_device->bufferSizeInBytes = deviceBufferSizeInBytes;
-        }
-
-	_alDebug( ALD_CONTEXT, __FILE__, __LINE__,
-		"new device buffer size in bytes = %d", deviceBufferSizeInBytes);
-
-	return;
+	return ALC_TRUE;
 }
 
 /*
@@ -1622,7 +1582,10 @@ alCaptureInit_EXT( UNUSED(ALenum format), ALuint rate, ALsizei UNUSED(bufferSize
 				capture_device->bufferSizeInBytes = bufferSize;
 
 				_alcSetContext(NULL, cid, capture_device);
-				alcDeviceSet_(capture_device);
+				if(_alcDeviceSet(capture_device) == ALC_FALSE) {
+					alcCloseDevice(capture_device);
+					capture_device = NULL;
+				}
 			}
 		}
 	}

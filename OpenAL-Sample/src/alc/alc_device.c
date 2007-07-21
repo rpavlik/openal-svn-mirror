@@ -274,7 +274,6 @@ ALCdevice *alcOpenDevice( const ALchar *deviceSpecifier ) {
 	/* defaults */
 	retval->format = _ALC_EXTERNAL_FMT;
 	retval->speed  = _ALC_EXTERNAL_SPEED;
-	retval->bufferSizeInBytes = ALC_DEFAULT_DEVICE_BUFFER_SIZE_IN_BYTES;
 	retval->flags  = ALCD_NONE;
 
 	if( freq_sym != NULL ) {
@@ -312,13 +311,23 @@ ALCdevice *alcOpenDevice( const ALchar *deviceSpecifier ) {
 	openForInput = (strncmp( dirstr, "read", 64 ) == 0);
 	alcBackendOpen_( (openForInput ? ALC_OPEN_INPUT_ : ALC_OPEN_OUTPUT_), &retval->ops, &retval->privateData );
 	if( retval->privateData == NULL ) {
+		free( retval->specifier );
 		free( retval );
-		_alcSetError(ALC_INVALID_DEVICE);
 		return NULL;
 	}
 	retval->flags |= ( openForInput ? ALCD_READ : ALCD_WRITE );
 
 	num_devices++;
+
+	/* Figure out the size of buffer to request from the device based
+	 * on the bytes per sample and speed */
+	retval->bufferSizeInBytes  = _alSmallestPowerOfTwo(retval->speed / 15);
+	retval->bufferSizeInBytes *= _alGetChannelsFromFormat(retval->format);
+	retval->bufferSizeInBytes *= _alGetBitsFromFormat(retval->format) / 8;
+	if(_alcDeviceSet(retval) == ALC_FALSE) {
+		alcCloseDevice(retval);
+		return NULL;
+	}
 
 	return retval;
 }
@@ -352,28 +361,28 @@ alcCloseDevice( ALCdevice *dev )
 /*
  * Sets the attributes for the device from the settings in the device. The
  * library is free to change the parameters associated with the device, but
- * until alcDeviceSet_ is called, none of the changes are important.
+ * until _alcDeviceSet is called, none of the changes are important.
  *
- * Sets ALC_INVALID_DEVICE if the setting operation failed.  After a call to
- * this function, the caller should check the members in dev is see what the
- * actual values set where.
+ * Returns ALC_FALSE if the setting operation failed.  After a call to this
+ * function, the caller should check the members in dev to see what the
+ * actual values set are.
  */
-void
-alcDeviceSet_ (AL_device * dev)
+ALCboolean _alcDeviceSet(AL_device *dev)
 {
-  _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
-            "requesting device buffer size %d, format 0x%x, speed %d",
-            dev->bufferSizeInBytes, dev->format, dev->speed);
+    _alDebug(ALD_CONTEXT, __FILE__, __LINE__,
+             "requesting device buffer size %d, format 0x%x, speed %d",
+             dev->bufferSizeInBytes, dev->format, dev->speed);
 
-  if (!dev->ops->setAttributes (dev->privateData, &dev->bufferSizeInBytes,
-                                &dev->format, &dev->speed))
-    {
-      _alDebug (ALD_CONVERT, __FILE__, __LINE__, "alcDeviceSet_ failed");
-      _alcSetError (ALC_INVALID_DEVICE);
+    if(!dev->ops->setAttributes(dev->privateData, &dev->bufferSizeInBytes,
+                                &dev->format, &dev->speed)) {
+        _alDebug(ALD_CONVERT, __FILE__, __LINE__, "alcDeviceSet_ failed");
+        return ALC_FALSE;
     }
-  _alDebug (ALD_CONTEXT, __FILE__, __LINE__,
-            "got device buffer size %d, format 0x%x, speed %d",
-            dev->bufferSizeInBytes, dev->format, dev->speed);
+
+    _alDebug(ALD_CONTEXT, __FILE__, __LINE__,
+             "got device buffer size %d, format 0x%x, speed %d",
+             dev->bufferSizeInBytes, dev->format, dev->speed);
+    return ALC_TRUE;
 }
 
 void

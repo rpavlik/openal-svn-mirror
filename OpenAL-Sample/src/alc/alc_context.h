@@ -82,7 +82,7 @@ ALboolean _alcIsContext( ALuint cid );
 /*
  * Sets context id paramaters according to an attribute list and device.
  */
-void _alcSetContext( const ALCint *attrlist, ALuint cid, AL_device *dev );
+ALCboolean _alcSetContext( const ALCint *attrlist, ALuint cid, AL_device *dev );
 
 /*
  * Returns a new id for use as a context name.
