@@ -1745,9 +1745,9 @@ static void _alSplitSourceLooping( ALuint cid,
 	/* in case samp->size < len, we don't want
 	 * to overwrite with the memcpy
 	 */
-	if(len * bufchannels <= samp->size) {
+	if(len <= samp->size) {
 		/* normal case */
-		remaining = (len * bufchannels) - mixable;
+		remaining = len - mixable;
 
 		for(i = 0; i < nc; i++) {
 			bufptr = _alSourceGetBufptr(src, samp, i);
