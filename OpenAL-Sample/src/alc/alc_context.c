@@ -200,6 +200,12 @@ void alcDestroyContext( ALCcontext *handle )
 		return;
 	}
 
+	_alcLockAllContexts();
+	if (cid == _alcCCId) {
+		_alcCCId = (ALuint) -1;
+	}
+	_alcUnlockAllContexts();
+
 	/*
 	 * If this is the last context, run _alExit()
 	 * to clean up the cruft
