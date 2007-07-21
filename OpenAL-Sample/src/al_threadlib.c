@@ -10,7 +10,7 @@
 
 #if defined(USE_POSIXTHREADING)
 
-ThreadID _alCreateThread( int ( *fn ) ( void * ) )
+ThreadID _alCreateThread( int ( *fn ) ( void * ), void *ptr )
 {
 	pthread_attr_t type;
 	pthread_t *thread = malloc( sizeof *thread );
@@ -25,7 +25,7 @@ ThreadID _alCreateThread( int ( *fn ) ( void * ) )
 
 	pthread_attr_setdetachstate( &type, PTHREAD_CREATE_JOINABLE );
 
-	if( pthread_create( thread, &type, (void *(*) (void *)) fn, NULL ) != 0 ) {
+	if( pthread_create( thread, &type, (void *(*) (void *)) fn, ptr ) != 0 ) {
 		free( thread );
 		return NULL;
 	}
@@ -55,10 +55,10 @@ void _alExitThread( void )
 /* for _alMicroSleep */
 #include "al_main.h"
 
-ThreadID _alCreateThread( int ( *fn ) ( void * ) )
+ThreadID _alCreateThread( int ( *fn ) ( void * ), void *ptr )
 {
 	DWORD dummy;
-	return CreateThread( NULL, 0, ( LPTHREAD_START_ROUTINE ) fn, NULL, 0,
+	return CreateThread( NULL, 0, ( LPTHREAD_START_ROUTINE ) fn, ptr, 0,
 			     &dummy );
 }
 

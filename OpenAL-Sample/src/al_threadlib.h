@@ -29,7 +29,7 @@ typedef HANDLE ThreadID;
 /*
  * Creates a thread, which starts by running fn.
  */
-extern ThreadID _alCreateThread( int ( *fn ) ( void * ) );
+extern ThreadID _alCreateThread( int ( *fn ) ( void * ), void *ptr );
 
 /*
  * Waits for thread to terminate before returning.

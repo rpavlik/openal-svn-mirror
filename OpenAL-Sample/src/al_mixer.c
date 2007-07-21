@@ -739,7 +739,7 @@ void _alSetMixer( ALboolean synchronous )
 #ifndef USE_BACKEND_NATIVE_DARWIN
 /*Since the new darwin backend uses a core audio thread, we don't need the mixing thread anymore and use the sync mixer */
 		if(mixthread == NULL) {
-			mixthread = _alCreateThread(mixer_iterate);
+			mixthread = _alCreateThread(mixer_iterate, NULL);
 		}
 #endif
 	}
