@@ -316,6 +316,11 @@ setAudioChannelWave (UNUSED (struct ALC_BackendPrivateData *privateData),
   return -1;
 }
 
+static const ALCchar *getNameWave(struct ALC_BackendPrivateData *privateData)
+{
+    return "Wave File Writer";
+}
+
 static ALC_BackendOps waveOps = {
   closeWave,
   pauseWave,
@@ -324,7 +329,8 @@ static ALC_BackendOps waveOps = {
   writeWave,
   readWave,
   getAudioChannelWave,
-  setAudioChannelWave
+  setAudioChannelWave,
+  getNameWave
 };
 
 void

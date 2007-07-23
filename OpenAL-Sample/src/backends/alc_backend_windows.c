@@ -249,6 +249,11 @@ setAudioChannelMMSYSTEM (UNUSED (struct ALC_BackendPrivateData *privateData),
   return -1;
 }
 
+static const ALCchar *getNameMMSYSTEM(struct ALC_BackendPrivateData *privateData)
+{
+    return "Windows MMSystem Native";
+}
+
 static ALC_BackendOps nativeOps = {
   closeMMSYSTEM,
   pauseMMSYSTEM,
@@ -257,7 +262,8 @@ static ALC_BackendOps nativeOps = {
   writeMMSYSTEM,
   readMMSYSTEM,
   getAudioChannelMMSYSTEM,
-  setAudioChannelMMSYSTEM
+  setAudioChannelMMSYSTEM,
+  getNameMMSYSTEM
 };
 
 static void *

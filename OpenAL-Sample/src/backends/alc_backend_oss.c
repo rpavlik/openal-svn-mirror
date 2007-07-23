@@ -366,6 +366,11 @@ setAudioChannelOSS (struct ALC_BackendPrivateData *privateData,
   return 0;
 }
 
+static const ALCchar *getNameOSS(struct ALC_BackendPrivateData *privateData)
+{
+    return "Open Sound System (OSS)";
+}
+
 static ALC_BackendOps ossOps = {
   closeOSS,
   pauseOSS,
@@ -374,7 +379,8 @@ static ALC_BackendOps ossOps = {
   writeOSS,
   readOSS,
   getAudioChannelOSS,
-  setAudioChannelOSS
+  setAudioChannelOSS,
+  getNameOSS
 };
 
 static void

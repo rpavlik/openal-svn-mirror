@@ -296,7 +296,7 @@ typedef struct ALCdevice_struct {
 	ALuint bufferSizeInBytes;
 
 	DeviceEnum flags;
-	ALCchar *specifier;
+	const ALCchar *specifier;
 } AL_device;
 
 typedef struct _AL_context {

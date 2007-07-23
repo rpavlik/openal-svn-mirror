@@ -708,6 +708,11 @@ static int grab_device_byname(const char *name)
     return device;
 }
 
+static const ALCchar *get_dmedianame(struct ALC_BackendPrivateData *privateData)
+{
+    return "DMedia IRIX Native";
+}
+
 static ALC_BackendOps dmediaOps = {
 	release_dmedia,
 	pause_dmedia,
@@ -716,7 +721,8 @@ static ALC_BackendOps dmediaOps = {
 	dmedia_blitbuffer,
 	capture_dmedia,
 	get_dmediachannel,
-	set_dmediachannel
+	set_dmediachannel,
+	get_dmedianame
 };
 
 void

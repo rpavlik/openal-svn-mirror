@@ -357,6 +357,11 @@ setAudioChannelESD (struct ALC_BackendPrivateData *privateData,
   return 0;
 }
 
+static const ALCchar *getNameESD(struct ALC_BackendPrivateData *privateData)
+{
+    return "Enlightened Sound Daemon (ESD)";
+}
+
 static ALC_BackendOps esdOps = {
   closeESD,
   pauseESD,
@@ -365,7 +370,8 @@ static ALC_BackendOps esdOps = {
   writeESD,
   readESD,
   getAudioChannelESD,
-  setAudioChannelESD
+  setAudioChannelESD,
+  getNameESD
 };
 
 void

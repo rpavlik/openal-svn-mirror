@@ -91,6 +91,11 @@ setAudioChannelNull (UNUSED (struct ALC_BackendPrivateData *privateData),
   return 0;
 }
 
+static const ALCchar *getNameNull(struct ALC_BackendPrivateData *privateData)
+{
+    return "Null Driver";
+}
+
 static ALC_BackendOps nullOps = {
   closeNull,
   pauseNull,
@@ -99,7 +104,8 @@ static ALC_BackendOps nullOps = {
   writeNull,
   readNull,
   getAudioChannelNull,
-  setAudioChannelNull
+  setAudioChannelNull,
+  getNameNull
 };
 
 void

@@ -394,6 +394,11 @@ setAudioChannelALSA (UNUSED (struct ALC_BackendPrivateData *privateData),
   return -1;
 }
 
+static const ALCchar *getNameALSA(struct ALC_BackendPrivateData *privateData)
+{
+    return "Advanced Linux Sound Architecture (ALSA)";
+}
+
 static ALC_BackendOps alsaOps = {
   closeALSA,
   pauseALSA,
@@ -402,7 +407,8 @@ static ALC_BackendOps alsaOps = {
   writeALSA,
   readALSA,
   getAudioChannelALSA,
-  setAudioChannelALSA
+  setAudioChannelALSA,
+  getNameALSA
 };
 
 static void

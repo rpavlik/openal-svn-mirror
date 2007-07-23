@@ -285,6 +285,11 @@ alcBackendSetAttributesNative_(void *handle, ALuint *deviceBufferSizeInBytes, AL
 		set_write_native(handle, deviceBufferSizeInBytes, fmt, speed);
 }
 
+static const ALCchar *get_nativename(struct ALC_BackendPrivateData *privateData)
+{
+    return "Solaris Native";
+}
+
 static ALC_BackendOps nativeOps = {
 	release_native,
 	pause_nativedevice,
@@ -293,7 +298,8 @@ static ALC_BackendOps nativeOps = {
 	native_blitbuffer,
 	capture_nativedevice,
 	get_nativechannel,
-	set_nativechannel
+	set_nativechannel,
+	get_nativename
 };
 
 void

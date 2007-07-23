@@ -7,6 +7,7 @@
 #include "al_siteconfig.h"
 
 #include <AL/al.h>
+#include <AL/alc.h>
 
 typedef enum
 {
@@ -78,16 +79,30 @@ typedef struct ALC_BackendOpsStruct
    */
   int (*setAudioChannel) (struct ALC_BackendPrivateData *privateData,
                           ALuint channel, ALfloat volume);
+  /*
+   * Gets the backend's name. The returned string must remain available and
+   * constant through the life of the program. A valid non-empty string must be
+   * returned. This function is used to fill the device specifier lists and map
+   * "pretty names" to backends.
+   */
+  const ALCchar* (*getName)(struct ALC_BackendPrivateData *privateData);
 } ALC_BackendOps;
 
 /*
- * Returns a pointer to private backend data via the 3rd argument, or NULL if no
+ * Returns a pointer to private backend data via the 4th argument, or NULL if no
  * such backend is available. In the former case, a pointer to a backend
  * function table suitable for reading or writing sound data is returned via the
- * 2nd argument. This function is used to implement alcOpenDevice.
+ * 3rd argument. This function is used to implement alcOpenDevice.
  */
-void alcBackendOpen_ (ALC_OpenMode mode, ALC_BackendOps **ops,
-                      struct ALC_BackendPrivateData **privateData);
+void alcBackendOpen_(const ALCchar *name, ALC_OpenMode mode, ALC_BackendOps **ops,
+                     struct ALC_BackendPrivateData **privateData);
+
+/*
+ * Builds and returns a specifier list for the given mode (input or output).
+ * This function is used to implement the various ALC device specifier strings.
+ */
+const ALCchar *_alcGetSpecifierList(ALC_OpenMode mode);
+const ALCchar *_alcGetDefaultSpecifier(ALC_OpenMode mode);
 
 /******************************************************************************/
 

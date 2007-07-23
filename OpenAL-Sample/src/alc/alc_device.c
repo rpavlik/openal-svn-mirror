@@ -23,152 +23,6 @@
 
 static int num_devices = 0;
 
-static const struct {
-    ALCchar *description;
-    ALCchar *drvname;
-} DeviceList[] = {
-#define DEFAULT_NAME "Default\0"
-    { DEFAULT_NAME, "" },
-
-#ifdef USE_BACKEND_ALSA
-#define ALSA_NAME "Advanced Linux Sound Architecture (ALSA)\0"
-    { ALSA_NAME, "alsa" },
-#else
-#define ALSA_NAME
-#endif
-
-#ifdef USE_BACKEND_OSS
-#define OSS_NAME "Open Sound System (OSS)\0"
-    { OSS_NAME, "oss" },
-#else
-#define OSS_NAME
-#endif
-
-#ifdef USE_BACKEND_DMEDIA
-#define DMEDIA_NAME "DMedia\0"
-    { DMEDIA_NAME, "dmedia" },
-#else
-#define DMEDIA_NAME
-#endif
-
-#ifdef USE_BACKEND_NATIVE_DARWIN
-#define DARWIN_NAME "Darwin Native\0"
-    { DARWIN_NAME, "darwin" },
-#else
-#define DARWIN_NAME
-#endif
-
-#ifdef USE_BACKEND_NATIVE_SOLARIS
-#define SOLARIS_NAME "Solaris Native\0"
-    { SOLARIS_NAME, "solaris" },
-#else
-#define SOLARIS_NAME
-#endif
-
-#ifdef USE_BACKEND_NATIVE_WINDOWS
-#define WINDOWS_NAME "Windows Native\0"
-    { WINDOWS_NAME, "windows" },
-#else
-#define WINDOWS_NAME
-#endif
-
-#ifdef USE_BACKEND_ESD
-#define ESD_NAME "Enlightened Sound Daemon (ESD)\0"
-    { ESD_NAME, "esd" },
-#else
-#define ESD_NAME
-#endif
-
-#ifdef USE_BACKEND_SDL
-#define SDL_NAME "Simple DirectMedia Layer (SDL)\0"
-    { SDL_NAME, "sdl" },
-#else
-#define SDL_NAME
-#endif
-
-#ifdef USE_BACKEND_WAVEOUT
-#define WAVE_NAME "Wave Writer\0"
-    { WAVE_NAME, "wave" },
-#else
-#define WAVE_NAME
-#endif
-
-#ifdef USE_BACKEND_NULL
-#define NULL_NAME "Null Output\0"
-    { NULL_NAME, "null" },
-#else
-#define NULL_NAME
-#endif
-
-    { NULL, NULL }
-};
-
-const ALCchar *_alcDeviceNames =
-    DEFAULT_NAME
-    ALSA_NAME
-    OSS_NAME
-    DMEDIA_NAME
-    DARWIN_NAME
-    SOLARIS_NAME
-    WINDOWS_NAME
-    ESD_NAME
-    SDL_NAME
-    WAVE_NAME
-    NULL_NAME
-"\0";
-
-
-static __inline void eval_config(const ALCchar *cfg)
-{
-	Rcvar listOfLists = rc_eval( cfg );
-	/* define each attribute pair */
-	rc_foreach( listOfLists, rc_define_list );
-}
-
-static int set_config_from_name(const ALCchar *name)
-{
-	int i;
-
-	/* First name in the list is the default, which behaves like NULL and
-	 * uses no special settings */
-	if(name == NULL || strcmp(name, DeviceList[0].description) == 0)
-		return 0;
-
-	/* If the name starts with a ', then it's a device configuration */
-	if(name[0] == '\'')
-	{
-		eval_config(name);
-		return 0;
-	}
-
-	for(i = 1;DeviceList[i].description != NULL;i++)
-	{
-		if(strcmp(name, DeviceList[i].description) == 0)
-		{
-			const ALCchar* str_pre = "'((devices '(";
-			const ALCchar* str_post = "))";
-			int str_pre_length = strlen(str_pre);
-			int drvname_length = strlen(DeviceList[i].drvname);
-			
-			ALCchar *str = malloc(str_pre_length +
-			                      drvname_length +
-			                      strlen(str_post) + 1);
-			if(!str)
-				return 1;
-
-			strcpy(str, str_pre);
-			strcpy(str + str_pre_length, DeviceList[i].drvname);
-			strcpy(str + str_pre_length + drvname_length, str_post);
-
-			eval_config(str);
-
-			free(str);
-			return 0;
-		}
-	}
-
-	return 1;
-}
 
 /*
  * Opens a device, using the alrc expression deviceSpecifier to specify
@@ -196,31 +50,35 @@ ALCdevice *alcOpenDevice( const ALchar *deviceSpecifier ) {
 		}
 	}
 
-	/* see if the user defined devices, sampling-rate, or direction */
-	devices   = rc_lookup( "devices" );
-	direction = rc_lookup( "direction" );
-	freq_sym  = rc_lookup( "sampling-rate" );
-	speakers  = rc_lookup( "speaker-num" );
+    /* If the name starts with a ', then it's a device configuration */
+    if(deviceSpecifier && deviceSpecifier[0] == '\'') {
+        Rcvar listOfLists;
 
-	if(set_config_from_name(deviceSpecifier))
-		return NULL;
+        /* see if the user defined devices, sampling-rate, or direction */
+        devices   = rc_lookup( "devices" );
+        direction = rc_lookup( "direction" );
+        freq_sym  = rc_lookup( "sampling-rate" );
+        speakers  = rc_lookup( "speaker-num" );
 
-	/* redefine the stuff we saved */
-	if( direction != NULL ) {
-		rc_define( "direction", alrc_quote( direction ));
-	}
+        listOfLists = rc_eval( deviceSpecifier );
+        rc_foreach( listOfLists, rc_define_list );
+        /* Got a config, so remove the name from further processing */
+        deviceSpecifier = NULL;
 
-	if( devices != NULL ) {
-		rc_define( "devices", alrc_quote( devices ) );
-	}
+        /* redefine the stuff we saved */
+        if( direction != NULL )
+            rc_define( "direction", alrc_quote( direction ));
 
-	if( freq_sym != NULL ) {
-		rc_define( "sampling-rate", alrc_quote( freq_sym ));
-	}
+        if( devices != NULL )
+            rc_define( "devices", alrc_quote( devices ) );
 
-	if( speakers != NULL ) {
-		rc_define( "speaker-num", alrc_quote( speakers ));
-	}
+        if( freq_sym != NULL )
+            rc_define( "sampling-rate", alrc_quote( freq_sym ));
+
+        if( speakers != NULL )
+            rc_define( "speaker-num", alrc_quote( speakers ));
+    }
+
 
 	direction = rc_lookup( "direction" );
 	devices   = rc_lookup( "devices" );
@@ -247,28 +105,6 @@ ALCdevice *alcOpenDevice( const ALchar *deviceSpecifier ) {
 		/* FIXME: set AL_OUT_OF_MEMORY here? */
 
 		return NULL;
-	}
-
-	/* copy specifier */
-	if(deviceSpecifier)
-	{
-		size_t len;
-		len = strlen((const char *) deviceSpecifier);
-		retval->specifier = malloc(len+1);
-		if(retval->specifier == NULL)
-		{
-			free(retval);
-			return NULL;
-		}
-
-		memcpy(retval->specifier, deviceSpecifier, len);
-		retval->specifier[len] = '\0';
-	}
-	else
-	{
-		/* JIV FIXME: maybe set to default string? */
-		retval->specifier = malloc(1);
-		retval->specifier[0] = '\0';
 	}
 
 	/* defaults */
@@ -309,12 +145,13 @@ ALCdevice *alcOpenDevice( const ALchar *deviceSpecifier ) {
 	}
 
 	openForInput = (strncmp( dirstr, "read", 64 ) == 0);
-	alcBackendOpen_( (openForInput ? ALC_OPEN_INPUT_ : ALC_OPEN_OUTPUT_), &retval->ops, &retval->privateData );
+	alcBackendOpen_(deviceSpecifier, (openForInput ? ALC_OPEN_INPUT_ : ALC_OPEN_OUTPUT_), &retval->ops, &retval->privateData );
 	if( retval->privateData == NULL ) {
-		free( retval->specifier );
 		free( retval );
 		return NULL;
 	}
+        /* set specifier */
+        retval->specifier = retval->ops->getName(retval->privateData);
 	retval->flags |= ( openForInput ? ALCD_READ : ALCD_WRITE );
 
 	num_devices++;
@@ -346,7 +183,6 @@ alcCloseDevice( ALCdevice *dev )
 		_alUnlockMixerPause();
 	}
 
-	free( dev->specifier );
 	free( dev );
 
 	num_devices--;

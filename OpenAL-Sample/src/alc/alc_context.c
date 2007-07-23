@@ -30,6 +30,8 @@
 #include "alc/alc_speaker.h"
 #include "alc/alc_context.h"
 
+#include "backends/alc_backend.h"
+
 /*
  * CONTEXT_BASE is the number which we start at for context ids.
  */
@@ -1406,17 +1408,13 @@ alcGetString (ALCdevice *dev, ALCenum token)
   switch (token)
     {
     case ALC_DEFAULT_DEVICE_SPECIFIER:
-      /* The first entry in the device list specifies the default */
-      return _alcDeviceNames;
+      return _alcGetDefaultSpecifier(ALC_OPEN_OUTPUT_);
+
     case ALC_DEVICE_SPECIFIER:
       if (dev == NULL)
-        {
-          return _alcDeviceNames;
-        }
-      else
-        {
-          return dev->specifier;
-        }
+          return _alcGetSpecifierList(ALC_OPEN_OUTPUT_);
+      return dev->specifier;
+
     case ALC_EXTENSIONS:
       if (dev == NULL)
         {
@@ -1424,19 +1422,15 @@ alcGetString (ALCdevice *dev, ALCenum token)
           return NULL;
         }
       return (const ALCchar *) "ALC_ENUMERATION_EXT ALC_EXT_CAPTURE";
+
     case ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER:
-      return (const ALCchar *) "'((device '(native))\0";
+      return _alcGetDefaultSpecifier(ALC_OPEN_INPUT_);
+
     case ALC_CAPTURE_DEVICE_SPECIFIER:
-      /* We happily ignore the capture device name for now, so we can't do something sensible here. */
       if (dev == NULL)
-        {
-          /* fake device enumeration for now */
-          return (const ALCchar *) "'((device '(native))\0'((device '(null))\0";
-        }
-      else
-        {
-          return (const ALCchar *) "dummy";
-        }
+          return _alcGetSpecifierList(ALC_OPEN_INPUT_);
+      return dev->specifier;
+
     case ALC_NO_ERROR:
       return (const ALCchar *) "ALC_NO_ERROR";
     case ALC_INVALID_DEVICE:

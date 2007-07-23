@@ -278,6 +278,11 @@ setAudioChannelSDL (UNUSED (struct ALC_BackendPrivateData *privateData),
   return -1;
 }
 
+static const ALCchar *getNameSDL(struct ALC_BackendPrivateData *privateData)
+{
+    return "Simple DirectMedia Layer (SDL)";
+}
+
 static ALC_BackendOps sdlOps = {
   closeSDL,
   pauseSDL,
@@ -286,7 +291,8 @@ static ALC_BackendOps sdlOps = {
   writeSDL,
   readSDL,
   getAudioChannelSDL,
-  setAudioChannelSDL
+  setAudioChannelSDL,
+  getNameSDL
 };
 
 void
