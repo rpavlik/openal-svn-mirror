@@ -1476,12 +1476,13 @@ _alcGetContextOfDevice (ALCdevice *deviceHandle)
 static int
 _alcIsDestinationValid (ALCsizei neededSize, ALCsizei size, ALCint *dest)
 {
-  if ((neededSize > size) || (dest == NULL))
+    if ((neededSize > size) || (dest == NULL))
     {
-      _alcSetError (ALC_INVALID_VALUE);
-      return 0;
+        if((dest != NULL) && (size != 0))
+            _alcSetError(ALC_INVALID_VALUE);
+        return 0;
     }
-  return 1;
+    return 1;
 }
 
 /*
