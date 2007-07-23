@@ -1536,6 +1536,40 @@ alcGetIntegerv (ALCdevice *deviceHandle, ALCenum token,
       *dest = 1;
       return;
 
+    case ALC_FREQUENCY:
+      if (deviceHandle == NULL)
+      {
+          _alcSetError(ALC_INVALID_DEVICE);
+          return;
+      }
+      if (!_alcIsDestinationValid (1, size, dest))
+          return;
+
+      *dest = deviceHandle->speed;
+      return;
+
+    case ALC_REFRESH:
+      if (deviceHandle == NULL)
+      {
+          _alcSetError(ALC_INVALID_DEVICE);
+          return;
+      }
+      if (!_alcIsDestinationValid (1, size, dest))
+          return;
+
+      *dest = deviceHandle->bufferSizeInBytes /
+              _alGetChannelsFromFormat(deviceHandle->format) /
+              (_alGetBitsFromFormat(deviceHandle->format)/8);
+      return;
+
+    case ALC_SYNC:
+      cc = _alcGetContextOfDevice (deviceHandle);
+      if ((cc == NULL) || !_alcIsDestinationValid (1, size, dest))
+          return;
+
+      *dest = cc->should_sync;
+      return;
+
     case ALC_CAPTURE_SAMPLES:
       cc = _alcGetContextOfDevice (deviceHandle);
       if ((cc == NULL) || !_alcIsDestinationValid (1, size, dest))
