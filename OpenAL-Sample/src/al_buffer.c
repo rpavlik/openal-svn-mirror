@@ -431,8 +431,16 @@ void alBufferData( ALuint  bid,
 		buf->flags &= ~ALB_CALLBACK;
 	}
 
-	tformat = buf->format;
-	tfreq   = buf->frequency;
+	/* Convert 8-bit formats to 16-bit, but leave the channel count alone */
+	if(format == AL_FORMAT_MONO8)
+		tformat = AL_FORMAT_MONO16;
+	else if(format == AL_FORMAT_STEREO8)
+		tformat = AL_FORMAT_STEREO16;
+	else if(format == AL_FORMAT_QUAD8_LOKI)
+		tformat = AL_FORMAT_QUAD16_LOKI;
+	else
+		tformat = format;
+	tfreq = buf->frequency;
 
 	_alUnlockBuffer();
 
@@ -463,7 +471,7 @@ void alBufferData( ALuint  bid,
 		/* don't use realloc */
 		_alBufferFreeOrigBuffers(buf);
 
-		channels = _alGetChannelsFromFormat(buf->format);
+		channels = _alGetChannelsFromFormat(tformat);
 
 		for(i = 0; i < channels; i++)
 		{
@@ -544,6 +552,7 @@ void alBufferData( ALuint  bid,
 	       buf->num_buffers, tchannels);
 
 	buf->size = retsize / tchannels;
+	buf->format = tformat;
 
 	_alUnlockBuffer();
 
