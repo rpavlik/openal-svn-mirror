@@ -35,6 +35,7 @@ typedef unsigned __int32 uint32_t;
 
 #ifdef _WIN32
 #define CDECL __cdecl
+#define strncasecmp(x,y,z) _strnicmp(x,y,z)
 #else /* _WIN32 */
 #define CDECL
 #endif /* _WIN32 */
