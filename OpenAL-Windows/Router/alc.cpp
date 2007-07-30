@@ -658,7 +658,6 @@ ALvoid BuildDeviceList()
 				// If we haven't found a match ... pick the 1st device!
 				if (!bFound)
 				{
-					printf("OPENA32DLL - Still didn't find exact match, picking first\n");
 					pszDefaultCaptureDeviceSpecifier = (char*)malloc((strlen(g_pCaptureDeviceList->pszDeviceName) + 1) * sizeof(char));
 					if (pszDefaultCaptureDeviceSpecifier)
 						strcpy(pszDefaultCaptureDeviceSpecifier, g_pCaptureDeviceList->pszDeviceName);
