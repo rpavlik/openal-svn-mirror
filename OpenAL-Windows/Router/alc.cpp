@@ -827,7 +827,7 @@ bool GetDefaultPlaybackDeviceName(char **pszName)
 	// Falling back to MMSYSTEM
 	if (*pszName == NULL)
 	{
-		UINT uDeviceID;
+		UINT uDeviceID=0;
 		DWORD dwFlags=1;
 		WAVEOUTCAPS outputInfo;
 
@@ -892,7 +892,7 @@ bool GetDefaultCaptureDeviceName(char **pszName)
 	// Falling back to MMSYSTEM
 	if (*pszName == NULL)
 	{
-		UINT uDeviceID;
+		UINT uDeviceID=0;
 		DWORD dwFlags=1;
 		WAVEINCAPS inputInfo;
 
