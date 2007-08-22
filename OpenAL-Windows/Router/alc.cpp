@@ -228,14 +228,14 @@ bool HasDLLAlreadyBeenUsed(ALDEVICE *pDeviceList, TCHAR *szDLLName);
 //*****************************************************************************
 //*****************************************************************************
 
-// #define _LOGCALLS
+// NOTE : LOG macro below requires a compiler newer than Visual Studio 6
+
+//#define _LOGCALLS
 
 #ifdef _LOGCALLS
  void OutputMessage(const char *szTest,...); 
  #define LOG(x, ...) OutputMessage(x, ##__VA_ARGS__)
  #define LOGFILENAME	"OpenALCalls.txt"
-#else
- #define LOG(x, ...)
 #endif
 
 //*****************************************************************************
@@ -1264,8 +1264,9 @@ ALboolean FillOutAlFunctions(ALCcontext* context)
 //
 ALCAPI ALCboolean ALCAPIENTRY alcCloseDevice(ALCdevice* device)
 {
+#ifdef _LOGCALLS
 	LOG("alcCloseDevice device %p\n", device);
-
+#endif
     if(!device)
     {
         return ALC_FALSE;
@@ -1428,8 +1429,9 @@ ALCAPI ALCcontext* ALCAPIENTRY alcCreateContext(ALCdevice* device, const ALint* 
 //*****************************************************************************
 ALCAPI ALvoid ALCAPIENTRY alcDestroyContext(ALCcontext* context)
 {
+#ifdef _LOGCALLS
 	LOG("alcDestroyContext context %p\n", context);
-
+#endif
     ALCcontext* listData = 0;
 
     if(!context)
@@ -1477,8 +1479,9 @@ ALCAPI ALvoid ALCAPIENTRY alcDestroyContext(ALCcontext* context)
 //*****************************************************************************
 ALCAPI ALCdevice* ALCAPIENTRY alcGetContextsDevice(ALCcontext* context)
 {
+#ifdef _LOGCALLS
 	LOG("alcGetContextsDevice context %p\n", context);
-
+#endif
     ALCdevice* ALCdevice = 0;
 
     alListAcquireLock(alContextList);
@@ -1500,8 +1503,9 @@ ALCAPI ALCdevice* ALCAPIENTRY alcGetContextsDevice(ALCcontext* context)
 //*****************************************************************************
 ALCAPI ALCcontext* ALCAPIENTRY alcGetCurrentContext(ALvoid)
 {
+#ifdef _LOGCALLS
 	LOG("alcGetCurrentContext\n");
-
+#endif
     return (ALCcontext *)alCurrentContext;
 }
 
@@ -1513,8 +1517,9 @@ ALCAPI ALCcontext* ALCAPIENTRY alcGetCurrentContext(ALvoid)
 //*****************************************************************************
 ALCAPI ALenum ALCAPIENTRY alcGetEnumValue(ALCdevice* device, const ALCchar* ename)
 {
+#ifdef _LOGCALLS
 	LOG("alcGetEnumValue device %p enum name '%s'\n", device, ename ? ename : "<NULL>");
-
+#endif
     //
     // Always return the router version of the ALC enum if it exists.
     //
@@ -1549,8 +1554,9 @@ ALCAPI ALenum ALCAPIENTRY alcGetEnumValue(ALCdevice* device, const ALCchar* enam
 //*****************************************************************************
 ALCAPI ALenum ALCAPIENTRY alcGetError(ALCdevice* device)
 {
+#ifdef _LOGCALLS
 	LOG("alcGetError device %p\n", device);
-
+#endif
     ALenum errorCode = ALC_NO_ERROR;
 
     // Try to get a valid device.
@@ -1685,7 +1691,9 @@ ALCAPI ALvoid ALCAPIENTRY alcGetIntegerv(ALCdevice* device, ALenum param, ALsize
 //*****************************************************************************
 ALCAPI ALvoid* ALCAPIENTRY alcGetProcAddress(ALCdevice* device, const ALCchar* fname)
 {
+#ifdef _LOGCALLS
 	LOG("alcGetProcAddress device %p function name '%s'\n", device, fname ? fname : "<NULL>");
+#endif
 
     //
     // Always return the router version of the ALC function if it exists.
@@ -1721,8 +1729,9 @@ ALCAPI ALvoid* ALCAPIENTRY alcGetProcAddress(ALCdevice* device, const ALCchar* f
 //*****************************************************************************
 ALCAPI ALboolean ALCAPIENTRY alcIsExtensionPresent(ALCdevice* device, const ALCchar* ename)
 {
+#ifdef _LOGCALLS
 	LOG("alcIsExtensionPresent device %p extension name '%s'\n", device, ename ? ename : "<NULL>");
-
+#endif
     //
     // Check if its a router supported extension first as its a good idea to have
     // ALC calls go through the router if possible.
@@ -1761,8 +1770,9 @@ ALCAPI ALboolean ALCAPIENTRY alcIsExtensionPresent(ALCdevice* device, const ALCc
 //*****************************************************************************
 ALCAPI ALboolean ALCAPIENTRY alcMakeContextCurrent(ALCcontext* context)
 {
+#ifdef _LOGCALLS
 	LOG("alcMakeContextCurrent context %p\n", context);
-
+#endif
     ALboolean contextSwitched = AL_TRUE;
 
     //
@@ -1836,8 +1846,9 @@ ALCAPI ALboolean ALCAPIENTRY alcMakeContextCurrent(ALCcontext* context)
 //*****************************************************************************
 ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(const ALCchar* deviceName)
 {
+#ifdef _LOGCALLS
 	LOG("alcOpenDevice device name '%s'\n", deviceName ? deviceName : "<NULL>");
-
+#endif
     HINSTANCE dll = 0;
     ALCdevice* device = 0;
 	const ALchar *pszDeviceName = NULL;
@@ -1908,8 +1919,9 @@ ALCAPI ALCdevice* ALCAPIENTRY alcOpenDevice(const ALCchar* deviceName)
 //*****************************************************************************
 ALCAPI ALvoid ALCAPIENTRY alcProcessContext(ALCcontext* context)
 {
+#ifdef _LOGCALLS
 	LOG("alcProcessContext context %p\n", context);
-
+#endif
     alListAcquireLock(alContextList);
     if(!context && !alCurrentContext)
     {
@@ -1944,8 +1956,9 @@ ALCAPI ALvoid ALCAPIENTRY alcProcessContext(ALCcontext* context)
 //*****************************************************************************
 ALCAPI ALCvoid ALCAPIENTRY alcSuspendContext(ALCcontext* context)
 {
+#ifdef _LOGCALLS
 	LOG("alcSuspendContext context %p\n", context);
-
+#endif
     alListAcquireLock(alContextList);
     if(!context && !alCurrentContext)
     {
@@ -2134,8 +2147,9 @@ ALCAPI const ALCchar* ALCAPIENTRY alcGetString(ALCdevice* device, ALenum param)
 //*****************************************************************************
 ALCAPI ALCdevice * ALCAPIENTRY alcCaptureOpenDevice(const ALCchar *deviceName, ALCuint frequency, ALCenum format, ALCsizei buffersize)
 {
+#ifdef _LOGCALLS
 	LOG("alcCaptureOpenDevice device name '%s' frequency %d format %d buffersize %d\n", deviceName ? deviceName : "<NULL>", frequency, format, buffersize);
-
+#endif
 	const ALchar *pszDeviceName = NULL;
 
 	BuildDeviceList();
@@ -2197,8 +2211,9 @@ ALCAPI ALCdevice * ALCAPIENTRY alcCaptureOpenDevice(const ALCchar *deviceName, A
 //*****************************************************************************
 ALCAPI ALCboolean ALCAPIENTRY alcCaptureCloseDevice(ALCdevice *device)
 {
+#ifdef _LOGCALLS
 	LOG("alcCaptureCloseDevice device %p\n", device);
-
+#endif
 	ALCboolean bReturn = ALC_FALSE;
 
 	if (device == g_CaptureDevice)
@@ -2225,8 +2240,9 @@ ALCAPI ALCboolean ALCAPIENTRY alcCaptureCloseDevice(ALCdevice *device)
 //*****************************************************************************
 ALCAPI ALCvoid ALCAPIENTRY alcCaptureStart(ALCdevice *device)
 {
+#ifdef _LOGCALLS
 	LOG("alcCaptureStart device %p\n", device);
-
+#endif
 	if (device == g_CaptureDevice)
 	{
 		if (g_CaptureDevice != NULL) {
@@ -2249,8 +2265,9 @@ ALCAPI ALCvoid ALCAPIENTRY alcCaptureStart(ALCdevice *device)
 //*****************************************************************************
 ALCAPI ALCvoid ALCAPIENTRY alcCaptureStop(ALCdevice *device)
 {
+#ifdef _LOGCALLS
 	LOG("alcCaptureStop device %p\n", device);
-
+#endif
 	if (device == g_CaptureDevice)
 	{
 		if (g_CaptureDevice != NULL) {
@@ -2273,8 +2290,9 @@ ALCAPI ALCvoid ALCAPIENTRY alcCaptureStop(ALCdevice *device)
 //*****************************************************************************
 ALCAPI ALCvoid ALCAPIENTRY alcCaptureSamples(ALCdevice *device, ALCvoid *buffer, ALCsizei samples)
 {
+#ifdef _LOGCALLS
 	LOG("alcCaptureSamples device %p buffer %p samples %d\n", device, buffer, samples);
-
+#endif
 	if (device == g_CaptureDevice)
 	{
 		if (g_CaptureDevice != NULL) {
