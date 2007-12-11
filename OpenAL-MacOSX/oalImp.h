@@ -111,6 +111,11 @@ AL_API ALvoid	AL_APIENTRY alHint( ALenum target, ALenum mode );
 #define kDefaultMaximumMixerBusCount    64
 #define kDopplerDefault                 0	
 
+enum {
+		kRogerBeepType	= 'rogr',
+		kDistortionType	= 'dist'
+};
+
 #define	THROW_RESULT		if(result != noErr) throw static_cast<OSStatus>(result);
 
 enum {
@@ -119,13 +124,21 @@ enum {
 		k3DMixerVersion_1_3		= 13,
 		k3DMixerVersion_2_0,
 		k3DMixerVersion_2_1,
-		k3DMixerVersion_2_2
+		k3DMixerVersion_2_2,
+		k3DMixerVersion_2_3
 };
-		
+
+enum {
+		kUnknownAUState	= -1,
+		kAUIsNotPresent	= 0,
+		kAUIsPresent	= 1
+};		
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 void	alSetError (ALenum errorCode);
 UInt32	Get3DMixerVersion ();
+ALCint  IsDistortionPresent();
+ALCint  IsRogerBeepPresent();
 
 #endif
 

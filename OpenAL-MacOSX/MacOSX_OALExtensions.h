@@ -25,11 +25,18 @@
 #define __MAC_OSX_OAL_EXTENSIONS_H__
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	Extension API Function TypeDefs
-	Mac OSX Extension 
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-/* ALC_EXT_MAC_OSX */
+/*	
+	Convert Data When Loading.  
+	Default false, currently applies only to monophonic sounds. Use with alEnable()/alDisable()
+*/
+	#define ALC_MAC_OSX_CONVERT_DATA_UPON_LOADING         	0xF001
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	ALC_EXT_MAC_OSX
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
 typedef ALvoid (*alcMacOSXRenderingQualityProcPtr) (const ALint value);
 typedef ALvoid (*alMacOSXRenderChannelCountProcPtr) (const ALint value);
 typedef ALvoid (*alcMacOSXMixerMaxiumumBussesProcPtr) (const ALint value);
@@ -40,44 +47,35 @@ typedef ALint (*alMacOSXGetRenderChannelCountProcPtr) ();
 typedef ALint (*alcMacOSXGetMixerMaxiumumBussesProcPtr) ();
 typedef ALdouble (*alcMacOSXGetMixerOutputRateProcPtr) ();
 
-/* AL_EXT_STATIC_BUFFER */
+/* Render Quality. Used with alcMacOSXRenderingQuality() */
+	
+	#define ALC_MAC_OSX_SPATIAL_RENDERING_QUALITY_HIGH      'rqhi'
+	#define ALC_MAC_OSX_SPATIAL_RENDERING_QUALITY_LOW		'rdlo'
+
+/*	
+	Render Channels. Used with alMacOSXRenderChannelCount()
+	Allows a user to force OpenAL to render to stereo, regardless of the audio hardware being used
+*/
+	#define ALC_MAC_OSX_RENDER_CHANNEL_COUNT_STEREO         'rcst'
+	#define ALC_MAC_OSX_RENDER_CHANNEL_COUNT_MULTICHANNEL   'rcmc'
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	AL_EXT_STATIC_BUFFER
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 typedef ALvoid	AL_APIENTRY	(*alBufferDataStaticProcPtr) (const ALint bid, ALenum format, ALvoid* data, ALsizei size, ALsizei freq);
 
-/* ALC_EXT_ASA - ASA (Apple Spatial Audio) Extension */
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	ALC_EXT_ASA : Apple Spatial Audio Extension
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+/*
+	Used with the ASA API calls: alcASAGetSource(), alcASASetSource(), alcASAGetListener(), alcASASetListener()
+*/
 
 typedef ALenum  (*alcASAGetSourceProcPtr) (const ALuint property, ALuint source, ALvoid *data, ALuint* dataSize);
 typedef ALenum  (*alcASASetSourceProcPtr) (const ALuint property, ALuint source, ALvoid *data, ALuint dataSize);
 typedef ALenum  (*alcASAGetListenerProcPtr) (const ALuint property, ALvoid *data, ALuint* dataSize);
 typedef ALenum  (*alcASASetListenerProcPtr) (const ALuint property, ALvoid *data, ALuint dataSize);
-
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-
-/**
- * Convert Data When Loading.  Default false, currently applies only to monophonic sounds. Use with alEnable()/alDisable()
- */
-	#define ALC_MAC_OSX_CONVERT_DATA_UPON_LOADING         	0xF001
-
-/**
- * Render Quality. Used with alcMacOSXRenderingQuality()
- */
-	#define ALC_MAC_OSX_SPATIAL_RENDERING_QUALITY_HIGH      'rqhi'
-	#define ALC_MAC_OSX_SPATIAL_RENDERING_QUALITY_LOW		'rdlo'
-
-/**
- * Render Channels. Used with alcMacOSXRenderChannelCount()
- * Allows a user to force OpenAL to render to stereo, regardless of the audio hardware being used
- */
-	#define ALC_MAC_OSX_RENDER_CHANNEL_COUNT_STEREO         'rcst'
-	#define ALC_MAC_OSX_RENDER_CHANNEL_COUNT_MULTICHANNEL   'rcmc'
-
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	Apple Environmental Audio Extension
-   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-
-/*
-	Used with the ASA API calls: alcASAGetSource(), alcASASetSource(), alcASAGetListener(), alcASASetListener()
-*/
 
 	/* listener properties */
 	#define ALC_ASA_REVERB_ON							'rvon'	// type ALboolean
@@ -100,7 +98,7 @@ typedef ALenum  (*alcASASetListenerProcPtr) (const ALuint property, ALvoid *data
 	#define ALC_ASA_REVERB_ROOM_TYPE_MediumHall3		11
 	#define ALC_ASA_REVERB_ROOM_TYPE_LargeHall2			12
 
-	#define ALC_ASA_REVERB_PRESET						'rvps'	// type ALchar* - set only
+	#define ALC_ASA_REVERB_PRESET						'rvps'	// type ALchar* - (set only) path to an au preset file
 
 	#define ALC_ASA_REVERB_EQ_GAIN						'rveg'	// type ALfloat
 	#define ALC_ASA_REVERB_EQ_BANDWITH					'rveb'	// type ALfloat
@@ -120,5 +118,77 @@ typedef ALenum  (*alcASASetListenerProcPtr) (const ALuint property, ALvoid *data
 	#define ALC_ASA_OCCLUSION							'occl'	// type ALfloat	-100.0 db (most occlusion) - 0.0 db (no occlusion, 0.0 default)
 	#define ALC_ASA_OBSTRUCTION							'obst'	// type ALfloat	-100.0 db (most obstruction) - 0.0 db (no obstruction, 0.0 default)	
 
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	ALC_EXT_ASA_ROGER_BEEP : Apple Spatial Audio Extension for Roger Beep Effect
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+	
+/*	
+	Roger Beep : an effect to simulate effects such as Walkie Talkie noise. It is designed to replace the 
+	source audio data with a specific 'tone' when falling below a specified db threshold for a specified time.
+	This Extension will be present when the Roger Beep Audio Unit is present on the system (10.5 or greater)
+	Use the alcASAGetSource() and alcASASetSource() APIs in the ALC_EXT_ASA extension.
+*/
+
+	/* source properties */
+	#define ALC_ASA_ROGER_BEEP_ENABLE				'rben'	// type ALboolean	- initializes Roger Beep for use - returns error if source is not in a Stopped or Initial state
+	#define ALC_ASA_ROGER_BEEP_ON					'rbon'	// type ALboolean	- set effect on/off (bypass) - default setting is true (on)
+	#define ALC_ASA_ROGER_BEEP_GAIN					'rbgn'	// type ALfloat		- 20.0 (db) apply maximum effect :  -80.0(db) apply minimum effect amount
+	#define ALC_ASA_ROGER_BEEP_SENSITIVITY			'rbsn'	// type ALint		- specifiy a predefined sensitivity setting
+	#define ALC_ASA_ROGER_BEEP_TYPE					'rbtp'	// type ALint		- choose predefined specific Roger Beep tone
+	#define ALC_ASA_ROGER_BEEP_PRESET				'rbps'	// type ALchar*		- path to an au preset file (set only) 
+
+	/* settings for the ALC_ASA_ROGER_BEEP_TYPE property */
+	#define ALC_ASA_ROGER_BEEP_TYPE_quindartone			0
+	#define ALC_ASA_ROGER_BEEP_TYPE_whitenoise			1
+	#define ALC_ASA_ROGER_BEEP_TYPE_walkietalkie		2
+
+	/* settings for the ALC_ASA_ROGER_BEEP_SENSITIVITY property */ 
+
+	#define ALC_ASA_ROGER_BEEP_SENSITIVITY_Light		0
+	#define ALC_ASA_ROGER_BEEP_SENSITIVITY_Medium		1
+	#define ALC_ASA_ROGER_BEEP_SENSITIVITY_Heavy		2
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	ALC_EXT_ASA_DISTORTION : Apple Spatial Audio Extension for Distortion Effect
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+/* 
+	Distortion Effect 
+	This Extension will be present when the Distortion Audio Unit is present on the system (10.5 or greater)
+	Use the alcASAGetSource() and alcASASetSource() APIs in the ALC_EXT_ASA extension.
+*/
+
+	/* source properties */
+	#define ALC_ASA_DISTORTION_ENABLE				'dsen'	// type ALboolean	- initializes Distortion for use - returns error if source is not in a Stopped or Initial state
+	#define ALC_ASA_DISTORTION_ON					'dson'	// type ALboolean	- set effect on/off (bypass) - default setting is true (on)
+	#define ALC_ASA_DISTORTION_MIX					'dsmx'	// type ALfloat		- mix balance between dry signal and distortion effect - 0.0 (no effect) - 100.0 (all effect)
+	#define ALC_ASA_DISTORTION_TYPE					'dstp'	// type ALint		- choose predefined distortion settings
+	#define ALC_ASA_DISTORTION_PRESET				'dsps'	// type ALchar*		- path to an au preset file (set only)
+
+	/* settings for the ALC_ASA_DISTORTION_TYPE property */
+	#define ALC_ASA_DISTORTION_TYPE_BitBrush			0
+	#define ALC_ASA_DISTORTION_TYPE_BufferBeats			1
+	#define ALC_ASA_DISTORTION_TYPE_LoFi				2
+	#define ALC_ASA_DISTORTION_TYPE_BrokenSpeaker		3
+	#define ALC_ASA_DISTORTION_TYPE_Cellphone			4
+	#define ALC_ASA_DISTORTION_TYPE_Decimated1			5
+	#define ALC_ASA_DISTORTION_TYPE_Decimated2			6
+	#define ALC_ASA_DISTORTION_TYPE_Decimated3			7
+	#define ALC_ASA_DISTORTION_TYPE_Decimated4			8
+	#define ALC_ASA_DISTORTION_TYPE_DistortedFunk		9
+	#define ALC_ASA_DISTORTION_TYPE_DistortionCubed		10
+	#define ALC_ASA_DISTORTION_TYPE_DistortionSquared	11
+	#define ALC_ASA_DISTORTION_TYPE_Echo1				12
+	#define ALC_ASA_DISTORTION_TYPE_Echo2				13
+	#define ALC_ASA_DISTORTION_TYPE_EchoTight1			14
+	#define ALC_ASA_DISTORTION_TYPE_EchoTight2			15
+	#define ALC_ASA_DISTORTION_TYPE_EverythingBroken	16
+	#define ALC_ASA_DISTORTION_TYPE_AlienChatter		17
+	#define ALC_ASA_DISTORTION_TYPE_CosmicInteference	18
+	#define ALC_ASA_DISTORTION_TYPE_GoldenPi			19
+	#define ALC_ASA_DISTORTION_TYPE_RadioTower			20
+	#define ALC_ASA_DISTORTION_TYPE_Waves				21
+
+	
 
 #endif // __MAC_OSX_OAL_EXTENSIONS_H__

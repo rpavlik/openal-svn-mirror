@@ -263,6 +263,7 @@ OSStatus	OALBuffer::AddAudioData(char*	inAudioData, UInt32	inAudioDataSize, ALen
     #if LOG_EXTRAS		
         DebugMessage("alBufferData called: Converting Data Now");
     #endif
+
             result = ConvertDataForBuffer(inAudioData, inAudioDataSize, format, freq);	// convert the data to the mixer's format and copy to the buffer
                 THROW_RESULT
         }
@@ -295,11 +296,10 @@ OSStatus OALBuffer::ConvertDataForBuffer(void *inData, UInt32 inDataSize, UInt32
 
         if (inData == NULL)
             throw ((OSStatus) AL_INVALID_OPERATION);
-        
+
         result = FillInASBD(mPreConvertedDataFormat, inDataFormat, inDataSampleRate);
             THROW_RESULT
 
-        // we only should be here for mono sounds for now...
         if (mPreConvertedDataFormat.NumberChannels() == 1)
             mPreConvertedDataFormat.mFormatFlags |= kAudioFormatFlagIsNonInterleaved; 
                     
@@ -323,10 +323,11 @@ OSStatus OALBuffer::ConvertDataForBuffer(void *inData, UInt32 inDataSize, UInt32
         result = AudioConverterNew(&mPreConvertedDataFormat, &destFormat, &converter);
             THROW_RESULT
 
-        framesOfSource = inDataSize / mPreConvertedDataFormat.mBytesPerFrame; // THIS ONLY WORKS FOR CBR FORMATS
+		framesOfSource = inDataSize / mPreConvertedDataFormat.mBytesPerFrame; // THIS ONLY WORKS FOR CBR FORMATS
+			
+       	UInt32 dataSize = framesOfSource * sizeof(Float32) * destFormat.NumberChannels();
         
-        UInt32		dataSize = framesOfSource * sizeof(Float32) * destFormat.NumberChannels();
-        mDataSize = (UInt32) dataSize;
+		mDataSize = (UInt32) dataSize;
 
         if (mData != NULL)
         {
@@ -350,15 +351,15 @@ OSStatus OALBuffer::ConvertDataForBuffer(void *inData, UInt32 inDataSize, UInt32
 
         if (mData != NULL)
         {
-            result = AudioConverterConvertBuffer(converter, inDataSize, inData, &mDataSize, mData);
-            if (result == noErr)
+			result = AudioConverterConvertBuffer(converter, inDataSize, inData, &mDataSize, mData);
+			if (result == noErr)
             {
                 mDataFormat.SetFrom(destFormat);
-                if (mPreConvertedDataFormat.NumberChannels() == 1)
-                    mDataHasBeenConverted = true;
-                else
-                    mDataHasBeenConverted = false;				
-            }
+				if (mPreConvertedDataFormat.NumberChannels() == 1)
+					mDataHasBeenConverted = true;
+				else
+					mDataHasBeenConverted = false;
+			}
         }
         
         AudioConverterDispose(converter);
@@ -427,7 +428,7 @@ bool	OALBuffer::UseThisBuffer(OALSource*	inSource)
 #endif
 	
 #if LOG_EXTRAS		
-	DebugMessageN2("OALBuffer::UseThisBuffer - BufferToken:SourceToken = %ld:%ld", mSelfToken, inSource->GetToken());
+	DebugMessageN2("OALBuffer::UseThisBuffer - BufferToken:SourceToken = %ld:%ld", (long int)mSelfToken, (long int)inSource->GetToken());
 #endif
 	
 	return noErr;

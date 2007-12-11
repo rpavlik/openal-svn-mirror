@@ -49,6 +49,7 @@ class OALCaptureDevice
 	
 	void				StartCapture();
 	void				StopCapture();
+
 	OSStatus			GetFrames(UInt32 inFrameCount, UInt8*	inBuffer);
 	UInt32				AvailableFrames();
 	void				SetError(ALenum errorCode);
@@ -65,7 +66,11 @@ class OALCaptureDevice
 		AudioUnit						mInputUnit;
 		CAStreamBasicDescription		mNativeFormat;
 		CAStreamBasicDescription		mRequestedFormat;
+		CAStreamBasicDescription		mOutputFormat;
 		OALRingBuffer*					mRingBuffer;					// the ring buffer
+		UInt8*							mBufferData;
+		AudioConverterRef				mAudioConverter;
+		Float64							mSampleRateRatio;
 		UInt32							mRequestedRingFrames;			
 		CABufferList*					mAudioInputPtrs;
 
@@ -76,6 +81,12 @@ class OALCaptureDevice
 									UInt32 						inBusNumber,
 									UInt32 						inNumberFrames,
 									AudioBufferList *			ioData);
+									
+	static OSStatus		ACComplexInputDataProc	(AudioConverterRef				inAudioConverter,
+												 UInt32							*ioNumberDataPackets,
+												 AudioBufferList				*ioData,
+												 AudioStreamPacketDescription	**outDataPacketDescription,
+												 void*							inUserData);
 										
 };
 

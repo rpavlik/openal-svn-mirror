@@ -82,6 +82,7 @@ class OALContext
 	UInt32			GetDesiredRenderChannels(UInt32	inDeviceChannels);
 	AudioUnit		GetMixerUnit() { return mMixerUnit;}
 	AUNode			GetMixerNode() { return mMixerNode;}
+	AUGraph			GetGraph()	   { return mOwningDevice->GetGraph(); }
 	UInt32			GetRenderQuality() {return mRenderQuality;}
 	Float32         GetFramesPerSlice() { return mOwningDevice->GetFramesPerSlice();}
 	Float64			GetMixerRate () const { return mMixerOutputRate; }

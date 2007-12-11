@@ -48,51 +48,45 @@
 ALuint		gTestSID = 0;
 #endif
 
-// ~~~~~~~~~~~~~~~~~~~~~~
-// VERSION
-const char *alVersion="1.1";
 #define		kMajorVersion	1
 #define		kMinorVersion	1
 
-const char *unknownImplementationError="Unknown Internal Error";
+
+char*		alcExtensions = NULL;
+char*		alExtensions = NULL;
+
+//these will be used to construct the actual strings
+#define		alcExtensionsBase		"ALC_EXT_CAPTURE ALC_ENUMERATION_EXT ALC_EXT_MAC_OSX"
+#define		alcExtensionsASA		" ALC_EXT_ASA"
+#define		alcExtensionsDistortion	" ALC_EXT_ASA_DISTORTION"
+#define		alcExtensionsRogerBeep	" ALC_EXT_ASA_ROGER_BEEP"
+
+#define		alExtensionsBase		"AL_EXT_OFFSET AL_EXT_LINEAR_DISTANCE AL_EXT_EXPONENT_DISTANCE AL_EXT_float32 AL_EXT_STATIC_BUFFER"
+
+// ~~~~~~~~~~~~~~~~~~~~~~
+// VERSION
+#define alVersion					"1.1"
+
+#define 	unknownImplementationError "Unknown Internal Error"
 
 // AL_STATE info
-const char *alVendor="Apple Computer Inc.";
-const char *alRenderer="Software";
+#define 	alVendor				"Apple Computer Inc."
+#define		alRenderer				"Software"
 
-#define	kALExtensionCount	5
-const char *alExtensions			= "AL_EXT_OFFSET AL_EXT_LINEAR_DISTANCE AL_EXT_EXPONENT_DISTANCE AL_EXT_float32 AL_EXT_STATIC_BUFFER";
-const char *alExtensionsList[kALExtensionCount] = {	"AL_EXT_OFFSET",
-													"AL_EXT_LINEAR_DISTANCE",
-													"AL_EXT_EXPONENT_DISTANCE",
-													"AL_EXT_float32",
-													"AL_EXT_STATIC_BUFFER"};
+#define		alNoError				"No Error"
+#define		alErrInvalidName		"Invalid Name"
+#define		alErrInvalidEnum		"Invalid Enum"
+#define		alErrInvalidValue		"Invalid Value"
+#define		alErrInvalidOp			"Invalid Operation"
+#define		alErrOutOfMemory		"Out of Memory"
 
-
-#define	kALCExtensionCount	3
-const char *alcExtensions				= "ALC_EXT_CAPTURE ALC_ENUMERATION_EXT ALC_EXT_MAC_OSX";
-
-const char *alcExtensionsList[kALCExtensionCount] = {	"ALC_EXT_CAPTURE",
-														"ALC_ENUMERATION_EXT",
-														"ALC_EXT_MAC_OSX"};
-
-const char *alcExtensionsWithASA		= "ALC_EXT_CAPTURE ALC_ENUMERATION_EXT ALC_EXT_MAC_OSX ALC_EXT_ASA";
-
-const char *alNoError				= "No Error";
-const char *alErrInvalidName		= "Invalid Name";
-const char *alErrInvalidEnum		= "Invalid Enum";
-const char *alErrInvalidValue		= "Invalid Value";
-const char *alErrInvalidOp			= "Invalid Operation";
-const char *alErrOutOfMemory		= "Out of Memory";
-
-const char *alcErrInvalidDevice		= "ALC Invalid Device";
-const char *alcErrInvalidContext	= "ALC Invalid Context";
+#define		alcErrInvalidDevice		"ALC Invalid Device"
+#define		alcErrInvalidContext	"ALC Invalid Context"
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // globals
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-// globals
 UInt32		gCurrentError = 0;										// globally stored error code
 uintptr_t	gCurrentContext = 0;                                    // token for the current context
 uintptr_t	gCurrentDevice = 0;                                     // token for the device of the current context
@@ -130,12 +124,47 @@ void WaitOneRenderCycle()
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-const char*	GetALCExtensionList()
+char* GetALCExtensionList()
 {
-	if (Get3DMixerVersion() >= k3DMixerVersion_2_2) 
-		return alcExtensionsWithASA;
-	else
-		return alcExtensions;
+	// if the string has already been allocated and created, return it
+	if(alcExtensions != NULL) return alcExtensions;
+	
+	// first create the base extension string
+	alcExtensions = (char*)malloc(strlen(alcExtensionsBase)+1);
+	memcpy(alcExtensions, alcExtensionsBase, strlen(alcExtensionsBase)+1);
+	
+	// now add the extensions if they are found on the system
+	if (Get3DMixerVersion() >= k3DMixerVersion_2_2)
+	{
+		alcExtensions = (char*)realloc(alcExtensions, strlen(alcExtensions) + strlen(alcExtensionsASA) + 1);
+		strcat(alcExtensions, alcExtensionsASA);
+	}
+	
+	if(IsDistortionPresent())
+	{
+		alcExtensions = (char*)realloc(alcExtensions, strlen(alcExtensions) + strlen(alcExtensionsDistortion) + 1);
+		strcat(alcExtensions, alcExtensionsDistortion);
+	}
+	
+	if(IsRogerBeepPresent())
+	{
+		alcExtensions = (char*)realloc(alcExtensions, strlen(alcExtensions) + strlen(alcExtensionsRogerBeep) + 1);
+		strcat(alcExtensions, alcExtensionsRogerBeep);
+	}
+	
+	return alcExtensions;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+char* GetALExtensionList()
+{
+	if(alExtensions != NULL) return alExtensions;
+	
+	// if list is not created, allocate and create a new string
+	alExtensions = (char*)malloc(strlen(alExtensionsBase)+1);
+	memcpy(alExtensions, alExtensionsBase, strlen(alExtensionsBase)+1);
+	
+	return alExtensions;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -172,9 +201,13 @@ UInt32 Get3DMixerVersion ()
 		{
 			mixerVersion = k3DMixerVersion_2_1;
 		}
-		else if (version >= 0x20200)
+		else if (version == 0x20200)
 		{
 			mixerVersion = k3DMixerVersion_2_2;
+		}
+		else if (version >= 0x20300)
+		{
+			mixerVersion = k3DMixerVersion_2_3;
 		}
 	}
 
@@ -364,7 +397,7 @@ void	InitializeBufferMap()
 
 		// populate the good buffer with the AL_NONE buffer, it should never be deleted
 		OALBuffer	*newBuffer = new OALBuffer (AL_NONE);
-		gOALBufferMap->Add(0, &newBuffer);							// add the new buffer to the buffer map
+		gOALBufferMap->Add(AL_NONE, &newBuffer);							// add the new buffer to the buffer map
 	}
 }
 
@@ -393,8 +426,10 @@ void	DeleteContextsOfThisDevice(uintptr_t inDeviceToken)
 					alcMakeContextCurrent(NULL);
 				}
 				
-				delete (oalContext);
-				i--; //try this index again since it was just deleted
+				if (gOALContextMap->Remove(contextToken)) {
+					delete (oalContext);
+					i--; // try this index again since it was just deleted
+				}
 			}
 		}
 	}
@@ -426,6 +461,43 @@ void	ReconfigureContextsOfThisDevice(uintptr_t inDeviceToken)
 	}
 
 	return;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ALCint   alcCheckUnitIsPresent(OSType componentSubType)
+{
+	ALCint isPresent = kUnknownAUState;
+	
+	ComponentDescription	desc;
+	desc.componentFlags = 0;        
+	desc.componentFlagsMask = 0;     
+	desc.componentType = kAudioUnitType_Effect;          
+	desc.componentSubType = componentSubType;       
+	desc.componentManufacturer = kAudioUnitManufacturer_Apple;  
+
+	isPresent = (FindNextComponent(0, &desc) != 0) ? kAUIsPresent : kAUIsNotPresent;
+	
+	return isPresent;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ALCint  IsRogerBeepPresent()
+{
+	static	ALCint isPresent = kUnknownAUState;
+	if (isPresent == kUnknownAUState)
+		isPresent = alcCheckUnitIsPresent(kRogerBeepType);
+		
+	return isPresent;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ALCint  IsDistortionPresent()
+{
+	static	ALCint isPresent = kUnknownAUState;
+	if (isPresent == kUnknownAUState)
+		isPresent = alcCheckUnitIsPresent(kDistortionType);
+		
+	return isPresent;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -521,11 +593,11 @@ ALC_API void   ALC_APIENTRY alcCaptureStart( ALCdevice *device )
         oalCaptureDevice->StartCapture();
 	}
 	catch (OSStatus   result) {
-		DebugMessageN1("ERROR: alcCaptureCloseDevice FAILED = %s\n", alcGetString(NULL, result));
+		DebugMessageN1("ERROR: alcCaptureStart FAILED = %s\n", alcGetString(NULL, result));
 		SetDeviceError((uintptr_t) device, result);
 	}
     catch (...) {
-		DebugMessage("ERROR: alcCaptureCloseDevice FAILED");
+		DebugMessage("ERROR: alcCaptureStart FAILED");
 		SetDeviceError((uintptr_t) device, AL_INVALID_OPERATION);
 	}
 }
@@ -542,11 +614,11 @@ ALC_API void	ALC_APIENTRY alcCaptureStop( ALCdevice *device )
         oalCaptureDevice->StopCapture();
 	}
 	catch (OSStatus   result) {
-		DebugMessageN1("ERROR: alcCaptureCloseDevice FAILED = %s\n", alcGetString(NULL, result));
+		DebugMessageN1("ERROR: alcCaptureStop FAILED = %s\n", alcGetString(NULL, result));
 		SetDeviceError((uintptr_t) device, result);
 	}
     catch (...) {
-		DebugMessage("ERROR: alcCaptureCloseDevice FAILED");
+		DebugMessage("ERROR: alcCaptureStop FAILED");
 		SetDeviceError((uintptr_t) device, AL_INVALID_OPERATION);
 	}
 }
@@ -563,11 +635,11 @@ ALC_API void	ALC_APIENTRY alcCaptureSamples( ALCdevice *device, ALCvoid *buffer,
         oalCaptureDevice->GetFrames(samples, (UInt8*) buffer);
 	}
 	catch (OSStatus   result) {
-		DebugMessageN1("ERROR: alcCaptureCloseDevice FAILED = %s\n", alcGetString(NULL, result));
+		DebugMessageN1("ERROR: alcCaptureSamples FAILED = %s\n", alcGetString(NULL, result));
 		SetDeviceError((uintptr_t) device, result);
 	}
     catch (...) {
-		DebugMessage("ERROR: alcCaptureCloseDevice FAILED");
+		DebugMessage("ERROR: alcCaptureSamples FAILED");
 		SetDeviceError((uintptr_t) device, AL_INVALID_OPERATION);
 	}
 }
@@ -745,7 +817,7 @@ ALC_API ALCboolean  ALC_APIENTRY alcMakeContextCurrent(ALCcontext *context)
 #endif
 
 	OALContext		*newContext = NULL;
-	OALContext		*oldContext = NULL;
+	OALContext		*currentContext = NULL;
 
 	if ((uintptr_t) context == gCurrentContext)
 		return AL_TRUE;								// no change necessary, already using this context
@@ -756,13 +828,18 @@ ALC_API ALCboolean  ALC_APIENTRY alcMakeContextCurrent(ALCcontext *context)
 
 		// get the current context if there is one
 		if (gCurrentContext != 0)
-			oldContext = gOALContextMap->Get(gCurrentContext);
+			currentContext = gOALContextMap->Get(gCurrentContext);
 			
 		if (context == 0)
 		{
 			// caller passed NULL, which means no context should be current
 			gCurrentDevice = 0;
 			gCurrentContext = 0;
+			
+			// disconnect the context from the owning device
+			uintptr_t owningDeviceToken = currentContext->GetDeviceToken();
+			OALDevice* owningDevice = gOALDeviceMap->Get(owningDeviceToken);
+			owningDevice->DisconnectContext(currentContext);
 		}
 		else
 		{
@@ -942,11 +1019,12 @@ ALC_API const ALCchar *	ALC_APIENTRY alcGetString(ALCdevice *device, ALCenum pna
 				break;
 
 			case ALC_DEVICE_SPECIFIER:
-				// for now return an empty list instead of the default device name
-				// GetDefaultDeviceNameList(gDefaultOutputDeviceNameList, false);
-				gDefaultOutputDeviceNameList[0] = '\0';
-				gDefaultOutputDeviceNameList[1] = '\0';
-				return gDefaultOutputDeviceNameList;
+			{
+				GetDefaultDeviceName(gDefaultOutputDeviceName, false);
+				UInt32	length = strlen(gDefaultOutputDeviceName);
+				gDefaultOutputDeviceName[length + 1] = '\0'; // double terminator
+				return gDefaultOutputDeviceName;
+			}
 				break;
 
 			case ALC_EXTENSIONS:
@@ -963,11 +1041,12 @@ ALC_API const ALCchar *	ALC_APIENTRY alcGetString(ALCdevice *device, ALCenum pna
 				break;
 
 			case ALC_CAPTURE_DEVICE_SPECIFIER:
-				// for now return an empty list instead of the default device name
-				//GetDefaultDeviceNameList(gDefaultInputDeviceName, true);
-				gDefaultInputDeviceNameList[0] = '\0';
-				gDefaultInputDeviceNameList[1] = '\0';
-				return gDefaultInputDeviceNameList;
+			{
+				GetDefaultDeviceName(gDefaultInputDeviceName, true);
+				UInt32	length = strlen(gDefaultInputDeviceName);
+				gDefaultInputDeviceName[length + 1] = '\0'; // double terminator
+				return gDefaultInputDeviceName;
+			}
 				break;
 
 			case ALC_NO_ERROR:
@@ -1022,14 +1101,8 @@ ALC_API ALCboolean ALC_APIENTRY alcIsExtensionPresent(ALCdevice *device, const A
 	}
 	else
 	{
-		// look at the extensions that are always present first
-		for (UInt32	i = 0; i < kALCExtensionCount; i++)
-		{
-			if (strcmp(alcExtensionsList[i], (const char *) extname) == 0) return AL_TRUE;
-		}
-		
-		// see if the ASA extension is requested and return true if we have the right 3DMixer present at runtime
-		if (Get3DMixerVersion() >= k3DMixerVersion_2_2 && (strcmp("ALC_EXT_ASA", (const char *) extname) == 0)) return AL_TRUE;
+		if(strstr(GetALCExtensionList(), extname) != NULL)
+			return AL_TRUE;
 	}
 	
 	return AL_FALSE;    // extension not present in this implementation
@@ -1722,6 +1795,7 @@ AL_API void	AL_APIENTRY alDeleteSources( ALsizei n, const ALuint* sids )
         
         for (UInt32 i = 0; i < (UInt32) n; i++)
         {
+			alSourceStop (sids[i]);
             oalContext->RemoveSource(sids[i]);
         }
 	}
@@ -2798,7 +2872,7 @@ AL_API void	AL_APIENTRY alSourceQueueBuffers( ALuint sid, ALsizei numEntries, co
 		if (oalSource->GetSourceType() == AL_STATIC)
         {
 			// if the source is Static but is transitioning to flushing the Q, then waity a render cycle and see if things are ok
-			// otherwise, it is illegal to append buffers to a Q, because a Ststoic designation means it only can use 1 buffer
+			// otherwise, it is illegal to append buffers to a Q, because a static designation means it only can use 1 buffer
 			if (!oalSource->IsSourceTransitioningToFlushQ())
 			{
 				DebugMessage("ERROR: alSourceQueueBuffers FAILED oalSource->GetSourceType() == AL_STATIC");
@@ -3429,7 +3503,7 @@ AL_API const ALchar* AL_APIENTRY alGetString( ALenum pname )
 		case AL_RENDERER:
 			return (ALchar *)alRenderer;
 		case AL_EXTENSIONS:
-			return (ALchar *)alExtensions;
+			return (ALchar *)GetALExtensionList();
 		case AL_NO_ERROR:
 			return (ALchar *)alNoError;
 		case AL_INVALID_NAME:
@@ -3600,6 +3674,50 @@ AL_API ALenum	AL_APIENTRY alGetEnumValue( const ALchar* ename )
 	if (strcmp("ALC_ASA_REVERB_QUALITY_Medium", (const char *)ename) == 0) { return ALC_ASA_REVERB_QUALITY_Medium; }
 	if (strcmp("ALC_ASA_REVERB_QUALITY_Low", (const char *)ename) == 0) { return ALC_ASA_REVERB_QUALITY_Low; }
 	if (strcmp("ALC_ASA_REVERB_QUALITY_Min", (const char *)ename) == 0) { return ALC_ASA_REVERB_QUALITY_Min; }
+
+	if (strcmp("ALC_ASA_ROGER_BEEP_ENABLE", (const char *)ename) == 0) { return ALC_ASA_ROGER_BEEP_ENABLE; }
+	if (strcmp("ALC_ASA_ROGER_BEEP_ON", (const char *)ename) == 0) { return ALC_ASA_ROGER_BEEP_ON; }
+	if (strcmp("ALC_ASA_ROGER_BEEP_GAIN", (const char *)ename) == 0) { return ALC_ASA_ROGER_BEEP_GAIN; }
+	if (strcmp("ALC_ASA_ROGER_BEEP_SENSITIVITY", (const char *)ename) == 0) { return ALC_ASA_ROGER_BEEP_SENSITIVITY; }
+	if (strcmp("ALC_ASA_ROGER_BEEP_TYPE", (const char *)ename) == 0) { return ALC_ASA_ROGER_BEEP_TYPE; }
+	if (strcmp("ALC_ASA_ROGER_BEEP_PRESET", (const char *)ename) == 0) { return ALC_ASA_ROGER_BEEP_PRESET; }
+
+	if (strcmp("ALC_ASA_ROGER_BEEP_TYPE_quindartone", (const char *)ename) == 0) { return ALC_ASA_ROGER_BEEP_TYPE_quindartone; }
+	if (strcmp("ALC_ASA_ROGER_BEEP_TYPE_whitenoise", (const char *)ename) == 0) { return ALC_ASA_ROGER_BEEP_TYPE_whitenoise; }
+	if (strcmp("ALC_ASA_ROGER_BEEP_TYPE_walkietalkie", (const char *)ename) == 0) { return ALC_ASA_ROGER_BEEP_TYPE_walkietalkie; }
+	if (strcmp("ALC_ASA_ROGER_BEEP_SENSITIVITY_Light", (const char *)ename) == 0) { return ALC_ASA_ROGER_BEEP_SENSITIVITY_Light; }
+	if (strcmp("ALC_ASA_ROGER_BEEP_SENSITIVITY_Medium", (const char *)ename) == 0) { return ALC_ASA_ROGER_BEEP_SENSITIVITY_Medium; }
+	if (strcmp("ALC_ASA_ROGER_BEEP_SENSITIVITY_Heavy", (const char *)ename) == 0) { return ALC_ASA_ROGER_BEEP_SENSITIVITY_Heavy; }
+
+	if (strcmp("ALC_ASA_DISTORTION_ENABLE", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_ENABLE; }
+	if (strcmp("ALC_ASA_DISTORTION_ON", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_ON; }
+	if (strcmp("ALC_ASA_DISTORTION_MIX", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_MIX; }
+	if (strcmp("ALC_ASA_DISTORTION_TYPE", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_TYPE; }
+	if (strcmp("ALC_ASA_DISTORTION_PRESET", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_PRESET; }
+
+	if (strcmp("ALC_ASA_DISTORTION_TYPE_BitBrush", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_TYPE_BitBrush; }
+	if (strcmp("ALC_ASA_DISTORTION_TYPE_BufferBeats", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_TYPE_BufferBeats; }
+	if (strcmp("ALC_ASA_DISTORTION_TYPE_LoFi", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_TYPE_LoFi; }
+	if (strcmp("ALC_ASA_DISTORTION_TYPE_BitBrush", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_TYPE_BitBrush; }
+	if (strcmp("ALC_ASA_DISTORTION_TYPE_BrokenSpeaker", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_TYPE_BrokenSpeaker; }
+	if (strcmp("ALC_ASA_DISTORTION_TYPE_Cellphone", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_TYPE_Cellphone; }
+	if (strcmp("ALC_ASA_DISTORTION_TYPE_Decimated1", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_TYPE_Decimated1; }
+	if (strcmp("ALC_ASA_DISTORTION_TYPE_Decimated2", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_TYPE_Decimated2; }
+	if (strcmp("ALC_ASA_DISTORTION_TYPE_Decimated3", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_TYPE_Decimated3; }
+	if (strcmp("ALC_ASA_DISTORTION_TYPE_Decimated4", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_TYPE_Decimated4; }
+	if (strcmp("ALC_ASA_DISTORTION_TYPE_DistortedFunk", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_TYPE_DistortedFunk; }
+	if (strcmp("ALC_ASA_DISTORTION_TYPE_DistortionCubed", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_TYPE_DistortionCubed; }
+	if (strcmp("ALC_ASA_DISTORTION_TYPE_DistortionSquared", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_TYPE_DistortionSquared; }
+	if (strcmp("ALC_ASA_DISTORTION_TYPE_Echo1", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_TYPE_Echo1; }
+	if (strcmp("ALC_ASA_DISTORTION_TYPE_Echo2", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_TYPE_Echo2; }
+	if (strcmp("ALC_ASA_DISTORTION_TYPE_EchoTight1", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_TYPE_EchoTight1; }
+	if (strcmp("ALC_ASA_DISTORTION_TYPE_EchoTight2", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_TYPE_EchoTight2; }
+	if (strcmp("ALC_ASA_DISTORTION_TYPE_EverythingBroken", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_TYPE_EverythingBroken; }
+	if (strcmp("ALC_ASA_DISTORTION_TYPE_AlienChatter", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_TYPE_AlienChatter; }
+	if (strcmp("ALC_ASA_DISTORTION_TYPE_CosmicInteference", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_TYPE_CosmicInteference; }
+	if (strcmp("ALC_ASA_DISTORTION_TYPE_GoldenPi", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_TYPE_GoldenPi; }
+	if (strcmp("ALC_ASA_DISTORTION_TYPE_RadioTower", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_TYPE_RadioTower; }
+	if (strcmp("ALC_ASA_DISTORTION_TYPE_Waves", (const char *)ename) == 0) { return ALC_ASA_DISTORTION_TYPE_Waves; }
 		
 	return -1;
 }
@@ -3984,7 +4102,6 @@ AL_API void*	AL_APIENTRY alGetProcAddress( const ALchar* fname )
 
 		// Buffer Static Extension
 		if (strcmp("alBufferDataStatic", (const char *)fname) == 0) { return (void*) alBufferDataStatic; }
-
 		if (strcmp("alcASASetListener", (const char *)fname) == 0) { return (void*) alcASASetListener; }
 		if (strcmp("alcASAGetListener", (const char *)fname) == 0) { return (void*) alcASAGetListener; }
 		if (strcmp("alcASASetSource", (const char *)fname) == 0) { return (void*) alcASASetSource; }
@@ -4014,10 +4131,8 @@ AL_API ALboolean AL_APIENTRY alIsExtensionPresent( const ALchar* extname )
 		SetDeviceError(gCurrentDevice, ALC_INVALID_VALUE);
 	else
 	{
-		for (UInt32	i = 0; i < kALExtensionCount; i++)
-		{
-			if (strcmp(alExtensionsList[i], (const char *) extname) == 0) return AL_TRUE;
-		}
+		if(strstr(GetALExtensionList(), extname) != NULL)
+			return AL_TRUE;
 	}
 		
 	return AL_FALSE;    // extension not present in this implementation
@@ -4091,7 +4206,7 @@ ALC_API ALvoid alcMacOSXRenderingQuality (const ALint value)
 ALC_API ALvoid alMacOSXRenderChannelCount (const ALint value)
 {
 #if LOG_API_USAGE
-	DebugMessageN1("alcOSXRenderChannelCount--> value = %ld", (long int) value);
+	DebugMessageN1("alOSXRenderChannelCount--> value = %ld", (long int) value);
 #endif
 	alSetInteger(ALC_RENDER_CHANNEL_COUNT, value);
 }
@@ -4195,25 +4310,79 @@ ALC_API ALenum  alcASAGetSource(const ALuint property, ALuint sid, ALvoid *data,
         {
             case ALC_ASA_REVERB_SEND_LEVEL:
 				if (*dataSize < sizeof(ALfloat))
-					throw AL_INVALID_OPERATION;
+					throw (OSStatus) AL_INVALID_OPERATION;
 				*dataSize = sizeof(ALfloat);
                 *(ALfloat*)data = oalSource->GetReverbSendLevel();
                 break;
 
             case ALC_ASA_OCCLUSION:
 				if (*dataSize < sizeof(ALfloat))
-					throw AL_INVALID_OPERATION;
+					throw (OSStatus) AL_INVALID_OPERATION;
 				*dataSize = sizeof(ALfloat);
                 *(ALfloat*)data =  oalSource->GetOcclusion();
                 break;
 
             case ALC_ASA_OBSTRUCTION:
 				if (*dataSize < sizeof(ALfloat))
-					throw AL_INVALID_OPERATION;
+					throw (OSStatus) AL_INVALID_OPERATION;
 				*dataSize = sizeof(ALfloat);
                 *(ALfloat*)data =  oalSource->GetObstruction();
                 break;
-			
+            case ALC_ASA_ROGER_BEEP_ENABLE:
+				if(!IsRogerBeepPresent() || (*dataSize < sizeof(ALboolean)))
+					throw (OSStatus) AL_INVALID_OPERATION;
+				*dataSize = sizeof(ALboolean);
+                *(ALboolean*)data =  oalSource->GetRogerBeepEnable();
+                break;
+            case ALC_ASA_ROGER_BEEP_ON:
+				if(!IsRogerBeepPresent() || (*dataSize < sizeof(ALboolean)))
+					throw (OSStatus) AL_INVALID_OPERATION;
+				*dataSize = sizeof(ALboolean);
+                *(ALboolean*)data =  oalSource->GetRogerBeepOn();
+                break;
+            case ALC_ASA_ROGER_BEEP_GAIN:
+				if(!IsRogerBeepPresent() || (*dataSize < sizeof(ALfloat)))
+					throw (OSStatus) AL_INVALID_OPERATION;
+				*dataSize = sizeof(ALfloat);
+                *(ALfloat*)data =  oalSource->GetRogerBeepGain();
+                break;
+            case ALC_ASA_ROGER_BEEP_SENSITIVITY:
+				if(!IsRogerBeepPresent() || (*dataSize < sizeof(ALint)))
+					throw (OSStatus) AL_INVALID_OPERATION;
+				*dataSize = sizeof(ALint);
+                *(ALint*)data =  oalSource->GetRogerBeepSensitivity();
+                break;
+            case ALC_ASA_ROGER_BEEP_TYPE:
+				if(!IsRogerBeepPresent() || (*dataSize < sizeof(ALint)))
+					throw (OSStatus) AL_INVALID_OPERATION;
+				*dataSize = sizeof(ALint);
+                *(ALint*)data =  oalSource->GetRogerBeepType();
+                break;		
+            case ALC_ASA_DISTORTION_ENABLE:
+				if(!IsDistortionPresent() || (*dataSize < sizeof(ALboolean)))
+					throw (OSStatus) AL_INVALID_OPERATION;
+				*dataSize = sizeof(ALboolean);
+                *(ALboolean*)data =  oalSource->GetDistortionEnable();
+                break;			
+            case ALC_ASA_DISTORTION_ON:
+				if(!IsDistortionPresent() || (*dataSize < sizeof(ALboolean)))
+					throw (OSStatus) AL_INVALID_OPERATION;
+				*dataSize = sizeof(ALboolean);
+                *(ALboolean*)data =  oalSource->GetDistortionOn();
+                break;			
+            case ALC_ASA_DISTORTION_MIX:
+				if(!IsDistortionPresent() || (*dataSize < sizeof(ALfloat)))
+					throw (OSStatus) AL_INVALID_OPERATION;
+				*dataSize = sizeof(ALfloat);
+                *(ALfloat*)data =  oalSource->GetDistortionMix();
+                break;			
+            case ALC_ASA_DISTORTION_TYPE:
+				if(!IsDistortionPresent() || (*dataSize < sizeof(ALint)))
+					throw (OSStatus) AL_INVALID_OPERATION;
+				*dataSize = sizeof(ALint);
+                *(ALint*)data =  oalSource->GetDistortionType();
+                break;				
+
             default:
 				return AL_INVALID_NAME;
                 break;
@@ -4243,27 +4412,86 @@ ALC_API ALenum  alcASASetSource(const ALuint property, ALuint sid, ALvoid *data,
 
 	try {
 		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+		FSRef nuRef;
         switch (property) 
         {
 			// Source & Listener Attributes
             case ALC_ASA_REVERB_SEND_LEVEL:
 				if (dataSize < sizeof(ALfloat))
-					throw AL_INVALID_OPERATION;
+					throw (OSStatus) AL_INVALID_OPERATION;
                 oalSource->SetReverbSendLevel(*(ALfloat*)data);
                 break;
 
             case ALC_ASA_OCCLUSION:
 				if (dataSize < sizeof(ALfloat))
-					throw AL_INVALID_OPERATION;
+					throw (OSStatus) AL_INVALID_OPERATION;
                 oalSource->SetOcclusion(*(ALfloat*)data);
                 break;
 
             case ALC_ASA_OBSTRUCTION:
 				if (dataSize < sizeof(ALfloat))
-					throw AL_INVALID_OPERATION;
+					throw (OSStatus) AL_INVALID_OPERATION;
                 oalSource->SetObstruction(*(ALfloat*)data);
                 break;
-			
+            case ALC_ASA_ROGER_BEEP_ENABLE:
+				if((!IsRogerBeepPresent()) || (dataSize < sizeof(Boolean)))
+					throw (OSStatus) AL_INVALID_OPERATION;
+                oalSource->SetRogerBeepEnable(*(Boolean*)data);
+                break;
+            case ALC_ASA_ROGER_BEEP_ON:
+				if((!IsRogerBeepPresent()) || (dataSize < sizeof(Boolean)))
+					throw (OSStatus) AL_INVALID_OPERATION;
+                oalSource->SetRogerBeepOn(*(Boolean*)data);
+                break;
+            case ALC_ASA_ROGER_BEEP_GAIN:
+				if((!IsRogerBeepPresent()) || (dataSize < sizeof(ALfloat)))
+					throw (OSStatus) AL_INVALID_OPERATION;
+                oalSource->SetRogerBeepGain(*(ALfloat*)data);
+                break;
+            case ALC_ASA_ROGER_BEEP_SENSITIVITY:
+				if((!IsRogerBeepPresent()) || (dataSize < sizeof(ALint)))
+					throw (OSStatus) AL_INVALID_OPERATION;
+                oalSource->SetRogerBeepSensitivity(*(ALint*)data);
+                break;
+            case ALC_ASA_ROGER_BEEP_TYPE:
+				if((!IsRogerBeepPresent()) || (dataSize < sizeof(ALint)))
+					throw (OSStatus) AL_INVALID_OPERATION;
+                oalSource->SetRogerBeepType(*(ALint*)data);
+                break;
+            case ALC_ASA_ROGER_BEEP_PRESET:
+				if(!IsRogerBeepPresent())
+					throw (OSStatus) AL_INVALID_OPERATION;
+				if (FSPathMakeRef((UInt8 *) data , &nuRef, NULL))
+					throw (OSStatus) AL_INVALID_OPERATION;
+				oalSource->SetRogerBeepPreset(&nuRef);
+                break;			
+            case ALC_ASA_DISTORTION_ENABLE:
+				if((!IsDistortionPresent()) || (dataSize < sizeof(Boolean)))
+					throw (OSStatus) AL_INVALID_OPERATION;
+                oalSource->SetDistortionEnable(*(Boolean*)data);
+                break;			
+            case ALC_ASA_DISTORTION_ON:
+				if((!IsDistortionPresent()) || (dataSize < sizeof(Boolean)))
+					throw (OSStatus) AL_INVALID_OPERATION;
+                oalSource->SetDistortionOn(*(Boolean*)data);
+                break;			
+            case ALC_ASA_DISTORTION_MIX:
+				if((!IsDistortionPresent()) || (dataSize < sizeof(ALfloat)))
+					throw (OSStatus) AL_INVALID_OPERATION;
+                oalSource->SetDistortionMix(*(ALfloat*)data);
+                break;			
+            case ALC_ASA_DISTORTION_TYPE:
+				if((!IsDistortionPresent()) || (dataSize < sizeof(ALint)))
+					throw (OSStatus) AL_INVALID_OPERATION;
+                oalSource->SetDistortionType(*(ALint*)data);
+                break;			
+            case ALC_ASA_DISTORTION_PRESET:
+				if(!IsDistortionPresent())
+					throw (OSStatus) AL_INVALID_OPERATION;
+				if (FSPathMakeRef((UInt8 *) data , &nuRef, NULL))
+					throw (OSStatus) AL_INVALID_OPERATION;
+				oalSource->SetDistortionPreset(&nuRef);
+                break;					
             default:
 				return AL_INVALID_NAME;
                 break;

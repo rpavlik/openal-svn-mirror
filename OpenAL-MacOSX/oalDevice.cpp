@@ -446,7 +446,7 @@ UInt32 OALDevice::GetDesiredRenderChannelCount ()
 				returnValue = 0;
 				for (UInt32 i = 0; i < layout->mNumberChannelDescriptions; i++)
 				{
-					if (layout->mChannelDescriptions[i].mChannelLabel != kAudioChannelLabel_Unknown)
+					if ((layout->mChannelDescriptions[i].mChannelLabel != kAudioChannelLabel_Unknown) && (layout->mChannelDescriptions[i].mChannelLabel != kAudioChannelLabel_LFEScreen))
 						returnValue++;
 				}
 			}
@@ -457,8 +457,18 @@ UInt32 OALDevice::GetDesiredRenderChannelCount ()
 			{
 				case kAudioChannelLayoutTag_AudioUnit_5_0:
 				case kAudioChannelLayoutTag_AudioUnit_5_1:
-				case kAudioChannelLayoutTag_AudioUnit_6:
 					returnValue = 5;
+					break;
+				case kAudioChannelLayoutTag_AudioUnit_6_0:
+				case kAudioChannelLayoutTag_AudioUnit_6_1:
+					returnValue = 6;
+					break;
+				case kAudioChannelLayoutTag_AudioUnit_7_0:
+				case kAudioChannelLayoutTag_AudioUnit_7_1:
+					returnValue = 7;
+					break;
+				case kAudioChannelLayoutTag_AudioUnit_8:
+					returnValue = 8;
 					break;
 				case kAudioChannelLayoutTag_AudioUnit_4:
 					returnValue = 4;
@@ -577,12 +587,47 @@ void	OALDevice::ConnectContext (OALContext*	inContext)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void		OALDevice::DisconnectContext(OALContext* inContext)
+{
+	if (inContext == mConnectedContext) 
+		mConnectedContext = NULL;
+		
+	AUGraphDisconnectNodeInput(mAUGraph, inContext->GetMixerNode(), 0);
+	// AUGraphUpdate will block here, until the node is removed
+	AUGraphUpdate(mAUGraph, NULL);	
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void		OALDevice::RemoveContext(OALContext* inContext)
+{
+	if(inContext == mConnectedContext)
+		mConnectedContext = NULL;
+	
+	// now remove the remove the mixer node for the context
+	AUGraphRemoveNode(mAUGraph, inContext->GetMixerNode());
+	// AUGraphUpdate will block here, until the node is removed
+	AUGraphUpdate(mAUGraph, NULL);
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 UInt32		OALDevice::GetChannelLayoutTag()
 {
 	if (mRenderChannelCount == 5)
 		return kAudioChannelLayoutTag_AudioUnit_5_0;
-	else if (mRenderChannelCount == 4)
-		return (Get3DMixerVersion() >= k3DMixerVersion_2_0) ? kAudioChannelLayoutTag_AudioUnit_4 : kAudioChannelLayoutTag_Stereo;
 
+	// Quad not supported prior to 3d mixer ver. 2.0
+	else if ((mRenderChannelCount == 4) && (Get3DMixerVersion() >= k3DMixerVersion_2_0))
+		return kAudioChannelLayoutTag_AudioUnit_4;
+
+	// now check for new multichannel formats in the 3d mixer v. 2.3 and higher	
+	else if (mRenderChannelCount == 6 && (Get3DMixerVersion() >= k3DMixerVersion_2_3))
+		return kAudioChannelLayoutTag_AudioUnit_6_0;	
+
+	else if (mRenderChannelCount == 7 && (Get3DMixerVersion() >= k3DMixerVersion_2_3))
+		return kAudioChannelLayoutTag_AudioUnit_7_0;
+
+	else if (mRenderChannelCount == 8 && (Get3DMixerVersion() >= k3DMixerVersion_2_3))
+		return kAudioChannelLayoutTag_AudioUnit_8;
+	
 	return  kAudioChannelLayoutTag_Stereo; // default case
 }

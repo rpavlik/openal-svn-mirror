@@ -80,10 +80,20 @@ UInt32	GetOALFormatFromASBD(CAStreamBasicDescription	&inASBD)
 	switch (inASBD.mFormatID)
 	{
 		case kAudioFormatLinearPCM:
-			// NOTE: if float: return 0;
+			// NOTE: if float: check for extension
+			
 			if (inASBD.mFormatFlags & kAudioFormatFlagIsFloat)  
 			{
-				return (0);		// float currently unsupported
+				if (inASBD.NumberChannels() == 1 && inASBD.mBitsPerChannel == 32)
+				{
+					if(alIsExtensionPresent("AL_EXT_float32"))
+						return alGetEnumValue("AL_FORMAT_MONO_FLOAT32");
+				}
+				if (inASBD.NumberChannels() == 2 && inASBD.mBitsPerChannel == 32)
+				{
+					if(alIsExtensionPresent("AL_EXT_float32"))
+						return alGetEnumValue("AL_FORMAT_STEREO_FLOAT32");					
+				}				
 			}
 			else
 			{
@@ -97,7 +107,6 @@ UInt32	GetOALFormatFromASBD(CAStreamBasicDescription	&inASBD)
 					return AL_FORMAT_STEREO8;
 			}
 			break;
-		
 		default:
 			return (0);
 			break;
@@ -163,6 +172,7 @@ const char* GetALAttributeString(UInt32 inToken)
 		case AL_LINEAR_DISTANCE_CLAMPED: return "AL_LINEAR_DISTANCE_CLAMPED"; break;
 		case AL_EXPONENT_DISTANCE: return "AL_EXPONENT_DISTANCE"; break;
 		case AL_EXPONENT_DISTANCE_CLAMPED: return "AL_EXPONENT_DISTANCE_CLAMPED"; break;
+		case AL_INVALID_NAME: return "AL_INVALID_NAME"; break;
 	}
 	return "UNKNOWN ATTRIBUTE - WARNING WARNING WARNING";
 }
@@ -187,6 +197,18 @@ const char* GetALCAttributeString(UInt32 inToken)
 		case ALC_ASA_REVERB_SEND_LEVEL: return "ALC_ASA_REVERB_SEND_LEVEL"; break;
 		case ALC_ASA_REVERB_GLOBAL_LEVEL: return "ALC_ASA_REVERB_GLOBAL_LEVEL"; break;
 		case ALC_ASA_OCCLUSION: return "ALC_ASA_OCCLUSION"; break;
+		case ALC_ASA_ROGER_BEEP_ENABLE: return "ALC_ASA_ROGER_BEEP_ENABLE"; break;
+		case ALC_ASA_ROGER_BEEP_ON: return "ALC_ASA_ROGER_BEEP_ON"; break;
+		case ALC_ASA_ROGER_BEEP_GAIN: return "ALC_ASA_ROGER_BEEP_GAIN"; break;
+		case ALC_ASA_ROGER_BEEP_SENSITIVITY: return "ALC_ASA_ROGER_BEEP_SENSITIVITY"; break;
+		case ALC_ASA_ROGER_BEEP_TYPE: return "ALC_ASA_ROGER_BEEP_TYPE"; break;
+		case ALC_ASA_ROGER_BEEP_PRESET: return "ALC_ASA_ROGER_BEEP_PRESET"; break;
+
+		case ALC_ASA_DISTORTION_ENABLE: return "ALC_ASA_DISTORTION_ENABLE"; break;
+		case ALC_ASA_DISTORTION_ON: return "ALC_ASA_DISTORTION_ON"; break;
+		case ALC_ASA_DISTORTION_MIX: return "ALC_ASA_DISTORTION_MIX"; break;
+		case ALC_ASA_DISTORTION_TYPE: return "ALC_ASA_DISTORTION_TYPE"; break;
+		case ALC_ASA_DISTORTION_PRESET: return "ALC_ASA_DISTORTION_PRESET"; break;
 	}
 	return "UNKNOWN ATTRIBUTE - WARNING WARNING WARNING";
 }
@@ -219,6 +241,10 @@ bool	IsFormatSupported(UInt32	inFormatID)
 		case AL_FORMAT_MONO8:
 		case AL_FORMAT_STEREO8:
 			return true;
+			break;
+		case AL_FORMAT_MONO_FLOAT32:
+		case AL_FORMAT_STEREO_FLOAT32:
+			return alIsExtensionPresent("AL_EXT_float32");
 			break;
 		default:
 			return false;
@@ -275,6 +301,28 @@ OSStatus	FillInASBD(CAStreamBasicDescription &inASBD, UInt32	inFormatID, UInt32 
 			inASBD.mBytesPerFrame = 1;
 			inASBD.mFramesPerPacket = 1;
 			inASBD.mBitsPerChannel = 8;
+			inASBD.mChannelsPerFrame = 1;
+			inASBD.mReserved = 0;
+			break;
+		case AL_FORMAT_STEREO_FLOAT32 : 
+			inASBD.mSampleRate = inSampleRate * 1.0;			
+			inASBD.mFormatID = kAudioFormatLinearPCM;
+			inASBD.mFormatFlags = kLinearPCMFormatFlagIsFloat;
+			inASBD.mBytesPerPacket = 8;
+			inASBD.mBytesPerFrame = 8;
+			inASBD.mFramesPerPacket = 1;
+			inASBD.mBitsPerChannel = 32;
+			inASBD.mChannelsPerFrame = 2;
+			inASBD.mReserved = 0;
+			break;
+		case AL_FORMAT_MONO_FLOAT32 : 
+			inASBD.mSampleRate = inSampleRate * 1.0;			
+			inASBD.mFormatID = kAudioFormatLinearPCM;
+			inASBD.mFormatFlags = kLinearPCMFormatFlagIsFloat;
+			inASBD.mBytesPerPacket = 4;
+			inASBD.mBytesPerFrame = 4;
+			inASBD.mFramesPerPacket = 1;
+			inASBD.mBitsPerChannel = 32;
 			inASBD.mChannelsPerFrame = 1;
 			inASBD.mReserved = 0;
 			break;
@@ -366,12 +414,18 @@ UInt32	GetDesiredRenderChannelsFor3DMixer(UInt32	inDeviceChannels)
         // guard against the possibility of multi channel hw that has never been given a preferred channel layout
         // Or, that a 3 channel layout was returned (which is unsupported by the 3DMixer)
         returnValue = 2; 
-    } 
-    else if (inDeviceChannels > 5)
-    {
-        // 3DMixer currently does not render to more than 5 channels
-        returnValue = 5;    
     }
+    else if ((inDeviceChannels > 5) &&  (Get3DMixerVersion() < k3DMixerVersion_2_3))
+    {
+		// 3DMixer ver. 2.2 and below does not render to more than 5 channels
+		returnValue = 5;
+	}
+	else if (inDeviceChannels > 8)
+    {
+		// Current 3DMixer renders to maximum 8 channels
+		returnValue = 8;
+	}
+	
 	return returnValue;
 }
 
@@ -768,260 +822,147 @@ inline UInt32 NextPowerOfTwo(UInt32 x)
 	return 1L << Log2Ceil(x);
 }
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-OALRingBuffer::OALRingBuffer() :
-	mBuffers(NULL), 
-	mNumberChannels(0), 
-	mCapacityFrames(0), 
-	mCapacityBytes(0)
+OALRingBuffer::OALRingBuffer() : mBuffer(NULL), mCapacityFrames(0), mCapacityBytes(0)
 {
 }
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+OALRingBuffer::OALRingBuffer(UInt32 bytesPerFrame, UInt32 capacityFrames) :
+	mBuffer(NULL)
+{
+	Allocate(bytesPerFrame, capacityFrames);
+}
+
 OALRingBuffer::~OALRingBuffer()
 {
 	Deallocate();
 }
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void	OALRingBuffer::Allocate(int nChannels, UInt32 bytesPerFrame, UInt32 capacityFrames)
+void	OALRingBuffer::Allocate(UInt32 bytesPerFrame, UInt32 capacityFrames)
 {
 	Deallocate();
-	
-	capacityFrames = NextPowerOfTwo(capacityFrames);
-	
-	mNumberChannels = nChannels;
 	mBytesPerFrame = bytesPerFrame;
 	mCapacityFrames = capacityFrames;
-	mCapacityFramesMask = capacityFrames - 1;
 	mCapacityBytes = bytesPerFrame * capacityFrames;
-
-	// put everything in one memory allocation, first the pointers, then the deinterleaved channels
-	UInt32 allocSize = (mCapacityBytes + sizeof(Byte *)) * nChannels;
-	Byte *p = (Byte *)malloc(allocSize);
-	memset(p, 0, allocSize);
-	mBuffers = (Byte **)p;
-	p += nChannels * sizeof(Byte *);
-	for (int i = 0; i < nChannels; ++i) {
-		mBuffers[i] = p;
-		p += mCapacityBytes;
-	}
-	
-	for (UInt32 i = 0; i<kTimeBoundsQueueSize; ++i)
-	{
-		mTimeBoundsQueue[i].mStartTime = 0;
-		mTimeBoundsQueue[i].mEndTime = 0;
-		mTimeBoundsQueue[i].mUpdateCounter = 0;
-	}
-	mTimeBoundsQueuePtr = 0;
+	mBuffer = (Byte *)malloc(mCapacityBytes);
+	Clear();
 }
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void	OALRingBuffer::Deallocate()
 {
-	if (mBuffers) {
-		free(mBuffers);
-		mBuffers = NULL;
+	if (mBuffer) {
+		free(mBuffer);
+		mBuffer = NULL;
 	}
-	mNumberChannels = 0;
 	mCapacityBytes = 0;
 	mCapacityFrames = 0;
+	Clear();
 }
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-inline void ZeroRange(Byte **buffers, int nchannels, int offset, int nbytes)
+void	OALRingBuffer::Clear()
 {
-	while (--nchannels >= 0) {
-		memset(*buffers + offset, 0, nbytes);
-		++buffers;
-	}
+	if (mBuffer)
+		memset(mBuffer, 0, mCapacityBytes);
+	mStartOffset = 0;
+	mStartFrame = 0;
+	mEndFrame = 0;
 }
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-inline void StoreABL(Byte **buffers, int destOffset, const AudioBufferList *abl, int srcOffset, int nbytes)
+bool	OALRingBuffer::Store(const Byte *data, UInt32 nFrames, SInt64 startFrame)
 {
-	int nchannels = abl->mNumberBuffers;
-	const AudioBuffer *src = abl->mBuffers;
-	while (--nchannels >= 0) {
-		memcpy(*buffers + destOffset, (Byte *)src->mData + srcOffset, nbytes);
-		++buffers;
-		++src;
-	}
-}
+	if (nFrames > mCapacityFrames) return false;
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-inline void FetchABL(AudioBufferList *abl, int destOffset, Byte **buffers, int srcOffset, int nbytes)
-{
-	int nchannels = abl->mNumberBuffers;
-	AudioBuffer *dest = abl->mBuffers;
-	while (--nchannels >= 0) {
-		memcpy((Byte *)dest->mData + destOffset, *buffers + srcOffset, nbytes);
-		++buffers;
-		++dest;
-	}
-}
+	// reading and writing could well be in separate threads
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-OSStatus	OALRingBuffer::Store(const AudioBufferList *abl, UInt32 framesToWrite, SInt64 startWrite)
-{
-	if (framesToWrite > mCapacityFrames)
-		return kOALRingBufferError_TooMuch;		// too big!
+	SInt64 endFrame = startFrame + nFrames;
+	if (startFrame >= mEndFrame + mCapacityFrames)
+		// writing more than one buffer ahead -- fine but that means that everything we have is now too far in the past
+		Clear();
 
-	SInt64 endWrite = startWrite + framesToWrite;
-	
-	if (startWrite < EndTime()) {
-		// going backwards, throw everything out
-		SetTimeBounds(startWrite, startWrite);
-	} else if (endWrite - StartTime() <= mCapacityFrames) {
-		// the buffer has not yet wrapped and will not need to
+	if (mStartFrame == 0) {
+		// empty buffer
+		mStartOffset = 0;
+		mStartFrame = startFrame;
+		mEndFrame = endFrame;
+		memcpy(mBuffer, data, nFrames * mBytesPerFrame);
 	} else {
-		// advance the start time past the region we are about to overwrite
-		SInt64 newStart = endWrite - mCapacityFrames;	// one buffer of time behind where we're writing
-		SInt64 newEnd = std::max(newStart, EndTime());
-		SetTimeBounds(newStart, newEnd);
-	}
-	
-	// write the new frames
-	Byte **buffers = mBuffers;
-	int nchannels = mNumberChannels;
-	int offset0, offset1, nbytes;
-	SInt64 curEnd = EndTime();
-	
-	if (startWrite > curEnd) {
-		// we are skipping some samples, so zero the range we are skipping
-		offset0 = FrameOffset(curEnd);
-		offset1 = FrameOffset(startWrite);
-		if (offset0 < offset1)
-			ZeroRange(buffers, nchannels, offset0, offset1 - offset0);
-		else {
-			ZeroRange(buffers, nchannels, offset0, mCapacityBytes - offset0);
-			ZeroRange(buffers, nchannels, 0, offset1);
+		UInt32 offset0, offset1, nBytes;
+		if (endFrame > mEndFrame) {
+			// advancing (as will be usual with sequential stores)
+			
+			if (startFrame > mEndFrame) {
+				// we are skipping some samples, so zero the range we are skipping
+				offset0 = FrameOffset(mEndFrame);
+				offset1 = FrameOffset(startFrame);
+				if (offset0 < offset1)
+					memset(mBuffer + offset0, 0, offset1 - offset0);
+				else {
+					nBytes = mCapacityBytes - offset0;
+					memset(mBuffer + offset0, 0, nBytes);
+					memset(mBuffer, 0, offset1);
+				}
+			}
+			mEndFrame = endFrame;
+
+			// except for the case of not having wrapped yet, we will normally
+			// have to advance the start
+			SInt64 newStart = mEndFrame - mCapacityFrames;
+			if (newStart > mStartFrame) {
+				mStartOffset = (mStartOffset + (newStart - mStartFrame) * mBytesPerFrame) % mCapacityBytes;
+				mStartFrame = newStart;
+			}
 		}
-		offset0 = offset1;
-	} else {
-		offset0 = FrameOffset(startWrite);
+		// now everything is lined up and we can just write the new data
+		offset0 = FrameOffset(startFrame);
+		offset1 = FrameOffset(endFrame);
+		if (offset0 < offset1)
+			memcpy(mBuffer + offset0, data, offset1 - offset0);
+		else {
+			nBytes = mCapacityBytes - offset0;
+			memcpy(mBuffer + offset0, data, nBytes);
+			memcpy(mBuffer, data + nBytes, offset1);
+		}
 	}
+	//printf("Store - buffer times: %.0f - %.0f, writing %.0f - %.0f\n", double(mStartFrame), double(mEndFrame), double(startFrame), double(endFrame));
 
-	offset1 = FrameOffset(endWrite);
+	return true;
+}
+
+SInt64	OALRingBuffer::Fetch(Byte *data, UInt32 nFrames, SInt64 startFrame)
+{
+	SInt64 endFrame = startFrame + nFrames;
+	if (startFrame < mStartFrame || endFrame > mEndFrame) {
+		//printf("error - buffer times: %.0f - %.0f, reading for %.0f - %.0f\n", double(mStartFrame), double(mEndFrame), double(startFrame), double(endFrame));
+		if (startFrame < mStartFrame)
+			return startFrame - mStartFrame;	// negative number, how many frames too far in the past
+		else
+			return endFrame - mEndFrame;		// positive number, how many frames too far ahead
+	}
+	
+	UInt32 offset0 = FrameOffset(startFrame);
+	UInt32 offset1 = FrameOffset(endFrame);
+	
 	if (offset0 < offset1)
-		StoreABL(buffers, offset0, abl, 0, offset1 - offset0);
+		memcpy(data, mBuffer + offset0, offset1 - offset0);
 	else {
-		nbytes = mCapacityBytes - offset0;
-		StoreABL(buffers, offset0, abl, 0, nbytes);
-		StoreABL(buffers, 0, abl, nbytes, offset1);
+		UInt32 nBytes = mCapacityBytes - offset0;
+		memcpy(data, mBuffer + offset0, nBytes);
+		memcpy(data + nBytes, mBuffer, offset1);
 	}
-	
-	// now update the end time
-	SetTimeBounds(StartTime(), endWrite);
-	
-	return kOALRingBufferError_OK;	// success
+	return (mEndFrame - nFrames) - startFrame;
 }
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void	OALRingBuffer::SetTimeBounds(SInt64 startTime, SInt64 endTime)
+Byte *	OALRingBuffer::GetFramePtr(SInt64 frameNumber, UInt32 &outNFrames)
 {
-	UInt32 nextPtr = mTimeBoundsQueuePtr + 1;
-	UInt32 index = nextPtr & kTimeBoundsQueueMask;
-	
-	mTimeBoundsQueue[index].mStartTime = startTime;
-	mTimeBoundsQueue[index].mEndTime = endTime;
-	mTimeBoundsQueue[index].mUpdateCounter = nextPtr;
-	
-	CompareAndSwap(mTimeBoundsQueuePtr, mTimeBoundsQueuePtr + 1, &mTimeBoundsQueuePtr);
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-OSStatus	OALRingBuffer::GetTimeBounds(SInt64 &startTime, SInt64 &endTime)
-{
-	for (int i=0; i<8; ++i) // fail after a few tries.
-	{
-		UInt32 curPtr = mTimeBoundsQueuePtr;
-		UInt32 index = curPtr & kTimeBoundsQueueMask;
-		OALRingBuffer::TimeBounds* bounds = mTimeBoundsQueue + index;
-		
-		startTime = bounds->mStartTime;
-		endTime = bounds->mEndTime;
-		UInt32 newPtr = bounds->mUpdateCounter;
-		
-		if (newPtr == curPtr) 
-			return kOALRingBufferError_OK;
+	if (frameNumber < mStartFrame || frameNumber >= mEndFrame) {
+		outNFrames = 0;
+		return NULL;
 	}
-#if LOG_RING_BUFFER
-	DebugMessage("OALRingBuffer::GetTimeBounds - kOALRingBufferError_CPUOverload");
-#endif
-	return kOALRingBufferError_CPUOverload;
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-OSStatus	OALRingBuffer::CheckTimeBounds(SInt64 startRead, SInt64 endRead)
-{
-	SInt64 startTime, endTime;
-	
-	OSStatus err = GetTimeBounds(startTime, endTime);
-#if LOG_RING_BUFFER
-	if (err) DebugMessageN1("OALRingBuffer::CheckTimeBounds - GetTimeBounds Failed =  %ld", err);
-#endif
-	if (err) return err;
-
-	if (startRead < startTime)
-	{
-		if (endRead > endTime)
-			return kOALRingBufferError_TooMuch;
-
-		if (endRead < startTime)
-			return kOALRingBufferError_WayBehind;
-		else
-			return kOALRingBufferError_SlightlyBehind;
-	}
-	
-	if (endRead > endTime)
-	{
-		if (startRead > endTime)
-			return kOALRingBufferError_WayAhead;
-		else
-			return kOALRingBufferError_SlightlyAhead;
-	}
-	
-	return kOALRingBufferError_OK;	// success
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-OSStatus	OALRingBuffer::Fetch(AudioBufferList *abl, UInt32 nFrames, SInt64 startRead)
-{
-	SInt64 endRead = startRead + nFrames;
-	OSStatus err;
-	
-	err = CheckTimeBounds(startRead, endRead);
-#if LOG_RING_BUFFER
-	if (err) DebugMessageN1("OALRingBuffer::Fetch - CheckTimeBounds Failed err =  %ld", err);
-#endif
-	if (err) return err;
-	
-	Byte **buffers = mBuffers;
-	int offset0 = FrameOffset(startRead);
-	int offset1 = FrameOffset(endRead);
-	int nbytes;
-	
+	UInt32 offset0 = FrameOffset(frameNumber);
+	UInt32 offset1 = FrameOffset(mEndFrame);
 	if (offset0 < offset1) {
-		FetchABL(abl, 0, buffers, offset0, nbytes = offset1 - offset0);
+		outNFrames = mEndFrame - frameNumber;
 	} else {
-		nbytes = mCapacityBytes - offset0;
-		FetchABL(abl, 0, buffers, offset0, nbytes);
-		FetchABL(abl, nbytes, buffers, 0, offset1);
-		nbytes += offset1;
+		outNFrames = (mCapacityBytes - offset0) / mBytesPerFrame;
 	}
-
-	int nchannels = abl->mNumberBuffers;
-	AudioBuffer *dest = abl->mBuffers;
-	while (--nchannels >= 0)
-	{
-		dest->mDataByteSize = nbytes;
-		dest++;
-	}
-
-	err = CheckTimeBounds(startRead, endRead);
-#if LOG_RING_BUFFER
-	if (err) DebugMessageN1("OALRingBuffer::Fetch - CheckTimeBounds Failed err =  %ld", err);
-#endif
-	return err;
+	return mBuffer + offset0;
 }

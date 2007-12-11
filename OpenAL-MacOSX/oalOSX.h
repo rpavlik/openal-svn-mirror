@@ -59,73 +59,47 @@ void		ReconfigureContextsOfThisDevice(uintptr_t inDeviceToken);
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 enum {
-		kOALRingBufferError_WayBehind		= -2,	// both fetch times are earlier than buffer start time
-		kOALRingBufferError_SlightlyBehind	= -1,	// fetch start time is earlier than buffer start time (fetch end time OK)
-		kOALRingBufferError_OK				= 0,
-		kOALRingBufferError_SlightlyAhead	= 1,	// fetch end time is later than buffer end time (fetch start time OK)
-		kOALRingBufferError_WayAhead		= 2,	// both fetch times are later than buffer end time
-		kOALRingBufferError_TooMuch			= 3,	// fetch start time is earlier than buffer start time and fetch end time is later than buffer end time
-		kOALRingBufferError_CPUOverload		= 4		// the reader is unable to get enough CPU cycles to capture a consistent snapshot of the time bounds
+	kOALRingBufferError_WayBehind = -2, // both fetch times are earlier than buffer start time
+	kOALRingBufferError_SlightlyBehind = -1, // fetch start time is earlier than buffer start time (fetch end time OK)
+	kOALRingBufferError_OK = 0,
+	kOALRingBufferError_SlightlyAhead = 1, // fetch end time is later than buffer end time (fetch start time OK)
+	kOALRingBufferError_WayAhead = 2, // both fetch times are later than buffer end time
+	kOALRingBufferError_TooMuch = 3, // fetch start time is earlier than buffer start time and fetch end time is later than buffer end time
+	kOALRingBufferError_CPUOverload = 4 // the reader is unable to get enough CPU cycles to capture a consistent snapshot of the time bounds
 };
 
-const UInt32 kTimeBoundsQueueSize = 32;
-const UInt32 kTimeBoundsQueueMask = kTimeBoundsQueueSize - 1;
+typedef SInt32 OALRingBufferError;
+typedef SInt64 SampleTime;
+
+const UInt32 kGeneralRingTimeBoundsQueueSize = 32;
+const UInt32 kGeneralRingTimeBoundsQueueMask = kGeneralRingTimeBoundsQueueSize - 1;
 
 class OALRingBuffer {
 public:
-	typedef SInt64 SampleTime;
-
 	OALRingBuffer();
+	OALRingBuffer(UInt32 bytesPerFrame, UInt32 capacityFrames);
 	~OALRingBuffer();
 	
-	void		Allocate(int nChannels, UInt32 bytesPerFrame, UInt32 capacityFrames);
-					// capacityFrames will be rounded up to a power of 2
-	void		Deallocate();
+	void	Allocate(UInt32 bytesPerFrame, UInt32 capacityFrames);
+	void	Deallocate();
+	void	Clear();
+	bool	Store(const Byte *data, UInt32 nFrames, SInt64 frameNumber);
+	SInt64	Fetch(Byte *data, UInt32 nFrames, SInt64 frameNumber);
+	Byte *	GetFramePtr(SInt64 frameNumber, UInt32 &outNFrames);
 	
-	OSStatus	Store(const AudioBufferList *abl, UInt32 nFrames, SInt64 frameNumber);
-					// Copy nFrames of data into the ring buffer at the specified sample time.
-					// The sample time should normally increase sequentially, though gaps
-					// are filled with zeroes. A sufficiently large gap effectively empties
-					// the buffer before storing the new data. 
-							
-					// If frameNumber is less than the previous frame number, the behavior is undefined.
-							
-					// Return false for failure (buffer not large enough).
-				
-	OSStatus	Fetch(AudioBufferList *abl, UInt32 nFrames, SInt64 frameNumber);
-								// will alter mNumDataBytes of the buffers
-	
-	OSStatus	GetTimeBounds(SInt64 &startTime, SInt64 &endTime);
+	void	GetTimeBounds(SInt64 &start, SInt64&end) { start = mStartFrame; end = mEndFrame; }
 	
 protected:
+	UInt32		FrameOffset(SInt64 frameNumber) { return (mStartOffset + UInt32(frameNumber - mStartFrame) * mBytesPerFrame) % mCapacityBytes; }
 
-	int			FrameOffset(SInt64 frameNumber) { return (frameNumber & mCapacityFramesMask) * mBytesPerFrame; }
-
-	OSStatus	CheckTimeBounds(SInt64 startRead, SInt64 endRead);
-	
-	// these should only be called from Store.
-	SInt64				StartTime() const { return mTimeBoundsQueue[mTimeBoundsQueuePtr & kTimeBoundsQueueMask].mStartTime; }
-	SInt64				EndTime()   const { return mTimeBoundsQueue[mTimeBoundsQueuePtr & kTimeBoundsQueueMask].mEndTime; }
-	void					SetTimeBounds(SInt64 startTime, SInt64 endTime);
-	
 protected:
-	Byte **		mBuffers;				// allocated in one chunk of memory
-	int			mNumberChannels;
-	UInt32		mBytesPerFrame;			// within one deinterleaved channel
-	UInt32		mCapacityFrames;		// per channel, must be a power of 2
-	UInt32		mCapacityFramesMask;
-	UInt32		mCapacityBytes;			// per channel
-	
-	// range of valid sample time in the buffer
-	typedef struct {
-		volatile SInt64		mStartTime;
-		volatile SInt64		mEndTime;
-		volatile UInt32		mUpdateCounter;
-	} TimeBounds;
-	
-	OALRingBuffer::TimeBounds mTimeBoundsQueue[kTimeBoundsQueueSize];
-	UInt32 mTimeBoundsQueuePtr;
+	Byte *		mBuffer;
+	UInt32		mBytesPerFrame;
+	UInt32		mCapacityFrames;
+	UInt32		mCapacityBytes;
+	UInt32		mStartOffset;
+	SInt64		mStartFrame;
+	SInt64		mEndFrame;
 };
-
 
 #endif

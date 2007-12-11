@@ -146,7 +146,7 @@ public:
 		{
 			it->mProcessedState = kPendingProcessing;
 			it->mOffset = 0;
-			it++;
+			++it;
 		}
 	}
 	    
@@ -181,7 +181,7 @@ public:
 	}
 
     AudioConverterRef Get(ALuint	inACToken) {
-        iterator	it = find(inACToken);
+        const_iterator	it = find(inACToken);
         iterator	theEnd = end();
 
         if (it != theEnd)
@@ -200,7 +200,7 @@ public:
 				it = end();
 			}
 			else
-				it++;
+				++it;
 		}
 		return;
 	}
@@ -220,7 +220,7 @@ public:
         
 		while (it !=  theEnd) {
 			AudioConverterDispose((*it).second.mConverter);
-			it++;
+			++it;
 		}
     }
 
@@ -303,6 +303,27 @@ class OALSource
 		Float32						mASAReverbSendLevel;
 		Float32						mASAOcclusion;
 		Float32						mASAObstruction;
+
+		// Audio Units and properties for RogerBeep and Distortion
+		AUNode						mRogerBeepNode;
+		AudioUnit					mRogerBeepAU;
+		Boolean						mASARogerBeepEnable;
+		Boolean						mASARogerBeepOn;
+		Float32						mASARogerBeepGain;
+		UInt32						mASARogerBeepSensitivity;
+		UInt32						mASARogerBeepType;
+		char*						mASARogerBeepPreset;
+
+		AUNode						mDistortionNode;
+		AudioUnit					mDistortionAU;		
+		Boolean						mASADistortionEnable;
+		Boolean						mASADistortionOn;
+		Float32						mASADistortionMix;
+		SInt32						mASADistortionType;
+		char*						mASADistortionPreset;
+				
+		AudioUnit					mRenderUnit;
+		UInt32						mRenderElement;
 		
 	typedef TAtomicStack<PlaybackMessage>	PlaybackMessageList;
 	
@@ -336,6 +357,9 @@ class OALSource
 	void		ReleaseNotifyAndRenderProcs();
 	void		DisconnectFromBus();
 	void		SetupMixerBus();
+	void		SetupDistortionAU();
+	void		SetupRogerBeepAU();
+	
 	bool		PrepBufferQueueForPlayback();
 
 	UInt32		SecondsToFrames(Float32	inSeconds);
@@ -453,11 +477,34 @@ class OALSource
 	void			SetReverbSendLevel(Float32 inReverbLevel);
 	void			SetOcclusion(Float32 inOcclusion);
 	void			SetObstruction(Float32 inObstruction);
+	
+	void			SetRogerBeepEnable(Boolean inEnable);
+	void			SetRogerBeepOn(Boolean inOn);
+	void			SetRogerBeepGain(Float32 inGain);
+	void			SetRogerBeepSensitivity(UInt32 inSensitivity);
+	void			SetRogerBeepType(UInt32 inType);
+	void			SetRogerBeepPreset(FSRef* inRef);
+	
+	void			SetDistortionEnable(Boolean inEnable);
+	void			SetDistortionOn(Boolean inOn);
+	void			SetDistortionMix(Float32 inMix);
+	void			SetDistortionType(SInt32 inType);
+	void			SetDistortionPreset(FSRef* inRef);
 
 	Float32			GetReverbSendLevel() {return mASAReverbSendLevel;}
 	Float32			GetOcclusion() {return mASAOcclusion;}
 	Float32			GetObstruction() {return mASAObstruction;}
 
+	Boolean			GetRogerBeepEnable() {return mASARogerBeepEnable;}
+	Boolean			GetRogerBeepOn() {return mASARogerBeepOn;}
+	Float32			GetRogerBeepGain() {return mASARogerBeepGain;}
+	UInt32			GetRogerBeepSensitivity() {return mASARogerBeepSensitivity;}
+	UInt32			GetRogerBeepType() {return mASARogerBeepType;}
+	
+	Boolean			GetDistortionEnable() {return mASADistortionEnable;}
+	Boolean			GetDistortionOn() {return mASADistortionOn;}
+	Float32			GetDistortionMix() {return mASADistortionMix;}
+	SInt32			GetDistortionType() {return mASADistortionType;}
 };	
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -477,7 +524,7 @@ public:
 
 		for (UInt32 i = 0; i < inIndex; i++) {
             if (it != end())
-                it++;
+                ++it;
             else
                 i = inIndex;
         }
@@ -498,7 +545,7 @@ public:
         iterator	it = begin();
         while (it != end()) {
 			(*it).second->SetChannelParameters();
-			it++;
+			++it;
 		}
 		return;
     }
@@ -508,7 +555,7 @@ public:
         while (it != end())
 		{
 			(*it).second->Suspend();
-			it++;
+			++it;
 		}
 		return;
     }
@@ -518,7 +565,7 @@ public:
         while (it != end())
 		{
 			(*it).second->Unsuspend();
-			it++;
+			++it;
 		}
 		return;
     }

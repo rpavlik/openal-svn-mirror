@@ -71,8 +71,9 @@ class OALDevice
 	OALDevice(const char* 	 inDeviceName, uintptr_t   inSelfToken, UInt32	inRenderChannelSetting);
 	~OALDevice();
 	
-	void			ConnectContext (OALContext*	inContext);
-	void			DisconnectContext (OALContext*	inContext);
+	void			ConnectContext		(OALContext*	inContext);
+	void			DisconnectContext	(OALContext*	inContext);
+	void			RemoveContext		(OALContext*	inContext);
 	void			StopGraph();
 
 	// set info
@@ -82,7 +83,7 @@ class OALDevice
 	// get info
 	uintptr_t       GetDeviceToken () const { return mSelfToken; }
 	Float64			GetDeviceSampleRate () const { return mDeviceSampleRate; }
-	UInt32			GetRenderChannelSetting() {return  mRenderChannelSetting; }
+	UInt32			GetRenderChannelSetting() { return  mRenderChannelSetting; }
 	ALenum			GetError();
 	UInt32			GetFramesPerSlice() { return mFramesPerSlice;}
 	AUGraph			GetGraph () {return mAUGraph;}

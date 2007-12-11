@@ -31,6 +31,7 @@
 
 #include "oalSource.h"
 #include "oalBuffer.h"
+#include "oalImp.h"
 
 #define		LOG_PLAYBACK				0
 #define		LOG_VERBOSE					0
@@ -170,7 +171,22 @@ OALSource::OALSource (const ALuint 	 	inSelfToken, OALContext	*inOwningContext)
 		mTransitioningToFlushQ(false),
 		mASAReverbSendLevel(0.0),
 		mASAOcclusion(0.0),
-		mASAObstruction(0.0)
+		mASAObstruction(0.0),
+		mRogerBeepNode(0),
+		mRogerBeepAU(0),
+		mASARogerBeepEnable(false),
+		mASARogerBeepOn(true),								// RogerBeep AU does not bypass by default
+		mASARogerBeepGain(0.0),
+		mASARogerBeepSensitivity(0),
+		mASARogerBeepType(0),
+		mASARogerBeepPreset(0),
+		mDistortionNode(0),
+		mDistortionAU(0),
+		mASADistortionEnable(false),
+		mASADistortionOn(true),							// Distortion AU does not bypass by default
+		mASADistortionMix(0.0),
+		mASADistortionType(0),
+		mASADistortionPreset(0)
 {		
     mPosition[0] = 0.0;
     mPosition[1] = 0.0;
@@ -219,6 +235,7 @@ OALSource::~OALSource()
     // release the 3DMixer bus if necessary
 	if (mCurrentPlayBus != kSourceNeedsBus)
 	{
+		ReleaseNotifyAndRenderProcs();
 		mOwningContext->SetBusAsAvailable (mCurrentPlayBus);
 		mCurrentPlayBus = kSourceNeedsBus;		
 	}
@@ -1280,6 +1297,41 @@ void	OALSource::SetupMixerBus()
 	return;			
 }
 
+void OALSource::SetupRogerBeepAU()
+{
+		
+	ComponentDescription desc;
+	desc.componentFlags = 0;        
+	desc.componentFlagsMask = 0;     
+	desc.componentType = kAudioUnitType_Effect;          
+	desc.componentSubType = kRogerBeepType;       
+	desc.componentManufacturer = kAudioUnitManufacturer_Apple;  
+
+	// CREATE NEW NODE FOR THE GRAPH
+	OSStatus result = AUGraphNewNode (mOwningContext->GetGraph(), &desc, 0, NULL, &mRogerBeepNode);
+		THROW_RESULT
+
+	result = AUGraphGetNodeInfo (mOwningContext->GetGraph(), mRogerBeepNode, 0, 0, 0, &mRogerBeepAU);
+		THROW_RESULT   
+}
+
+void OALSource::SetupDistortionAU()
+{
+	ComponentDescription desc;
+	desc.componentFlags = 0;        
+	desc.componentFlagsMask = 0;     
+	desc.componentType = kAudioUnitType_Effect;          
+	desc.componentSubType = kDistortionType;       
+	desc.componentManufacturer = kAudioUnitManufacturer_Apple;  
+
+	// CREATE NEW NODE FOR THE GRAPH
+	OSStatus result = AUGraphNewNode (mOwningContext->GetGraph(), &desc, 0, NULL, &mDistortionNode);
+		THROW_RESULT
+
+	result = AUGraphGetNodeInfo (mOwningContext->GetGraph(), mDistortionNode, 0, 0, 0, &mDistortionAU);
+		THROW_RESULT   
+}
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // returns false if there is no data to play
 bool	OALSource::PrepBufferQueueForPlayback()
@@ -1297,7 +1349,7 @@ bool	OALSource::PrepBufferQueueForPlayback()
 		return false; // there isn't anything to do
 	
 #if LOG_PLAYBACK
-	DebugMessage("OALSource::PrepBufferQueueForPlayback called - Format of 1st buffer in the Q = ");
+	DebugMessage("OALSource::PrepBufferQueueForPlayback called - Format of 1st buffer in the Q =\n");
 	buffer->mBuffer->PrintFormat();
 #endif
 			
@@ -1322,7 +1374,7 @@ bool	OALSource::PrepBufferQueueForPlayback()
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void	OALSource::Play()
-{	
+{		
 	if (GetQLength() == 0)
 		return; // nothing to do
 	
@@ -1379,14 +1431,76 @@ void	OALSource::Play()
 #if LOG_PLAYBACK
 				DebugMessageN3("OALSource::Play Starting from a Stopped or Initial state (AFTER PREP) - OALSource:QSize:Looping = %ld:%ld:%ld", (long int) mSelfToken,mBufferQueueActive->Size(), mLooping);
 #endif
-						
+				
 				// set up a mixer bus now
 				SetupMixerBus();
-												
+				CAStreamBasicDescription	format;
+				UInt32                      propSize = sizeof(format);
+				OSStatus result = noErr;
+				
+				if(mASARogerBeepEnable || mASADistortionEnable)
+				{	
+					mRenderElement = 0;
+					result = AudioUnitGetProperty(mOwningContext->GetMixerUnit(), kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, mCurrentPlayBus, &format, &propSize);
+						THROW_RESULT	
+								
+					if(mASARogerBeepEnable)
+					{
+						// set AU format to mixer format for input/output
+						result = AudioUnitSetProperty (mRogerBeepAU, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 0, &format, sizeof(format));
+							THROW_RESULT
+						result = AudioUnitSetProperty (mRogerBeepAU, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 0, &format, sizeof(format));
+							THROW_RESULT
+						result = AudioUnitInitialize(mRogerBeepAU);
+							THROW_RESULT
+						// connect roger beep AU to 3D Mixer
+						result = AUGraphConnectNodeInput(mOwningContext->GetGraph(), mRogerBeepNode, 0, mOwningContext->GetMixerNode(), mCurrentPlayBus);
+							THROW_RESULT	
+						
+						if(!mASADistortionEnable)
+						{
+							// connect render proc to unit if distortion is not enabled
+							result = AUGraphGetNodeInfo (mOwningContext->GetGraph(), mRogerBeepNode, 0, 0, 0, &mRenderUnit);
+								THROW_RESULT;
+						}
+					}
+					
+					if(mASADistortionEnable)
+					{
+
+						// set AU format to mixer format for input/output
+						result = AudioUnitSetProperty (mDistortionAU, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 0, &format, sizeof(format));
+							THROW_RESULT
+						result = AudioUnitSetProperty (mDistortionAU, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 0, &format, sizeof(format));
+							THROW_RESULT
+						result = AudioUnitInitialize(mDistortionAU);
+							THROW_RESULT
+						
+						// distortion unit will always be first if it exists
+						result = AUGraphGetNodeInfo (mOwningContext->GetGraph(), mDistortionNode, 0, 0, 0, &mRenderUnit);
+							THROW_RESULT
+						
+						if(mASARogerBeepEnable)
+							result = AUGraphConnectNodeInput(mOwningContext->GetGraph(), mDistortionNode, 0, mRogerBeepNode, 0);
+						else
+							result = AUGraphConnectNodeInput(mOwningContext->GetGraph(), mDistortionNode, 0, mOwningContext->GetMixerNode(), mCurrentPlayBus);
+								
+							THROW_RESULT
+					}
+					
+					result = AUGraphUpdate(mOwningContext->GetGraph(), NULL);
+						THROW_RESULT
+				}	
+				else
+				{
+					mRenderUnit = mOwningContext->GetMixerUnit();
+					mRenderElement = mCurrentPlayBus;
+				}
+					THROW_RESULT
+				
 				mState = AL_PLAYING;
 				mQueueIsProcessed = false;
-
-				// attach the notify and render procs to start processing audio data
+				// attach the notify and render procs to the first unit in the sequence
 				AddNotifyAndRenderProcs();
 			}
 		}
@@ -1500,7 +1614,7 @@ void	OALSource::Resume()
 void	OALSource::Stop()
 {
 #if LOG_PLAYBACK
-	DebugMessageN1("OALSource::Stop called - OALSource = %ld\n", (long int) mSelfToken);
+	DebugMessageN2("OALSource::Stop called - OALSource = %ld : mState = %ld\n", (long int) mSelfToken, mState);
 #endif
 
 	TRY_PLAY_MUTEX
@@ -1900,7 +2014,17 @@ void	OALSource::DisconnectFromBus()
 {
 	try {
 		ReleaseNotifyAndRenderProcs();
+		OSStatus result = noErr;
 
+		// remove the connection between the AUs, if they exist
+		if(mRogerBeepNode || mDistortionNode)
+		{
+			if(mRogerBeepNode && mDistortionNode)
+				result = AUGraphDisconnectNodeInput(mOwningContext->GetGraph(), mRogerBeepNode, 0);
+			result = AUGraphDisconnectNodeInput(mOwningContext->GetGraph(), mOwningContext->GetMixerNode(), mCurrentPlayBus);
+			result = AUGraphUpdate(mOwningContext->GetGraph(), NULL);
+		}	
+			
 		if (mCurrentPlayBus != kSourceNeedsBus)
 		{
 			mOwningContext->SetBusAsAvailable (mCurrentPlayBus);
@@ -2121,7 +2245,7 @@ void	OALSource::UpdateBusObstruction ()
 
 	if (mCurrentPlayBus != kSourceNeedsBus)
 	{
-		if (Get3DMixerVersion() < k3DMixerVersion_2_2)	// the pre-2.3 3DMixer does not have obstruction
+		if (Get3DMixerVersion() < k3DMixerVersion_2_2)	// the pre-2.2 3DMixer does not have obstruction
 			return;
 		
 		AudioUnitSetParameter(mOwningContext->GetMixerUnit(), 8 /*k3DMixerParam_ObstructionAttenuation*/, kAudioUnitScope_Input, mCurrentPlayBus, mASAObstruction, 0);
@@ -2140,11 +2264,11 @@ void	OALSource::AddNotifyAndRenderProcs()
 	
 	mPlayCallback.inputProc = SourceInputProc;
 	mPlayCallback.inputProcRefCon = this;
-	result = AudioUnitSetProperty (	mOwningContext->GetMixerUnit(), kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Input, 
-							mCurrentPlayBus, &mPlayCallback, sizeof(mPlayCallback));	
+	result = AudioUnitSetProperty (	mRenderUnit, kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Input, 
+							mRenderElement, &mPlayCallback, sizeof(mPlayCallback));	
 			THROW_RESULT
-
-	result = AudioUnitAddRenderNotify(mOwningContext->GetMixerUnit(), SourceNotificationProc, this);
+	
+	result = AUGraphAddRenderNotify(mOwningContext->GetGraph(), SourceNotificationProc, this);
 			THROW_RESULT
 }
 
@@ -2154,15 +2278,16 @@ void	OALSource::ReleaseNotifyAndRenderProcs()
 	OSStatus	result = noErr;
 	if (mCurrentPlayBus != kSourceNeedsBus)
 	{
-		result = AudioUnitRemoveRenderNotify(mOwningContext->GetMixerUnit(), SourceNotificationProc,this);
+		result = AUGraphRemoveRenderNotify(mOwningContext->GetGraph(), SourceNotificationProc, this);
 			THROW_RESULT
-					
-		mPlayCallback.inputProc = 0;
-		mPlayCallback.inputProcRefCon = 0;
-		result = AudioUnitSetProperty (	mOwningContext->GetMixerUnit()/*mOwningDevice->GetMixerUnit()*/, kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Input, 
-								mCurrentPlayBus, &mPlayCallback, sizeof(mPlayCallback));	
-			THROW_RESULT
-	}
+	}				
+	
+	mPlayCallback.inputProc = 0;
+	mPlayCallback.inputProcRefCon = 0;
+
+	result = AudioUnitSetProperty (	mRenderUnit, kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Input, 
+							mRenderElement, &mPlayCallback, sizeof(mPlayCallback));	
+		THROW_RESULT
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2180,7 +2305,7 @@ OSStatus	OALSource::SourceNotificationProc (	void 						*inRefCon,
 		
 	if (*inActionFlags & kAudioUnitRenderAction_PostRender)
 		return THIS->DoPostRender();
-		
+			
 	return (noErr);
 }
 
@@ -2199,7 +2324,7 @@ OSStatus	OALSource::SourceInputProc (	void 						*inRefCon,
 											AudioBufferList 			*ioData)
 {
 	OALSource* THIS = (OALSource*)inRefCon;
-		
+	
 	if (THIS->mOutputSilence)
 		*inActionFlags |= kAudioUnitRenderAction_OutputIsSilence;	
 	else
@@ -2227,7 +2352,7 @@ OSStatus OALSource::DoPreRender ()
 {    
 	BufferInfo	*bufferInfo = NULL;
 	OSStatus	err = noErr;
-	
+
 	TRY_PLAY_MUTEX
 	
 	bufferInfo = mBufferQueueActive->Get(mCurrentBufferIndex);
@@ -2237,9 +2362,9 @@ OSStatus OALSource::DoPreRender ()
 		mQueueIsProcessed = true;
         err = -1;	// there are no buffers
     }
-        
+
 	UNLOCK_PLAY_MUTEX
-	
+
 	return (err);
 }
 
@@ -2355,11 +2480,27 @@ OSStatus OALSource::DoRender (AudioBufferList 			*ioData)
 	UInt32				packetsRequestedFromRenderProc = ioData->mBuffers[0].mDataByteSize / sizeof(Float32);
 	UInt32				packetsObtained = 0;
 	UInt32				packetCount;
-	AudioBufferList		*tempBufferList = ioData;
+	struct {
+			AudioBufferList	abl;
+			AudioBuffer		buffer;
+	}t;	
+	AudioBufferList	*	tBufferList = (AudioBufferList	*) &t.abl;
 	UInt32				dataByteSize = ioData->mBuffers[0].mDataByteSize;
-	void				*dataStarts[2];
 	BufferInfo			*bufferInfo = NULL;
-	 
+
+	tBufferList->mNumberBuffers = ioData->mNumberBuffers;
+	// buffer 1
+	tBufferList->mBuffers[0].mNumberChannels = ioData->mBuffers[0].mNumberChannels;
+	tBufferList->mBuffers[0].mDataByteSize = ioData->mBuffers[0].mDataByteSize;
+	tBufferList->mBuffers[0].mData = ioData->mBuffers[0].mData;
+	if (tBufferList->mNumberBuffers > 1)
+	{
+		// buffer 2
+		tBufferList->mBuffers[1].mNumberChannels = ioData->mBuffers[1].mNumberChannels;
+		tBufferList->mBuffers[1].mDataByteSize = ioData->mBuffers[1].mDataByteSize;
+		tBufferList->mBuffers[1].mData = ioData->mBuffers[1].mData;
+	}
+	
 	TRY_PLAY_MUTEX
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2391,11 +2532,6 @@ OSStatus OALSource::DoRender (AudioBufferList 			*ioData)
 	ChangeChannelSettings();
 	
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// save the data ptrs to restore later
-	for (UInt32	i = 0; i < tempBufferList->mNumberBuffers; i++)
-	{
-		dataStarts[i] = tempBufferList->mBuffers[i].mData;
-	}
 		
 	// walk through as many buffers as needed to satisfy the request AudioConverterFillComplexBuffer will
 	// get called each time the data format changes until enough packets have been obtained or the q is empty.
@@ -2411,12 +2547,16 @@ OSStatus OALSource::DoRender (AudioBufferList 			*ioData)
         }
 
 		bufferInfo->mProcessedState = kInProgress;
-
-		for (UInt32	i = 0; i < tempBufferList->mNumberBuffers; i++)
+		// buffer 1
+		UInt32	byteCount = packetsObtained * sizeof(Float32);
+		tBufferList->mBuffers[0].mDataByteSize = dataByteSize - byteCount;
+		tBufferList->mBuffers[0].mData = (Byte *) ioData->mBuffers[0].mData + byteCount;
+		if (tBufferList->mNumberBuffers > 1)
 		{
-			tempBufferList->mBuffers[i].mDataByteSize = dataByteSize - (packetsObtained * sizeof(Float32));
-			tempBufferList->mBuffers[i].mData = (Byte *) ioData->mBuffers[i].mData + (packetsObtained * sizeof(Float32));
-		}		
+			// buffer 2
+			tBufferList->mBuffers[1].mDataByteSize = tBufferList->mBuffers[0].mDataByteSize;
+			tBufferList->mBuffers[1].mData = (Byte *) ioData->mBuffers[1].mData + byteCount;
+		}
 		
 		if (bufferInfo->mBuffer->HasBeenConverted() == false)
 		{
@@ -2425,7 +2565,7 @@ OSStatus OALSource::DoRender (AudioBufferList 			*ioData)
 	
 			packetCount = packetsRequestedFromRenderProc - packetsObtained;
 			// if OALSourceError_CallConverterAgain is returned, there is nothing to do, just go around again and try and get the data
-			err = AudioConverterFillComplexBuffer(converter, ACComplexInputDataProc, this, &packetCount, tempBufferList, NULL);
+			err = AudioConverterFillComplexBuffer(converter, ACComplexInputDataProc, this, &packetCount, tBufferList, NULL);
 			packetsObtained += packetCount;
 	
 			if (mQueueIsProcessed == true)
@@ -2454,7 +2594,8 @@ OSStatus OALSource::DoRender (AudioBufferList 			*ioData)
 				framesToCopy = framesRemaining;
 			
 			bytesToCopy = framesToCopy * sizeof(Float32);
-			memcpy(tempBufferList->mBuffers->mData, bufferInfo->mBuffer->GetDataPtr() + bufferInfo->mOffset, bytesToCopy);
+			// we're in a mono only case, so only copy the first buffer
+			memcpy(tBufferList->mBuffers->mData, bufferInfo->mBuffer->GetDataPtr() + bufferInfo->mOffset, bytesToCopy);
 			bufferInfo->mOffset += bytesToCopy;
 			packetsObtained += framesToCopy;
 						
@@ -2464,7 +2605,6 @@ OSStatus OALSource::DoRender (AudioBufferList 			*ioData)
 
 			if (bufferInfo->mOffset == bufferInfo->mBuffer->GetDataSize())
 			{
-
 				mCurrentBufferIndex++;
 				// see if there is a next buffer or if the queue is looping and should return to the start
 				BufferInfo	*nextBufferInfo = NextPlayableBufferInActiveQ();	// this method updates mCurrentBufferIndex as well
@@ -2492,21 +2632,19 @@ OSStatus OALSource::DoRender (AudioBufferList 			*ioData)
 
 Finished:
 
-	// if there wasn't enough data left, be sure to silence the end of the buffer
+	// if there wasn't enough data left, be sure to silence the end of the buffers
 	if (packetsObtained < packetsRequestedFromRenderProc)
 	{
-		for (UInt32	i = 0; i < tempBufferList->mNumberBuffers; i++)
+		UInt32	byteCount = packetsObtained * sizeof(Float32);
+		tBufferList->mBuffers[0].mDataByteSize = dataByteSize - byteCount;
+		tBufferList->mBuffers[0].mData = (Byte *) ioData->mBuffers[0].mData + byteCount;
+		memset(tBufferList->mBuffers[0].mData, 0, tBufferList->mBuffers[0].mDataByteSize);
+		if (tBufferList->mNumberBuffers > 1)
 		{
-			tempBufferList->mBuffers[i].mDataByteSize = dataByteSize - (packetsObtained * sizeof(Float32));
-			tempBufferList->mBuffers[i].mData = (Byte *) ioData->mBuffers[i].mData + (packetsObtained * sizeof(Float32));
-			memset(tempBufferList->mBuffers[i].mData, 0, tempBufferList->mBuffers[i].mDataByteSize);
-		}		
-	}
-    
-	for (UInt32	i = 0; i < tempBufferList->mNumberBuffers; i++)
-	{
-		tempBufferList->mBuffers[i].mData = dataStarts[i];
-		tempBufferList->mBuffers[i].mDataByteSize = dataByteSize;
+			tBufferList->mBuffers[1].mDataByteSize = tBufferList->mBuffers[0].mDataByteSize;
+			tBufferList->mBuffers[1].mData = (Byte *) ioData->mBuffers[1].mData + byteCount;
+			memset(tBufferList->mBuffers[1].mData, 0, tBufferList->mBuffers[1].mDataByteSize);
+		}
 	}
 
 	// ramp the buffer up or down to avoid any clicking
@@ -2522,7 +2660,7 @@ Finished:
 		RampUp(ioData);
 		mRampState = kRampingComplete;
 	}
-	
+			
 	UNLOCK_PLAY_MUTEX
 
 	// For Testing The Get Offset APIs
@@ -2574,6 +2712,7 @@ OSStatus OALSource::DoPostRender ()
 							AddNotifyAndRenderProcs();
 							renderProcsRemoved = false;
 						}
+						mState = AL_PLAYING; // in case it was also paused while processing these Q commands
 						break;
 						
 					case kMQ_ClearBuffersFromQueue:
@@ -2721,7 +2860,7 @@ void OALSource::RampUp (AudioBufferList 			*ioData)
 
 OSStatus	OALSource::DoSRCRender(	AudioBufferList 			*ioData )
 {   
-	 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// 1st move past any AL_NONE Buffers
 	BufferInfo	*bufferInfo = NULL;
 	bufferInfo = NextPlayableBufferInActiveQ();
@@ -3352,6 +3491,342 @@ void	OALSource::SetObstruction(Float32 inObstruction)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void	OALSource::SetRogerBeepEnable(Boolean inEnable)
+{
+#if LOG_GRAPH_AND_MIXER_CHANGES
+    DebugMessageN2("OALSource::SetRogerBeepEnable:  OALSource: = %ld : inEnable %d\n", (long int)mSelfToken, inEnable );
+#endif            
+
+	// Enable cannot be set during playback 
+	if ((mState == AL_PLAYING) || (mState == AL_PAUSED))
+		throw (OSStatus) AL_INVALID_OPERATION;
+		
+    if (inEnable == mASARogerBeepEnable)
+		return;			// nothing to do	
+		
+	mASARogerBeepEnable = inEnable;
+	
+	if (mASARogerBeepEnable)
+	{
+		SetupRogerBeepAU();
+		
+		// first get the initial values
+		UInt32 propSize = sizeof(UInt32);
+		UInt32 bypassValue;
+		if(AudioUnitGetProperty(mRogerBeepAU, kAudioUnitProperty_BypassEffect, kAudioUnitScope_Global, 0, &bypassValue, &propSize) == noErr)
+			mASARogerBeepOn = bypassValue ? 0 : 1;
+		
+		Float32 paramValue;
+		if(AudioUnitGetParameter(mRogerBeepAU, 6/*kRogerBeepParam_RogerGain*/, kAudioUnitScope_Global, 0, &paramValue) == noErr)
+			mASARogerBeepGain = paramValue;
+		
+		if(AudioUnitGetParameter(mRogerBeepAU, 4/*kRogerBeepParam_Sensitivity*/, kAudioUnitScope_Global, 0, &paramValue) == noErr)
+			mASARogerBeepSensitivity = (UInt32)paramValue;
+		
+		if(AudioUnitGetParameter(mRogerBeepAU, 5 /*kRogerBeepParam_RogerType*/, kAudioUnitScope_Global, 0, &paramValue) == noErr)
+			mASARogerBeepType = (UInt32)paramValue;
+			
+		//now default the unit off
+		SetRogerBeepOn(false);
+	}
+	
+	else
+	{
+		if(mRogerBeepNode)
+			AUGraphRemoveNode(mOwningContext->GetGraph(), mRogerBeepNode);
+		mRogerBeepNode = 0;
+		mRogerBeepAU = 0;
+	}
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void	OALSource::SetRogerBeepOn(Boolean inOn)
+{
+#if LOG_GRAPH_AND_MIXER_CHANGES
+    DebugMessageN2("OALSource::SetRogerBeepOn:  OALSource: = %ld : inOn %d\n", mSelfToken, inOn );
+#endif      
+		      
+    if (inOn == mASARogerBeepOn)
+		return;			// nothing to do	
+		
+	mASARogerBeepOn = inOn;
+	
+	UInt32 bypassValue = mASARogerBeepOn ? 0 : 1;
+	AudioUnitSetProperty(mRogerBeepAU, kAudioUnitProperty_BypassEffect, kAudioUnitScope_Global, 0, &bypassValue, sizeof(UInt32));
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void	OALSource::SetRogerBeepGain(Float32 inGain)
+{
+#if LOG_GRAPH_AND_MIXER_CHANGES
+    DebugMessageN2("OALSource::SetGain:  OALSource: = %ld : inGain %f2\n", mSelfToken, inGain );
+#endif         
+	if(!mASARogerBeepEnable)
+		throw (OSStatus) AL_INVALID_OPERATION;
+		
+    if (inGain == mASARogerBeepGain)
+		return;			// nothing to do	
+		
+	if (inGain < -100.0f || inGain > 20.0f)
+		throw AL_INVALID_VALUE; // must be within -100.0 - 20.0 range
+
+	mASARogerBeepGain = inGain;
+			
+	AudioUnitSetParameter(mRogerBeepAU, 6/*kRogerBeepParam_RogerGain*/, kAudioUnitScope_Global, 0, inGain, 0 );
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void	OALSource::SetRogerBeepSensitivity(UInt32 inSensitivity)
+{
+#if LOG_GRAPH_AND_MIXER_CHANGES
+    DebugMessageN2("OALSource::SetRogerBeepSensitivity:  OALSource: = %ld : inSensitivity %d\n", mSelfToken, inSensitivity );
+#endif        
+	if(!mASARogerBeepEnable)
+		throw AL_INVALID_OPERATION;
+		    
+    if (inSensitivity == mASARogerBeepSensitivity)
+		return;			// nothing to do	
+		
+	if (inSensitivity < 0 || inSensitivity > 2)
+		throw AL_INVALID_VALUE; // must be within 0 - 2 range
+
+	mASARogerBeepSensitivity = inSensitivity;
+			
+	AudioUnitSetParameter(mRogerBeepAU, 4/*kRogerBeepParam_Sensitivity*/, kAudioUnitScope_Global, 0, inSensitivity, 0 );
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void	OALSource::SetRogerBeepType(UInt32 inType)
+{
+#if LOG_GRAPH_AND_MIXER_CHANGES
+    DebugMessageN2("OALSource::SetRogerBeepType:  OALSource: = %ld : inType %d\n", mSelfToken, inType );
+#endif           
+	if(!mASARogerBeepEnable)
+		throw AL_INVALID_OPERATION;
+		 
+    if (inType == mASARogerBeepType)
+		return;			// nothing to do	
+		
+	if (inType < 0 || inType > 3)
+		throw AL_INVALID_VALUE; // must be within 0 - 3 range
+
+	mASARogerBeepType = inType;
+			
+	AudioUnitSetParameter(mRogerBeepAU, 5 /*kRogerBeepParam_RogerType*/, kAudioUnitScope_Global, 0, inType, 0 );
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void	OALSource::SetRogerBeepPreset(FSRef* inRef)
+{
+
+	try {
+			Boolean				status; 
+			SInt32				result = 0;
+			CFURLRef			fileURL = CFURLCreateFromFSRef (kCFAllocatorDefault, inRef);
+			if (fileURL) 
+			{
+				// Read the XML file.
+				CFDataRef		resourceData = NULL;
+				
+				status = CFURLCreateDataAndPropertiesFromResource (kCFAllocatorDefault, fileURL, &resourceData,	NULL, NULL, &result);
+				CFRelease (fileURL);	// no longer needed
+				
+				if (status == false || result)				
+					throw (OSStatus) -1;			
+				else
+				{
+					CFStringRef			errString = NULL;
+					CFPropertyListRef   theData = NULL;
+					theData = CFPropertyListCreateFromXMLData (kCFAllocatorDefault, resourceData, kCFPropertyListImmutable, &errString);
+					CFRelease (resourceData);
+					if (errString)
+						CFRelease (errString);
+					
+					if (theData == NULL || errString) 
+					{
+						if (theData)
+							CFRelease (theData);
+						throw (OSStatus) -1;			
+					}
+					else
+					{
+						result = AudioUnitSetProperty(mRogerBeepAU, kAudioUnitProperty_ClassInfo, kAudioUnitScope_Global, 0, &theData, sizeof(theData) );
+						CFRelease (theData);
+						THROW_RESULT
+					}				
+				}
+			}
+			else
+				throw (OSStatus) -1;			
+	}
+	catch (OSStatus result) {
+		throw result;
+	}
+	catch (...) {
+		throw (OSStatus) -1;			
+	}
+	
+	return;
+
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void	OALSource::SetDistortionEnable(Boolean inEnable)
+{
+#if LOG_GRAPH_AND_MIXER_CHANGES
+    DebugMessageN2("OALSource::SetDistortionEnable:  OALSource: = %ld : inEnable %d\n", mSelfToken, inEnable );
+#endif            
+    if (inEnable == mASADistortionEnable)
+		return;			// nothing to do	
+		
+	mASADistortionEnable = inEnable;
+	if (mASADistortionEnable)
+	{
+		SetupDistortionAU();
+		// first get the default values
+		UInt32 propSize = sizeof(UInt32);
+		
+		UInt32 bypassValue;
+		if(AudioUnitGetProperty(mDistortionAU, kAudioUnitProperty_BypassEffect, kAudioUnitScope_Global, 0, &bypassValue, &propSize) == noErr) 
+			mASADistortionOn = bypassValue ? 0 : 1;
+		
+		Float32 paramValue;
+		if(AudioUnitGetParameter(mDistortionAU, 15/*kDistortionParam_FinalMix*/, kAudioUnitScope_Global, 0, &paramValue) == noErr)
+			mASADistortionMix = paramValue;
+			
+		AUPreset distortionType;
+		propSize = sizeof(distortionType);
+		if(AudioUnitGetProperty(mDistortionAU, kAudioUnitProperty_PresentPreset, kAudioUnitScope_Global, 0, &distortionType, &propSize) == noErr)
+		{
+			if(distortionType.presetName) CFRelease(distortionType.presetName);
+			mASADistortionType = distortionType.presetNumber;
+		}
+		
+		// now default the unit off
+		SetDistortionOn(false);
+	}
+	
+	else
+	{
+		if(mDistortionNode)
+			AUGraphRemoveNode(mOwningContext->GetGraph(), mDistortionNode);
+		mDistortionNode = 0;
+		mDistortionAU = 0;
+	}	
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void	OALSource::SetDistortionOn(Boolean inOn)
+{
+#if LOG_GRAPH_AND_MIXER_CHANGES
+    DebugMessageN2("OALSource::SetDistortionOn:  OALSource: = %ld : inOn %d\n", mSelfToken, inOn );
+#endif    
+		       
+    if (inOn == mASADistortionOn)
+		return;			// nothing to do	
+		
+	mASADistortionOn = inOn;
+	
+	UInt32 bypassValue = mASADistortionOn ? 0 : 1;
+	
+	AudioUnitSetProperty(mDistortionAU, kAudioUnitProperty_BypassEffect, kAudioUnitScope_Global, 0, &bypassValue, sizeof(UInt32));
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void	OALSource::SetDistortionMix(Float32 inMix)
+{
+#if LOG_GRAPH_AND_MIXER_CHANGES
+    DebugMessageN2("OALSource::SetDistortionMix:  OALSource: = %ld : inMix %f2\n", mSelfToken, inMix );
+#endif            
+	if(!mASADistortionEnable)
+		throw AL_INVALID_OPERATION;
+		
+    if (inMix == mASADistortionMix)
+		return;			// nothing to do	
+
+	if (inMix < 0.0f || inMix > 100.0f)
+		throw AL_INVALID_VALUE; // must be within 0.0 - 100.0 range
+
+	mASADistortionMix = inMix;
+	AudioUnitSetParameter(mDistortionAU, 15/*kDistortionParam_FinalMix*/, kAudioUnitScope_Global, 0, inMix, 0 );
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void	OALSource::SetDistortionType(SInt32 inType)
+{
+#if LOG_GRAPH_AND_MIXER_CHANGES
+    DebugMessageN2("OALSource::SetDistortionType:  OALSource: = %u : inType %d\n", mSelfToken, inType );
+#endif     
+	if(!mASADistortionEnable)
+		throw AL_INVALID_OPERATION; 
+		       
+    if (inType == mASADistortionType)
+		return;			// nothing to do	
+		
+	mASADistortionType = inType;
+	AUPreset distortionType;
+	distortionType.presetNumber = mASADistortionType;
+	distortionType.presetName = NULL;
+			
+	AudioUnitSetProperty(mDistortionAU, kAudioUnitProperty_PresentPreset, kAudioUnitScope_Global, 0, &distortionType, sizeof(AUPreset));
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void	OALSource::SetDistortionPreset(FSRef* inRef)
+{   
+		
+	try {
+			Boolean				status; 
+			SInt32				result = 0;
+			CFURLRef			fileURL = CFURLCreateFromFSRef (kCFAllocatorDefault, inRef);
+			if (fileURL) 
+			{
+				// Read the XML file.
+				CFDataRef		resourceData = NULL;
+				
+				status = CFURLCreateDataAndPropertiesFromResource (kCFAllocatorDefault, fileURL, &resourceData,	NULL, NULL, &result);
+				CFRelease (fileURL);	// no longer needed
+				
+				if (status == false || result)				
+					throw (OSStatus) -1;			
+				else
+				{
+					CFStringRef			errString = NULL;
+					CFPropertyListRef   theData = NULL;
+					theData = CFPropertyListCreateFromXMLData (kCFAllocatorDefault, resourceData, kCFPropertyListImmutable, &errString);
+					CFRelease (resourceData);
+					if (errString)
+						CFRelease (errString);
+					
+					if (theData == NULL || errString) 
+					{
+						if (theData)
+							CFRelease (theData);
+						throw (OSStatus) -1;			
+					}
+					else
+					{
+						result = AudioUnitSetProperty(mDistortionAU, kAudioUnitProperty_ClassInfo, kAudioUnitScope_Global, 0, &theData, sizeof(theData) );
+						CFRelease (theData);
+						THROW_RESULT
+					}				
+				}
+			}
+			else
+				throw (OSStatus) -1;			
+	}
+	catch (OSStatus result) {
+		throw result;
+	}
+	catch (...) {
+		throw (OSStatus) -1;			
+	}
+	
+	return;
+
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #pragma mark _____BufferQueue_____
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3408,7 +3883,7 @@ UInt32 	BufferQueue::GetQueueSizeInFrames()
 	while (it != end())
 	{
 		totalFrames += it->mBuffer->GetFrameCount();
-		it++;
+		++it;
 	}
 	
 	return (totalFrames);

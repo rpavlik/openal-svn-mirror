@@ -64,7 +64,7 @@ public:
 				return;
 			}
 			else
-				it++;
+				++it;
         }
 		return;
     }
@@ -75,7 +75,7 @@ public:
             if ((*it).mSource == inSource)
 				return true;
 			else 
-				it++;
+				++it;
         }
 		return false;
     }
@@ -88,7 +88,7 @@ public:
 				return;
 			}
 			else 
-				it++;
+				++it;
         }
 		return;
     }
@@ -101,7 +101,7 @@ public:
 				return (*it).mAttachedCount;
 			}
 			else
-				it++;
+				++it;
         }
 		return 0;
     }
@@ -112,7 +112,7 @@ public:
             if ((*it).mSource == inSource)
 				 return (*it).mAttachedCount;
 			else
-				it++;
+				++it;
         }
 		return 0;
     }
@@ -140,8 +140,7 @@ class OALBuffer
 	public:
 	OALBuffer(const ALuint	inSelfToken);
 	~OALBuffer();
-	
-	OSStatus						AddAudioData(	char*	inAudioData, UInt32	inAudioDataSize, ALenum format, ALsizei freq, bool	inPreConvertToHalFormat);												
+	OSStatus						AddAudioData(	char*		inAudioData, UInt32	inAudioDataSize, ALenum format, ALsizei freq, bool	inPreConvertToHalFormat);													
 	OSStatus						AddAudioDataStatic(char*	inAudioData, UInt32	inAudioDataSize, ALenum format, ALsizei freq);
 
 	bool							IsPurgable();
@@ -205,7 +204,7 @@ public:
 
 		for (UInt32 i = 0; i < inIndex; i++){
             if (it != end())
-                it++;
+                ++it;
             else
                 i = inIndex;
         }

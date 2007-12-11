@@ -133,6 +133,8 @@ OALContext::OALContext (const uintptr_t	inSelfToken, OALDevice    *inOALDevice, 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 OALContext::~OALContext()
 {
+	mOwningDevice->RemoveContext(this);
+
 	// delete all the sources that were created by this context
 	if (mSourceMap)
 	{
@@ -145,7 +147,21 @@ OALContext::~OALContext()
 				delete oalSource;
 			}
 		}
+		delete mSourceMap;
 	}
+	
+	if (mDeadSourceMap)
+	{
+		CleanUpDeadSourceList();
+		delete mDeadSourceMap;
+	}
+	
+	if (mAttributeList)
+		free(mAttributeList);
+	
+	if(mBusInfo)
+		free(mBusInfo);
+		
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -275,15 +291,15 @@ void		OALContext::InitializeMixer(UInt32	inStereoBusCount)
 			// set the bus count on the mixer if necessary	
 			UInt32  currentBusCount;
 			propSize = sizeof(currentBusCount);
-			result = AudioUnitGetProperty (	mMixerUnit, kAudioUnitProperty_BusCount, kAudioUnitScope_Input, 0, &currentBusCount, &propSize);
+			result = AudioUnitGetProperty (	mMixerUnit, kAudioUnitProperty_ElementCount, kAudioUnitScope_Input, 0, &currentBusCount, &propSize);
 			if ((result == noErr) && (mBusCount != currentBusCount))
 			{
-				result = AudioUnitSetProperty (	mMixerUnit, kAudioUnitProperty_BusCount, kAudioUnitScope_Input, 0, &mBusCount, propSize);
+				result = AudioUnitSetProperty (	mMixerUnit, kAudioUnitProperty_ElementCount, kAudioUnitScope_Input, 0, &mBusCount, propSize);
 				if (result != noErr)
 				{
 					// couldn't set the bus count so make sure we know just how many busses there are
 					propSize = sizeof(mBusCount);
-					AudioUnitGetProperty (	mMixerUnit, kAudioUnitProperty_BusCount, kAudioUnitScope_Input, 0, &mBusCount, &propSize);
+					AudioUnitGetProperty (	mMixerUnit, kAudioUnitProperty_ElementCount, kAudioUnitScope_Input, 0, &mBusCount, &propSize);
 				}
 			}
 		}
@@ -687,11 +703,17 @@ UInt32	OALContext::GetDesiredRenderChannels(UInt32	inDeviceChannels)
         // Or, that a 3 channel layout was returned (which is unsupported by the 3DMixer)
         returnValue = 2; 
     } 
-    else if (inDeviceChannels > 5)
+    else if ((inDeviceChannels > 5) && (Get3DMixerVersion() < k3DMixerVersion_2_3))
     {
-        // 3DMixer currently does not render to more than 5 channels
-        returnValue = 5;    
+		// 3DMixer ver. 2.2 and below could only render a maximum of 5 channels
+		returnValue = 5;    
     }
+	else if(inDeviceChannels > 8)
+	{
+		// Current 3DMixer can handle a maximum of 8 channels
+		returnValue = 8;
+	}
+	
 	return returnValue;
 }
 
