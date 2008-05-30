@@ -22,6 +22,9 @@ The directories in detail:
  * OpenAL-Sample: Contains the cross-platform OpenAL sample implementation
    (SI), based on former Loki efforts.
 
+ * OpenAL-Soft: A portable software OpenAL implementation, based on the old
+   Windows code. Designed to replace the SI.
+
  * OpenAL-Windows: Creative's Windows implementation of OpenAL.
 
 Please check the individual directories for installation instructions.
