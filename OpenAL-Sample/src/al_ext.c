@@ -14,6 +14,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <strings.h>
+
 #include "al_main.h"
 #include "al_types.h"
 #include "al_ext.h"

@@ -52,4 +52,8 @@ typedef unsigned __int32 uint32_t;
 
 #endif /* USE_LRINT */
 
+#ifdef __SUNPRO_C
+#define __inline inline
+#endif
+
 #endif /* not AL_SITE_CONFIG_H_ */

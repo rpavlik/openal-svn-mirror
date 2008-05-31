@@ -36,8 +36,9 @@ ADD_DEFINE("PACKAGE_VERSION \"${PACKAGE_VERSION}\"")
 
 # We need ISO C99 features (e.g. snprintf) and POSIX IEEE Std 1003.1b-1993
 # features (e.g. struct timespec, used in <alsa/asoundlib.h>)
+# struct timeval used in esd and solaris backend is actually defined in POSIX 2001
 ADD_DEFINE(_ISOC99_SOURCE)
-ADD_DEFINE("_POSIX_C_SOURCE 199309")
+ADD_DEFINE("_POSIX_C_SOURCE 200112L")
 
 # Without __NO_CTYPE tolower and friends are macros which introduce a GLIBC 2.3
 # dependency.

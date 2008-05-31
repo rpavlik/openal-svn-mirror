@@ -58,8 +58,9 @@ AC_SUBST([VERSIONINFO], ["$CURRENT:$REVISION:$AGE"])
 
 # We need ISO C99 features (e.g. snprintf) and POSIX IEEE Std 1003.1b-1993
 # features (e.g. struct timespec, used in <alsa/asoundlib.h>, and nanosleep)
+# struct timeval used in esd and solaris backend is actually defined in POSIX 2001
 AC_DEFINE([_ISOC99_SOURCE], [1], [Define to 1 if extensions to ISO C89 from ISO C99 are needed.])
-AC_DEFINE([_POSIX_C_SOURCE], [199309], [Define to the POSIX version that should be used.])
+AC_DEFINE([_POSIX_C_SOURCE], [200112L], [Define to the POSIX version that should be used.])
 
 # Without __NO_CTYPE tolower and friends are macros which introduce a GLIBC 2.3
 # dependency. By defining this identifier we are currently backwards compatible

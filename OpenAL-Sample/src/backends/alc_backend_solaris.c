@@ -26,7 +26,7 @@
 #ifndef USE_BACKEND_NATIVE_SOLARIS
 
 void alcBackendOpenNative_ (UNUSED(ALC_OpenMode mode), UNUSED(ALC_BackendOps **ops),
-			    ALC_BackendPrivateData **privateData)
+			    struct ALC_BackendPrivateData **privateData)
 {
 	*privateData = NULL;
 }
@@ -303,7 +303,7 @@ static ALC_BackendOps nativeOps = {
 };
 
 void
-alcBackendOpenNative_ (ALC_OpenMode mode, ALC_BackendOps **ops, ALC_BackendPrivateData **privateData)
+alcBackendOpenNative_ (ALC_OpenMode mode, ALC_BackendOps **ops, struct ALC_BackendPrivateData **privateData)
 {
 	*privateData = (mode == ALC_OPEN_INPUT_) ? grab_read_native() : grab_write_native();
 	if (*privateData != NULL) {

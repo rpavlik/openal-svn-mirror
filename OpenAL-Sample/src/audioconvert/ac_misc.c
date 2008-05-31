@@ -37,7 +37,7 @@ struct MS_ADPCM_decodestate_FULL {
 	ALshort iSamp1;
 	ALshort iSamp2;
 }
-#ifdef __GNUC__
+#if defined(__GNUC__) || __SUNPRO_C > 8
  __attribute__ ((packed));
 #else
  __attribute__;
