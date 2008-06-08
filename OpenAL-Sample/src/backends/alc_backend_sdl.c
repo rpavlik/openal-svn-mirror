@@ -323,7 +323,7 @@ alcBackendOpenSDL_ (ALC_OpenMode mode, ALC_BackendOps **ops,
       return;
     }
 
-  sd = (struct sdlData *) malloc (sizeof *sd);
+  sd = (struct sdlData *) calloc (1, sizeof *sd);
   if (sd == NULL)
     {
       _alDebug (ALD_MAXIMUS, __FILE__, __LINE__,
