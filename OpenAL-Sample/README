@@ -1,6 +1,7 @@
 Contents
 ========
 
+   * DEPRECATED
    * Building OpenAL with autotools
    * Building OpenAL with CMake
    * Notes about the Darwin backend
@@ -10,6 +11,21 @@ Contents
       + Darwin backend test results
    * Notes about the IRIX backend
    * Coding guidelines
+
+
+DEPRECATED
+==========
+
+This OpenAL implementation is now considered deprecated, in favor of the
+OpenAL-Soft implementation by Chris Robinson.  Users and packagers are
+strongly encouraged to switch to this newer implementation, as it is
+actively maintained and is based on a more robust code base.  
+
+OpenAL-Soft is available from the following locations:
+
+http://kcat.strangesoft.net/openal.html
+git://repo.or.cz/openal-soft.git
+svn://connect.creativelabs.com/OpenAL
 
 
 Building OpenAL with autotools
