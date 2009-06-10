@@ -19,8 +19,9 @@ The directories in detail:
 
  * OpenAL-MacOSX: Apple's implementation of OpenAL for Mac OS X.
 
- * OpenAL-Sample: Contains the cross-platform OpenAL sample implementation
-   (SI), based on former Loki efforts.
+ * OpenAL-Sample: Contains the original cross-platform OpenAL sample
+   implementation (SI), based on former Loki efforts.  This implementation
+   is now considered DEPRECATED.  Use OpenAL-Soft instead.
 
  * OpenAL-Soft: A portable software OpenAL implementation, based on the old
    Windows code. Designed to replace the SI.
