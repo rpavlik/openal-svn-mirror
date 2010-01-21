@@ -16,7 +16,7 @@
  *  Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  *  Boston, MA  02111-1307, USA.
  * Or go to http://www.gnu.org/copyleft/lgpl.html
- */
+ */ 
 
 #ifndef __MINGW32__
 #define _CRT_SECURE_NO_DEPRECATE // get rid of sprintf security warnings on VS2005
