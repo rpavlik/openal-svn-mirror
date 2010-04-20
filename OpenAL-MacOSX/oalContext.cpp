@@ -1,23 +1,23 @@
 /**********************************************************************************************************************************
 *
 *   OpenAL cross platform audio library
-*   Copyright (c) 2004, Apple Computer, Inc. All rights reserved.
+*	Copyright (c) 2004, Apple Computer, Inc., Copyright (c) 2009, Apple Inc. All rights reserved.
 *
-*   Redistribution and use in source and binary forms, with or without modification, are permitted provided 
-*   that the following conditions are met:
+*	Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following 
+*	conditions are met:
 *
-*   1.  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer. 
-*   2.  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following 
-*       disclaimer in the documentation and/or other materials provided with the distribution. 
-*   3.  Neither the name of Apple Computer, Inc. ("Apple") nor the names of its contributors may be used to endorse or promote 
-*       products derived from this software without specific prior written permission. 
+*	1.  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer. 
+*	2.  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following 
+*		disclaimer in the documentation and/or other materials provided with the distribution. 
+*	3.  Neither the name of Apple Inc. ("Apple") nor the names of its contributors may be used to endorse or promote products derived 
+*		from this software without specific prior written permission. 
 *
-*   THIS SOFTWARE IS PROVIDED BY APPLE AND ITS CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, 
-*   THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL APPLE OR ITS 
-*   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED 
-*   TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
-*   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
-*   USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*	THIS SOFTWARE IS PROVIDED BY APPLE AND ITS CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED 
+*	TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL APPLE OR ITS 
+*	CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+*	LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED 
+*	AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
+*	ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 **********************************************************************************************************************************/
 
@@ -29,7 +29,6 @@
 // OALContexts
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 #pragma mark ***** OALContexts - Public Methods *****
 OALContext::OALContext (const uintptr_t	inSelfToken, OALDevice    *inOALDevice, const ALCint *inAttributeList, UInt32  &inBusCount, Float64	&inMixerRate)
 	: 	mSelfToken (inSelfToken),
@@ -38,6 +37,9 @@ OALContext::OALContext (const uintptr_t	inSelfToken, OALDevice    *inOALDevice, 
 		mMixerNode(0), 
 		mMixerUnit (0),
 		mSourceMap (NULL),
+		mSourceMapLock ("OALContext::SourceMapLock"),
+		mDeadSourceMap (NULL),
+		mDeadSourceMapLock ("OALContext::DeadSourceMapLock"),
 		mDistanceModel(AL_INVERSE_DISTANCE_CLAMPED),			
 		mSpeedOfSound(343.3),
 		mDopplerFactor(1.0),
@@ -51,10 +53,12 @@ OALContext::OALContext (const uintptr_t	inSelfToken, OALDevice    *inOALDevice, 
 		mRenderQuality(ALC_MAC_OSX_SPATIAL_RENDERING_QUALITY_LOW),
 		mSpatialSetting(0),
 		mBusCount(inBusCount),
+		mInUseFlag(0),
 		mMixerOutputRate(inMixerRate),
 		mDefaultReferenceDistance(1.0),
         mDefaultMaxDistance(100000.0),
 		mUserSpecifiedBusCounts(false),
+		mRenderThreadID(0),
 		mSettableMixerAttenuationCurves(false),
 		mASAReverbState(0),		
 		mASAReverbRoomType(0),
@@ -133,6 +137,12 @@ OALContext::OALContext (const uintptr_t	inSelfToken, OALDevice    *inOALDevice, 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 OALContext::~OALContext()
 {
+#if CAPTURE_AUDIO_TO_FILE
+	gTheCapturer->Stop();
+	delete(gTheCapturer);
+	gTheCapturer = NULL;
+#endif
+
 	mOwningDevice->RemoveContext(this);
 
 	// delete all the sources that were created by this context
@@ -325,7 +335,7 @@ void		OALContext::InitializeMixer(UInt32	inStereoBusCount)
 				THROW_RESULT
 
 			mBusInfo[i].mNumberChannels = theOutFormat.mChannelsPerFrame; 
-			mBusInfo[i].mIsAvailable = true;
+			mBusInfo[i].mSourceAttached = kNoSourceAttached;
 			mBusInfo[i].mReverbState = mASAReverbState;
 
 			// set kAudioUnitProperty_SpatializationAlgorithm
@@ -385,9 +395,15 @@ void		OALContext::AddSource(ALuint	inSourceToken)
 {	
 	try {
 			OALSource	*newSource = new OALSource (inSourceToken, this);
-	
-			mSourceMap->Add(inSourceToken, &newSource);
-			CleanUpDeadSourceList();
+			
+			{
+				CAGuard::Locker locked(mSourceMapLock);
+				mSourceMap->Add(inSourceToken, &newSource);
+			}
+			{
+				CAGuard::Locker locked(mDeadSourceMapLock);
+				CleanUpDeadSourceList();
+			}
 	}
 	catch (...) {
 		throw;
@@ -395,9 +411,64 @@ void		OALContext::AddSource(ALuint	inSourceToken)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-OALSource*		OALContext::GetSource(ALuint	inSourceToken)
+// You MUST call ReleaseSource after you have completed use of the source object
+OALSource*		OALContext::ProtectSource(ALuint	inSourceToken)
 {
-	return (mSourceMap->Get(inSourceToken));
+	OALSource *newSource = NULL;
+	
+	CAGuard::Locker locked(mSourceMapLock);
+
+	newSource = mSourceMap->Get(inSourceToken);
+	
+	if (newSource)
+		newSource->SetInUseFlag();
+		
+	return newSource;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// You MUST call ReleaseSource after you have completed use of the source object
+OALSource*		OALContext::GetSourceForRender(ALuint	inSourceToken)
+{
+	OALSource *newSource = NULL;
+	
+	CAMutex::Tryer tryer(mSourceMapLock);
+	
+	if (tryer.HasLock())
+	{		
+		newSource = mSourceMap->Get(inSourceToken);
+		
+		if (newSource)
+			newSource->SetInUseFlag();
+	}
+	
+	return newSource;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// You MUST call ReleaseSource after you have completed use of the dead source object
+OALSource*		OALContext::GetDeadSourceForRender(ALuint	inSourceToken)
+{
+	OALSource *deadSource = NULL;
+	
+	CAMutex::Tryer tryer(mDeadSourceMapLock);
+	
+	if (tryer.HasLock())
+	{
+		deadSource = mDeadSourceMap->Get(inSourceToken);
+	
+		if (deadSource)
+			deadSource->SetInUseFlag();
+	}
+		
+	return deadSource;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void OALContext::ReleaseSource(OALSource* inSource)
+{
+	if (inSource) 
+		inSource->ClearInUseFlag();
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -407,9 +478,16 @@ void		OALContext::RemoveSource(ALuint	inSourceToken)
 	if (oalSource != NULL)
 	{
 		oalSource->SetUpDeconstruction();
-		mSourceMap->Remove(inSourceToken);					// do not allow any more threads to use this source object
-		mDeadSourceMap->Add(inSourceToken, &oalSource);		// remove it later when it is safe
-		CleanUpDeadSourceList();							// now is a good time to actually delete other sources marked for deletion
+		
+		{
+			CAGuard::Locker locked(mSourceMapLock);
+			mSourceMap->Remove(inSourceToken);					// do not allow any more threads to use this source object
+		}
+		{
+			CAGuard::Locker locked(mDeadSourceMapLock);
+			mDeadSourceMap->Add(inSourceToken, &oalSource);		// remove it later when it is safe
+			CleanUpDeadSourceList();							// now is a good time to actually delete other sources marked for deletion
+		}
 	}
 }
 
@@ -452,7 +530,44 @@ void		OALContext::SuspendContext()
 void		OALContext::ConnectMixerToDevice()
 {
 	mOwningDevice->ConnectContext(this);
+
+#if CAPTURE_AUDIO_TO_FILE
+    DebugMessage ("ABOUT TO START CAPTURE");
+
+	gCapturerDataFormat.mSampleRate = 44100.0;
+	gCapturerDataFormat.mFormatID = kAudioFormatLinearPCM;
+	gCapturerDataFormat.mFormatFlags = kAudioFormatFlagIsPacked | kLinearPCMFormatFlagIsSignedInteger;
+	gCapturerDataFormat.mBytesPerPacket = 4;
+	gCapturerDataFormat.mFramesPerPacket = 1;
+	gCapturerDataFormat.mBytesPerFrame = 4;
+	gCapturerDataFormat.mChannelsPerFrame = 2;
+	gCapturerDataFormat.mBitsPerChannel = 16;
+	gCapturerDataFormat.mReserved = 0;
+
+	gFileURL = CFURLCreateWithFileSystemPath(NULL, CFSTR("<PathToCapturedFileLocation>CapturedAudio.wav"), kCFURLPOSIXPathStyle, false);
+	gTheCapturer = new CAAudioUnitOutputCapturer(mMixerUnit, gFileURL, 'WAVE', gCapturerDataFormat);
+
+	gTheCapturer->Start();
+#endif
+
+	OSStatus result = AUGraphAddRenderNotify(mOwningDevice->GetGraph(), ContextNotificationProc, this);
+		THROW_RESULT
 }
+
+void		OALContext::DisconnectMixerFromDevice()
+{			
+	mOwningDevice->DisconnectContext(this);
+
+#if CAPTURE_AUDIO_TO_FILE
+    DebugMessage ("STOPPING CAPTURE");
+
+	gTheCapturer->Stop();
+#endif
+
+	OSStatus result = AUGraphRemoveRenderNotify(mOwningDevice->GetGraph(), ContextNotificationProc, this);
+		THROW_RESULT
+}			
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void		OALContext::SetDistanceModel(UInt32	inDistanceModel)
@@ -554,7 +669,8 @@ void		OALContext::SetDistanceModel(UInt32	inDistanceModel)
 		mDistanceModel = inDistanceModel;
 		if (mSourceMap)
 		{
-             mSourceMap->MarkAllSourcesForRecalculation();
+			CAGuard::Locker locked(mSourceMapLock);
+			mSourceMap->MarkAllSourcesForRecalculation();
 		}
 	}
 }	
@@ -566,7 +682,10 @@ void		OALContext::SetDopplerFactor(Float32		inDopplerFactor)
 	{
 		mDopplerFactor = inDopplerFactor;
 		if (mSourceMap)
+		{
+			CAGuard::Locker locked(mSourceMapLock);
 			mSourceMap->MarkAllSourcesForRecalculation();
+		}
 	}
 }
 
@@ -588,7 +707,10 @@ void		OALContext::SetSpeedOfSound(Float32	inSpeedOfSound)
 	{
 		mSpeedOfSound = inSpeedOfSound;
 		if (mSourceMap)
+		{
+			CAGuard::Locker locked(mSourceMapLock);
 			mSourceMap->MarkAllSourcesForRecalculation();
+		}
 	}
 }
 
@@ -607,10 +729,15 @@ void		OALContext::SetListenerGain(Float32	inGain)
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 UInt32		OALContext::GetSourceCount()
 {
-	if (mSourceMap)
-		return (mSourceMap->Size());
+	UInt32 count = 0;
 
-	return (0);
+	if (mSourceMap)
+	{
+		CAGuard::Locker locked(mSourceMapLock);
+		count = mSourceMap->Size();
+	}
+
+	return count;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -633,6 +760,7 @@ void		OALContext::SetListenerPosition(Float32	posX, Float32	posY, Float32	posZ)
 #if LOG_GRAPH_AND_MIXER_CHANGES
 	DebugMessageN4("OALContext::SetListenerPosition called - OALSource = %f:%f:%f/%ld\n", posX, posY, posZ, mSelfToken);
 #endif
+		CAGuard::Locker locked(mSourceMapLock);
 		// moving the listener effects the coordinate translation for ALL the sources
 		mSourceMap->MarkAllSourcesForRecalculation();
 	}	
@@ -650,6 +778,7 @@ void		OALContext::SetListenerVelocity(Float32	posX, Float32	posY, Float32	posZ)
 #if LOG_GRAPH_AND_MIXER_CHANGES
 	DebugMessage("OALContext::SetListenerVelocity: MarkAllSourcesForRecalculation called\n");
 #endif
+		CAGuard::Locker locked(mSourceMapLock);
 		// moving the listener effects the coordinate translation for ALL the sources
         mSourceMap->MarkAllSourcesForRecalculation();
 	}
@@ -682,6 +811,7 @@ void	OALContext::SetListenerOrientation( Float32	forwardX, 	Float32	forwardY,	Fl
 #if LOG_GRAPH_AND_MIXER_CHANGES
 	DebugMessage("OALContext::SetListenerOrientation: MarkAllSourcesForRecalculation called\n");
 #endif
+		CAGuard::Locker locked(mSourceMapLock);
 		// moving the listener effects the coordinate translation for ALL the sources
 		mSourceMap->MarkAllSourcesForRecalculation();
 	}
@@ -771,11 +901,7 @@ void OALContext::InitRenderQualityOnBusses()
 
 			// Render Flags                
             result = AudioUnitSetProperty(	mMixerUnit, kAudioUnitProperty_3DMixerRenderingFlags, kAudioUnitScope_Input, 
-											i, &render_flags_3d, sizeof(render_flags_3d));
-			
-			// Doppler - This must be done AFTER the spatialization setting, because some algorithms explicitly turn doppler on
-			UInt32		doppler = kDopplerDefault;
-			result = AudioUnitSetProperty(mMixerUnit, kAudioUnitProperty_DopplerShift, kAudioUnitScope_Input, i, &doppler, sizeof(doppler));
+											i, &render_flags_3d, sizeof(render_flags_3d));						
 		}
 	}
 }
@@ -821,14 +947,14 @@ void    OALContext::SetDistanceAttenuation(UInt32    inBusIndex, Float64 inRefDi
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-UInt32		OALContext::GetAvailableMonoBus ()
+UInt32		OALContext::GetAvailableMonoBus (ALuint inSourceToken)
 {
 	// look for a bus already set for mono
 	for (UInt32 i = 0; i < mBusCount; i++)
 	{
-		if (mBusInfo[i].mIsAvailable == true && mBusInfo[i].mNumberChannels == 1) 
+		if ((mBusInfo[i].mSourceAttached == kNoSourceAttached) && mBusInfo[i].mNumberChannels == 1) 
 		{
-			mBusInfo[i].mIsAvailable = false;
+			mBusInfo[i].mSourceAttached = inSourceToken;
 #if LOG_BUS_CONNECTIONS
 			mMonoSourcesConnected++;
 			DebugMessageN2("GetAvailableMonoBus1: Sources Connected, Mono =  %ld, Stereo = %ld", mMonoSourcesConnected, mStereoSourcesConnected);
@@ -844,7 +970,7 @@ UInt32		OALContext::GetAvailableMonoBus ()
 		// couldn't find a mono bus, so find any available channel and make it mono
 		for (UInt32 i = 0; i < mBusCount; i++)
 		{
-			if (mBusInfo[i].mIsAvailable == true) 
+			if (mBusInfo[i].mSourceAttached == kNoSourceAttached) 
 			{
 	#if LOG_BUS_CONNECTIONS
 				mMonoSourcesConnected++;
@@ -863,7 +989,7 @@ UInt32		OALContext::GetAvailableMonoBus ()
 															i, &theOutFormat, sizeof(CAStreamBasicDescription));
 					THROW_RESULT
 
-				mBusInfo[i].mIsAvailable = false;
+				mBusInfo[i].mSourceAttached = inSourceToken; 
 				mBusInfo[i].mNumberChannels = 1; 			
 				AudioUnitSetProperty(	mMixerUnit, kAudioUnitProperty_SpatializationAlgorithm, kAudioUnitScope_Input, 
 										i, &mSpatialSetting, sizeof(mSpatialSetting));
@@ -886,13 +1012,13 @@ UInt32		OALContext::GetAvailableMonoBus ()
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-UInt32		OALContext::GetAvailableStereoBus ()
+UInt32		OALContext::GetAvailableStereoBus (ALuint inSourceToken)
 {
 	for (UInt32 i = 0; i < mBusCount; i++)
 	{
-		if (mBusInfo[i].mIsAvailable == true && mBusInfo[i].mNumberChannels == 2) 
+		if ((mBusInfo[i].mSourceAttached == kNoSourceAttached) && mBusInfo[i].mNumberChannels == 2) 
 		{
-			mBusInfo[i].mIsAvailable = false;
+			mBusInfo[i].mSourceAttached = inSourceToken;
 #if LOG_BUS_CONNECTIONS
 			mStereoSourcesConnected++;
 			DebugMessageN2("GetAvailableStereoBus1: Sources Connected, Mono =  %ld, Stereo = %ld", mMonoSourcesConnected, mStereoSourcesConnected);
@@ -908,7 +1034,7 @@ UInt32		OALContext::GetAvailableStereoBus ()
 		// couldn't find one, so look for a mono channel, make it stereo and set to kSpatializationAlgorithm_StereoPassThrough
 		for (UInt32 i = 0; i < mBusCount; i++)
 		{
-			if (mBusInfo[i].mIsAvailable == true) 
+			if (mBusInfo[i].mSourceAttached == kNoSourceAttached) 
 			{
 
 	#if LOG_BUS_CONNECTIONS
@@ -929,7 +1055,7 @@ UInt32		OALContext::GetAvailableStereoBus ()
 															i, &theOutFormat, sizeof(CAStreamBasicDescription));
 					THROW_RESULT
 
-				mBusInfo[i].mIsAvailable = false;
+				mBusInfo[i].mSourceAttached = inSourceToken;
 				mBusInfo[i].mNumberChannels = 2; 
 
 				UInt32		spatAlgo = kSpatializationAlgorithm_StereoPassThrough;
@@ -948,7 +1074,7 @@ UInt32		OALContext::GetAvailableStereoBus ()
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void	OALContext::SetBusAsAvailable (UInt32 inBusIndex)
 {	
-	mBusInfo[inBusIndex].mIsAvailable = true;
+	mBusInfo[inBusIndex].mSourceAttached = kNoSourceAttached;
 
 #if LOG_BUS_CONNECTIONS
 	if (mBusInfo[inBusIndex].mNumberChannels == 1)
@@ -1134,3 +1260,75 @@ void	OALContext::SetReverbPreset (FSRef* inRef)
 	return;
 }
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+OSStatus	OALContext::ContextNotificationProc (	void 						*inRefCon, 
+													AudioUnitRenderActionFlags 	*inActionFlags,
+													const AudioTimeStamp 		*inTimeStamp, 
+													UInt32 						inBusNumber,
+													UInt32 						inNumberFrames, 
+													AudioBufferList 			*ioData)
+{
+	OALContext* THIS = (OALContext*)inRefCon;
+	
+	// we have no use for a pre-render notification, we only care about the post-render
+	if (*inActionFlags & kAudioUnitRenderAction_PreRender)
+	{
+		THIS->mRenderThreadID = pthread_self();
+		THIS->DoPreRender();
+	}
+		
+	else if (*inActionFlags & kAudioUnitRenderAction_PostRender)
+		return THIS->DoPostRender();
+		
+	return (noErr);
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+OSStatus OALContext::DoPreRender ()
+{
+#if	LOG_MESSAGE_QUEUE					
+	DebugMessageN1("OALContext::DoPreRender");
+#endif
+
+	for (UInt32 i=0; i < mBusCount; i++)
+	{
+		OALSource *oalSource = GetSourceForRender(mBusInfo[i].mSourceAttached);
+		if (oalSource != NULL)
+		{
+			oalSource->DoPreRender();
+			ReleaseSource(oalSource);
+		}
+	}
+	
+	return noErr;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+OSStatus OALContext::DoPostRender ()
+{
+#if	LOG_MESSAGE_QUEUE					
+	DebugMessageN1("OALContext::DoPostRender");
+#endif
+
+	for (UInt32 i=0; i < mBusCount; i++)
+	{
+		OALSource *oalSource = GetSourceForRender(mBusInfo[i].mSourceAttached);
+		if (oalSource == NULL)
+		{
+			//if we have a source that needs post-render but has been deleted. We need to just deconstruct
+			oalSource = GetDeadSourceForRender(mBusInfo[i].mSourceAttached);
+			if (oalSource)
+			{
+				//clear all the current messages
+				oalSource->ClearMessageQueue();
+				oalSource->AddPlaybackMessage((UInt32)kMQ_DeconstructionStop, NULL, 0);
+			}
+			else continue;
+		}
+		
+		oalSource->DoPostRender();
+		ReleaseSource(oalSource);
+	}
+	
+	return noErr;
+}

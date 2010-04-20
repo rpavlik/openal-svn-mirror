@@ -1,23 +1,23 @@
 /**********************************************************************************************************************************
 *
 *   OpenAL cross platform audio library
-*   Copyright (c) 2004, Apple Computer, Inc. All rights reserved.
+*	Copyright (c) 2004, Apple Computer, Inc., Copyright (c) 2009, Apple Inc. All rights reserved.
 *
-*   Redistribution and use in source and binary forms, with or without modification, are permitted provided 
-*   that the following conditions are met:
+*	Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following 
+*	conditions are met:
 *
-*   1.  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer. 
-*   2.  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following 
-*       disclaimer in the documentation and/or other materials provided with the distribution. 
-*   3.  Neither the name of Apple Computer, Inc. ("Apple") nor the names of its contributors may be used to endorse or promote 
-*       products derived from this software without specific prior written permission. 
+*	1.  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer. 
+*	2.  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following 
+*		disclaimer in the documentation and/or other materials provided with the distribution. 
+*	3.  Neither the name of Apple Inc. ("Apple") nor the names of its contributors may be used to endorse or promote products derived 
+*		from this software without specific prior written permission. 
 *
-*   THIS SOFTWARE IS PROVIDED BY APPLE AND ITS CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, 
-*   THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL APPLE OR ITS 
-*   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED 
-*   TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
-*   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
-*   USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*	THIS SOFTWARE IS PROVIDED BY APPLE AND ITS CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED 
+*	TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL APPLE OR ITS 
+*	CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+*	LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED 
+*	AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
+*	ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 **********************************************************************************************************************************/
 
@@ -82,11 +82,13 @@ OALDevice::OALDevice (const char* 	 inDeviceName, uintptr_t   inSelfToken, UInt3
 		mOutputNode(0), 
 		mOutputUnit(0),
 		mMixerNode(0),
+		mChannelLayoutTag(0),
 		mConnectedContext(NULL),
 		mDeviceSampleRate(kDefaultMixerRate),
 		mRenderChannelCount(0),
         mRenderChannelSetting(inRenderChannelSetting),
-		mFramesPerSlice(512)
+		mFramesPerSlice(512),
+		mInUseFlag(0)
 {
 	OSStatus	result = noErr;
 	UInt32		size = 0;
@@ -425,63 +427,66 @@ UInt32 OALDevice::GetDesiredRenderChannelCount ()
 	
 	// get the channel layout set by the user in AMS		
 	result = AudioDeviceGetPropertyInfo(deviceID, 0, false, kAudioDevicePropertyPreferredChannelLayout, &propSize, NULL);
-    if (result != noErr)
-        return (returnValue);   // default to stereo since channel layout could not be obtained
 
-	AudioChannelLayout	*layout = NULL;
-	layout = (AudioChannelLayout *) calloc(1, propSize);
-	if (layout != NULL)
+	if (result == noErr)
 	{
-		result = AudioDeviceGetProperty(deviceID, 0, false, kAudioDevicePropertyPreferredChannelLayout, &propSize, layout);
-		if (layout->mChannelLayoutTag == kAudioChannelLayoutTag_UseChannelDescriptions)
+		AudioChannelLayout* layout = (AudioChannelLayout *) calloc(1, propSize);
+		if (layout != NULL)
 		{
-			// no channel layout tag is returned, so walk through the channel descriptions and count 
-            // the channels that are associated with a speaker
-			if (layout->mNumberChannelDescriptions == 2)
-			{	
-                returnValue = 2;        // there is no channel info for stereo
+			result = AudioDeviceGetProperty(deviceID, 0, false, kAudioDevicePropertyPreferredChannelLayout, &propSize, layout);
+
+			if (layout->mChannelLayoutTag == kAudioChannelLayoutTag_UseChannelDescriptions)
+			{
+				// no channel layout tag is returned, so walk through the channel descriptions and count 
+				// the channels that are associated with a speaker
+				if (layout->mNumberChannelDescriptions == 2)
+				{	
+					returnValue = 2;        // there is no channel info for stereo
+				}
+				else
+				{
+					returnValue = 0;
+					for (UInt32 i = 0; i < layout->mNumberChannelDescriptions; i++)
+					{
+						if ((layout->mChannelDescriptions[i].mChannelLabel != kAudioChannelLabel_Unknown) && (layout->mChannelDescriptions[i].mChannelLabel != kAudioChannelLabel_LFEScreen))
+							returnValue++;
+					}
+				}
+				mChannelLayoutTag = GetLayoutTagForLayout(layout, returnValue);
 			}
 			else
 			{
-				returnValue = 0;
-				for (UInt32 i = 0; i < layout->mNumberChannelDescriptions; i++)
+				mChannelLayoutTag = layout->mChannelLayoutTag;
+				switch (layout->mChannelLayoutTag)
 				{
-					if ((layout->mChannelDescriptions[i].mChannelLabel != kAudioChannelLabel_Unknown) && (layout->mChannelDescriptions[i].mChannelLabel != kAudioChannelLabel_LFEScreen))
-						returnValue++;
+					case kAudioChannelLayoutTag_AudioUnit_5_0:
+					case kAudioChannelLayoutTag_AudioUnit_5_1:
+						returnValue = 5;
+						break;
+					case kAudioChannelLayoutTag_AudioUnit_6_0:
+					case kAudioChannelLayoutTag_AudioUnit_6_1:
+						returnValue = 6;
+						break;
+					case kAudioChannelLayoutTag_AudioUnit_7_0:
+					case kAudioChannelLayoutTag_AudioUnit_7_1:
+					case kAudioChannelLayoutTag_AudioUnit_7_0_Front:
+						returnValue = 7;
+						break;
+					case kAudioChannelLayoutTag_AudioUnit_8:
+						returnValue = 8;
+						break;
+					case kAudioChannelLayoutTag_AudioUnit_4:
+						returnValue = 4;
+						break;
+					default:
+						returnValue = 2;
+						break;
 				}
-			}
+			}	
+		
+			free(layout);
 		}
-		else
-		{
-			switch (layout->mChannelLayoutTag)
-			{
-				case kAudioChannelLayoutTag_AudioUnit_5_0:
-				case kAudioChannelLayoutTag_AudioUnit_5_1:
-					returnValue = 5;
-					break;
-				case kAudioChannelLayoutTag_AudioUnit_6_0:
-				case kAudioChannelLayoutTag_AudioUnit_6_1:
-					returnValue = 6;
-					break;
-				case kAudioChannelLayoutTag_AudioUnit_7_0:
-				case kAudioChannelLayoutTag_AudioUnit_7_1:
-					returnValue = 7;
-					break;
-				case kAudioChannelLayoutTag_AudioUnit_8:
-					returnValue = 8;
-					break;
-				case kAudioChannelLayoutTag_AudioUnit_4:
-					returnValue = 4;
-					break;
-				default:
-					returnValue = 2;
-					break;
-			}
-		}
-	
-		free(layout);
-	}
-    
+    }
 	// pass in num channels on the hw, 
 	// how many channels the user has requested, and which 3DMixer is present
 	returnValue	= GetDesiredRenderChannelsFor3DMixer(returnValue);
@@ -592,7 +597,8 @@ void		OALDevice::DisconnectContext(OALContext* inContext)
 	if (inContext == mConnectedContext) 
 		mConnectedContext = NULL;
 		
-	AUGraphDisconnectNodeInput(mAUGraph, inContext->GetMixerNode(), 0);
+	AUGraphDisconnectNodeInput(mAUGraph, mOutputNode, 0);
+	
 	// AUGraphUpdate will block here, until the node is removed
 	AUGraphUpdate(mAUGraph, NULL);	
 }
@@ -610,24 +616,43 @@ void		OALDevice::RemoveContext(OALContext* inContext)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-UInt32		OALDevice::GetChannelLayoutTag()
+AudioChannelLayoutTag OALDevice::GetLayoutTagForLayout(AudioChannelLayout *inLayout, UInt32 inNumChannels)
 {
-	if (mRenderChannelCount == 5)
+	if (inNumChannels == 5)
 		return kAudioChannelLayoutTag_AudioUnit_5_0;
 
 	// Quad not supported prior to 3d mixer ver. 2.0
-	else if ((mRenderChannelCount == 4) && (Get3DMixerVersion() >= k3DMixerVersion_2_0))
+	else if ((inNumChannels == 4) && (Get3DMixerVersion() >= k3DMixerVersion_2_0))
 		return kAudioChannelLayoutTag_AudioUnit_4;
 
 	// now check for new multichannel formats in the 3d mixer v. 2.3 and higher	
-	else if (mRenderChannelCount == 6 && (Get3DMixerVersion() >= k3DMixerVersion_2_3))
+	else if (inNumChannels == 6 && (Get3DMixerVersion() >= k3DMixerVersion_2_3))
 		return kAudioChannelLayoutTag_AudioUnit_6_0;	
 
-	else if (mRenderChannelCount == 7 && (Get3DMixerVersion() >= k3DMixerVersion_2_3))
-		return kAudioChannelLayoutTag_AudioUnit_7_0;
+	else if (inNumChannels == 7 && (Get3DMixerVersion() >= k3DMixerVersion_2_3))
+	{
+		//return kAudioChannelLayoutTag_AudioUnit_7_0;
+		for (UInt32 i=0; i< inLayout->mNumberChannelDescriptions; i++)
+		{
+			if((inLayout->mChannelDescriptions[i].mChannelLabel == kAudioChannelLabel_RearSurroundLeft) || 
+				(inLayout->mChannelDescriptions[i].mChannelLabel == kAudioChannelLabel_RearSurroundRight))
+			{
+				//if we have rear channels, we need kAudioChannelLayoutTag_AudioUnit_7_0
+				return kAudioChannelLayoutTag_AudioUnit_7_0;
+			}
+		}
+		//if we didn't find rear channels, default 7.0 front
+		return kAudioChannelLayoutTag_AudioUnit_7_0_Front;
+	}
 
-	else if (mRenderChannelCount == 8 && (Get3DMixerVersion() >= k3DMixerVersion_2_3))
+	else if (inNumChannels == 8 && (Get3DMixerVersion() >= k3DMixerVersion_2_3))
 		return kAudioChannelLayoutTag_AudioUnit_8;
 	
 	return  kAudioChannelLayoutTag_Stereo; // default case
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+UInt32		OALDevice::GetChannelLayoutTag()
+{
+	return mChannelLayoutTag;
 }

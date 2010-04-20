@@ -30,6 +30,7 @@
 #include <map>
 #include <list>
 #include "al.h"
+#include <libkern/OSAtomic.h>
 
 #define USE_SOURCE_LIST_MUTEX  1
 
@@ -143,6 +144,8 @@ class OALBuffer
 	OSStatus						AddAudioData(	char*		inAudioData, UInt32	inAudioDataSize, ALenum format, ALsizei freq, bool	inPreConvertToHalFormat);													
 	OSStatus						AddAudioDataStatic(char*	inAudioData, UInt32	inAudioDataSize, ALenum format, ALsizei freq);
 
+	void							SetInUseFlag()					{ OSAtomicIncrement32Barrier(&mInUseFlag); }
+	void							ClearInUseFlag()				{ OSAtomicDecrement32Barrier(&mInUseFlag); }
 	bool							IsPurgable();
 	bool							HasBeenConverted(){return mDataHasBeenConverted;}
 
@@ -158,7 +161,6 @@ class OALBuffer
 	UInt8*							GetDataPtr(){return mData;}
 	UInt32							GetDataSize(){return mDataSize;}
 	CAStreamBasicDescription*		GetFormat(){return &mDataFormat;}
-	bool							CanBufferDataBeModified();
 	bool							CanBeRemovedFromBufferMap();
 
 	// called from OAL Source object
@@ -173,6 +175,8 @@ private:
 #if USE_SOURCE_LIST_MUTEX
 	CAGuard							mSourceListGuard;
 #endif
+	CAGuard							mBufferLock;				// lock to serialize all buffer manipulations
+	volatile int32_t				mInUseFlag;					// flag to indicate if the buffer is currently being edited by one or more threads
 	UInt8							*mData;						// ptr to the actual audio data
 	bool							mAppOwnsBufferMemory;		// true when data is passed in via the alBufferDtatStatic API (extension)
 	UInt32							mDataSize;					// size in bytes of the audio data ptr

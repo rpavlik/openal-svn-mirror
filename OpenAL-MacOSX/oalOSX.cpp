@@ -1,7 +1,7 @@
 /**********************************************************************************************************************************
 * OpenAL cross platform audio library
 * Copyright (C) 1999-2000 by authors.
-* Portions Copyright (C) 2004 by Apple Computer Inc.
+* Portions Copyright (C) 2004 by Apple Computer Inc., Copyright (C) 2009 by Apple Inc.
 * This library is free software; you can redistribute it and/or
 *  modify it under the terms of the GNU Library General Public
 *  License as published by the Free Software Foundation; either
@@ -448,7 +448,7 @@ extern "C" {
 #define ALUTAPIENTRY
 
 ALUTAPI ALvoid	ALUTAPIENTRY alutInit(ALint *argc,ALbyte **argv);
-ALUTAPI ALvoid	ALUTAPIENTRY alutExit(ALvoid);
+ALUTAPI ALvoid	ALUTAPIENTRY alutExit(void);
 ALUTAPI ALvoid	ALUTAPIENTRY alutLoadWAVFile(ALbyte *file,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq);
 ALUTAPI ALvoid  ALUTAPIENTRY alutLoadWAVMemory(ALbyte *memory,ALenum *format,ALvoid **data,ALsizei *size,ALsizei *freq);
 ALUTAPI ALvoid  ALUTAPIENTRY alutUnloadWAV(ALenum format,ALvoid *data,ALsizei size,ALsizei freq);
@@ -660,7 +660,7 @@ ALUTAPI ALvoid ALUTAPIENTRY alutInit(ALint *argc,ALbyte **argv)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALUTAPI ALvoid ALUTAPIENTRY alutExit(ALvoid) 
+ALUTAPI ALvoid ALUTAPIENTRY alutExit(void) 
 {
     ALCcontext *Context;
     ALCdevice *Device;
@@ -775,7 +775,7 @@ AL_API ALvoid AL_APIENTRY alInit(ALint *argc, ALubyte **argv)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-AL_API ALvoid AL_APIENTRY alExit(ALvoid)
+AL_API ALvoid AL_APIENTRY alExit(void)
 {
 }
 

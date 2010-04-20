@@ -1,23 +1,23 @@
 /**********************************************************************************************************************************
 *
 *   OpenAL cross platform audio library
-*   Copyright (c) 2004, Apple Computer, Inc. All rights reserved.
+*	Copyright (c) 2004, Apple Computer, Inc., Copyright (c) 2009, Apple Inc. All rights reserved.
 *
-*   Redistribution and use in source and binary forms, with or without modification, are permitted provided 
-*   that the following conditions are met:
+*	Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following 
+*	conditions are met:
 *
-*   1.  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer. 
-*   2.  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following 
-*       disclaimer in the documentation and/or other materials provided with the distribution. 
-*   3.  Neither the name of Apple Computer, Inc. ("Apple") nor the names of its contributors may be used to endorse or promote 
-*       products derived from this software without specific prior written permission. 
+*	1.  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer. 
+*	2.  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following 
+*		disclaimer in the documentation and/or other materials provided with the distribution. 
+*	3.  Neither the name of Apple Inc. ("Apple") nor the names of its contributors may be used to endorse or promote products derived 
+*		from this software without specific prior written permission. 
 *
-*   THIS SOFTWARE IS PROVIDED BY APPLE AND ITS CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, 
-*   THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL APPLE OR ITS 
-*   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED 
-*   TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
-*   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
-*   USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*	THIS SOFTWARE IS PROVIDED BY APPLE AND ITS CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED 
+*	TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL APPLE OR ITS 
+*	CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+*	LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED 
+*	AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
+*	ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 **********************************************************************************************************************************/
 /*
@@ -31,7 +31,7 @@
 #include "oalBuffer.h"
 #include "oalCaptureDevice.h"
 #include "MacOSX_OALExtensions.h"
-
+	
 // ~~~~~~~~~~~~~~~~~~~~~~
 // development build flags
 #define		LOG_API_USAGE		0
@@ -42,12 +42,6 @@
 #define		LOG_ERRORS			0
 #define		LOG_ASA_USAGE		0
 
-#define		TEST_WORK_AROUND_ONE		0	// For a Game that insists on using Source ID 0 which doesn't exist
-
-#if TEST_WORK_AROUND_ONE
-ALuint		gTestSID = 0;
-#endif
-
 #define		kMajorVersion	1
 #define		kMinorVersion	1
 
@@ -56,7 +50,7 @@ char*		alcExtensions = NULL;
 char*		alExtensions = NULL;
 
 //these will be used to construct the actual strings
-#define		alcExtensionsBase		"ALC_EXT_CAPTURE ALC_ENUMERATION_EXT ALC_EXT_MAC_OSX"
+#define		alcExtensionsBase		"ALC_EXT_capture ALC_ENUMERATION_EXT ALC_EXT_MAC_OSX"
 #define		alcExtensionsASA		" ALC_EXT_ASA"
 #define		alcExtensionsDistortion	" ALC_EXT_ASA_DISTORTION"
 #define		alcExtensionsRogerBeep	" ALC_EXT_ASA_ROGER_BEEP"
@@ -104,11 +98,17 @@ ALCchar 	gDefaultInputDeviceNameList[maxLen];
 bool        gConvertBufferNow = false;                              // do not convert data into mixer format by default
 
 // global object maps
-OALDeviceMap*				gOALDeviceMap = NULL;					// this map will be created upon the first call to alcOpenDevice()
-OALContextMap*				gOALContextMap = NULL;					// this map will be created upon the first call to alcCreateContext()
-OALBufferMap*				gOALBufferMap = NULL;					// this map will be created upon the first call to alcGenBuffers()
-OALBufferMap*				gDeadOALBufferMap = NULL;				// this map will be created upon the first call to alcGenBuffers()
-OALCaptureDeviceMap*		gOALCaptureDeviceMap = NULL;			// this map will be created upon the first call to alcCaptureOpenDevice()
+OALDeviceMap*			gOALDeviceMap			= NULL;			// this map will be created upon the first call to alcOpenDevice()
+OALContextMap*			gOALContextMap			= NULL;			// this map will be created upon the first call to alcCreateContext()
+OALBufferMap*			gOALBufferMap			= NULL;			// this map will be created upon the first call to alcGenBuffers()
+OALBufferMap*			gDeadOALBufferMap		= NULL;			// this map will be created upon the first call to alcGenBuffers()
+OALCaptureDeviceMap*	gOALCaptureDeviceMap	= NULL;			// this map will be created upon the first call to alcCaptureOpenDevice()
+
+// global API lock
+CAGuard*				gBufferMapLock			= NULL;			// this is used to prevent threading collisions in buffer manipulation API
+CAGuard*				gContextMapLock			= NULL;			// this is used to prevent threading collisions in context manipulation API
+CAGuard*				gDeviceMapLock			= NULL;			// this is used to prevent threading collisions in device manipulation API
+CAGuard*				gCaptureDeviceMapLock	= NULL;			// this is used to prevent threading collisions in capture device manipulation API
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #pragma mark ***** Support Methods *****
@@ -119,8 +119,6 @@ void WaitOneRenderCycle()
 	
 	UInt32	microseconds = (UInt32)((context->GetFramesPerSlice() / (context->GetMixerRate()/1000)) * 1000);
 	usleep (microseconds * 2);
-
-	return;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -296,16 +294,29 @@ void	CleanUpDeadBufferList()
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-OALContext*		GetContextObjectByToken (uintptr_t	inContextToken)
+// ReleaseContextObject must be called when finished using the returned object
+OALContext*		ProtectContextObject (uintptr_t	inContextToken)
 {
+	OALContext		*oalContext = NULL;
+	
 	if (gOALContextMap == NULL)
 		throw ((OSStatus) AL_INVALID_OPERATION);
 
-	OALContext		*oalContext = gOALContextMap->Get(inContextToken);
+	CAGuard::Locker locked(*gContextMapLock);
+	
+	oalContext = gOALContextMap->Get(inContextToken);
 	if (oalContext == NULL)
 		throw ((OSStatus) ALC_INVALID_CONTEXT);
 	
+	oalContext->SetInUseFlag();
+		
 	return oalContext;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void ReleaseContextObject(OALContext* inContext)
+{
+	if (inContext) inContext->ClearInUseFlag();
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -327,64 +338,116 @@ void	SetDeviceError(uintptr_t inDeviceToken, UInt32	inError)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-OALDevice*		GetDeviceObjectByToken (uintptr_t inDeviceToken)
+// ReleaseDeviceObject must be called when finished using the returned object
+OALDevice*		ProtectDeviceObject (uintptr_t inDeviceToken)
 {
 	if (gOALDeviceMap == NULL)
 		throw AL_INVALID_OPERATION;
+	OALDevice *oalDevice = NULL;
+	
+	CAGuard::Locker locked(*gDeviceMapLock);
 
-	OALDevice			*oalDevice = gOALDeviceMap->Get(inDeviceToken);	// get the requested oal device
+	oalDevice = gOALDeviceMap->Get(inDeviceToken);	// get the requested oal device
 	if (oalDevice == NULL)
 		throw ((OSStatus) AL_INVALID_VALUE);
 	
+	oalDevice->SetInUseFlag();
+	
 	return oalDevice;
 }
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-OALCaptureDevice*		GetCaptureDeviceObjectByToken (uintptr_t inDeviceToken)
+void	ReleaseDeviceObject(OALDevice* inDevice)
+{
+	if (inDevice) inDevice->ClearInUseFlag();
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ReleaseCaptureDeviceObject must be called when finished using the returned object
+OALCaptureDevice*		ProtectCaptureDeviceObject (uintptr_t inDeviceToken)
 {
 	if (gOALCaptureDeviceMap == NULL)
 		throw AL_INVALID_OPERATION;
 
-	OALCaptureDevice			*oalCaptureDevice = gOALCaptureDeviceMap->Get(inDeviceToken);	// get the requested oal device
+	OALCaptureDevice			*oalCaptureDevice = NULL;
+
+	CAGuard::Locker locked(*gCaptureDeviceMapLock);
+
+	oalCaptureDevice = gOALCaptureDeviceMap->Get(inDeviceToken);	// get the requested oal device
 	if (oalCaptureDevice == NULL)
 		throw ((OSStatus) AL_INVALID_VALUE);
 	
+	oalCaptureDevice->SetInUseFlag();
+		
 	return oalCaptureDevice;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-OALSource*	GetSourceObjectFromCurrentContext(ALuint	inSID)
+void	ReleaseCaptureDeviceObject(OALCaptureDevice* inDevice)
 {
-#if TEST_WORK_AROUND_ONE
-	if (inSID == 0)
-	{
-		OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
-		OALSource		*oalSource = oalContext->GetSource(gTestSID);
+	if (inDevice) inDevice->ClearInUseFlag();
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ReleaseSourceObject must be called when finished using the returned object
+OALSource*	ProtectSourceObjectInCurrentContext(ALuint	inSID)
+{
+	OALContext	*oalContext = NULL;
+	OALSource	*oalSource	= NULL;
+	
+	try {
+		oalContext = ProtectContextObject(gCurrentContext);
+		oalSource = oalContext->ProtectSource(inSID);
 		if (oalSource == NULL)
 			throw ((OSStatus) AL_INVALID_VALUE);
-		return oalSource;
-	}
-#endif
 
-	OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
-	OALSource		*oalSource = oalContext->GetSource(inSID);
-	if (oalSource == NULL)
-		throw ((OSStatus) AL_INVALID_NAME);
+		ReleaseContextObject(oalContext);
+	} 
+	catch (OSStatus stat) {
+		ReleaseContextObject(oalContext);
+		throw stat;
+	} 
+	catch (...) {
+		ReleaseContextObject(oalContext);
+		throw -1;
+	}
+	
 	return oalSource;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-OALBuffer*	GetBufferObjectFromToken(ALuint	inBID)
+void ReleaseSourceObject(OALSource *inSource)
 {
+	if (inSource) inSource->ClearInUseFlag();
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ReleaseBufferObject must be called when finished using the returned object
+OALBuffer*	ProtectBufferObject(ALuint	inBID)
+{
+	OALBuffer *oalBuffer = NULL;
+
 	if (gOALBufferMap == NULL)
 		throw ((OSStatus) AL_INVALID_OPERATION);
 
+	CAGuard::Locker locked(*gBufferMapLock);
+			
 	CleanUpDeadBufferList();	
 
-	OALBuffer	*oalBuffer = gOALBufferMap->Get(inBID);
+	oalBuffer = gOALBufferMap->Get(inBID);
 	if (oalBuffer == NULL)
 		throw ((OSStatus) AL_INVALID_NAME);
-
+	
+	// we need to signal the buffer is being used, and cannot be deleted yet
+	oalBuffer->SetInUseFlag();
+	
 	return oalBuffer;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void ReleaseBufferObject(OALBuffer* inBuffer)
+{
+	if (inBuffer) inBuffer->ClearInUseFlag();
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -393,6 +456,7 @@ void	InitializeBufferMap()
 	if (gOALBufferMap == NULL)
 	{
 		gOALBufferMap = new OALBufferMap ();						// create the buffer map since there isn't one yet
+		gBufferMapLock = new CAGuard("OAL:BufferMapLock");				// create the buffer map mutex
 		gDeadOALBufferMap = new OALBufferMap ();					// create the buffer map since there isn't one yet
 
 		// populate the good buffer with the AL_NONE buffer, it should never be deleted
@@ -405,10 +469,12 @@ void	InitializeBufferMap()
 // walk through the context map and find the ones that are linked to this device
 void	DeleteContextsOfThisDevice(uintptr_t inDeviceToken)
 {
+	if (gOALContextMap == NULL) 
+		return;
+		
 	try {
-        if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-
+		CAGuard::Locker locked(*gContextMapLock);
+		
 		for (UInt32	i = 0; i < gOALContextMap->Size(); i++)
 		{
 			uintptr_t		contextToken = 0;
@@ -427,11 +493,14 @@ void	DeleteContextsOfThisDevice(uintptr_t inDeviceToken)
 				}
 				
 				if (gOALContextMap->Remove(contextToken)) {
+					while(oalContext->IsInUse())
+						usleep(10000);
+						
 					delete (oalContext);
 					i--; // try this index again since it was just deleted
 				}
 			}
-		}
+		}		
 	}
 	catch (OSStatus     result) {
 		alSetError(result);
@@ -459,8 +528,6 @@ void	ReconfigureContextsOfThisDevice(uintptr_t inDeviceToken)
 			oalContext->ConfigureMixerFormat();	// reconfigure the output format of the context's mixer
 		}
 	}
-
-	return;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -530,22 +597,31 @@ ALC_API ALCdevice*      ALC_APIENTRY alcCaptureOpenDevice( const ALCchar *device
 			throw ((OSStatus) AL_INVALID_VALUE);
 		
 		if (gOALCaptureDeviceMap == NULL)
+		{
 			gOALCaptureDeviceMap = new OALCaptureDeviceMap ();                          // create the device map if there isn't one yet
-		        
+			gCaptureDeviceMapLock = new CAGuard("OAL:CaptureLock");								// create the list guard for thread safety
+		}
+		
         newDeviceToken = GetNewPtrToken();                                              // get a unique token
         newDevice = new OALCaptureDevice((const char *) devicename, newDeviceToken, frequency, format, buffersize);	// create a new device object
-        if (newDevice != NULL)
-            gOALCaptureDeviceMap->Add(newDeviceToken, &newDevice);						// add the new device to the device map
+        if (newDevice == NULL)
+			throw ((OSStatus) AL_INVALID_OPERATION);
+
+		{ 
+			CAGuard::Locker locked(*gCaptureDeviceMapLock);
+			gOALCaptureDeviceMap->Add(newDeviceToken, &newDevice);						// add the new device to the device map
+			
+		}
 	}
 	catch (OSStatus result) {
 		DebugMessageN1("ERROR: alcCaptureOpenDevice FAILED = %s\n", alcGetString(NULL, result));
 		if (newDevice) delete (newDevice);
-		return NULL;
+		newDeviceToken = 0;
 	}
 	catch (...) {
 		DebugMessage("ERROR: alcCaptureOpenDevice FAILED");
 		if (newDevice) delete (newDevice);
-		return NULL;
+		newDeviceToken = 0;
 	}
 	
 	return ((ALCdevice *) newDeviceToken);
@@ -557,19 +633,38 @@ ALC_API ALCboolean	ALC_APIENTRY alcCaptureCloseDevice( ALCdevice *device )
 #if LOG_CAPTURE_USAGE
 	DebugMessage("alcCaptureCloseDevice");
 #endif
+	
+	try {									
+		if (gOALCaptureDeviceMap == NULL)
+			throw AL_INVALID_OPERATION;
 
-	try {										
-		OALCaptureDevice	*oalCaptureDevice = GetCaptureDeviceObjectByToken ((uintptr_t) device);
+		OALCaptureDevice *oalCaptureDevice = NULL;
+
+		{
+			CAGuard::Locker locked(*gCaptureDeviceMapLock);												// map operations are not thread-safe
+
+			oalCaptureDevice = gOALCaptureDeviceMap->Get((uintptr_t) device);
+			if (oalCaptureDevice == NULL)
+				throw ((OSStatus) AL_INVALID_VALUE);
+			
+			gOALCaptureDeviceMap->Remove((uintptr_t) device);									// remove the device from the map
+									
+			while(oalCaptureDevice->IsInUse())
+				usleep(10000);
+				
+			delete (oalCaptureDevice);															// destruct the device object
+			
+			if (gOALCaptureDeviceMap->Empty())
+			{
+				// there are no more devices in the map, so delete the map and create again later if needed
+				delete (gOALCaptureDeviceMap);
+				gOALCaptureDeviceMap = NULL;
+			}
+		}
 		
-        gOALCaptureDeviceMap->Remove((uintptr_t) device);									// remove the device from the map
-        delete (oalCaptureDevice);															// destruct the device object
-        
-        if (gOALCaptureDeviceMap->Empty())
-        {
-            // there are no more devices in the map, so delete the map and create again later if needed
-            delete (gOALCaptureDeviceMap);
-            gOALCaptureDeviceMap = NULL;
-        }
+		// if we deleted the map, we can delete the lock as well
+		if (gOALCaptureDeviceMap == NULL)
+			delete gCaptureDeviceMapLock;
 	}
 	catch (OSStatus   result) {
 		DebugMessageN1("ERROR: alcCaptureCloseDevice FAILED = %s\n", alcGetString(NULL, result));
@@ -588,8 +683,10 @@ ALC_API void   ALC_APIENTRY alcCaptureStart( ALCdevice *device )
 	DebugMessage("alcCaptureStart");
 #endif
 
+	OALCaptureDevice *oalCaptureDevice = NULL;
+	
 	try {										
-		OALCaptureDevice	*oalCaptureDevice = GetCaptureDeviceObjectByToken ((uintptr_t) device);
+		oalCaptureDevice = ProtectCaptureDeviceObject ((uintptr_t) device);
         oalCaptureDevice->StartCapture();
 	}
 	catch (OSStatus   result) {
@@ -600,6 +697,8 @@ ALC_API void   ALC_APIENTRY alcCaptureStart( ALCdevice *device )
 		DebugMessage("ERROR: alcCaptureStart FAILED");
 		SetDeviceError((uintptr_t) device, AL_INVALID_OPERATION);
 	}
+
+	ReleaseCaptureDeviceObject(oalCaptureDevice);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -609,8 +708,10 @@ ALC_API void	ALC_APIENTRY alcCaptureStop( ALCdevice *device )
 	DebugMessage("alcCaptureStop");
 #endif
 
+	OALCaptureDevice *oalCaptureDevice = NULL;
+	
 	try {										
-		OALCaptureDevice	*oalCaptureDevice = GetCaptureDeviceObjectByToken ((uintptr_t) device);
+		oalCaptureDevice = ProtectCaptureDeviceObject ((uintptr_t) device);
         oalCaptureDevice->StopCapture();
 	}
 	catch (OSStatus   result) {
@@ -621,6 +722,8 @@ ALC_API void	ALC_APIENTRY alcCaptureStop( ALCdevice *device )
 		DebugMessage("ERROR: alcCaptureStop FAILED");
 		SetDeviceError((uintptr_t) device, AL_INVALID_OPERATION);
 	}
+	
+	ReleaseCaptureDeviceObject(oalCaptureDevice);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -630,8 +733,10 @@ ALC_API void	ALC_APIENTRY alcCaptureSamples( ALCdevice *device, ALCvoid *buffer,
 	DebugMessage("alcCaptureSamples");
 #endif
 
+	OALCaptureDevice *oalCaptureDevice = NULL;
+	
 	try {										
-		OALCaptureDevice	*oalCaptureDevice = GetCaptureDeviceObjectByToken ((uintptr_t) device);
+		oalCaptureDevice = ProtectCaptureDeviceObject ((uintptr_t) device);
         oalCaptureDevice->GetFrames(samples, (UInt8*) buffer);
 	}
 	catch (OSStatus   result) {
@@ -642,6 +747,8 @@ ALC_API void	ALC_APIENTRY alcCaptureSamples( ALCdevice *device, ALCvoid *buffer,
 		DebugMessage("ERROR: alcCaptureSamples FAILED");
 		SetDeviceError((uintptr_t) device, AL_INVALID_OPERATION);
 	}
+	
+	ReleaseCaptureDeviceObject(oalCaptureDevice);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -657,31 +764,38 @@ ALC_API ALCdevice* ALC_APIENTRY alcOpenDevice(const ALchar *deviceName)
 #endif
 	
 	try {
-
-		if (gOALDeviceMap == NULL)
-			gOALDeviceMap = new OALDeviceMap ();                                // create the device map if there isn't one yet
-		        
 		if (Get3DMixerVersion() == kUnsupported3DMixer)
 			throw -1;
 		
+		if (gOALDeviceMap == NULL)
+		{
+			gOALDeviceMap = new OALDeviceMap ();                                // create the device map if there isn't one yet
+			gDeviceMapLock = new CAGuard("OAL:DeviceLock");
+		}
+		 		
         newDeviceToken = GetNewPtrToken();																// get a unique token
         newDevice = new OALDevice((const char *) deviceName, newDeviceToken, gRenderChannelSetting);	// create a new device object
-        if (newDevice != NULL)
-            gOALDeviceMap->Add(newDeviceToken, &newDevice);												// add the new device to the device map
+        if (newDevice == NULL)
+			throw ((OSStatus) AL_INVALID_OPERATION);
+		{
+			// the map is not thread-safe. We need to protect any manipulation to it
+			CAGuard::Locker locked(*gDeviceMapLock);
+			gOALDeviceMap->Add(newDeviceToken, &newDevice);												// add the new device to the device map
+		}
 	}
 	catch (OSStatus result) {
 		DebugMessageN1("ERROR: alcOpenDevice FAILED = %s\n", alcGetString(NULL, result));
 		if (newDevice) delete (newDevice);
 		SetDeviceError(gCurrentDevice, result);
-		return NULL;
+		newDeviceToken = 0;
     }
 	catch (...) {
 		DebugMessage("ERROR: alcOpenDevice FAILED");
 		if (newDevice) delete (newDevice);
 		SetDeviceError(gCurrentDevice, AL_INVALID_OPERATION);
-		return NULL;
+		newDeviceToken = 0;
 	}
-	
+		
 	return ((ALCdevice *) newDeviceToken);
 }
 
@@ -692,34 +806,55 @@ ALC_API ALCboolean   ALC_APIENTRY alcCloseDevice(ALCdevice *device)
 #if LOG_API_USAGE
 	DebugMessage("alcCloseDevice");
 #endif
+	ALCboolean result = ALC_TRUE;
 
+	OALDevice *oalDevice = NULL; 
+	
 	try {										
-		OALDevice	*oalDevice = GetDeviceObjectByToken((uintptr_t) device);	// get the requested oal device
+		if (gOALDeviceMap == NULL)
+            throw ((OSStatus) AL_INVALID_OPERATION);
 
-        gOALDeviceMap->Remove((uintptr_t) device);								// remove the device from the map
-        
-        DeleteContextsOfThisDevice((uintptr_t) device);
-        delete (oalDevice);														// destruct the device object
-        
-        if (gOALDeviceMap->Empty())
-        {
-            // there are no more devices in the map, so delete the map and create again later if needed
-            delete (gOALDeviceMap);
-            gOALDeviceMap = NULL;
-        }
+		oalDevice = gOALDeviceMap->Get((uintptr_t) device);	// get the requested oal device
+		if (oalDevice == NULL)
+			throw ((OSStatus) AL_INVALID_VALUE);
+		
+		{
+			CAGuard::Locker locked(*gDeviceMapLock);
+
+			gOALDeviceMap->Remove((uintptr_t) device);								// remove the device from the map
+					
+			DeleteContextsOfThisDevice((uintptr_t) device);
+
+			// we cannot delete this object until all methods using it have released it
+			while(oalDevice->IsInUse())
+				usleep(10000);
+
+			delete (oalDevice);														// destruct the device object
+			
+			if (gOALDeviceMap->Empty())
+			{
+				// there are no more devices in the map, so delete the map and create again later if needed
+				delete (gOALDeviceMap);
+				gOALDeviceMap = NULL;
+			}
+		}
+
+		// if we deleted the map, we can delete the lock as well
+		if (gOALDeviceMap == NULL)
+			delete gDeviceMapLock;
 	}
 	catch (OSStatus   result) {
 		DebugMessageN1("ERROR: alcCloseDevice FAILED = %s\n", alcGetString(NULL, result));
 		SetDeviceError(gCurrentDevice, result);
-		return ALC_FALSE;
+		result = ALC_FALSE;
 	}
     catch (...) {
 		DebugMessage("ERROR: alcCloseDevice FAILED");
 		SetDeviceError(gCurrentDevice, AL_INVALID_OPERATION);
-		return ALC_FALSE;
+		result = ALC_FALSE;
 	}
-
-	return ALC_TRUE; // success
+	
+	return result;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -728,33 +863,36 @@ ALC_API ALCenum  ALC_APIENTRY alcGetError(ALCdevice *device)
 #if LOG_API_USAGE
 	DebugMessage("alcGetError");
 #endif
-
+	ALCenum error = noErr;
+		
 	try {
 		if (gOALDeviceMap)
 		{
 			OALDevice*		oalDevice = gOALDeviceMap->Get((uintptr_t) device);
 			if (oalDevice)
-				return (oalDevice->GetError());
+				error = oalDevice->GetError();
 		}
-		
-		if (gOALCaptureDeviceMap)
+		else if (gOALCaptureDeviceMap)
 		{
+			CAGuard::Locker locked(*gCaptureDeviceMapLock);
+			
 			OALCaptureDevice			*oalCaptureDevice = gOALCaptureDeviceMap->Get((uintptr_t) device);	// get the requested oal device
 			if (oalCaptureDevice)
-				return (oalCaptureDevice->GetError());
+				error = oalCaptureDevice->GetError();
 		}
-
-		return ALC_INVALID_DEVICE;
+		else
+			error = ALC_INVALID_DEVICE;
 	} 
 	catch (OSStatus	result) {
 		DebugMessage("ERROR: alcGetError FAILED: ALC_INVALID_DEVICE");
-		return ALC_INVALID_DEVICE;
+		error = ALC_INVALID_DEVICE;
 	}
 	catch (...) {
 		DebugMessage("ERROR: alcGetError FAILED: ALC_INVALID_DEVICE");
-		return ALC_INVALID_DEVICE;
+		error = ALC_INVALID_DEVICE;
 	}
-	return noErr;	// don't know about this device
+		
+	return error;	// don't know about this device
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -774,13 +912,18 @@ ALC_API ALCcontext* 	ALC_APIENTRY alcCreateContext(ALCdevice *device,	const ALCi
 	DebugMessageN1("alcCreateContext--> device = %ld", (long int) device);
 #endif
 	
+	OALDevice	*oalDevice = NULL;
+
 	try {
-		OALDevice	*oalDevice = GetDeviceObjectByToken ((uintptr_t) device);
+	
+		oalDevice = ProtectDeviceObject ((uintptr_t) device);
 
 		// create the context map if there isn't one yet
 		if (gOALContextMap == NULL)
+		{
 			gOALContextMap = new OALContextMap();
-	
+			gContextMapLock = new CAGuard("OAL:ContextMapLock");
+		}
 		newContextToken = GetNewPtrToken();
 		
 		// use the attribute hint for mono/stereo sources to set gMaximumMixerBusCount
@@ -791,20 +934,24 @@ ALC_API ALCcontext* 	ALC_APIENTRY alcCreateContext(ALCdevice *device,	const ALCi
 		// otherwise just use the device's sample rate
 		Float64		mixerOutputRate = gMixerOutputRate > 0.0 ? gMixerOutputRate : oalDevice->GetDeviceSampleRate();
 		newContext = new OALContext(newContextToken, oalDevice, attrList, sourceCount, mixerOutputRate);
-		
-		gOALContextMap->Add(newContextToken, &newContext);	
+		{
+			CAGuard::Locker locked(*gContextMapLock);
+			gOALContextMap->Add(newContextToken, &newContext);	
+		}
 	}
 	catch (OSStatus     result){
 		DebugMessageN1("ERROR: alcCreateContext FAILED = %s\n", alcGetString(NULL, result));
 		if (newContext) delete (newContext);
 		SetDeviceError(gCurrentDevice, result);
-		return (NULL);
+		newContextToken = 0;
 	}
     catch (...) {
 		DebugMessage("ERROR: alcCreateContext FAILED");
 		SetDeviceError(gCurrentDevice, AL_INVALID_OPERATION);
-		return (NULL);
+		newContextToken = 0;
 	}
+	
+	ReleaseDeviceObject(oalDevice);
 	
 	return ((ALCcontext *) newContextToken);
 }
@@ -818,38 +965,38 @@ ALC_API ALCboolean  ALC_APIENTRY alcMakeContextCurrent(ALCcontext *context)
 
 	OALContext		*newContext = NULL;
 	OALContext		*currentContext = NULL;
+	ALCboolean		result = ALC_TRUE;
 
 	if ((uintptr_t) context == gCurrentContext)
-		return AL_TRUE;								// no change necessary, already using this context
-	
+		return ALC_TRUE;								// no change necessary, already using this context
+
 	try {	
 		if ((gOALContextMap == NULL) || (gOALDeviceMap == NULL))
             throw ((OSStatus) AL_INVALID_OPERATION);
 
 		// get the current context if there is one
 		if (gCurrentContext != 0)
-			currentContext = gOALContextMap->Get(gCurrentContext);
+			currentContext = ProtectContextObject(gCurrentContext);
 			
 		if (context == 0)
 		{
-			// caller passed NULL, which means no context should be current
+			// Changing Current Context to NULL
 			gCurrentDevice = 0;
 			gCurrentContext = 0;
-			
-			// disconnect the context from the owning device
-			uintptr_t owningDeviceToken = currentContext->GetDeviceToken();
-			OALDevice* owningDevice = gOALDeviceMap->Get(owningDeviceToken);
-			owningDevice->DisconnectContext(currentContext);
+
+			currentContext->DisconnectMixerFromDevice();
 		}
 		else
 		{
-			newContext = gOALContextMap->Get((uintptr_t) context);
-			if (newContext == NULL)
-				throw ((OSStatus) ALC_INVALID_CONTEXT);    // fail because the context is invalid
-
-			// find the device that owns this context
-			uintptr_t		newCurrentDeviceToken = gOALContextMap->GetDeviceTokenForContext((uintptr_t) context);
+			// Switching to a new Context
+			newContext = ProtectContextObject((uintptr_t) context);
 			
+			uintptr_t newCurrentDeviceToken = 0;	
+			{
+				CAGuard::Locker locked(*gContextMapLock);
+				// find the device that owns this context
+				newCurrentDeviceToken = gOALContextMap->GetDeviceTokenForContext((uintptr_t) context);
+			}			
 			// store the new current context and device
 			gCurrentDevice = newCurrentDeviceToken;
 			gCurrentContext = (uintptr_t) context;
@@ -857,24 +1004,24 @@ ALC_API ALCboolean  ALC_APIENTRY alcMakeContextCurrent(ALCcontext *context)
 			newContext->ConnectMixerToDevice();
 		}
 		
-#if TEST_WORK_AROUND_ONE
-		if (!gTestSID)
-			alGenSources(1, &gTestSID);
-#endif
-
-		return AL_TRUE;
+		result = ALC_TRUE;
 	}
 	catch (OSStatus result) {
 		DebugMessageN1("ERROR: alcMakeContextCurrent FAILED = %s\n", alcGetString(NULL, result));
 		// get the Device object for this context so we can set an error code
 		SetDeviceError(gCurrentDevice, result);
+		result = ALC_FALSE;
 	}
-    catch (...) {
+	catch (...) {
 		DebugMessage("ERROR: alcMakeContextCurrent FAILED");
 		SetDeviceError(gCurrentDevice, AL_INVALID_OPERATION);
+		result = ALC_FALSE;
 	}
 	
-	return AL_FALSE;
+	ReleaseContextObject(currentContext);
+	ReleaseContextObject(newContext);
+	
+	return result;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -888,7 +1035,7 @@ ALC_API ALCvoid	  ALC_APIENTRY alcProcessContext(ALCcontext *context)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ALC_API ALCcontext* ALC_APIENTRY alcGetCurrentContext(ALCvoid)
+ALC_API ALCcontext* ALC_APIENTRY alcGetCurrentContext(void)
 {
 #if LOG_API_USAGE
 	DebugMessage("alcGetCurrentContext");
@@ -906,12 +1053,14 @@ ALC_API ALCdevice*  ALC_APIENTRY alcGetContextsDevice(ALCcontext *context)
 #if LOG_API_USAGE
 	DebugMessageN1("alcGetContextsDevice--> context = %ld", (long int) context);
 #endif
-	
+		
 	try {
         if (gOALContextMap == NULL)
-            throw ((OSStatus) AL_INVALID_OPERATION);
-        
-        returnValue = gOALContextMap->GetDeviceTokenForContext((uintptr_t) context);
+            throw ((OSStatus) AL_INVALID_OPERATION);        
+		{
+			CAGuard::Locker locked(*gContextMapLock);
+			returnValue = gOALContextMap->GetDeviceTokenForContext((uintptr_t) context);
+		}
     }
     catch (OSStatus result) {
 		DebugMessageN1("ERROR: alcGetContextsDevice FAILED = %s\n", alcGetString(NULL, result));
@@ -941,47 +1090,50 @@ ALC_API ALCvoid	ALC_APIENTRY alcDestroyContext (ALCcontext *context)
 #if LOG_API_USAGE
 	DebugMessageN1("alcDestroyContext--> context = %ld", (long int) context);
 #endif
-
+	
 	try {
         // if this was the current context, set current context to NULL
         if (gCurrentContext == (uintptr_t) context)
             alcMakeContextCurrent(NULL);
 
-		if (gOALContextMap)
-		{
-			bool			stopGraph = true;
-			OALContext		*deleteThisContext = gOALContextMap->Get((uintptr_t) context);
-			
-			if (!gOALContextMap->Remove((uintptr_t) context))	// remove from the map
-				throw ((OSStatus) ALC_INVALID_CONTEXT);
+		if (gOALContextMap == NULL)
+            throw ((OSStatus) AL_INVALID_OPERATION);
 
-			// if there are no other contexts that use the same device, the device graph can be stopped now
-			for (UInt32 i = 0; i < gOALContextMap->Size(); i++)
+		CAGuard::Locker locked(*gContextMapLock);
+		
+		bool			stopGraph = true;
+		OALContext		*deleteThisContext = gOALContextMap->Get((uintptr_t) context);
+		
+		if (!gOALContextMap->Remove((uintptr_t) context))	// remove from the map
+			throw ((OSStatus) ALC_INVALID_CONTEXT);
+
+		// if there are no other contexts that use the same device, the device graph can be stopped now
+		for (UInt32 i = 0; i < gOALContextMap->Size(); i++)
+		{
+			uintptr_t		token;
+			OALContext		*context = gOALContextMap->GetContextByIndex(i, token);
+			if (context)
 			{
-				uintptr_t		token;
-				OALContext		*context = gOALContextMap->GetContextByIndex(i, token);
-				if (context)
+				if (context->GetDeviceToken() == deleteThisContext->GetDeviceToken())
 				{
-					if (context->GetDeviceToken() == deleteThisContext->GetDeviceToken())
-					{
-						// some other context still exists that uses this device, so leave it running
-						stopGraph = false;
-						break;
-					}
+					// some other context still exists that uses this device, so leave it running
+					stopGraph = false;
+					break;
 				}
 			}
-			
-			if (stopGraph)
-			{
-				OALDevice		*owningDevice = GetDeviceObjectByToken(deleteThisContext->GetDeviceToken());
-				if (owningDevice)
-					owningDevice->StopGraph();	// if there are no context's there is no reason for the device's graph to be running
-			}
-			
-			delete(deleteThisContext);
 		}
-		else
-            throw ((OSStatus) AL_INVALID_OPERATION);
+		
+		if (stopGraph)
+		{
+			OALDevice		*owningDevice = ProtectDeviceObject(deleteThisContext->GetDeviceToken());
+			if (owningDevice)
+			{
+				owningDevice->StopGraph();	// if there are no context's there is no reason for the device's graph to be running
+				ReleaseDeviceObject(owningDevice);
+			}
+		}
+		
+		delete(deleteThisContext);		
 	}
 	catch (OSStatus     result) {
 		DebugMessageN1("ERROR: alcDestroyContext FAILED = %s\n", alcGetString(NULL, result));
@@ -990,9 +1142,7 @@ ALC_API ALCvoid	ALC_APIENTRY alcDestroyContext (ALCcontext *context)
     catch (...) {
 		DebugMessage("ERROR: alcDestroyContext FAILED");
 		SetDeviceError(gCurrentDevice, AL_INVALID_OPERATION);
-	}
-	
-	return;
+	}	
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1021,8 +1171,14 @@ ALC_API const ALCchar *	ALC_APIENTRY alcGetString(ALCdevice *device, ALCenum pna
 			case ALC_DEVICE_SPECIFIER:
 			{
 				GetDefaultDeviceName(gDefaultOutputDeviceName, false);
-				UInt32	length = strlen(gDefaultOutputDeviceName);
-				gDefaultOutputDeviceName[length + 1] = '\0'; // double terminator
+				// if a null pointer is specified, double terminate the device list
+				// currently we only allow use of the default device. if this changes
+				// we will need to update this mechanism to return all the devices available
+				if (device == NULL)
+				{
+					UInt32	length = strlen(gDefaultOutputDeviceName);
+					gDefaultOutputDeviceName[length + 1] = '\0'; // double terminator
+				}
 				return gDefaultOutputDeviceName;
 			}
 				break;
@@ -1043,8 +1199,14 @@ ALC_API const ALCchar *	ALC_APIENTRY alcGetString(ALCdevice *device, ALCenum pna
 			case ALC_CAPTURE_DEVICE_SPECIFIER:
 			{
 				GetDefaultDeviceName(gDefaultInputDeviceName, true);
-				UInt32	length = strlen(gDefaultInputDeviceName);
-				gDefaultInputDeviceName[length + 1] = '\0'; // double terminator
+				// if a null pointer is specified, double terminate the device list
+				// currently we only allow use of the default device. if this changes
+				// we will need to update this mechanism to return all the devices available
+				if (device == NULL)
+				{
+					UInt32	length = strlen(gDefaultInputDeviceName);
+					gDefaultInputDeviceName[length + 1] = '\0'; // double terminator
+				}
 				return gDefaultInputDeviceName;
 			}
 				break;
@@ -1138,13 +1300,24 @@ AL_API ALint AL_APIENTRY alcGetInteger (ALCdevice *device, ALenum pname)
 	UInt32				returnValue	= 0;
 	OALCaptureDevice	*oalCaptureDevice = NULL;
 	OALDevice			*oalDevice = NULL;
-	
+	OALContext			*oalContext = NULL;
+		
 	if (gOALDeviceMap)
+	{
+		CAGuard::Locker locked(*gDeviceMapLock);
 		oalDevice = gOALDeviceMap->Get((uintptr_t) device);	// get the requested oal device
+
+		if (oalDevice) oalDevice->SetInUseFlag();
+	}
 	
 	if (!oalDevice && gOALCaptureDeviceMap != NULL)
+	{
+		CAGuard::Locker locked(*gCaptureDeviceMapLock);	
 		oalCaptureDevice = gOALCaptureDeviceMap->Get((uintptr_t) device);		// it's not an output device, look for a capture device
 
+		if (oalCaptureDevice) oalCaptureDevice->SetInUseFlag();
+	}
+	
 	try {
 
 		switch (pname)
@@ -1155,7 +1328,7 @@ AL_API ALint AL_APIENTRY alcGetInteger (ALCdevice *device, ALenum pname)
 					throw (OSStatus) ALC_INVALID_DEVICE;
 				else
 				{
-					OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+					oalContext = ProtectContextObject(gCurrentContext);
 					returnValue = oalContext->GetAttributeListSize();
 				}
 				break;
@@ -1192,7 +1365,11 @@ AL_API ALint AL_APIENTRY alcGetInteger (ALCdevice *device, ALenum pname)
 	catch (...) {
 		DebugMessageN3("ERROR: alcGetInteger FAILED: device = %ld attribute name = %s error = %s", (long int) device, GetALCAttributeString(pname), "Unknown Error");
 	}
-	
+		
+	ReleaseDeviceObject(oalDevice);
+	ReleaseCaptureDeviceObject(oalCaptureDevice);
+	ReleaseContextObject(oalContext);
+
 	return (returnValue);
 }
 
@@ -1206,12 +1383,23 @@ ALC_API ALCvoid     ALC_APIENTRY alcGetIntegerv(ALCdevice *device, ALCenum pname
 	// get the device
 	OALCaptureDevice	*oalCaptureDevice = NULL;
 	OALDevice			*oalDevice = NULL;
+	OALContext			*oalContext = NULL;
+	
 	if (gOALDeviceMap)
+	{
+		CAGuard::Locker locked(*gDeviceMapLock);		
 		oalDevice = gOALDeviceMap->Get((uintptr_t) device);	// get the requested oal device
+
+		if (oalDevice) oalDevice->SetInUseFlag();
+	}
 	
 	if (!oalDevice && gOALCaptureDeviceMap != NULL)
+	{
+		CAGuard::Locker locked(*gCaptureDeviceMapLock);
 		oalCaptureDevice = gOALCaptureDeviceMap->Get((uintptr_t) device);		// it's not an output device, look for a capture device
 
+		if (oalCaptureDevice) oalCaptureDevice->SetInUseFlag();
+	}
 	try {
 
 		if ((data == NULL) || (size == 0))
@@ -1225,7 +1413,7 @@ ALC_API ALCvoid     ALC_APIENTRY alcGetIntegerv(ALCdevice *device, ALCenum pname
 					throw (OSStatus) ALC_INVALID_DEVICE;
 				else
 				{
-					OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+					oalContext = ProtectContextObject(gCurrentContext);
 					*data = oalContext->GetAttributeListSize();
 				}
 				break;
@@ -1236,7 +1424,7 @@ ALC_API ALCvoid     ALC_APIENTRY alcGetIntegerv(ALCdevice *device, ALCenum pname
 					throw (OSStatus) ALC_INVALID_DEVICE;
 				else
 				{
-					OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+					oalContext = ProtectContextObject(gCurrentContext);
 					if (size < (ALCsizei) oalContext->GetAttributeListSize())
 						throw (OSStatus) ALC_INVALID_VALUE;
 					
@@ -1275,8 +1463,10 @@ ALC_API ALCvoid     ALC_APIENTRY alcGetIntegerv(ALCdevice *device, ALCenum pname
 	catch (...) {
 		DebugMessageN3("ERROR: alcGetInteger FAILED: device = %ld attribute name = %s error = %s", (long int) device, GetALCAttributeString(pname), "Unknown Error");
 	}
-
-	return;
+	
+	ReleaseDeviceObject(oalDevice);
+	ReleaseCaptureDeviceObject(oalCaptureDevice);
+	ReleaseContextObject(oalContext);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1291,7 +1481,7 @@ AL_API ALenum AL_APIENTRY alGetError ()
 {
     ALenum	error = AL_NO_ERROR;
 
-#if LOG_API_USAGE
+#if LOG_API_USAGE && LOG_EXTRAS
 	DebugMessage("alGetError");
 #endif
 
@@ -1311,7 +1501,7 @@ AL_API ALenum AL_APIENTRY alGetError ()
 				device->SetError(AL_NO_ERROR);
 		}
 	}
-	
+
 	return (error);
 }
 
@@ -1336,6 +1526,8 @@ AL_API ALvoid AL_APIENTRY alGenBuffers(ALsizei n, ALuint *bids)
         InitializeBufferMap();
         if (gOALBufferMap == NULL)
             throw ((OSStatus) AL_INVALID_OPERATION);
+
+		CAGuard::Locker locked(*gBufferMapLock);
 
 		CleanUpDeadBufferList();		// take the opportunity to clean up the dead list
 		
@@ -1371,8 +1563,6 @@ AL_API ALvoid AL_APIENTRY alGenBuffers(ALsizei n, ALuint *bids)
 	}
 	printf("\n");
 #endif
-	
-	return;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1394,6 +1584,8 @@ AL_API void	AL_APIENTRY alDeleteBuffers( ALsizei n, const ALuint* bids )
             DebugMessage("alDeleteBuffers: gOALBufferMap == NULL");
             throw ((OSStatus) AL_INVALID_VALUE);   
         }
+
+		CAGuard::Locker locked(*gBufferMapLock);
 
 		CleanUpDeadBufferList();		// take the opportunity to clean up the dead list
         			
@@ -1440,7 +1632,7 @@ AL_API void	AL_APIENTRY alDeleteBuffers( ALsizei n, const ALuint* bids )
 				}
 			}
 		}
-    }
+	}
     catch (OSStatus     result) {
 		DebugMessageN1("ERROR: alDeleteBuffers FAILED = %s", alGetString(result));
         alSetError(result);
@@ -1449,8 +1641,6 @@ AL_API void	AL_APIENTRY alDeleteBuffers( ALsizei n, const ALuint* bids )
 		DebugMessage("ERROR: alDeleteBuffers FAILED");
         alSetError(AL_INVALID_OPERATION);
 	}
-    
-	return;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1461,19 +1651,20 @@ AL_API ALboolean AL_APIENTRY alIsBuffer(ALuint bid)
 #endif
 
 	if (bid == 0) return true;	// 0 == AL_NONE which is valid
-    
+	
+	ALboolean isBuffer = AL_FALSE;
+	OALBuffer *oalBuffer = NULL;
+	
 	try {
         if (gOALBufferMap == NULL)
             throw ((OSStatus) AL_INVALID_OPERATION);   
 
-		CleanUpDeadBufferList();		// take the opportunity to clean up the dead list
-
-        OALBuffer	*oalBuffer = gOALBufferMap->Get((UInt32) bid);
-
+		oalBuffer = ProtectBufferObject(bid);
+		
         if (oalBuffer != NULL)
-            return AL_TRUE;
+            isBuffer = AL_TRUE;
         else
-            return AL_FALSE;
+            isBuffer = AL_FALSE;		
     }
     catch (OSStatus     result) {
 		DebugMessageN2("ERROR: alIsBuffer FAILED: buffer = %ld error = %s", (long int) bid, alGetString(result));
@@ -1484,7 +1675,9 @@ AL_API ALboolean AL_APIENTRY alIsBuffer(ALuint bid)
         alSetError(AL_INVALID_OPERATION);
 	}
 
-    return AL_FALSE;
+	ReleaseBufferObject(oalBuffer);
+
+    return isBuffer;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1495,12 +1688,18 @@ AL_API void	AL_APIENTRY alBufferData(	ALuint			bid,
 										ALsizei			freq )
 {
 #if LOG_BUFFER_USAGE
-	//DebugMessageN4("alBufferData-->  buffer %ld : %s : %ld bytes : %ldHz", (long int) bid, GetFormatString(format), (long int) size, (long int) freq);
+	DebugMessageN4("alBufferData-->  buffer %ld : %s : %ld bytes : %ldHz", (long int) bid, GetFormatString(format), (long int) size, (long int) freq);
 #endif
 
+	OALBuffer *oalBuffer = NULL;
+	
 	try {
-			OALBuffer	*oalBuffer = GetBufferObjectFromToken(bid);
-			oalBuffer->AddAudioData((char*)data, size, format, freq, gConvertBufferNow); // should also check for a valid format IsFormatSupported()
+        if (gOALBufferMap == NULL)
+            throw ((OSStatus) AL_INVALID_OPERATION);   
+		
+		oalBuffer = ProtectBufferObject(bid);
+				
+		oalBuffer->AddAudioData((char*)data, size, format, freq, gConvertBufferNow); // should also check for a valid format IsFormatSupported()
     }
     catch (OSStatus     result) {
 		DebugMessageN5("ERROR: alBufferData FAILED: buffer %ld : %s : %ld bytes : %ldHz error = %s", (long int) bid, GetFormatString(format), (long int) size, (long int) freq,  alGetString(result));
@@ -1510,8 +1709,8 @@ AL_API void	AL_APIENTRY alBufferData(	ALuint			bid,
 		DebugMessageN4("ERROR: alBufferData FAILED: buffer %ld : %s : %ld bytes : %ldHz", (long int) bid, GetFormatString(format), (long int) size, (long int) freq);
         alSetError(AL_INVALID_OPERATION);
 	}
-	
-	return;
+
+	ReleaseBufferObject(oalBuffer);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1576,9 +1775,14 @@ AL_API ALvoid AL_APIENTRY alGetBufferf (ALuint bid, ALenum pname, ALfloat *value
 #if LOG_BUFFER_USAGE
 	DebugMessageN2("alGetBufferf--> buffer %ld : property = %s", (long int) bid, GetALAttributeString(pname));
 #endif
+	OALBuffer	*oalBuffer = NULL;
 
     try {
-		OALBuffer	*oalBuffer = GetBufferObjectFromToken(bid);
+        if (gOALBufferMap == NULL)
+            throw ((OSStatus) AL_INVALID_OPERATION);   
+
+		oalBuffer = ProtectBufferObject(bid);
+			
         switch (pname)
         {
             case AL_FREQUENCY:
@@ -1597,8 +1801,8 @@ AL_API ALvoid AL_APIENTRY alGetBufferf (ALuint bid, ALenum pname, ALfloat *value
 		DebugMessageN2("ERROR: alGetBufferf FAILED: buffer %ld : property = %s", (long int) bid, GetALAttributeString(pname));
         alSetError(AL_INVALID_OPERATION);
 	}
-    
-	return;
+	
+	ReleaseBufferObject(oalBuffer);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1627,8 +1831,14 @@ AL_API ALvoid AL_APIENTRY alGetBufferi(ALuint bid, ALenum pname, ALint *value)
 	DebugMessageN2("alGetBufferi--> buffer %ld : property = %s", (long int) bid, GetALAttributeString(pname));
 #endif
 
-    try {
-		OALBuffer	*oalBuffer = GetBufferObjectFromToken(bid);
+	OALBuffer	*oalBuffer = NULL;
+    
+	try {
+        if (gOALBufferMap == NULL)
+            throw ((OSStatus) AL_INVALID_OPERATION);   
+
+		oalBuffer = ProtectBufferObject(bid);
+
         switch (pname)
         {
             case AL_FREQUENCY:
@@ -1659,8 +1869,8 @@ AL_API ALvoid AL_APIENTRY alGetBufferi(ALuint bid, ALenum pname, ALint *value)
 		*value = 0;
         alSetError(AL_INVALID_OPERATION);
 	}
-    
-	return;
+	
+	ReleaseBufferObject(oalBuffer);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1680,9 +1890,15 @@ AL_API void AL_APIENTRY alGetBufferiv( ALuint bid, ALenum pname, ALint* values )
 	DebugMessageN2("alGetBufferi--> buffer %ld : property = %s", (long int) bid, GetALAttributeString(pname));
 #endif
 
+	OALBuffer	*oalBuffer = NULL;
+
     try {
-		OALBuffer	*oalBuffer = GetBufferObjectFromToken(bid);
-        switch (pname)
+        if (gOALBufferMap == NULL)
+            throw ((OSStatus) AL_INVALID_OPERATION);   
+
+		oalBuffer = ProtectBufferObject(bid);		
+		
+       switch (pname)
         {
             case AL_FREQUENCY:
                 *values = (UInt32) oalBuffer->GetSampleRate();
@@ -1712,8 +1928,8 @@ AL_API void AL_APIENTRY alGetBufferiv( ALuint bid, ALenum pname, ALint* values )
 		*values = 0;
         alSetError(AL_INVALID_OPERATION);
 	}
-    
-	return;
+	
+	ReleaseBufferObject(oalBuffer);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1721,8 +1937,7 @@ AL_API void AL_APIENTRY alGetBufferiv( ALuint bid, ALenum pname, ALint* values )
 // Source APIs
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#pragma mark ***** Sources *****
-
+#pragma mark ***** Sources *****	
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ALC_API ALvoid  AL_APIENTRY alGenSources(ALsizei n, ALuint *sids)
 {
@@ -1735,6 +1950,9 @@ ALC_API ALvoid  AL_APIENTRY alGenSources(ALsizei n, ALuint *sids)
 
 	UInt32      i = 0,
                 count = 0;
+				
+	OALContext *oalContext = NULL;
+
 	try {
 		if (n < 0)
             throw ((OSStatus) AL_INVALID_VALUE);
@@ -1742,8 +1960,9 @@ ALC_API ALvoid  AL_APIENTRY alGenSources(ALsizei n, ALuint *sids)
         if ((n > AL_MAXSOURCES) || (sids == NULL))
             throw ((OSStatus) AL_INVALID_VALUE);
         
-		OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
-        for (i = 0; i < (UInt32) n; i++)
+		oalContext = ProtectContextObject(gCurrentContext);
+        
+		for (i = 0; i < (UInt32) n; i++)
         {
             ALuint	newToken = GetNewToken();		// get a unique token
             
@@ -1767,9 +1986,9 @@ ALC_API ALvoid  AL_APIENTRY alGenSources(ALsizei n, ALuint *sids)
 		alDeleteSources(i, sids);
 		for (i = 0; i < count; i++)
 			sids[i] = 0;
-	}
-	
-	return;
+	}	
+
+	ReleaseContextObject(oalContext);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1787,8 +2006,10 @@ AL_API void	AL_APIENTRY alDeleteSources( ALsizei n, const ALuint* sids )
 	if (n == 0)
 		return; // NOP
 
+	OALContext *oalContext = NULL;
+	
 	try {
-		OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+		oalContext = ProtectContextObject(gCurrentContext);
 
         if ((UInt32) n > oalContext->GetSourceCount())
             throw ((OSStatus) AL_INVALID_VALUE);
@@ -1807,8 +2028,8 @@ AL_API void	AL_APIENTRY alDeleteSources( ALsizei n, const ALuint* sids )
 		DebugMessageN1("ERROR: alDeleteSources FAILED: source count = %ld", (long int) n);
         alSetError(AL_INVALID_OPERATION);
 	}
-	
-	return;
+
+	ReleaseContextObject(oalContext);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1817,13 +2038,16 @@ ALC_API ALboolean  AL_APIENTRY alIsSource(ALuint sid)
 #if LOG_SOURCE_USAGE
 	DebugMessageN1("alIsSource--> source %ld", (long int) sid);
 #endif
-
-	try {
-		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+	ALboolean isSource = AL_FALSE;
+	OALSource *oalSource = NULL;
+	
+	try {		
+		oalSource = ProtectSourceObjectInCurrentContext(sid);
+		
         if (oalSource != NULL)
-            return AL_TRUE;
+            isSource = AL_TRUE;
         else
-            return AL_FALSE;
+            isSource = AL_FALSE;		
 	}
 	catch (OSStatus     result) {
 		DebugMessageN2("ERROR: alIsSource FAILED: source = %ld error = %s", (long int) sid, alGetString(result));
@@ -1834,7 +2058,9 @@ ALC_API ALboolean  AL_APIENTRY alIsSource(ALuint sid)
         alSetError(AL_INVALID_OPERATION);
 	}
 
-	return AL_FALSE;
+	ReleaseSourceObject(oalSource);
+	
+	return isSource;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1843,9 +2069,12 @@ AL_API ALvoid AL_APIENTRY alSourcef (ALuint sid, ALenum pname, ALfloat value)
 #if LOG_SOURCE_USAGE
 	DebugMessageN3("alSourcef--> source %ld : %s : value = %.2f", (long int) sid, GetALAttributeString(pname), value);
 #endif
-
+		
+	OALSource *oalSource = NULL;
+	
 	try {
-		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+		oalSource = ProtectSourceObjectInCurrentContext(sid);
+
         switch (pname) 
         {
 			// Source ONLY Attributes
@@ -1907,7 +2136,7 @@ AL_API ALvoid AL_APIENTRY alSourcef (ALuint sid, ALenum pname, ALfloat value)
         alSetError(AL_INVALID_OPERATION);
 	}
 	
-	return;
+	ReleaseSourceObject(oalSource);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1916,9 +2145,12 @@ AL_API ALvoid AL_APIENTRY alSourcefv (ALuint sid, ALenum pname, const ALfloat *v
 #if LOG_SOURCE_USAGE
 	DebugMessageN2("alSourcefv--> source %ld : %s", (long int) sid, GetALAttributeString(pname));
 #endif
-
+	
+	OALSource *oalSource = NULL;
+			
 	try {
-		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+		oalSource = ProtectSourceObjectInCurrentContext(sid);
+
         switch(pname) 
         {
 			// Source ONLY Attributes
@@ -1989,7 +2221,7 @@ AL_API ALvoid AL_APIENTRY alSourcefv (ALuint sid, ALenum pname, const ALfloat *v
         alSetError(AL_INVALID_OPERATION);
 	}
 	
-	return;
+	ReleaseSourceObject(oalSource);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1998,9 +2230,12 @@ AL_API ALvoid AL_APIENTRY alSource3f (ALuint sid, ALenum pname, ALfloat v1, ALfl
 #if LOG_SOURCE_USAGE
 	DebugMessageN5("alSource3f--> source %ld : %s : values = %.2f:%.2f:%.2f", (long int) sid, GetALAttributeString(pname), v1, v2, v3);
 #endif
-
+		
+	OALSource *oalSource = NULL;
+	
 	try {
-		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+		oalSource = ProtectSourceObjectInCurrentContext(sid);
+		
         switch (pname) 
         {
 			// Source ONLY Attributes
@@ -2030,7 +2265,7 @@ AL_API ALvoid AL_APIENTRY alSource3f (ALuint sid, ALenum pname, ALfloat v1, ALfl
         alSetError(AL_INVALID_OPERATION);
 	}
 	
-	return;
+	ReleaseSourceObject(oalSource);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2039,10 +2274,13 @@ AL_API ALvoid AL_APIENTRY alSourcei (ALuint sid, ALenum pname, ALint value)
 #if LOG_SOURCE_USAGE
 	DebugMessageN3("alSourcei--> source %ld : %s : value = %ld", (long int) sid, GetALAttributeString(pname), (long int)value);
 #endif
-
+		
+	OALSource *oalSource = NULL;
+	
 	try {
-		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
-        switch (pname) 
+		oalSource = ProtectSourceObjectInCurrentContext(sid);
+
+		switch (pname) 
         {
 			// Source ONLY Attributes
             case AL_SOURCE_RELATIVE:
@@ -2061,7 +2299,10 @@ AL_API ALvoid AL_APIENTRY alSourcei (ALuint sid, ALenum pname, ALint value)
 					{
 					    // if no buffers have been made yet but alIsBuffer() is true, then this is a AL_NONE buffer
 					    if (gOALBufferMap)
+						{
+							CAGuard::Locker locked(*gBufferMapLock);
 							oalSource->SetBuffer(value, gOALBufferMap->Get((UInt32) value));
+						}
 					}
 					else
                         throw ((OSStatus) AL_INVALID_OPERATION);
@@ -2109,7 +2350,7 @@ AL_API ALvoid AL_APIENTRY alSourcei (ALuint sid, ALenum pname, ALint value)
         alSetError(AL_INVALID_OPERATION);
 	}
 	
-	return;
+	ReleaseSourceObject(oalSource);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2118,9 +2359,12 @@ AL_API void AL_APIENTRY alSourceiv( ALuint sid, ALenum pname, const ALint* value
 #if LOG_SOURCE_USAGE
 	DebugMessageN2("alSourceiv--> source %ld : %s", (long int) sid, GetALAttributeString(pname));
 #endif
-
+		
+	OALSource *oalSource = NULL;
+	
 	try {
-		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+		oalSource = ProtectSourceObjectInCurrentContext(sid);
+
         switch (pname) 
         {
 			// Source ONLY Attributes
@@ -2143,7 +2387,10 @@ AL_API void AL_APIENTRY alSourceiv( ALuint sid, ALenum pname, const ALint* value
 				{
 					// if no buffers have been made yet but alIsBuffer() is true, then this is a AL_NONE buffer
 					if (gOALBufferMap)
+					{
+						CAGuard::Locker locked(*gBufferMapLock);
 						oalSource->SetBuffer(*values, gOALBufferMap->Get((UInt32) *values));
+					}
 				}
 				else
 					throw ((OSStatus) AL_INVALID_OPERATION);
@@ -2199,8 +2446,7 @@ AL_API void AL_APIENTRY alSourceiv( ALuint sid, ALenum pname, const ALint* value
         alSetError(AL_INVALID_OPERATION);
 	}
 	
-	return;
-
+	ReleaseSourceObject(oalSource);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2209,9 +2455,12 @@ AL_API void AL_APIENTRY alSource3i( ALuint sid, ALenum pname, ALint v1, ALint v2
 #if LOG_SOURCE_USAGE
 	DebugMessageN5("alSource3i--> source %ld : %s : values = %ld:%ld:%ld", (long int) sid, GetALAttributeString(pname), (long int)v1, (long int)v2, (long int)v3);
 #endif
-
+	
+	OALSource *oalSource = NULL;
+	
 	try {
-		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+		oalSource = ProtectSourceObjectInCurrentContext(sid);
+
         switch (pname) 
         {
 			// Source ONLY Attributes
@@ -2241,7 +2490,7 @@ AL_API void AL_APIENTRY alSource3i( ALuint sid, ALenum pname, ALint v1, ALint v2
         alSetError(AL_INVALID_OPERATION);
 	}
 	
-	return;
+	ReleaseSourceObject(oalSource);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2250,9 +2499,11 @@ AL_API ALvoid AL_APIENTRY alGetSourcef (ALuint sid, ALenum pname, ALfloat *value
 #if LOG_SOURCE_USAGE
 	DebugMessageN2("alGetSourcef--> source %ld : %s", (long int) sid, GetALAttributeString(pname));
 #endif
-
+	
+	OALSource *oalSource = NULL;
 	try {
-		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+		oalSource = ProtectSourceObjectInCurrentContext(sid);
+
         switch (pname) 
         {
 			// Source ONLY Attributes
@@ -2312,7 +2563,7 @@ AL_API ALvoid AL_APIENTRY alGetSourcef (ALuint sid, ALenum pname, ALfloat *value
         alSetError(AL_INVALID_OPERATION);
 	}
 	
-	return;
+	ReleaseSourceObject(oalSource);		
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2322,8 +2573,10 @@ AL_API ALvoid AL_APIENTRY alGetSourcefv (ALuint sid, ALenum pname, ALfloat *valu
 	DebugMessageN2("alGetSourcefv--> source %ld : %s", (long int) sid, GetALAttributeString(pname));
 #endif
 
+	OALSource *oalSource = NULL;
 	try {
-		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+		oalSource = ProtectSourceObjectInCurrentContext(sid);
+
         switch(pname) 
         {
 			// Source ONLY Attributes
@@ -2392,7 +2645,7 @@ AL_API ALvoid AL_APIENTRY alGetSourcefv (ALuint sid, ALenum pname, ALfloat *valu
         alSetError(AL_INVALID_OPERATION);
 	}
 	
-	return;
+	ReleaseSourceObject(oalSource);		
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2402,8 +2655,10 @@ AL_API ALvoid AL_APIENTRY alGetSource3f (ALuint sid, ALenum pname, ALfloat *v1, 
 	DebugMessageN2("alGetSource3f--> source %ld : %s", (long int) sid, GetALAttributeString(pname));
 #endif
 
+	OALSource *oalSource = NULL;
 	try {
-		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+		oalSource = ProtectSourceObjectInCurrentContext(sid);
+
         switch (pname) 
         {
 			// Source ONLY Attributes
@@ -2433,7 +2688,7 @@ AL_API ALvoid AL_APIENTRY alGetSource3f (ALuint sid, ALenum pname, ALfloat *v1, 
         alSetError(AL_INVALID_OPERATION);
 	}
 	
-	return;
+	ReleaseSourceObject(oalSource);		
 }
 
 
@@ -2444,8 +2699,10 @@ AL_API ALvoid AL_APIENTRY alGetSourcei (ALuint sid, ALenum pname, ALint *value)
 	DebugMessageN2("alGetSourcei--> source %ld : %s", (long int) sid, GetALAttributeString(pname));
 #endif
 
+	OALSource *oalSource = NULL;
 	try {
-		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+		oalSource = ProtectSourceObjectInCurrentContext(sid);
+
         switch (pname) 
         {
 			// Source ONLY Attributes
@@ -2512,7 +2769,7 @@ AL_API ALvoid AL_APIENTRY alGetSourcei (ALuint sid, ALenum pname, ALint *value)
         alSetError(AL_INVALID_OPERATION);
 	}
 	
-	return;
+	ReleaseSourceObject(oalSource);		
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2521,9 +2778,11 @@ AL_API void AL_APIENTRY alGetSourceiv( ALuint sid,  ALenum pname, ALint* values 
 #if LOG_SOURCE_USAGE
 	DebugMessageN2("alGetSourceiv--> source %ld : %s", (long int) sid, GetALAttributeString(pname));
 #endif
-
+	
+	OALSource *oalSource = NULL;
 	try {
-		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+		oalSource = ProtectSourceObjectInCurrentContext(sid);
+
         switch(pname) 
         {
 			// Source ONLY Attributes
@@ -2590,15 +2849,15 @@ AL_API void AL_APIENTRY alGetSourceiv( ALuint sid,  ALenum pname, ALint* values 
         }
 	}
 	catch (OSStatus      result) {
-		DebugMessageN1("ERROR: alGetSourcefv FAILED = %s\n", alGetString(result));
+		DebugMessageN1("ERROR: alGetSourceiv FAILED = %s\n", alGetString(result));
 		alSetError(result);
 	}
     catch (...) {
-		DebugMessage("ERROR: alGetSourcefv FAILED");
+		DebugMessage("ERROR: alGetSourceiv FAILED");
         alSetError(AL_INVALID_OPERATION);
 	}
 	
-	return;
+	ReleaseSourceObject(oalSource);		
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2607,10 +2866,11 @@ AL_API void AL_APIENTRY alGetSource3i( ALuint sid, ALenum pname, ALint* v1, ALin
 #if LOG_SOURCE_USAGE
 	DebugMessageN2("alGetSource3i--> source %ld : %s", (long int) sid, GetALAttributeString(pname));
 #endif
-
-
+	
+	OALSource *oalSource = NULL;
 	try {
-		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+		oalSource = ProtectSourceObjectInCurrentContext(sid);
+
         switch (pname) 
         {
 			// Source ONLY Attributes
@@ -2632,15 +2892,15 @@ AL_API void AL_APIENTRY alGetSource3i( ALuint sid, ALenum pname, ALint* v1, ALin
         }
 	}
 	catch (OSStatus      result) {
-		DebugMessageN1("ERROR: alGetSource3f FAILED = %s\n", alGetString(result));
+		DebugMessageN1("ERROR: alGetSource3i FAILED = %s\n", alGetString(result));
 		alSetError(result);
 	}
     catch (...) {
-		DebugMessage("ERROR: alGetSource3f FAILED");
+		DebugMessage("ERROR: alGetSource3i FAILED");
         alSetError(AL_INVALID_OPERATION);
 	}
 	
-	return;
+	ReleaseSourceObject(oalSource);		
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2650,8 +2910,10 @@ AL_API ALvoid AL_APIENTRY alSourcePlay(ALuint sid)
 	DebugMessageN1("alSourcePlay--> source %ld", (long int) sid);
 #endif
 
+	OALSource *oalSource = NULL;
 	try {
-		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+		oalSource = ProtectSourceObjectInCurrentContext(sid);
+
 		oalSource->Play();					// start playing the queue
 	}
 	catch (OSStatus      result) {
@@ -2663,7 +2925,7 @@ AL_API ALvoid AL_APIENTRY alSourcePlay(ALuint sid)
         alSetError(AL_INVALID_OPERATION);
 	}
 	
-	return;
+	ReleaseSourceObject(oalSource);		
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2673,8 +2935,10 @@ AL_API ALvoid AL_APIENTRY alSourcePause (ALuint sid)
 	DebugMessageN1("alSourcePause--> source %ld", (long int) sid);
 #endif
 
+	OALSource *oalSource = NULL;
 	try {
-		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+		oalSource = ProtectSourceObjectInCurrentContext(sid);
+
 		oalSource->Pause();
 	}
 	catch (OSStatus      result) {
@@ -2686,7 +2950,7 @@ AL_API ALvoid AL_APIENTRY alSourcePause (ALuint sid)
         alSetError(AL_INVALID_OPERATION);
 	}
 	
-	return;
+	ReleaseSourceObject(oalSource);		
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2696,8 +2960,10 @@ AL_API ALvoid AL_APIENTRY alSourceStop (ALuint sid)
 	DebugMessageN1("alSourceStop--> source %ld", (long int) sid);
 #endif
 
+	OALSource *oalSource = NULL;
 	try {
-		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+		oalSource = ProtectSourceObjectInCurrentContext(sid);
+
         oalSource->Stop();
 	}
 	catch (OSStatus      result) {
@@ -2709,7 +2975,7 @@ AL_API ALvoid AL_APIENTRY alSourceStop (ALuint sid)
         alSetError(AL_INVALID_OPERATION);
 	}
 	
-	return;
+	ReleaseSourceObject(oalSource);		
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2719,8 +2985,10 @@ AL_API ALvoid AL_APIENTRY alSourceRewind (ALuint sid)
 	DebugMessageN1("alSourceRewind--> source %ld", (long int) sid);
 #endif
 
+	OALSource *oalSource = NULL;
 	try {
-		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+		oalSource = ProtectSourceObjectInCurrentContext(sid);
+
         oalSource->Rewind();
 	}
 	catch (OSStatus      result) {
@@ -2732,7 +3000,7 @@ AL_API ALvoid AL_APIENTRY alSourceRewind (ALuint sid)
         alSetError(AL_INVALID_OPERATION);
 	}
 	
-	return;
+	ReleaseSourceObject(oalSource);		
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2758,8 +3026,6 @@ AL_API void	AL_APIENTRY alSourcePlayv( ALsizei ns, const ALuint *sids )
 		DebugMessage("ERROR: alSourcePlayv FAILED");
         alSetError(AL_INVALID_OPERATION);
 	}
-	
-	return;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2785,8 +3051,6 @@ AL_API void	AL_APIENTRY alSourcePausev( ALsizei ns, const ALuint *sids )
 		DebugMessage("ERROR: alSourcePausev FAILED");
         alSetError(AL_INVALID_OPERATION);
 	}
-	
-	return;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2812,8 +3076,6 @@ AL_API void	AL_APIENTRY alSourceStopv( ALsizei ns, const ALuint *sids )
 		DebugMessage("ERROR: alSourceStopv FAILED");
         alSetError(AL_INVALID_OPERATION);
 	}
-	
-	return;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2839,8 +3101,6 @@ AL_API void	AL_APIENTRY alSourceRewindv(ALsizei ns, const ALuint *sids)
 		DebugMessage("ERROR: alSourceRewindv FAILED");
         alSetError(AL_INVALID_OPERATION);
 	}
-	
-	return;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2861,12 +3121,14 @@ AL_API void	AL_APIENTRY alSourceQueueBuffers( ALuint sid, ALsizei numEntries, co
 
 	if (numEntries == 0)
 		return;	// no buffers were actually requested for queueing
+
+	OALSource		*oalSource = NULL;
 		
 	try {
         if (gOALBufferMap == NULL)
             throw ((OSStatus) AL_INVALID_OPERATION);   
 
-		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+		oalSource = ProtectSourceObjectInCurrentContext(sid);
                         
 		// The source type must first be checked for static or streaming
 		if (oalSource->GetSourceType() == AL_STATIC)
@@ -2887,6 +3149,9 @@ AL_API void	AL_APIENTRY alSourceQueueBuffers( ALuint sid, ALsizei numEntries, co
             		throw ((OSStatus) AL_INVALID_OPERATION);
 			}
 		}
+	
+		CAGuard::Locker locked(*gBufferMapLock);
+
         // verify that buffers provided are valid before queueing them.
         for (UInt32	i = 0; i < (UInt32) numEntries; i++)
         {
@@ -2916,8 +3181,8 @@ AL_API void	AL_APIENTRY alSourceQueueBuffers( ALuint sid, ALsizei numEntries, co
 		DebugMessage("ERROR: alSourceQueueBuffers FAILED");
         alSetError(AL_INVALID_OPERATION);
 	}
-
-	return;
+	
+	ReleaseSourceObject(oalSource);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2930,6 +3195,8 @@ AL_API ALvoid AL_APIENTRY alSourceUnqueueBuffers (ALuint sid, ALsizei n, ALuint 
 	if (n == 0)
 		return;
 
+	OALSource		*oalSource = NULL;
+
 	try {
         if (buffers == NULL)
             throw ((OSStatus) AL_INVALID_VALUE);   
@@ -2937,13 +3204,14 @@ AL_API ALvoid AL_APIENTRY alSourceUnqueueBuffers (ALuint sid, ALsizei n, ALuint 
         if (gOALBufferMap == NULL)
             throw ((OSStatus) AL_INVALID_OPERATION);   
 
-		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+		oalSource = ProtectSourceObjectInCurrentContext(sid);
+
+		CAGuard::Locker locked(*gBufferMapLock);
 
         if (oalSource->GetQLength() < (UInt32) n)
             throw (OSStatus) AL_INVALID_VALUE;				// n is greater than the source's Q length
         
-        oalSource->RemoveBuffersFromQueue(n, buffers);
-
+		oalSource->RemoveBuffersFromQueue(n, buffers);		
 	}
 	catch (OSStatus		result) {
 		DebugMessageN1("ERROR: alSourceUnqueueBuffers FAILED = %s\n", alGetString(result));
@@ -2961,6 +3229,8 @@ AL_API ALvoid AL_APIENTRY alSourceUnqueueBuffers (ALuint sid, ALsizei n, ALuint 
         alSetError(AL_INVALID_OPERATION);
 	}
 
+	ReleaseSourceObject(oalSource);
+	
 #if LOG_BUFFER_USAGE
 	printf("sid = %ld alSourceUnqueueBuffers--> (%ld) ", (long int) sid, (long int) n);
 	for (UInt32	i = 0; i < (UInt32) n; i++) {
@@ -2968,8 +3238,6 @@ AL_API ALvoid AL_APIENTRY alSourceUnqueueBuffers (ALuint sid, ALsizei n, ALuint 
 	}
 	printf("\n");
 #endif
-
-	return;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2983,9 +3251,10 @@ AL_API ALvoid AL_APIENTRY alListenerf (ALenum pname, ALfloat value)
 #if LOG_API_USAGE
 	DebugMessageN2("alListenerf--> attribute = %s : value %.2f", GetALAttributeString(pname), value);
 #endif
+	OALContext		*oalContext = NULL;
 
 	try {
-        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+        oalContext = ProtectContextObject(gCurrentContext);
         switch (pname) 
         {
             case AL_GAIN:
@@ -3006,7 +3275,7 @@ AL_API ALvoid AL_APIENTRY alListenerf (ALenum pname, ALfloat value)
         alSetError(AL_INVALID_OPERATION);   // by default
 	}
 	
-	return;
+	ReleaseContextObject(oalContext);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3016,8 +3285,11 @@ AL_API ALvoid AL_APIENTRY alListenerfv (ALenum pname, const ALfloat *values)
 	DebugMessageN1("alListenerfv--> attribute = %s", GetALAttributeString(pname));
 #endif
 
+	OALContext		*oalContext = NULL;
+ 
 	try {
-        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+       
+		oalContext = ProtectContextObject(gCurrentContext);
         switch(pname) 
         {
             case AL_POSITION:
@@ -3047,7 +3319,7 @@ AL_API ALvoid AL_APIENTRY alListenerfv (ALenum pname, const ALfloat *values)
         alSetError(AL_INVALID_OPERATION);   // by default
 	}
 	
-	return;
+	ReleaseContextObject(oalContext);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3057,8 +3329,10 @@ AL_API ALvoid AL_APIENTRY alListener3f (ALenum pname, ALfloat v1, ALfloat v2, AL
 	DebugMessageN4("alListener3f--> attribute = %s : %.2f : %.2f : %.2f", GetALAttributeString(pname), v1, v2, v3);
 #endif
 
+	OALContext		*oalContext = NULL;
+
 	try {
-        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+        oalContext = ProtectContextObject(gCurrentContext);
         switch (pname) 
         {
             case AL_POSITION:
@@ -3080,8 +3354,8 @@ AL_API ALvoid AL_APIENTRY alListener3f (ALenum pname, ALfloat v1, ALfloat v2, AL
 		DebugMessage("ERROR: alListener3f FAILED");
         alSetError(AL_INVALID_OPERATION);   // by default
 	}
-	
-	return;
+		
+	ReleaseContextObject(oalContext);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3100,8 +3374,10 @@ AL_API void AL_APIENTRY alListeneriv( ALenum pname, const ALint* values )
 	DebugMessageN1("alListeneriv--> attribute = %s", GetALAttributeString(pname));
 #endif
 
+	OALContext		*oalContext = NULL;
+
 	try {
-        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+		oalContext = ProtectContextObject(gCurrentContext);
         switch(pname) 
         {
             case AL_POSITION:
@@ -3128,7 +3404,7 @@ AL_API void AL_APIENTRY alListeneriv( ALenum pname, const ALint* values )
         alSetError(AL_INVALID_OPERATION);   // by default
 	}
 	
-	return;
+	ReleaseContextObject(oalContext);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3138,8 +3414,10 @@ AL_API void AL_APIENTRY alListener3i( ALenum pname, ALint v1, ALint v2, ALint v3
 	DebugMessageN4("alListener3i--> attribute = %s : %ld : %ld : %ld", GetALAttributeString(pname), (long int) v1, (long int) v2, (long int) v3);
 #endif
 
+	OALContext		*oalContext = NULL;
+
 	try {
-        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+        oalContext = ProtectContextObject(gCurrentContext);
         switch (pname) 
         {
             case AL_POSITION:
@@ -3162,7 +3440,7 @@ AL_API void AL_APIENTRY alListener3i( ALenum pname, ALint v1, ALint v2, ALint v3
         alSetError(AL_INVALID_OPERATION);   // by default
 	}
 	
-	return;
+	ReleaseContextObject(oalContext);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3172,8 +3450,10 @@ AL_API ALvoid AL_APIENTRY alGetListenerf( ALenum pname, ALfloat* value )
 	DebugMessageN1("alGetListenerf--> attribute = %s", GetALAttributeString(pname));
 #endif
 
+	OALContext* oalContext = NULL;
+	
 	try {
-        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+        oalContext = ProtectContextObject(gCurrentContext);
         switch(pname) 
         {
             case AL_GAIN:
@@ -3193,7 +3473,7 @@ AL_API ALvoid AL_APIENTRY alGetListenerf( ALenum pname, ALfloat* value )
         alSetError(AL_INVALID_OPERATION);   // by default
 	}
 	
-	return;
+	ReleaseContextObject(oalContext);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3203,8 +3483,10 @@ AL_API ALvoid AL_APIENTRY alGetListenerfv( ALenum pname, ALfloat* values )
 	DebugMessageN1("alGetListenerfv--> attribute = %s", GetALAttributeString(pname));
 #endif
 
+	OALContext* oalContext = NULL;
+
 	try {
-        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+        oalContext = ProtectContextObject(gCurrentContext);
         switch (pname) 
         {
             case AL_POSITION:
@@ -3234,8 +3516,8 @@ AL_API ALvoid AL_APIENTRY alGetListenerfv( ALenum pname, ALfloat* values )
         alSetError(AL_INVALID_OPERATION);   // by default
 	}
 	
-	return;
-}
+	ReleaseContextObject(oalContext);
+}	
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 AL_API ALvoid AL_APIENTRY alGetListener3f( ALenum pname, ALfloat* v1, ALfloat* v2, ALfloat* v3 )
@@ -3244,8 +3526,10 @@ AL_API ALvoid AL_APIENTRY alGetListener3f( ALenum pname, ALfloat* v1, ALfloat* v
 	DebugMessageN1("alGetListener3f--> attribute = %s", GetALAttributeString(pname));
 #endif
 
+	OALContext* oalContext = NULL;
+
 	try {
-        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+        oalContext = ProtectContextObject(gCurrentContext);
         switch(pname) 
         {
             case AL_POSITION:
@@ -3268,7 +3552,7 @@ AL_API ALvoid AL_APIENTRY alGetListener3f( ALenum pname, ALfloat* v1, ALfloat* v
         alSetError(AL_INVALID_OPERATION);   // by default
 	}
 	
-	return;
+	ReleaseContextObject(oalContext);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3292,8 +3576,6 @@ AL_API ALvoid AL_APIENTRY alGetListeneri( ALenum pname, ALint* value )
  		DebugMessage("ERROR: alGetListeneri FAILED");
         alSetError(AL_INVALID_OPERATION); // not available yet as the device is not setup
 	}
-	
-	return;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3303,8 +3585,10 @@ AL_API void AL_APIENTRY alGetListeneriv( ALenum pname, ALint* values )
 	DebugMessageN1("alGetListeneriv--> attribute = %s", GetALAttributeString(pname));
 #endif
 
+	OALContext* oalContext = NULL;
+
 	try {
-        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+        oalContext = ProtectContextObject(gCurrentContext);
         switch (pname) 
         {
             case AL_POSITION:
@@ -3331,7 +3615,7 @@ AL_API void AL_APIENTRY alGetListeneriv( ALenum pname, ALint* values )
         alSetError(AL_INVALID_OPERATION);   // by default
 	}
 	
-	return;
+	ReleaseContextObject(oalContext);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3341,8 +3625,10 @@ AL_API void AL_APIENTRY alGetListener3i( ALenum pname, ALint *v1, ALint *v2, ALi
 	DebugMessageN1("alGetListener3i--> attribute = %s", GetALAttributeString(pname));
 #endif
 
+	OALContext* oalContext = NULL;
+
 	try {
-        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+        oalContext = ProtectContextObject(gCurrentContext);
         switch(pname) 
         {
             case AL_POSITION:
@@ -3365,7 +3651,7 @@ AL_API void AL_APIENTRY alGetListener3i( ALenum pname, ALint *v1, ALint *v2, ALi
         alSetError(AL_INVALID_OPERATION);   // by default
 	}
 	
-	return;
+	ReleaseContextObject(oalContext);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3376,6 +3662,8 @@ AL_API ALvoid AL_APIENTRY	alDistanceModel (ALenum value)
 #if LOG_API_USAGE
 	DebugMessageN1("alDistanceModel--> model = %s", GetALAttributeString(value));
 #endif
+
+	OALContext* oalContext = NULL;
 
 	try {
         switch (value)
@@ -3388,7 +3676,7 @@ AL_API ALvoid AL_APIENTRY	alDistanceModel (ALenum value)
             case AL_EXPONENT_DISTANCE:
             case AL_EXPONENT_DISTANCE_CLAMPED:
             {
-				OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+				oalContext = ProtectContextObject(gCurrentContext);
 				oalContext->SetDistanceModel(value);
             } 
             break;
@@ -3406,7 +3694,8 @@ AL_API ALvoid AL_APIENTRY	alDistanceModel (ALenum value)
 		DebugMessage("ERROR: alDistanceModel FAILED");
         alSetError(AL_INVALID_OPERATION);   // by default
     }
-    return;
+
+	ReleaseContextObject(oalContext);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3416,11 +3705,13 @@ AL_API ALvoid AL_APIENTRY alDopplerFactor (ALfloat value)
 	DebugMessageN1("alDopplerFactor---> setting = %.f2", value);
 #endif
 
+	OALContext* oalContext = NULL;
+
 	try {
         if (value < 0.0f)
             throw ((OSStatus) AL_INVALID_VALUE);
 
-        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+        oalContext = ProtectContextObject(gCurrentContext);
 		oalContext->SetDopplerFactor(value);
 	}
 	catch (OSStatus		result) {
@@ -3432,7 +3723,7 @@ AL_API ALvoid AL_APIENTRY alDopplerFactor (ALfloat value)
         alSetError(AL_INVALID_OPERATION);   // by default
     }
 	
-	return;
+	ReleaseContextObject(oalContext);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3442,11 +3733,13 @@ AL_API ALvoid AL_APIENTRY alDopplerVelocity (ALfloat value)
 	DebugMessageN1("alDopplerVelocity---> setting = %.f2", value);
 #endif
 
+	OALContext* oalContext = NULL;
+
 	try {
         if (value <= 0.0f)
             throw ((OSStatus) AL_INVALID_VALUE);
 
-        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+        oalContext = ProtectContextObject(gCurrentContext);
 		oalContext->SetDopplerVelocity(value);
 	}
 	catch (OSStatus		result) {
@@ -3458,7 +3751,7 @@ AL_API ALvoid AL_APIENTRY alDopplerVelocity (ALfloat value)
         alSetError(AL_INVALID_OPERATION);   // by default
     }
 	
-	return;
+	ReleaseContextObject(oalContext);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3468,11 +3761,13 @@ AL_API void AL_APIENTRY alSpeedOfSound( ALfloat value )
 	DebugMessageN1("alSpeedOfSound---> setting = %.f2", value);
 #endif
 
+	OALContext* oalContext = NULL;
+
 	try {
 		if (value <= 0.0f)
 			throw ((OSStatus) AL_INVALID_VALUE);
 
-        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+        oalContext = ProtectContextObject(gCurrentContext);
 		oalContext->SetSpeedOfSound(value);
 	}
 	catch (OSStatus		result) {
@@ -3484,7 +3779,7 @@ AL_API void AL_APIENTRY alSpeedOfSound( ALfloat value )
         alSetError(AL_INVALID_OPERATION);   // by default
     }
 	
-	return;
+	ReleaseContextObject(oalContext);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3617,7 +3912,7 @@ AL_API ALenum	AL_APIENTRY alGetEnumValue( const ALchar* ename )
 	if (strcmp("AL_SEC_OFFSET", (const char *)ename) == 0) { return AL_SEC_OFFSET; }
 	if (strcmp("AL_SAMPLE_OFFSET", (const char *)ename) == 0) { return AL_SAMPLE_OFFSET; }
 	if (strcmp("AL_BYTE_OFFSET", (const char *)ename) == 0) { return AL_BYTE_OFFSET; }
-	// ALC_EXT_CAPTURE
+	// ALC_EXT_capture
 	if (strcmp("ALC_CAPTURE_DEVICE_SPECIFIER", (const char *)ename) == 0) { return ALC_CAPTURE_DEVICE_SPECIFIER; }
 	if (strcmp("ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER", (const char *)ename) == 0) { return ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER; }
 	if (strcmp("ALC_CAPTURE_SAMPLES", (const char *)ename) == 0) { return ALC_CAPTURE_SAMPLES; }
@@ -3747,8 +4042,10 @@ AL_API ALfloat AL_APIENTRY alGetFloat (ALenum pname)
 	DebugMessageN1("alGetFloat ---> attribute = %s", GetALAttributeString(pname));
 #endif
 
+	OALContext* oalContext = NULL;
+
 	try {
-        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+        oalContext = ProtectContextObject(gCurrentContext);
         switch (pname)
         {
             case AL_SPEED_OF_SOUND:
@@ -3773,6 +4070,8 @@ AL_API ALfloat AL_APIENTRY alGetFloat (ALenum pname)
         alSetError(AL_INVALID_OPERATION);   // by default
 	}
 	
+	ReleaseContextObject(oalContext);
+	
 	return (returnValue);
 }
 
@@ -3783,8 +4082,10 @@ AL_API ALvoid AL_APIENTRY alGetFloatv (ALenum pname, ALfloat *data)
 	DebugMessageN1("alGetFloatv ---> attribute = %s", GetALAttributeString(pname));
 #endif
 
+	OALContext* oalContext = NULL;
+
 	try {
-        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+        oalContext = ProtectContextObject(gCurrentContext);
         switch(pname)
         {
             case AL_SPEED_OF_SOUND:
@@ -3810,7 +4111,7 @@ AL_API ALvoid AL_APIENTRY alGetFloatv (ALenum pname, ALfloat *data)
         alSetError(AL_INVALID_OPERATION);   // by default
 	}
 	
-    return;
+	ReleaseContextObject(oalContext);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3822,6 +4123,8 @@ AL_API ALdouble AL_APIENTRY alGetDouble (ALenum pname)
 
     double      returnValue = 0.0;
 
+	OALContext* oalContext = NULL;
+	
 	try {
 		switch (pname)
 		{			
@@ -3843,7 +4146,9 @@ AL_API ALdouble AL_APIENTRY alGetDouble (ALenum pname)
         alSetError(AL_INVALID_OPERATION);   // by default
 	}
 	
-	return (returnValue);
+	ReleaseContextObject(oalContext);
+	
+	return returnValue;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3853,6 +4158,8 @@ AL_API ALvoid AL_APIENTRY alGetDoublev (ALenum pname, ALdouble *data)
 	DebugMessageN1("alGetDoublev ---> attribute = %s", GetALCAttributeString(pname));
 #endif
 
+	OALContext* oalContext = NULL;
+	
 	try {
 		switch (pname)
 		{			
@@ -3873,6 +4180,8 @@ AL_API ALvoid AL_APIENTRY alGetDoublev (ALenum pname, ALdouble *data)
  		DebugMessage("ERROR: alGetDoublev FAILED");
         alSetError(AL_INVALID_OPERATION);   // by default
 	}
+	
+	ReleaseContextObject(oalContext);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3884,29 +4193,30 @@ AL_API ALint AL_APIENTRY alGetInteger (ALenum pname)
 
 	UInt32			returnValue	= 0;
 	OALContext		*oalContext = NULL;
+	OALDevice		*oalDevice = NULL;
 	
 	try {
 		switch (pname)
 		{
             case AL_DISTANCE_MODEL:
-				oalContext = GetContextObjectByToken(gCurrentContext);
+				oalContext = ProtectContextObject(gCurrentContext);
 				returnValue = oalContext->GetDistanceModel();
                 break;
 
 			case ALC_SPATIAL_RENDERING_QUALITY:
-				oalContext = GetContextObjectByToken(gCurrentContext);
+				oalContext = ProtectContextObject(gCurrentContext);
 				returnValue = oalContext->GetRenderQuality();
 				break;
 
 			case ALC_RENDER_CHANNEL_COUNT:
 			{
-				OALDevice* oalDevice = GetDeviceObjectByToken (gCurrentDevice);
+				oalDevice = ProtectDeviceObject (gCurrentDevice);
 				returnValue = oalDevice->GetRenderChannelSetting();
 			}
 				break;
                 
             case ALC_MIXER_MAXIMUM_BUSSES:
-				oalContext = GetContextObjectByToken(gCurrentContext);
+				oalContext = ProtectContextObject(gCurrentContext);
 				if (oalContext)
 					returnValue = oalContext->GetBusCount();
 				else
@@ -3925,6 +4235,9 @@ AL_API ALint AL_APIENTRY alGetInteger (ALenum pname)
  		DebugMessage("ERROR: alGetInteger FAILED");
 	}
 	
+	ReleaseContextObject(oalContext);
+	ReleaseDeviceObject(oalDevice);
+	
 	return (returnValue);
 }
 
@@ -3935,29 +4248,32 @@ AL_API ALvoid AL_APIENTRY alGetIntegerv (ALenum pname, ALint *data)
 	DebugMessageN1("alGetIntegerv ---> attribute = 0x%X", pname);
 #endif
 
+	OALContext* oalContext	= NULL;
+	OALDevice*	oalDevice	= NULL;
+		
 	try {
-		OALContext		*oalContext = NULL;
+		oalContext = NULL;
         switch (pname)
         {
             case AL_DISTANCE_MODEL:
-				oalContext = GetContextObjectByToken(gCurrentContext);
+				oalContext = ProtectContextObject(gCurrentContext);
 				*data = oalContext->GetDistanceModel();
                 break;
                 
 			case ALC_SPATIAL_RENDERING_QUALITY:
-				oalContext = GetContextObjectByToken(gCurrentContext);
+				oalContext = ProtectContextObject(gCurrentContext);
 				*data = oalContext->GetRenderQuality();
 				break;
 
 			case ALC_RENDER_CHANNEL_COUNT:
 			{
-				OALDevice* oalDevice = GetDeviceObjectByToken (gCurrentDevice);
+				oalDevice = ProtectDeviceObject (gCurrentDevice);
 				*data = oalDevice->GetRenderChannelSetting();
 			}
 				break;
                 
             case ALC_MIXER_MAXIMUM_BUSSES:
-				oalContext = GetContextObjectByToken(gCurrentContext);
+				oalContext = ProtectContextObject(gCurrentContext);
 				if (oalContext)
 					*data = oalContext->GetBusCount();
 				else
@@ -3978,7 +4294,8 @@ AL_API ALvoid AL_APIENTRY alGetIntegerv (ALenum pname, ALint *data)
         alSetError(AL_INVALID_OPERATION);
 	}
 	
-	return;
+	ReleaseContextObject(oalContext);
+	ReleaseDeviceObject(oalDevice);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4144,6 +4461,7 @@ AL_API ALvoid AL_APIENTRY alDisable (ALenum capability)
 #if LOG_API_USAGE
 	DebugMessageN1("alDisable--> capability = 0x%X", capability);
 #endif
+	
 	switch (capability)
 	{
 		case ALC_MAC_OSX_CONVERT_DATA_UPON_LOADING:
@@ -4161,6 +4479,7 @@ AL_API ALvoid AL_APIENTRY alEnable (ALenum capability)
 #if LOG_API_USAGE
 	DebugMessageN1("alEnable--> capability = 0x%X", capability);
 #endif
+	
 	switch(capability)
 	{
 		case ALC_MAC_OSX_CONVERT_DATA_UPON_LOADING:
@@ -4198,7 +4517,6 @@ ALC_API ALvoid alcMacOSXRenderingQuality (const ALint value)
 #if LOG_API_USAGE
 	DebugMessageN1("alcOSXRenderingQuality--> value = %ld", (long int) value);
 #endif
-
 	alSetInteger(ALC_SPATIAL_RENDERING_QUALITY, value);
 }
 
@@ -4272,9 +4590,11 @@ AL_API ALvoid	AL_APIENTRY	alBufferDataStatic (const ALint bid, ALenum format, AL
 	DebugMessageN4("alBufferDataStatic-->  buffer %ld : %s : %ld bytes : %ldHz", (long int) bid, GetFormatString(format), (long int) size, (long int) freq);
 #endif
 
+	OALBuffer *oalBuffer = NULL;
+	
 	try {
-			OALBuffer	*oalBuffer = GetBufferObjectFromToken(bid);
-			oalBuffer->AddAudioDataStatic((char*)data, size, format, freq);
+		oalBuffer = ProtectBufferObject(bid);
+		oalBuffer->AddAudioDataStatic((char*)data, size, format, freq);
     }
     catch (OSStatus     result) {
 		DebugMessageN5("ERROR: alBufferDataStatic FAILED: buffer %ld : %s : %ld bytes : %ldHz error = %s", (long int) bid, GetFormatString(format), (long int) size, (long int) freq,  alGetString(result));
@@ -4285,7 +4605,7 @@ AL_API ALvoid	AL_APIENTRY	alBufferDataStatic (const ALint bid, ALenum format, AL
         alSetError(AL_INVALID_OPERATION);
 	}
 	
-	return;
+	ReleaseBufferObject(oalBuffer);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4303,9 +4623,13 @@ ALC_API ALenum  alcASAGetSource(const ALuint property, ALuint sid, ALvoid *data,
 
 	if (Get3DMixerVersion() < k3DMixerVersion_2_2)
 		return  AL_INVALID_OPERATION;
-
+	
+	ALCenum err = ALC_NO_ERROR;
+	OALSource		*oalSource = NULL;
+			
 	try {
-		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+		oalSource = ProtectSourceObjectInCurrentContext(sid);
+
         switch (property) 
         {
             case ALC_ASA_REVERB_SEND_LEVEL:
@@ -4384,20 +4708,21 @@ ALC_API ALenum  alcASAGetSource(const ALuint property, ALuint sid, ALvoid *data,
                 break;				
 
             default:
-				return AL_INVALID_NAME;
+				err = AL_INVALID_NAME;
                 break;
         }
 	}
 	catch (OSStatus     result) {
 		DebugMessageN3("ERROR ASAGetSource FAILED--> source %ld : property %s : error = %s", (long int) sid, GetALCAttributeString(property), alGetString(result));
-		return (result);
+		err = result;
 	}
     catch (...) {
 		DebugMessageN3("ERROR ASAGetSource FAILED--> source %ld : property %s : error = %s", (long int) sid, GetALCAttributeString(property), alGetString(-1));
-		return AL_INVALID_OPERATION;
+		err = AL_INVALID_OPERATION;
 	}
 	
-	return AL_NO_ERROR;
+	ReleaseSourceObject(oalSource);
+	return err;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4409,9 +4734,13 @@ ALC_API ALenum  alcASASetSource(const ALuint property, ALuint sid, ALvoid *data,
 
 	if (Get3DMixerVersion() < k3DMixerVersion_2_2)
 		return  AL_INVALID_OPERATION;
-
+	
+	ALCenum err = ALC_NO_ERROR;
+	OALSource		*oalSource = NULL;
+		
 	try {
-		OALSource		*oalSource = GetSourceObjectFromCurrentContext(sid);
+		oalSource = ProtectSourceObjectInCurrentContext(sid);
+
 		FSRef nuRef;
         switch (property) 
         {
@@ -4493,20 +4822,22 @@ ALC_API ALenum  alcASASetSource(const ALuint property, ALuint sid, ALvoid *data,
 				oalSource->SetDistortionPreset(&nuRef);
                 break;					
             default:
-				return AL_INVALID_NAME;
+				err = AL_INVALID_NAME;
                 break;
         }
 	}
 	catch (OSStatus     result) {
 		DebugMessageN3("ERROR ASASetSource FAILED--> source %ld : property %s : error = %s", (long int) sid, GetALCAttributeString(property), alGetString(result));
-		return (result);
+		err = result;
 	}
     catch (...) {
 		DebugMessageN3("ERROR ASASetSource FAILED--> source %ld : property %s : error = %s", (long int) sid, GetALCAttributeString(property), alGetString(-1));
-		return AL_INVALID_OPERATION;
-	}
-	
-	return AL_NO_ERROR;
+		err = AL_INVALID_OPERATION;
+	}	
+		
+	ReleaseSourceObject(oalSource);
+
+	return err;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4518,9 +4849,13 @@ ALC_API ALenum  alcASAGetListener(const ALuint property, ALvoid *data, ALuint* d
 
 	if (Get3DMixerVersion() < k3DMixerVersion_2_2)
 		return  AL_INVALID_OPERATION;
-
+	
+	ALCenum err = ALC_NO_ERROR;
+	
+	OALContext* oalContext = NULL;
+	
 	try {
-        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+        oalContext = ProtectContextObject(gCurrentContext);
         switch (property) 
         {
 			case ALC_ASA_REVERB_ON:
@@ -4572,20 +4907,22 @@ ALC_API ALenum  alcASAGetListener(const ALuint property, ALvoid *data, ALuint* d
 				break;
 			
 			default:
-				return AL_INVALID_NAME;
+				err = AL_INVALID_NAME;
                 break;
         }
 	}
 	catch (OSStatus     result) {
 		DebugMessageN2("ERROR ASAGetListener FAILED--> property %s : error = %s", GetALCAttributeString(property), alGetString(result));
-		return (result);
+		err = result;
 	}
     catch (...) {
 		DebugMessageN2("ERROR ASAGetListener FAILED--> property %s : error = %s", GetALCAttributeString(property), alGetString(-1));
-        return AL_INVALID_OPERATION;
+        err = AL_INVALID_OPERATION;
 	}
 	
-	return AL_NO_ERROR;
+	ReleaseContextObject(oalContext);
+	
+	return err;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4600,27 +4937,31 @@ ALC_API ALenum  alcASASetListener(const ALuint property, ALvoid *data, ALuint da
 		
 	if (Get3DMixerVersion() < k3DMixerVersion_2_2)
 		return  AL_INVALID_OPERATION;
-
+	
+	ALCenum err = ALC_NO_ERROR;
+	
+	OALContext* oalContext = NULL;
+	
 	try {
-        OALContext		*oalContext = GetContextObjectByToken(gCurrentContext);
+        oalContext = ProtectContextObject(gCurrentContext);
         switch (property) 
         {
             case ALC_ASA_REVERB_ON:
 				if (dataSize < sizeof(UInt32))
-					throw AL_INVALID_OPERATION;
+					throw ((OSStatus) AL_INVALID_OPERATION);
                 oalContext->SetReverbState(*(UInt32*)data);
                 break;
 
             case ALC_ASA_REVERB_ROOM_TYPE:
 				if (dataSize < sizeof(ALint))
-					throw AL_INVALID_OPERATION;
+					throw ((OSStatus) AL_INVALID_OPERATION);
                 oalContext->SetReverbRoomType(*(ALint *)data);
                 break;
 
             case ALC_ASA_REVERB_GLOBAL_LEVEL:
 			{
 				if (dataSize < sizeof(ALfloat))
-					throw AL_INVALID_OPERATION;
+					throw ((OSStatus) AL_INVALID_OPERATION);
 			
 				Float32		level = *(ALfloat *) data;
                 oalContext->SetReverbLevel(level);
@@ -4629,14 +4970,12 @@ ALC_API ALenum  alcASASetListener(const ALuint property, ALvoid *data, ALuint da
 
             case ALC_ASA_REVERB_PRESET:
 			{
-				if (dataSize == 0)
-					throw AL_INVALID_OPERATION;
-				if (data == NULL)
-					throw AL_INVALID_OPERATION;
+				if ((dataSize == 0) || (data == NULL))
+					throw ((OSStatus) AL_INVALID_OPERATION);
 				
 				FSRef	nuRef;
 				if (FSPathMakeRef((UInt8 *) data , &nuRef, NULL))
-					throw AL_INVALID_OPERATION;
+					throw ((OSStatus) AL_INVALID_OPERATION);
 						
 				oalContext->SetReverbPreset(&nuRef);
 			}
@@ -4654,7 +4993,7 @@ ALC_API ALenum  alcASASetListener(const ALuint property, ALvoid *data, ALuint da
 				// check range of -18.0 - 18.0 or pin it anyway
 				Float32		gain = *(ALfloat *) data;	
 				if ((gain < -18.0) || (gain > 18.0))
-					return AL_INVALID_VALUE;
+					throw ((OSStatus) AL_INVALID_VALUE);
 				oalContext->SetReverbEQGain(gain);
 			}
 				break;
@@ -4664,7 +5003,7 @@ ALC_API ALenum  alcASASetListener(const ALuint property, ALvoid *data, ALuint da
 				// check range of 0.5 - 4.0 or pin it anyway
 				Float32		bandwidth = *(ALfloat *) data;	
 				if ((bandwidth < 0.5) || (bandwidth > 4.0))
-					return AL_INVALID_VALUE;
+					throw ((OSStatus) AL_INVALID_VALUE);
 				oalContext->SetReverbEQBandwidth(bandwidth);
 			}
 				break;
@@ -4674,26 +5013,28 @@ ALC_API ALenum  alcASASetListener(const ALuint property, ALvoid *data, ALuint da
 				// check range of 10.0 - 20000.0 or pin it anyway
 				Float32		frequency = *(ALfloat *) data;	
 				if ((frequency < 10.0) || (frequency > 20000.0))
-					return AL_INVALID_VALUE;
+					throw ((OSStatus) AL_INVALID_VALUE);
 				oalContext->SetReverbEQFrequency(frequency);
 			}
 				break;
 			
             default:
-				return AL_INVALID_NAME;
+				err = AL_INVALID_NAME;
                 break;
         }
 	}
 	catch (OSStatus     result) {
 		DebugMessageN2("ERROR ASAGetListener FAILED--> property %s : error = %s", GetALCAttributeString(property), alGetString(result));
-		return (result);
+		err = result;
 	}
     catch (...) {
 		DebugMessageN2("ERROR ASAGetListener FAILED--> property %s : error = %s", GetALCAttributeString(property), alGetString(-1));
-        return AL_INVALID_OPERATION;
+        err = AL_INVALID_OPERATION;
 	}
 	
-	return AL_NO_ERROR;
+	ReleaseContextObject(oalContext);
+	
+	return err;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4716,35 +5057,44 @@ AL_API ALvoid AL_APIENTRY alSetInteger (ALenum pname, const ALint value)
 #if LOG_API_USAGE
 	DebugMessage("***** alSetIntegeri");
 #endif
+
+	OALContext* oalContext	= NULL;
+	
 	try {
 		switch(pname)
 		{			
 			case ALC_SPATIAL_RENDERING_QUALITY:
 				if (IsValidRenderQuality ((UInt32) value))
 				{
-					OALContext		*oalContext = gOALContextMap->Get(gCurrentContext);
-					if (oalContext)
-						oalContext->SetRenderQuality ((UInt32) value);
+        			oalContext = ProtectContextObject(gCurrentContext);
+					oalContext->SetRenderQuality ((UInt32) value);
 				}
 				break;
 
 			case ALC_RENDER_CHANNEL_COUNT:
 			{
 				if (value != gRenderChannelSetting)
-				{				
+				{
+					if (gOALDeviceMap == NULL)
+						throw ((OSStatus) AL_INVALID_OPERATION);
+
 					// it's a new setting, so make sure all open devices now use it
 					// if there are no open devices, then all subsequent device creations will use this setting to start with
 					uintptr_t	token;
 					OALDevice	*oalDevice = NULL;
 					gRenderChannelSetting = (UInt32) value;
+					
+					CAGuard::Locker locked(*gDeviceMapLock);
+
 					for (UInt32 i = 0; i < gOALDeviceMap->Size(); i++)
 					{
 						oalDevice = gOALDeviceMap->GetDeviceByIndex(i, token);
-						if (oalDevice)
+						// this device may already be using this setting
+						if ((ALint) oalDevice->GetRenderChannelSetting() != gRenderChannelSetting)
 						{
-							// this device may already be using this setting
-							if ((ALint) oalDevice->GetRenderChannelSetting() != gRenderChannelSetting)
-								oalDevice->SetRenderChannelSetting (gRenderChannelSetting); // SetRenderChannelSetting tells the library to walk the context list and adjust all context's for this device
+							oalDevice->SetInUseFlag();
+							oalDevice->SetRenderChannelSetting (gRenderChannelSetting); // SetRenderChannelSetting tells the library to walk the context list and adjust all context's for this device							
+							oalDevice->ClearInUseFlag();
 						}
 					}
 				}
@@ -4769,7 +5119,7 @@ AL_API ALvoid AL_APIENTRY alSetInteger (ALenum pname, const ALint value)
 		alSetError(AL_INVALID_OPERATION); 
 	}
 	
-	return;
+	ReleaseContextObject(oalContext);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4780,6 +5130,7 @@ AL_API ALvoid AL_APIENTRY alSetDouble (ALenum pname, const ALdouble value)
 #if LOG_API_USAGE
 	DebugMessage("***** alSetDouble");
 #endif
+	
 	try {
 		switch (pname)
 		{			
@@ -4800,8 +5151,6 @@ AL_API ALvoid AL_APIENTRY alSetDouble (ALenum pname, const ALdouble value)
  		DebugMessage("ERROR: alSetDouble FAILED");
 		alSetError(AL_INVALID_OPERATION); 
 	}
-	
-	return;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4905,7 +5254,6 @@ void	GetDefaultDeviceNameList(ALCchar*		outDeviceNameList, bool	isInput)
 		outDeviceNameList[0] = '\0'; // failure case, make it a zero length string
 		outDeviceNameList[1] = '\0'; // failure case, make it a zero length string
 	}
-	return;
 }
 
 void	GetDeviceList(ALCchar*		outDeviceName, bool	inMakeInputDeviceList)

@@ -1,7 +1,7 @@
 /**********************************************************************************************************************************
 *
 *   OpenAL cross platform audio library
-*   Copyright (c) 2004, Apple Computer, Inc. All rights reserved.
+*	Copyright (c) 2004, Apple Computer, Inc., Copyright (c) 2009, Apple Inc. All rights reserved.
 *
 *   Redistribution and use in source and binary forms, with or without modification, are permitted provided 
 *   that the following conditions are met:
@@ -9,7 +9,7 @@
 *   1.  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer. 
 *   2.  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following 
 *       disclaimer in the documentation and/or other materials provided with the distribution. 
-*   3.  Neither the name of Apple Computer, Inc. ("Apple") nor the names of its contributors may be used to endorse or promote 
+*   3.  Neither the name of Apple Inc. ("Apple") nor the names of its contributors may be used to endorse or promote 
 *       products derived from this software without specific prior written permission. 
 *
 *   THIS SOFTWARE IS PROVIDED BY APPLE AND ITS CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, 
@@ -42,40 +42,6 @@
 #define		CALCULATE_POSITION	1	// this should be true except for testing
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// These are macros for locking around play/stop code:
-#define TRY_PLAY_MUTEX										\
-	bool wasLocked = false;									\
-	try 													\
-	{														\
-		if (CallingInRenderThread()) {						\
-			if (mPlayGuard.Try(wasLocked) == false)	{		\
-				goto home;									\
-            }												\
-		} else {											\
-			wasLocked = mPlayGuard.Lock();					\
-		}
-		
-
-#define UNLOCK_PLAY_MUTEX									\
-	home:;													\
-        if (wasLocked)										\
-			mPlayGuard.Unlock();							\
-															\
-	} catch (OSStatus stat) {								\
-        if (wasLocked)										\
-			mPlayGuard.Unlock();							\
-        throw stat;                                         \
-	} catch (...) {											\
-        if (wasLocked)										\
-			mPlayGuard.Unlock();							\
-        throw -1;                                         	\
-	}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// TEMPORARY
-// This build flag should be on if you do not have a copy of AudioUnitProperties.h that
-// defines the struct MixerDistanceParams and the constant kAudioUnitProperty_3DMixerDistanceParams
-
 #define MIXER_PARAMS_UNDEFINED 0
 
 #if MIXER_PARAMS_UNDEFINED
@@ -140,10 +106,12 @@ OALSource::OALSource (const ALuint 	 	inSelfToken, OALContext	*inOwningContext)
         mResetPitch(true),
 		mBufferQueueActive(NULL),
 		mBufferQueueInactive(NULL),
+		mBuffersQueuedForClear(0),
 		mCurrentBufferIndex(0),
 		mQueueIsProcessed(true),
-		mRenderThreadID (0),
-		mPlayGuard ("OALAudioPlayer::Guard"),
+		mEditFlag(0),
+		mInUseFlag(0),
+		mSourceLock("OAL:SourceLock"),
 		mCurrentPlayBus (kSourceNeedsBus),
 		mACMap(NULL),
 		mOutputSilence(false),
@@ -243,6 +211,12 @@ OALSource::~OALSource()
     // empty the two queues
 	FlushBufferQueue();
 	
+	// empty the message queue
+	ClearMessageQueue();
+	
+	if (mTempSourceStorage)
+		free(mTempSourceStorage);
+		
     delete (mBufferQueueInactive);
     delete (mBufferQueueActive);
     	
@@ -255,6 +229,7 @@ OALSource::~OALSource()
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// this is only callled by the context when removing a source, which is thread protected already
 void	OALSource::SetUpDeconstruction()
 {
 #if LOG_VERBOSE
@@ -262,8 +237,11 @@ void	OALSource::SetUpDeconstruction()
 #endif
 
 	try {
-        
-		TRY_PLAY_MUTEX
+		// wait if in render, then prevent rendering til completion
+		OALRenderLocker::RenderLocker locked(mRenderLocker, InRenderThread());
+
+		// don't allow synchronous source manipulation
+		CAGuard::Locker sourceLock(mSourceLock);
 
 		switch (mState)
 		{
@@ -271,8 +249,7 @@ void	OALSource::SetUpDeconstruction()
 			case AL_PLAYING:
 			case kTransitionState:
 			{
-				PlaybackMessage*		pbm = new PlaybackMessage((UInt32) kMQ_DeconstructionStop, NULL, 0);
-				mMessageQueue.push_atomic(pbm);
+				AddPlaybackMessage(kMQ_DeconstructionStop, NULL, 0);
 			}
 				break;
 			
@@ -283,11 +260,9 @@ void	OALSource::SetUpDeconstruction()
 
 		mState = kTransitionState;
 		mTransitioningToFlushQ = true;
-
-		UNLOCK_PLAY_MUTEX	
 	}
 	catch (OSStatus	result) {
-		DebugMessageN2("SetUpDeconstruction FAILED source = %ld, err = %ld\n", (long int) mSelfToken, result);
+		DebugMessageN2("SetUpDeconstruction FAILED source = %d, err = %d\n", (int) mSelfToken, (int)result);
 		throw (result);
 	}
 }
@@ -312,6 +287,9 @@ void	OALSource::SetPitch (float	inPitch)
 	if (inPitch < 0.0f)
 		throw ((OSStatus) AL_INVALID_VALUE);
 
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
+
     if ((inPitch == mPitch) && (mResetPitch == false))
 		return;			// nothing to do
 	
@@ -334,7 +312,7 @@ void	OALSource::SetPitch (float	inPitch)
 			
 			OSStatus    result = AudioUnitSetParameter (mOwningContext->GetMixerUnit(), k3DMixerParam_PlaybackRate, kAudioUnitScope_Input, mCurrentPlayBus, newPitch, 0);
             if (result != noErr)
-                DebugMessageN3("OALSource::SetPitch: k3DMixerParam_PlaybackRate called - OALSource = %ld mPitch = %f2 result = %ld\n", (long int) mSelfToken, mPitch, result );
+                DebugMessageN3("OALSource::SetPitch: k3DMixerParam_PlaybackRate called - OALSource = %ld mPitch = %f2 result = %d\n", (long int) mSelfToken, mPitch, (int)result );
         }
 
 		mResetPitch = false;
@@ -350,6 +328,9 @@ void	OALSource::SetGain (float	inGain)
         DebugMessageN2("OALSource::SetGain - OALSource:inGain = %ld:%f\n", (long int) mSelfToken, inGain);
 #endif
 
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
+
 	if (mGain != inGain)
 	{
 		mGain = inGain;
@@ -363,8 +344,11 @@ void	OALSource::SetMinGain (Float32	inMinGain)
 #if LOG_VERBOSE
 	DebugMessageN2("OALSource::SetMinGain - OALSource:inMinGain = %ld:%f\n", (long int) mSelfToken, inMinGain);
 #endif
-	if ((inMinGain < 0.0f) && (inMinGain > 1.0f))
+	if ((inMinGain < 0.0f) || (inMinGain > 1.0f))
 		throw ((OSStatus) AL_INVALID_VALUE);
+
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
 
 	if (mMinGain != inMinGain)
 	{
@@ -380,8 +364,11 @@ void	OALSource::SetMaxGain (Float32	inMaxGain)
 	DebugMessageN2("OALSource::SetMaxGain - OALSource:inMaxGain = %ld:%f\n", (long int) mSelfToken, inMaxGain);
 #endif
 
-	if ((inMaxGain < 0.0f) && (inMaxGain > 1.0f))
+	if ((inMaxGain < 0.0f) || (inMaxGain > 1.0f))
 		throw ((OSStatus) AL_INVALID_VALUE);
+
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
 
 	if (mMaxGain != inMaxGain)
 	{
@@ -407,6 +394,10 @@ Float32		OALSource::GetMaxAttenuation(Float32	inRefDistance, Float32 inMaxDistan
 OSStatus	OALSource::SetDistanceParams(bool	inChangeReferenceDistance, bool inChangeMaxDistance)
 {
 	OSStatus	result = noErr;
+
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
+
 	if (Get3DMixerVersion() < k3DMixerVersion_2_0)	
 	{
 		// the pre-2.0 3DMixer does not accept kAudioUnitProperty_3DMixerDistanceParams, it has do some extra work and use the DistanceAtten property instead
@@ -459,6 +450,9 @@ void	OALSource::SetReferenceDistance (Float32	inReferenceDistance)
 
 	if (inReferenceDistance <= 0.0f)
 		throw ((OSStatus) AL_INVALID_VALUE);
+
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
 				
 	if (inReferenceDistance == mReferenceDistance)
 		return; // nothing to do
@@ -480,6 +474,9 @@ void	OALSource::SetMaxDistance (Float32	inMaxDistance)
 #if LOG_VERBOSE
 	DebugMessageN2("OALSource::SetMaxDistance - OALSource:inMaxDistance = %ld:%f2\n", (long int) mSelfToken, inMaxDistance);
 #endif
+
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
 
 	if (inMaxDistance == mMaxDistance)
 		return; // nothing to do
@@ -505,6 +502,9 @@ void	OALSource::SetRollOffFactor (Float32	inRollOffFactor)
 	if (inRollOffFactor < 0.0f) 
 		throw ((OSStatus) AL_INVALID_VALUE);
 
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
+
 	if (inRollOffFactor == mRollOffFactor)
 		return; // nothing to do
 
@@ -526,6 +526,9 @@ void	OALSource::SetLooping (UInt32	inLooping)
 	DebugMessageN2("OALSource::SetLooping called - OALSource:inLooping = %ld:%ld\n", (long int) mSelfToken, inLooping);
 #endif
 
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
+
     mLooping = inLooping;
 }
 
@@ -538,6 +541,9 @@ void	OALSource::SetPosition (Float32 inX, Float32 inY, Float32 inZ)
 
 	if (isnan(inX) || isnan(inY) || isnan(inZ))
 		throw ((OSStatus) AL_INVALID_VALUE);
+
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
 
 	mPosition[0] = inX;
 	mPosition[1] = inY;
@@ -553,6 +559,9 @@ void	OALSource::SetVelocity (Float32 inX, Float32 inY, Float32 inZ)
 	DebugMessageN1("OALSource::SetVelocity called - OALSource = %ld", (long int) mSelfToken);
 #endif
 
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
+
 	mVelocity[0] = inX;
 	mVelocity[1] = inY;
 	mVelocity[2] = inZ;
@@ -567,6 +576,9 @@ void	OALSource::SetDirection (Float32 inX, Float32 inY, Float32 inZ)
 	DebugMessageN1("OALSource::SetDirection called - OALSource = %ld", (long int) mSelfToken);
 #endif
 
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
+
 	mConeDirection[0] = inX;
 	mConeDirection[1] = inY;
 	mConeDirection[2] = inZ;
@@ -580,10 +592,13 @@ void	OALSource::SetSourceRelative (UInt32	inSourceRelative)
 #if LOG_VERBOSE
 	DebugMessageN2("OALSource::SetSourceRelative called - OALSource:inSourceRelative = %ld:%ld", (long int) mSelfToken, inSourceRelative);
 #endif
-	
+
 	if ((inSourceRelative != AL_FALSE) && (inSourceRelative != AL_TRUE))
 		throw ((OSStatus) AL_INVALID_VALUE);
 
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
+	
 	mSourceRelative = inSourceRelative;
 	mCalculateDistance = true;  // change the source relative next time the PreRender proc or a new Play() is called
 }
@@ -609,6 +624,9 @@ void	OALSource::SetConeInnerAngle (Float32	inConeInnerAngle)
 	DebugMessageN2("OALSource::SetConeInnerAngle called - OALSource:inConeInnerAngle = %ld:%f2\n", (long int) mSelfToken, inConeInnerAngle);
 #endif
 
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
+
     if (mConeInnerAngle != inConeInnerAngle)
 	{
 		mConeInnerAngle = inConeInnerAngle;
@@ -622,6 +640,9 @@ void	OALSource::SetConeOuterAngle (Float32	inConeOuterAngle)
 #if LOG_VERBOSE
 	DebugMessageN2("OALSource::SetConeOuterAngle called - OALSource:inConeOuterAngle = %ld:%f2\n", (long int) mSelfToken, inConeOuterAngle);
 #endif
+
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
 
     if (mConeOuterAngle != inConeOuterAngle)
 	{
@@ -638,6 +659,9 @@ void	OALSource::SetConeOuterGain (Float32	inConeOuterGain)
 #endif
 	if (inConeOuterGain >= 0.0 && inConeOuterGain <= 1.0)
 	{
+		// don't allow synchronous source manipulation
+		CAGuard::Locker sourceLock(mSourceLock);
+
 		if (mConeOuterGain != inConeOuterGain)
 		{
 			mConeOuterGain = inConeOuterGain;
@@ -792,46 +816,35 @@ ALuint	OALSource::GetToken()
 // BUFFER QUEUE METHODS 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// this should only be called when the source is render and edit protected
 UInt32	OALSource::GetQLength()
 {
-    // as far as the user is concerned, the Q length is the size of the inactive & active lists
-    UInt32  returnValue = 0;
-    
-	TRY_PLAY_MUTEX
-
-		returnValue = mBufferQueueInactive->Size() + mBufferQueueActive->Size();
-
-	UNLOCK_PLAY_MUTEX
-
-	return (returnValue);
+    // as far as the user is concerned, the Q length is the size of the inactive & active lists, 
+	// minus the inactive buffers that are pending removal
+	return mBufferQueueInactive->Size() + mBufferQueueActive->Size() - mBuffersQueuedForClear;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 UInt32	OALSource::GetBuffersProcessed()
 {
-    UInt32  returnValue = 0;
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
+
 	if (mState == AL_INITIAL)
-        return(0);
-	else if (mState == kTransitionState)
-		return(GetQLength());	// transistioning to Stop is the same as being in a stopped state for this call, but the queues may not be joined yet
-    else
-    {
-		TRY_PLAY_MUTEX
+        return 0;
 		
-		if (mQueueIsProcessed)
-		{
-			// fixes 4085888
-			// When the Q ran dry it might not have been possible to modify the Buffer Q Lists
-			// This means that there could be one left over buffer in the active Q list which should not be there
-			ClearActiveQueue();
-		}
+	if (mState == kTransitionState)
+		return GetQLength();	// transistioning to Stop is the same as being in a stopped state for this call, but the queues may not be joined yet
+   
+	if (mQueueIsProcessed)
+	{
+		// fixes 4085888
+		// When the Q ran dry it might not have been possible to modify the Buffer Q Lists
+		// This means that there could be one left over buffer in the active Q list which should not be there
+		ClearActiveQueue();
+	}
 		
-        returnValue = mBufferQueueInactive->Size();
-		
-		UNLOCK_PLAY_MUTEX
-    }
-    
-	return (returnValue);
+	return mBufferQueueInactive->Size();
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -840,7 +853,11 @@ void	OALSource::SetBuffer (ALuint inBufferToken, OALBuffer	*inBuffer)
 	if (inBuffer == NULL)
 		return;	// invalid case
     
-	TRY_PLAY_MUTEX
+	// wait if in render, then prevent rendering til completion
+	OALRenderLocker::RenderLocker locked(mRenderLocker, InRenderThread());
+
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
 
 	switch (mState)
 	{
@@ -866,8 +883,7 @@ void	OALSource::SetBuffer (ALuint inBufferToken, OALBuffer	*inBuffer)
 #if	LOG_MESSAGE_QUEUE					
 			DebugMessageN1("OALSource::SetBuffer - kMQ_SetBuffer added to MQ - OALSource = %ld", (long int) mSelfToken);
 #endif
-			PlaybackMessage*		pbm = new PlaybackMessage((UInt32) kMQ_SetBuffer, inBuffer, 0);
-			mMessageQueue.push_atomic(pbm);			
+			AddPlaybackMessage(kMQ_SetBuffer, inBuffer, 0);
 			break;
 		}
 		
@@ -889,17 +905,17 @@ void	OALSource::SetBuffer (ALuint inBufferToken, OALBuffer	*inBuffer)
 				mSourceType = AL_UNDETERMINED;
 		}
 	}
-
-	UNLOCK_PLAY_MUTEX
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// this should only be called when the source is render and edit protected
 void	OALSource::FlushBufferQueue()
 {
 	UInt32	count = mBufferQueueInactive->Size();
 	for (UInt32	i = 0; i < count; i++)
 	{	
 		mBufferQueueInactive->RemoveQueueEntryByIndex(this, 0, true);
+		mBuffersQueuedForClear = 0;
 	}
    
 	count = mBufferQueueActive->Size();
@@ -915,6 +931,12 @@ ALuint	OALSource::GetBuffer()
 #if LOG_VERBOSE
 	DebugMessageN2("OALSource::GetBuffer called - OALSource:currentBuffer = %ld:%ld\n", mSelfToken, mBufferQueueActive->GetBufferTokenByIndex(mCurrentBufferIndex));
 #endif
+	// wait if in render, then prevent rendering til completion
+	OALRenderLocker::RenderLocker locked(mRenderLocker, InRenderThread());
+
+	// need to make sure no other thread touches the active queue
+	CAGuard::Locker sourceLock(mSourceLock);
+
 	// for now, return the currently playing buffer in an active source, or the 1st buffer of the Q in an inactive source
 	return (mBufferQueueActive->GetBufferTokenByIndex(mCurrentBufferIndex));
 }
@@ -923,28 +945,29 @@ ALuint	OALSource::GetBuffer()
 // public method
 void	OALSource::AddToQueue(ALuint	inBufferToken, OALBuffer	*inBuffer)
 {
-	TRY_PLAY_MUTEX
+	// wait if in render, then prevent rendering til completion
+	OALRenderLocker::RenderLocker locked(mRenderLocker, InRenderThread());
 
-		if (mSourceType == AL_STATIC)
-			throw AL_INVALID_OPERATION;
-			
-		if (mSourceType == AL_UNDETERMINED)
-			mSourceType = AL_STREAMING;
-			
-		AppendBufferToQueue(inBufferToken, inBuffer);
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
 
-	UNLOCK_PLAY_MUTEX
+	if (mSourceType == AL_STATIC)
+		throw AL_INVALID_OPERATION;
+			
+	if (mSourceType == AL_UNDETERMINED)
+		mSourceType = AL_STREAMING;
+			
+	AppendBufferToQueue(inBufferToken, inBuffer);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// this should only be called when the source is render and edit protected
 void	OALSource::AppendBufferToQueue(ALuint	inBufferToken, OALBuffer	*inBuffer)
 {
 	OSStatus	result = noErr;	
 #if LOG_BUFFER_QUEUEING
 	DebugMessageN2("OALSource::AppendBufferToQueue called (START) - OALSource:inBufferToken = %ld:%ld", (long int)mSelfToken, (long int)inBufferToken);
 #endif
-
-	TRY_PLAY_MUTEX
     
 	try {
 		if (mBufferQueueActive->Empty())
@@ -1017,8 +1040,6 @@ void	OALSource::AppendBufferToQueue(ALuint	inBufferToken, OALBuffer	*inBuffer)
 		throw (result);
 	}
 
-	UNLOCK_PLAY_MUTEX
-
 #if LOG_BUFFER_QUEUEING
 	DebugMessageN2("OALSource::AppendBufferToQueue called (END) - OALSource:QLength = %ld:%ld", (long int)mSelfToken, mBufferQueueInactive->Size() + mBufferQueueActive->Size());
 #endif
@@ -1039,11 +1060,18 @@ void	OALSource::RemoveBuffersFromQueue(UInt32	inCount, ALuint	*outBufferTokens)
 	
 	try {
         
-		TRY_PLAY_MUTEX
+		// wait if in render, then prevent rendering til completion
+		OALRenderLocker::RenderLocker locked(mRenderLocker, InRenderThread());
+
+		// don't allow synchronous source manipulation
+		CAGuard::Locker sourceLock(mSourceLock);
 
 		if (inCount > GetQLength())
 			throw ((OSStatus) AL_INVALID_OPERATION);			
 
+		if (outBufferTokens == NULL)
+			throw ((OSStatus) AL_INVALID_OPERATION);			
+		
 		// 1) determine if it is a legal request
 		// 2) determine if buffers can be removed now or at PostRender time
 		// 3) get the buffer names that will be removed and if safe, remove them now
@@ -1060,7 +1088,7 @@ void	OALSource::RemoveBuffersFromQueue(UInt32	inCount, ALuint	*outBufferTokens)
 			ClearActiveQueue();
 			if (inCount > mBufferQueueInactive->Size())
 			{
-				DebugMessageN3("	OALSource::RemoveBuffersFromQueue mState == AL_STOPPED - OALSource:GetQLength():mBufferQueueInactive->Size() = %ld:%ld:%ld", (long int) mSelfToken, GetQLength(), mBufferQueueInactive->Size());
+				DebugMessageN3("	OALSource::RemoveBuffersFromQueue mState == AL_STOPPED - OALSource:GetQLength():mBufferQueueInactive->Size() = %d:%d:%d", (int) mSelfToken, (int)GetQLength(), (int)mBufferQueueInactive->Size());
 				throw ((OSStatus) AL_INVALID_OPERATION);	
 			}
 		}
@@ -1073,29 +1101,25 @@ void	OALSource::RemoveBuffersFromQueue(UInt32	inCount, ALuint	*outBufferTokens)
 			DebugMessageN1("	RemoveBuffersFromQueue ADDING : kMQ_ClearBuffersFromQueue - OALSource = %ld", (long int) mSelfToken);
 #endif
 
-			PlaybackMessage*		pbm = new PlaybackMessage((UInt32) kMQ_ClearBuffersFromQueue, NULL, inCount);
-			mMessageQueue.push_atomic(pbm);
+			AddPlaybackMessage(kMQ_ClearBuffersFromQueue, NULL, inCount);
 		}
 		
-		for (UInt32	i = 0; i < inCount; i++)
+		for (UInt32	i = mBuffersQueuedForClear; i < mBuffersQueuedForClear+inCount; i++)
 		{	
 			if (mState == kTransitionState)
 			{
 				//DebugMessageN1("	* RemoveBuffersFromQueue kTransitionState - GetQLength() = %ld", (long int) GetQLength());
-				if (outBufferTokens)
+				// we're transitioning, so let the caller know what buffers will be removed, but don't actually do it until the deferred message is acted on
+				// first return the token for the buffers in the inactive queue, then the active queue
+				if (i < mBufferQueueInactive->Size())
 				{
-					// we're transitioning, so let the caller know what buffers will be removed, but don't actually do it until the deferred message is acted on
-					// first return the token for the buffers in the inactive queue, then the active queue
-					if (i < mBufferQueueInactive->Size())
-					{
-						outBufferTokens[i] = mBufferQueueInactive->GetBufferTokenByIndex(i);
-						//DebugMessageN1("	DEFERRED * RemoveBuffersFromQueue kTransitionState - mBufferQueueInactive->GetBufferTokenByIndex(i) = %ld", (long int) outBufferTokens[i]);
-					}
-					else
-					{
-						outBufferTokens[i] = mBufferQueueActive->GetBufferTokenByIndex(i - mBufferQueueInactive->Size());
-						//DebugMessageN1("	DEFERRED * RemoveBuffersFromQueue kTransitionState - mBufferQueueActive->GetBufferTokenByIndex(i) = %ld", (long int) outBufferTokens[i]);
-					}
+					outBufferTokens[i-mBuffersQueuedForClear] = mBufferQueueInactive->GetBufferTokenByIndex(i);
+					//DebugMessageN1("	DEFERRED * RemoveBuffersFromQueue kTransitionState - mBufferQueueInactive->GetBufferTokenByIndex(i) = %ld", (long int) outBufferTokens[i]);
+				}
+				else
+				{
+					outBufferTokens[i-mBuffersQueuedForClear] = mBufferQueueActive->GetBufferTokenByIndex(i - mBufferQueueInactive->Size());
+					//DebugMessageN1("	DEFERRED * RemoveBuffersFromQueue kTransitionState - mBufferQueueActive->GetBufferTokenByIndex(i) = %ld", (long int) outBufferTokens[i]);
 				}
 			}
 			else
@@ -1103,18 +1127,23 @@ void	OALSource::RemoveBuffersFromQueue(UInt32	inCount, ALuint	*outBufferTokens)
 				ALuint	outToken = 0;
 				// it is safe to remove the buffers from the inactive Q
 				outToken = mBufferQueueInactive->RemoveQueueEntryByIndex(this, 0, true);
+				mBuffersQueuedForClear = 0;
 				#if	LOG_MESSAGE_QUEUE					
 					DebugMessageN1("	Just Removed Buffer Id from inactive Q = %ld", (long int) outToken);
 				#endif
-				if (outBufferTokens)
-					outBufferTokens[i] = outToken;
+				outBufferTokens[i] = outToken;
 			}
+		}
+		
+		if (mState == kTransitionState)
+		{
+			// we need to keep track of how many buffers need to be clear but have not yet
+			mBuffersQueuedForClear+= inCount;
 		}
 		
 		if (GetQLength() == 0)
 			mSourceType = AL_UNDETERMINED;	// Q has been cleared and is now available for both static or streaming usage
 
-		UNLOCK_PLAY_MUTEX
 	}
 	catch (OSStatus	 result) {
 		DebugMessageN1("	REMOVE BUFFER FAILED, OALSource = %ld\n", (long int) mSelfToken);
@@ -1139,19 +1168,19 @@ void	OALSource::PostRenderRemoveBuffersFromQueue(UInt32	inBuffersToUnqueue)
 #endif
 	
 	try {
+		ClearActiveQueue();
 
+		if (inBuffersToUnqueue > mBufferQueueInactive->Size())
 		{
-			ClearActiveQueue();
-			if (inBuffersToUnqueue > mBufferQueueInactive->Size())
-			{
-				DebugMessageN3("	OALSource::PostRenderRemoveBuffersFromQueue mState == AL_STOPPED - OALSource:GetQLength():mBufferQueueInactive->Size() = %ld:%ld:%ld", (long int) mSelfToken, GetQLength(), mBufferQueueInactive->Size());
-				throw ((OSStatus) AL_INVALID_OPERATION);	
-			}
+			DebugMessageN3("	OALSource::PostRenderRemoveBuffersFromQueue mState == AL_STOPPED - OALSource:GetQLength():mBufferQueueInactive->Size() = %d:%d:%d", (int) mSelfToken, (int)GetQLength(), (int)mBufferQueueInactive->Size());
+			throw ((OSStatus) AL_INVALID_OPERATION);	
 		}
 		
 		for (UInt32	i = 0; i < inBuffersToUnqueue; i++)
 		{	
-			/*UInt32	bufferToken = */ mBufferQueueInactive->RemoveQueueEntryByIndex(this, 0, true);
+			mBufferQueueInactive->RemoveQueueEntryByIndex(this, 0, true);
+			// we have now cleared all buffers slated for removal, so we can reset the queued for clear index
+			mBuffersQueuedForClear = 0;
 			//DebugMessageN1("***** OALSource::PostRenderRemoveBuffersFromQueue buffer removed = %ld", bufferToken);
 		}
 		
@@ -1210,7 +1239,7 @@ void	OALSource::SetupMixerBus()
 		if (mCurrentPlayBus == kSourceNeedsBus)
 		{		
 			// the bus stream format will get set if necessary while getting the available bus
-			mCurrentPlayBus = (buffer->mBuffer->GetNumberChannels() == 1) ? mOwningContext->GetAvailableMonoBus() : mOwningContext->GetAvailableStereoBus();                
+			mCurrentPlayBus = (buffer->mBuffer->GetNumberChannels() == 1) ? mOwningContext->GetAvailableMonoBus(mSelfToken) : mOwningContext->GetAvailableStereoBus(mSelfToken);                
 			if (mCurrentPlayBus == -1)
 				throw (OSStatus) -1; 
 			
@@ -1286,7 +1315,7 @@ void	OALSource::SetupMixerBus()
 		UpdateBusGain();
 	}
 	catch (OSStatus	 result) {
-		DebugMessageN2("	SetupMixerBus FAILED, OALSource:error = %ld:%ld\n", (long int) mSelfToken, result);
+		DebugMessageN2("	SetupMixerBus FAILED, OALSource:error = %d:%d\n", (int) mSelfToken, (int)result);
 		throw (result);
 	}
 	catch (...) {
@@ -1374,14 +1403,17 @@ bool	OALSource::PrepBufferQueueForPlayback()
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void	OALSource::Play()
-{		
-	if (GetQLength() == 0)
-		return; // nothing to do
-	
+{			
 	try {
-        
-		TRY_PLAY_MUTEX
+		// wait if in render, then prevent rendering til completion
+		OALRenderLocker::RenderLocker locked(mRenderLocker, InRenderThread());
 
+		// don't allow synchronous source manipulation
+		CAGuard::Locker sourceLock(mSourceLock);
+
+		if (GetQLength() == 0)
+			return; // nothing to do
+        
 		switch (mState)
 		{
 			case AL_PLAYING:
@@ -1394,8 +1426,7 @@ void	OALSource::Play()
 #if	LOG_MESSAGE_QUEUE					
 					DebugMessageN1("OALSource::Play (AL_PLAYING state)  - kMQ_Rewind added to MQ - OALSource = %ld", (long int) mSelfToken);
 #endif
-					PlaybackMessage*		pbm = new PlaybackMessage((UInt32) kMQ_Rewind, NULL, 0);
-					mMessageQueue.push_atomic(pbm);
+					AddPlaybackMessage(kMQ_Rewind, NULL, 0);
 			 	}
 				break;
 			
@@ -1416,8 +1447,7 @@ void	OALSource::Play()
 #if	LOG_MESSAGE_QUEUE					
 					DebugMessageN1("OALSource::Play (kTransitionState state)  - kMQ_Play added to MQ - OALSource = %ld", (long int) mSelfToken);
 #endif
-					PlaybackMessage*		pbm = new PlaybackMessage((UInt32) kMQ_Play, NULL, 0);
-					mMessageQueue.push_atomic(pbm);
+					AddPlaybackMessage(kMQ_Play, NULL, 0);
 				}
 				break;
 			
@@ -1504,11 +1534,9 @@ void	OALSource::Play()
 				AddNotifyAndRenderProcs();
 			}
 		}
-
-		UNLOCK_PLAY_MUTEX	
 	}
 	catch (OSStatus	result) {
-		DebugMessageN2("PLAY FAILED source = %ld, err = %ld\n", (long int) mSelfToken, result);
+		DebugMessageN2("PLAY FAILED source = %ld, err = %ld\n", (long int) mSelfToken, (long int)result);
 		throw (result);
 	}
 }
@@ -1520,7 +1548,11 @@ void	OALSource::Rewind()
 	DebugMessageN1("OALSource::Pause called - OALSource = %ld", (long int) mSelfToken);
 #endif
 
-	TRY_PLAY_MUTEX
+	// wait if in render, then prevent rendering til completion
+	OALRenderLocker::RenderLocker locked(mRenderLocker, InRenderThread());
+
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
 
 	switch (mState)
 	{
@@ -1531,8 +1563,7 @@ void	OALSource::Rewind()
 #if	LOG_MESSAGE_QUEUE					
 			DebugMessageN1("Rewind(AL_PLAYING)  ADDING : kMQ_Rewind - OALSource = %ld", (long int) mSelfToken);
 #endif
-			PlaybackMessage*		pbm = new PlaybackMessage((UInt32) kMQ_Rewind, NULL, 0);
-			mMessageQueue.push_atomic(pbm);
+			AddPlaybackMessage(kMQ_Rewind, NULL, 0);
 		}
 		case AL_PAUSED:
 		case AL_STOPPED:
@@ -1542,8 +1573,6 @@ void	OALSource::Rewind()
 		case AL_INITIAL:
 			break;
 	}
-
-	UNLOCK_PLAY_MUTEX
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1553,7 +1582,11 @@ void	OALSource::Pause()
 	DebugMessageN1("OALSource::Pause called - OALSource = %ld", (long int) mSelfToken);
 #endif
 
-	TRY_PLAY_MUTEX
+	// wait if in render, then prevent rendering til completion
+	OALRenderLocker::RenderLocker locked(mRenderLocker, InRenderThread());
+
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
 
 	switch (mState)
 	{
@@ -1564,8 +1597,7 @@ void	OALSource::Pause()
 #if	LOG_MESSAGE_QUEUE					
 				DebugMessageN1("Pause(AL_PLAYING)  ADDING : kMQ_Pause - OALSource = %ld", (long int) mSelfToken);
 #endif
-			PlaybackMessage*		pbm = new PlaybackMessage((UInt32) kMQ_Pause, NULL, 0);
-			mMessageQueue.push_atomic(pbm);
+			AddPlaybackMessage(kMQ_Pause, NULL, 0);
 		}
 		case AL_INITIAL:
 		case AL_STOPPED:
@@ -1577,9 +1609,6 @@ void	OALSource::Pause()
 			// do nothing it's either stopped or initial right now
 			break;
 	}
-
-	UNLOCK_PLAY_MUTEX
-
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1589,7 +1618,11 @@ void	OALSource::Resume()
 	DebugMessageN1("OALSource::Resume called - OALSource = %ld", (long int) mSelfToken);
 #endif
 
-	TRY_PLAY_MUTEX
+	// wait if in render, then prevent rendering til completion
+	OALRenderLocker::RenderLocker locked(mRenderLocker, InRenderThread());
+
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
 
 	switch (mState)
 	{
@@ -1605,9 +1638,6 @@ void	OALSource::Resume()
 			mState = AL_PLAYING;
 			break;
 	}
-
-	UNLOCK_PLAY_MUTEX
-
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1617,7 +1647,11 @@ void	OALSource::Stop()
 	DebugMessageN2("OALSource::Stop called - OALSource = %ld : mState = %ld\n", (long int) mSelfToken, mState);
 #endif
 
-	TRY_PLAY_MUTEX
+	// wait if in render, then prevent rendering til completion
+	OALRenderLocker::RenderLocker locked(mRenderLocker, InRenderThread());
+
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
 
 	switch (mState)
 	{
@@ -1637,8 +1671,7 @@ void	OALSource::Stop()
 			mState = kTransitionState;
 			if (mRampState != kRampingComplete)	
 				mRampState = kRampDown;
-			PlaybackMessage*		pbm = new PlaybackMessage((UInt32) kMQ_Stop, NULL, 0);
-			mMessageQueue.push_atomic(pbm);
+			AddPlaybackMessage(kMQ_Stop, NULL, 0);
 		}
 			break;
 		
@@ -1647,8 +1680,7 @@ void	OALSource::Stop()
 #if	LOG_MESSAGE_QUEUE					
 			DebugMessageN1("OALSource::Stop (kTransitionState state)  ADDING : kMQ_Stop - OALSource = %ld", (long int) mSelfToken);
 #endif
-			PlaybackMessage*		pbm = new PlaybackMessage((UInt32) kMQ_Stop, NULL, 0);
-			mMessageQueue.push_atomic(pbm);
+			AddPlaybackMessage(kMQ_Stop, NULL, 0);
 		}
 			break;
 				
@@ -1656,54 +1688,6 @@ void	OALSource::Stop()
 			// do nothing it's either stopped or initial right now
 			break;
 	}
-
-	UNLOCK_PLAY_MUTEX
-
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void	OALSource::StopFromDestructor()
-{
-#if LOG_PLAYBACK
-	DebugMessageN1("OALSource::StopFromDestructor called - OALSource = %ld", (long int) mSelfToken);
-#endif
-
-	TRY_PLAY_MUTEX
-
-	switch (mState)
-	{
-		case AL_PAUSED:
-		if (mCurrentPlayBus != kSourceNeedsBus)
-		{
-			mOwningContext->SetBusAsAvailable (mCurrentPlayBus);
-			mCurrentPlayBus = kSourceNeedsBus;
-			mState = AL_STOPPED;
-		}
-			break;
-
-		case kTransitionState:
-		{
-			DebugMessageN1("OALSource::StopFromDestructor (kTransition) called - OALSource = %ld", (long int) mSelfToken);
-			// no ramping, we want it to stop ASAP
-			mState = kTransitionState;
-			PlaybackMessage*		pbm = new PlaybackMessage((UInt32) kMQ_Stop, NULL, 0);
-			mMessageQueue.push_atomic(pbm);
-		}
-			break;
-		case AL_PLAYING:
-		{
-			DebugMessageN1("OALSource::StopFromDestructor (AL_PLAYING) called - OALSource = %ld",(long int)  mSelfToken);
-			// no ramping, we want it to stop ASAP
-			mRampState = kRampingComplete;			
-			mState = kTransitionState;
-			PlaybackMessage*		pbm = new PlaybackMessage((UInt32) kMQ_Stop, NULL, 0);
-			mMessageQueue.push_atomic(pbm);
-		}
-			break;
-	}
-
-	UNLOCK_PLAY_MUTEX
-
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1755,6 +1739,8 @@ UInt32	OALSource::FramesToBytes(UInt32	inFrames)
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 UInt32	OALSource::GetQueueOffset(UInt32	inOffsetType)
 {
+	CAGuard::Locker sourceLock(mSourceLock);
+
 	UInt32		inInactiveQFrames = mBufferQueueInactive->GetQueueSizeInFrames();
 	UInt32		inActiveQFrames = 0;
 
@@ -1790,6 +1776,12 @@ void	OALSource::SetQueueOffset(UInt32	inOffsetType,	Float32	inOffset)
 	DebugMessageN1("OALSource::SetQueueOffset - OALSource = %ld", (long int) mSelfToken);
 #endif
 	UInt32		frameOffset = 0;
+
+	// wait if in render, then prevent rendering til completion
+	OALRenderLocker::RenderLocker locked(mRenderLocker, InRenderThread());
+
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
 	
 	// first translate the entered offset into a frame offset
 	switch (inOffsetType)
@@ -1807,8 +1799,6 @@ void	OALSource::SetQueueOffset(UInt32	inOffsetType,	Float32	inOffset)
 			return;
 			break;
 	}
-
-	TRY_PLAY_MUTEX
 
 	// move the queue to the requested offset either right now, or in the PostRender proc via a queued message
 	switch (mState)
@@ -1828,20 +1818,17 @@ void	OALSource::SetQueueOffset(UInt32	inOffsetType,	Float32	inOffset)
 			mRampState = kRampDown;			
 			// currently, no consideration for ramping the samples is being taken, so there could be clicks if playhead is moved during a playback
 			mPlaybackHeadPosition = frameOffset;
-			PlaybackMessage*		pbm = new PlaybackMessage((UInt32) kMQ_SetFramePosition, NULL, 0);
-			mMessageQueue.push_atomic(pbm);
+			AddPlaybackMessage(kMQ_SetFramePosition, NULL, 0);
 		}
 			break;
 				
 		default:
 			break;
 	}
-
-	UNLOCK_PLAY_MUTEX
-
 }	
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// this should only be called when the source is render and edit protected
 void	OALSource::AdvanceQueueToFrameIndex(UInt32	inFrameOffset)
 {
 	// Queue should be in an initial state right now.
@@ -1883,6 +1870,25 @@ void	OALSource::AdvanceQueueToFrameIndex(UInt32	inFrameOffset)
 #pragma mark ***** PRIVATE *****
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void	OALSource::AddPlaybackMessage(UInt32 inMessage, OALBuffer* inDeferredAppendBuffer, UInt32	inBuffersToUnqueue)
+{
+	PlaybackMessage*		pbm = new PlaybackMessage((UInt32) inMessage, inDeferredAppendBuffer, inBuffersToUnqueue);
+	mMessageQueue.push_atomic(pbm);
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void	OALSource::ClearMessageQueue()
+{
+	PlaybackMessage	*messages = mMessageQueue.pop_all_reversed();
+	while (messages != NULL)
+	{
+		PlaybackMessage	*lastMessage = messages;
+		messages = messages->get_next();
+		delete (lastMessage); // made it, so now get rid of it
+	}
+}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #pragma mark ***** Buffer Queue Methods *****
@@ -1957,6 +1963,7 @@ void	OALSource::JoinBufferLists()
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// this is ONLY called from the render thread
 void OALSource::UpdateQueue ()
 {
 	if (mCurrentBufferIndex > 0)
@@ -1979,32 +1986,9 @@ void OALSource::UpdateQueue ()
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void	OALSource::SkipALNONEBuffers()
-{
-	while (mBufferQueueActive->GetBufferTokenByIndex(mCurrentBufferIndex) == AL_NONE)
-	{
-		// mark buffer as processed
-		mBufferQueueActive->SetBufferAsProcessed(mCurrentBufferIndex);
-		mCurrentBufferIndex++;
-	}
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 bool	OALSource::IsSourceTransitioningToFlushQ()
 {
 	return mTransitioningToFlushQ;
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-bool	OALSource::IsBufferInActiveQueue(ALuint inBufferToken)
-{
-	for (UInt32	i = 0; i < mBufferQueueActive->Size(); i++)
-	{
-		ALuint     bid = mBufferQueueActive->GetBufferTokenByIndex(i);
-		if (bid == inBufferToken)
-			return true;
-	}
-	return false; // this buffer is not in trhe active Q
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2139,19 +2123,17 @@ void	OALSource::UpdateBusGain ()
 {
 	if (mCurrentPlayBus != kSourceNeedsBus)
 	{
-		Float32		busGain;
-		
-		// figure out which gain to actually use
-		if (mMinGain > mGain)
-			busGain = mMinGain;
-		else if (mMaxGain < mGain)
-			busGain = mMaxGain;
-		else
-			busGain = mGain;
+		Float32		busGain = mGain;
 		
 		busGain *= mConeGainScaler;
 		busGain *= mAttenuationGainScaler;
-
+		
+		// figure out which gain to actually use
+		if (mMinGain > busGain)
+			busGain = mMinGain;
+		else if (mMaxGain < busGain)
+			busGain = mMaxGain;
+		
 		// clamp the gain used to 0.0-1.0
         if (busGain > 1.0)
 			busGain = 1.0;
@@ -2166,9 +2148,9 @@ void	OALSource::UpdateBusGain ()
 			if (db < -120.0)
 				db = -120.0;						// clamp minimum audible level at -120db
 			
-#if LOG_GRAPH_AND_MIXER_CHANGES
-	DebugMessageN3("OALSource::UpdateBusGain: k3DMixerParam_Gain called - OALSource:busGain:db = %ld:%f2:%f2\n", mSelfToken, busGain, db );
-#endif
+//#if LOG_GRAPH_AND_MIXER_CHANGES
+//	DebugMessageN3("OALSource::UpdateBusGain: k3DMixerParam_Gain called - OALSource:busGain:db = %ld:%f2:%f2\n", mSelfToken, busGain, db );
+//#endif
 
 			OSStatus	result = AudioUnitSetParameter (	mOwningContext->GetMixerUnit(), k3DMixerParam_Gain, kAudioUnitScope_Input, mCurrentPlayBus, db, 0);
 				THROW_RESULT
@@ -2267,20 +2249,12 @@ void	OALSource::AddNotifyAndRenderProcs()
 	result = AudioUnitSetProperty (	mRenderUnit, kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Input, 
 							mRenderElement, &mPlayCallback, sizeof(mPlayCallback));	
 			THROW_RESULT
-	
-	result = AUGraphAddRenderNotify(mOwningContext->GetGraph(), SourceNotificationProc, this);
-			THROW_RESULT
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void	OALSource::ReleaseNotifyAndRenderProcs()
 {
 	OSStatus	result = noErr;
-	if (mCurrentPlayBus != kSourceNeedsBus)
-	{
-		result = AUGraphRemoveRenderNotify(mOwningContext->GetGraph(), SourceNotificationProc, this);
-			THROW_RESULT
-	}				
 	
 	mPlayCallback.inputProc = 0;
 	mPlayCallback.inputProcRefCon = 0;
@@ -2288,25 +2262,6 @@ void	OALSource::ReleaseNotifyAndRenderProcs()
 	result = AudioUnitSetProperty (	mRenderUnit, kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Input, 
 							mRenderElement, &mPlayCallback, sizeof(mPlayCallback));	
 		THROW_RESULT
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-OSStatus	OALSource::SourceNotificationProc (	void 						*inRefCon, 
-												AudioUnitRenderActionFlags 	*inActionFlags,
-												const AudioTimeStamp 		*inTimeStamp, 
-												UInt32 						inBusNumber,
-												UInt32 						inNumberFrames, 
-												AudioBufferList 			*ioData)
-{
-	OALSource* THIS = (OALSource*)inRefCon;
-	
-	if (*inActionFlags & kAudioUnitRenderAction_PreRender)
-		return THIS->DoPreRender();
-		
-	if (*inActionFlags & kAudioUnitRenderAction_PostRender)
-		return THIS->DoPostRender();
-			
-	return (noErr);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2324,6 +2279,8 @@ OSStatus	OALSource::SourceInputProc (	void 						*inRefCon,
 											AudioBufferList 			*ioData)
 {
 	OALSource* THIS = (OALSource*)inRefCon;
+	
+	THIS->SetInUseFlag();
 	
 	if (THIS->mOutputSilence)
 		*inActionFlags |= kAudioUnitRenderAction_OutputIsSilence;	
@@ -2344,6 +2301,8 @@ OSStatus	OALSource::SourceInputProc (	void 						*inRefCon,
 	syscall(180, tracerEnd, inBusNumber, ioData->mNumberBuffers, 0, 0);
 #endif
 
+	THIS->ClearInUseFlag();
+
 	return (result);
 }
 
@@ -2353,7 +2312,10 @@ OSStatus OALSource::DoPreRender ()
 	BufferInfo	*bufferInfo = NULL;
 	OSStatus	err = noErr;
 
-	TRY_PLAY_MUTEX
+	OALRenderLocker::RenderTryer tried(mRenderLocker);
+
+	if (!tried.Acquired())
+		return err;
 	
 	bufferInfo = mBufferQueueActive->Get(mCurrentBufferIndex);
 	if (bufferInfo == NULL)
@@ -2362,8 +2324,6 @@ OSStatus OALSource::DoPreRender ()
 		mQueueIsProcessed = true;
         err = -1;	// there are no buffers
     }
-
-	UNLOCK_PLAY_MUTEX
 
 	return (err);
 }
@@ -2501,8 +2461,16 @@ OSStatus OALSource::DoRender (AudioBufferList 			*ioData)
 		tBufferList->mBuffers[1].mData = ioData->mBuffers[1].mData;
 	}
 	
-	TRY_PLAY_MUTEX
+	OALRenderLocker::RenderTryer tried(mRenderLocker);
 
+	if (!tried.Acquired()) 
+	{
+		// source is being edited. can't render, so the ioData buffers must be cleared out 
+		for (UInt32	i = 0; i < ioData->mNumberBuffers; i++)
+			memset(ioData->mBuffers[i].mData, 0, ioData->mBuffers[i].mDataByteSize);
+		return noErr;
+	}
+		
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// 1st move past any AL_NONE Buffers
 	
@@ -2661,12 +2629,6 @@ Finished:
 		mRampState = kRampingComplete;
 	}
 			
-	UNLOCK_PLAY_MUTEX
-
-	// For Testing The Get Offset APIs
-	// UInt32	value = GetQueueOffset(kSampleOffset);
-	// DebugMessageN1("kSampleOffset = %ld\n", (long int) value);
-	
 	return (noErr);
 }
 
@@ -2675,7 +2637,11 @@ OSStatus OALSource::DoPostRender ()
 {
 	bool				renderProcsRemoved = false;
 	PlaybackMessage*	lastMessage;
-	TRY_PLAY_MUTEX
+
+	OALRenderLocker::RenderTryer tried(mRenderLocker);
+
+	if (!tried.Acquired())
+		return noErr;
 
 	try {
 		// all messages must be executed after the last buffer has been ramped down
@@ -2768,12 +2734,7 @@ OSStatus OALSource::DoPostRender ()
 						mSafeForDeletion = true;		// now the CleanUp Sources method of the context can safely delete this object
 						
 						// before returning, delete all remaining messages on the queue so they do not get leaked when the object is deconstructed
-						while (messages != NULL)
-						{
-							lastMessage = messages;
-							messages = messages->get_next();
-							delete (lastMessage); // made it, so now get rid of it
-						}						
+						ClearMessageQueue();
 						
 						goto Finished;					// skip any remaining MQ messages
 					}
@@ -2804,15 +2765,12 @@ Finished:
 		DebugMessageN1("OALSource::DoPostRender:ERROR - OALSource = %ld", (long int)  mSelfToken);
 	}
 	
-	UNLOCK_PLAY_MUTEX
-
 	return noErr;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void OALSource::RampDown (AudioBufferList 			*ioData)
 {
-	//return;
 	UInt32		sampleCount = (ioData->mBuffers[0].mDataByteSize / sizeof (Float32));
 			
 	Float32		slope = 1.0/sampleCount;
@@ -2832,7 +2790,6 @@ void OALSource::RampDown (AudioBufferList 			*ioData)
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void OALSource::RampUp (AudioBufferList 			*ioData)
 {
-	return;
 	UInt32		sampleCount = (ioData->mBuffers[0].mDataByteSize / sizeof (Float32));
 			
 	Float32		slope = 1.0/sampleCount;
@@ -2861,8 +2818,20 @@ void OALSource::RampUp (AudioBufferList 			*ioData)
 OSStatus	OALSource::DoSRCRender(	AudioBufferList 			*ioData )
 {   
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// 1st move past any AL_NONE Buffers
 	BufferInfo	*bufferInfo = NULL;
+
+	OALRenderLocker::RenderTryer tried(mRenderLocker);
+
+	if (!tried.Acquired()) 
+	{
+		// source is being edited. can't render, so the ioData buffers must be cleared out 
+		for (UInt32	i = 0; i < ioData->mNumberBuffers; i++)
+			memset(ioData->mBuffers[i].mData, 0, ioData->mBuffers[i].mDataByteSize);
+
+		return noErr;
+	}	
+
+	// 1st move past any AL_NONE Buffers	
 	bufferInfo = NextPlayableBufferInActiveQ();
 	if (bufferInfo == NULL)
 	{
@@ -2897,11 +2866,11 @@ OSStatus	OALSource::DoSRCRender(	AudioBufferList 			*ioData )
         			
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		
-	double srcSampleRate = bufferInfo->mBuffer->GetSampleRate();
-	double dstSampleRate = mOwningContext->GetMixerRate();
-	double ratio = (srcSampleRate / dstSampleRate) * mPitch * mDopplerScaler;
+	double srcSampleRate; srcSampleRate = bufferInfo->mBuffer->GetSampleRate();
+	double dstSampleRate; dstSampleRate = mOwningContext->GetMixerRate();
+	double ratio; ratio = (srcSampleRate / dstSampleRate) * mPitch * mDopplerScaler;
 	
-	int nchannels = ioData->mNumberBuffers;
+	int nchannels; nchannels = ioData->mNumberBuffers;
 
 	if (ratio == 1.0)
 	{
@@ -2910,11 +2879,11 @@ OSStatus	OALSource::DoSRCRender(	AudioBufferList 			*ioData )
  	}
 
 	// otherwise continue on to do dirty linear interpolation
-	UInt32      inFramesToProcess = ioData->mBuffers[0].mDataByteSize / sizeof(Float32);
-	float readIndex = mReadIndex;
+	UInt32      inFramesToProcess; inFramesToProcess = ioData->mBuffers[0].mDataByteSize / sizeof(Float32);
+	float readIndex; readIndex = mReadIndex;
 
-	int readUntilIndex = (int) (2.0 + readIndex + inFramesToProcess * ratio );
-	int framesToPull = readUntilIndex - 2;
+	int readUntilIndex; readUntilIndex = (int) (2.0 + readIndex + inFramesToProcess * ratio );
+	int framesToPull; framesToPull = readUntilIndex - 2;
 	
 	if (framesToPull == 0) 
         return -1;
@@ -2944,12 +2913,12 @@ OSStatus	OALSource::DoSRCRender(	AudioBufferList 			*ioData )
         mTempSourceStorage->mBuffers[i].mDataByteSize = framesToPull * sizeof(UInt32);
     }
     
-    OSStatus result = DoRender(mTempSourceStorage);
+    OSStatus result; result = DoRender(mTempSourceStorage);
 	if (result != noErr ) 
         return result;		// !!@ something bad happened (could return error code)
 
-	float *pullL = (float *) mTempSourceStorage->mBuffers[0].mData;
-	float *pullR = nchannels > 1 ? (float *) mTempSourceStorage->mBuffers[1].mData: NULL;
+	float *pullL; pullL = (float *) mTempSourceStorage->mBuffers[0].mData;
+	float *pullR; pullR = nchannels > 1 ? (float *) mTempSourceStorage->mBuffers[1].mData: NULL;
 
 	// setup a small array of the previous two cached values, plus the first new input frame
 	float tempL[4];
@@ -2967,8 +2936,8 @@ OSStatus	OALSource::DoSRCRender(	AudioBufferList 			*ioData )
 
 	// in first loop start out getting source from this small array, then change sourceL/sourceR to point
 	// to the buffers containing the new pulled input for the main loop
-	float *sourceL = tempL;
-	float *sourceR = tempR;
+	float *sourceL; sourceL = tempL;
+	float *sourceR; sourceR = tempR;
 	if(!pullR) 
         sourceR = NULL;
 
@@ -2983,10 +2952,10 @@ OSStatus	OALSource::DoSRCRender(	AudioBufferList 			*ioData )
 	}
 
 	// quick-and-dirty linear interpolation
-	int n = inFramesToProcess;
+	int n; n = inFramesToProcess;
 	
-	float *destL = (float *) ioData->mBuffers[0].mData;
-	float *destR = (float *) ioData->mBuffers[1].mData;
+	float *destL; destL = (float *) ioData->mBuffers[0].mData;
+	float *destR; destR = (float *) ioData->mBuffers[1].mData;
 	
 	if (!sourceR)
 	{
@@ -3099,7 +3068,7 @@ OSStatus	OALSource::DoSRCRender(	AudioBufferList 			*ioData )
 	readIndex -= float(framesToPull);
     
 	mReadIndex = readIndex;
-	
+
 	return noErr;
 }
 
@@ -3446,11 +3415,15 @@ void OALSource::SetReverbSendLevel(Float32 inReverbLevel)
     DebugMessageN2("OALSource::SetReverbSendLevel:  OALSource: = %ld : inReverbLevel %f2\n", mSelfToken, inReverbLevel );
 #endif            
 
+	if (inReverbLevel < 0.0f || inReverbLevel > 1.0f)
+		throw AL_INVALID_VALUE; // must be within 0.0-1.0 range
+
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
+
     if (inReverbLevel == mASAReverbSendLevel)
 		return;			// nothing to do
 
-	if (inReverbLevel < 0.0f || inReverbLevel > 1.0f)
-		throw AL_INVALID_VALUE; // must be within 0.0-1.0 range
 		
 	mASAReverbSendLevel = inReverbLevel;
 	UpdateBusReverb();
@@ -3462,11 +3435,12 @@ void	OALSource::SetOcclusion(Float32 inOcclusion)
 #if LOG_GRAPH_AND_MIXER_CHANGES
     DebugMessageN2("OALSource::SetOcclusion:  OALSource: = %ld : inOcclusion %f2\n", mSelfToken, inOcclusion );
 #endif            
+	if (inOcclusion < -100.0f || inOcclusion > 0.0f)
+		throw AL_INVALID_VALUE; // must be within -100.0 - 0.0 range
+
     if (inOcclusion == mASAOcclusion)
 		return;			// nothing to do	
 		
-	if (inOcclusion < -100.0f || inOcclusion > 0.0f)
-		throw AL_INVALID_VALUE; // must be within -100.0 - 0.0 range
 
 	mASAOcclusion = inOcclusion;
 			
@@ -3479,12 +3453,15 @@ void	OALSource::SetObstruction(Float32 inObstruction)
 #if LOG_GRAPH_AND_MIXER_CHANGES
     DebugMessageN2("OALSource::SetObstruction:  OALSource: = %ld : inObstruction %f2\n", mSelfToken, inObstruction );
 #endif            
-    if (inObstruction == mASAObstruction)
-		return;			// nothing to do	
-		
 	if (inObstruction < -100.0f || inObstruction > 0.0f)
 		throw AL_INVALID_VALUE; // must be within -100.0 - 0.0 range
 
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
+
+    if (inObstruction == mASAObstruction)
+		return;			// nothing to do	
+		
 	mASAObstruction = inObstruction;
 			
 	UpdateBusObstruction();
@@ -3496,6 +3473,9 @@ void	OALSource::SetRogerBeepEnable(Boolean inEnable)
 #if LOG_GRAPH_AND_MIXER_CHANGES
     DebugMessageN2("OALSource::SetRogerBeepEnable:  OALSource: = %ld : inEnable %d\n", (long int)mSelfToken, inEnable );
 #endif            
+
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
 
 	// Enable cannot be set during playback 
 	if ((mState == AL_PLAYING) || (mState == AL_PAUSED))
@@ -3544,7 +3524,10 @@ void	OALSource::SetRogerBeepOn(Boolean inOn)
 {
 #if LOG_GRAPH_AND_MIXER_CHANGES
     DebugMessageN2("OALSource::SetRogerBeepOn:  OALSource: = %ld : inOn %d\n", mSelfToken, inOn );
-#endif      
+#endif
+      
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
 		      
     if (inOn == mASARogerBeepOn)
 		return;			// nothing to do	
@@ -3560,16 +3543,17 @@ void	OALSource::SetRogerBeepGain(Float32 inGain)
 {
 #if LOG_GRAPH_AND_MIXER_CHANGES
     DebugMessageN2("OALSource::SetGain:  OALSource: = %ld : inGain %f2\n", mSelfToken, inGain );
-#endif         
+#endif
+
+	if (inGain < -100.0f || inGain > 20.0f)
+		throw AL_INVALID_VALUE; // must be within -100.0 - 20.0 range      
+
 	if(!mASARogerBeepEnable)
 		throw (OSStatus) AL_INVALID_OPERATION;
 		
     if (inGain == mASARogerBeepGain)
 		return;			// nothing to do	
 		
-	if (inGain < -100.0f || inGain > 20.0f)
-		throw AL_INVALID_VALUE; // must be within -100.0 - 20.0 range
-
 	mASARogerBeepGain = inGain;
 			
 	AudioUnitSetParameter(mRogerBeepAU, 6/*kRogerBeepParam_RogerGain*/, kAudioUnitScope_Global, 0, inGain, 0 );
@@ -3581,15 +3565,18 @@ void	OALSource::SetRogerBeepSensitivity(UInt32 inSensitivity)
 #if LOG_GRAPH_AND_MIXER_CHANGES
     DebugMessageN2("OALSource::SetRogerBeepSensitivity:  OALSource: = %ld : inSensitivity %d\n", mSelfToken, inSensitivity );
 #endif        
+	if (inSensitivity < 0 || inSensitivity > 2)
+		throw AL_INVALID_VALUE; // must be within 0 - 2 range
+
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
+
 	if(!mASARogerBeepEnable)
 		throw AL_INVALID_OPERATION;
 		    
     if (inSensitivity == mASARogerBeepSensitivity)
 		return;			// nothing to do	
 		
-	if (inSensitivity < 0 || inSensitivity > 2)
-		throw AL_INVALID_VALUE; // must be within 0 - 2 range
-
 	mASARogerBeepSensitivity = inSensitivity;
 			
 	AudioUnitSetParameter(mRogerBeepAU, 4/*kRogerBeepParam_Sensitivity*/, kAudioUnitScope_Global, 0, inSensitivity, 0 );
@@ -3600,16 +3587,20 @@ void	OALSource::SetRogerBeepType(UInt32 inType)
 {
 #if LOG_GRAPH_AND_MIXER_CHANGES
     DebugMessageN2("OALSource::SetRogerBeepType:  OALSource: = %ld : inType %d\n", mSelfToken, inType );
-#endif           
+#endif
+
+	if (inType < 0 || inType > 3)
+		throw AL_INVALID_VALUE; // must be within 0 - 3 range
+
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
+
 	if(!mASARogerBeepEnable)
 		throw AL_INVALID_OPERATION;
 		 
     if (inType == mASARogerBeepType)
 		return;			// nothing to do	
 		
-	if (inType < 0 || inType > 3)
-		throw AL_INVALID_VALUE; // must be within 0 - 3 range
-
 	mASARogerBeepType = inType;
 			
 	AudioUnitSetParameter(mRogerBeepAU, 5 /*kRogerBeepParam_RogerType*/, kAudioUnitScope_Global, 0, inType, 0 );
@@ -3618,6 +3609,8 @@ void	OALSource::SetRogerBeepType(UInt32 inType)
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void	OALSource::SetRogerBeepPreset(FSRef* inRef)
 {
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
 
 	try {
 			Boolean				status; 
@@ -3675,7 +3668,11 @@ void	OALSource::SetDistortionEnable(Boolean inEnable)
 {
 #if LOG_GRAPH_AND_MIXER_CHANGES
     DebugMessageN2("OALSource::SetDistortionEnable:  OALSource: = %ld : inEnable %d\n", mSelfToken, inEnable );
-#endif            
+#endif
+
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
+
     if (inEnable == mASADistortionEnable)
 		return;			// nothing to do	
 		
@@ -3720,7 +3717,10 @@ void	OALSource::SetDistortionOn(Boolean inOn)
 {
 #if LOG_GRAPH_AND_MIXER_CHANGES
     DebugMessageN2("OALSource::SetDistortionOn:  OALSource: = %ld : inOn %d\n", mSelfToken, inOn );
-#endif    
+#endif   
+
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock); 
 		       
     if (inOn == mASADistortionOn)
 		return;			// nothing to do	
@@ -3737,15 +3737,19 @@ void	OALSource::SetDistortionMix(Float32 inMix)
 {
 #if LOG_GRAPH_AND_MIXER_CHANGES
     DebugMessageN2("OALSource::SetDistortionMix:  OALSource: = %ld : inMix %f2\n", mSelfToken, inMix );
-#endif            
+#endif
+
+	if (inMix < 0.0f || inMix > 100.0f)
+		throw AL_INVALID_VALUE; // must be within 0.0 - 100.0 range
+
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
+      
 	if(!mASADistortionEnable)
 		throw AL_INVALID_OPERATION;
 		
     if (inMix == mASADistortionMix)
 		return;			// nothing to do	
-
-	if (inMix < 0.0f || inMix > 100.0f)
-		throw AL_INVALID_VALUE; // must be within 0.0 - 100.0 range
 
 	mASADistortionMix = inMix;
 	AudioUnitSetParameter(mDistortionAU, 15/*kDistortionParam_FinalMix*/, kAudioUnitScope_Global, 0, inMix, 0 );
@@ -3757,6 +3761,10 @@ void	OALSource::SetDistortionType(SInt32 inType)
 #if LOG_GRAPH_AND_MIXER_CHANGES
     DebugMessageN2("OALSource::SetDistortionType:  OALSource: = %u : inType %d\n", mSelfToken, inType );
 #endif     
+
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
+
 	if(!mASADistortionEnable)
 		throw AL_INVALID_OPERATION; 
 		       
@@ -3774,6 +3782,8 @@ void	OALSource::SetDistortionType(SInt32 inType)
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void	OALSource::SetDistortionPreset(FSRef* inRef)
 {   
+	// don't allow synchronous source manipulation
+	CAGuard::Locker sourceLock(mSourceLock);
 		
 	try {
 			Boolean				status; 

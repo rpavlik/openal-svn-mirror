@@ -1,7 +1,7 @@
 /**********************************************************************************************************************************
 *
 *   OpenAL cross platform audio library
-*   Copyright (c) 2006, Apple Computer, Inc. All rights reserved.
+*   Copyright (c) 2005, Apple Computer, Inc. All rights reserved.
 *
 *   Redistribution and use in source and binary forms, with or without modification, are permitted provided 
 *   that the following conditions are met:
@@ -41,7 +41,8 @@ OALCaptureDevice::OALCaptureDevice (const char* 	 inDeviceName, uintptr_t   inSe
 		mBufferData(NULL),
 		mSampleRateRatio(1.0),
 		mRequestedRingFrames(inBufferSize),
-		mAudioInputPtrs(NULL)
+		mAudioInputPtrs(NULL),
+		mInUseFlag(0)
 {
     char        *useThisDevice = (char *) inDeviceName;
 	

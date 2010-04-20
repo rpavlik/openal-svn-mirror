@@ -1,23 +1,23 @@
 /**********************************************************************************************************************************
 *
 *   OpenAL cross platform audio library
-*   Copyright (c) 2004, Apple Computer, Inc. All rights reserved.
+*	Copyright (c) 2004, Apple Computer, Inc., Copyright (c) 2009, Apple Inc. All rights reserved.
 *
-*   Redistribution and use in source and binary forms, with or without modification, are permitted provided 
-*   that the following conditions are met:
+*	Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following 
+*	conditions are met:
 *
-*   1.  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer. 
-*   2.  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following 
-*       disclaimer in the documentation and/or other materials provided with the distribution. 
-*   3.  Neither the name of Apple Computer, Inc. ("Apple") nor the names of its contributors may be used to endorse or promote 
-*       products derived from this software without specific prior written permission. 
+*	1.  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer. 
+*	2.  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following 
+*		disclaimer in the documentation and/or other materials provided with the distribution. 
+*	3.  Neither the name of Apple Inc. ("Apple") nor the names of its contributors may be used to endorse or promote products derived 
+*		from this software without specific prior written permission. 
 *
-*   THIS SOFTWARE IS PROVIDED BY APPLE AND ITS CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, 
-*   THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL APPLE OR ITS 
-*   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED 
-*   TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
-*   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
-*   USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*	THIS SOFTWARE IS PROVIDED BY APPLE AND ITS CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED 
+*	TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL APPLE OR ITS 
+*	CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+*	LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED 
+*	AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
+*	ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 **********************************************************************************************************************************/
 
@@ -27,8 +27,17 @@
 #include "oalDevice.h"
 #include "alc.h"
 #include "MacOSX_OALExtensions.h"
+#include "CAGuard.h"
+
 #include <Carbon/Carbon.h>
 #include <map>
+#include <libkern/OSAtomic.h>
+
+#define CAPTURE_AUDIO_TO_FILE 0
+
+#if	CAPTURE_AUDIO_TO_FILE
+	#include "CAAudioUnitOutputCapturer.h"
+#endif
 	
 #define LOG_BUS_CONNECTIONS  	0
 
@@ -54,8 +63,10 @@
 	and a single listener. It also has it's own settings for the 3DMixer, such as Reverb, Doppler, etc.
 */
 
+enum { kNoSourceAttached = (ALuint)-1 };
+
 struct BusInfo {
-					bool		mIsAvailable;       // is an OALSource using this bus?
+					ALuint		mSourceAttached;	// the token of the source attached
 					UInt32		mNumberChannels;    // mono/stereo setting of the bus
                     UInt32      mReverbState;     // unused until Reverb extension is added to the implementation
 };
@@ -89,8 +100,8 @@ class OALContext
 	Float32         GetDefaultReferenceDistance() { return mDefaultReferenceDistance;}
 	Float32         GetDefaultMaxDistance() { return mDefaultMaxDistance;}
 	bool            IsDistanceScalingRequired() { return mDistanceScalingRequired;}
-	UInt32			GetAvailableMonoBus ();
-	UInt32			GetAvailableStereoBus ();
+	UInt32			GetAvailableMonoBus (ALuint inSourceToken);
+	UInt32			GetAvailableStereoBus (ALuint inSourceToken);
 	UInt32			GetBusCount () { return mBusCount;}
 	uintptr_t		GetDeviceToken () { return mOwningDevice->GetDeviceToken();}
 	UInt32			GetDistanceModel() { return mDistanceModel;}
@@ -151,18 +162,41 @@ class OALContext
 	UInt32			GetReverbRoomType() {return mASAReverbRoomType;}
 	Float32			GetReverbLevel() {return mASAReverbGlobalLevel;}
 
+	// notification proc methods
+	OSStatus			DoPostRender ();
+	OSStatus			DoPreRender ();
+	static	OSStatus	ContextNotificationProc (	void                        *inRefCon, 
+													AudioUnitRenderActionFlags 	*inActionFlags,
+													const AudioTimeStamp 		*inTimeStamp, 
+													UInt32 						inBusNumber,
+													UInt32 						inNumberFrames, 
+													AudioBufferList 			*ioData);
+													
+
+	// threading protection methods
+	bool				CallingInRenderThread () const { return (pthread_self() == mRenderThreadID); }
+	
+	volatile int32_t	IsInUse()			{ return mInUseFlag; }
+	void				SetInUseFlag()		{ OSAtomicIncrement32Barrier(&mInUseFlag); }
+	void				ClearInUseFlag()	{ OSAtomicDecrement32Barrier(&mInUseFlag); }
+	
 	// context activity methods
 	void			ProcessContext();
 	void			SuspendContext();
+	
 	// source methods
 	void			AddSource(ALuint inSourceToken);
 	void			RemoveSource(ALuint inSourceToken);
-	OALSource*		GetSource(ALuint inSourceToken);
+	OALSource*		ProtectSource(ALuint inSourceToken);
+	OALSource*		GetSourceForRender(ALuint inSourceToken);
+	OALSource*		GetDeadSourceForRender(ALuint inSourceToken);
+	void			ReleaseSource(OALSource* inSource);
 	UInt32			GetSourceCount();
 	void			CleanUpDeadSourceList();
 
 	// device methods
 	void			ConnectMixerToDevice();
+	void			DisconnectMixerFromDevice();
 	void			InitRenderQualityOnBusses();
 	void			ConfigureMixerFormat();
 		
@@ -173,7 +207,9 @@ class OALContext
         AUNode				mMixerNode;
         AudioUnit			mMixerUnit;
 		OALSourceMap		*mSourceMap;
+		CAGuard				mSourceMapLock;					// the map is not thread-safe. We need a mutex to serialize operations on it
 		OALSourceMap		*mDeadSourceMap;
+		CAGuard				mDeadSourceMapLock;					// the map is not thread-safe. We need a mutex to serialize operations on it
 		UInt32				mDistanceModel;
 		Float32				mSpeedOfSound;
 		Float32				mDopplerFactor;
@@ -191,11 +227,13 @@ class OALContext
 		UInt32				mRenderQuality;                 // Hi or Lo for now
         UInt32				mSpatialSetting;
         UInt32				mBusCount;
+		volatile int32_t	mInUseFlag;		
         Float64				mMixerOutputRate;
         Float32				mDefaultReferenceDistance;
         Float32				mDefaultMaxDistance;
 		bool				mUserSpecifiedBusCounts;
         BusInfo				*mBusInfo;
+   		pthread_t			mRenderThreadID;
 		bool				mSettableMixerAttenuationCurves;
 		UInt32				mASAReverbState;
 		UInt32				mASAReverbRoomType;
@@ -208,6 +246,11 @@ class OALContext
 #if LOG_BUS_CONNECTIONS
         UInt32		mMonoSourcesConnected;
         UInt32		mStereoSourcesConnected;
+#endif
+#if CAPTURE_AUDIO_TO_FILE
+		CAAudioUnitOutputCapturer		*gTheCapturer;
+		CFURLRef						gFileURL;
+		AudioStreamBasicDescription		gCapturerDataFormat;	
 #endif
 
 	void	InitializeMixer(UInt32	inStereoBusCount);

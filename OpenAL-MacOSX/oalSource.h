@@ -1,7 +1,7 @@
 /**********************************************************************************************************************************
 *
 *   OpenAL cross platform audio library
-*   Copyright (c) 2004, Apple Computer, Inc. All rights reserved.
+*	Copyright (c) 2004, Apple Computer, Inc., Copyright (c) 2009, Apple Inc. All rights reserved.
 *
 *   Redistribution and use in source and binary forms, with or without modification, are permitted provided 
 *   that the following conditions are met:
@@ -9,7 +9,7 @@
 *   1.  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer. 
 *   2.  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following 
 *       disclaimer in the documentation and/or other materials provided with the distribution. 
-*   3.  Neither the name of Apple Computer, Inc. ("Apple") nor the names of its contributors may be used to endorse or promote 
+*   3.  Neither the name of Apple Inc. ("Apple") nor the names of its contributors may be used to endorse or promote 
 *       products derived from this software without specific prior written permission. 
 *
 *   THIS SOFTWARE IS PROVIDED BY APPLE AND ITS CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, 
@@ -32,11 +32,12 @@
 #include <Carbon/Carbon.h>
 #include <AudioToolbox/AudioConverter.h>
 #include <list>
+#include <libkern/OSAtomic.h>
+
 #include "CAStreamBasicDescription.h"
+#include "CAAtomicStack.h"
 #include "CAGuard.h"
-#include "CAMutex.h"
-#include "oalAtomicStack.h"
-	
+
 class OALBuffer;        // forward declaration
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -80,6 +81,8 @@ enum {
 // do not change kDistanceScalar from 10.0 - it is used to compensate for a reverb related problem in the 3DMixer
 #define kDistanceScalar                     10.0
 #define kTransitionState					'tste'
+
+#pragma mark _____PlaybackMessage_____
 
 class PlaybackMessage {
 public:
@@ -229,6 +232,57 @@ public:
 };
 typedef	ACMap ACMap;
 
+#pragma mark _____OALRenderLocker_____
+
+class OALRenderLocker {
+	int mAcquireFlag, mTryFlag;
+	
+	OALRenderLocker& operator= (const OALRenderLocker& as) { return *this; }
+	OALRenderLocker (const OALRenderLocker& as) {}
+	
+public:
+	OALRenderLocker () : mAcquireFlag(0), mTryFlag (0) {}
+
+	class RenderLocker {
+		OALRenderLocker &mEditor;
+		bool mInRenderThread;
+
+	public:
+		RenderLocker (OALRenderLocker &editor, bool inRenderThread)
+			: mEditor(editor),
+			  mInRenderThread(inRenderThread)
+		{
+			if (!mInRenderThread)
+			{
+				OSAtomicIncrement32Barrier(&mEditor.mAcquireFlag); 
+				while (mEditor.mTryFlag) { usleep(500); }
+			}
+		}
+		~RenderLocker ()
+		{
+			if (!mInRenderThread)
+			{
+				OSAtomicDecrement32Barrier (&mEditor.mAcquireFlag);
+			}
+		}
+	};
+
+	class RenderTryer {
+		OALRenderLocker &mTrier;
+	public:
+		RenderTryer (OALRenderLocker & trier)
+			: mTrier (trier)
+		{
+			OSAtomicIncrement32Barrier(&mTrier.mTryFlag);
+		}
+		~RenderTryer ()
+		{
+			OSAtomicDecrement32Barrier (&mTrier.mTryFlag);
+		}
+		bool Acquired () const { return !mTrier.mAcquireFlag; }
+	};
+};
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // OALSources
@@ -250,11 +304,13 @@ class OALSource
 
 		BufferQueue					*mBufferQueueActive;        // map of buffers for queueing
 		BufferQueue					*mBufferQueueInactive;      // map of buffers already queued
+		UInt32						mBuffersQueuedForClear;		// number of buffers pending removal from the inactive queue
 		ALuint						mCurrentBufferIndex;		// index of the current buffer being played
 		bool						mQueueIsProcessed;			// state of the entire buffer queue
 		
-		pthread_t					mRenderThreadID;
-		CAGuard						mPlayGuard;
+		volatile int32_t			mEditFlag;
+		volatile int32_t			mInUseFlag;					// flag to indicate a source is currently being used by one or more threads
+		CAGuard						mSourceLock;
 		AURenderCallbackStruct 		mPlayCallback;
 		int							mCurrentPlayBus;			// the mixer bus currently used by this source
 		
@@ -304,6 +360,9 @@ class OALSource
 		Float32						mASAOcclusion;
 		Float32						mASAObstruction;
 
+		// thread protection
+		OALRenderLocker				mRenderLocker;
+		
 		// Audio Units and properties for RogerBeep and Distortion
 		AUNode						mRogerBeepNode;
 		AudioUnit					mRogerBeepAU;
@@ -335,13 +394,10 @@ class OALSource
 	void        ChangeChannelSettings();
 	void		InitSource();
 	void		SetState(UInt32		inState);
-	OSStatus 	DoPreRender ();
 	OSStatus 	DoRender (AudioBufferList 	*ioData);
 	OSStatus 	DoSRCRender (AudioBufferList 	*ioData);           // support for pre 2.0 3DMixer
-	OSStatus 	DoPostRender ();
 	bool		ConeAttenuation();
 	void 		CalculateDistanceAndAzimuth(Float32 *outDistance, Float32 *outAzimuth, Float32 *outElevation, Float32	*outDopplerShift);
-	bool        CallingInRenderThread () const { return (pthread_self() == mRenderThreadID); }
 	void        UpdateBusGain ();
 	void        UpdateBusFormat ();
 	void        UpdateBusReverb ();
@@ -352,7 +408,6 @@ class OALSource
 	void		RampDown (AudioBufferList 			*ioData);
 	void		RampUp (AudioBufferList 			*ioData);
 	void		ClearActiveQueue();
-	void		SkipALNONEBuffers();
 	void		AddNotifyAndRenderProcs();
 	void		ReleaseNotifyAndRenderProcs();
 	void		DisconnectFromBus();
@@ -371,12 +426,13 @@ class OALSource
 	void		PostRenderSetBuffer(ALuint inBufferToken, OALBuffer	*inBuffer);
 	void		PostRenderRemoveBuffersFromQueue(UInt32	inBuffersToUnqueue);
 	void		FlushBufferQueue();
-	void		StopFromDestructor();
 
 	void		AdvanceQueueToFrameIndex(UInt32	inFrameOffset);
 	OSStatus	SetDistanceParams(bool	inChangeReferenceDistance, bool inChangeMaxDistance);
 	Float32		GetMaxAttenuation(Float32	inRefDistance, Float32 inMaxDistance, Float32 inRolloff);
 	BufferInfo* NextPlayableBufferInActiveQ();
+
+	inline bool		InRenderThread() { return mOwningContext->CallingInRenderThread(); }
 
 /*
 	OSStatus	MuteCurrentPlayBus () const
@@ -452,6 +508,10 @@ class OALSource
     ALuint	GetToken();
 	UInt32	GetQueueOffset(UInt32	inOffsetType);
 
+	// thread safety
+	void	SetInUseFlag()		{ OSAtomicIncrement32Barrier(&mInUseFlag); }
+	void	ClearInUseFlag()	{ OSAtomicDecrement32Barrier(&mInUseFlag); }
+
     // buffer queue
 	UInt32	GetQLength();
 	UInt32	GetBuffersProcessed();
@@ -460,8 +520,13 @@ class OALSource
 	void	AddToQueue(ALuint	inBufferToken, OALBuffer	*inBuffer);
 	void	RemoveBuffersFromQueue(UInt32	inCount, ALuint	*outBufferTokens);
 	bool	IsSourceTransitioningToFlushQ();
-	bool	IsBufferInActiveQueue(ALuint inBufferToken);
-	bool    IsSafeForDeletion ()  { return (mSafeForDeletion); }
+	bool    IsSafeForDeletion ()  { return (mSafeForDeletion && (mInUseFlag <= 0) && mSourceLock.IsFree()); }
+
+	// notifcation methods
+	void		ClearMessageQueue();
+	void		AddPlaybackMessage(UInt32 inMessage, OALBuffer* inDeferredAppendBuffer, UInt32	inBuffersToUnqueue);
+	OSStatus 	DoPreRender ();
+	OSStatus 	DoPostRender ();
 	
 	// playback methods
 	void	Play();

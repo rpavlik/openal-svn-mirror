@@ -25,6 +25,8 @@
 #include "oalSource.h"
 #include "oalImp.h"
 
+#include "CAGuard.h"
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #pragma mark _____Support Methods_____
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -40,6 +42,8 @@ OALBuffer::OALBuffer (const ALuint	inSelfToken)
 #if USE_SOURCE_LIST_MUTEX
 		mSourceListGuard ("OALBuffer::SourceListGuard"),
 #endif
+		mBufferLock ("OALBuffer::EditLock"),
+		mInUseFlag(0),
 		mData(NULL),
 		mAppOwnsBufferMemory(false),
 		mDataSize (0),
@@ -116,7 +120,8 @@ bool	OALBuffer::IsPurgable()
 	bool wasLocked = mSourceListGuard.Lock();
 #endif
 	
-	if (mAttachedSourceList->Size() == 0)
+	// make sure that no other source has attached this buffer, and that no other thread is editing it
+	if ((mAttachedSourceList->Size() == 0) && mBufferLock.IsFree() && (mInUseFlag <= 0))
 		returnValue = true; 
 	
 #if USE_SOURCE_LIST_MUTEX
@@ -133,8 +138,11 @@ OSStatus	OALBuffer::AddAudioDataStatic(char*	inAudioData, UInt32	inAudioDataSize
         DebugMessage("AddAudioDataStatic called: Converting Data Now");
     #endif
 
+	CAGuard::Locker bufferLock(mBufferLock);
+
 	try {
-        if (!IsFormatSupported(format))
+        
+		if (!IsFormatSupported(format))
            throw ((OSStatus) AL_INVALID_VALUE);   // this is not a valid buffer token or is an invalid format
 	
 		// don't allow if the buffer is in a queue
@@ -187,6 +195,8 @@ OSStatus	OALBuffer::AddAudioData(char*	inAudioData, UInt32	inAudioDataSize, ALen
 	// reallocs if needed
 	// returns an error if buffer is in use
 
+	CAGuard::Locker bufferLock(mBufferLock);
+	
 	try {
         if (!IsFormatSupported(format))
            throw ((OSStatus) AL_INVALID_VALUE);   // this is not a valid buffer token or is an invalid format
@@ -278,7 +288,7 @@ OSStatus	OALBuffer::AddAudioData(char*	inAudioData, UInt32	inAudioDataSize, ALen
         alSetError(AL_INVALID_OPERATION);
 		throw -1;
 	}
-	
+			
 	return noErr;
 }
 
@@ -464,29 +474,4 @@ bool	OALBuffer::ReleaseBuffer(OALSource*	inSource)
 #endif
 
 	return returnValue;
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-bool	OALBuffer::CanBufferDataBeModified()
-{
-#if LOG_EXTRAS		
-	DebugMessageN2("OALBuffer::CanBufferDataBeModified - BufferToken%ld", mSelfToken);
-#endif
-	// see if this source is in list already
-	if (mAttachedSourceList->Size() > 0)
-	{
-		for (UInt32	i = 0; i < mAttachedSourceList->Size(); i++)
-		{
-			OALSource*     oalSource = mAttachedSourceList->GetSourceByIndex(i);
-			if (oalSource)
-			{
-				if (oalSource->IsBufferInActiveQueue(mSelfToken))
-					return false;
-			}
-		}
-	}
-	else
-		return true; // if it's not in a source list it can be modified
-
-	return true;
 }

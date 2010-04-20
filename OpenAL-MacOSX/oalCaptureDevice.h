@@ -1,7 +1,7 @@
 /**********************************************************************************************************************************
 *
 *   OpenAL cross platform audio library
-*   Copyright (c) 2006, Apple Computer, Inc. All rights reserved.
+*   Copyright (c) 2005, Apple Computer, Inc. All rights reserved.
 *
 *   Redistribution and use in source and binary forms, with or without modification, are permitted provided 
 *   that the following conditions are met:
@@ -25,12 +25,14 @@
 #define __OAL_CAPTURE_DEVICE__
 
 #include "oalImp.h"
+#include "CAStreamBasicDescription.h"
+#include "CABufferList.h"
+
 #include <CoreAudio/AudioHardware.h>
 #include <AudioToolbox/AudioToolbox.h>
 #include <AudioUnit/AudioUnit.h>
 #include <map>
-#include  "CAStreamBasicDescription.h"
-#include  "CABufferList.h"
+#include <libkern/OSAtomic.h>
      
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -55,6 +57,11 @@ class OALCaptureDevice
 	void				SetError(ALenum errorCode);
 	ALenum				GetError();
 
+	// we need to mark the capture device if it is being used to prevent deletion from another thread
+	void				SetInUseFlag()		{ OSAtomicIncrement32Barrier(&mInUseFlag); }	
+	void				ClearInUseFlag()	{ OSAtomicDecrement32Barrier(&mInUseFlag); }
+	volatile int32_t	IsInUse()			{ return mInUseFlag; }
+
 #pragma mark __________ Private_Class_Members
 
 	private:
@@ -73,6 +80,7 @@ class OALCaptureDevice
 		Float64							mSampleRateRatio;
 		UInt32							mRequestedRingFrames;			
 		CABufferList*					mAudioInputPtrs;
+		volatile int32_t				mInUseFlag;						// flag to indicate the device is currently being used by one or more threads
 
 	void				InitializeAU (const char* 	inDeviceName);
 	static OSStatus		InputProc(	void *						inRefCon,

@@ -3,6 +3,7 @@ February 13th, 2004 - Apple Computer Inc.
 updated: March 15th, 2004 - Apple Computer Inc.
 updated: July 1st, 2005 - Apple Computer Inc.
 updated: July 25, 2006 - Apple Computer Inc.
+updated: April 20, 2010 - Apple Inc.
 
 ----------------------------------------------------------------------------------------------------------------------
 READ ME: OPENAL - MAC OS X IMPLEMENTATION USING THE 3DMIXER AUDIOUNIT
@@ -12,7 +13,12 @@ This Read Me should accompany the 3DMixer implementation of OpenAL (Open Audio L
 
 CoreAudio SDK Requirements
 -----------------------
-Building this implementation of OpenAL for Mac OSX requires the CoreAudio SDK that accompanies the XCode 2.2 or greater developer release.
+
+The accompanying XCode project is setup for building on Mac OS X 10.6 (or greater), and XCode 3.x (or greater). To build
+on prior OS/XCode release, the path to the Public Utility folder should be changed in the XCode project to:
+
+	/Developer/Extras/CoreAudio/PublicUtility
+
 -----------------------
 
     Recommended:
@@ -41,56 +47,21 @@ functions for both the Listener and Source objects. Property constants are defin
 and can(should) really be obtained via alGetEnumValue() API. These constanst are described below:
 ----------------------------------------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------------------------------------
+ALC_EXT_ASA_ROGER_BEEP - Apple Spatial Audio Extension for Roger Beep Effect
 
-	ALenum  alcASAGetSource (const ALuint property, ALuint source, ALvoid *data, ALuint* dataSize);
-	ALenum  alcASASetSource (const ALuint property, ALuint source, ALvoid *data, ALuint dataSize);
-	
-	ALenum  alcASAGetListener (const ALuint property, ALvoid *data, ALuint* dataSize);
-	ALenum  alcASASetListener (const ALuint property, ALvoid *data, ALuint dataSize);
+Roger Beep : an effect to simulate effects such as Walkie Talkie noise. It is designed to replace the source audio data 
+with a specific 'tone' when falling below a specified db threshold for a specified time. This Extension will be present 
+when the Roger Beep Audio Unit is present on the system (10.5 or greater) Use the alcASAGetSource() and alcASASetSource() 
+APIs in the ALC_EXT_ASA extension.
+----------------------------------------------------------------------------------------------------------------------
 
-	/* LISTENER properties */
-		
-		ALC_ASA_REVERB_ON			// type ALboolean
-		ALC_ASA_REVERB_GLOBAL_LEVEL		// type ALfloat	-40.0 db - 40.0 db
-		
-		ALC_ASA_REVERB_ROOM_TYPE		// type ALint (see list of room types below)
-		
-			/* reverb room type presets for the ALC_ASA_REVERB_ROOM_TYPE property */
-			ALC_ASA_REVERB_ROOM_TYPE_SmallRoom
-			ALC_ASA_REVERB_ROOM_TYPE_MediumRoom
-			ALC_ASA_REVERB_ROOM_TYPE_LargeRoom
-			ALC_ASA_REVERB_ROOM_TYPE_MediumHall
-			ALC_ASA_REVERB_ROOM_TYPE_LargeHall
-			ALC_ASA_REVERB_ROOM_TYPE_Plate
-			ALC_ASA_REVERB_ROOM_TYPE_MediumChamber
-			ALC_ASA_REVERB_ROOM_TYPE_LargeChamber
-			ALC_ASA_REVERB_ROOM_TYPE_Cathedral
-			ALC_ASA_REVERB_ROOM_TYPE_LargeRoom2
-			ALC_ASA_REVERB_ROOM_TYPE_MediumHall2
-			ALC_ASA_REVERB_ROOM_TYPE_MediumHall3
-			ALC_ASA_REVERB_ROOM_TYPE_LargeHall2
+----------------------------------------------------------------------------------------------------------------------
+ALC_EXT_ASA_DISTORTION - Apple Spatial Audio Extension for Distortion Effect
 
-		ALC_ASA_REVERB_PRESET			// type ALchar* - path to an .aupreset file containing a Matrix Reverb preset file
-
-		/* Reverb EQ Properties - contained in aupreset files or settable at runtime */
-		ALC_ASA_REVERB_EQ_GAIN			// type ALfloat
-		ALC_ASA_REVERB_EQ_BANDWITH		// type ALfloat
-		ALC_ASA_REVERB_EQ_FREQ			// type ALfloat
-
-		ALC_ASA_REVERB_QUALITY			// type ALint (see list of qualities below)
-	
-			/* reverb quality settings for the ALC_ASA_REVERB_QUALITY property */
-			ALC_ASA_REVERB_QUALITY_Max
-			ALC_ASA_REVERB_QUALITY_High
-			ALC_ASA_REVERB_QUALITY_Medium
-			ALC_ASA_REVERB_QUALITY_Low
-			ALC_ASA_REVERB_QUALITY_Min
-	
-	/* SOURCE properties */
-		ALC_ASA_REVERB_SEND_LEVEL		// type ALfloat	0.0 (dry) - 1.0 (wet) (0-100% dry/wet mix, 0.0 default)
-		ALC_ASA_OCCLUSION			// type ALfloat	-100.0 db (most occlusion) - 0.0 db (no occlusion, 0.0 default)
-		ALC_ASA_OBSTRUCTION			// type ALfloat	-100.0 db (most obstruction) - 0.0 db (no obstruction, 0.0 default)	
-
+This Extension will be present when the Distortion Audio Unit is present on the system (10.5 or greater)
+Use the alcASAGetSource() and alcASASetSource() APIs in the ALC_EXT_ASA extension.
+----------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------
 AL_EXT_STATIC_BUFFER - Static Buffer Extension
@@ -100,8 +71,6 @@ the need for the OpenAL library to do a memcpy of the audio data into it's own b
 the same contract as alBufferData(). In other words, the call will fail when the buffer object is marked as pending
 in a source queue.
 ----------------------------------------------------------------------------------------------------------------------
-
-	ALvoid	alBufferDataStatic (const ALint bid, ALenum format, ALvoid* data, ALsizei size, ALsizei freq);
 
 ----------------------------------------------------------------------------------------------------------------------
 ALC_EXT_MAC_OSX - Apple Mac OSX Extension
