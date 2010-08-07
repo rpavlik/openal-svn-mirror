@@ -574,6 +574,11 @@ AL_API ALvoid AL_APIENTRY alSourcei(ALuint source,ALenum eParam,ALint lValue)
                             Source->queue = BufferListItem;
                             Source->BuffersInQueue = 1;
 
+                            if(aluChannelsFromFormat(buffer->format) == 1)
+                                Source->Update = CalcSourceParams;
+                            else
+                                Source->Update = CalcNonAttnSourceParams;
+
                             // Increment reference counter for buffer
                             buffer->refcount++;
                         }
@@ -999,6 +1004,12 @@ AL_API ALvoid AL_APIENTRY alGetSourcefv(ALuint source, ALenum eParam, ALfloat *p
                     alGetSourcef(source, eParam, pflValues);
                     break;
 
+                case AL_POSITION:
+                case AL_VELOCITY:
+                case AL_DIRECTION:
+                    alGetSource3f(source, eParam, pflValues+0, pflValues+1, pflValues+2);
+                    break;
+
                 case AL_SAMPLE_RW_OFFSETS_EXT:
                 case AL_BYTE_RW_OFFSETS_EXT:
                     updateLen = (ALdouble)pContext->Device->UpdateSize /
@@ -1006,24 +1017,6 @@ AL_API ALvoid AL_APIENTRY alGetSourcefv(ALuint source, ALenum eParam, ALfloat *p
                     GetSourceOffset(Source, eParam, Offsets, updateLen);
                     pflValues[0] = Offsets[0];
                     pflValues[1] = Offsets[1];
-                    break;
-
-                case AL_POSITION:
-                    pflValues[0] = Source->vPosition[0];
-                    pflValues[1] = Source->vPosition[1];
-                    pflValues[2] = Source->vPosition[2];
-                    break;
-
-                case AL_VELOCITY:
-                    pflValues[0] = Source->vVelocity[0];
-                    pflValues[1] = Source->vVelocity[1];
-                    pflValues[2] = Source->vVelocity[2];
-                    break;
-
-                case AL_DIRECTION:
-                    pflValues[0] = Source->vOrientation[0];
-                    pflValues[1] = Source->vOrientation[1];
-                    pflValues[2] = Source->vOrientation[2];
                     break;
 
                 default:
@@ -1247,6 +1240,12 @@ AL_API void AL_APIENTRY alGetSourceiv(ALuint source, ALenum eParam, ALint* plVal
                     alGetSourcei(source, eParam, plValues);
                     break;
 
+                case AL_POSITION:
+                case AL_VELOCITY:
+                case AL_DIRECTION:
+                    alGetSource3i(source, eParam, plValues+0, plValues+1, plValues+2);
+                    break;
+
                 case AL_SAMPLE_RW_OFFSETS_EXT:
                 case AL_BYTE_RW_OFFSETS_EXT:
                     updateLen = (ALdouble)pContext->Device->UpdateSize /
@@ -1254,24 +1253,6 @@ AL_API void AL_APIENTRY alGetSourceiv(ALuint source, ALenum eParam, ALint* plVal
                     GetSourceOffset(Source, eParam, Offsets, updateLen);
                     plValues[0] = (ALint)Offsets[0];
                     plValues[1] = (ALint)Offsets[1];
-                    break;
-
-                case AL_POSITION:
-                    plValues[0] = (ALint)Source->vPosition[0];
-                    plValues[1] = (ALint)Source->vPosition[1];
-                    plValues[2] = (ALint)Source->vPosition[2];
-                    break;
-
-                case AL_VELOCITY:
-                    plValues[0] = (ALint)Source->vVelocity[0];
-                    plValues[1] = (ALint)Source->vVelocity[1];
-                    plValues[2] = (ALint)Source->vVelocity[2];
-                    break;
-
-                case AL_DIRECTION:
-                    plValues[0] = (ALint)Source->vOrientation[0];
-                    plValues[1] = (ALint)Source->vOrientation[1];
-                    plValues[2] = (ALint)Source->vOrientation[2];
                     break;
 
                 default:
@@ -1560,7 +1541,6 @@ AL_API ALvoid AL_APIENTRY alSourceQueueBuffers(ALuint source, ALsizei n, const A
     ALsizei i;
     ALbufferlistitem *BufferListStart;
     ALbufferlistitem *BufferList;
-    ALboolean HadFormat;
     ALint Frequency;
     ALint Format;
 
@@ -1591,7 +1571,6 @@ AL_API ALvoid AL_APIENTRY alSourceQueueBuffers(ALuint source, ALsizei n, const A
 
     Frequency = -1;
     Format = -1;
-    HadFormat = AL_FALSE;
 
     // Check existing Queue (if any) for a valid Buffers and get its frequency and format
     BufferList = Source->queue;
@@ -1601,7 +1580,6 @@ AL_API ALvoid AL_APIENTRY alSourceQueueBuffers(ALuint source, ALsizei n, const A
         {
             Frequency = BufferList->buffer->frequency;
             Format = BufferList->buffer->eOriginalFormat;
-            HadFormat = AL_TRUE;
             break;
         }
         BufferList = BufferList->next;
@@ -1622,6 +1600,11 @@ AL_API ALvoid AL_APIENTRY alSourceQueueBuffers(ALuint source, ALsizei n, const A
         {
             Frequency = buffer->frequency;
             Format = buffer->eOriginalFormat;
+            if(aluChannelsFromFormat(buffer->format) == 1)
+                Source->Update = CalcSourceParams;
+            else
+                Source->Update = CalcNonAttnSourceParams;
+            Source->NeedsUpdate = AL_TRUE;
         }
         else if(Frequency != buffer->frequency || Format != buffer->eOriginalFormat)
         {
@@ -1677,9 +1660,6 @@ AL_API ALvoid AL_APIENTRY alSourceQueueBuffers(ALuint source, ALsizei n, const A
 
     // Update number of buffers in queue
     Source->BuffersInQueue += n;
-    // If no previous format, mark the source dirty now that it may have one
-    if(!HadFormat)
-        Source->NeedsUpdate = AL_TRUE;
 
 done:
     ProcessContext(Context);

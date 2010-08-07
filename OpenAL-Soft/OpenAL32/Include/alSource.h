@@ -91,7 +91,7 @@ typedef struct ALsource
     struct {
         ALfloat DryGains[OUTPUTCHANNELS];
         ALfloat WetGains[MAX_SENDS];
-        ALfloat Pitch;
+        ALint Step;
 
         struct {
             FILTER iirFilter;
@@ -101,10 +101,12 @@ typedef struct ALsource
         FILTER iirFilter;
         ALfloat history[OUTPUTCHANNELS*2];
     } Params;
+    ALvoid (*Update)(struct ALsource *self, const ALCcontext *context);
 
     // Index to itself
     ALuint source;
 } ALsource;
+#define ALsource_Update(s,a)  ((s)->Update(s,a))
 
 ALvoid ReleaseALSources(ALCcontext *Context);
 

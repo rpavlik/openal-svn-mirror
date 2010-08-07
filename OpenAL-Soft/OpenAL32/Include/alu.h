@@ -5,6 +5,7 @@
 #include "AL/alc.h"
 #include "AL/alext.h"
 
+#include <limits.h>
 #include <math.h>
 #ifdef HAVE_FLOAT_H
 #include <float.h>
@@ -75,6 +76,10 @@ typedef enum {
 } Channel;
 
 #define BUFFERSIZE 8192
+
+#define FRACTIONBITS (14)
+#define FRACTIONMASK ((1<<FRACTIONBITS)-1)
+#define MAX_PITCH    (INT_MAX & ~FRACTIONMASK)
 
 /* NOTE: The AL_FORMAT_REAR* enums aren't handled here because they're
  *       converted to AL_FORMAT_QUAD* when loaded */
@@ -177,7 +182,13 @@ static __inline ALint aluCart2LUTpos(ALfloat re, ALfloat im)
     return pos%LUT_NUM;
 }
 
+struct ALsource;
+
 ALvoid aluInitPanning(ALCdevice *Device);
+
+ALvoid CalcSourceParams(struct ALsource *ALSource, const ALCcontext *ALContext);
+ALvoid CalcNonAttnSourceParams(struct ALsource *ALSource, const ALCcontext *ALContext);
+
 ALvoid aluMixData(ALCdevice *device, ALvoid *buffer, ALsizei size);
 ALvoid aluHandleDisconnect(ALCdevice *device);
 

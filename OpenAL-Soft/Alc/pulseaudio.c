@@ -330,7 +330,7 @@ static void stream_buffer_attr_callback(pa_stream *stream, void *pdata) //{{{
     if(Device->NumUpdates <= 1)
     {
         Device->NumUpdates = 1;
-        AL_PRINT("PulseAudio returned tlength < minreq*2; expect break up\n");
+        AL_PRINT("PulseAudio returned minreq > tlength/2; expect break up\n");
     }
 
     ProcessContext(NULL);
@@ -600,6 +600,7 @@ static pa_context *connect_context(pa_threaded_mainloop *loop)
             if(!PA_CONTEXT_IS_GOOD(state))
             {
                 err = ppa_context_errno(context);
+                if(err > 0)  err = -err;
                 break;
             }
 
@@ -666,19 +667,9 @@ static void probe_devices(ALboolean capture)
     pa_threaded_mainloop *loop;
 
     if(capture == AL_FALSE)
-    {
         allDevNameMap = malloc(sizeof(DevMap) * 1);
-        allDevNameMap[0].name = strdup("PulseAudio Default");
-        allDevNameMap[0].device_name = NULL;
-        numDevNames = 1;
-    }
     else
-    {
         allCaptureDevNameMap = malloc(sizeof(DevMap) * 1);
-        allCaptureDevNameMap[0].name = strdup("PulseAudio Default");
-        allCaptureDevNameMap[0].device_name = NULL;
-        numCaptureDevNames = 1;
-    }
 
     if((loop=ppa_threaded_mainloop_new()) &&
        ppa_threaded_mainloop_start(loop) >= 0)
@@ -692,9 +683,21 @@ static void probe_devices(ALboolean capture)
             pa_operation *o;
 
             if(capture == AL_FALSE)
+            {
+                allDevNameMap[0].name = strdup(pulse_device);
+                allDevNameMap[0].device_name = NULL;
+                numDevNames = 1;
+
                 o = ppa_context_get_sink_info_list(context, sink_device_callback, loop);
+            }
             else
+            {
+                allCaptureDevNameMap[0].name = strdup(pulse_device);
+                allCaptureDevNameMap[0].device_name = NULL;
+                numCaptureDevNames = 1;
+
                 o = ppa_context_get_source_info_list(context, source_device_callback, loop);
+            }
             while(ppa_operation_get_state(o) == PA_OPERATION_RUNNING)
                 ppa_threaded_mainloop_wait(loop);
             ppa_operation_unref(o);
@@ -792,14 +795,14 @@ static ALCboolean pulse_open_playback(ALCdevice *device, const ALCchar *device_n
     if(!pulse_load())
         return ALC_FALSE;
 
-    if(!device_name)
-        device_name = pulse_device;
-    else if(strcmp(device_name, pulse_device) != 0)
+    if(!allDevNameMap)
+        probe_devices(AL_FALSE);
+
+    if(!device_name && numDevNames > 0)
+        device_name = allDevNameMap[0].name;
+    else
     {
         ALuint i;
-
-        if(!allDevNameMap)
-            probe_devices(AL_FALSE);
 
         for(i = 0;i < numDevNames;i++)
         {
@@ -1039,7 +1042,7 @@ static ALCboolean pulse_open_capture(ALCdevice *device, const ALCchar *device_na
     if(!allCaptureDevNameMap)
         probe_devices(AL_TRUE);
 
-    if(!device_name)
+    if(!device_name && numCaptureDevNames > 0)
         device_name = allCaptureDevNameMap[0].name;
     else
     {
@@ -1315,7 +1318,29 @@ void alc_pulse_probe(int type) //{{{
     if(!pulse_load()) return;
 
     if(type == DEVICE_PROBE)
-        AppendDeviceList(pulse_device);
+    {
+        pa_threaded_mainloop *loop;
+
+        if((loop=ppa_threaded_mainloop_new()) &&
+           ppa_threaded_mainloop_start(loop) >= 0)
+        {
+            pa_context *context;
+
+            ppa_threaded_mainloop_lock(loop);
+            context = connect_context(loop);
+            if(context)
+            {
+                AppendDeviceList(pulse_device);
+
+                ppa_context_disconnect(context);
+                ppa_context_unref(context);
+            }
+            ppa_threaded_mainloop_unlock(loop);
+            ppa_threaded_mainloop_stop(loop);
+        }
+        if(loop)
+            ppa_threaded_mainloop_free(loop);
+    }
     else if(type == ALL_DEVICE_PROBE)
     {
         ALuint i;
